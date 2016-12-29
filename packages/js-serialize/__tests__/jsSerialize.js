@@ -35,8 +35,8 @@ it('serializes arrays', () => {
 
 it('serializes symbols', () => {
     expect(jsSerialize(Symbol.for('foo'))).toBe('Symbol.for("foo")');
-    expect(jsSerialize(Symbol())).toBe('Symbol()');
-    expect(jsSerialize(Symbol('bar'))).toBe('Symbol("bar")');
+    expect(jsSerialize(Symbol())).toBe('Symbol()'); // this isn't the same Symbol!
+    expect(jsSerialize(Symbol('bar'))).toBe('Symbol("bar")'); // nor is this
 });
 
 it('serializes null', () => {
@@ -49,6 +49,23 @@ it('serializes undefined', () => {
 
 it('serializes native functions', () => {
     expect(jsSerialize(isNaN)).toBe('isNaN');
-    expect(jsSerialize(Math.sin)).toBe('Math.sin');
+    expect(jsSerialize(Math.sin)).toBe('Math.sin'); // can be broken with `global.sin = Math.sin`
     expect(jsSerialize(Intl.NumberFormat.supportedLocalesOf)).toBe('Intl.NumberFormat.supportedLocalesOf');
+});
+
+it('serializes functions', () => {
+    expect(jsSerialize(() => 1)).toBe('() => 1');
+    expect(jsSerialize(x => x*2)).toBe('x => x * 2');
+    expect(jsSerialize(function(x,y) { return x + y })).toBe("function (x, y) {return x + y;}");
+    expect(jsSerialize(function mult(x,y) { return x * y; })).toBe("function mult(x, y) {return x * y;}");
+});
+
+
+it('serializes objects', () => {
+    expect(jsSerialize({a:1})).toBe('{a:1}');
+    expect(jsSerialize({})).toBe('{}');
+    expect(jsSerialize({foo:'bar',baz:9})).toBe('{foo:"bar",baz:9}');
+    expect(jsSerialize({'foo bar':'baz',corge:'Waldo'})).toBe('{"foo bar":"baz",corge:"Waldo"}');
+    let foo = Symbol.for('Foo');
+    expect(jsSerialize({[foo]:'bar'})).toBe(`{[Symbol.for("Foo")]:"bar"}`);
 });
