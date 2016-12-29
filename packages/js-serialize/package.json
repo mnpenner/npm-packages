@@ -1,0 +1,17 @@
+{
+  "name": "@mpen/js-serialize",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "Mark Penner <mark@mpen.ca>",
+  "license": "MIT",
+  "dependencies": {
+    "xregexp": "^3.1.1"
+  },
+  "devDependencies": {
+    "jest": "^18.0.0"
+  }
+}
