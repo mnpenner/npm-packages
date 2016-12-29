@@ -1,9 +1,99 @@
 const XRegExp = require('xregexp');
 const util = require('./util');
 
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
+const builtIns = [
+    'Array',
+    'ArrayBuffer',
+    'AsyncFunction',
+    'Atomics',
+    'Boolean',
+    'DataView',
+    'Date',
+    'Error',
+    'EvalError',
+    'Float32Array',
+    'Float64Array',
+    'Function',
+    'Generator',
+    'GeneratorFunction',
+    'Infinity',
+    'Int16Array',
+    'Int32Array',
+    'Int8Array',
+    'InternalError',
+    'Intl',
+    'Intl.Collator',
+    'Intl.DateTimeFormat',
+    'Intl.NumberFormat',
+    'Iterator',
+    'JSON',
+    'Map',
+    'Math',
+    'NaN',
+    'Number',
+    'Object',
+    'ParallelArray',
+    'Promise',
+    'Proxy',
+    'RangeError',
+    'ReferenceError',
+    'Reflect',
+    'RegExp',
+    'SIMD',
+    'SIMD.Bool16x8',
+    'SIMD.Bool32x4',
+    'SIMD.Bool64x2',
+    'SIMD.Bool8x16',
+    'SIMD.Float32x4',
+    'SIMD.Float64x2',
+    'SIMD.Int16x8',
+    'SIMD.Int32x4',
+    'SIMD.Int8x16',
+    'SIMD.Uint16x8',
+    'SIMD.Uint32x4',
+    'SIMD.Uint8x16',
+    'Set',
+    'SharedArrayBuffer',
+    'StopIteration',
+    'String',
+    'Symbol',
+    'SyntaxError',
+    'TypeError',
+    'TypedArray',
+    'URIError',
+    'Uint16Array',
+    'Uint32Array',
+    'Uint8Array',
+    'Uint8ClampedArray',
+    'WeakMap',
+    'WeakSet',
+].map(lib => [lib,util.dotGet(global, lib)]).filter(x => x[1]);
+
 function jsSerialize(obj) {
+    // TODO: Object.isFrozen check
+    // TODO: compression option -- create functions for all the different types
     if(util.isArray(obj)) {
-        return '[' +  obj.map(jsSerialize).join(',') + ']';
+        if(obj.length === 0) {
+            return '[]';
+        }
+        let sb = [];
+        let hasProp = false;
+        for(let i=0; i<obj.length; ++i) {
+            if(obj.hasOwnProperty(i)) {
+                hasProp = true;
+                sb.push(jsSerialize(obj[i]));
+            } else {
+                sb.push('');
+            }
+        }
+        if(!hasProp) {
+            return `new Array(${obj.length})`;
+        }
+        if(!obj.hasOwnProperty(obj.length - 1)) {
+            sb.push('');
+        }
+        return '[' +  sb.join(',') + ']';
     } else if(obj instanceof Set) {
         if(obj.size) {
             return 'new Set([' + Array.from(obj).map(jsSerialize).join(',') + '])';
@@ -11,10 +101,21 @@ function jsSerialize(obj) {
         return 'new Set';
     } else if(obj instanceof Map) {
         throw new Error('Map serialization is not yet implemented');
-    } else if(obj instanceof Symbol) {
+    } else if(util.isSymbol(obj)) {
         return serializeSymbol(obj);
     } else if(isNativeFunction(obj)) {
-        throw new Error('Cannot serialize native functions'); // ...or maybe we *can* serialize native functions? just replace it with a call to the function!
+        if(!obj.name) {
+            throw new Error('Could not serialize unnamed native function');
+        }
+        if(global[obj.name] === obj) {
+            return obj.name;
+        }
+        for(let [libName,lib] of builtIns) {
+            if(lib[obj.name] === obj) {
+                return `${libName}.${obj.name}`;
+            }
+        }
+        throw new Error(`Could not determine fully-qualified name of native function '${obj.name}'`);
     } else if(util.isFunction(obj)) {
         return obj.toString();
     } else if(util.isRegExp(obj)) {
@@ -22,6 +123,10 @@ function jsSerialize(obj) {
         return obj.toString();
     } else if(util.isString(obj) || util.isNumber(obj)) {
         return JSON.stringify(obj);
+    } else if(obj === undefined) {
+        return 'undefined';
+    } else if(obj === null) {
+        return 'null';
     } else if(util.isObject(obj)) {
         if(util.isFunction(obj.toScript)) {
             return obj.toScript();
@@ -36,7 +141,7 @@ function jsSerialize(obj) {
         }
         return '{' + tmp.join(',') + '}';
     } else {
-        return JSON.stringify(obj);
+        throw new Error('Could not serialize unknown type');
     }
 }
 
@@ -48,9 +153,13 @@ function isNativeFunction(obj) {
 function serializeSymbol(sym) {
     let key = Symbol.keyFor(sym);
     if(key === undefined) {
-        return `Symbol()`;
+        let m = sym.toString().match(/^Symbol\((.+)\)$/);
+        if(m) {
+            return `Symbol(${jsSerialize(m[1])})`;
+        }
+        return `Symbol()`; // not sure if this is worthwhile or not
     } else {
-        return `Symbol.for(${JSON.stringify(key)})`;
+        return `Symbol.for(${jsSerialize(key)})`;
     }
 }
 
