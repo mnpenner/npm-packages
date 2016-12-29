@@ -36,7 +36,7 @@ function jsSerialize(obj) {
         throw new Error('Map serialization is not yet implemented');
     } else if(util.isSymbol(obj)) {
         return serializeSymbol(obj);
-    } else if(isNativeFunction(obj)) {
+    } else if(util.isNativeFunction(obj)) {
         let path = nativeFuncs.get(obj);
         
         if(path !== undefined) {
@@ -80,9 +80,6 @@ function jsSerialize(obj) {
     }
 }
 
-function isNativeFunction(obj) {
-    return typeof obj === 'function' && obj.toString().endsWith('{ [native code] }');
-}
 
 function serializeSymbol(sym) {
     let key = Symbol.keyFor(sym);

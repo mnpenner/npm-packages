@@ -77,6 +77,8 @@ function dotGet(obj, path, defaultValue) {
 /**
  * Recursively searches (BFS) through `lib` (an object/module) to find the fully-qualified name of `fn`.
  * 
+ * This function may be expensive.
+ * 
  * @param {Object} lib
  * @param {Function} fn
  * @param {Number} maxDepth
