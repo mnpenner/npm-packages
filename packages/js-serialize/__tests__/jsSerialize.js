@@ -50,4 +50,5 @@ it('serializes undefined', () => {
 it('serializes native functions', () => {
     expect(jsSerialize(isNaN)).toBe('isNaN');
     expect(jsSerialize(Math.sin)).toBe('Math.sin');
+    expect(jsSerialize(Intl.NumberFormat.supportedLocalesOf)).toBe('Intl.NumberFormat.supportedLocalesOf');
 });

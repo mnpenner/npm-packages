@@ -104,18 +104,11 @@ function jsSerialize(obj) {
     } else if(util.isSymbol(obj)) {
         return serializeSymbol(obj);
     } else if(isNativeFunction(obj)) {
-        if(!obj.name) {
-            throw new Error('Could not serialize unnamed native function');
+        let path = util.findFunction(global, obj);
+        if(path === null) {
+            throw new Error(`Could not determine fully-qualified name of native function '${obj.name}'`);
         }
-        if(global[obj.name] === obj) {
-            return obj.name;
-        }
-        for(let [libName,lib] of builtIns) {
-            if(lib[obj.name] === obj) {
-                return `${libName}.${obj.name}`;
-            }
-        }
-        throw new Error(`Could not determine fully-qualified name of native function '${obj.name}'`);
+        return path.join('.');
     } else if(util.isFunction(obj)) {
         return obj.toString();
     } else if(util.isRegExp(obj)) {

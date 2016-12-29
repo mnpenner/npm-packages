@@ -30,6 +30,14 @@ function isObject(obj) {
     return obj !== null && typeof obj === 'object';
 }
 
+function isPlainObject(obj) {
+    return isObject(obj)
+        && !isString(obj)
+        && !isNumber(obj)
+        && !isRegExp(obj)
+        && !isArray(obj);
+}
+
 function isSymbol(obj) {
     return Object.prototype.toString.call(obj) === '[object Symbol]';
 }
@@ -66,4 +74,45 @@ function dotGet(obj, path, defaultValue) {
     return obj;
 }
 
-module.exports = {isNativeFunction, isFunction, isObject, isNull, isString, isArray, isNumber, isRegExp, map, hasAssignedValues, isSymbol, dotGet};
+// function findFunction(lib, fn, path=[], seen=new Set) {
+//     if(lib[fn.name] === fn) {
+//         return [...path, fn.name];
+//     }
+//     seen.add(lib);
+//     console.log(seen);
+//     // process.stdout.write(`${path.join('.')}\n`);
+//     for(let n of Object.getOwnPropertyNames(lib)) {
+//         if(isObject(lib[n]) && !seen.has(lib[n])) {
+//             let res = findFunction(lib[n], fn, [...path, n], seen);
+//             if(res !== null) {
+//                 return res;
+//             }
+//         }
+//     }
+//     return null;
+// }
+
+let reserved = new Set(['length','name','prototype']);
+
+function findFunction(lib, fn) {
+    let queue = [
+        [[], lib]
+    ];
+    let seen = new Set();
+    do {
+        let [path,lib] = queue.shift();
+        if(lib[fn.name] === fn) {
+            return [...path, fn.name];
+        }
+        if(path.length < 4) {
+            for(let n of Object.getOwnPropertyNames(lib)) {
+                if(n[0] !== '_' && !reserved.has(n) && lib[n] && !seen.has(lib[n])) {
+                    queue.push([[...path, n], lib[n]]);
+                }
+            }
+        }
+    } while(queue.length);
+    return null;
+}
+
+module.exports = {isNativeFunction, isFunction, isObject, isNull, isString, isArray, isNumber, isRegExp, map, hasAssignedValues, isSymbol, dotGet, findFunction};
