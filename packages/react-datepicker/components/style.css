@@ -1,0 +1,20 @@
+/* https://github.com/zeit/next.js/tree/master/examples/with-global-stylesheet/pages */
+
+.calendar {
+    border-collapse: collapse;
+    font-family: sans-serif;
+}
+
+.calendar td, .calendar th {
+    border: 1px solid black;
+    width: 1.5em;
+    height: 1em;
+}
+
+.calendar th {
+    text-align: center;
+}
+
+.calendar td {
+    text-align: right;
+}
