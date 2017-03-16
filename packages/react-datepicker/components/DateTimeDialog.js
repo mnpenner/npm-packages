@@ -3,8 +3,9 @@ import cn from './style.less';
 import moment from 'moment';
 import classnames from 'classnames';
 
+moment.locale('es');
 const months = moment.monthsShort();
-const monthChunks = lo.chunk(months.map((m,n) => [n,m]),3);
+const monthChunks = lo.chunk(months.map((m,n) => [n,m]),4);
 const weekdays = moment.weekdaysMin();
 
 export default class DateTimeDialog extends React.Component {
@@ -63,11 +64,16 @@ export default class DateTimeDialog extends React.Component {
         this.setState({month})
     };
 
-    render() {
+    clickDay = day => ev => {
+        ev.preventDefault();
+        this.setState({day})
+    };
 
-        const date = new Date(this.state.year, this.state.month, this.state.day), y = date.getFullYear(), m = date.getMonth();
-        const firstDay = new Date(y, m, 1);
-        const lastDay = new Date(y, m + 1, 0);
+    render() {
+        console.log(JSON.stringify(this.state,null,2));
+
+        const firstDay = new Date(this.state.year, this.state.month, 1);
+        const lastDay = new Date(this.state.year, this.state.month + 1, 0);
         let dow = firstDay.getDay();
         const lastDayNumber = lastDay.getDate();
 
@@ -77,7 +83,7 @@ export default class DateTimeDialog extends React.Component {
             row.push(<td key="pre" colSpan={dow}/>);
         }
         for(let d = 1; d<=lastDayNumber; ++d) {
-            row.push(<td key={d}>{d}</td>);
+            row.push(<td key={d} className={classnames(cn.dayBtn,{[cn.daySelected]:this.state.day==d})} onClick={this.clickDay(d)}>{d}</td>);
             if(++dow === 7) {
                 dow = 0;
                 rows.push(row);
