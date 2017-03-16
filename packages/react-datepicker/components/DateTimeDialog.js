@@ -1,6 +1,5 @@
 import lo from 'lodash';
-import {stylesheet, classNames} from './style.css'
-import Head from 'next/head';
+import classNames from './style.css'
 
 export default class DateTimeDialog extends React.Component {
 
@@ -34,7 +33,6 @@ export default class DateTimeDialog extends React.Component {
 
         return (
             <div>
-                <Head><style dangerouslySetInnerHTML={{__html: stylesheet}} /></Head>
                 <table className={classNames.calendar}>
                     <thead>
                         <tr>
