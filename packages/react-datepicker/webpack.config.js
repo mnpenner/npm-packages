@@ -14,9 +14,10 @@ const cssLoaders = [
 module.exports = {
     context: __dirname,
     entry: [
-        'react-hot-loader/patch',
-        'webpack-dev-server/client?http://localhost:8080',
-        'webpack/hot/only-dev-server',
+        // 'react-hot-loader/patch',
+        // 'webpack-dev-server/client?http://localhost:8080',
+        // 'webpack/hot/only-dev-server',
+        'normalize.css',
         './pages',
     ],
     output: {
@@ -25,9 +26,12 @@ module.exports = {
         publicPath: '/',
     },
     devServer: {
-        publicPath: `/`,
         contentBase: `./public`,
-        hot: true
+        hot: false,
+    },
+    watchOptions: {
+        aggregateTimeout: 50,
+        poll: 50
     },
     module: {
         rules: [
@@ -39,7 +43,13 @@ module.exports = {
                         loader: 'babel-loader',
                         options: {
                             compact: false,
-                            plugins: ['transform-react-jsx', 'transform-class-properties', 'transform-function-bind', 'transform-object-rest-spread', 'react-hot-loader/babel'],
+                            plugins: [
+                                'transform-react-jsx',
+                                'transform-class-properties',
+                                'transform-function-bind',
+                                'transform-object-rest-spread',
+                                // 'react-hot-loader/babel',
+                            ],
                         },
                     },
                 ],
@@ -77,7 +87,7 @@ module.exports = {
         new ProvidePlugin({
             React: 'react',
         }),
-        new HotModuleReplacementPlugin(),
+        // new HotModuleReplacementPlugin(),
         new NamedModulesPlugin(),
     ],
 };
