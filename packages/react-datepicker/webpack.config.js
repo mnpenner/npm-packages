@@ -1,5 +1,4 @@
-const path = require('path');
-const {ProvidePlugin, HotModuleReplacementPlugin} = require('webpack');
+const {ProvidePlugin, HotModuleReplacementPlugin, NamedModulesPlugin} = require('webpack');
 
 const cssLoaders = [
     'style-loader',
@@ -15,12 +14,20 @@ const cssLoaders = [
 module.exports = {
     context: __dirname,
     entry: [
-        `${__dirname}/pages/index`,
+        'react-hot-loader/patch',
+        'webpack-dev-server/client?http://localhost:8080',
+        'webpack/hot/only-dev-server',
+        './pages',
     ],
     output: {
         path: `${__dirname}/public`,
         filename: 'bundle.js',
         publicPath: '/',
+    },
+    devServer: {
+        publicPath: `/`,
+        contentBase: `./public`,
+        hot: true
     },
     module: {
         rules: [
@@ -31,7 +38,8 @@ module.exports = {
                     {
                         loader: 'babel-loader',
                         options: {
-                            plugins: ['transform-react-jsx', 'transform-class-properties', 'transform-function-bind', 'transform-object-rest-spread'],
+                            compact: false,
+                            plugins: ['transform-react-jsx', 'transform-class-properties', 'transform-function-bind', 'transform-object-rest-spread', 'react-hot-loader/babel'],
                         },
                     },
                 ],
@@ -70,5 +78,6 @@ module.exports = {
             React: 'react',
         }),
         new HotModuleReplacementPlugin(),
+        new NamedModulesPlugin(),
     ],
 };

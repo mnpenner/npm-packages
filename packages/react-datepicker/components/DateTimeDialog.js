@@ -51,7 +51,6 @@ export default class DateTimeDialog extends React.Component {
                         {rows.map((r,i) => <tr key={i}>{r}</tr>)}
                     </tbody>
                 </table>
-
             </div>
         )
     }
