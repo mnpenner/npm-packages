@@ -3,10 +3,13 @@ import cn from './style.less';
 import moment from 'moment';
 import classnames from 'classnames';
 
-moment.locale('es');
-const months = moment.monthsShort();
+moment.locale('fr');
+const localeData = moment.localeData();
+const months = localeData.monthsShort();
 const monthChunks = lo.chunk(months.map((m,n) => [n,m]),4);
-const weekdays = moment.weekdaysMin();
+const weekdays = localeData.weekdaysMin();
+const firstDayOfWeek = localeData.firstDayOfWeek(); // TODO: factor this in
+console.log(firstDayOfWeek);
 
 export default class DateTimeDialog extends React.Component {
 
