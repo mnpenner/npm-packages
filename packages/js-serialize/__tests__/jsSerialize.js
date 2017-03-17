@@ -69,3 +69,8 @@ it('serializes objects', () => {
     let foo = Symbol.for('Foo');
     expect(jsSerialize({[foo]:'bar'})).toBe(`{[Symbol.for("Foo")]:"bar"}`);
 });
+
+it('serializes raw', () => {
+    expect(jsSerialize(jsSerialize.raw('foo'))).toBe('foo');
+    expect(jsSerialize({context:jsSerialize.raw('__dirname')})).toBe('{context:__dirname}');
+});

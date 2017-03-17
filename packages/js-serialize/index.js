@@ -2,6 +2,7 @@ const XRegExp = require('xregexp');
 const util = require('./util');
 
 let nativeFuncs = new Map();
+const isRaw = Symbol('isRaw');
 
 function jsSerialize(obj) {
     // TODO: Object.isFrozen check
@@ -67,6 +68,9 @@ function jsSerialize(obj) {
         // if(util.isFunction(obj.toScript)) {
         //     return obj.toScript();
         // }
+        if(obj[isRaw]) {
+            return obj.value;
+        }
         if(util.isFunction(obj.toJSON)) {
             return jsSerialize(obj.toJSON());
         }
@@ -80,6 +84,15 @@ function jsSerialize(obj) {
     }
 }
 
+/**
+ * @param {string} jsCode
+ */
+jsSerialize.raw = function raw(jsCode) {
+    return Object.create({
+        [isRaw]: true,
+        value: jsCode,
+    });
+};
 
 function serializeSymbol(sym) {
     let key = Symbol.keyFor(sym);
