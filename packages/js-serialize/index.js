@@ -58,7 +58,7 @@ function jsSerialize(obj) {
     } else if(util.isRegExp(obj)) {
         // return `/${obj.source}/${obj.flags}`;
         return obj.toString();
-    } else if(util.isString(obj) || util.isNumber(obj)) {
+    } else if(util.isString(obj) || util.isNumber(obj) || util.isBoolean(obj)) {
         return JSON.stringify(obj);
     } else if(obj === undefined) {
         return 'undefined';

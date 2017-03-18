@@ -14,6 +14,10 @@ function isNumber(obj) {
     return typeof obj === 'number' || obj instanceof Number;
 }
 
+function isBoolean(obj) {
+    return obj === true || obj === false;
+}
+
 function isRegExp(obj) {
     return obj instanceof RegExp;
 }
@@ -108,4 +112,4 @@ function findFunction(lib, fn, maxDepth=3) {
     }
 }
 
-module.exports = {isNativeFunction, isFunction, isObject, isNull, isString, isArray, isNumber, isRegExp, map, hasAssignedValues, isSymbol, dotGet, findFunction};
+module.exports = {isNativeFunction, isFunction, isObject, isNull, isString, isArray, isNumber, isRegExp, map, hasAssignedValues, isSymbol, dotGet, findFunction, isBoolean};

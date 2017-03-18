@@ -74,3 +74,8 @@ it('serializes raw', () => {
     expect(jsSerialize(jsSerialize.raw('foo'))).toBe('foo');
     expect(jsSerialize({context:jsSerialize.raw('__dirname')})).toBe('{context:__dirname}');
 });
+
+it('serializes booleans', () => {
+    expect(jsSerialize(true)).toBe('true');
+    expect(jsSerialize(false)).toBe('false');
+});
