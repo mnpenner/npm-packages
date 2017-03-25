@@ -8,7 +8,7 @@ import SunCalc from 'suncalc';
 moment.locale('en-ca');
 const localeData = moment.localeData();
 const months = localeData.monthsShort();
-const monthChunks = lo.chunk(months.map((m,n) => [n,m]),4);
+const monthChunks = lo.chunk(months.map((m,n) => [n,m]),3);
 const weekdays = localeData.weekdaysMin();
 const firstDayOfWeek = localeData.firstDayOfWeek(); // TODO: factor this in
 console.log('firstDayOfWeek',firstDayOfWeek);
@@ -40,14 +40,16 @@ export default class DateTimeDialog extends React.Component {
         minuteInterval: PropTypes.number,
         latitude: PropTypes.number,
         longitude: PropTypes.number,
+        lastMinute: PropTypes.bool,
     };
 
     static defaultProps = {
         locale: 'en',
         militaryTime: false,
         minuteInterval: 5,
-        latitude: 49.1805940,
-        longitude: -122.8456780,
+        latitude: 49.700000,
+        longitude: -96.809722,
+        lastMinute: true,
     };
 
     constructor(props) {
@@ -122,6 +124,7 @@ export default class DateTimeDialog extends React.Component {
     };
 
     wheelMinute = ev => {
+        ev.preventDefault();
         let minute = this.state.minute + this.props.minuteInterval * Math.sign(ev.deltaY);
         while(minute < 0) {
             minute += 60;
@@ -133,7 +136,7 @@ export default class DateTimeDialog extends React.Component {
     };
 
     wheelHour = ev => {
-        console.log('hourrr');
+        ev.preventDefault();
         let hour = this.state.hour + Math.sign(ev.deltaY);
         while(hour < 0) {
             hour += 24;
@@ -238,89 +241,96 @@ export default class DateTimeDialog extends React.Component {
         // let darkest = -0.687470273549926
         // let lightest = 0.740826542700143
 
+        let minuteValues = lo.range(0, 60, this.props.minuteInterval);
+        if(this.props.lastMinute && lo.tail(minuteValues) !== 59) {
+            minuteValues.push(59);
+        }
+
 
         return (
             <div>
             <div className={cn.root}>
-                <div>
-                    {moment(selectedDate).format('LLLL')}
-                </div>
-                <div className={cn.column}>
-                    <div className={cn.yearContainer}>
-                        <a className={cn.yearBtn} onClick={this.incYear(-10)}>&laquo;</a>
-                        <a className={cn.yearBtn} onClick={this.incYear(-1)}>&lt;</a>
-                        <input type="number" className={cn.yearInput} onChange={this.changeYear} onBlur={this.yearBlur} value={this.state.yearText}/>
-                        <a className={cn.yearBtn} onClick={this.incYear(1)}>&gt;</a>
-                        <a className={cn.yearBtn} onClick={this.incYear(10)}>&raquo;</a>
+                <div className={cn.header}>
+                    <div>
+                        {moment(selectedDate).format('LLLL')}
                     </div>
+                </div>
+                <div className={cn.body}>
+                    <div className={cn.column}>
+                        <div className={cn.yearContainer}>
+                            <a className={cn.yearBtn} onClick={this.incYear(-10)}>&laquo;</a>
+                            <a className={cn.yearBtn} onClick={this.incYear(-1)}>&lt;</a>
+                            <input type="number" className={cn.yearInput} onChange={this.changeYear} onBlur={this.yearBlur} value={this.state.yearText}/>
+                            <a className={cn.yearBtn} onClick={this.incYear(1)}>&gt;</a>
+                            <a className={cn.yearBtn} onClick={this.incYear(10)}>&raquo;</a>
+                        </div>
 
-                    <table className={cn.monthPicker}>
-                        <tbody>
-                        {monthChunks.map((chunk,idx) => <tr key={idx}>{chunk.map(([m,mmm]) => <td key={m} onClick={this.clickMonth(m)} className={classnames(cn.monthBtn,{[cn.monthSelected]:this.state.month==m})}>{mmm}</td>)}</tr>)}
-                        </tbody>
-                    </table>
-
-                    <div className={cn.calendarContainer}>
-                        <table className={cn.calendar}>
-                            <thead>
-                                <tr>
-                                    {weekdays.map((d,i) => <th key={i}>{d}</th>)}
-                                </tr>
-                            </thead>
-                        </table>
-                        <table className={cn.calendar}>
+                        <table className={cn.monthPicker}>
                             <tbody>
-                                {rows.map((r,i) => <tr key={i}>{r}</tr>)}
+                            {monthChunks.map((chunk,idx) => <tr key={idx}>{chunk.map(([m,mmm]) => <td key={m} onClick={this.clickMonth(m)} className={classnames(cn.monthBtn,{[cn.monthSelected]:this.state.month==m})}>{mmm}</td>)}</tr>)}
                             </tbody>
                         </table>
+
+                        <div className={cn.calendarContainer}>
+                            <table className={cn.calendar}>
+                                <thead>
+                                    <tr>
+                                        {weekdays.map((d,i) => <th key={i}>{d}</th>)}
+                                    </tr>
+                                </thead>
+                            </table>
+                            <table className={cn.calendar}>
+                                <tbody>
+                                    {rows.map((r,i) => <tr key={i}>{r}</tr>)}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
-                <div className={cn.column}>
-                    <div className={cn.pmCol} style={{background:`linear-gradient(to bottom,${pmGradient.join(',')})`}}>
-                    <div className={cn.amCol} style={{background:`linear-gradient(to bottom,${amGradient.join(',')})`}}>
-                        <table onWheel={this.wheelHour} className={cn.hourTable}>
+                    <div className={cn.column}>
+                        <div className={cn.pmCol} style={{background:`linear-gradient(to bottom,${pmGradient.join(',')})`}}>
+                        <div className={cn.amCol} style={{background:`linear-gradient(to bottom,${amGradient.join(',')})`}}>
+                            <table onWheel={this.wheelHour} className={cn.hourTable}>
+                                <tbody>
+                                    {lo.times(12, i => {
+                                        let disp = i === 0 ? '12' : String(i);
+                                        return (
+                                            <tr key={i}>
+                                                <td className={classnames(cn.hourCell,{[cn.timeSelected]:this.state.hour===i})}>
+                                                    <a onClick={this.clickHour(i)} className={cn.timeBtn} href="">{disp}<sup>am</sup></a>
+                                                </td>
+                                                <td className={classnames(cn.hourCell,{[cn.timeSelected]:this.state.hour===i+12})}>
+                                                    <a onClick={this.clickHour(i+12)} className={cn.timeBtn} href="">{disp}<sup>pm</sup></a>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                        </div>
+                    </div>
+                    <div className={cn.column}>
+                        <div className={cn.minGradient} style={{background:`linear-gradient(to bottom,${minGradient.join(',')})`}}>
+                        <table className={cn.minTable} onWheel={this.wheelMinute}>
                             <tbody>
-                                {lo.times(12, i => {
-                                    let disp = i === 0 ? '12' : String(i);
+                                {minuteValues.map(i => {
+                                    let disp = i < 10 ? `0${i}` : String(i);
                                     return (
                                         <tr key={i}>
-                                            <td className={classnames(cn.hourCell,{[cn.timeSelected]:this.state.hour===i})}>
-                                                <a onClick={this.clickHour(i)} className={cn.timeBtn} href="">{disp}<sup>am</sup></a>
-                                            </td>
-                                            <td className={classnames(cn.hourCell,{[cn.timeSelected]:this.state.hour===i+12})}>
-                                                <a onClick={this.clickHour(i+12)} className={cn.timeBtn} href="">{disp}<sup>pm</sup></a>
+                                            <td className={classnames(cn.minCell,{[cn.timeSelected]:this.state.minute===i,[cn.halfHour]: i % 30 === 0 || i === 59, [cn.quarterHour]: i % 15 === 0 || i === 59})}>
+                                                <a onClick={this.clickMinute(i)} className={classnames(cn.timeBtn, cn.hourBtn)} href="">{disp}</a>
                                             </td>
                                         </tr>
                                     );
                                 })}
                             </tbody>
                         </table>
-                    </div>
-                    </div>
-                </div>
-                <div className={cn.column}>
-                    <div className={cn.minGradient} style={{background:`linear-gradient(to bottom,${minGradient.join(',')})`}}>
-                    <table className={cn.minTable} onWheel={this.wheelMinute}>
-                        <tbody>
-                            {lo.range(0, 60, 5).map(i => {
-                                let disp = i < 10 ? `0${i}` : String(i);
-                                return (
-                                    <tr key={i}>
-                                        <td className={classnames(cn.minCell,{[cn.timeSelected]:this.state.minute===i})}>
-                                            <a onClick={this.clickMinute(i)} className={classnames(cn.timeBtn, cn.hourBtn)} href="">{disp}</a>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                        </div>
                     </div>
                 </div>
-
             </div>
-                <pre>
-                    {JSON.stringify(this.state,null,2)}
-                </pre>
+                <pre>{JSON.stringify(this.state,null,2)}</pre>
+                <pre>{JSON.stringify(this.props,null,2)}</pre>
             </div>
         )
     }
