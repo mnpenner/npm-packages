@@ -5,7 +5,7 @@ import moment from 'moment';
 import classnames from 'classnames';
 import SunCalc from 'suncalc';
 
-moment.locale('en');
+moment.locale('en-ca');
 const localeData = moment.localeData();
 const months = localeData.monthsShort();
 const monthChunks = lo.chunk(months.map((m,n) => [n,m]),4);
@@ -25,11 +25,11 @@ SunCalc.addTime(15, 'am3', 'pm1');
 SunCalc.addTime(21, 'am4', 'pm0');
 
 const skyColors = [
-    '#07242C',
-    '#143E4C',
-    '#2D6577',
-    '#65B5D0',
-    '#ECF4F8',
+    '#1F252D',
+    '#263E66',
+    '#4773BB',
+    '#87A4D3',
+    '#DBE9FF',
 ];
 
 export default class DateTimeDialog extends React.Component {
@@ -53,13 +53,14 @@ export default class DateTimeDialog extends React.Component {
     constructor(props) {
         super(props);
         const now = new Date();
+        now.setMinutes(round(now.getMinutes()+now.getSeconds()/60,props.minuteInterval));
         this.state = {
             yearText: now.getFullYear().toString(),
             year: now.getFullYear(),
             month: now.getMonth(),
             day: now.getDate(),
             hour: now.getHours(),
-            minute: round(now.getMinutes(),props.minuteInterval),
+            minute: now.getMinutes(),
         }
     }
 
@@ -110,8 +111,43 @@ export default class DateTimeDialog extends React.Component {
         this.setState({day})
     };
 
+    clickHour = hour => ev => {
+        ev.preventDefault();
+        this.setState({hour})
+    };
+
+    clickMinute = minute => ev => {
+        ev.preventDefault();
+        this.setState({minute})
+    };
+
+    wheelMinute = ev => {
+        let minute = this.state.minute + this.props.minuteInterval * Math.sign(ev.deltaY);
+        while(minute < 0) {
+            minute += 60;
+        }
+        while(minute >= 60) {
+            minute -= 60;
+        }
+        this.setState({minute})
+    };
+
+    wheelHour = ev => {
+        console.log('hourrr');
+        let hour = this.state.hour + Math.sign(ev.deltaY);
+        while(hour < 0) {
+            hour += 24;
+        }
+        while(hour >= 24) {
+            hour -= 24;
+        }
+        this.setState({hour})
+    };
+
     render() {
         // console.log(JSON.stringify(this.state,null,2));
+
+        const selectedDate = new Date(this.state.year, this.state.month, this.state.day, this.state.hour, this.state.minute, 0);
 
         const firstDay = new Date(this.state.year, this.state.month, 1);
         const lastDay = new Date(this.state.year, this.state.month + 1, 0);
@@ -147,6 +183,11 @@ export default class DateTimeDialog extends React.Component {
 
         let amRange = noon.getTime() - startOfDay.getTime();
         let pmRange = endOfDay.getTime() - noon.getTime();
+
+        let startOfHour = new Date(this.state.year, this.state.month, this.state.day, this.state.hour, 0, 0);
+        let endOfHour = new Date(this.state.year, this.state.month, this.state.day, this.state.hour, 59, 59, 999);
+        let hourRange = endOfHour.getTime() - startOfHour.getTime();
+
         // console.log('pmRange',pmRange);
         // let nadirPercent = (sunTimes.nadir.getTime() - startOfDay.getTime())/amRange*100;
         // let noonPercent = (sunTimes.solarNoon.getTime() - startOfDay.getTime())/amRange*100;
@@ -159,20 +200,31 @@ export default class DateTimeDialog extends React.Component {
 
         let amGradient = [];
         let pmGradient = [];
+        let minGradient = [];
         // console.log('noon',noon);
         for(let i=0; i<5; ++i) {
             let at = sunTimes[`am${i}`].getTime();
             if(!isNaN(at)) {
                 let pc = (at - startOfDay.getTime()) / amRange;
                 amGradient.push(`${skyColors[i]} ${pc * 100}%`);
+                if(this.state.hour < 12) {
+                    let pc = (at - startOfHour.getTime()) / hourRange;
+                    minGradient.push(`${skyColors[i]} ${pc * 100}%`);
+                }
             }
 
             let pt = sunTimes[`pm${i}`].getTime();
             if(!isNaN(pt)) {
                 let pc = (pt - noon.getTime())/pmRange;
                 pmGradient.push(`${skyColors[4-i]} ${pc*100}%`);
+                if(this.state.hour >= 12) {
+                    let pc = (pt - startOfHour.getTime()) / hourRange;
+                    minGradient.push(`${skyColors[4-i]} ${pc*100}%`);
+                }
             }
         }
+
+        // console.log(minGradient);
         // console.log('endOfDay',endOfDay);
         // console.log(pmGradient);
 
@@ -188,7 +240,11 @@ export default class DateTimeDialog extends React.Component {
 
 
         return (
+            <div>
             <div className={cn.root}>
+                <div>
+                    {moment(selectedDate).format('LLLL')}
+                </div>
                 <div className={cn.column}>
                     <div className={cn.yearContainer}>
                         <a className={cn.yearBtn} onClick={this.incYear(-10)}>&laquo;</a>
@@ -222,14 +278,18 @@ export default class DateTimeDialog extends React.Component {
                 <div className={cn.column}>
                     <div className={cn.pmCol} style={{background:`linear-gradient(to bottom,${pmGradient.join(',')})`}}>
                     <div className={cn.amCol} style={{background:`linear-gradient(to bottom,${amGradient.join(',')})`}}>
-                        <table className={cn.hourTable}>
+                        <table onWheel={this.wheelHour} className={cn.hourTable}>
                             <tbody>
                                 {lo.times(12, i => {
                                     let disp = i === 0 ? '12' : String(i);
                                     return (
                                         <tr key={i}>
-                                            <td className={classnames(cn.hourCell, cn.hourBtn,{[cn.hourSelected]:this.state.hour===i})}>{disp}<sup>am</sup></td>
-                                            <td className={classnames(cn.hourCell, cn.hourBtn,{[cn.hourSelected]:this.state.hour===i+12})}>{disp}<sup>pm</sup></td>
+                                            <td className={classnames(cn.hourCell,{[cn.timeSelected]:this.state.hour===i})}>
+                                                <a onClick={this.clickHour(i)} className={cn.timeBtn} href="">{disp}<sup>am</sup></a>
+                                            </td>
+                                            <td className={classnames(cn.hourCell,{[cn.timeSelected]:this.state.hour===i+12})}>
+                                                <a onClick={this.clickHour(i+12)} className={cn.timeBtn} href="">{disp}<sup>pm</sup></a>
+                                            </td>
                                         </tr>
                                     );
                                 })}
@@ -239,20 +299,25 @@ export default class DateTimeDialog extends React.Component {
                     </div>
                 </div>
                 <div className={cn.column}>
-                    <table>
+                    <div className={cn.minGradient} style={{background:`linear-gradient(to bottom,${minGradient.join(',')})`}}>
+                    <table className={cn.minTable} onWheel={this.wheelMinute}>
                         <tbody>
                             {lo.range(0, 60, 5).map(i => {
                                 let disp = i < 10 ? `0${i}` : String(i);
                                 return (
                                     <tr key={i}>
-                                        <td className={classnames(cn.minCell, cn.minBtn,{[cn.minSelected]:this.state.minute===i})}>{disp}</td>
+                                        <td className={classnames(cn.minCell,{[cn.timeSelected]:this.state.minute===i})}>
+                                            <a onClick={this.clickMinute(i)} className={classnames(cn.timeBtn, cn.hourBtn)} href="">{disp}</a>
+                                        </td>
                                     </tr>
                                 );
                             })}
                         </tbody>
                     </table>
-
+                    </div>
                 </div>
+
+            </div>
                 <pre>
                     {JSON.stringify(this.state,null,2)}
                 </pre>

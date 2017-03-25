@@ -29,6 +29,10 @@
         td, th {
             border: 1px solid black;
         }
+
+        a {
+            text-decoration: none;
+        }
     }
 
     .monthPicker {
@@ -51,11 +55,11 @@
         }
     }
 
-    .monthSelected, .daySelected, .minSelected, .hourSelected {
+    .monthSelected, .daySelected {
         font-weight: bold;
     }
 
-    .monthBtn, .dayBtn, .minBtn, .hourBtn {
+    .monthBtn, .dayBtn {
         cursor: pointer;
 
         &:hover {
@@ -120,10 +124,28 @@
         //background: linear-gradient(to bottom, #dbe9ff 0%,#87a4d3 55%,#4773bb 70%,#263e66 85%,#1f252d 100%);
     }
 
-    .hourTable > tbody > tr > td {
+    .timeBtn {
         color: white;
         text-shadow: black 0 0 1px, black 0 0 2px, black 0 0 3px;
+        display: block;
+        border: 1px solid transparent;
+        margin: -1px;
+        padding: 1px 3px;
+
+        &:hover {
+            border-color: green;
+        }
     }
+
+    .hourBtn {
+        padding: 1px 5px;
+    }
+
+    .timeSelected > .timeBtn {
+        border: 1px solid red;
+    }
+
+
 }
 
 //@keyframes pmSkyColor {
