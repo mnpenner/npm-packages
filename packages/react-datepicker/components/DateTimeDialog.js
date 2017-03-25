@@ -1,7 +1,7 @@
 import {PropTypes} from 'react';
 import lo from 'lodash';
 import cn from './style.less';
-import moment from 'moment';
+import moment from 'moment-timezone';
 import classnames from 'classnames';
 import SunCalc from 'suncalc';
 
@@ -41,6 +41,7 @@ export default class DateTimeDialog extends React.Component {
         latitude: PropTypes.number,
         longitude: PropTypes.number,
         lastMinute: PropTypes.bool,
+        timezone: PropTypes.string,
     };
 
     static defaultProps = {
@@ -50,6 +51,7 @@ export default class DateTimeDialog extends React.Component {
         latitude: 49.700000,
         longitude: -96.809722,
         lastMinute: true,
+        timezone: 'UTC',
     };
 
     constructor(props) {
@@ -252,7 +254,7 @@ export default class DateTimeDialog extends React.Component {
             <div className={cn.root}>
                 <div className={cn.header}>
                     <div>
-                        {moment(selectedDate).format('LLLL')}
+                        {moment.tz(selectedDate, this.props.timezone).format('LLLL (z)')}
                     </div>
                 </div>
                 <div className={cn.body}>
@@ -292,6 +294,7 @@ export default class DateTimeDialog extends React.Component {
                             <table onWheel={this.wheelHour} className={cn.hourTable}>
                                 <tbody>
                                     {lo.times(12, i => {
+                                        // TODO: DST switches (23 or 25-hour days) e.g. 2017-03-12T03:00:00-07:00
                                         let disp = i === 0 ? '12' : String(i);
                                         return (
                                             <tr key={i}>
