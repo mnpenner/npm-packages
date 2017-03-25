@@ -1,4 +1,5 @@
 const {ProvidePlugin, HotModuleReplacementPlugin, NamedModulesPlugin} = require('webpack');
+const autoprefixer = require('autoprefixer');
 
 const cssLoaders = [
     'style-loader',
@@ -9,6 +10,14 @@ const cssLoaders = [
             localIdentName: '[name]_[local]--[hash:base64:5]',
         }
     },
+    {
+        loader: 'postcss-loader',
+        options: {
+            plugins: () => [
+                autoprefixer({browsers: '> 1%, last 2 Firefox versions, last 2 Chrome versions, last 2 Edge versions, last 2 Safari versions, Firefox ESR'}),
+            ]
+        }
+    }
 ];
 
 module.exports = {
