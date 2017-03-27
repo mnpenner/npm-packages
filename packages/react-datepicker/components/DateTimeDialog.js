@@ -57,6 +57,8 @@ export default class DateTimeDialog extends React.Component {
     constructor(props) {
         super(props);
         const now = new Date();
+        const c = this;
+
         now.setMinutes(round(now.getMinutes()+now.getSeconds()/60,props.minuteInterval));
         this.state = {
             yearText: now.getFullYear().toString(),
@@ -65,6 +67,18 @@ export default class DateTimeDialog extends React.Component {
             day: now.getDate(),
             hour: now.getHours(),
             minute: now.getMinutes(),
+            loading: !moment.tz.zone(props.timezone),
+        };
+
+
+        if(this.state.loading) {
+            require([`bundle-loader!../data/${props.timezone}.txt`], function(bundle) {
+                bundle(tzData => {
+                    console.log('loaded',props.timezone);
+                    moment.tz.add(tzData);
+                    c.setState({loading: false});
+                });
+            });
         }
     }
 
@@ -150,7 +164,11 @@ export default class DateTimeDialog extends React.Component {
     };
 
     render() {
+
         // console.log(JSON.stringify(this.state,null,2));
+        if(this.state.loading) {
+            return <p>Loading...</p>;
+        }
 
         const selectedDate = new Date(this.state.year, this.state.month, this.state.day, this.state.hour, this.state.minute, 0);
 

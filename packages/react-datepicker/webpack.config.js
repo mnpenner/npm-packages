@@ -84,6 +84,10 @@ module.exports = {
                 test: /\.(svg|eot|ttf|woff2?)($|\?)/i,
                 loader: 'file-loader',
             },
+            {
+                test: /\.txt$/,
+                use: 'raw-loader'
+            }
         ]
     },
     target: 'web',
