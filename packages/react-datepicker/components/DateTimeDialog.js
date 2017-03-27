@@ -1,7 +1,7 @@
 import {PropTypes} from 'react';
 import lo from 'lodash';
 import cn from './style.less';
-import moment from 'moment-timezone';
+import moment from 'moment-timezone/moment-timezone';
 import classnames from 'classnames';
 import SunCalc from 'suncalc';
 
