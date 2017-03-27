@@ -32,6 +32,8 @@ const skyColors = [
     '#DBE9FF',
 ];
 
+const requireTzData = require.context('bundle-loader!../data', true, /\.txt$/);
+
 export default class DateTimeDialog extends React.Component {
 
     static propTypes = {
@@ -70,14 +72,10 @@ export default class DateTimeDialog extends React.Component {
             loading: !moment.tz.zone(props.timezone),
         };
 
-
         if(this.state.loading) {
-            require([`bundle-loader!../data/${props.timezone}.txt`], function(bundle) {
-                bundle(tzData => {
-                    console.log('loaded',props.timezone);
-                    moment.tz.add(tzData);
-                    c.setState({loading: false});
-                });
+            requireTzData(`./${props.timezone}.txt`)(tzData => {
+                moment.tz.add(tzData);
+                this.setState({loading: false});
             });
         }
     }
