@@ -1,29 +1,29 @@
 const FS = require('fs');
 
-const fd = Symbol();
-const d = Symbol();
 
+const debounce = require('lodash/debounce');
 
-function deepProxy(obj) {
+function deepProxy(obj, path = []) {
     return new Proxy(obj, {
         set(target, property, value, receiver) {
-            console.log('set', property,'=', value);
+            console.log('set', [...path, property].join('.'), '=', value);
             if(typeof value === 'object') {
                 for(let k of Object.keys(value)) {
                     if(typeof value[k] === 'object') {
-                        value[k] = deepProxy(value[k]);
+                        value[k] = deepProxy(value[k], [...path, property, k]);
                     }
                 }
-                value = deepProxy(value);
+                value = deepProxy(value, [...path, property]);
             }
             target[property] = value;
             return true;
         },
+
         deleteProperty(target, property) {
             if(Reflect.has(target, property)) {
                 let deleted = Reflect.deleteProperty(target, property);
                 if(deleted) {
-                    console.log('delete', property);
+                    console.log('delete', [...path, property].join('.'));
                 }
                 return deleted;
             }
@@ -32,10 +32,14 @@ function deepProxy(obj) {
     });
 }
 
+const DATA = Symbol('data');
+const OPT = Symbol('options');
+const WRITE = Symbol('writeFn');
+const PATH = Symbol('filePath');
 
 class PackDB {
     constructor(path, options) {
-        options = Object.assign({},
+        this[OPT] = Object.assign({},
             options,
             {
                 serialize: JSON.stringify,
@@ -43,22 +47,43 @@ class PackDB {
             });
 
         let obj = Object.create(null);
-        try {
-            const stat = FS.statSync(path);
-            this[fd] = FS.openSync(path, 'a+');
-            if(stat.size > 0) {
-                let buf = new Buffer(stat.size);
-                let bytesRead = FS.readSync(this[fd], buf, 0, stat.size, 0);
-                obj = options.deserialize(buf);
+        
+        try{
+            let buf = FS.readFileSync(path);
+            if(buf.length > 0) {
+                obj = this[OPT].deserialize(buf);
             }
-        } catch(_) {
-            this[fd] = FS.openSync(path, 'wx');
+        } catch(err) {
+            if(err.code !== 'ENOENT') {
+                throw err;
+            }
         }
-        this[d] = deepProxy(obj);
+        
+        this[PATH] = path;
+        this[DATA] = deepProxy(obj);
+
+        this.write = debounce(this[WRITE].bind(this), 10, {
+            maxWait: 5000,
+        });
     }
 
     get data() {
-        return this[d];
+        return this[DATA];
+    }
+
+    [WRITE]() {
+        return new Promise((resolve, reject) => {
+            let buf = this[OPT].serialize(this[DATA]);
+            FS.writeFile(this[PATH], buf, err => {
+                if(err) return reject(err);
+                resolve();
+            });
+        });
+    }
+
+    writeNow() {
+        this.write.cancel();
+        return this[WRITE]();
     }
 }
 

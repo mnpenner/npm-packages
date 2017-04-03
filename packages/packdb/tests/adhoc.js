@@ -14,3 +14,4 @@ delete db.data.bar; // should not trigger notifcation -- property was already de
 baz.quux.duck = 666;  // should not trigger notification -- 'bar' was detached
 
 console.log(db.data);
+db.write();
