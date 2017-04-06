@@ -1,36 +1,7 @@
 const FS = require('fs');
 
-
+const createDeepProxy = require('./deepProxy');
 const debounce = require('lodash/debounce');
-
-function deepProxy(obj, path = []) {
-    return new Proxy(obj, {
-        set(target, property, value, receiver) {
-            console.log('set', [...path, property].join('.'), '=', value);
-            if(typeof value === 'object') {
-                for(let k of Object.keys(value)) {
-                    if(typeof value[k] === 'object') {
-                        value[k] = deepProxy(value[k], [...path, property, k]);
-                    }
-                }
-                value = deepProxy(value, [...path, property]);
-            }
-            target[property] = value;
-            return true;
-        },
-
-        deleteProperty(target, property) {
-            if(Reflect.has(target, property)) {
-                let deleted = Reflect.deleteProperty(target, property);
-                if(deleted) {
-                    console.log('delete', [...path, property].join('.'));
-                }
-                return deleted;
-            }
-            return false;
-        }
-    });
-}
 
 const DATA = Symbol('data');
 const OPT = Symbol('options');
@@ -60,7 +31,15 @@ class PackDB {
         }
         
         this[PATH] = path;
-        this[DATA] = deepProxy(obj);
+        this[DATA] = createDeepProxy(obj, {
+            set(target, path, value, receiver) {
+                console.log('set',path.join('.'),value);
+            },
+
+            deleteProperty(target, path) {
+                console.log('deleteProperty',target,path.join('.'));
+            }
+        });
 
         this.write = debounce(this[WRITE].bind(this), 10, {
             maxWait: 5000,
