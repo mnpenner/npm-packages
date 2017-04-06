@@ -1,16 +1,12 @@
 function createDeepProxy(target, handler) {
-    function recurse(obj, path) {
-        return new Proxy(obj, {
+    function makeHandler(path) {
+        return {
             set(target, key, value, receiver) {
                 if(typeof value === 'object') {
-                    for(let k of Object.keys(value)) {
-                        if(typeof value[k] === 'object') {
-                            value[k] = recurse(value[k], [...path, key, k]);
-                        }
-                    }
-                    value = recurse(value, [...path, key]);
+                    value = makeProxy(value, [...path, key]);
                 }
                 target[key] = value;
+
                 if(handler.set) {
                     handler.set(target, [...path, key], value, receiver);
                 }
@@ -29,10 +25,19 @@ function createDeepProxy(target, handler) {
                 }
                 return false;
             }
-        });
+        }
     }
-
-    return recurse(target, []);
+    
+    function makeProxy(obj, path) {
+        for(let key of Object.keys(obj)) {
+            if(typeof obj[key] === 'object') {
+                obj[key] = makeProxy(obj[key], [...path, key]);
+            }
+        }
+        return new Proxy(obj, makeHandler(path))
+    }
+    
+    return makeProxy(target, []);
 }
 
 

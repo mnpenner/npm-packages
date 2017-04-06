@@ -2,6 +2,8 @@ const FS = require('fs');
 
 const createDeepProxy = require('./deepProxy');
 const debounce = require('lodash/debounce');
+const inspect = o => require('util').inspect(o, {colors: true, showHidden: true, depth: 5});
+const Chalk = require('chalk');
 
 const DATA = Symbol('data');
 const OPT = Symbol('options');
@@ -18,8 +20,8 @@ class PackDB {
             });
 
         let obj = Object.create(null);
-        
-        try{
+
+        try {
             let buf = FS.readFileSync(path);
             if(buf.length > 0) {
                 obj = this[OPT].deserialize(buf);
@@ -29,18 +31,18 @@ class PackDB {
                 throw err;
             }
         }
-        
+
         this[PATH] = path;
         this[DATA] = createDeepProxy(obj, {
             set(target, path, value, receiver) {
-                console.log('set',path.join('.'),value);
+                console.log(Chalk.green('set'), path.join('.'), Chalk.dim('='), inspect(value));
             },
 
             deleteProperty(target, path) {
-                console.log('deleteProperty',target,path.join('.'));
+                console.log(Chalk.red('delete'), path.join('.'));
             }
         });
-
+        
         this.write = debounce(this[WRITE].bind(this), 10, {
             maxWait: 5000,
         });

@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "lodash": "^4.17.4"
+  },
+  "devDependencies": {
+    "chalk": "^1.1.3"
   }
 }

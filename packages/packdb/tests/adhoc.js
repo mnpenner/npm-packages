@@ -2,11 +2,11 @@ const PackDB = require('../PackDB');
 
 let db = new PackDB(`${__dirname}/db.json`);
 
-const baz = {baz: 9, quux: {duck: 6}};
+const baz = {baz: 9, quux: {duck: 6, goose: {farm:'animal'}}};
 db.data.foo = 5;
 db.data.bar = baz;
 db.data.bar.baz = 10;
-db.data.bar.quux.duck = 999;
+db.data.bar.quux.goose.farm = 999; 
 
 baz.quux.duck = 777;
 delete db.data.bar;
