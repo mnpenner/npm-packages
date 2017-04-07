@@ -2,8 +2,8 @@ const FS = require('fs');
 
 const createDeepProxy = require('./deepProxy');
 const debounce = require('lodash/debounce');
-const inspect = o => require('util').inspect(o, {colors: true, showHidden: true, depth: 5});
-const Chalk = require('chalk');
+// const inspect = o => require('util').inspect(o, {colors: true, showHidden: true, depth: 5});
+// const Chalk = require('chalk');
 
 const DATA = Symbol('data');
 const OPT = Symbol('options');
@@ -12,12 +12,15 @@ const PATH = Symbol('filePath');
 
 class PackDB {
     constructor(path, options) {
-        this[OPT] = Object.assign({},
-            options,
+        this[OPT] = Object.assign(
             {
                 serialize: JSON.stringify,
                 deserialize: JSON.parse,
-            });
+                minWait: 10,
+                maxWait: 5000,
+            },
+            options
+        );
 
         let obj = Object.create(null);
 
@@ -32,20 +35,24 @@ class PackDB {
             }
         }
 
+        this.write = debounce(this[WRITE].bind(this), this[OPT].minWait, {
+            maxWait: this[OPT].maxWait,
+        });
+
         this[PATH] = path;
         this[DATA] = createDeepProxy(obj, {
-            set(target, path, value, receiver) {
-                console.log(Chalk.green('set'), path.join('.'), Chalk.dim('='), inspect(value));
+            set: (target, path, value, receiver) => {
+                // console.log('set',path);
+                this.write();
             },
 
-            deleteProperty(target, path) {
-                console.log(Chalk.red('delete'), path.join('.'));
+            deleteProperty: (target, path) => {
+                // console.log('delete',path);
+                this.write();
             }
         });
         
-        this.write = debounce(this[WRITE].bind(this), 10, {
-            maxWait: 5000,
-        });
+   
     }
 
     get data() {
@@ -57,6 +64,7 @@ class PackDB {
             let buf = this[OPT].serialize(this[DATA]);
             FS.writeFile(this[PATH], buf, err => {
                 if(err) return reject(err);
+                // console.log('wrote',this[PATH]);
                 resolve();
             });
         });

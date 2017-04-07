@@ -33,7 +33,7 @@ function createDeepProxy(target, handler) {
         if(preproxy.has(obj[key])) {
             // console.log('unproxy',key);
             obj[key] = preproxy.get(obj[key]);
-            // preproxy.delete(obj[key]);
+            preproxy.delete(obj[key]);
         }
         
         for(let k of Object.keys(obj[key])) {

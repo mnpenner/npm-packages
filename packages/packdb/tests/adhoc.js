@@ -11,10 +11,10 @@ const baz = {
         }
     }
 };
-db.data.foo = 5;
+db.data.foo = 444;
 db.data.bar = baz;
 db.data.bar.baz = 10;
-db.data.bar.quux.goose.farm = 999;
+db.data.bar.quux.goose.farm = 876;
 
 baz.quux.duck = 777;
 delete db.data.bar;
@@ -24,4 +24,4 @@ console.log(db.data);
 baz.quux.duck = 666;  // should not trigger notification -- 'bar' was detached
 console.log(db.data);
 console.log(baz);
-db.write();
+// db.write();
