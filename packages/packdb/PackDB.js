@@ -1,7 +1,7 @@
 const FS = require('fs');
 
 const createDeepProxy = require('./deepProxy');
-const debounce = require('lodash/debounce');
+const debounce = require('lodash.debounce');
 // const inspect = o => require('util').inspect(o, {colors: true, showHidden: true, depth: 5});
 // const Chalk = require('chalk');
 
