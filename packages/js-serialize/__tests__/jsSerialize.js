@@ -21,6 +21,10 @@ it('serializes sets', () => {
     expect(jsSerialize(new Set([]))).toBe('new Set');
 });
 
+it('serializes maps', () => {
+    expect(jsSerialize(new Map([["a",1],["b",2]]))).toBe('new Map([["a",1],["b",2]])');
+    expect(jsSerialize(new Map([]))).toBe('new Map');
+});
 
 it('serializes arrays', () => {
     expect(jsSerialize([])).toBe('[]');

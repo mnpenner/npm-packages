@@ -30,11 +30,14 @@ function jsSerialize(obj) {
         return '[' +  sb.join(',') + ']';
     } else if(obj instanceof Set) {
         if(obj.size) {
-            return 'new Set([' + Array.from(obj).map(jsSerialize).join(',') + '])';
+            return 'new Set(' + jsSerialize(Array.from(obj)) + ')';
         }
         return 'new Set';
     } else if(obj instanceof Map) {
-        throw new Error('Map serialization is not yet implemented');
+        if(obj.size) {
+            return 'new Map(' + jsSerialize(Array.from(obj)) + ')';
+        }
+        return 'new Map';
     } else if(util.isSymbol(obj)) {
         return serializeSymbol(obj);
     } else if(util.isNativeFunction(obj)) {
