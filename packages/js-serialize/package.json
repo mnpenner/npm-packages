@@ -1,6 +1,6 @@
 {
   "name": "js-serialize",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -13,5 +13,9 @@
   },
   "devDependencies": {
     "jest": "^18.0.0"
+  },
+  "repository": {
+    "type": "hg",
+    "url": "https://bitbucket.org/mnpenner/js-serialize"
   }
 }
