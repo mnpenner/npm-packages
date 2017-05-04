@@ -65,4 +65,7 @@ npm i js-serialize -S
 
 > jsSerialize(x => x*2)
 'x => x*2'
+
+> jsSerialize(() => '</script>')
+'() => \'<\\/script>\''
 ```

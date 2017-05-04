@@ -5,6 +5,10 @@ let nativeFuncs = new Map();
 const isRaw = Symbol('isRaw');
 
 function jsSerialize(obj) {
+    return _jsSerialize(obj).split('</script>').join('<\\/script>');
+}
+
+function _jsSerialize(obj) {
     // TODO: Object.isFrozen check
     // TODO: compression option -- create functions for all the different types
     if(util.isArray(obj)) {
@@ -38,6 +42,8 @@ function jsSerialize(obj) {
             return 'new Map(' + jsSerialize(Array.from(obj)) + ')';
         }
         return 'new Map';
+    } else if(obj instanceof Date) {
+        return 'new Date(' + jsSerialize(obj.getTime()) + ')';
     } else if(util.isSymbol(obj)) {
         return serializeSymbol(obj);
     } else if(util.isNativeFunction(obj)) {
@@ -119,7 +125,7 @@ function serializePropertyName(name) {
         return '['+serializeSymbol(name)+']';
     }
     if(util.isString(name)) {
-        if(/*!keywords.has(name) &&*/ propName.test(name)) {
+        if(!keywords.has(name) && propName.test(name)) {
             return name;
         }
         return jsSerialize(name);

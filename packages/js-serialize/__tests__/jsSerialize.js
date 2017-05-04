@@ -26,6 +26,15 @@ it('serializes maps', () => {
     expect(jsSerialize(new Map([]))).toBe('new Map');
 });
 
+it('serializes dates', () => {
+    expect(jsSerialize(new Date('2017-05-04T16:55:50.457Z'))).toBe('new Date(1493916950457)');
+});
+
+it('serializes scripts', () => {
+    expect(jsSerialize('<script>alert("injection")</script>')).toBe('"<script>alert(\\"injection\\")<\\/script>"');
+    expect(jsSerialize(() => document.write('</script>'))).toBe('() => document.write(\'<\\/script>\')');
+});
+
 it('serializes arrays', () => {
     expect(jsSerialize([])).toBe('[]');
     expect(jsSerialize([3,1,2])).toBe('[3,1,2]');
