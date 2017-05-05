@@ -101,11 +101,11 @@ function js(obj) {
     } else if(obj === null) {
         return 'null';
     } else if(util.isObject(obj)) {
-        // if(util.isFunction(obj.toScript)) {
-        //     return obj.toScript();
-        // }
         if(obj[isRaw]) {
             return obj.value;
+        }
+        if(util.isFunction(obj.toSource)) { // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toSource
+            return obj.toSource();
         }
         if(util.isFunction(obj.toJSON)) {
             return js(obj.toJSON());

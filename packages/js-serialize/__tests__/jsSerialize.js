@@ -103,3 +103,33 @@ it('serializes booleans', () => {
     expect(jsSerialize(true)).toBe('!0');
     expect(jsSerialize(false)).toBe('!1');
 });
+
+it('serializes toSource', () => {
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toSource#Overriding_the_toSource()_method
+
+    function Person(name) {
+        this.name = name;
+    }
+
+    Person.prototype.toSource = function Person_toSource() {
+        return `new Person(${JSON.stringify(this.name)})`;
+    };
+    
+    let joe = new Person('Joe');
+    
+    expect(jsSerialize(joe)).toBe(`new Person("Joe")`);
+});
+
+it('serializes toJSON', () => {
+    // https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#toJSON()_behavior
+
+    var obj = {
+        foo: 'foo',
+        toJSON: function() {
+            return 'bar';
+        }
+    };
+
+    expect(jsSerialize(obj)).toBe('"bar"');
+    expect(jsSerialize({ x: obj })).toBe('{x:"bar"}');
+});
