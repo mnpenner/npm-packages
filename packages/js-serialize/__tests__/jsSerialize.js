@@ -7,7 +7,20 @@ it('serializes strings', () => {
 
 it('serializes numbers', () => {
     expect(jsSerialize(1)).toBe('1');
+    expect(jsSerialize(3.14)).toBe('3.14');
+    expect(jsSerialize(Math.PI)).toBe('Math.PI');
+    expect(jsSerialize(0)).toBe('0');
+    expect(jsSerialize(-0)).toBe('-0');
     expect(jsSerialize(new Number(2))).toBe('2');
+});
+
+it('serializes Infinity', () => {
+    expect(jsSerialize(Infinity)).toBe('1/0');
+    expect(jsSerialize(-Infinity)).toBe('1/-0');
+});
+
+it('serializes NaN', () => {
+    expect(jsSerialize(NaN)).toBe('NaN');
 });
 
 it('serializes regexes', () => {
@@ -32,7 +45,7 @@ it('serializes dates', () => {
 
 it('serializes scripts', () => {
     expect(jsSerialize('<script>alert("injection")</script>')).toBe('"<script>alert(\\"injection\\")<\\/script>"');
-    expect(jsSerialize(() => document.write('</script>'))).toBe('() => document.write(\'<\\/script>\')');
+    expect(jsSerialize(() => document.write('</script >'))).toBe('() => document.write(\'<\\/script >\')');
 });
 
 it('serializes arrays', () => {
@@ -44,7 +57,6 @@ it('serializes arrays', () => {
     a[1] = 4;
     expect(jsSerialize(a)).toBe('[,4,,,]');
 });
-
 
 it('serializes symbols', () => {
     expect(jsSerialize(Symbol.for('foo'))).toBe('Symbol.for("foo")');
@@ -73,7 +85,6 @@ it('serializes functions', () => {
     expect(jsSerialize(function mult(x,y) { return x * y; })).toBe("function mult(x, y) {return x * y;}");
 });
 
-
 it('serializes objects', () => {
     expect(jsSerialize({a:1})).toBe('{a:1}');
     expect(jsSerialize({})).toBe('{}');
@@ -89,6 +100,6 @@ it('serializes raw', () => {
 });
 
 it('serializes booleans', () => {
-    expect(jsSerialize(true)).toBe('true');
-    expect(jsSerialize(false)).toBe('false');
+    expect(jsSerialize(true)).toBe('!0');
+    expect(jsSerialize(false)).toBe('!1');
 });

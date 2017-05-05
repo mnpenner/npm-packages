@@ -5,10 +5,10 @@ let nativeFuncs = new Map();
 const isRaw = Symbol('isRaw');
 
 function jsSerialize(obj) {
-    return _jsSerialize(obj).split('</script>').join('<\\/script>');
+    return js(obj).split('</script').join('<\\/script');
 }
 
-function _jsSerialize(obj) {
+function js(obj) {
     // TODO: Object.isFrozen check
     // TODO: compression option -- create functions for all the different types
     if(util.isArray(obj)) {
@@ -20,7 +20,7 @@ function _jsSerialize(obj) {
         for(let i=0; i<obj.length; ++i) {
             if(obj.hasOwnProperty(i)) {
                 hasProp = true;
-                sb.push(jsSerialize(obj[i]));
+                sb.push(js(obj[i]));
             } else {
                 sb.push('');
             }
@@ -34,16 +34,16 @@ function _jsSerialize(obj) {
         return '[' +  sb.join(',') + ']';
     } else if(obj instanceof Set) {
         if(obj.size) {
-            return 'new Set(' + jsSerialize(Array.from(obj)) + ')';
+            return 'new Set(' + js(Array.from(obj)) + ')';
         }
         return 'new Set';
     } else if(obj instanceof Map) {
         if(obj.size) {
-            return 'new Map(' + jsSerialize(Array.from(obj)) + ')';
+            return 'new Map(' + js(Array.from(obj)) + ')';
         }
         return 'new Map';
     } else if(obj instanceof Date) {
-        return 'new Date(' + jsSerialize(obj.getTime()) + ')';
+        return 'new Date(' + js(obj.getTime()) + ')';
     } else if(util.isSymbol(obj)) {
         return serializeSymbol(obj);
     } else if(util.isNativeFunction(obj)) {
@@ -67,7 +67,34 @@ function _jsSerialize(obj) {
     } else if(util.isRegExp(obj)) {
         // return `/${obj.source}/${obj.flags}`;
         return obj.toString();
-    } else if(util.isString(obj) || util.isNumber(obj) || util.isBoolean(obj)) {
+    } else if(util.isNumber(obj)) {
+        switch(obj) {
+            case Math.E:
+                return 'Math.E';
+            case Math.LN2:
+                return 'Math.LN2';
+            case Math.LN10:
+                return 'Math.LN10';
+            case Math.LOG2E:
+                return 'Math.LOG2E';
+            case Math.PI:
+                return 'Math.PI';
+            case Math.SQRT1_2:
+                return 'Math.SQRT1_2';
+            case Math.SQRT2:
+                return 'Math.SQRT2';
+            case Infinity:
+                return '1/0';
+            case -Infinity:
+                return '1/-0';
+        }
+        if(Object.is(obj, -0)) return '-0';
+        return String(obj);
+    } else if(obj === true) {
+        return '!0';
+    } else if(obj === false) {
+        return '!1';
+    } else if(util.isString(obj)) {
         return JSON.stringify(obj);
     } else if(obj === undefined) {
         return 'undefined';
@@ -81,11 +108,12 @@ function _jsSerialize(obj) {
             return obj.value;
         }
         if(util.isFunction(obj.toJSON)) {
-            return jsSerialize(obj.toJSON());
+            return js(obj.toJSON());
         }
+        // TODO: circular reference support
         let tmp = [];
         for(let key of Reflect.ownKeys(obj)) {
-            tmp.push(serializePropertyName(key)+':'+jsSerialize(obj[key]));
+            tmp.push(serializePropertyName(key)+':'+js(obj[key]));
         }
         return '{' + tmp.join(',') + '}';
     } else {
@@ -108,11 +136,11 @@ function serializeSymbol(sym) {
     if(key === undefined) {
         let m = sym.toString().match(/^Symbol\((.+)\)$/);
         if(m) {
-            return `Symbol(${jsSerialize(m[1])})`;
+            return `Symbol(${js(m[1])})`;
         }
         return `Symbol()`; // not sure if this is worthwhile or not
     } else {
-        return `Symbol.for(${jsSerialize(key)})`;
+        return `Symbol.for(${js(key)})`;
     }
 }
 
@@ -128,7 +156,7 @@ function serializePropertyName(name) {
         if(!keywords.has(name) && propName.test(name)) {
             return name;
         }
-        return jsSerialize(name);
+        return js(name);
     }
 
     throw new Error(`Cannot make property name`);
