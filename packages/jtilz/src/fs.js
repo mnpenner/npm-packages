@@ -7,6 +7,7 @@ import promisify from './promisify';
 export const readFile = promisify(FileSystem.readFile);
 export const writeFile = promisify(FileSystem.writeFile);
 export const readText = file => readFile(file, {encoding: 'utf8'});
+export const readJson = file => readText(file).then(x => JSON.parse(x));
 export const readDir = promisify(FileSystem.readdir);
 export const fileStat = promisify(FileSystem.stat);
 
