@@ -1,6 +1,6 @@
 {
   "name": "jtilz",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "",
   "scripts": {
     "test": "babel-node --presets latest tests/fs.js",
@@ -18,5 +18,9 @@
     "cross-env": "^4.0.0"
   },
   "browser": "dist/browser",
-  "main": "dist/node"
+  "main": "dist/node",
+  "repository": {
+    "type": "hg",
+    "url": "https://bitbucket.org/mnpenner/jtilz"
+  }
 }
