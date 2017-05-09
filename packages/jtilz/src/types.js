@@ -15,11 +15,27 @@ export function isNumber(obj) {
 }
 
 export function isBoolean(obj) {
-    return obj === true || obj === false;
+    return obj === true || obj === false; // there's also a `Boolean` type but it doesn't behave much like a boolean
 }
 
 export function isRegExp(obj) {
     return obj instanceof RegExp;
+}
+
+export function isDate(obj) {
+    return obj instanceof Date;
+}
+
+export function isSet(obj) {
+    return obj instanceof Set;
+}
+
+export function isMap(obj) {
+    return obj instanceof Map;
+}
+
+export function isWeakMap(obj) {
+    return obj instanceof WeakMap;
 }
 
 export function isArray(obj) {
@@ -30,16 +46,19 @@ export function isNull(obj) {
     return obj === null;
 }
 
+export function isUndefined(obj) {
+    return obj === undefined;
+}
+
 export function isObject(obj) {
     return obj !== null && typeof obj === 'object';
 }
 
 export function isPlainObject(obj) {
-    return isObject(obj)
-        && !isString(obj)
-        && !isNumber(obj)
-        && !isRegExp(obj)
-        && !isArray(obj);
+    return isObject(obj) && (
+        obj.constructor === Object  // obj = {}
+        || obj.constructor === undefined // obj = Object.create(null)
+    );
 }
 
 export function isSymbol(obj) {
