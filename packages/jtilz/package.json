@@ -6,7 +6,7 @@
     "test": "babel-node --presets latest tests/fs.js",
     "build": "concurrently \"yarn build:node\" \"yarn build:browser\"",
     "build:node": "cross-env rm -rf dist/node/* && BABEL_ENV=node babel src --out-dir dist/node --source-maps",
-    "build:browser": "cross-env rm -rf dist/browser/* && BABEL_ENV=node babel src --out-dir dist/browser --source-maps --minified --compact --no-comments",
+    "build:browser": "cross-env rm -rf dist/browser/* && BABEL_ENV=browser babel src --out-dir dist/browser --source-maps --minified --compact --no-comments",
     "prepublish": "yarn build"
   },
   "author": "Mark Penner <jtilz@mpen.ca>",
