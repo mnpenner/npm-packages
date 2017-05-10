@@ -1,4 +1,4 @@
-const {isFunction} = require('./types');
+const {isFunction} = require('./isType');
 
 /**
  * Returns a function that will wrap the given `nodeFunction`. Instead of taking a callback, the returned function will return a promise whose fate is decided by the callback behavior of the given node function. The node function should conform to node.js convention of accepting a callback as last argument and calling that callback with error as the first argument and success value on the second argument.

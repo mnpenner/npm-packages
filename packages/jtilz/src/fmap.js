@@ -1,3 +1,5 @@
+const {reduce} = Array.prototype;
+
 export const __skip__ = Symbol('skip');
 
 /**
@@ -6,8 +8,8 @@ export const __skip__ = Symbol('skip');
  * @param callback
  */
 export default function fmap(callback) {
-    return Array.prototype.reduce.call(this, (accum, ...args) => {
-        let x = callback.call(this, ...args);
+    return this::reduce((accum, ...args) => {
+        let x = this::callback(...args);
         if(x !== __skip__) {
             accum.push(x);
         }

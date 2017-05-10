@@ -1,7 +1,7 @@
-import FileSystem from 'fs';
+import FileSystem from 'src/node/fs';
 import Path from 'path';
 
-import promisify from './promisify';
+import promisify from '../promisify';
 
 // export * as default from './fs';
 export const readFile = promisify(FileSystem.readFile);

@@ -1,9 +1,7 @@
 {
-    //"plugins": [
-    //    "transform-class-properties",
-    //    "syntax-object-rest-spread",
-    //    "transform-object-rest-spread"
-    //],
+    "plugins": [
+        "transform-function-bind"
+    ],
     "env": {
         "node": {
             "presets": [

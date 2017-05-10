@@ -1,11 +1,11 @@
 {
   "name": "jtilz",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "",
   "scripts": {
-    "test": "babel-node --presets latest tests/fs.js",
+    "test": "BABEL_ENV=node babel-node tests/url.js",
     "build": "concurrently \"yarn build:node\" \"yarn build:browser\"",
-    "build:node": "cross-env rm -rf dist/node/* && BABEL_ENV=node babel src --out-dir dist/node --source-maps",
+    "build:node": "cross-env rm -rf dist/node/* && BABEL_ENV=node babel src --out-dir dist/node",
     "build:browser": "cross-env rm -rf dist/browser/* && BABEL_ENV=browser babel src --out-dir dist/browser --source-maps --minified --compact --no-comments",
     "prepublish": "yarn build"
   },
@@ -13,6 +13,7 @@
   "license": "MIT",
   "devDependencies": {
     "babel-cli": "^6.24.1",
+    "babel-plugin-transform-function-bind": "^6.22.0",
     "babel-preset-env": "^1.4.0",
     "concurrently": "^3.4.0",
     "cross-env": "^4.0.0"
