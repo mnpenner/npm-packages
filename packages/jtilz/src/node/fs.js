@@ -1,4 +1,4 @@
-import FileSystem from 'src/node/fs';
+import FileSystem from 'fs';
 import Path from 'path';
 
 import promisify from '../promisify';

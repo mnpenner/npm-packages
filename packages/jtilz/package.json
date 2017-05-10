@@ -1,6 +1,6 @@
 {
   "name": "jtilz",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "",
   "scripts": {
     "test": "BABEL_ENV=node babel-node tests/url.js",
