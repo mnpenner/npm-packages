@@ -1,5 +1,4 @@
 import fmap, {__skip__} from './fmap';
-import {percentEncode, replaceAll} from './string';
 
 export function encodeParam(x) {
     if(x === true) {
@@ -11,9 +10,7 @@ export function encodeParam(x) {
     if(x === undefined || x === null) {
         return '';
     }
-    
-    return encodeURIComponent(x)
-        .replace(/(%2F|%5C|^)\.{1,2}(?=%2F|%5C|$)/g, m => m::replaceAll('.','%2E'));
+    return encodeURIComponent(x);
 }
 
 export function queryParams(params) {
