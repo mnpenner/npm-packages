@@ -1,21 +1,22 @@
 import {isFunction,isString} from './isType';
+import bindable from './bindable';
 
-export function flatten(arr) {
-    return Array.prototype.concat(...arr);
-}
+export const flatten = bindable(function flatten(arrayOfArrays) {
+    return Array.prototype.concat(...arrayOfArrays);
+});
 
-export function toArray(s) {
-    if(s === null || s === undefined) {
+export const toArray = bindable(function toArray(obj) {
+    if(obj === null || obj === undefined) {
         return [];
     }
-    if(Array.isArray(s)) {
-        return s;
+    if(Array.isArray(obj)) {
+        return obj;
     }
-    if(isString(s)) {
-        return [s];
+    if(isString(obj)) {
+        return [obj];
     }
-    if(isFunction(s[Symbol.iterator])) {
-        return [...s];
+    if(isFunction(obj[Symbol.iterator])) {
+        return [...obj];
     }
-    return [s];
-}
+    return [obj];
+});
