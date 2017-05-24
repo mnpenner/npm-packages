@@ -1,22 +1,23 @@
 import {isFunction,isString} from './isType';
 import bindable from './bindable';
 
-export const flatten = bindable(function flatten(arrayOfArrays) {
-    return Array.prototype.concat(...arrayOfArrays);
-});
+export const flatten = bindable(arrayOfArrays => Array.prototype.concat.call(...arrayOfArrays));
 
-export const toArray = bindable(function toArray(obj) {
-    if(obj === null || obj === undefined) {
-        return [];
-    }
-    if(Array.isArray(obj)) {
-        return obj;
-    }
-    if(isString(obj)) {
-        return [obj];
-    }
-    if(isFunction(obj[Symbol.iterator])) {
-        return [...obj];
-    }
-    return [obj];
+export const map = bindable((array,callback) => Array.prototype.map.call(array, callback));
+
+/**
+ * Map + flatten
+ */
+export const selectMany = bindable((array,callback) => array::map(callback)::flatten());
+
+export const groupBy = bindable(function groupBy(array, grouper) {
+    return array.reduce((acc,val,idx) => {
+        let key = grouper(val,idx);
+        if(acc[key]) {
+            acc[key].push(val);
+        } else {
+            acc[key] = [val];
+        }
+        return acc;
+    }, Object.create(null));
 });
