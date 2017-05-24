@@ -1,9 +1,6 @@
-import {dec2hex} from './number';
+import {toHex} from './number';
+import bindable from './bindable';
 
-export function replaceAll(search, replacement) {
-    return this.split(search).join(replacement);
-}
+export const replaceAll = bindable((string, search, replacement) => string.split(search).join(replacement));
 
-export function percentEncode(char) {
-    return '%' + dec2hex(char.codePointAt(0));
-}
+export const percentEncode = bindable(char => '%' + toHex(char.codePointAt(0)));

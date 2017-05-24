@@ -1,13 +1,16 @@
+import bindable from './bindable';
+
 /**
- * Converts a decimal number to hexidecimal (uppercase).
+ * Converts a decimal number to hexidecimal.
  * 
  * @param {Number} num
  * @return {string}
  */
-export function dec2hex(num) {
-    if(num < 0) {
-        num = 0xFFFFFFFF + num + 1;
-    }
+export const toHex = bindable(num => {
+        if(num < 0) {
+            num = 0xFFFFFFFF + num + 1;
+        }
 
-    return num.toString(16).toUpperCase();
-}
+        return num.toString(16);
+    }
+);
