@@ -1,5 +1,5 @@
 syntax: regexp
 
 ^node_modules/
-^\.idea/
-^dist/
+^\.idea/$
+^dist/$
