@@ -3,10 +3,6 @@
   "version": "0.1.4",
   "description": "",
   "scripts": {
-    "test": "BABEL_ENV=node babel-node tests/url.js",
-    "_build": "concurrently \"yarn build:node\" \"yarn build:browser\"",
-    "_build:node": "cross-env rm -rf dist/node/* && BABEL_ENV=node babel src --out-dir dist/node",
-    "_build:browser": "cross-env rm -rf dist/browser/* && BABEL_ENV=browser babel src --out-dir dist/browser --source-maps --minified --compact --no-comments",
     "prepublishOnly": "make"
   },
   "author": "Mark Penner <jtilz@mpen.ca>",
@@ -16,7 +12,8 @@
     "babel-plugin-transform-function-bind": "^6.22.0",
     "babel-preset-env": "^1.4.0",
     "concurrently": "^3.4.0",
-    "cross-env": "^4.0.0"
+    "cross-env": "^4.0.0",
+    "recursive-readdir": "^2.2.1"
   },
   "browser": "dist/browser",
   "main": "dist/node",

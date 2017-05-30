@@ -6,7 +6,7 @@ const {isFunction} = require('./isType');
  * @param {Function} nodeFunction
  * @returns {Function}
  */
-export default function promisify(nodeFunction) {
+export function promisify(nodeFunction) {
     return function(...args) {
         return new Promise((resolve, reject) => {
             nodeFunction(...args, function(err, data) {

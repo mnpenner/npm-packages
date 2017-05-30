@@ -1,10 +1,11 @@
-BIN := node_modules/.bin
-NODE_SRC_FILES := $(shell find src -name '*.js' ! -name '*.browser.js')
-BROWSER_SRC_FILES := $(shell find src -name '*.js' ! -name '*.node.js')
-NODE_DIST_FILES := $(patsubst %.node.js,%.js,$(patsubst src/%,dist/node/%,$(NODE_SRC_FILES)))
-BROWSER_DIST_FILES := $(patsubst %.browser.js,%.js,$(patsubst src/%,dist/browser/%,$(BROWSER_SRC_FILES)))
-NODE_DIST_DIRS := $(sort $(dir $(NODE_DIST_FILES)))
-BROWSER_DIST_DIRS := $(sort $(dir $(BROWSER_DIST_FILES)))
+BIN = node_modules/.bin
+SRC_DIRS = $(find src -type d)
+NODE_SRC_FILES = src/index.node.js $(shell find src -name '*.js' ! -name '*.browser.js')
+BROWSER_SRC_FILES = src/index.browser.js $(shell find src -name '*.js' ! -name '*.node.js')
+NODE_DIST_FILES = $(patsubst %.node.js,%.js,$(patsubst src/%,dist/node/%,$(NODE_SRC_FILES)))
+BROWSER_DIST_FILES = $(patsubst %.browser.js,%.js,$(patsubst src/%,dist/browser/%,$(BROWSER_SRC_FILES)))
+NODE_DIST_DIRS = $(sort $(dir $(NODE_DIST_FILES)))
+BROWSER_DIST_DIRS = $(sort $(dir $(BROWSER_DIST_FILES)))
 NODE_COMPILE = BABEL_ENV=node $(BIN)/babel $< -o $@
 BROWSER_COMPILE = BABEL_ENV=browser $(BIN)/babel $< -o $@ --source-maps --minified --compact --no-comments
 
@@ -38,10 +39,16 @@ publish:
 	npm publish
 
 clean: 
-	rm -rf node_modules dist
+	rm -rf node_modules dist src/index.*
 
 nuke: clean
 	rm -rf yarn.lock
+
+src/index.node.js: $(SRC_DIRS) yarn.lock
+	node make-index node
+
+src/index.browser.js: $(SRC_DIRS) yarn.lock
+	node make-index browser
 
 dist/node/%.js: src/%.node.js yarn.lock .babelrc | $(NODE_DIST_DIRS)
 	$(NODE_COMPILE)
