@@ -64,3 +64,10 @@ export function isPlainObject(obj) {
 export function isSymbol(obj) {
     return Object.prototype.toString.call(obj) === '[object Symbol]';
 }
+
+export function isBuffer(obj) {
+    if(BUNDILIO_TARGET === 'node') {
+        return Buffer.isBuffer(obj);
+    }
+    return false;
+}

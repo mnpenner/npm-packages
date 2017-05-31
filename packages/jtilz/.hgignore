@@ -2,5 +2,5 @@ syntax: regexp
 
 ^node_modules/
 ^\.idea/
+^\.deps/
 ^dist/
-^src/index\.

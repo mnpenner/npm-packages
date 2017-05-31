@@ -1,4 +1,4 @@
-import FileSystem from 'src/fs.node';
+import FileSystem from 'fs';
 import Path from 'path';
 import {filterAsync, flatten} from './array';
 import {promisify} from './promise';
@@ -15,20 +15,18 @@ export const fileAccess = promisify(FileSystem.access);
 export const fileExists = file => fileAccess(file, FileSystem.F_OK);
 
 /**
- * 
+ *
  * @param {string} dir
  * @param {Boolean} recursive
  * @returns {Promise.<string[]>}
  */
 export async function getFiles(dir, recursive = true) {
     let paths = await readDir(dir);
-    
+
     if(recursive) {
-        return paths.map(path => fileStat(path)
-                .then(stat => stat.isDirectory() ? getFiles(path, recursive) : path)
-            )
-            .then(Promise.all)
-            .then(flatten);
+        return Promise.all(paths.map(path => fileStat(path)
+            .then(stat => stat.isDirectory() ? getFiles(path, recursive) : [path])
+        )).then(flatten);
     }
 
     return paths::filterAsync(p => fileStat(p).then(s => s.isFile()));

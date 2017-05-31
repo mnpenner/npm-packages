@@ -1,5 +1,5 @@
-import * as url from '../src/url';
+const Jtilz = require('../dist/node');
 
 let input = 'foo💩bar/../baz';
-let output = url.encodeParam(input);
+let output = Jtilz.encodeParam(input);
 console.log(output,input === decodeURIComponent(output));

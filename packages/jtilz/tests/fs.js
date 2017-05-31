@@ -1,3 +1,4 @@
-import * as fs from '../src/fs.node';
+const {getFiles} = require('../dist/node');
 
-fs.getFiles(`${__dirname}/dir`).then(console.log);
+getFiles(`${__dirname}/dir`).then(console.log);
+getFiles(`${__dirname}/dir`,false).then(console.log);
