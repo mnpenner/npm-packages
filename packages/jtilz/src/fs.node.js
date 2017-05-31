@@ -1,22 +1,36 @@
 import FileSystem from 'src/fs.node';
 import Path from 'path';
-
-import promisify from './promisify';
+import {filterAsync, flatten} from './array';
+import {promisify} from './promise';
 
 // export * as default from './fs';
 export const readFile = promisify(FileSystem.readFile);
 export const writeFile = promisify(FileSystem.writeFile);
 export const readText = file => readFile(file, {encoding: 'utf8'});
 export const readJson = file => readText(file).then(x => JSON.parse(x));
-export const readDir = promisify(FileSystem.readdir);
+const readDirAsync = promisify(FileSystem.readdir);
+export const readDir = path => readDirAsync(path).then(entries => entries.map(e => Path.join(path, e)));
 export const fileStat = promisify(FileSystem.stat);
+export const fileAccess = promisify(FileSystem.access);
+export const fileExists = file => fileAccess(file, FileSystem.F_OK);
 
+/**
+ * 
+ * @param {string} dir
+ * @param {Boolean} recursive
+ * @returns {Promise.<string[]>}
+ */
+export async function getFiles(dir, recursive = true) {
+    let paths = await readDir(dir);
+    
+    if(recursive) {
+        return paths.map(path => fileStat(path)
+                .then(stat => stat.isDirectory() ? getFiles(path, recursive) : path)
+            )
+            .then(Promise.all)
+            .then(flatten);
+    }
 
-export function getFiles(dir) {
-    return readDir(dir).then(files => files.map(file => {
-        let path = Path.join(dir, file);
-        return fileStat(path).then(stat => stat.isDirectory() ? getFiles(path) : path);
-    }))
-        .then(result => Promise.all(result))
-        .then(files => Array.prototype.concat(...files));
+    return paths::filterAsync(p => fileStat(p).then(s => s.isFile()));
 }
+

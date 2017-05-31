@@ -1,4 +1,12 @@
-{
+{                           require.resolve('XXXXXXXXX'),
+                            require.resolve('XXXXXXXXX'),
+                            require.resolve('XXXXXXXXX'),
+                            require.resolve('XXXXXXXXX'),
+                            require.resolve('XXXXXXXXX'),
+                            require.resolve('XXXXXXXXX'),
+                            require.resolve('XXXXXXXXX'),
+                            require.resolve('XXXXXXXXX'),
+                            require.resolve('XXXXXXXXX'),
   "name": "jtilz",
   "version": "0.1.4",
   "description": "",
@@ -15,7 +23,7 @@
     "cross-env": "^4.0.0",
     "recursive-readdir": "^2.2.1"
   },
-  "browser": "dist/browser",
+  "browser": "dist/web",
   "main": "dist/node",
   "repository": {
     "type": "hg",
