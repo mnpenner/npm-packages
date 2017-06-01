@@ -1,10 +1,11 @@
-const util = require('util');
+import Util from 'util';
 
-export function format(...args) {
+// TODO: should we export this...? as what?
+function format(...args) {
     if(args.length === 1 && Object.prototype.toString.call(args[0]) === '[object String]') {
         return args[0];
     }
-    return args.map(o => util.inspect(o, {colors: true, depth: 10, showHidden: false})).join(' ');
+    return args.map(o => Util.inspect(o, {colors: true, depth: 10, showHidden: false})).join(' ');
 }
 
 export function log(...args) {

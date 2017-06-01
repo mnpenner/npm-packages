@@ -2,7 +2,7 @@ BIN := node_modules/.bin
 SRC_FILES := $(shell find src -name '*.js')
 
 # these are not files
-.PHONY: clean test publish
+.PHONY: clean test patch
 
 # disable default suffixes
 .SUFFIXES:
@@ -11,12 +11,12 @@ SRC_FILES := $(shell find src -name '*.js')
 	$(BIN)/bundilio .
 	@touch $@
 
-yarn.lock:: node_modules
-	@yarn install --production=false --check-files
-	@touch -mr $@ $<
-
 yarn.lock:: package.json
 	@yarn install --production=false
+	@touch -mr $@ $<
+
+yarn.lock:: node_modules
+	@yarn install --production=false --check-files
 	@touch -mr $@ $<
 	
 node_modules .deps:

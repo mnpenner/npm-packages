@@ -67,3 +67,7 @@ export function mergeDeep(target, ...sources) {
 
     return mergeDeep(target, ...sources);
 }
+
+export function getMethods(obj) {
+    return Reflect.ownKeys(obj).filter(k => typeof obj[k] === 'function').map(k => obj[k]);
+}
