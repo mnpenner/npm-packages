@@ -1,11 +1,11 @@
 {
   "name": "jtilz",
-  "version": "0.2.11",
+  "version": "0.2.17",
   "description": "",
   "author": "Mark Penner <jtilz@mpen.ca>",
   "license": "MIT",
   "devDependencies": {
-    "bundilio": "^0.2.5"
+    "bundilio": "^0.2.9"
   },
   "browser": "dist/web",
   "main": "dist/node",
