@@ -24,12 +24,12 @@ export const pairsToObject = bindable(array => {
     return result;
 });
 
-/**
- * 
- * @param {Array} array
- * @param {Function} callback
- * @returns {Object}
- */
+// /**
+//  * 
+//  * @param {Array} array
+//  * @param {Function} callback
+//  * @returns {Object}
+//  */
 // export function mapToObject(array, callback) {
 //     let result = Object.create(null);
 //     for(let i = 0; i<array.length; ++i) {
@@ -69,5 +69,5 @@ export function mergeDeep(target, ...sources) {
 }
 
 export function getMethods(obj) {
-    return Reflect.ownKeys(obj).filter(k => typeof obj[k] === 'function').map(k => obj[k]);
+    return Reflect.ownKeys(obj).filter(k => isFunction(obj[k]));
 }

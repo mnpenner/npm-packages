@@ -8,6 +8,7 @@ SRC_FILES := $(shell find src -name '*.js')
 .SUFFIXES:
 
 .deps/dist: $(SRC_FILES) yarn.lock .deps
+	rm -rf dist/*
 	$(BIN)/bundilio .
 	@touch $@
 
@@ -24,7 +25,8 @@ node_modules .deps:
 
 patch: .deps/dist
 	npm version patch
-	npm publish
+	cp package.json dist/package.json
+	npm publish dist
 
 clean:
 	rm -rf node_modules dist .deps

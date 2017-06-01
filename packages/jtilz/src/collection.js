@@ -22,5 +22,5 @@ export const toSet = bindable(function toSet(obj) {
     if(obj instanceof Set) {
         return obj;
     }
-    return new Set(obj::toArray());
+    return new Set(toArray(obj));
 });
