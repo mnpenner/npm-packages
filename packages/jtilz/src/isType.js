@@ -14,6 +14,10 @@ export function isNumber(obj) {
     return typeof obj === 'number' || obj instanceof Number;
 }
 
+export function isPromise(obj) {
+    return obj instanceof Promise;
+}
+
 export function isBoolean(obj) {
     return obj === true || obj === false; // there's also a `Boolean` type but it doesn't behave much like a boolean
 }
@@ -69,5 +73,10 @@ export function isBuffer(obj) {
     if(BUNDILIO_TARGET === 'node') {
         return Buffer.isBuffer(obj);
     }
+    // TODO: should we check if obj is a UInt8Array or something?
     return false;
+}
+
+export function isError(obj) {
+    return obj instanceof Error;
 }

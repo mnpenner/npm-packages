@@ -143,6 +143,8 @@ function fdt(obj, depth) {
         return cc`${TOK.undefined}undefined`;
     } else if(obj === null) {
         return cc`${TOK.null}null`;
+    } else if(T.isPromise(obj)) {
+        return cc`${TOK.className}«Promise»`;
     } else if(T.isObject(obj)) {
         if(T.isFunction(obj.toSource)) { // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toSource
             return cc(obj.toSource());
