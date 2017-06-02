@@ -5,7 +5,9 @@
   "author": "Mark Penner <jtilz@mpen.ca>",
   "license": "MIT",
   "devDependencies": {
-    "bundilio": "^0.2.11"
+    "bundilio": "^0.2.11",
+    "jest": "^20.0.4",
+    "babel-jest": "^20.0.3"
   },
   "browser": "web",
   "main": "node",

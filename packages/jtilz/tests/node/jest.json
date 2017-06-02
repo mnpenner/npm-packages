@@ -1,0 +1,4 @@
+{
+  "browser": false,
+  "testRegex": "/tests/node/.*\\.jsx?$"
+}

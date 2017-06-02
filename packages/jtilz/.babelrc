@@ -1,0 +1,29 @@
+{
+  // Used by Jest. Source code is compiled with Bundilio.
+  "plugins": [
+    "babel-plugin-transform-function-bind",
+    "babel-plugin-syntax-do-expressions",
+    "babel-plugin-syntax-dynamic-import",
+    "babel-plugin-transform-class-properties",
+    "babel-plugin-transform-do-expressions",
+    "babel-plugin-transform-function-bind",
+    "babel-plugin-transform-object-rest-spread",
+    "babel-plugin-transform-react-jsx",
+    [
+      "babel-plugin-transform-define",
+      {
+        "BUNDILIO_TARGET": "node"
+      }
+    ]
+  ],
+  "presets": [
+    [
+      "env",
+      {
+        "targets": {
+          "node": "current"
+        }
+      }
+    ]
+  ]
+}
