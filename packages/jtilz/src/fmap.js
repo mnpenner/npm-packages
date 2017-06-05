@@ -10,7 +10,7 @@ export const __skip__ = Symbol('skip');
 export default function fmap(callback) {
     return this::reduce((accum, ...args) => {
         let x = this::callback(...args);
-        // TODO: if `x` is a Promise, should we wait for it to resolve?
+        // TODO: if `x` is a Promise, should we wait for it to resolve? maybe have an async version?
         if(x !== __skip__) {
             accum.push(x);
         }
