@@ -24,3 +24,18 @@ export const toSet = bindable(function toSet(obj) {
     }
     return new Set(toArray(obj));
 });
+
+/**
+ * Creates a new array with the results of calling a provided function on every element of an iterable.
+ * 
+ * @param {*} iterable Any iterable object.
+ * @param {Function} callback Function that produces an element of the new Array, taking one argument: the current element being processed.
+ * @returns {Array}
+ */
+export function arrayMap(iterable, callback) {
+    let out = [];
+    for(let x of iterable) {
+        out.push(callback(x));
+    }
+    return out;
+}

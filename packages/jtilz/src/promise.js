@@ -22,6 +22,9 @@ export function promisify(nodeFunction) {
     };
 }
 
+export const FULFILLED = 'fulfilled'; 
+export const REJECTED = 'rejected';
+
 export const promisifyAll = module => wrapMethods(module, promisify);
 
 const thenFinally = bindable((promise,callback) => {
@@ -33,10 +36,10 @@ const thenFinally = bindable((promise,callback) => {
 // same API as Q: https://github.com/kriskowal/q/wiki/API-Reference#promiseallsettled
 export function allSettled(promises) {
     return Promise.all(promises.map(p => Promise.resolve(p).then(v => ({
-        state: 'fulfilled',
+        state: FULFILLED,
         value: v,
     }), r => ({
-        state: 'rejected',
+        state: REJECTED,
         reason: r,
     }))));
 }

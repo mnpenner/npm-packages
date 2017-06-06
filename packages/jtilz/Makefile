@@ -35,13 +35,4 @@ clean:
 	rm -rf node_modules dist .deps
 
 test: .deps/dist
-#	node --trace-warnings tests/url.js
-#	node --trace-warnings tests/fs.js
-#	node --trace-warnings tests/hrtime.js
 	BABEL_ENV=test $(BIN)/jest
-
-#test-node: .deps/dist
-#	$(BIN)/jest --config tests/node/jest.json
-#
-#test-web: .deps/dist
-#	$(BIN)/jest --config tests/web/jest.json
