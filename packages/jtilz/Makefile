@@ -8,7 +8,7 @@ SRC_FILES := $(shell find src -name '*.js')
 .SUFFIXES:
 
 .deps/dist: $(SRC_FILES) yarn.lock .deps
-	rm -rf dist/*
+#	rm -rf dist/*
 	$(BIN)/bundilio .
 	@touch $@
 
@@ -28,6 +28,9 @@ patch: .deps/dist
 	cp package.json dist/package.json
 	npm publish dist
 
+publish:
+	npm publish dist
+
 clean:
 	rm -rf node_modules dist .deps
 
@@ -35,7 +38,7 @@ test: .deps/dist
 #	node --trace-warnings tests/url.js
 #	node --trace-warnings tests/fs.js
 #	node --trace-warnings tests/hrtime.js
-	$(BIN)/jest
+	BABEL_ENV=test $(BIN)/jest
 
 #test-node: .deps/dist
 #	$(BIN)/jest --config tests/node/jest.json

@@ -27,3 +27,21 @@ export function queryParams(params) {
             return `${encodeParam(k)}=${encodeParam(params[k])}`
         }).join('&');
 }
+
+/**
+ * Joins URLs together with /. Leaves leading and trailing slashes alone. Does not duplicate internal slashes.
+ * 
+ * @param {string[]} urls
+ * @returns {string}
+ */
+function joinUrlPaths(...urls) {
+    return urls.map((u,i) => {
+        if(i > 0) {
+            u = u.replace(/^\/+/g, '');
+        }
+        if(i < urls.length - 1) {
+            u = u.replace(/\/+$/g, '');
+        }
+        return u;
+    }).join('/');
+}

@@ -34,3 +34,59 @@ export const tap = bindable((array,callback) => {
     callback(array);
     return array;
 });
+
+
+
+/**
+ * Removes one instance of `value` from `array`, without mutating the original array. Uses loose comparison.
+ *
+ * @param {Array} array Array to remove value from
+ * @param {*|Function} value Value to remove
+ * @returns {Array} Array with `value` removed
+ */
+export function arrayWithout(array, value) {
+    let func = value;
+    if(typeof value !== 'function') {
+        func = (v,i) => v == value;
+    }
+    for(let i=0; i<array.length; ++i) {
+        if(func(array[i],i)) {
+            return arraySplice(array, i);
+        }
+    }
+    return array;
+}
+
+/**
+ * Removes an index from an array without mutating the original array.
+ *
+ * @param {Array} array Array to remove value from
+ * @param {Number} index Index to remove
+ * @param {Number} count
+ * @param {Array} replaceWith
+ * @returns {Array} Array with `value` removed
+ */
+export function arraySplice(array, index, count=1, replaceWith=[]) {
+    if(index < array.length) {
+        let copy = [...array];
+        copy.splice(index, count, ...replaceWith);
+        return copy;
+    }
+    return array;
+}
+
+/**
+ * Checks if `value` is in collection. Uses loose comparison.
+ *
+ * @param {Array} array
+ * @param {*} value
+ * @returns {boolean}
+ */
+export function arrayIncludes(array, value) {
+    for(let val of array) {
+        if(val == value) {
+            return true;
+        }
+    }
+    return false;
+}

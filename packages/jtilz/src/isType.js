@@ -70,7 +70,7 @@ export function isSymbol(obj) {
 }
 
 export function isBuffer(obj) {
-    if(BUNDILIO_TARGET === 'node') {
+    if(BUILD_TARGET === 'node') {
         return Buffer.isBuffer(obj);
     }
     // TODO: should we check if obj is a UInt8Array or something?
