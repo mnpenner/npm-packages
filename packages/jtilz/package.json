@@ -1,11 +1,11 @@
 {
   "name": "jtilz",
-  "version": "0.2.34",
+  "version": "0.2.35",
   "description": "",
   "author": "Mark Penner <jtilz@mpen.ca>",
   "license": "MIT",
   "devDependencies": {
-    "bundilio": "^0.3.1",
+    "bundilio": "^0.3.2",
     "jest": "^20.0.4"
   },
   "browser": "web",
@@ -16,5 +16,6 @@
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
-  }
+  },
+  "dependencies": {}
 }
