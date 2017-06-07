@@ -1,4 +1,4 @@
-import {isFunction} from './isType';
+import {isFunction} from './Types';
 
 export function value(f, ...args) {
     return isFunction(f) ? this::f(...args) : f;

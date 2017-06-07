@@ -1,4 +1,4 @@
-import {isFunction,isString,isPlainObject} from './isType';
+import {isFunction,isString,isPlainObject} from './Types';
 import bindable from './bindable';
 
 export const entries = bindable(Object.entries);

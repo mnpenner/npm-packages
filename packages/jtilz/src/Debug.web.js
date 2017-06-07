@@ -1,4 +1,4 @@
-import * as T from './isType';
+import * as T from './Types';
 
 export function log(...args) {
     console.log(...join(args.map(formatDevTools),' '));

@@ -54,6 +54,13 @@ export function isUndefined(obj) {
     return obj === undefined;
 }
 
+/**
+ * Returns true if a value is null, undefined, or NaN.
+ */
+export function isNullish(obj) {
+    return obj === null || obj === undefined || obj !== obj;
+}
+
 export function isObject(obj) {
     return obj !== null && typeof obj === 'object';
 }

@@ -1,7 +1,8 @@
 import FileSystem from 'fs';
 import Path from 'path';
-import {filterAsync, flatten} from './array';
-import {promisify} from './promise';
+import {flatten} from './Array';
+import {filterAsync} from './Collection';
+import {promisify} from './Promise';
 
 // export * as default from './fs';
 export const readFile = promisify(FileSystem.readFile);
@@ -37,6 +38,6 @@ export async function getFiles(dir, recursive = true) {
         )).then(flatten);
     }
 
-    return paths::filterAsync(p => fileStat(p).then(s => s.isFile()));
+    return filterAsync(paths, p => fileStat(p).then(s => s.isFile()));
 }
 

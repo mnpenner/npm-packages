@@ -1,4 +1,4 @@
-import {toHex} from './number';
+import {toHex} from './Number';
 import bindable from './bindable';
 
 export const replaceAll = bindable((string, search, replacement) => string.split(search).join(replacement));
