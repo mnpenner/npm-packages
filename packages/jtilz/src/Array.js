@@ -1,7 +1,4 @@
 import {isFunction,isString} from './Types';
-import bindable from './bindable';
-import {identity} from './Value';
-import {toArray,mapArray} from './Collection';
 
 // Developer note: all of these functions should take an array as the first argument
 

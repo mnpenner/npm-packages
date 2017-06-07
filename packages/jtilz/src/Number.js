@@ -6,11 +6,6 @@ import bindable from './bindable';
  * @param {Number} num
  * @return {string}
  */
-export const toHex = bindable(num => {
-        if(num < 0) {
-            num = 0xFFFFFFFF + num + 1;
-        }
-
-        return num.toString(16);
-    }
-);
+export function decToHex(num) {
+    return num.toString(16);
+}

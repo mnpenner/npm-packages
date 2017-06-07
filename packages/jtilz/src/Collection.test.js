@@ -8,7 +8,7 @@ function *gen() {
     yield 5;
 }
 
-test('toArray', () => {
+test(toArray.name, () => {
     expect(toArray(numbers)).toBe(numbers);
     expect(toArray(new Set(numbers))).toEqual(numbers);
     
@@ -21,18 +21,18 @@ test('toArray', () => {
     expect(toArray("foo",true)).toEqual(['f','o','o']);
 });
 
-test('toSet', () => {
+test(toSet.name, () => {
     const s = new Set([1,2,3]);
     expect(toSet(s)).toBe(s);
     expect(toSet([1,2,3])).toEqual(s);
     expect(toSet(gen())).toEqual(new Set([4,5]));
 })
 
-test('mapArray', () => {
+test(mapArray.name, () => {
     expect(mapArray(gen(), x=>x*2)).toEqual([8,10]);
 })
 
-test('filterMap', () => {
+test(filterMap.name, () => {
     expect(filterMap(numbers, x => x * 2)).toEqual([2, 4, 6, 8, 10]);
     expect(filterMap(numbers, x => {
         if(x % 2 === 0) {
@@ -42,7 +42,7 @@ test('filterMap', () => {
     })).toEqual([2, 6, 10]);
 });
 
-test('groupBy', () => {
+test(groupBy.name, () => {
     const people = [
         {
             name: "Luke Skywalker",
@@ -89,7 +89,7 @@ test('groupBy', () => {
     )
 });
 
-test('filterMapAsync', async () => {
+test(filterMapAsync.name, async () => {
     await expect(filterMapAsync(numbers, x => x * 2)).resolves.toEqual([2, 4, 6, 8, 10]);
     await expect(filterMapAsync(numbers, x => new Promise((resolve, reject) => {
         if(x % 2 === 0) {
@@ -107,7 +107,7 @@ test('filterMapAsync', async () => {
     }))).resolves.toEqual([2, 6, 10]);
 });
 
-test('flatMap', () => {
+test(flatMap.name, () => {
     expect(
         flatMap([1,2], x => [x,x])
     ).toEqual(
