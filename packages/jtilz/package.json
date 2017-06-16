@@ -12,6 +12,9 @@
   },
   "browser": "web",
   "main": "node",
+  "typescript": {
+    "definition": "jtilz.d.ts"
+  },
   "repository": {
     "type": "hg",
     "url": "https://bitbucket.org/mnpenner/jtilz"

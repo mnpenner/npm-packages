@@ -6,13 +6,10 @@
     "sourceMap": true,
     "noEmitOnError": true,
     "pretty": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "lib": ["es2017", "dom"]
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "**/*.spec.ts"
+  "files": [
+    "src/index.ts"
   ]
 }
