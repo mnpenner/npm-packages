@@ -1,5 +1,6 @@
 BIN := node_modules/.bin
-SRC_FILES := $(shell find src -name '*.js')
+SRC_FILES := $(shell find src -name '*.ts')
+TS_DEPS := $(SRC_FILES) yarn.lock tsconfig.json
 
 # these are not files
 .PHONY: clean test patch
@@ -7,9 +8,22 @@ SRC_FILES := $(shell find src -name '*.js')
 # disable default suffixes
 .SUFFIXES:
 
-.deps/dist: $(SRC_FILES) yarn.lock .deps bundilio.config.js
-#	rm -rf dist/*
-	$(BIN)/bundilio .
+all: dist/node dist/browser dist/jtilz.d.ts
+
+dist/browser: $(TS_DEPS) | .deps/lint
+	$(BIN)/tsc -t "ES5" -m "ES6" --outDir dist/browser
+	@touch $@
+
+dist/node: $(TS_DEPS) | .deps/lint
+	$(BIN)/tsc -t "ES2017" -m "CommonJS" --outDir dist/node
+	@touch $@
+
+.deps/lint: $(TS_DEPS) .deps
+	$(BIN)/tsc --noEmit --pretty
+	@touch $@
+
+dist/jtilz.d.ts: $(TS_DEPS) | .deps/lint
+	$(BIN)/dts-generator --name jtilz --project . --out dist/jtilz.d.ts
 	@touch $@
 
 yarn.lock:: package.json
@@ -23,16 +37,11 @@ yarn.lock:: node_modules
 node_modules .deps:
 	mkdir -p $@
 
-patch: .deps/dist test
-	npm version patch
-	cp package.json dist/package.json
-	npm publish dist
-
 publish:
 	npm publish dist
 
 clean:
-	rm -rf node_modules dist .deps
+	rm -rf dist .deps
 
-test: .deps/dist
+test: 
 	BABEL_ENV=test $(BIN)/jest

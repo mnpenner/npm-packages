@@ -6,7 +6,9 @@
   "license": "MIT",
   "devDependencies": {
     "bundilio": "^0.3.3",
-    "jest": "^20.0.4"
+    "dts-generator": "^2.1.0",
+    "jest": "^20.0.4",
+    "typescript": "^2.3.4"
   },
   "browser": "web",
   "main": "node",

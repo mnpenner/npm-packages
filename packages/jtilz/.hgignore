@@ -4,3 +4,4 @@ syntax: regexp
 ^\.idea/
 ^\.deps/
 ^dist/
+\.log$
