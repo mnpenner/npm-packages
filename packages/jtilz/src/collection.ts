@@ -32,7 +32,7 @@ export function toArray(obj: any): any[] {
     return [obj];
 }
 
-export function toArrayStrict(obj: Iterable<any>): any[] {
+export function toArrayStrict<T>(obj: Iterable<T>): T[] {
     if(obj) {
         if(isArray(obj)) {
             return obj;
@@ -48,41 +48,36 @@ export function toArrayStrict(obj: Iterable<any>): any[] {
  * Like `Array.prototype.map`, but you may omit entries by returning `__skip__`.
  */
 export function filterMap<TVal,TRet,TDict extends IDictionary<TVal>>(dict: TDict, callback: (v: TVal, k: string, d: TDict) => TRet|symbol): IDictionary<TRet>; 
-export function filterMap<TVal,TRet,TIter extends Iterable<TVal>>(iter: TIter, callback: (v: TVal, k: number, i: TIter) => TRet|symbol): TRet[];
-export function filterMap<TVal,TRet>(obj: any, callback: (v: TVal, k: any, i: any) => TRet|symbol): any {
-    return isPlainObject(obj)
-        ? _fmapObj(obj, callback)
-        : _fmapIter(obj, callback);
-}
+export function filterMap<TVal,TRet,TIter extends Iterable<TVal>=TVal[]>(iter: TIter, callback: (v: TVal, k: number, i: TIter) => TRet|symbol): TRet[];
+export function filterMap<TVal,TRet,TObj extends Iterable<TVal>|IDictionary<TVal>=TVal[]>(obj: TObj, callback: (v: TVal, k: string|number, i: TObj) => TRet|symbol): IDictionary<TRet>|TRet[] {
+    
+    if(isPlainObject(obj)) {
+        let accum = Object.create(null);
 
-function _fmapObj<TVal,TRet,TDict extends IDictionary<TVal>>(dict: TDict, callback: (v: TVal, k: string, d: TDict) => TRet|symbol): IDictionary<TRet> {
-    let accum = Object.create(null);
-
-    // There's lots of ways to iterate an object, hopefully this was a good choice
-    // You can't remap the keys with this
-    // And the callback takes (value,key) instead of [key,value]
-    for(let [k,v] of Object.entries(dict)) {
-        let y = callback(v,k,dict);
-        if(y !== __skip__) {
-            accum[k] = y as TRet;
+        // There's lots of ways to iterate an object, hopefully this was a good choice
+        // You can't remap the keys with this
+        // And the callback takes (value,key) instead of [key,value]
+        for(let [k,v] of Object.entries(obj)) {
+            let y = callback(v,k,obj);
+            if(y !== __skip__) {
+                accum[k] = y as TRet;
+            }
         }
-    }
 
-    return accum;
-}
+        return accum;
+    } else {
+        let accum = [];
 
-function _fmapIter<TVal,TRet,TIter extends Iterable<TVal>>(iter: TIter, callback: (v: TVal, k: number, i: TIter) => TRet|symbol): TRet[] {
-    let accum = [];
-
-    let i = 0;
-    for(let x of iter) {
-        let y = callback(x, i++, iter);
-        if(y !== __skip__) {
-            accum.push(y as TRet);
+        let i = 0;
+        for(let x of obj) {
+            let y = callback(x, i++, obj);
+            if(y !== __skip__) {
+                accum.push(y as TRet);
+            }
         }
-    }
 
-    return accum;
+        return accum;
+    }
 }
 
 export const fmap = chain(filterMap);
