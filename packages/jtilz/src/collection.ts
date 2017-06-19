@@ -4,6 +4,8 @@ import chain from './chain';
 import {IDictionary} from './type-defs';
 import {SpawnSyncReturns} from 'child_process';
 import {identity} from './value';
+import {allSettled, FULFILLED} from './promise';
+import {flatten} from './array';
 
 
 export const __skip__ = Symbol('skip');
@@ -44,12 +46,19 @@ export function toArrayStrict<T>(obj: Iterable<T>): T[] {
     throw new Error(`Cannot convert ${getType(obj)} to array; it is not iterable.`);
 }
 
+export function toSet(obj: any) {
+    if(obj instanceof Set) {
+        return obj;
+    }
+    return new Set(toArray(obj));
+}
+
 /**
  * Like `Array.prototype.map`, but you may omit entries by returning `__skip__`.
  */
-export function filterMap<TVal,TRet,TDict extends IDictionary<TVal>>(dict: TDict, callback: (v: TVal, k: string, d: TDict) => TRet|symbol): IDictionary<TRet>; 
-export function filterMap<TVal,TRet,TIter extends Iterable<TVal>=TVal[]>(iter: TIter, callback: (v: TVal, k: number, i: TIter) => TRet|symbol): TRet[];
-export function filterMap<TVal,TRet,TObj extends Iterable<TVal>|IDictionary<TVal>=TVal[]>(obj: TObj, callback: (v: TVal, k: string|number, i: TObj) => TRet|symbol): IDictionary<TRet>|TRet[] {
+export function filterMap<TVal,TRet>(dict: IDictionary<TVal>, callback: (v: TVal, k: string, d: IDictionary<TVal>) => TRet|symbol): IDictionary<TRet>; 
+export function filterMap<TVal,TRet>(iter: Iterable<TVal>, callback: (v: TVal, k: number, i: Iterable<TVal>) => TRet|symbol): TRet[];
+export function filterMap<TVal,TRet>(obj: Iterable<TVal>|IDictionary<TVal>, callback: (v: TVal, k: string|number, i: Iterable<TVal>|IDictionary<TVal>) => TRet|symbol): IDictionary<TRet>|TRet[] {
     
     if(isPlainObject(obj)) {
         let accum = Object.create(null);
@@ -91,7 +100,7 @@ export const fmap = chain(filterMap);
  * @param iterable Any iterable object.
  * @param callback Function that produces an element of the new Array, taking one argument: the current element being processed.
  */
-export function mapArray<TVal,TRet,TIter extends Iterable<TVal>>(iterable: TIter, callback: (value: TVal, index: number, iterable: TIter) => TRet): TRet[] {
+export function mapArray<TVal,TRet>(iterable: Iterable<TVal>, callback: (value: TVal, index: number, iterable: Iterable<TVal>) => TRet): TRet[] {
     let out = [];
     let i = 0;
     for(let x of iterable) {
@@ -100,7 +109,7 @@ export function mapArray<TVal,TRet,TIter extends Iterable<TVal>>(iterable: TIter
     return out;
 }
 
-export function filterArray<TVal,TIter extends Iterable<TVal>>(iterable: TIter, callback: (element: TVal, index: number, iterable: TIter) => boolean): TVal[] {
+export function filterArray<TVal>(iterable: Iterable<TVal>, callback: (value: TVal, index: number, iterable: Iterable<TVal>) => boolean): TVal[] {
     let out = [];
     let i = 0;
     for(let x of iterable) {
@@ -114,4 +123,22 @@ export function filterArray<TVal,TIter extends Iterable<TVal>>(iterable: TIter, 
 export function filterAsync<TInput,TResult>(iterable: Iterable<TInput>, mapCb: (value: TInput, index: number) => Promise<TResult>, filterCb: (el: TResult) => boolean = identity): Promise<TInput[]> {
     return Promise.all(mapArray(iterable,mapCb))
         .then(results => filterArray(iterable,(_, i) => filterCb(results[i])));
+}
+
+export function filterMapAsync<TVal,TRet>(
+    iterable: Iterable<TVal>, 
+    callback: (value: TVal, index: number, iterable: Iterable<TVal>) => Promise<TRet>|TRet
+) {
+    return allSettled(mapArray(iterable, callback))
+        .then(array => filterMap(array, r => r.state === FULFILLED ? r.value : __skip__))
+}
+
+/**
+ * Map and flatten
+ */
+export function flatMap<TVal,TRet>(
+    iterable: Iterable<TVal>, 
+    callback: (value: TVal, index: number, iterable: Iterable<TVal>) => TRet[]|TRet
+): TRet[] {
+    return flatten(mapArray(iterable,callback));
 }

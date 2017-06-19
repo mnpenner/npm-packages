@@ -29,8 +29,14 @@ export function promisify<TResult>(nodeFunction: Function): (...args: any[]) => 
 export const FULFILLED = 'fulfilled';
 export const REJECTED = 'rejected';
 
+export interface PromiseState<T> {
+    state: string;
+    value?: T;
+    reason?: Error;
+}
+
 // same API as Q: https://github.com/kriskowal/q/wiki/API-Reference#promiseallsettled
-export function allSettled(promises: Array<Promise<any>>) {
+export function allSettled<T>(promises: Array<Promise<T>|T>): Promise<PromiseState<T>[]> {
     return Promise.all(promises.map(p => Promise.resolve(p).then(v => ({
         state: FULFILLED,
         value: v,

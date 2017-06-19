@@ -37,7 +37,7 @@ export function joinUrlPaths(...urls: string[]): string {
  * Encodes an object as a query string.
  */
 export function queryParams(params: {[key: string]: any}): string {
-    return filterMap(Object.keys(params), (k: string) => {
+    return filterMap(Object.keys(params), k => {
         if(params[k] === undefined) {
             return __skip__;
         }

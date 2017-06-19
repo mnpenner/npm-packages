@@ -2,9 +2,21 @@
 # yarn lockfile v1
 
 
+"@types/bluebird@^3.5.5":
+  version "3.5.5"
+  resolved "http://code.nucleuslabs.com:4873/@types%2fbluebird/-/bluebird-3.5.5.tgz#3c7e8cf660b9d60ea25c787fdd258ddb6abb384d"
+
+"@types/jest@^20.0.1":
+  version "20.0.1"
+  resolved "http://code.nucleuslabs.com:4873/@types%2fjest/-/jest-20.0.1.tgz#8643a195d925a00f7bdee5257d12c3aac743f3b4"
+
 "@types/node@^7.0.31":
   version "7.0.31"
   resolved "http://code.nucleuslabs.com:4873/@types%2fnode/-/node-7.0.31.tgz#80ea4d175599b2a00149c29a10a4eb2dff592e86"
+
+"@types/q@^1.0.1":
+  version "1.0.1"
+  resolved "http://code.nucleuslabs.com:4873/@types%2fq/-/q-1.0.1.tgz#dbccb01bd8f0f801a12a4604c7d7af59bb02ae2f"
 
 abab@^1.0.3:
   version "1.0.3"

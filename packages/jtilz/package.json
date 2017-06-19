@@ -5,6 +5,7 @@
   "author": "Mark Penner <jtilz@mpen.ca>",
   "license": "MIT",
   "devDependencies": {
+    "@types/jest": "^20.0.1",
     "@types/node": "^7.0.31",
     "dts-generator": "^2.1.0",
     "jest": "^20.0.4",
@@ -22,5 +23,21 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@types/bluebird": "^3.5.5",
+    "@types/q": "^1.0.1"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "ts",
+      "js"
+    ],
+    "transform": {
+      "\\.ts$": "<rootDir>/preprocessor.js"
+    },
+    "testMatch": [
+      "<rootDir>/tests/**.(ts|js)",
+      "<rootDir>/src/**.test.(ts|js)"
+    ]
+  }
 }
