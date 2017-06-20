@@ -1,11 +1,10 @@
-import {isArray, isFunction, isNullish, isPlainObject, isString} from './types';
-import {getType} from './debug';
-import chain from './chain';
-import {IDictionary} from './type-defs';
-import {SpawnSyncReturns} from 'child_process';
-import {identity} from './value';
-import {allSettled, FULFILLED} from './promise';
-import {flatten} from './array';
+import {isArray, isFunction, isIterable, isNullish, isPlainObject, isString} from '../Lang/is';
+import {getType} from '../Dbg/shared';
+import chain from '../Seq';
+import {IDictionary} from '../interfaces';
+import {identity} from '../Lang/value';
+import {allSettled, FULFILLED} from '../Lang/promise';
+import {flatten} from '../Arr';
 
 
 export const __skip__ = Symbol('skip');
@@ -28,7 +27,7 @@ export function toArray(obj: any): any[] {
     if(isString(obj)) {
         return [obj];
     }
-    if(isFunction(obj[Symbol.iterator])) {
+    if(isIterable(obj)) {
         return [...obj];
     }
     return [obj];
@@ -39,7 +38,7 @@ export function toArrayStrict<T>(obj: Iterable<T>): T[] {
         if(isArray(obj)) {
             return obj;
         }
-        if(isFunction(obj[Symbol.iterator])) {
+        if(isIterable(obj)) {
             return [...obj];
         }
     }
@@ -58,7 +57,7 @@ export function toSet(obj: any) {
  */
 export function filterMap<TVal,TRet>(dict: IDictionary<TVal>, callback: (v: TVal, k: string, d: IDictionary<TVal>) => TRet|symbol): IDictionary<TRet>; 
 export function filterMap<TVal,TRet>(iter: Iterable<TVal>, callback: (v: TVal, k: number, i: Iterable<TVal>) => TRet|symbol): TRet[];
-export function filterMap<TVal,TRet>(obj: Iterable<TVal>|IDictionary<TVal>, callback: (v: TVal, k: string|number, i: Iterable<TVal>|IDictionary<TVal>) => TRet|symbol): IDictionary<TRet>|TRet[] {
+export function filterMap<TVal,TRet>(obj: any, callback: Function): any {
     
     if(isPlainObject(obj)) {
         let accum = Object.create(null);
@@ -147,9 +146,6 @@ export function flatMap<TVal,TRet>(
 
 export type ReduceCallback<TVal,TAcc> 
     = (accumulator: TAcc, currentValue: TVal, currentIndex: number, array: TVal[]) => TAcc
-
-// export type ReduceCallback<TVal,TAcc=TVal> = (accumulator: TAcc, currentValue: TVal, currentIndex: number, array: TVal[]) => TAcc;
-
 
 export function reduceArray<TVal>(
     iterable: Iterable<TVal>,

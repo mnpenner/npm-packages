@@ -1,4 +1,4 @@
-import {decToHex} from './number';
+import {decToHex} from '../Nbr';
 
 
 export function replaceAll(this: string, search: string, replacement: string): string {

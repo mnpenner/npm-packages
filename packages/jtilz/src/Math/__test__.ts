@@ -1,4 +1,4 @@
-import {divQR,wholeFrac} from './math';
+import {divQR,wholeFrac} from './index';
 
 test(divQR.name, () => {
     expect(divQR(7,3)).toEqual([2,1]);

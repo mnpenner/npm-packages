@@ -1,7 +1,8 @@
 import {
     __skip__, filterMap, filterMapAsync, flatMap, groupBy, mapArray, reduceArray, toArray, toArrayStrict,
     toSet
-} from './collection';
+} from './index';
+import {isIterable} from '../Lang/is';
 
 
 const numbers = [1, 2, 3, 4, 5];
@@ -86,51 +87,62 @@ test(reduceArray.name, () => {
     expect(
         reduceArray([0,1,2,3], (acc, val) => acc + val, 0)
     ).toEqual(6);
+});
+
+test(isIterable.name, () => {
+    expect(isIterable([])).toBeTruthy();
+    expect(isIterable(gen())).toBeTruthy();
+    expect(isIterable('foo')).toBeTruthy();
+    expect(isIterable(new Set())).toBeTruthy();
+    expect(isIterable({})).toBeFalsy();
+    expect(isIterable(true)).toBeFalsy();
+    expect(isIterable(1)).toBeFalsy();
+    expect(isIterable({[Symbol.iterator]: ()=>{}})).toBeTruthy();
 })
 
-// test(groupBy.name, () => {
-//     const people = [
-//         {
-//             name: "Luke Skywalker",
-//             species: "Human",
-//         },
-//         {
-//             name: "C-3PO",
-//             species: "Droid",
-//         },
-//         {
-//             name: "R2-D2",
-//             species: "Droid",
-//         },
-//     ];
-//
-//     expect(
-//         groupBy(people, p => p.species)
-//     ).toEqual(
-//         {
-//             Human: [
-//                 {
-//                     name: "Luke Skywalker",
-//                     species: "Human",
-//                 },
-//             ],
-//             Droid: [
-//                 {
-//                     name: "C-3PO",
-//                     species: "Droid",
-//                 },
-//                 {
-//                     name: "R2-D2",
-//                     species: "Droid",
-//                 },
-//
-//             ]
-//         }
-//     )
-//
-//     expect(
-//         groupBy(new Set([6.1, 4.2, 6.3]), Math.floor)
-//     ).toEqual(
-//         { '4': [4.2], '6': [6.1, 6.3] }
-//     )
-// });
+test(groupBy.name, () => {
+    const people = [
+        {
+            name: "Luke Skywalker",
+            species: "Human",
+        },
+        {
+            name: "C-3PO",
+            species: "Droid",
+        },
+        {
+            name: "R2-D2",
+            species: "Droid",
+        },
+    ];
+
+    expect(
+        groupBy(people, p => p.species)
+    ).toEqual(
+        {
+            Human: [
+                {
+                    name: "Luke Skywalker",
+                    species: "Human",
+                },
+            ],
+            Droid: [
+                {
+                    name: "C-3PO",
+                    species: "Droid",
+                },
+                {
+                    name: "R2-D2",
+                    species: "Droid",
+                },
+
+            ]
+        }
+    )
+
+    expect(
+        groupBy(new Set([6.1, 4.2, 6.3]), Math.floor)
+    ).toEqual(
+        { '4': [4.2], '6': [6.1, 6.3] }
+    )
+});

@@ -1,9 +1,9 @@
 import {URL} from 'url';
 import FileSystem = require('fs');
 import Path = require('path');
-import {flatten} from './array';
-import {promisify} from './promise';
-import {filterAsync} from './collection';
+import {flatten} from '../Arr';
+import {promisify} from '../Lang/promise';
+import {filterAsync} from '../Col';
 import {Stats} from 'fs';
 
 
@@ -15,7 +15,7 @@ export interface ReadOptions {
 
 export interface WriteOptions {
     encoding?: string|null,
-    mode: number,
+    mode?: number,
     flag?: string,
 }
 

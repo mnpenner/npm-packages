@@ -8,22 +8,22 @@ TS_DEPS := $(SRC_FILES) yarn.lock tsconfig.json Makefile
 # disable default suffixes
 .SUFFIXES:
 
-all: dist/node dist/browser dist/jtilz.d.ts
+all: dist/node dist/web dist/jtilz.d.ts
 
-dist/browser: $(TS_DEPS) | .deps/lint
-	$(BIN)/tsc --target es5 --module es6 --outDir dist/browser --lib esnext,dom src/index.browser.ts
+dist/web: $(TS_DEPS) | .deps/lint
+	$(BIN)/tsc --target es5 --module es6 --outDir dist/web --lib esnext,dom  --strict --noEmitOnError --moduleResolution node --downlevelIteration src/index.web.ts
 	@touch $@
 
 dist/node: $(TS_DEPS) | .deps/lint
-	$(BIN)/tsc --target es2017 --module commonjs --outDir dist/node --lib esnext src/index.node.ts
+	$(BIN)/tsc --target es2017 --module commonjs --outDir dist/node --lib esnext --strict --noEmitOnError --moduleResolution node src/index.node.ts
+	@touch $@
+
+dist/jtilz.d.ts: $(TS_DEPS) | .deps/lint
+	$(BIN)/dts-generator --name jtilz --project . --out dist/jtilz.d.ts --moduleResolution node --baseDir src
 	@touch $@
 
 .deps/lint: $(TS_DEPS) .deps
 	$(BIN)/tsc --noEmit --pretty
-	@touch $@
-
-dist/jtilz.d.ts: $(TS_DEPS) | .deps/lint
-	$(BIN)/dts-generator --name jtilz --project . --out dist/jtilz.d.ts
 	@touch $@
 
 yarn.lock:: package.json
@@ -37,7 +37,8 @@ yarn.lock:: node_modules
 node_modules .deps:
 	mkdir -p $@
 
-publish:
+publish: all
+	cp package.json dist/
 	npm publish dist
 
 clean:

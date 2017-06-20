@@ -1,6 +1,6 @@
 {
   "name": "jtilz",
-  "version": "0.2.37",
+  "version": "0.3.0",
   "description": "",
   "author": "Mark Penner <jtilz@mpen.ca>",
   "license": "MIT",
@@ -11,8 +11,8 @@
     "jest": "^20.0.4",
     "typescript": "^2.3.4"
   },
-  "browser": "web",
-  "main": "node",
+  "browser": "web/index.web",
+  "main": "node/index.node",
   "typescript": {
     "definition": "jtilz.d.ts"
   },
@@ -32,8 +32,10 @@
       "\\.ts$": "<rootDir>/preprocessor.js"
     },
     "testMatch": [
-      "<rootDir>/tests/**.(ts|js)",
-      "<rootDir>/src/**.test.(ts|js)"
+      "<rootDir>/tests/**/*.(ts|js)",
+      "<rootDir>/src/**/*.test.(ts|js)",
+      "<rootDir>/src/**/__test__.(ts|js)",
+      "<rootDir>/src/**/__tests__/**/*.(ts|js)"
     ]
   }
 }

@@ -6,6 +6,10 @@ export function isFunction(obj: any): obj is Function {
     return typeof obj === 'function';
 }
 
+export function isIterable(obj: any): obj is Iterable<any> {
+    return obj && isFunction(obj[Symbol.iterator]);
+}
+
 export function isString(obj: any): obj is string {
     return typeof obj === 'string' || obj instanceof String;
 }
@@ -59,9 +63,16 @@ export function isUndefined(obj: any): obj is undefined {
 }
 
 /**
- * Returns true if a value is null, undefined, or NaN.
+ * Checks if value is `null`, `undefined` or `NaN`
  */
 export function isNullish(obj: any): obj is null|undefined|number { // the NaN kind of screws up the type checking...
+    return obj === null || obj === undefined || obj !== obj;
+}
+
+/**
+ * Checks if value is `null` or `undefined`.
+ */
+export function isNil(obj: any): obj is null|undefined {
     return obj === null || obj === undefined || obj !== obj;
 }
 
