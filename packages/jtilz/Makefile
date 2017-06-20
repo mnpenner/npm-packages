@@ -8,18 +8,14 @@ TS_DEPS := $(SRC_FILES) yarn.lock tsconfig.json Makefile
 # disable default suffixes
 .SUFFIXES:
 
-all: dist/node dist/web dist/jtilz.d.ts
+all: dist/node dist/web
 
 dist/web: $(TS_DEPS) | .deps/lint
-	$(BIN)/tsc --target es5 --module es6 --outDir dist/web --lib esnext,dom  --strict --noEmitOnError --moduleResolution node --downlevelIteration src/index.web.ts
+	$(BIN)/tsc --target es5 --module es6 --outDir dist/web --lib esnext,dom  --strict --noEmitOnError --moduleResolution node --declaration --downlevelIteration src/index.web.ts
 	@touch $@
 
 dist/node: $(TS_DEPS) | .deps/lint
-	$(BIN)/tsc --target es2017 --module commonjs --outDir dist/node --lib esnext --strict --noEmitOnError --moduleResolution node src/index.node.ts
-	@touch $@
-
-dist/jtilz.d.ts: $(TS_DEPS) | .deps/lint
-	$(BIN)/dts-generator --name jtilz --project . --out dist/jtilz.d.ts --moduleResolution node --baseDir src
+	$(BIN)/tsc --target es2017 --module commonjs --outDir dist/node --lib esnext --strict --noEmitOnError --moduleResolution node --declaration src/index.node.ts
 	@touch $@
 
 .deps/lint: $(TS_DEPS) .deps
