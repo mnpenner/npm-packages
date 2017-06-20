@@ -10,8 +10,12 @@ export function isString(obj: any): obj is string {
     return typeof obj === 'string' || obj instanceof String;
 }
 
-export function isNumber(obj: any) {
+export function isNumber(obj: any): obj is number {
     return typeof obj === 'number' || obj instanceof Number;
+}
+
+export function isInteger(obj: any): obj is number {
+    return isNumber(obj) && obj === (obj|0);
 }
 
 export function isPromise(obj: any): obj is Promise<any> {
@@ -86,6 +90,6 @@ export function isBuffer(obj: any): obj is Buffer {
     return false;
 }
 
-export function isError(obj: any) {
+export function isError(obj: any): obj is Error {
     return obj instanceof Error;
 }

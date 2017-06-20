@@ -1,6 +1,6 @@
 BIN := node_modules/.bin
 SRC_FILES := $(shell find src -name '*.ts')
-TS_DEPS := $(SRC_FILES) yarn.lock tsconfig.json
+TS_DEPS := $(SRC_FILES) yarn.lock tsconfig.json Makefile
 
 # these are not files
 .PHONY: clean test patch
@@ -11,11 +11,11 @@ TS_DEPS := $(SRC_FILES) yarn.lock tsconfig.json
 all: dist/node dist/browser dist/jtilz.d.ts
 
 dist/browser: $(TS_DEPS) | .deps/lint
-	$(BIN)/tsc -t "ES5" -m "ES6" --outDir dist/browser
+	$(BIN)/tsc --target es5 --module es6 --outDir dist/browser --lib esnext,dom src/index.browser.ts
 	@touch $@
 
 dist/node: $(TS_DEPS) | .deps/lint
-	$(BIN)/tsc -t "ES2017" -m "CommonJS" --outDir dist/node
+	$(BIN)/tsc --target es2017 --module commonjs --outDir dist/node --lib esnext src/index.node.ts
 	@touch $@
 
 .deps/lint: $(TS_DEPS) .deps

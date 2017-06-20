@@ -1,3 +1,4 @@
+import {URL} from 'url';
 import FileSystem = require('fs');
 import Path = require('path');
 import {flatten} from './array';

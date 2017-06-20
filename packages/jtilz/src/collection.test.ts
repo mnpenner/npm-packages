@@ -1,4 +1,7 @@
-import {__skip__, filterMap, filterMapAsync, flatMap, mapArray, toArray, toArrayStrict, toSet} from './collection';
+import {
+    __skip__, filterMap, filterMapAsync, flatMap, groupBy, mapArray, reduceArray, toArray, toArrayStrict,
+    toSet
+} from './collection';
 
 
 const numbers = [1, 2, 3, 4, 5];
@@ -75,3 +78,59 @@ test(flatMap.name, () => {
         [2,4]
     )
 });
+
+test(reduceArray.name, () => {
+    expect(
+        reduceArray([0,1,2,3], (acc, val) => acc + val)
+    ).toEqual(6);
+    expect(
+        reduceArray([0,1,2,3], (acc, val) => acc + val, 0)
+    ).toEqual(6);
+})
+
+// test(groupBy.name, () => {
+//     const people = [
+//         {
+//             name: "Luke Skywalker",
+//             species: "Human",
+//         },
+//         {
+//             name: "C-3PO",
+//             species: "Droid",
+//         },
+//         {
+//             name: "R2-D2",
+//             species: "Droid",
+//         },
+//     ];
+//
+//     expect(
+//         groupBy(people, p => p.species)
+//     ).toEqual(
+//         {
+//             Human: [
+//                 {
+//                     name: "Luke Skywalker",
+//                     species: "Human",
+//                 },
+//             ],
+//             Droid: [
+//                 {
+//                     name: "C-3PO",
+//                     species: "Droid",
+//                 },
+//                 {
+//                     name: "R2-D2",
+//                     species: "Droid",
+//                 },
+//
+//             ]
+//         }
+//     )
+//
+//     expect(
+//         groupBy(new Set([6.1, 4.2, 6.3]), Math.floor)
+//     ).toEqual(
+//         { '4': [4.2], '6': [6.1, 6.3] }
+//     )
+// });
