@@ -29,6 +29,9 @@ export interface _Console {
     warn(...optionalParams: any[]): void;
 }
 
+// http://json.org/
+export type JsonType = string|number|object|Array<any>|boolean|null;
+
 /**
  * A decorator is a function that takes in a function and returns a new function that accepts the same args,
  * but adds some extra functionality.
