@@ -1,13 +1,22 @@
-
-
 /**
  * Identity function. Returns whatever it's given as-is.
  * 
  * @param arg
  * @returns {T}
  */
+
+
+import {isFunction} from './is';
+
 export function identity<T>(arg: T): T {
     return arg;
+}
+
+/**
+ * Unwraps a value. If passed a function, evaluates that function with the provided args. Otherwise, returns the value as-is.
+ */
+export function value<T>(this: any, functionOrValue: (...args: any[]) => T|T, ...args: any[]): T {
+    return isFunction(functionOrValue) ? functionOrValue.call(this, ...args) : functionOrValue;
 }
 
 /**
