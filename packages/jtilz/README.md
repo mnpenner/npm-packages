@@ -27,4 +27,4 @@ let output = Jtilz.encodeParam(input);
 
 ## API
 
-See [docs/index.html](docs/index.html).
+See [docs/index.html](https://htmlpreview.github.io/?https://bitbucket.org/mnpenner/jtilz/raw/typescript/docs/index.html).
