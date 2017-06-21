@@ -3,8 +3,6 @@
     "strict": true,
     "removeComments": false,
     "preserveConstEnums": false,
-    "sourceMap": true,
-    "noEmitOnError": true,
     "pretty": true,
     "noEmit": true,
     "target": "es2017",

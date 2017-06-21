@@ -22,9 +22,6 @@ dist/node: tsconfig.node.json $(TS_DEPS) | .deps/lint
 	$(BIN)/tsc -p $<
 	@touch $@
 
-docs/node: tsconfig.typedoc.json $(TS_DEPS) | .deps/lint
-	$(BIN)/typedoc -p $< --out $@ --mode file --moduleResolution node .
-
 yarn.lock:: package.json
 	@yarn install --production=false
 	@touch -mr $@ $<

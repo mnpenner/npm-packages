@@ -1,12 +1,14 @@
 {
   "compilerOptions": {
     "strict": true,
-    "removeComments": false,
+    "importHelpers": false,
+    "removeComments": true,
     "preserveConstEnums": false,
     "sourceMap": true,
+    "inlineSources": true,
     "noEmitOnError": true,
     "pretty": true,
-    "outDir": "dist/node",
+    "outDir": "dist/web",
     "target": "es5",
     "downlevelIteration": true,
     "lib": ["esnext","dom"],
