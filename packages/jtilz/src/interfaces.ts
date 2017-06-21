@@ -4,7 +4,7 @@ export interface IDictionary<TValue> {
 
 // TS2461: Type 'Iterable' is not an array type.
 // https://github.com/Microsoft/TypeScript/issues/4130
-export interface _Console {
+export interface Console {
     assert(test?: boolean, message?: string, ...optionalParams: any[]): void;
     clear(): void;
     count(countTitle?: string): void;

@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "removeComments": false,
+    "preserveConstEnums": false,
+    "sourceMap": true,
+    "noEmitOnError": true,
+    "pretty": true,
+    "outDir": "dist/node",
+    "target": "es2017",
+    "downlevelIteration": false,
+    "lib": ["esnext"],
+    "moduleResolution": "node",
+    "declaration": true,
+    "module": "commonjs",
+    "types" : ["node"]
+  },
+  "include": [
+    "dist/node/**/*.d.ts"
+  ]
+}

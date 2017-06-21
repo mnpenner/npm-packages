@@ -6,13 +6,16 @@
     "sourceMap": true,
     "noEmitOnError": true,
     "pretty": true,
-    "outDir": "dist",
+    "outDir": "dist/node",
     "target": "es5",
     "downlevelIteration": true,
-    "lib": ["esnext", "dom"],
-    "moduleResolution": "node"
+    "lib": ["esnext","dom"],
+    "moduleResolution": "node",
+    "declaration": true,
+    "module": "es6",
+    "types" : []
   },
-  "include": [
-    "src/**/*"
+  "files": [
+    "src/index.web.ts"
   ]
 }

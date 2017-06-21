@@ -91,16 +91,6 @@ export function isSymbol(obj: any): obj is symbol {
     return Object.prototype.toString.call(obj) === '[object Symbol]';
 }
 
-declare const BUILD_TARGET: string; // need to actually define this
-
-export function isBuffer(obj: any): obj is Buffer {
-    if(BUILD_TARGET === 'node') {
-        return Buffer.isBuffer(obj);
-    }
-    // TODO: should we check if obj is a UInt8Array or something?
-    return false;
-}
-
 export function isError(obj: any): obj is Error {
     return obj instanceof Error;
 }

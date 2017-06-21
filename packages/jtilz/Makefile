@@ -1,6 +1,6 @@
 BIN := node_modules/.bin
 SRC_FILES := $(shell find src -name '*.ts')
-TS_DEPS := $(SRC_FILES) yarn.lock tsconfig.json Makefile
+TS_DEPS := $(SRC_FILES) yarn.lock
 
 # these are not files
 .PHONY: clean test patch
@@ -10,17 +10,20 @@ TS_DEPS := $(SRC_FILES) yarn.lock tsconfig.json Makefile
 
 all: dist/node dist/web
 
-dist/web: $(TS_DEPS) | .deps/lint
-	$(BIN)/tsc --target es5 --module es6 --outDir dist/web --lib esnext,dom  --strict --noEmitOnError --moduleResolution node --declaration --downlevelIteration src/index.web.ts
+.deps/lint: tsconfig.lint.json $(TS_DEPS) .deps
+	$(BIN)/tsc -p $<
 	@touch $@
 
-dist/node: $(TS_DEPS) | .deps/lint
-	$(BIN)/tsc --target es2017 --module commonjs --outDir dist/node --lib esnext --strict --noEmitOnError --moduleResolution node --declaration src/index.node.ts
+dist/web: tsconfig.web.json $(TS_DEPS) | .deps/lint
+	$(BIN)/tsc -p $<
 	@touch $@
 
-.deps/lint: $(TS_DEPS) .deps
-	$(BIN)/tsc --noEmit --pretty
+dist/node: tsconfig.node.json $(TS_DEPS) | .deps/lint
+	$(BIN)/tsc -p $<
 	@touch $@
+
+docs/node: tsconfig.typedoc.json $(TS_DEPS) | .deps/lint
+	$(BIN)/typedoc -p $< --out $@ --mode file --moduleResolution node .
 
 yarn.lock:: package.json
 	@yarn install --production=false
@@ -38,7 +41,7 @@ publish: all
 	npm publish dist
 
 clean:
-	rm -rf dist .deps
+	rm -rf dist .deps docs
 
 test: 
-	BABEL_ENV=test $(BIN)/jest
+	$(BIN)/jest

@@ -1,9 +1,9 @@
 import * as T from '../Lang/is';
-import {_Console} from '../interfaces';
+import {Console} from '../interfaces';
 
 
 export function log(...args: any[]) {
-    (console as _Console).log(...join(args.map(formatDevTools),' '));
+    (console as Console).log(...join(args.map(formatDevTools),' '));
 }
 
 function formatDevTools(obj: any) {

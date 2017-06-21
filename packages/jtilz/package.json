@@ -1,14 +1,16 @@
 {
   "name": "jtilz",
-  "version": "0.3.0",
+  "version": "0.3.4",
   "description": "",
   "author": "Mark Penner <jtilz@mpen.ca>",
   "license": "MIT",
   "devDependencies": {
+    "@types/highlight.js": "^9.1.9",
     "@types/jest": "^20.0.1",
     "@types/node": "^7.0.31",
     "dts-generator": "^2.1.0",
     "jest": "^20.0.4",
+    "typedoc": "^0.7.1",
     "typescript": "^2.3.4"
   },
   "browser": "web/index.web",
