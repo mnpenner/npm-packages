@@ -5,7 +5,7 @@ import {flatten} from '../Arr';
 import {promisify} from '../Lang/promise';
 import {filterAsync} from '../Col';
 import {Stats} from 'fs';
-import {JsonType} from '../interfaces';
+import {JsonValue} from '../interfaces';
 
 
 export interface ReadOptions {
@@ -30,7 +30,7 @@ export const writeFile: (file: string|Buffer|FileDescriptor, data: string|Buffer
 
 export const readText = (file: string) => readFile<string>(file, {encoding: 'utf8'});
 
-export const readJson: (file: string) => Promise<JsonType>
+export const readJson: (file: string) => Promise<JsonValue>
     = file => readText(file).then(x => JSON.parse(x));
 
 const _readDir = promisify<string[]>(FileSystem.readdir);

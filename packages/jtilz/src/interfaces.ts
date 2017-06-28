@@ -30,7 +30,11 @@ export interface Console {
 }
 
 // http://json.org/
-export type JsonType = string|number|object|Array<any>|boolean|null;
+export interface JsonArray extends Array<JsonValue> {}
+export interface JsonObject {
+    [id: string]: JsonValue;
+}
+export type JsonValue = string|number|JsonObject|JsonArray|boolean|null;
 
 /**
  * A decorator is a function that takes in a function and returns a new function that accepts the same args,
