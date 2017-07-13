@@ -7,7 +7,7 @@ Merge HTML attributes (for React).
 - `style` performs a shallow merge via `Object.assign`.
 - Event handlers (attributes beginning with "on") will be combined into a single function that executes all the handlers.
     - The same goes for [`ref`](https://facebook.github.io/react/docs/refs-and-the-dom.html)
-- Everything else will be overwritten
+- Everything else will be overwritten (right-most value takes precedence)
 
 ## Installation
 

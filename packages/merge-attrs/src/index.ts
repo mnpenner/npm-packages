@@ -17,7 +17,8 @@ export interface IAttrs {
     className?: ClassValue,
     style?: {[prop: string]: string|number},
     ref?: RefCallback,
-    [key: string]: any;
+    // TODO: fill with exhaustive list of attributes to assist the IDE
+    [other: string]: any;
 }
 
 // @types/react is borked -- copy SyntheticEvent here to avoid compile errors
