@@ -64,8 +64,6 @@ function mergeAttrs(...attrDicts: IAttrs[]): IAttrs {
                 delete merged[attr];
             } else if(value === mergeAttrs.UNDEFINED) {
                 merged[attr] = undefined;
-            } else if(merged[attr] === undefined) {
-                merged[attr] = value;
             } else if(attr === 'style') {
                 Object.assign(merged[attr], value);
             } else if(attr === 'className') {
@@ -79,7 +77,7 @@ function mergeAttrs(...attrDicts: IAttrs[]): IAttrs {
     }
 
     if(classes.length) {
-        merged.className = classNames(...classes);
+        merged.className = classNames(classes);
     }
 
     for(let attr of Object.keys(eventHandlers)) {

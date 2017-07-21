@@ -30,6 +30,12 @@ describe(mergeAttrs.name, () => {
         ).toEqual(
             {className: 'foo'}
         );
+
+        expect(
+            mergeAttrs({className: undefined}, {className: ['foo','bar']})
+        ).toEqual(
+            {className: 'foo bar'}
+        );
     });
 
     it('merges styles', () => {
