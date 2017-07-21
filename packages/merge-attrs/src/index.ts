@@ -45,9 +45,13 @@ interface SyntheticEvent<T> {
 type EventHandler = (e: SyntheticEvent<any>) => void;
 export type RefCallback = (n: Element) => void;
 
-export default function mergeAttrs(merged: IAttrs, ...attrDicts: IAttrs[]): IAttrs {
+function mergeAttrs(...attrDicts: IAttrs[]): IAttrs {
+    if(attrDicts.length === 0) {
+        return {};
+    }
     let eventHandlers: {[attr:string]: Array<EventHandler|RefCallback>} = {};
-    let classes = merged.className ? [merged.className] : [];
+    let classes = [];
+    let merged = attrDicts[0];
 
     for(let attrs of attrDicts) {
         for(let attr of Object.keys(attrs)) {
@@ -56,6 +60,10 @@ export default function mergeAttrs(merged: IAttrs, ...attrDicts: IAttrs[]): IAtt
 
             if(value === undefined) {
                 //
+            } else if(value === mergeAttrs.DELETE) {
+                delete merged[attr];
+            } else if(value === mergeAttrs.UNDEFINED) {
+                merged[attr] = undefined;
             } else if(merged[attr] === undefined) {
                 merged[attr] = value;
             } else if(attr === 'style') {
@@ -76,10 +84,7 @@ export default function mergeAttrs(merged: IAttrs, ...attrDicts: IAttrs[]): IAtt
 
     for(let attr of Object.keys(eventHandlers)) {
         const funcs = eventHandlers[attr];
-
-        if(merged[attr]) {
-            funcs.unshift(merged[attr]);
-        }
+        
         if(funcs.length === 1) {
             merged[attr] = funcs[0];
         } else {
@@ -96,3 +101,10 @@ export default function mergeAttrs(merged: IAttrs, ...attrDicts: IAttrs[]): IAtt
 
     return merged;
 }
+
+namespace mergeAttrs {
+    export const DELETE = Symbol('DELETE');
+    export const UNDEFINED = Symbol('DELETE');
+}
+
+export default mergeAttrs;

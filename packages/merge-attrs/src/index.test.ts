@@ -84,4 +84,12 @@ describe(mergeAttrs.name, () => {
         expect(handler1).toBeCalledWith(node);
         expect(handler2).toBeCalledWith(node, val);
     });
+
+    it('allows deleting and undefining props', () => {
+        const result = mergeAttrs({foo: 'bar', baz: 'quux', corge: 'grault'}, {
+            foo: mergeAttrs.DELETE,
+            baz: mergeAttrs.UNDEFINED
+        });
+        expect(result).toEqual({baz: undefined, corge: 'grault'});
+    });
 });
