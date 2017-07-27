@@ -11,7 +11,7 @@ test(Type.isFloat.name, () => {
     expect(Type.isFloat(1.1)).toBe(true);
     expect(Type.isFloat(1.0)).toBe(false);
     expect(Type.isFloat(0)).toBe(false);
-    expect(Type.isInteger('foo')).toBe(false);
+    expect(Type.isFloat('foo')).toBe(false);
     expect(Type.isFloat(Math.PI)).toBe(true);
     expect(Type.isFloat(Number.MIN_VALUE)).toBe(true);
     expect(Type.isFloat(Number.EPSILON)).toBe(true);
