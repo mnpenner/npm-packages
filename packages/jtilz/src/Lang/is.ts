@@ -73,7 +73,7 @@ export function isNullish(obj: any): obj is null|undefined|number { // the NaN k
  * Checks if value is `null` or `undefined`.
  */
 export function isNil(obj: any): obj is null|undefined {
-    return obj === null || obj === undefined || obj !== obj;
+    return obj === null || obj === undefined;
 }
 
 export function isObject(obj: any): obj is object {
