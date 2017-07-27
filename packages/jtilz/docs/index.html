@@ -1045,7 +1045,13 @@ img { max-width: 100%; }
 			<a href="index.html#isdate" class="tsd-kind-icon">is<wbr>Date</a>
 		</li>
 		<li class=" tsd-kind-function tsd-is-external">
+			<a href="index.html#isempty" class="tsd-kind-icon">is<wbr>Empty</a>
+		</li>
+		<li class=" tsd-kind-function tsd-is-external">
 			<a href="index.html#iserror" class="tsd-kind-icon">is<wbr>Error</a>
+		</li>
+		<li class=" tsd-kind-function tsd-is-external">
+			<a href="index.html#isfloat" class="tsd-kind-icon">is<wbr>Float</a>
 		</li>
 		<li class=" tsd-kind-function tsd-is-external">
 			<a href="index.html#isfunction" class="tsd-kind-icon">is<wbr>Function</a>
@@ -1058,6 +1064,9 @@ img { max-width: 100%; }
 		</li>
 		<li class=" tsd-kind-function tsd-is-external">
 			<a href="index.html#ismap" class="tsd-kind-icon">is<wbr>Map</a>
+		</li>
+		<li class=" tsd-kind-function tsd-is-external">
+			<a href="index.html#isnan" class="tsd-kind-icon">is<wbr>NaN</a>
 		</li>
 		<li class=" tsd-kind-function tsd-is-external">
 			<a href="index.html#isnativefunction" class="tsd-kind-icon">is<wbr>Native<wbr>Function</a>
@@ -1235,11 +1244,14 @@ img { max-width: 100%; }
 							<li class="tsd-kind-function tsd-is-external"><a href="index.html#isboolean" class="tsd-kind-icon">is<wbr>Boolean</a></li>
 							<li class="tsd-kind-function tsd-is-external"><a href="index.html#isbuffer" class="tsd-kind-icon">is<wbr>Buffer</a></li>
 							<li class="tsd-kind-function tsd-is-external"><a href="index.html#isdate" class="tsd-kind-icon">is<wbr>Date</a></li>
+							<li class="tsd-kind-function tsd-is-external"><a href="index.html#isempty" class="tsd-kind-icon">is<wbr>Empty</a></li>
 							<li class="tsd-kind-function tsd-is-external"><a href="index.html#iserror" class="tsd-kind-icon">is<wbr>Error</a></li>
+							<li class="tsd-kind-function tsd-is-external"><a href="index.html#isfloat" class="tsd-kind-icon">is<wbr>Float</a></li>
 							<li class="tsd-kind-function tsd-is-external"><a href="index.html#isfunction" class="tsd-kind-icon">is<wbr>Function</a></li>
 							<li class="tsd-kind-function tsd-is-external"><a href="index.html#isinteger" class="tsd-kind-icon">is<wbr>Integer</a></li>
 							<li class="tsd-kind-function tsd-is-external"><a href="index.html#isiterable" class="tsd-kind-icon">is<wbr>Iterable</a></li>
 							<li class="tsd-kind-function tsd-is-external"><a href="index.html#ismap" class="tsd-kind-icon">is<wbr>Map</a></li>
+							<li class="tsd-kind-function tsd-is-external"><a href="index.html#isnan" class="tsd-kind-icon">is<wbr>NaN</a></li>
 							<li class="tsd-kind-function tsd-is-external"><a href="index.html#isnativefunction" class="tsd-kind-icon">is<wbr>Native<wbr>Function</a></li>
 							<li class="tsd-kind-function tsd-is-external"><a href="index.html#isnil" class="tsd-kind-icon">is<wbr>Nil</a></li>
 							<li class="tsd-kind-function tsd-is-external"><a href="index.html#isnull" class="tsd-kind-icon">is<wbr>Null</a></li>
@@ -2370,7 +2382,7 @@ img { max-width: 100%; }
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in Lang/is.ts:53</li>
+								<li>Defined in Lang/is.ts:62</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>
@@ -2393,7 +2405,7 @@ img { max-width: 100%; }
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in Lang/is.ts:29</li>
+								<li>Defined in Lang/is.ts:38</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>
@@ -2439,13 +2451,50 @@ img { max-width: 100%; }
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in Lang/is.ts:37</li>
+								<li>Defined in Lang/is.ts:46</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>
 						<ul class="tsd-parameters">
 							<li>
 								<h5>obj: <span class="tsd-signature-type">any</span></h5>
+							</li>
+						</ul>
+						<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+					</li>
+				</ul>
+			</section>
+			<section class="tsd-panel tsd-member tsd-kind-function tsd-is-external">
+				<a name="isempty" class="tsd-anchor"></a>
+				<h3>is<wbr>Empty</h3>
+				<ul class="tsd-signatures tsd-kind-function tsd-is-external">
+					<li class="tsd-signature tsd-kind-icon">is<wbr>Empty<span class="tsd-signature-symbol">(</span>value<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+				</ul>
+				<ul class="tsd-descriptions">
+					<li class="tsd-description">
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in Lang/value.ts:63</li>
+							</ul>
+						</aside>
+						<div class="tsd-comment tsd-typography">
+							<div class="lead">
+								<p>Returns <code>true</code> for:</p>
+								<ul>
+									<li>null</li>
+									<li>undefined</li>
+									<li>NaN</li>
+									<li>Plain objects without any own enumerable properties</li>
+									<li>Empty arrays, Sets and Maps</li>
+									<li>Invalid Dates
+									Returns <code>false</code> for everything else.</li>
+								</ul>
+							</div>
+						</div>
+						<h4 class="tsd-parameters-title">Parameters</h4>
+						<ul class="tsd-parameters">
+							<li>
+								<h5>value: <span class="tsd-signature-type">any</span></h5>
 							</li>
 						</ul>
 						<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
@@ -2462,9 +2511,38 @@ img { max-width: 100%; }
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in Lang/is.ts:94</li>
+								<li>Defined in Lang/is.ts:110</li>
 							</ul>
 						</aside>
+						<h4 class="tsd-parameters-title">Parameters</h4>
+						<ul class="tsd-parameters">
+							<li>
+								<h5>obj: <span class="tsd-signature-type">any</span></h5>
+							</li>
+						</ul>
+						<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+					</li>
+				</ul>
+			</section>
+			<section class="tsd-panel tsd-member tsd-kind-function tsd-is-external">
+				<a name="isfloat" class="tsd-anchor"></a>
+				<h3>is<wbr>Float</h3>
+				<ul class="tsd-signatures tsd-kind-function tsd-is-external">
+					<li class="tsd-signature tsd-kind-icon">is<wbr>Float<span class="tsd-signature-symbol">(</span>obj<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+				</ul>
+				<ul class="tsd-descriptions">
+					<li class="tsd-description">
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in Lang/is.ts:30</li>
+							</ul>
+						</aside>
+						<div class="tsd-comment tsd-typography">
+							<div class="lead">
+								<p>Checks if value is a number with a non-zero fractional part.</p>
+							</div>
+							<p>Note: <code>1.000</code> is considered an integer, not a float. Similarly, <code>999999.00000000001</code> is an integer, but <code>5e-324</code> is a float (see Number.MIN_VALUE).</p>
+						</div>
 						<h4 class="tsd-parameters-title">Parameters</h4>
 						<ul class="tsd-parameters">
 							<li>
@@ -2554,9 +2632,37 @@ img { max-width: 100%; }
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in Lang/is.ts:45</li>
+								<li>Defined in Lang/is.ts:54</li>
 							</ul>
 						</aside>
+						<h4 class="tsd-parameters-title">Parameters</h4>
+						<ul class="tsd-parameters">
+							<li>
+								<h5>obj: <span class="tsd-signature-type">any</span></h5>
+							</li>
+						</ul>
+						<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+					</li>
+				</ul>
+			</section>
+			<section class="tsd-panel tsd-member tsd-kind-function tsd-is-external">
+				<a name="isnan" class="tsd-anchor"></a>
+				<h3>is<wbr>NaN</h3>
+				<ul class="tsd-signatures tsd-kind-function tsd-is-external">
+					<li class="tsd-signature tsd-kind-icon">is<wbr>NaN<span class="tsd-signature-symbol">(</span>obj<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+				</ul>
+				<ul class="tsd-descriptions">
+					<li class="tsd-description">
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in Lang/is.ts:95</li>
+							</ul>
+						</aside>
+						<div class="tsd-comment tsd-typography">
+							<div class="lead">
+								<p>Checks if value is <code>NaN</code>, like <code>Number.isNaN</code> but unlike <code>global.isNaN</code>.</p>
+							</div>
+						</div>
 						<h4 class="tsd-parameters-title">Parameters</h4>
 						<ul class="tsd-parameters">
 							<li>
@@ -2600,7 +2706,7 @@ img { max-width: 100%; }
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in Lang/is.ts:75</li>
+								<li>Defined in Lang/is.ts:84</li>
 							</ul>
 						</aside>
 						<div class="tsd-comment tsd-typography">
@@ -2628,7 +2734,7 @@ img { max-width: 100%; }
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in Lang/is.ts:57</li>
+								<li>Defined in Lang/is.ts:66</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>
@@ -2651,7 +2757,7 @@ img { max-width: 100%; }
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in Lang/is.ts:68</li>
+								<li>Defined in Lang/is.ts:77</li>
 							</ul>
 						</aside>
 						<div class="tsd-comment tsd-typography">
@@ -2702,7 +2808,7 @@ img { max-width: 100%; }
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in Lang/is.ts:79</li>
+								<li>Defined in Lang/is.ts:88</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>
@@ -2725,7 +2831,7 @@ img { max-width: 100%; }
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in Lang/is.ts:83</li>
+								<li>Defined in Lang/is.ts:99</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>
@@ -2748,7 +2854,7 @@ img { max-width: 100%; }
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in Lang/is.ts:25</li>
+								<li>Defined in Lang/is.ts:34</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>
@@ -2771,7 +2877,7 @@ img { max-width: 100%; }
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in Lang/is.ts:33</li>
+								<li>Defined in Lang/is.ts:42</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>
@@ -2794,7 +2900,7 @@ img { max-width: 100%; }
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in Lang/is.ts:41</li>
+								<li>Defined in Lang/is.ts:50</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>
@@ -2840,7 +2946,7 @@ img { max-width: 100%; }
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in Lang/is.ts:90</li>
+								<li>Defined in Lang/is.ts:106</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>
@@ -2863,7 +2969,7 @@ img { max-width: 100%; }
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in Lang/is.ts:61</li>
+								<li>Defined in Lang/is.ts:70</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>
@@ -2886,7 +2992,7 @@ img { max-width: 100%; }
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in Lang/is.ts:49</li>
+								<li>Defined in Lang/is.ts:58</li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>

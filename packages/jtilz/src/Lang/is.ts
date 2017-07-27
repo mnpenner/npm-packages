@@ -22,6 +22,15 @@ export function isInteger(obj: any): obj is number {
     return isNumber(obj) && obj === (obj|0);
 }
 
+/**
+ * Checks if value is a number with a non-zero fractional part.
+ * 
+ * Note: `1.000` is considered an integer, not a float. Similarly, `999999.00000000001` is an integer, but `5e-324` is a float (see Number.MIN_VALUE).
+ */
+export function isFloat(obj: any): obj is number {
+    return isNumber(obj) && obj !== (obj|0);
+}
+
 export function isPromise(obj: any): obj is Promise<any> {
     return obj instanceof Promise;
 }
@@ -78,6 +87,13 @@ export function isNil(obj: any): obj is null|undefined {
 
 export function isObject(obj: any): obj is object {
     return obj !== null && typeof obj === 'object';
+}
+
+/**
+ * Checks if value is `NaN`, like `Number.isNaN` but unlike `global.isNaN`.
+ */
+export function isNaN(obj: any): obj is number {
+    return obj !== obj;
 }
 
 export function isPlainObject(obj: any): obj is object {
