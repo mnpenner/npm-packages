@@ -1,5 +1,6 @@
 BIN := node_modules/.bin
-SRC_FILES := $(shell find src -name '*.js')
+SRC_FILES := $(shell find src -name '*.ts')
+TS_DEPS := $(SRC_FILES) yarn.lock
 
 # these are not files
 .PHONY: clean test patch
@@ -7,10 +8,22 @@ SRC_FILES := $(shell find src -name '*.js')
 # disable default suffixes
 .SUFFIXES:
 
-.deps/dist: $(SRC_FILES) yarn.lock .deps bundilio.config.js
-#	rm -rf dist/*
-	$(BIN)/bundilio .
+all: dist/node dist/web docs
+
+.deps/lint: tsconfig.lint.json $(TS_DEPS) .deps
+	$(BIN)/tsc -p $<
 	@touch $@
+
+dist/web: tsconfig.web.json $(TS_DEPS) | .deps/lint
+	$(BIN)/tsc -p $<
+	@touch $@
+
+dist/node: tsconfig.node.json $(TS_DEPS) | .deps/lint
+	$(BIN)/tsc -p $<
+	@touch $@
+
+docs: $(TS_DEPS) | .deps/lint
+	typedoc --out $@ src/index.node.ts --moduleResolution node --target es2017 --mode file --readme none --module commonjs --theme minimal
 
 yarn.lock:: package.json
 	@yarn install --production=false
@@ -23,16 +36,12 @@ yarn.lock:: node_modules
 node_modules .deps:
 	mkdir -p $@
 
-patch: .deps/dist test
-	npm version patch
-	cp package.json dist/package.json
-	npm publish dist
-
-publish:
+publish: all
+	cp package.json dist/
 	npm publish dist
 
 clean:
-	rm -rf node_modules dist .deps
+	rm -rf dist .deps docs
 
-test: .deps/dist
-	BABEL_ENV=test $(BIN)/jest
+test: 
+	$(BIN)/jest
