@@ -153,11 +153,11 @@ it('passes options recursively', () => {
 });
 
 it('serializes recursive objects', () => {
-    // let foo = {foo:1};
-    // expect(jsSerialize({a:foo,b:foo})).toBe('{foo:{bar:!0}}');
+    let foo = {foo:1};
+    expect(jsSerialize({a:foo,b:foo})).toBe("(($0)=>({a:$0={foo:1},b:$0}))()");
     
     
-    let o = {a:'perfect'};
-    o.circle = o;
-    expect(jsSerialize(o)).toBe('{foo:{bar:!0}}');
+    // let o = {a:'perfect'};
+    // o.circle = o;
+    // expect(jsSerialize(o)).toBe('{foo:{bar:!0}}');
 });

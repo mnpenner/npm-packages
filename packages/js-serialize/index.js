@@ -4,39 +4,39 @@ const util = require('./util');
 let nativeFuncs = new Map();
 const isRaw = Symbol('isRaw');
 
-const defaults = {
-    compact: false,
-    safe: true,
-};
-
 function jsSerialize(obj, options) {
     
     let opt = Object.assign({
+        compact: false,
+        safe: true,
         _objects: new Set(),
         _circular: new Set(),
-    }, defaults, options);
+    }, options);
     
     let out = doSerialize(obj, opt);
     
     if(opt._circular.size) {
-        let values = Array.from(opt._circular).map((o,i) => [o,`$${i}`]);
-        out = doSerialize(obj, Object.assign({_lookup: new Map(values)}, defaults, options));
-        // let z = values.map(v => doSerialize(v[0],Object.assign({_force: true},defaults,options))).join(',');
-        let z = 111;
-        out = `((${values.map(v => v[1]).join(',')})=>(${out}))(${z})`;
+        delete opt._objects;
+        opt._lookup = new Map();
+        out = doSerialize(obj, opt);
+        out = `((${Array.from(opt._lookup.values()).join(',')})=>(${out}))()`;
     }
     
     return out.split('</script').join('<\\/script');
 }
 
-function doSerialize(obj, options) {
+function doSerialize(obj, options, force) {
     const R = o => doSerialize(o, options);
     
-    
-    if(!options._force && util.isObject(obj)) {
+    if(!force && util.isObject(obj)) {
         if(options._lookup) { // 2nd run
             if(options._lookup.has(obj)) {
                 return options._lookup.get(obj);
+            }
+            if(options._circular.has(obj)) {
+                let k = `$${options._lookup.size}`;
+                options._lookup.set(obj, k);
+                return `${k}=${doSerialize(obj,options,true)}`;
             }
         } else {
             if(options._objects.has(obj)) {
@@ -195,7 +195,7 @@ function serializePropertyName(name, options) {
         if(!options.safe || !keywords.has(name) && propName.test(name)) {
             return name;
         }
-        return doSerialize(name, options);
+        return doSerialize(name);
     }
 
     throw new Error(`Cannot make property name`);
