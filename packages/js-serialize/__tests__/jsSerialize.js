@@ -15,8 +15,11 @@ it('serializes numbers', () => {
 });
 
 it('serializes Infinity', () => {
-    expect(jsSerialize(Infinity)).toBe('1/0');
-    expect(jsSerialize(-Infinity)).toBe('1/-0');
+    expect(jsSerialize(Infinity)).toBe('Infinity');
+    expect(jsSerialize(-Infinity)).toBe('-Infinity');
+
+    expect(jsSerialize(Infinity, {compact:true})).toBe('1/0');
+    expect(jsSerialize(-Infinity, {compact:true})).toBe('1/-0');
 });
 
 it('serializes NaN', () => {
@@ -40,7 +43,8 @@ it('serializes maps', () => {
 });
 
 it('serializes dates', () => {
-    expect(jsSerialize(new Date('2017-05-04T16:55:50.457Z'))).toBe('new Date(1493916950457)');
+    expect(jsSerialize(new Date('2017-05-04T16:55:50.457Z'))).toBe('new Date("2017-05-04T16:55:50.457Z")');
+    expect(jsSerialize(new Date('2017-05-04T16:55:50.457Z'), {compact: true})).toBe('new Date(1493916950457)');
 });
 
 it('serializes scripts', () => {
@@ -62,6 +66,13 @@ it('serializes symbols', () => {
     expect(jsSerialize(Symbol.for('foo'))).toBe('Symbol.for("foo")');
     expect(jsSerialize(Symbol())).toBe('Symbol()'); // this isn't the same Symbol!
     expect(jsSerialize(Symbol('bar'))).toBe('Symbol("bar")'); // nor is this
+
+    expect(jsSerialize({[Symbol.for('foo')]:'foo'})).toBe(`{[Symbol.for("foo")]:"foo"}`);
+});
+
+it('quotes keyword property names', () => {
+    expect(jsSerialize({class:1,do:2,finally:3,for:4,five:5})).toBe(`{"class":1,"do":2,"finally":3,"for":4,five:5}`);
+    expect(jsSerialize({class:1,do:2,finally:3,for:4,five:5},{safe:false})).toBe(`{class:1,do:2,finally:3,for:4,five:5}`);
 });
 
 it('serializes null', () => {
@@ -100,8 +111,11 @@ it('serializes raw', () => {
 });
 
 it('serializes booleans', () => {
-    expect(jsSerialize(true)).toBe('!0');
-    expect(jsSerialize(false)).toBe('!1');
+    expect(jsSerialize(true)).toBe('true');
+    expect(jsSerialize(false)).toBe('false');
+
+    expect(jsSerialize(true,{compact:true})).toBe('!0');
+    expect(jsSerialize(false,{compact:true})).toBe('!1');
 });
 
 it('serializes toSource', () => {
@@ -132,4 +146,18 @@ it('serializes toJSON', () => {
 
     expect(jsSerialize(obj)).toBe('"bar"');
     expect(jsSerialize({ x: obj })).toBe('{x:"bar"}');
+});
+
+it('passes options recursively', () => {
+    expect(jsSerialize({foo:{bar:true}},{compact:true})).toBe('{foo:{bar:!0}}');
+});
+
+it('serializes recursive objects', () => {
+    // let foo = {foo:1};
+    // expect(jsSerialize({a:foo,b:foo})).toBe('{foo:{bar:!0}}');
+    
+    
+    let o = {a:'perfect'};
+    o.circle = o;
+    expect(jsSerialize(o)).toBe('{foo:{bar:!0}}');
 });

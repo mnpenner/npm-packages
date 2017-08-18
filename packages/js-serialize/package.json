@@ -9,6 +9,7 @@
   "author": "Mark Penner <mark@mpen.ca>",
   "license": "MIT",
   "dependencies": {
+    "@types/jest": "^20.0.7",
     "xregexp": "^3.1.1"
   },
   "devDependencies": {

@@ -4,11 +4,50 @@ const util = require('./util');
 let nativeFuncs = new Map();
 const isRaw = Symbol('isRaw');
 
-function jsSerialize(obj) {
-    return js(obj).split('</script').join('<\\/script');
+const defaults = {
+    compact: false,
+    safe: true,
+};
+
+function jsSerialize(obj, options) {
+    
+    let opt = Object.assign({
+        _objects: new Set(),
+        _circular: new Set(),
+    }, defaults, options);
+    
+    let out = doSerialize(obj, opt);
+    
+    if(opt._circular.size) {
+        let values = Array.from(opt._circular).map((o,i) => [o,`$${i}`]);
+        out = doSerialize(obj, Object.assign({_lookup: new Map(values)}, defaults, options));
+        // let z = values.map(v => doSerialize(v[0],Object.assign({_force: true},defaults,options))).join(',');
+        let z = 111;
+        out = `((${values.map(v => v[1]).join(',')})=>(${out}))(${z})`;
+    }
+    
+    return out.split('</script').join('<\\/script');
 }
 
-function js(obj) {
+function doSerialize(obj, options) {
+    const R = o => doSerialize(o, options);
+    
+    
+    if(!options._force && util.isObject(obj)) {
+        if(options._lookup) { // 2nd run
+            if(options._lookup.has(obj)) {
+                return options._lookup.get(obj);
+            }
+        } else {
+            if(options._objects.has(obj)) {
+                // recursion -- skip for now
+                options._circular.add(obj);
+                return '«recursion»';
+            }
+            options._objects.add(obj);
+        }
+    }
+    
     // TODO: Object.isFrozen check
     // TODO: compression option -- create functions for all the different types
     if(util.isArray(obj)) {
@@ -20,7 +59,7 @@ function js(obj) {
         for(let i=0; i<obj.length; ++i) {
             if(obj.hasOwnProperty(i)) {
                 hasProp = true;
-                sb.push(js(obj[i]));
+                sb.push(R(obj[i]));
             } else {
                 sb.push('');
             }
@@ -34,18 +73,18 @@ function js(obj) {
         return '[' +  sb.join(',') + ']';
     } else if(obj instanceof Set) {
         if(obj.size) {
-            return 'new Set(' + js(Array.from(obj)) + ')';
+            return 'new Set(' + R(Array.from(obj)) + ')';
         }
         return 'new Set';
     } else if(obj instanceof Map) {
         if(obj.size) {
-            return 'new Map(' + js(Array.from(obj)) + ')';
+            return 'new Map(' + R(Array.from(obj)) + ')';
         }
         return 'new Map';
     } else if(obj instanceof Date) {
-        return 'new Date(' + js(obj.getTime()) + ')';
+        return 'new Date(' + R(options.compact ? obj.getTime() : obj.toISOString()) + ')';
     } else if(util.isSymbol(obj)) {
-        return serializeSymbol(obj);
+        return serializeSymbol(obj, options);
     } else if(util.isNativeFunction(obj)) {
         let path = nativeFuncs.get(obj);
         
@@ -84,20 +123,20 @@ function js(obj) {
             case Math.SQRT2:
                 return 'Math.SQRT2';
             case Infinity:
-                return '1/0';
+                return options.compact ? '1/0' : 'Infinity';
             case -Infinity:
-                return '1/-0';
+                return options.compact ? '1/-0' : '-Infinity';
         }
         if(Object.is(obj, -0)) return '-0';
         return String(obj);
     } else if(obj === true) {
-        return '!0';
+        return options.compact ? '!0' : 'true';
     } else if(obj === false) {
-        return '!1';
+        return options.compact ? '!1' : 'false';
     } else if(util.isString(obj)) {
         return JSON.stringify(obj);
     } else if(obj === undefined) {
-        return 'undefined';
+        return options.compact ? 'void 0' : 'undefined';
     } else if(obj === null) {
         return 'null';
     } else if(util.isObject(obj)) {
@@ -108,12 +147,12 @@ function js(obj) {
             return obj.toSource();
         }
         if(util.isFunction(obj.toJSON)) {
-            return js(obj.toJSON());
+            return R(obj.toJSON());
         }
         // TODO: circular reference support
         let tmp = [];
         for(let key of Reflect.ownKeys(obj)) {
-            tmp.push(serializePropertyName(key)+':'+js(obj[key]));
+            tmp.push(serializePropertyName(key, options)+':'+R(obj[key]));
         }
         return '{' + tmp.join(',') + '}';
     } else {
@@ -131,16 +170,16 @@ jsSerialize.raw = function raw(jsCode) {
     });
 };
 
-function serializeSymbol(sym) {
+function serializeSymbol(sym, options) {
     let key = Symbol.keyFor(sym);
     if(key === undefined) {
         let m = sym.toString().match(/^Symbol\((.+)\)$/);
         if(m) {
-            return `Symbol(${js(m[1])})`;
+            return `Symbol(${doSerialize(m[1], options)})`;
         }
         return `Symbol()`; // not sure if this is worthwhile or not
     } else {
-        return `Symbol.for(${js(key)})`;
+        return `Symbol.for(${doSerialize(key, options)})`;
     }
 }
 
@@ -148,15 +187,15 @@ const keywords = new Set(['do','if','in','for','let','new','try','var','case','e
 
 const propName = XRegExp('^[$_\\p{Lu}\\p{Ll}\\p{Lt}\\p{Lm}\\p{Lo}\\p{Ll}][$_\\p{Lu}\\p{Ll}\\p{Lt}\\p{Lm}\\p{Lo}\\p{Ll}\\u200C\\u200D\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}]*$');
 
-function serializePropertyName(name) {
+function serializePropertyName(name, options) {
     if(util.isSymbol(name)) {
-        return '['+serializeSymbol(name)+']';
+        return '['+serializeSymbol(name, options)+']';
     }
     if(util.isString(name)) {
-        if(!keywords.has(name) && propName.test(name)) {
+        if(!options.safe || !keywords.has(name) && propName.test(name)) {
             return name;
         }
-        return js(name);
+        return doSerialize(name, options);
     }
 
     throw new Error(`Cannot make property name`);
