@@ -52,12 +52,17 @@ function mergeAttrs(...attrDicts: IAttrs[]): IAttrs {
     let eventHandlers: {[attr:string]: Array<EventHandler|RefCallback>} = {};
     let classes = [];
     let merged = attrDicts[0];
+    
+    for(let k of Object.keys(merged)) {
+        if(merged[k] === undefined) {
+            delete merged[k];
+        }
+    }
 
     for(let attrs of attrDicts) {
         for(let attr of Object.keys(attrs)) {
             const value = attrs[attr];
             
-
             if(value === undefined) {
                 //
             } else if(value === mergeAttrs.DELETE) {
@@ -65,7 +70,7 @@ function mergeAttrs(...attrDicts: IAttrs[]): IAttrs {
             } else if(value === mergeAttrs.UNDEFINED) {
                 merged[attr] = undefined;
             } else if(attr === 'style') {
-                Object.assign(merged[attr], value);
+                merged[attr] = Object.assign({}, merged[attr], value);
             } else if(attr === 'className') {
                 classes.push(value);
             } else if(attr === 'ref' || /^on[A-Z]/.test(attr)) {
@@ -101,8 +106,8 @@ function mergeAttrs(...attrDicts: IAttrs[]): IAttrs {
 }
 
 namespace mergeAttrs {
-    export const DELETE = Symbol('DELETE');
-    export const UNDEFINED = Symbol('DELETE');
+    export const DELETE = Symbol('delete');
+    export const UNDEFINED = Symbol('undefined');
 }
 
 export default mergeAttrs;

@@ -63,8 +63,57 @@ describe(mergeAttrs.name, () => {
                 },
             }
         );
-    });
 
+        expect(
+            mergeAttrs(
+                {
+                    type: 'text',
+                },
+                {
+                    style: {
+                        color: 'blue',
+                        fontFamily: 'verdana',
+                    },
+                }
+            )
+        ).toEqual(
+            {
+                style: {
+                    color: 'blue',
+                    fontFamily: 'verdana',
+                },
+                type: 'text',
+            }
+        );
+
+        expect(
+            mergeAttrs(
+                {
+                    style: undefined
+                },
+                {
+                    style: {
+                        color: 'blue',
+                        fontFamily: 'verdana',
+                    },
+                }
+            )
+        ).toEqual(
+            {
+                style: {
+                    color: 'blue',
+                    fontFamily: 'verdana',
+                },
+            }
+        );
+    });
+    
+    it(`doesn't mutate styles`, () => {
+        let style = {foo:'bar'};
+        let result = mergeAttrs({style},{style:{baz:99}});
+        expect(style).toEqual({foo:'bar'});
+    });
+    
     it('merges event handlers', () => {
         const noop = () => {};
         let result1 = mergeAttrs({onClick: noop},{onClick:undefined});
@@ -97,5 +146,15 @@ describe(mergeAttrs.name, () => {
             baz: mergeAttrs.UNDEFINED
         });
         expect(result).toEqual({baz: undefined, corge: 'grault'});
+    });
+
+    it(`doesn't copy undefined props`, () => {
+        const result = mergeAttrs({foo:'bar'},{foo:undefined,baz:undefined});
+        expect(result).toEqual({foo:'bar'});
+    });
+
+    it(`deletes undefined props from left-most object`, () => {
+        const result = mergeAttrs({foo:'bar',bar:undefined});
+        expect(result).toEqual({foo:'bar'}); // fixme: https://github.com/facebook/jest/issues/711
     });
 });
