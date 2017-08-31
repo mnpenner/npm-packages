@@ -4,47 +4,48 @@ const util = require('./util');
 let nativeFuncs = new Map();
 const isRaw = Symbol('isRaw');
 
-function jsSerialize(obj, options) {
-    
-    let opt = Object.assign({
+function merge(out, ...objs) {
+    for(let obj of objs) {
+        if(obj) {
+            for(let key of Object.keys(obj)) {
+                if(obj[key] !== undefined) {
+                    out[key] = obj[key];
+                }
+            }
+        }
+    }
+    return out;
+}
+
+function jsSerialize(object, options) {
+    let opt = merge({
         compact: false,
         safe: true,
-        _objects: new Set(),
-        _circular: new Set(),
     }, options);
     
-    let out = doSerialize(obj, opt);
+    let ctx = {
+        seen: new Set(),
+        dupes: new Set(),
+    };
     
-    if(opt._circular.size) {
-        delete opt._objects;
-        opt._lookup = new Map();
-        out = doSerialize(obj, opt);
-        out = `((${Array.from(opt._lookup.values()).join(',')})=>(${out}))()`;
+    let out = doSerialize(object, opt, ctx);
+    
+    if(ctx.dupes.size) {
+        console.log('has dupes');
     }
     
     return out.split('</script').join('<\\/script');
 }
 
-function doSerialize(obj, options, force) {
-    const R = o => doSerialize(o, options);
+function doSerialize(obj, opt, ctx) {
+    const R = o => doSerialize(o, opt, ctx);
     
-    if(!force && util.isObject(obj)) {
-        if(options._lookup) { // 2nd run
-            if(options._lookup.has(obj)) {
-                return options._lookup.get(obj);
-            }
-            if(options._circular.has(obj)) {
-                let k = `$${options._lookup.size}`;
-                options._lookup.set(obj, k);
-                return `${k}=${doSerialize(obj,options,true)}`;
-            }
+    if(util.isObject(obj)) {
+        if(ctx.seen.has(obj)) {
+            ctx.dupes.add(obj);
+            return '«circular»';
         } else {
-            if(options._objects.has(obj)) {
-                // recursion -- skip for now
-                options._circular.add(obj);
-                return '«recursion»';
-            }
-            options._objects.add(obj);
+            ctx.seen.add(obj);
         }
     }
     
@@ -82,9 +83,9 @@ function doSerialize(obj, options, force) {
         }
         return 'new Map';
     } else if(obj instanceof Date) {
-        return 'new Date(' + R(options.compact ? obj.getTime() : obj.toISOString()) + ')';
+        return 'new Date(' + R(opt.compact ? obj.getTime() : obj.toISOString()) + ')';
     } else if(util.isSymbol(obj)) {
-        return serializeSymbol(obj, options);
+        return serializeSymbol(obj, opt, ctx);
     } else if(util.isNativeFunction(obj)) {
         let path = nativeFuncs.get(obj);
         
@@ -123,20 +124,20 @@ function doSerialize(obj, options, force) {
             case Math.SQRT2:
                 return 'Math.SQRT2';
             case Infinity:
-                return options.compact ? '1/0' : 'Infinity';
+                return opt.compact ? '1/0' : 'Infinity';
             case -Infinity:
-                return options.compact ? '1/-0' : '-Infinity';
+                return opt.compact ? '1/-0' : '-Infinity';
         }
         if(Object.is(obj, -0)) return '-0';
         return String(obj);
     } else if(obj === true) {
-        return options.compact ? '!0' : 'true';
+        return opt.compact ? '!0' : 'true';
     } else if(obj === false) {
-        return options.compact ? '!1' : 'false';
+        return opt.compact ? '!1' : 'false';
     } else if(util.isString(obj)) {
         return JSON.stringify(obj);
     } else if(obj === undefined) {
-        return options.compact ? 'void 0' : 'undefined';
+        return opt.compact ? 'void 0' : 'undefined';
     } else if(obj === null) {
         return 'null';
     } else if(util.isObject(obj)) {
@@ -152,7 +153,7 @@ function doSerialize(obj, options, force) {
         // TODO: circular reference support
         let tmp = [];
         for(let key of Reflect.ownKeys(obj)) {
-            tmp.push(serializePropertyName(key, options)+':'+R(obj[key]));
+            tmp.push(serializePropertyName(key, opt, ctx)+':'+R(obj[key]));
         }
         return '{' + tmp.join(',') + '}';
     } else {
@@ -170,16 +171,16 @@ jsSerialize.raw = function raw(jsCode) {
     });
 };
 
-function serializeSymbol(sym, options) {
+function serializeSymbol(sym, options, ctx) {
     let key = Symbol.keyFor(sym);
     if(key === undefined) {
         let m = sym.toString().match(/^Symbol\((.+)\)$/);
         if(m) {
-            return `Symbol(${doSerialize(m[1], options)})`;
+            return `Symbol(${doSerialize(m[1], options, ctx)})`;
         }
         return `Symbol()`; // not sure if this is worthwhile or not
     } else {
-        return `Symbol.for(${doSerialize(key, options)})`;
+        return `Symbol.for(${doSerialize(key, options, ctx)})`;
     }
 }
 
@@ -187,15 +188,15 @@ const keywords = new Set(['do','if','in','for','let','new','try','var','case','e
 
 const propName = XRegExp('^[$_\\p{Lu}\\p{Ll}\\p{Lt}\\p{Lm}\\p{Lo}\\p{Ll}][$_\\p{Lu}\\p{Ll}\\p{Lt}\\p{Lm}\\p{Lo}\\p{Ll}\\u200C\\u200D\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}]*$');
 
-function serializePropertyName(name, options) {
+function serializePropertyName(name, options, ctx) {
     if(util.isSymbol(name)) {
-        return '['+serializeSymbol(name, options)+']';
+        return '['+serializeSymbol(name, options, ctx)+']';
     }
     if(util.isString(name)) {
         if(!options.safe || !keywords.has(name) && propName.test(name)) {
             return name;
         }
-        return doSerialize(name);
+        return doSerialize(name, options, ctx);
     }
 
     throw new Error(`Cannot make property name`);
