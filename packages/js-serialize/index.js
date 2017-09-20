@@ -52,6 +52,9 @@ function doSerialize(obj, opt, ctx) {
     
     // TODO: Object.isFrozen check
     // TODO: compression option -- create functions for all the different types
+    // TODO: scan object and count number of instances of each object, sort by frequency,
+    //   assign objects with the most occurrences the shortest variable name
+    //   repeat recursively. should result in smaller output *and* remove cycles
     if(util.isArray(obj)) {
         if(obj.length === 0) {
             return '[]';
@@ -121,6 +124,7 @@ function doSerialize(obj, opt, ctx) {
         return obj.toString();
     } else if(util.isNumber(obj)) {
         switch(obj) {
+            // alternatively, search Object.getOwnPropertyNames(Math).filter(k => typeof Math[k] === 'number')
             case Math.E:
                 return 'Math.E';
             case Math.LN2:
