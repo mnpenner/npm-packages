@@ -70,6 +70,13 @@ it('serializes symbols', () => {
     expect(jsSerialize({[Symbol.for('foo')]:'foo'})).toBe(`{[Symbol.for("foo")]:"foo"}`);
 });
 
+it('serializes well-known symbols', () => {
+    const wellKnownSymbols = ["hasInstance", "isConcatSpreadable", "iterator", "match", "replace", "search", "species", "split", "toPrimitive", "toStringTag", "unscopables"];
+    for(let wks of wellKnownSymbols) {
+        expect(jsSerialize(Symbol[wks])).toBe(`Symbol.${wks}`);    
+    }
+});
+
 it('quotes keyword property names', () => {
     expect(jsSerialize({class:1,do:2,finally:3,for:4,five:5})).toBe(`{"class":1,"do":2,"finally":3,"for":4,five:5}`);
     expect(jsSerialize({class:1,do:2,finally:3,for:4,five:5},{safe:false})).toBe(`{class:1,do:2,finally:3,for:4,five:5}`);

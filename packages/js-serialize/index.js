@@ -3,6 +3,7 @@ const util = require('./util');
 
 let nativeFuncs = new Map();
 const isRaw = Symbol('isRaw');
+let wellKnownSymbols;
 
 function merge(out, ...objs) {
     for(let obj of objs) {
@@ -85,6 +86,17 @@ function doSerialize(obj, opt, ctx) {
     } else if(obj instanceof Date) {
         return 'new Date(' + R(opt.compact ? obj.getTime() : obj.toISOString()) + ')';
     } else if(util.isSymbol(obj)) {
+        if(!wellKnownSymbols) {
+            wellKnownSymbols = new Map(
+                Object.getOwnPropertyNames(Symbol)
+                    .filter(k => util.isSymbol(Symbol[k]))
+                    .map(k => [Symbol[k],k])
+            );
+        }
+        let symbolName = wellKnownSymbols.get(obj);
+        if(symbolName) {
+            return `Symbol.${symbolName}`;
+        }
         return serializeSymbol(obj, opt, ctx);
     } else if(util.isNativeFunction(obj)) {
         let path = nativeFuncs.get(obj);
