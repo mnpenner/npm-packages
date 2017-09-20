@@ -92,7 +92,8 @@ it('serializes undefined', () => {
 
 it('serializes native functions', () => {
     expect(jsSerialize(isNaN)).toBe('isNaN');
-    expect(jsSerialize(Math.sin)).toBe('Math.sin'); // can be broken with `global.sin = Math.sin`
+    expect(jsSerialize(Number.isNaN)).toBe('Number.isNaN');
+    expect(jsSerialize(Math.sin)).toBe('Math.sin'); // can be broken with `global.sin = Math.sin` -- maybe if we run findFunction in a clean context? https://nodejs.org/api/vm.html#vm_vm_createcontext_sandbox
     expect(jsSerialize(Intl.NumberFormat.supportedLocalesOf)).toBe('Intl.NumberFormat.supportedLocalesOf');
 });
 
