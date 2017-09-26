@@ -1,4 +1,3 @@
-const XRegExp = require('xregexp');
 const util = require('./util');
 
 let nativeFuncs = new Map();
@@ -242,7 +241,7 @@ function serializeSymbol(sym, options, ctx) {
 
 const keywords = new Set(['do','if','in','for','let','new','try','var','case','else','enum','eval','false','null','this','true','void','with','break','catch','class','const','super','throw','while','yield','delete','export','import','public','return','static','switch','typeof','default','extends','finally','package','private','continue','debugger','function','arguments','interface','protected','implements','instanceof']);
 
-const propName = XRegExp('^[$_\\p{Lu}\\p{Ll}\\p{Lt}\\p{Lm}\\p{Lo}\\p{Ll}][$_\\p{Lu}\\p{Ll}\\p{Lt}\\p{Lm}\\p{Lo}\\p{Ll}\\u200C\\u200D\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}]*$');
+const propName = require('./propNameRegex');
 
 function isSafePropName(name, options) {
     return (!options.safe || !keywords.has(name)) && propName.test(name);
