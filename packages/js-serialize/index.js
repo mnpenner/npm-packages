@@ -5,49 +5,68 @@ let nativeFuncs = new Map();
 const isRaw = Symbol('isRaw');
 let wellKnownSymbols;
 
-function merge(out, ...objs) {
-    for(let obj of objs) {
+function merge(target, ...sources) {
+    for(let obj of sources) {
         if(obj) {
             for(let key of Object.keys(obj)) {
                 if(obj[key] !== undefined) {
-                    out[key] = obj[key];
+                    target[key] = obj[key];
                 }
             }
         }
     }
-    return out;
+    return target;
 }
 
-function jsSerialize(object, options) {
+function serialize1(object, options) {
+    return serialize2(object,options).split('</script').join('<\\/script');
+}
+
+function serialize2(object, options) {
     let opt = merge({
         compact: false,
         safe: true,
     }, options);
     
     let ctx = {
-        seen: new Set(),
-        dupes: new Set(),
+        pass: 1,
+        paths: new Map(),
+        defer: [],
     };
     
-    let out = doSerialize(object, opt, ctx);
+    let out1 = serialize3(object, opt, ctx, []);
     
-    if(ctx.dupes.size) {
-        console.log('has dupes');
+    if(!ctx.defer.length) {
+        return out1;
     }
     
-    return out.split('</script').join('<\\/script');
+    // console.log('defer',ctx.defer);
+
+    const out2 = 'o='+out1+';'
+        + ctx.defer.map(d => `o${pathToStr(d[0],opt)}=o${pathToStr(d[1],opt)}`).join(';');
+    
+    const out3 = `(${opt.safe?'function(o)':'o=>'}{${out2};return o})()`;
+    
+    // console.log(out3);
+
+    return out3;
 }
 
-function doSerialize(obj, opt, ctx) {
-    const R = o => doSerialize(o, opt, ctx);
+function pathToStr(path, opt) {
+    // console.log('pathToStr',path);
+    
+    return path.map(p => util.isString(name) && isSafePropName(p,opt) ? `.${p}` : `[${serialize2(p,opt)}]`).join('');
+}
+
+
+function serialize3(obj, opt, ctx, path) {
+    
     
     if(util.isObject(obj)) {
-        if(ctx.seen.has(obj)) {
-            ctx.dupes.add(obj);
-            return '«circular»';
-        } else {
-            ctx.seen.add(obj);
+        if(ctx.paths.has(obj)) {
+            throw new Error(`Possible recursive loop`);
         }
+        ctx.paths.set(obj, path);
     }
     
     // TODO: Object.isFrozen check
@@ -64,7 +83,13 @@ function doSerialize(obj, opt, ctx) {
         for(let i=0; i<obj.length; ++i) {
             if(obj.hasOwnProperty(i)) {
                 hasProp = true;
-                sb.push(R(obj[i]));
+                let existingPath = ctx.paths.get(obj[i]);
+                if(existingPath) {
+                    ctx.defer.push([[...path,i],existingPath]);
+                    sb.push('');
+                } else {
+                    sb.push(serialize3(obj[i], opt, ctx, [...path, i]));
+                }
             } else {
                 sb.push('');
             }
@@ -72,22 +97,22 @@ function doSerialize(obj, opt, ctx) {
         if(!hasProp) {
             return `new Array(${obj.length})`;
         }
-        if(!obj.hasOwnProperty(obj.length - 1)) {
+        if(sb[sb.length - 1] === '') {
             sb.push('');
         }
         return '[' +  sb.join(',') + ']';
     } else if(obj instanceof Set) {
         if(obj.size) {
-            return 'new Set(' + R(Array.from(obj)) + ')';
+            return 'new Set(' + serialize2(Array.from(obj),opt) + ')';
         }
         return 'new Set';
     } else if(obj instanceof Map) {
         if(obj.size) {
-            return 'new Map(' + R(Array.from(obj)) + ')';
+            return 'new Map(' + serialize2(Array.from(obj),opt) + ')';
         }
         return 'new Map';
     } else if(obj instanceof Date) {
-        return 'new Date(' + R(opt.compact ? obj.getTime() : obj.toISOString()) + ')';
+        return 'new Date(' + serialize2(opt.compact ? obj.getTime() : obj.toISOString(),opt) + ')';
     } else if(util.isSymbol(obj)) {
         if(!wellKnownSymbols) {
             wellKnownSymbols = new Map(
@@ -164,12 +189,17 @@ function doSerialize(obj, opt, ctx) {
             return obj.toSource();
         }
         if(util.isFunction(obj.toJSON)) {
-            return R(obj.toJSON());
+            return serialize2(obj.toJSON(),opt);
         }
         // TODO: circular reference support
         let tmp = [];
         for(let key of Reflect.ownKeys(obj)) {
-            tmp.push(serializePropertyName(key, opt, ctx)+':'+R(obj[key]));
+            let existingPath = ctx.paths.get(obj[key]);
+            if(existingPath) {
+                ctx.defer.push([[...path,key],existingPath]);
+            } else {
+                tmp.push(serializePropertyName(key, opt, ctx) + ':' + serialize3(obj[key], opt, ctx, [...path, key]));
+            }
         }
         return '{' + tmp.join(',') + '}';
     } else {
@@ -180,7 +210,7 @@ function doSerialize(obj, opt, ctx) {
 /**
  * @param {string} jsCode
  */
-jsSerialize.raw = function raw(jsCode) {
+serialize1.raw = function raw(jsCode) {
     return Object.create({
         [isRaw]: true,
         value: jsCode,
@@ -192,11 +222,11 @@ function serializeSymbol(sym, options, ctx) {
     if(key === undefined) {
         let m = sym.toString().match(/^Symbol\((.+)\)$/);
         if(m) {
-            return `Symbol(${doSerialize(m[1], options, ctx)})`;
+            return `Symbol(${serialize3(m[1], options, ctx)})`;
         }
         return `Symbol()`; // not sure if this is worthwhile or not
     } else {
-        return `Symbol.for(${doSerialize(key, options, ctx)})`;
+        return `Symbol.for(${serialize3(key, options, ctx)})`;
     }
 }
 
@@ -204,18 +234,22 @@ const keywords = new Set(['do','if','in','for','let','new','try','var','case','e
 
 const propName = XRegExp('^[$_\\p{Lu}\\p{Ll}\\p{Lt}\\p{Lm}\\p{Lo}\\p{Ll}][$_\\p{Lu}\\p{Ll}\\p{Lt}\\p{Lm}\\p{Lo}\\p{Ll}\\u200C\\u200D\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}]*$');
 
+function isSafePropName(name, options) {
+    return (!options.safe || !keywords.has(name)) && propName.test(name);
+}
+
 function serializePropertyName(name, options, ctx) {
     if(util.isSymbol(name)) {
         return '['+serializeSymbol(name, options, ctx)+']';
     }
     if(util.isString(name)) {
-        if(!options.safe || !keywords.has(name) && propName.test(name)) {
+        if(isSafePropName(name, options)) {
             return name;
         }
-        return doSerialize(name, options, ctx);
+        return serialize3(name, options, ctx);
     }
 
     throw new Error(`Cannot make property name`);
 }
 
-module.exports = jsSerialize;
+module.exports = serialize1;

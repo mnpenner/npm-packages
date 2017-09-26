@@ -162,9 +162,12 @@ it('passes options recursively', () => {
 
 it('serializes recursive objects', () => {
     let foo = {foo:1};
-    expect(jsSerialize({a:foo,b:foo})).toBe("(($0)=>({a:$0={foo:1},b:$0}))()");
+    expect(jsSerialize({a:foo,b:foo},{safe:false})).toBe("(o=>{o={a:{foo:1}};o.b=o.a;return o})()"); // shorter: (($0)=>({a:$0,b:$0}))({foo:1})
     
     let o = {a:'perfect'};
     o.circle = o;
-    expect(jsSerialize(o)).toBe('not-sure-yet');
+    expect(jsSerialize({apc:o},{safe:false})).toBe('(o=>{o={apc:{a:"perfect"}};o.apc.circle=o.apc;return o})()');
+    expect(jsSerialize(o,{safe:false})).toBe('(o=>{o={a:"perfect"};o.circle=o;return o})()');
+    expect(jsSerialize(o,{safe:true})).toBe('(function(o){o={a:"perfect"};o.circle=o;return o})()');
+    expect(jsSerialize({a:o,b:[o,1,o],c:{d:o,e:o,f:new Set([o])}},{safe:false})).toBe('(o=>{o={a:{a:"perfect"},b:[,1,,],c:{f:new Set((o=>{o=[{a:"perfect"}];o[0].circle=o[0];return o})())}};o.a.circle=o.a;o.b[0]=o.a;o.b[2]=o.a;o.c.d=o.a;o.c.e=o.a;return o})()');
 });
