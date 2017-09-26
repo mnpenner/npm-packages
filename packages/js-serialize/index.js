@@ -60,20 +60,13 @@ function pathToStr(path, opt) {
 }
 
 function serialize3(obj, opt, ctx, path) {
-    
-    
     if(util.isObject(obj)) {
         if(ctx.paths.has(obj)) {
             throw new Error(`Possible recursive loop`);
         }
         ctx.paths.set(obj, path);
     }
-    
-    // TODO: Object.isFrozen check
-    // TODO: compression option -- create functions for all the different types
-    // TODO: scan object and count number of instances of each object, sort by frequency,
-    //   assign objects with the most occurrences the shortest variable name
-    //   repeat recursively. should result in smaller output *and* remove cycles
+
     if(util.isArray(obj)) {
         if(obj.length === 0) {
             return '[]';
