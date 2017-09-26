@@ -43,7 +43,8 @@ it('serializes maps', () => {
 });
 
 it('serializes dates', () => {
-    expect(jsSerialize(new Date('2017-05-04T16:55:50.457Z'))).toBe('new Date("2017-05-04T16:55:50.457Z")');
+    // expect(jsSerialize(new Date('2017-05-04T16:55:50.457Z'))).toBe('new Date("2017-05-04T16:55:50.457Z")'); // iOS can't handle ISO dates?!
+    expect(jsSerialize(new Date('2017-05-04T16:55:50.457Z'), {compact: false})).toBe('new Date(1493916950457)');
     expect(jsSerialize(new Date('2017-05-04T16:55:50.457Z'), {compact: true})).toBe('new Date(1493916950457)');
 });
 
@@ -169,5 +170,12 @@ it('serializes recursive objects', () => {
     expect(jsSerialize({apc:o},{safe:false})).toBe('(o=>{o={apc:{a:"perfect"}};o.apc.circle=o.apc;return o})()');
     expect(jsSerialize(o,{safe:false})).toBe('(o=>{o={a:"perfect"};o.circle=o;return o})()');
     expect(jsSerialize(o,{safe:true})).toBe('(function(o){o={a:"perfect"};o.circle=o;return o})()');
-    expect(jsSerialize({a:o,b:[o,1,o],c:{d:o,e:o,f:new Set([o])}},{safe:false})).toBe('(o=>{o={a:{a:"perfect"},b:[,1,,],c:{f:new Set((o=>{o=[{a:"perfect"}];o[0].circle=o[0];return o})())}};o.a.circle=o.a;o.b[0]=o.a;o.b[2]=o.a;o.c.d=o.a;o.c.e=o.a;return o})()');
+    expect(jsSerialize({a:o,b:[o,1,o],c:{d:o,e:o,f:new Set([o])}},{safe:false})).toBe('(o=>{o={a:{a:"perfect"},b:[,1,,],c:{f:new Set((o=>{o=[{a:"perfect"}];o[0].circle=o[0];return o})())}};o.a.circle=o.a;o.b[0]=o.a;o.b[2]=o.a;o.c.d=o.a;o.c.e=o.a;return o})()'); // FIXME: the object inside the set isn't === to the object outside the set -- there are *two* copies here
+});
+
+it('supports frozen objects', () => {
+    const frozen = {ans: 42};
+    expect(jsSerialize(frozen)).toBe('{ans:42}');
+    Object.freeze(frozen);
+    expect(jsSerialize(frozen)).toBe('Object.freeze({ans:42})');
 });

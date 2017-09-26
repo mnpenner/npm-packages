@@ -40,6 +40,8 @@ function serialize2(object, options) {
         return out1;
     }
     
+    // circular *or* repeated objects
+    
     // console.log('defer',ctx.defer);
 
     const out2 = 'o='+out1+';'
@@ -57,7 +59,6 @@ function pathToStr(path, opt) {
     
     return path.map(p => util.isString(name) && isSafePropName(p,opt) ? `.${p}` : `[${serialize2(p,opt)}]`).join('');
 }
-
 
 function serialize3(obj, opt, ctx, path) {
     
@@ -112,7 +113,7 @@ function serialize3(obj, opt, ctx, path) {
         }
         return 'new Map';
     } else if(obj instanceof Date) {
-        return 'new Date(' + serialize2(opt.compact ? obj.getTime() : obj.toISOString(),opt) + ')';
+        return 'new Date(' + serialize2(obj.valueOf(),opt) + ')';
     } else if(util.isSymbol(obj)) {
         if(!wellKnownSymbols) {
             wellKnownSymbols = new Map(
@@ -182,29 +183,38 @@ function serialize3(obj, opt, ctx, path) {
     } else if(obj === null) {
         return 'null';
     } else if(util.isObject(obj)) {
-        if(obj[isRaw]) {
-            return obj.value;
+        const tmp = serializeObject(obj, opt, ctx, path);
+        
+        if(Object.isFrozen(obj)) {
+            return `Object.freeze(${tmp})`;
         }
-        if(util.isFunction(obj.toSource)) { // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toSource
-            return obj.toSource();
-        }
-        if(util.isFunction(obj.toJSON)) {
-            return serialize2(obj.toJSON(),opt);
-        }
-        // TODO: circular reference support
-        let tmp = [];
-        for(let key of Reflect.ownKeys(obj)) {
-            let existingPath = ctx.paths.get(obj[key]);
-            if(existingPath) {
-                ctx.defer.push([[...path,key],existingPath]);
-            } else {
-                tmp.push(serializePropertyName(key, opt, ctx) + ':' + serialize3(obj[key], opt, ctx, [...path, key]));
-            }
-        }
-        return '{' + tmp.join(',') + '}';
+        
+        return tmp;
     } else {
         throw new Error('Could not serialize unknown type');
     }
+}
+
+function serializeObject(obj, opt, ctx, path) {
+    if(obj[isRaw]) {
+        return obj.value;
+    }
+    if(util.isFunction(obj.toSource)) { // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toSource
+        return obj.toSource();
+    }
+    if(util.isFunction(obj.toJSON)) {
+        return serialize2(obj.toJSON(),opt);
+    }
+    let tmp = [];
+    for(let key of Reflect.ownKeys(obj)) {
+        let existingPath = ctx.paths.get(obj[key]);
+        if(existingPath) {
+            ctx.defer.push([[...path,key],existingPath]);
+        } else {
+            tmp.push(serializePropertyName(key, opt, ctx) + ':' + serialize3(obj[key], opt, ctx, [...path, key]));
+        }
+    }
+    return '{' + tmp.join(',') + '}';
 }
 
 /**
