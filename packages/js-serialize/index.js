@@ -28,7 +28,6 @@ function serialize2(object, options) {
     }, options);
     
     let ctx = {
-        pass: 1,
         paths: new Map(),
         defer: [],
     };

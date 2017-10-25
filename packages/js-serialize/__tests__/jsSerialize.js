@@ -171,6 +171,11 @@ it('serializes recursive objects', () => {
     expect(jsSerialize(o,{safe:false})).toBe('(o=>{o={a:"perfect"};o.circle=o;return o})()');
     expect(jsSerialize(o,{safe:true})).toBe('(function(o){o={a:"perfect"};o.circle=o;return o})()');
     expect(jsSerialize({a:o,b:[o,1,o],c:{d:o,e:o,f:new Set([o])}},{safe:false})).toBe('(o=>{o={a:{a:"perfect"},b:[,1,,],c:{f:new Set((o=>{o=[{a:"perfect"}];o[0].circle=o[0];return o})())}};o.a.circle=o.a;o.b[0]=o.a;o.b[2]=o.a;o.c.d=o.a;o.c.e=o.a;return o})()'); // FIXME: the object inside the set isn't === to the object outside the set -- there are *two* copies here
+    
+    let s = new Set();
+    let rs = {s};
+    s.add(rs);
+    // expect(jsSerialize(s,{safe:false})).toBe('xxx'); // <-- fixme: recursion bomb 
 });
 
 it('supports frozen objects', () => {
