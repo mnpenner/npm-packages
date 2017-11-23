@@ -1,40 +1,42 @@
 const Crypto = require('crypto');
+const getTime = require('./getTime');
+const BigInt = require('./bigint');
 
-
-function init() {
-    let [now,hrt] = [Date.now(), process.hrtime()]; // generate these as close to the same time as possible
-    let ms = now%1000;
-    let s = (now-ms)/1000;
-    let ns = ms*1000;
-    return [s-hrt[0],ns-hrt[1]];
+function padNano(ns) {
+    let pad = 9 - ns.length;
+    if(pad) {
+        return '000000000'.slice(0,pad) + ns;
+    }
+    return String(ns);
 }
 
-let start = init();
-
-// console.log(start);
-
-// function hrms() {
-//     let [s,ns] = process.hrtime();
-//     return s*1e3 + ns/1e6;
-// }
-//
-// let start = Date.now() - hrms();
-//
-// let counter = 0;
-// let lastTime = null;
-//
 // /**
 //  * Generates a 16-byte UUID. The first 6 bytes represent the time it was created.
 //  *
 //  * @return {Buffer}
 //  */
 function uuid() {
-    let hrt = process.hrtime();
-    let now = [start[0]+hrt[0], start[1]+hrt[1]];
+    const [sec,ns] = getTime(); // getTime
     
-    return now;
+    let int = BigInt(sec + padNano(ns));
+    
+    let {quotient,remainder} = int.divmod(4294967296);
+
+    let buf = Buffer.allocUnsafe(16);
+    buf.writeUInt32BE(quotient.valueOf(),0,true);
+    buf.writeUInt32BE(remainder.valueOf(),4,true);
+    Crypto.randomBytes(8).copy(buf, 8);
+    
+    return buf;
+   
     
     
+    // not sure how to combine these two numbers without bringing in a big-int library
+    // we could split it into 2 32-bit uints though. this buys us 136 years though instead of 584 -- quite a loss!
+    
+    // return buf;
+
+
     // return start+hrms();
     //
     // let newTime = start+hrms();
@@ -53,6 +55,11 @@ function uuid() {
     // Crypto.randomBytes(10).copy(buf, 6);
     // return buf;
 }
+
+
+// console.log(uuid());
+
+
 //
 //
 //
@@ -71,6 +78,18 @@ console.log([
     uuid(),
     uuid(),
 ]);
+
+// for(;;) {
+//     uuid();
+// }
+
+// for(;;) {
+//
+//     let hrt = process.hrtime();
+//     let ns = hrt[1];
+//     console.log(ns);
+//     // if(ns < 204745397) break;
+// }
 
 // console.log([
 //     process.hrtime(),
