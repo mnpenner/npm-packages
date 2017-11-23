@@ -17,6 +17,7 @@ function padNano(ns) {
 //  */
 function uuid() {
     const [sec,ns] = getTime(); // getTime
+    // const [sec,ns] = [1511461841,253093752];
     
     let int = BigInt(sec + padNano(ns));
     
@@ -65,19 +66,19 @@ function uuid() {
 //
 // console.log(s,ns);
 
-console.log([
-    uuid(),
-    uuid(),
-    uuid(),
-    uuid(),
-    uuid(),
-    uuid(),
-    uuid(),
-    uuid(),
-    uuid(),
-    uuid(),
-    uuid(),
-]);
+// console.log([
+//     uuid(),
+//     uuid(),
+//     uuid(),
+//     uuid(),
+//     uuid(),
+//     uuid(),
+//     uuid(),
+//     uuid(),
+//     uuid(),
+//     uuid(),
+//     uuid(),
+// ]);
 
 // for(;;) {
 //     uuid();
@@ -104,3 +105,5 @@ console.log([
 //     process.hrtime(),
 //     process.hrtime(),
 // ]);
+
+module.exports = uuid;
