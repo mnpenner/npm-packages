@@ -1,13 +1,6 @@
 const Crypto = require('crypto');
 const BigInt = require('./bigint');
-
-function padNano(ns) {
-    let padLen = 9 - ns.length;
-    if(padLen > 0) {
-        return '000000000'.slice(0,padLen) + ns;
-    }
-    return String(ns);
-}
+const padStart = require('./padStart');
 
 function init() {
     let [now, hrt] = [Date.now(), process.hrtime()]; // generate these as close to the same time as possible
@@ -36,7 +29,6 @@ function getTime() {
     return now;
 }
 
-
 /**
  * Generates a 16-byte UUID. The first 8 bytes represent the time it was created.
  *
@@ -45,7 +37,7 @@ function getTime() {
 function uuid() {
     const [sec,ns] = getTime(); 
 
-    let num = BigInt(sec + padNano(ns));
+    let num = BigInt(sec + padStart(ns, 9, '0'));
     
     let {quotient,remainder} = num.divmod(4294967296);
 
@@ -56,7 +48,5 @@ function uuid() {
     
     return buf;
 }
-
-
 
 module.exports = uuid;

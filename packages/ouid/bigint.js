@@ -405,5 +405,5 @@ var BigInt = (function(undefined) {
     return Integer;
 })();
 
-// module.exports = bigInt;
-export default BigInt;
+module.exports = BigInt;
+// export default BigInt;
