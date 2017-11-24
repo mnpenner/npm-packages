@@ -3,9 +3,9 @@ const getTime = require('./getTime');
 const BigInt = require('./bigint');
 
 function padNano(ns) {
-    let pad = 9 - ns.length;
-    if(pad) {
-        return '000000000'.slice(0,pad) + ns;
+    let padLen = 9 - ns.length;
+    if(padLen > 0) {
+        return '000000000'.slice(0,padLen) + ns;
     }
     return String(ns);
 }
@@ -16,9 +16,9 @@ function padNano(ns) {
 //  * @return {Buffer}
 //  */
 function uuid() {
-    const [sec,ns] = getTime(); // getTime
-    // const [sec,ns] = [1511461841,253093752];
-    
+    const [sec,ns] = getTime(); 
+    console.log(sec,ns);
+
     let int = BigInt(sec + padNano(ns));
     
     let {quotient,remainder} = int.divmod(4294967296);
@@ -29,36 +29,10 @@ function uuid() {
     Crypto.randomBytes(8).copy(buf, 8);
     
     return buf;
-   
-    
-    
-    // not sure how to combine these two numbers without bringing in a big-int library
-    // we could split it into 2 32-bit uints though. this buys us 136 years though instead of 584 -- quite a loss!
-    
-    // return buf;
-
-
-    // return start+hrms();
-    //
-    // let newTime = start+hrms();
-    // console.log(newTime);
-    //
-    // if(newTime !== lastTime) {
-    //     counter = 0;
-    //     lastTime = newTime;
-    // } else {
-    //     counter = (counter + 1) % 10;
-    // }
-    // let now = newTime * 10 + counter;
-    // let buf = Buffer.allocUnsafe(16);
-    //
-    // buf.writeUIntBE(now, 0, 6, true);
-    // Crypto.randomBytes(10).copy(buf, 6);
-    // return buf;
 }
 
 
-// console.log(uuid());
+console.log(uuid());
 
 
 //
@@ -66,19 +40,19 @@ function uuid() {
 //
 // console.log(s,ns);
 
-// console.log([
-//     uuid(),
-//     uuid(),
-//     uuid(),
-//     uuid(),
-//     uuid(),
-//     uuid(),
-//     uuid(),
-//     uuid(),
-//     uuid(),
-//     uuid(),
-//     uuid(),
-// ]);
+console.log([
+    uuid(),
+    uuid(),
+    uuid(),
+    uuid(),
+    uuid(),
+    uuid(),
+    uuid(),
+    uuid(),
+    uuid(),
+    uuid(),
+    uuid(),
+]);
 
 // for(;;) {
 //     uuid();
