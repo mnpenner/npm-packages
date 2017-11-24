@@ -1,6 +1,6 @@
 // https://github.com/peterolson/BigInteger.js/blob/b7e949acdc534cc77e511a707b16f0c5e2ccfe7c/BigInteger.js
 
-module.exports = (function(undefined) {
+var BigInt = (function(undefined) {
     "use strict";
 
     var BASE = 1e7,
@@ -287,6 +287,7 @@ module.exports = (function(undefined) {
             remainder: result[1]
         };
     };
+    SmallInteger.prototype.divmod = BigInteger.prototype.divmod;
 
 
     function compareAbs(a, b) {
@@ -307,6 +308,12 @@ module.exports = (function(undefined) {
         return compareAbs(a, b);
     };
 
+    BigInteger.prototype.isZero = function() {
+        return false;
+    };
+    SmallInteger.prototype.isZero = function() {
+        return this.value === 0;
+    };
 
     BigInteger.prototype.toString = function(radix) {
         if(radix === undefined) radix = 10;
@@ -397,3 +404,6 @@ module.exports = (function(undefined) {
 
     return Integer;
 })();
+
+// module.exports = bigInt;
+export default BigInt;

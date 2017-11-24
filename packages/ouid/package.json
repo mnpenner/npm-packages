@@ -4,7 +4,8 @@
   "description": "Ordered UUIDs for Node and Browser",
   "main": "index.js",
   "scripts": {
-    "test": "nyc mocha"
+    "test": "nyc mocha",
+    "web": "http-server ."
   },
   "author": "NucleusLabs Information Technologies Inc.",
   "license": "MIT",
@@ -13,6 +14,7 @@
   },
   "devDependencies": {
     "mocha": "^4.0.1",
-    "nyc": "^11.3.0"
+    "nyc": "^11.3.0",
+    "http-server": "^0.10.0"
   }
 }
