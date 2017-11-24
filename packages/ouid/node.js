@@ -37,11 +37,11 @@ function getTime() {
 }
 
 
-// /**
-//  * Generates a 16-byte UUID. The first 6 bytes represent the time it was created.
-//  *
-//  * @return {Buffer}
-//  */
+/**
+ * Generates a 16-byte UUID. The first 8 bytes represent the time it was created.
+ *
+ * @return {Buffer}
+ */
 function uuid() {
     const [sec,ns] = getTime(); 
 
