@@ -2,7 +2,8 @@
   "name": "ouid",
   "version": "0.5.0",
   "description": "Ordered UUIDs for Node and Browser",
-  "main": "index.js",
+  "main": "src/node.js",
+  "browser": "src/browser.js",
   "scripts": {
     "test": "nyc mocha",
     "web": "http-server ."

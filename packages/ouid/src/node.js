@@ -1,6 +1,6 @@
-const Crypto = require('crypto');
-const BigInt = require('./bigint');
-const padStart = require('./padStart');
+import Crypto from 'crypto';
+import BigInt from './bigint';
+import padStart from './padStart';
 
 function init() {
     let [now, hrt] = [Date.now(), process.hrtime()]; // generate these as close to the same time as possible
@@ -34,7 +34,7 @@ function getTime() {
  *
  * @return {Buffer}
  */
-function uuid() {
+export default function uuid() {
     const [sec,ns] = getTime(); 
 
     let num = BigInt(sec + padStart(ns, 9, '0'));
@@ -49,4 +49,3 @@ function uuid() {
     return buf;
 }
 
-module.exports = uuid;

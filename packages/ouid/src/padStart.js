@@ -1,4 +1,4 @@
-module.exports = String.prototype.padStart 
+export default String.prototype.padStart 
     ? (str, targetLength, padString) => String(str).padStart(targetLength, padString)
     : (str, targetLength, padString) => {
         str = String(str);

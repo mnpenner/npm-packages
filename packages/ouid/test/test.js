@@ -1,4 +1,4 @@
-const uuid = require('../node');
+const uuid = require('../src/node');
 
 describe('x', function() {
    it('bacon',function() {
