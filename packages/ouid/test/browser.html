@@ -1,11 +1,25 @@
+<pre id="out"></pre>
+
 <script type="module">
-    import uuid from '../dist/src/browser.js';
-    //
-    // console.log(uuid());
+    import uuid from '/dist/browser.js';
+
+    function buf2hex(buffer) { // buffer is an ArrayBuffer; 
+        return Array.prototype.map.call(new Uint8Array(buffer), x => ('0' + x.toString(16)).slice(-2)).join('');
+    }
     
-for(let i=0; i<10; ++i) {
-    console.log(new Uint8Array(uuid()));
-}
-    
-    export default function(){}
+    document.getElementById('out').innerHTML = [
+        uuid(),
+        uuid(),
+        uuid(),
+        uuid(),
+        uuid(),
+        uuid(),
+        uuid(),
+        uuid(),
+        uuid(),
+        uuid(),
+    ].map(buf => {
+        let hex = buf2hex(buf);
+        return `${hex.slice(0,16)} ${hex.slice(16)}`;
+    }).join("\n");
 </script>
