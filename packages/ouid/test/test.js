@@ -1,7 +1,13 @@
-const uuid = require('../src/node');
+const uuid = require('../dist/main');
 
-describe('x', function() {
-   it('bacon',function() {
-       console.log(uuid());
-   }) 
-});
+console.log([
+    uuid(),
+    uuid(),
+    uuid(),
+    uuid(),
+    uuid(),
+    uuid(),
+    uuid(),
+    uuid(),
+    uuid(),
+]);
