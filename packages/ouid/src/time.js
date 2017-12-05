@@ -1,5 +1,6 @@
 let perfTime;
 
+// alternatively, use `process.browser`: https://nolanlawson.com/2017/01/09/how-to-write-a-javascript-package-for-both-node-and-the-browser/ 
 if(typeof process === 'object' && typeof process.hrtime === 'function') {
     perfTime = process.hrtime;
 } else {
