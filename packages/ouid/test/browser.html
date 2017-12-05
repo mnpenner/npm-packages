@@ -1,9 +1,8 @@
 <pre id="out"></pre>
 
 <script type="module">
-    import * as uuid from '/dist/browser.js';
+    import uuid from '/dist/browser.js';
     
-    console.log(uuid);
     console.log(new Uint8Array(uuid()));
 
     function buf2hex(buffer) { // buffer is an ArrayBuffer; 
