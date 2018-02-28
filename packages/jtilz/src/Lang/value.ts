@@ -78,3 +78,29 @@ export function isEmpty(value: any): boolean {
     }
     return false;
 }
+
+export function clone<T>(value: T): T {
+    if(Type.isArray(value)) {
+        return [...value];
+    }
+    if(Type.isDate(value)) {
+        return Object.assign(new Date(value.valueOf()),value);
+    }
+    if(Type.isMap(value) || Type.isSet(value)) {
+        return Object.assign(new value.constructor(value),value);
+    }
+    if(Type.isNumber(value) || Type.isString(value) || Type.isNullish(value) || Type.isBoolean(value)) {
+        return value; // these types are immutable. no clone necessary
+    }
+    if(Type.isRegExp(value)) {
+        return Object.assign(new RegExp(value.source, value.flags),value);
+    }
+    if(Type.isObject(value)) {
+        return Object.assign(Object.create(value.constructor ? value.constructor.prototype : null), value);
+    }
+    if(Type.isFunction(value)) {
+        // FIXME: doesn't quite work. how to clone the context (bound this)?
+        return new Function(`return ${value.toString()}`)();
+    }
+    throw new Error(`Could not clone value`);
+}
