@@ -96,11 +96,16 @@ export function clone<T>(value: T): T {
         return Object.assign(new RegExp(value.source, value.flags),value);
     }
     if(Type.isObject(value)) {
-        return Object.assign(Object.create(value.constructor ? value.constructor.prototype : null), value);
+        return Object.assign(Object.create(Object.getPrototypeOf(value)), value);
     }
     if(Type.isFunction(value)) {
-        // FIXME: doesn't quite work. how to clone the context (bound this)?
-        return new Function(`return ${value.toString()}`)();
+        if(Type.isNativeFunction(value)) {
+            // Bound functions are also considered "native". Not sure if there's much we can do about that.
+            return value;
+        }
+        const fn = new Function(`return ${value.toString()}`)();
+        Object.assign(fn,value);
+        return fn;
     }
     throw new Error(`Could not clone value`);
 }
