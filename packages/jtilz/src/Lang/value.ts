@@ -89,7 +89,7 @@ export function clone<T>(value: T): T {
     if(Type.isMap(value) || Type.isSet(value)) {
         return Object.assign(new value.constructor(value),value);
     }
-    if(Type.isNumber(value) || Type.isString(value) || Type.isNullish(value) || Type.isBoolean(value)) {
+    if(Type.isNumber(value) || Type.isString(value) || Type.isNullish(value) || Type.isBoolean(value) || Type.isSymbol(value)) {
         return value; // these types are immutable. no clone necessary
     }
     if(Type.isRegExp(value)) {
@@ -100,12 +100,18 @@ export function clone<T>(value: T): T {
     }
     if(Type.isFunction(value)) {
         if(Type.isNativeFunction(value)) {
-            // Bound functions are also considered "native". Not sure if there's much we can do about that.
-            return value;
+            throw new Error(`Cannot clone native functions`);
         }
         const fn = new Function(`return ${value.toString()}`)();
         Object.assign(fn,value);
         return fn;
     }
+    // if(Type.isSymbol(value)) {
+    //     const key = Symbol.keyFor(value);
+    //     if(key !== undefined) {
+    //         return Symbol.for(key);
+    //     }
+    //     throw new Error(`Cannot clone symbols without keys`);
+    // }
     throw new Error(`Could not clone value`);
 }

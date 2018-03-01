@@ -142,21 +142,28 @@ describe(clone.name, () => {
         expect(copy.x).toBe(orig.x);
     });
     
-    it('clones bound functions', () => {
-        function fn(x) { return this*x };
-        const orig = fn.bind(3);
-        orig.x = {};
-        const copy = clone(orig);
-        expect(copy.name).toBe(orig.name);
-        expect(copy(2)).toBe(6);
-        // expect(copy).not.toBe(orig);
-        expect(copy.x).toBe(orig.x);
-    });
+    // it('clones bound functions', () => {
+    //     function fn(x) { return this*x };
+    //     const orig = fn.bind(3);
+    //     orig.x = {};
+    //     const copy = clone(orig);
+    //     expect(copy.name).toBe(orig.name);
+    //     expect(copy(2)).toBe(6);
+    //     // expect(copy).not.toBe(orig);
+    //     expect(copy.x).toBe(orig.x);
+    // });
+    //
+    // it('clones native functions', () => {
+    //     const copy = clone(Math.floor);
+    //     expect(copy.name).toBe(Math.floor.name);
+    //     expect(copy(3.14)).toBe(3);
+    //     // expect(copy).not.toBe(orig);
+    // });
 
-    it('clones native functions', () => {
-        const copy = clone(Math.floor);
-        expect(copy.name).toBe(Math.floor.name);
-        expect(copy(3.14)).toBe(3);
+    it('clones symbols', () => {
+        const orig = Symbol.for('foo');
+        const copy = clone(orig);
+        expect(copy).toEqual(orig);
         // expect(copy).not.toBe(orig);
     });
 })
