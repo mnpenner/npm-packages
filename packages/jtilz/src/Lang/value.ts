@@ -106,12 +106,5 @@ export function clone<T>(value: T): T {
         Object.assign(fn,value);
         return fn;
     }
-    // if(Type.isSymbol(value)) {
-    //     const key = Symbol.keyFor(value);
-    //     if(key !== undefined) {
-    //         return Symbol.for(key);
-    //     }
-    //     throw new Error(`Cannot clone symbols without keys`);
-    // }
     throw new Error(`Could not clone value`);
 }
