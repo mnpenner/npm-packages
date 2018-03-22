@@ -5,8 +5,9 @@ import * as fs from './util/fs';
 
 async function __main__() {
     
-    // let serverVars = await conn.query('show variables').fetchPairs();
+    let serverVars = await conn.query('show variables').fetchPairs();
     // dump(serverVars);
+    // dump(serverVars.innodb_default_row_format);
     
     let [
         version,
@@ -32,25 +33,26 @@ async function __main__() {
     
     await async.forEach(databases, async db => {
         out.databases[db.name] = {
-            tables: {},
-            meta: {
-                defaultCharset: db.defaultCharset,
-                defaultCollation: db.defaultCollation,
+            options: {
+                collation: db.defaultCollation,
             },
+            tables: {},
+         
         };
         
         let tables = await conn.query("SHOW TABLE STATUS IN ?? WHERE ENGINE IS NOT NULL", [db.name]).fetchAll();
+        // dump(tables);
 
         await async.forEach(tables, async tbl => {
             let tableOut = out.databases[db.name].tables[tbl.Name] = {
                 // name: table.Name,
                 options: {
-                    engine: tbl.Engine,
-                    autoIncrement: tbl.Auto_increment,
-                    comment: tbl.Comment,
+                    // engine: tbl.Engine,
+                    // autoIncrement: tbl.Auto_increment,
+                    // comment: tbl.Comment,
                     // charset: table.Collation !== null ? table.Collation.match(/^[^_]+/)[0] : null,
-                    collation: tbl.Collation,
-                    rowFormat: tbl.Row_format,
+                    // collation: tbl.Collation,
+                    // rowFormat: tbl.Row_format,
                 },
                 // stats: {
                 //     version: tbl.Version,
@@ -63,55 +65,67 @@ async function __main__() {
                 //     updateTime: tbl.Update_time,
                 //     checkTime: tbl.Check_time,
                 // },
-                columns: {},
+                columns: [],
                 indexes: {},
                 foreignKeys: {},
             };
+            
+            if(tbl.Auto_increment !== null) {
+                tableOut.options.autoIncrement = tbl.Auto_increment;
+            }
+            if(tbl.Engine !== serverVars.default_storage_engine) {
+                tableOut.options.engine = tbl.Engine;
+            }
+            if(tbl.Comment.length) {
+                tableOut.options.comment = tbl.Comment;
+            }
+            if(tbl.Collation !== db.defaultCollation) {
+                tableOut.options.collation = tbl.Collation;
+            }
+            if(!(
+                (tbl.Engine === 'InnoDB' && tbl.Row_format === 'Compact')
+                || (tbl.Engine === 'MyISAM' && tbl.Row_format === 'Dynamic')
+            )) {
+                tableOut.options.rowFormat = tbl.Row_format;
+            }
             
             await async.parallel(
                 async () => {
                     let columns = await conn.query(`
                         select 
                             COLUMN_NAME,
-                            ORDINAL_POSITION,
                             COLUMN_DEFAULT,
                             IS_NULLABLE,
-                            COLUMN_TYPE,
-                            CHARACTER_SET_NAME,
                             COLLATION_NAME,
-                            EXTRA,
-                            COLUMN_COMMENT,
                             DATA_TYPE,
-                            CHARACTER_MAXIMUM_LENGTH,
-                            CHARACTER_OCTET_LENGTH,
-                            NUMERIC_PRECISION,
-                            NUMERIC_SCALE,
-                            DATETIME_PRECISION
+                            COLUMN_TYPE,
+                            COLUMN_COMMENT
                         from information_schema.columns 
                         where table_schema=? and table_name=? 
                         order by ORDINAL_POSITION`, [db.name, tbl.Name]).fetchAll();
                     
                     for(let col of columns) {
-                        let colDef = tableOut.columns[col.COLUMN_NAME] = {
-                            dataType: col.DATA_TYPE,
-                            isNullable: col.IS_NULLABLE === 'YES',
-                            defaultValue: col.COLUMN_DEFAULT,
-                            charMaxLength: col.CHARACTER_MAXIMUM_LENGTH,
-                            charOctetLength: col.CHARACTER_OCTET_LENGTH,
-                            numericPrecision: col.NUMERIC_PRECISION,
-                            numericScale: col.NUMERIC_SCALE,
-                            datetimePrecision: col.DATETIME_PRECISION, // FSP?
-                            extra: col.EXTRA,
-                            charset: col.CHARACTER_SET_NAME,
-                            collation: col.COLLATION_NAME,
-                            comment: col.COLUMN_COMMENT,
-                            position: col.ORDINAL_POSITION,
-                            values: [], // Permitted values for ENUM and SET
-                            zerofill: null,
-                            unsigned: null,
-                            length: null,
-                            decimals: null,
+                        
+                        let colDef = {
+                            name: col.COLUMN_NAME,
+                            type: col.COLUMN_TYPE,
+                            null: col.IS_NULLABLE === 'YES',
                         };
+
+                        if(col.COLUMN_COMMENT.length) {
+                            colDef.comment = col.COLUMN_COMMENT; 
+                        }
+                        
+                        if(col.COLUMN_DEFAULT !== null) {
+                            colDef.default = col.COLUMN_DEFAULT; 
+                        }
+
+                        if(col.COLLATION_NAME !== null && col.COLLATION_NAME !== tbl.Collation) {
+                            colDef.collation = col.COLLATION_NAME;
+                        }
+                        
+                        
+                        out.databases[db.name].tables[tbl.Name].columns.push(colDef);
                         
 
                         switch(col.DATA_TYPE) {
@@ -124,6 +138,7 @@ async function __main__() {
                                 if(type !== col.DATA_TYPE) {
                                     throw new Error(`Data type (${col.DATA_TYPE}) does not match column type (${type})`);
                                 }
+                                colDef.type = type;
                                 colDef.values = splitValues(values);
                                 break;
                             case 'tinyint':
@@ -138,9 +153,9 @@ async function __main__() {
                                 if(type !== col.DATA_TYPE) {
                                     throw new Error(`Data type (${col.DATA_TYPE}) does not match column type (${type})`);
                                 }
-                                colDef.length = parseInt(length);
-                                colDef.unsigned = unsigned !== undefined;
-                                colDef.zerofill = zerofill !== undefined;
+                                // colDef.length = parseInt(length);
+                                // colDef.unsigned = unsigned !== undefined;
+                                // colDef.zerofill = zerofill !== undefined;
                             } break;
                             case 'float':
                             case 'decimal':
@@ -152,40 +167,16 @@ async function __main__() {
                                 if(type !== col.DATA_TYPE) {
                                     throw new Error(`Data type (${col.DATA_TYPE}) does not match column type (${type})`);
                                 }
-                                if(length !== undefined) {
-                                    colDef.length = parseInt(length);
-                                }
-                                if(decimals !== undefined) {
-                                    colDef.decimals = parseInt(decimals);
-                                }
-                                colDef.unsigned = unsigned !== undefined;
-                                colDef.zerofill = zerofill !== undefined;
+                                // if(length !== undefined) {
+                                //     colDef.length = parseInt(length);
+                                // }
+                                // if(decimals !== undefined) {
+                                //     colDef.decimals = parseInt(decimals);
+                                // }
+                                // colDef.unsigned = unsigned !== undefined;
+                                // colDef.zerofill = zerofill !== undefined;
                             } break;
-                            case 'char':
-                            case 'binary':
-                            case 'varbinary':
-                            case 'varchar': {
-                                let [match, type, length] = /^(\w+)\((\d+)\)$/.exec(col.COLUMN_TYPE);
-                                if(type !== col.DATA_TYPE) {
-                                    throw new Error(`Something weird: ${type} ${col.DATA_TYPE}`);
-                                }
-                                if(!match) {
-                                    throw new Error(`Unexpected char format: ${col.COLUMN_TYPE}`);
-                                }
-                                colDef.length = parseInt(length);
-                            } break;
-                            case 'longblob':
-                            case 'longtext':
-                            case 'mediumblob':
-                            case 'mediumtext':
-                            case 'text':
-                            case 'blob':
-                                // nothing interesting to record
-                                break;
-                            default: {
-                                dump(col);
-                                throw new Error(`Unhandled DATA_TYPE: ${col.DATA_TYPE}`);
-                            }
+                            
                         }
                     }
                 }
