@@ -1449,6 +1449,10 @@ object-assign@^4.1.0, object-assign@^4.1.1:
   version "4.1.1"
   resolved "http://code.nucleuslabs.com:4873/object-assign/-/object-assign-4.1.1.tgz#2109adc7965887cfc05cbbd442cac8bfbb360863"
 
+object-hash@^1.3.0:
+  version "1.3.0"
+  resolved "http://code.nucleuslabs.com:4873/object-hash/-/object-hash-1.3.0.tgz#76d9ba6ff113cf8efc0d996102851fe6723963e2"
+
 object.omit@^2.0.0:
   version "2.0.1"
   resolved "http://code.nucleuslabs.com:4873/object.omit/-/object.omit-2.0.1.tgz#1a9c744829f39dbb858c76ca3579ae2a54ebd1fa"

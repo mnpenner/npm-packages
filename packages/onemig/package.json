@@ -3,7 +3,8 @@
     "@nucleuslabs/napi-js": "^1.0.2",
     "chalk": "^2.3.2",
     "make-dir": "^1.2.0",
-    "mysql2": "^1.5.3"
+    "mysql2": "^1.5.3",
+    "object-hash": "^1.3.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",

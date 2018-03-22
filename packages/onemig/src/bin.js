@@ -2,6 +2,7 @@ import conn from './db';
 import dump from './dump';
 import * as async from './util/async';
 import * as fs from './util/fs';
+import objHash from 'object-hash';
 
 async function __main__() {
     
@@ -31,6 +32,8 @@ async function __main__() {
         databases: {},
     };
     
+    let allTables = Object.create(null);
+    
     await async.forEach(databases, async db => {
         out.databases[db.name] = {
             options: {
@@ -44,7 +47,7 @@ async function __main__() {
         // dump(tables);
 
         await async.forEach(tables, async tbl => {
-            let tableOut = out.databases[db.name].tables[tbl.Name] = {
+            let tableOut = {
                 // name: table.Name,
                 options: {
                     // engine: tbl.Engine,
@@ -70,9 +73,9 @@ async function __main__() {
                 foreignKeys: {},
             };
             
-            if(tbl.Auto_increment !== null) {
-                tableOut.options.autoIncrement = tbl.Auto_increment;
-            }
+            // if(tbl.Auto_increment !== null) {
+            //     tableOut.options.autoIncrement = tbl.Auto_increment;
+            // }
             if(tbl.Engine !== serverVars.default_storage_engine) {
                 tableOut.options.engine = tbl.Engine;
             }
@@ -125,7 +128,7 @@ async function __main__() {
                         }
                         
                         
-                        out.databases[db.name].tables[tbl.Name].columns.push(colDef);
+                        tableOut.columns.push(colDef);
                         
 
                         switch(col.DATA_TYPE) {
@@ -180,11 +183,34 @@ async function __main__() {
                         }
                     }
                 }
-            )
+            );
+            
+            
+            
+            let tblHash = objHash(tableOut);
+            if(!allTables[tbl.Name]) {
+                allTables[tbl.Name] = {};
+            }
+            if(!allTables[tbl.Name][tblHash]) {
+                allTables[tbl.Name][tblHash] = {
+                    databases: [db.name],
+                    ...tableOut,
+                }
+            } else {
+                allTables[tbl.Name][tblHash].databases.push(db.name);
+            }
         });
     });
     
-    fs.writeText('schema.json',JSON.stringify(out,null,4));
+    for(let tblName of Object.keys(allTables)) {
+        let json = {
+            name: tblName,
+            versions: Object.values(allTables[tblName]),
+        };
+        fs.writeText(`out/tables/${tblName}.json`,JSON.stringify(json,null,4));
+    }
+    // dump(Object.keys(allTables));
+    // fs.writeText('out/schema.json',JSON.stringify(out,null,4));
     // dump('done!');
     // dump(timeOffset,timeZone,databases);
     
