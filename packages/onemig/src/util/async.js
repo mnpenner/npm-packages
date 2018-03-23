@@ -10,5 +10,5 @@ export function forEach(iterable, callback) {
 
 
 export function parallel(...funcs) {
-    return Promise.all(funcs.map(f => f()));
+    return Promise.all(funcs.map(f => typeof f === 'function' ? f() : f));
 }
