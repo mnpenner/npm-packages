@@ -16,13 +16,15 @@ async function __main__() {
     // dump(serverVars.innodb_stats_on_metadata);
     // dump(serverVars.innodb_default_row_format);
     // process.exit();
+    
+    let t = startTimer();
 
-    // await async.forEachLimit([1,2,3,4,5,6,7,8,9,10], 3, async x => {
-    //     console.log(x);
-    //     await sleep(1000);
-    // });
-    // console.log('done');
-    // process.exit();
+    await async.forEachLimit([1,2,3,6,5,4,1], 3, async x => {
+        console.log(x,stopTimer(t));
+        await sleep(x*100);
+    });
+    console.log('done',stopTimer(t));
+    process.exit();
     
 
     let databases = await conn.query(`
