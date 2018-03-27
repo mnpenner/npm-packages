@@ -17,14 +17,14 @@ async function __main__() {
     // dump(serverVars.innodb_default_row_format);
     // process.exit();
     
-    let t = startTimer();
+    // let t = startTimer();
 
-    await async.forEachLimit([1,2,3,6,5,4,1], 3, async x => {
-        console.log(x,stopTimer(t));
-        await sleep(x*100);
-    });
-    console.log('done',stopTimer(t));
-    process.exit();
+    // await async.forEachLimit([1,2,3,6,5,4], 3, async x => {
+    //     console.log(x,stopTimer(t));
+    //     await sleep(x*100);
+    // });
+    // console.log('done',stopTimer(t));
+    // process.exit();
     
 
     let databases = await conn.query(`
@@ -36,13 +36,15 @@ async function __main__() {
 
     let allTables = Object.create(null);
     
-    await async.forEachLimit(databases, 1, async db => {
-        let t = startTimer();
+    await async.forEachLimit(databases, 5, async db => {
+        console.log(`fetching tables for ${db.name}`);
+        // let t = startTimer();
         let tables = await conn.query("SELECT TABLE_NAME,ENGINE,TABLE_COMMENT,TABLE_COLLATION,ROW_FORMAT,AUTO_INCREMENT FROM INFORMATION_SCHEMA.TABLES WHERE TABLES.TABLE_SCHEMA=? AND TABLE_TYPE='BASE TABLE'", [db.name]).fetchAll();
-        dump(db.name,stopTimer(t));
+        // dump(db.name,stopTimer(t));
         // dump(tables);
 
-        await async.forEach(tables, async tbl => {
+        await async.forEachLimit(tables, 5, async tbl => {
+            console.log(`inspecting ${db.name}.${tbl.TABLE_NAME}`);
             let tblDef = {
                 // name: table.Name,
                 options: {

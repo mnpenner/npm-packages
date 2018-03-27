@@ -22,50 +22,30 @@ export async function forEachChunked(array, limit, callback) {
 }
 
 function makeFulfill(fn) {
-    return (x,i) => fulfill(fn,[x,i],i);
+    return (x, i) => fulfill(fn, [x, i], i);
 }
 
-function fulfill(fn,args,val) {
-    return always(call(fn,...args),_=>val);
+function fulfill(fn, args, val) {
+    return always(call(fn, ...args), _ => val);
 }
 
 function always(promise, cb) {
-    return Promise.resolve(promise).then(cb,cb);
-}
-
-/**
- * Removes an index from an array without mutating the original array.
- *
- * @param {Array} array Array to remove value from
- * @param {Number} index Index to remove
- * @param {Number} count
- * @param {Array} replaceWith
- * @returns {Array} Array with `value` removed
- */
-export function arraySplice(array, index, count=1, replaceWith=[]) {
-    if(index < array.length) {
-        let copy = [...array];
-        copy.splice(index, count, ...replaceWith);
-        return copy;
-    }
-    return array;
+    return Promise.resolve(promise).then(cb, cb);
 }
 
 export async function forEachLimit(array, limit, callback) {
-    // if(array.length <= limit) {
-    //     return Promise.all(array.map(makeFulfill(callback)))
-    // }
-    let cur = limit;
-    let promises = array.slice(0,limit).map(makeFulfill(callback));
-    // let idx;
-    // let end = array.length - 1;
-    for(;cur<array.length;++cur) {
+    let promises = array.slice(0, limit).map(makeFulfill(callback));
+    for(let cur = limit; cur < array.length; ++cur) {
         let idx = await Promise.race(promises);
-        promises.splice(idx,1,fulfill(callback,[array[cur]], idx));
+        promises.splice(idx, 1, fulfill(callback, [array[cur]], idx));
     }
-    // promises.splice(idx,1);
-    // dump(promises);
     await Promise.all(promises);
+}
+
+export async function sequence(array, callback) {
+    for(let i=0; i<array.length; ++i) {
+        await fulfill(callback, [array[i], i], i);
+    }
 }
 
 export function parallel(...funcs) {
