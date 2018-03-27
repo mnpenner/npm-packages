@@ -89,6 +89,12 @@ async-each@^1.0.0:
   version "1.0.1"
   resolved "http://code.nucleuslabs.com:4873/async-each/-/async-each-1.0.1.tgz#19d386a1d9edc6e7c1c85d388aedbcc56d33602d"
 
+async@^2.6.0:
+  version "2.6.0"
+  resolved "http://code.nucleuslabs.com:4873/async/-/async-2.6.0.tgz#61a29abb6fcc026fea77e56d1c6ec53a795951f4"
+  dependencies:
+    lodash "^4.14.0"
+
 asynckit@^0.4.0:
   version "0.4.0"
   resolved "http://code.nucleuslabs.com:4873/asynckit/-/asynckit-0.4.0.tgz#c79ed97f7f34cb8f2ba1bc9790bcc366474b4b79"
@@ -1274,7 +1280,7 @@ lodash.once@^4.0.0:
   version "4.1.1"
   resolved "http://code.nucleuslabs.com:4873/lodash.once/-/lodash.once-4.1.1.tgz#0dd3971213c7c56df880977d504c88fb471a97ac"
 
-lodash@^4.17.4:
+lodash@^4.14.0, lodash@^4.17.4:
   version "4.17.5"
   resolved "http://code.nucleuslabs.com:4873/lodash/-/lodash-4.17.5.tgz#99a92d65c0272debe8c96b6057bc8fbfa3bed511"
 

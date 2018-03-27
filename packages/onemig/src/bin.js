@@ -3,12 +3,26 @@ import dump from './dump';
 import * as async from './util/async';
 import * as fs from './util/fs';
 import objHash from 'object-hash';
+import {startTimer, stopTimer} from './util/hrtime';
+
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve,ms));
+}
 
 async function __main__() {
     
     let serverVars = await conn.query('show variables').fetchPairs();
-    // dump(serverVars);
+    // dump(serverVars.innodb_stats_on_metadata);
     // dump(serverVars.innodb_default_row_format);
+    // process.exit();
+
+    // await async.forEachLimit([1,2,3,4,5,6,7,8,9,10], 3, async x => {
+    //     console.log(x);
+    //     await sleep(1000);
+    // });
+    // console.log('done');
+    // process.exit();
     
 
     let databases = await conn.query(`
@@ -20,8 +34,10 @@ async function __main__() {
 
     let allTables = Object.create(null);
     
-    await async.forEach(databases, async db => {
-        let tables = await conn.query("SHOW TABLE STATUS IN ?? WHERE ENGINE IS NOT NULL", [db.name]).fetchAll();
+    await async.forEachLimit(databases, 1, async db => {
+        let t = startTimer();
+        let tables = await conn.query("SELECT TABLE_NAME,ENGINE,TABLE_COMMENT,TABLE_COLLATION,ROW_FORMAT,AUTO_INCREMENT FROM INFORMATION_SCHEMA.TABLES WHERE TABLES.TABLE_SCHEMA=? AND TABLE_TYPE='BASE TABLE'", [db.name]).fetchAll();
+        dump(db.name,stopTimer(t));
         // dump(tables);
 
         await async.forEach(tables, async tbl => {
@@ -54,20 +70,20 @@ async function __main__() {
             // if(tbl.Auto_increment !== null) {
             //     tblDef.options.autoIncrement = tbl.Auto_increment;
             // }
-            if(tbl.Engine !== serverVars.default_storage_engine) {
-                tblDef.options.engine = tbl.Engine;
+            if(tbl.ENGINE !== serverVars.default_storage_engine) {
+                tblDef.options.engine = tbl.ENGINE;
             }
-            if(tbl.Comment.length) {
-                tblDef.options.comment = tbl.Comment;
+            if(tbl.TABLE_COMMENT.length) {
+                tblDef.options.comment = tbl.TABLE_COMMENT;
             }
-            if(tbl.Collation !== db.defaultCollation) {
-                tblDef.options.collation = tbl.Collation;
+            if(tbl.TABLE_COLLATION !== db.defaultCollation) {
+                tblDef.options.collation = tbl.TABLE_COLLATION;
             }
             if(!(
-                (tbl.Engine === 'InnoDB' && tbl.Row_format === 'Compact')
-                || (tbl.Engine === 'MyISAM' && tbl.Row_format === 'Dynamic')
+                (tbl.ENGINE === 'InnoDB' && tbl.ROW_FORMAT === 'Compact')
+                || (tbl.ENGINE === 'MyISAM' && tbl.ROW_FORMAT === 'Dynamic')
             )) {
-                tblDef.options.rowFormat = tbl.Row_format;
+                tblDef.options.rowFormat = tbl.ROW_FORMAT;
             }
             
             await async.parallel(
@@ -83,7 +99,7 @@ async function __main__() {
                             COLUMN_COMMENT
                         from information_schema.columns 
                         where table_schema=? and table_name=? 
-                        order by ORDINAL_POSITION`, [db.name, tbl.Name]).fetchAll();
+                        order by ORDINAL_POSITION`, [db.name, tbl.TABLE_NAME]).fetchAll();
                     
                     for(let col of columns) {
                         
@@ -101,7 +117,7 @@ async function __main__() {
                             colDef.default = col.COLUMN_DEFAULT; 
                         }
 
-                        if(col.COLLATION_NAME !== null && col.COLLATION_NAME !== tbl.Collation) {
+                        if(col.COLLATION_NAME !== null && col.COLLATION_NAME !== tbl.TABLE_COLLATION) {
                             colDef.collation = col.COLLATION_NAME;
                         }
                         
@@ -163,7 +179,7 @@ async function __main__() {
                 },
 
                 async () => {
-                    let indexes = await conn.query("SELECT INDEX_NAME,INDEX_TYPE,INDEX_COMMENT,NON_UNIQUE,COLUMN_NAME,SUB_PART FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA=? AND TABLE_NAME=? ORDER BY INDEX_NAME, SEQ_IN_INDEX", [db.name, tbl.Name]).fetchAll();
+                    let indexes = await conn.query("SELECT INDEX_NAME,INDEX_TYPE,INDEX_COMMENT,NON_UNIQUE,COLUMN_NAME,SUB_PART FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA=? AND TABLE_NAME=? ORDER BY INDEX_NAME, SEQ_IN_INDEX", [db.name, tbl.TABLE_NAME]).fetchAll();
                     for(let idx of indexes) {
                         
                         let colName = idx.COLUMN_NAME;
@@ -218,7 +234,7 @@ async function __main__() {
                             AND tc.TABLE_NAME = :tblname
                             AND tc.CONSTRAINT_TYPE = 'FOREIGN KEY'
                         ORDER BY kcu.ORDINAL_POSITION;
-                    `, {dbname: db.name, tblname: tbl.Name}).fetchAll();
+                    `, {dbname: db.name, tblname: tbl.TABLE_NAME}).fetchAll();
 
                     for(let fk of foreignKeys) {
                         // dump(fk);
@@ -246,16 +262,16 @@ async function __main__() {
             
             
             let tblHash = objHash(tblDef);
-            if(!allTables[tbl.Name]) {
-                allTables[tbl.Name] = {};
+            if(!allTables[tbl.TABLE_NAME]) {
+                allTables[tbl.TABLE_NAME] = {};
             }
-            if(!allTables[tbl.Name][tblHash]) {
-                allTables[tbl.Name][tblHash] = {
+            if(!allTables[tbl.TABLE_NAME][tblHash]) {
+                allTables[tbl.TABLE_NAME][tblHash] = {
                     databases: [db.name],
                     ...tblDef,
                 }
             } else {
-                allTables[tbl.Name][tblHash].databases.push(db.name);
+                allTables[tbl.TABLE_NAME][tblHash].databases.push(db.name);
             }
         });
     });
