@@ -11,7 +11,7 @@ dev: build
 
 build: $(DISTS) yarn.lock
 
-dist/%.js: src/%.js yarn.lock | $(DISTDIRS)
+dist/%.js: src/%.js yarn.lock .babelrc | $(DISTDIRS)
 	$(NM)/babel $< -o $@
 	
 $(DISTDIRS):

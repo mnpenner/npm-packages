@@ -10,6 +10,16 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve,ms));
 }
 
+// this is bugged!!! https://github.com/babel/babel/issues/4969
+// async function __main__2() {
+//    
+//     let results = conn.stream("SELECT TABLE_NAME,ENGINE,TABLE_COMMENT,TABLE_COLLATION,ROW_FORMAT,AUTO_INCREMENT FROM INFORMATION_SCHEMA.TABLES WHERE TABLES.TABLE_SCHEMA=? AND TABLE_TYPE='BASE TABLE'", ['wx_ncdcs_cs']);
+//    
+//     for await(let row of results) {
+//         dump(row);
+//     }
+// }
+
 async function __main__() {
     
     let serverVars = await conn.query('show variables').fetchPairs();
@@ -43,11 +53,12 @@ async function __main__() {
     
     await async.forEachLimit(databases, 5, async db => {
         console.log(`fetching tables for ${db.name}`);
-        // let t = startTimer();
+      
         
-        // FIXME: might be quicker if we avoid AUTO_INCREMENT and ROW_FORMAT https://dev.mysql.com/doc/refman/5.7/en/information-schema-optimization.html and conn.stream
+        // FIXME: might be quicker if we avoid AUTO_INCREMENT and ROW_FORMAT https://dev.mysql.com/doc/refman/5.7/en/information-schema-optimization.html (tested: might be a bit faster, but still takes like 4 seconds) and conn.stream (or maybe not, the query takes forever but it isn't a lot of data)
+        let t = startTimer();
         let tables = await conn.query("SELECT TABLE_NAME,ENGINE,TABLE_COMMENT,TABLE_COLLATION,ROW_FORMAT,AUTO_INCREMENT FROM INFORMATION_SCHEMA.TABLES WHERE TABLES.TABLE_SCHEMA=? AND TABLE_TYPE='BASE TABLE'", [db.name]).fetchAll();
-        // dump(db.name,stopTimer(t));
+        dump(db.name,stopTimer(t));
         // dump(tables);
 
         await async.forEachLimit(tables, 5, async tbl => {

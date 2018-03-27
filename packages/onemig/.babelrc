@@ -2,7 +2,9 @@
     "plugins": [
         "transform-object-rest-spread",
         "transform-class-properties",
-        "transform-function-bind"
+        "transform-function-bind",
+        "syntax-async-generators",
+        "transform-async-generator-functions"
     ],
     "presets": [
         [
