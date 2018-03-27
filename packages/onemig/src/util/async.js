@@ -30,6 +30,7 @@ function fulfill(fn, args, val) {
 }
 
 function always(promise, cb) {
+    // FIXME: maybe we shouldn't suppress errors...
     return Promise.resolve(promise).then(cb, cb);
 }
 

@@ -18,6 +18,11 @@ export default class DatabaseWrapper {
     query(sql, params) {
         return new ResultWrapper(this.pool.query(sql, params));
     }
+    
+    stream(sql, params) {
+        // fixme: this would probably be nicer as an async-generator but those aren't available until node 10.0.0
+        return this.pool.pool.query(sql, params);
+    }
 
     close() {
         return this.pool.end();

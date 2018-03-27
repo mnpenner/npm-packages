@@ -24,6 +24,11 @@ async function __main__() {
     //     await sleep(x*100);
     // });
     // console.log('done',stopTimer(t));
+    // conn.stream("SELECT TABLE_NAME,ENGINE,TABLE_COMMENT,TABLE_COLLATION,ROW_FORMAT,AUTO_INCREMENT FROM INFORMATION_SCHEMA.TABLES WHERE TABLES.TABLE_SCHEMA='wx_ncdcs_cs' AND TABLE_TYPE='BASE TABLE'")
+    //     .on('result', row => {
+    //         dump(row);
+    //     });
+    //
     // process.exit();
     
 
@@ -39,6 +44,8 @@ async function __main__() {
     await async.forEachLimit(databases, 5, async db => {
         console.log(`fetching tables for ${db.name}`);
         // let t = startTimer();
+        
+        // FIXME: might be quicker if we avoid AUTO_INCREMENT and ROW_FORMAT https://dev.mysql.com/doc/refman/5.7/en/information-schema-optimization.html and conn.stream
         let tables = await conn.query("SELECT TABLE_NAME,ENGINE,TABLE_COMMENT,TABLE_COLLATION,ROW_FORMAT,AUTO_INCREMENT FROM INFORMATION_SCHEMA.TABLES WHERE TABLES.TABLE_SCHEMA=? AND TABLE_TYPE='BASE TABLE'", [db.name]).fetchAll();
         // dump(db.name,stopTimer(t));
         // dump(tables);
