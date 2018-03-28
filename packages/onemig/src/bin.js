@@ -47,6 +47,7 @@ async function __main__() {
         FROM information_schema.SCHEMATA 
         WHERE (SCHEMA_NAME LIKE 'wx_%' OR SCHEMA_NAME LIKE 'webenginex_%' OR SCHEMA_NAME LIKE 'fbs2_%')
             AND SCHEMA_NAME NOT LIKE '%_old' AND SCHEMA_NAME NOT IN ('wx_zlnxbcaana01_stats','wx_documentation')
+        -- LIMIT 10
         `).fetchAll();
 
     let allTables = Object.create(null);
@@ -85,8 +86,8 @@ async function __main__() {
                 //     checkTime: tbl.Check_time,
                 // },
                 columns: [],
-                indexes: {},
-                foreignKeys: {},
+                // indexes: [],
+                // foreignKeys: [],
             };
             
             // if(tbl.Auto_increment !== null) {
@@ -202,34 +203,46 @@ async function __main__() {
 
                 async () => {
                     let indexes = await conn.query("SELECT INDEX_NAME,INDEX_TYPE,INDEX_COMMENT,NON_UNIQUE,COLUMN_NAME,SUB_PART FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA=? AND TABLE_NAME=? ORDER BY INDEX_NAME, SEQ_IN_INDEX", [db.name, tbl.TABLE_NAME]).fetchAll();
-                    for(let idx of indexes) {
-                        
-                        let colName = idx.COLUMN_NAME;
-                        if(idx.SUB_PART !== null) {
-                            colName += `(${idx.SUB_PART})`;
-                        }
-                        
-                        if(!tblDef.indexes.hasOwnProperty(idx.INDEX_NAME)) {
-                            // FIXME: "USING HASH" cannot be detected; https://stackoverflow.com/q/49440609/65387
-                            let idxDef = tblDef.indexes[idx.INDEX_NAME] = {};
-                            if(idx.INDEX_TYPE !== 'BTREE') {
-                                idxDef.type = idx.INDEX_TYPE;
-                            } else if(idx.NON_UNIQUE === 0) {
-                                idxDef.type = 'UNIQUE';
+                    
+                    if(indexes.length) {
+                        let idxMap = {};
+
+                        for(let idx of indexes) {
+
+                            let colName = idx.COLUMN_NAME;
+                            if(idx.SUB_PART !== null) {
+                                colName += `(${idx.SUB_PART})`;
+                            }
+
+                            if(!idxMap.hasOwnProperty(idx.INDEX_NAME)) {
+                                // FIXME: "USING HASH" cannot be detected; https://stackoverflow.com/q/49440609/65387
+                                let idxDef = idxMap[idx.INDEX_NAME] = {
+                                    name: idx.INDEX_NAME,
+                                };
+
+                                if(idx.INDEX_NAME === 'PRIMARY') {
+                                    idxDef.type = 'PRIMARY';
+                                } else if(idx.INDEX_TYPE !== 'BTREE') {
+                                    idxDef.type = idx.INDEX_TYPE;
+                                } else if(idx.NON_UNIQUE === 0) {
+                                    idxDef.type = 'UNIQUE';
+                                } else {
+                                    idxDef.type = 'INDEX';
+                                }
+                                idxDef.columns = [colName];
+
+                                // if(idx.Index_type !== 'BTREE') {
+                                //     idxDef.type = idx.Index_type; 
+                                // }
+                                if(idx.INDEX_COMMENT.length) {
+                                    idxDef.comment = idx.INDEX_COMMENT;
+                                }
                             } else {
-                                idxDef.type = 'INDEX';
+                                idxMap[idx.INDEX_NAME].columns.push(colName)
                             }
-                            idxDef.columns = [colName];
-                           
-                            // if(idx.Index_type !== 'BTREE') {
-                            //     idxDef.type = idx.Index_type; 
-                            // }
-                            if(idx.INDEX_COMMENT.length) {
-                                idxDef.comment = idx.INDEX_COMMENT;
-                            }
-                        } else {
-                            tblDef.indexes[idx.INDEX_NAME].columns.push(colName)
                         }
+
+                        tblDef.indexes = sortBy(Object.values(idxMap),'name');
                     }
                 },
 
@@ -258,27 +271,34 @@ async function __main__() {
                         ORDER BY kcu.ORDINAL_POSITION;
                     `, {dbname: db.name, tblname: tbl.TABLE_NAME}).fetchAll();
 
-                    for(let fk of foreignKeys) {
-                        // dump(fk);
-                        if(!tblDef.foreignKeys.hasOwnProperty(fk.constraint_name)) {
-                            let fkDef = tblDef.foreignKeys[fk.constraint_name] = {
-                                columnNames: [fk.column_name],
-                                // refTableSchema: fk.ref_table_schema,
-                                refTableName: fk.ref_table_name,
-                                refColumnNames: [fk.ref_column_name],
-                                deleteRule: fk.delete_rule,
-                                updateRule: fk.update_rule,
-                            }
-                            if(fk.ref_table_schema !== db.name) {
-                                // FIXME: we need to generalize this for {{pcs}}
-                                fkDef.refTableSchema = fk.ref_table_schema;
-                            }
-                        } else {
-                            tblDef.foreignKeys[fk.constraint_name].columnNames.push(fk.column_name);
-                            tblDef.foreignKeys[fk.constraint_name].refColumnNames.push(fk.ref_column_name);
-                        }
-                    }
+                    
+                    if(foreignKeys.length) {
+                        let fkMap = {};
 
+                        for(let fk of foreignKeys) {
+                            // dump(fk);
+                            if(!fkMap.hasOwnProperty(fk.constraint_name)) {
+                                let fkDef = fkMap[fk.constraint_name] = {
+                                    name: fk.constraint_name,
+                                    columnNames: [fk.column_name],
+                                    // refTableSchema: fk.ref_table_schema,
+                                    refTableName: fk.ref_table_name,
+                                    refColumnNames: [fk.ref_column_name],
+                                    deleteRule: fk.delete_rule,
+                                    updateRule: fk.update_rule,
+                                }
+                                if(fk.ref_table_schema !== db.name) {
+                                    // FIXME: we need to generalize this for {{pcs}}
+                                    fkDef.refTableSchema = fk.ref_table_schema;
+                                }
+                            } else {
+                                fkMap[fk.constraint_name].columnNames.push(fk.column_name);
+                                fkMap[fk.constraint_name].refColumnNames.push(fk.ref_column_name);
+                            }
+                        }
+
+                        tblDef.foreignKeys = sortBy(Object.values(fkMap),'name');
+                    }
                 },
             );
             
@@ -378,6 +398,15 @@ function splitValues(subject) {
     terms.push(term);
     return terms;
 }
+
+function sortBy(array, prop) {
+    return array.sort((a,b) => {
+        if(a[prop] === 'PRIMARY') return -1;
+        if(b[prop] === 'PRIMARY') return 1;
+        return a[prop].localeCompare(b[prop]);
+    });
+}
+
 
 
 /*

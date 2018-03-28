@@ -17,7 +17,7 @@ export default new DatabaseWrapper({
     timezone: dbVars.timezone || 'America/Vancouver',
     queryFormat: formatSql,
     charset: 'utf8_unicode_ci',
-    connectionLimit: 2, // TODO: increase this for production
+    connectionLimit: 25, // TODO: increase this for production
     typeCast: (field, next) => {
         if(field.type === 'BIT' && field.length === 1) {
             let buf = field.buffer();
