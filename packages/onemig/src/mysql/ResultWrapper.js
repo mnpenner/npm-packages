@@ -9,8 +9,13 @@ export default class ResultWrapper {
     /**
      * @returns {Promise<TextRow>}
      */
-    fetchRow() {
-        return this.result.then(([[row], fields]) => row);
+    async fetchRow() {
+        // fetch one row and then release the connection rather than
+        // waiting for all the rows?
+        let [rows,fields] = await this.result;
+        if(!rows.length) return null;
+        if(rows.length > 1) throw new Error("You should only query for one row when using `fetchRow`");
+        return rows[0];
     }
 
     /**
@@ -26,6 +31,8 @@ export default class ResultWrapper {
     async fetchValue() {
         let [rows,fields] = await this.result;
         if(!rows.length) return null;
+        if(rows.length > 1) throw new Error("You should only query for one row when using `fetchValue`");
+        if(fields.length > 1) throw new Error("You should only query for one field when using `fetchValue`");
         return rows[0][fields[0].name];
     }
 
@@ -35,6 +42,7 @@ export default class ResultWrapper {
     async fetchColumn() {
         let [rows,fields] = await this.result;
         if(!rows.length) return [];
+        if(fields.length > 1) throw new Error("You should only query for one field when using `fetchColumn`");
         const name = fields[0].name;
         return rows.map(r => r[name]);
     }
@@ -44,7 +52,7 @@ export default class ResultWrapper {
      */
     async fetchPairs() {
         let [rows,fields] = await this.result;
-        if(fields.length !== 2) throw new Error(`fetchPairs expects exactly 2 columns`);
+        if(fields.length !== 2) throw new Error("`fetchPairs` expects exactly 2 columns");
         if(!rows.length) return {};
         const key = fields[0].name;
         const val = fields[1].name;
@@ -53,4 +61,6 @@ export default class ResultWrapper {
             return acc;
         }, Object.create(null));
     }
+    
+    // [Symbol.asyncIterator]: ...
 }
