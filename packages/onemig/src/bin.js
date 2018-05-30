@@ -4,8 +4,11 @@ import * as async from './util/async';
 import * as fs from './util/fs';
 import objHash from 'object-hash';
 import {startTimer, stopTimer} from './util/hrtime';
-import {parseFrm} from './mysql/parseData';
-
+import SshClient from './ssh-client';
+import Moment from 'moment';
+import Path from 'path';
+// import {parseFrm} from './mysql/parseData';
+// import {Client as SshClient} from 'ssh2';
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve,ms));
@@ -21,15 +24,44 @@ function sleep(ms) {
 //     }
 // }
 
+function isoDate(d) {
+    let str = d.toISOString();
+    const dot = str.lastIndexOf('.');
+    if(dot >= 0) {
+        str = str.slice(0,dot);
+    }
+    return str;
+}
+
 async function __main__() {
     
-    dump(await parseFrm(`${__dirname}/../data/emr_client.frm`));
-    return;
+    // dump(await parseFrm(`${__dirname}/../data/emr_client.frm`));
+    // return;
+    
+    const sshClient = new SshClient({
+        host: 'dev-sql',
+        // debug: dump,
+    });
+    
+
     
     let serverVars = await conn.query('show variables').fetchPairs();
     // dump(serverVars.innodb_stats_on_metadata);
     // dump(serverVars.innodb_default_row_format);
-    // process.exit();
+    // dump(serverVars.datadir);
+    
+    const lastMod = Moment([2018,4,30]).format('ddd DD MMM YYYY HH:mm:ss'); // https://stackoverflow.com/questions/848293/shell-script-get-all-files-modified-after-date#comment84300127_848327
+
+    let frmFiles = await sshClient.exec(['sudo','find',serverVars.datadir,'-mindepth',2,'-maxdepth','2','-type','f','-newermt',lastMod,'-name','*.frm','-print0']);
+    frmFiles = frmFiles.slice(0,-1).split('\0');
+    dump(frmFiles);
+
+    sshClient.close();
+
+
+    process.exit();
+    
+    
     
     // let t = startTimer();
 
