@@ -290,7 +290,7 @@ babel-plugin-syntax-async-functions@^6.8.0:
   version "6.13.0"
   resolved "http://code.nucleuslabs.com:4873/babel-plugin-syntax-async-functions/-/babel-plugin-syntax-async-functions-6.13.0.tgz#cad9cad1191b5ad634bf30ae0872391e0647be95"
 
-babel-plugin-syntax-async-generators@^6.13.0, babel-plugin-syntax-async-generators@^6.5.0:
+babel-plugin-syntax-async-generators@^6.13.0:
   version "6.13.0"
   resolved "http://code.nucleuslabs.com:4873/babel-plugin-syntax-async-generators/-/babel-plugin-syntax-async-generators-6.13.0.tgz#6bc963ebb16eccbae6b92b596eb7f35c342a8b9a"
 
@@ -313,14 +313,6 @@ babel-plugin-syntax-object-rest-spread@^6.8.0:
 babel-plugin-syntax-trailing-function-commas@^6.22.0:
   version "6.22.0"
   resolved "http://code.nucleuslabs.com:4873/babel-plugin-syntax-trailing-function-commas/-/babel-plugin-syntax-trailing-function-commas-6.22.0.tgz#ba0360937f8d06e40180a43fe0d5616fff532cf3"
-
-babel-plugin-transform-async-generator-functions@^6.24.1:
-  version "6.24.1"
-  resolved "http://code.nucleuslabs.com:4873/babel-plugin-transform-async-generator-functions/-/babel-plugin-transform-async-generator-functions-6.24.1.tgz#f058900145fd3e9907a6ddf28da59f215258a5db"
-  dependencies:
-    babel-helper-remap-async-to-generator "^6.24.1"
-    babel-plugin-syntax-async-generators "^6.5.0"
-    babel-runtime "^6.22.0"
 
 babel-plugin-transform-async-to-generator@^6.22.0:
   version "6.24.1"
@@ -1539,6 +1531,10 @@ pify@^3.0.0:
 preserve@^0.2.0:
   version "0.2.0"
   resolved "http://code.nucleuslabs.com:4873/preserve/-/preserve-0.2.0.tgz#815ed1f6ebc65926f865b310c0713bcb3315ce4b"
+
+prettier@1.13.3:
+  version "1.13.3"
+  resolved "http://code.nucleuslabs.com:4873/prettier/-/prettier-1.13.3.tgz#e74c09a7df6519d472ca6febaa37cf7addb48a20"
 
 private@^0.1.6, private@^0.1.7:
   version "0.1.8"

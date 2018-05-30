@@ -1,7 +1,7 @@
 import dump from '../dump';
 
 export function forEach(array, callback) {
-    return Promise.all(array.map(makeFulfill(callback)));
+    return Promise.all(array.map(makeResolveWith(callback)));
 }
 
 function chunkArray(array, chunkSize) {
@@ -17,35 +17,34 @@ function chunkArray(array, chunkSize) {
 
 export async function forEachChunked(array, limit, callback) {
     for(let chunk of chunkArray(array, limit)) {
-        await Promise.all(chunk.map(makeFulfill(callback)));
+        await Promise.all(chunk.map(makeResolveWith(callback)));
     }
 }
 
-function makeFulfill(fn) {
-    return (x, i) => fulfill(fn, [x, i], i);
+function makeResolveWith(fn) {
+    return (x, i) => resolveWith(fn, [x, i], i);
 }
 
-function fulfill(fn, args, val) {
-    return always(call(fn, ...args), _ => val);
+function resolveWith(fn, args, val) {
+    return Promise.resolve(call(fn, ...args)).then(_ => val);
 }
 
 function always(promise, cb) {
-    // FIXME: maybe we shouldn't suppress errors...
     return Promise.resolve(promise).then(cb, cb);
 }
 
 export async function forEachLimit(array, limit, callback) {
-    let promises = array.slice(0, limit).map(makeFulfill(callback));
+    let promises = array.slice(0, limit).map(makeResolveWith(callback));
     for(let cur = limit; cur < array.length; ++cur) {
         let idx = await Promise.race(promises);
-        promises.splice(idx, 1, fulfill(callback, [array[cur]], idx));
+        promises.splice(idx, 1, resolveWith(callback, [array[cur]], idx));
     }
     await Promise.all(promises);
 }
 
 export async function sequence(array, callback) {
     for(let i=0; i<array.length; ++i) {
-        await fulfill(callback, [array[i], i], i);
+        await resolveWith(callback, [array[i], i], i);
     }
 }
 
