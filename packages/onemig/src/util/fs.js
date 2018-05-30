@@ -1,8 +1,9 @@
 import Util from 'util';
 import mkdirp from 'make-dir';
 import Path from 'path';
+import FileSystem from 'fs';
 
-const fsa = Object.entries(require('fs')).reduce((acc, [k, v]) => {
+export const fsa = Object.entries(FileSystem).reduce((acc, [k, v]) => {
     if(typeof v === 'function' && /^[a-z]/.test(k) && !k.endsWith('Sync')) {
         acc[k] = Util.promisify(v);
     } else {

@@ -4,6 +4,7 @@ import * as async from './util/async';
 import * as fs from './util/fs';
 import objHash from 'object-hash';
 import {startTimer, stopTimer} from './util/hrtime';
+import {parseFrm} from './mysql/parseData';
 
 
 function sleep(ms) {
@@ -21,6 +22,9 @@ function sleep(ms) {
 // }
 
 async function __main__() {
+    
+    dump(await parseFrm(`${__dirname}/../data/emr_client.frm`));
+    return;
     
     let serverVars = await conn.query('show variables').fetchPairs();
     // dump(serverVars.innodb_stats_on_metadata);
