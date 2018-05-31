@@ -1,7 +1,9 @@
 import Util from 'util';
 import mkdirp from 'make-dir';
 import Path from 'path';
-import FileSystem from 'fs';
+import FileSystem, {Stats} from 'fs';
+import {URL} from "url";
+import dump from '../dump';
 
 export const fsa = Object.entries(FileSystem).reduce((acc, [k, v]) => {
     if(typeof v === 'function' && /^[a-z]/.test(k) && !k.endsWith('Sync')) {
@@ -25,3 +27,11 @@ export const writeText = (path,contents) => {
         throw err;
     });
 };
+
+export const readDir = (path) => fsa.readdir(path).then(entries => entries.map(e => Path.join(path, e)));
+
+
+// export async function getFiles(dir, recursive = true) {
+//     const entries = await readDir(dir);
+//     dump(entries);
+// }

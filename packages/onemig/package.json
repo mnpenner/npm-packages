@@ -1,8 +1,11 @@
 {
+  "name": "onemig",
+  "version": "0.1.0",
   "dependencies": {
     "@nucleuslabs/napi-js": "^1.0.2",
     "async": "^2.6.0",
     "chalk": "^2.4.1",
+    "find-up": "^2.1.0",
     "make-dir": "^1.2.0",
     "moment": "^2.22.1",
     "mysql2": "^1.5.3",
@@ -12,6 +15,7 @@
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
+    "babel-plugin-dynamic-import-node": "^1.2.0",
     "babel-plugin-syntax-async-generators": "^6.13.0",
     "babel-plugin-transform-class-properties": "^6.24.1",
     "babel-plugin-transform-function-bind": "^6.22.0",

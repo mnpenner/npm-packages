@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import conn from './db';
 import dump from './dump';
 import * as async from './util/async';
@@ -9,8 +10,19 @@ import Moment from 'moment';
 import Path from 'path';
 import Chalk from 'chalk';
 import {getValue, setValue} from './util/object';
+import {Application,Command} from './console';
 // import {parseFrm} from './mysql/parseData';
 // import {Client as SshClient} from 'ssh2';
+
+// import exportCommand from './commands/export';
+import {getFiles} from './util/fs';
+import {readDir} from './util/fs';
+
+process.on('unhandledRejection', dump);
+
+
+
+
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -36,7 +48,23 @@ function isoDate(d) {
 }
 
 async function __main__() {
+    
 
+    const app = new Application();
+
+    for(let cmd of await readDir(`${__dirname}/commands`)) {
+        app.add(import(cmd).then(m => m.default));
+    }
+    // app.add(exportCommand);
+    
+    // app.add(new Command({
+    //     name: 'export',
+    //     description: "Export the current database schema",
+    // }));
+
+    await app.run();
+    return;
+    
     // dump(await parseFrm(`${__dirname}/../data/emr_client.frm`));
     // return;
 
