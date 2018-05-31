@@ -14,7 +14,8 @@ export const fsa = Object.entries(FileSystem).reduce((acc, [k, v]) => {
     return acc;
 }, Object.create(null));
 
-export const readText = path => fsa.readFile(path, {encoding: 'utf8'});
+export const readText = path => fsa.readFile(path, {encoding: 'utf8', flag: 'r'});
+export const readJson = file => readText(file).then(JSON.parse);
 
 export const writeText = (path,contents) => {
     const write = () => fsa.writeFile(path, contents, {encoding: 'utf8'});
@@ -27,6 +28,8 @@ export const writeText = (path,contents) => {
         throw err;
     });
 };
+
+export const writeJson = (file,data,options) => writeText(file,JSON.stringify(data,null,'\t'),options);
 
 export const readDir = (path) => fsa.readdir(path).then(entries => entries.map(e => Path.join(path, e)));
 
