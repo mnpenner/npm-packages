@@ -1,8 +1,10 @@
 {
   "name": "onemig",
   "version": "0.1.0",
+  "license": "UNLICENSED",
   "dependencies": {
-    "@nucleuslabs/napi-js": "^1.0.2",
+    "@async-generators/from-emitter": "^0.3.0",
+    "@nucleuslabs/napi-js": "^1.1.0",
     "async": "^2.6.0",
     "chalk": "^2.4.1",
     "find-up": "^2.1.0",
@@ -14,13 +16,14 @@
     "ssh2": "^0.6.1"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-plugin-dynamic-import-node": "^1.2.0",
-    "babel-plugin-syntax-async-generators": "^6.13.0",
-    "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-plugin-transform-function-bind": "^6.22.0",
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-preset-env": "^1.6.1",
+    "@babel/cli": "^7.0.0-beta.49",
+    "@babel/core": "^7.0.0-beta.49",
+    "@babel/plugin-proposal-function-bind": "^7.0.0-beta.49",
+    "@babel/plugin-syntax-dynamic-import": "^7.0.0-beta.49",
+    "@babel/preset-env": "^7.0.0-beta.49",
     "prettier": "1.13.3"
+  },
+  "engines": {
+    "node": ">=10"
   }
 }

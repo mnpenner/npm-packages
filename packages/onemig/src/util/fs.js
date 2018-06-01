@@ -29,7 +29,7 @@ export const writeText = (path,contents) => {
     });
 };
 
-export const writeJson = (file,data,options) => writeText(file,JSON.stringify(data,null,'\t'),options);
+export const writeJson = (file,data,options) => writeText(file,JSON.stringify(data,null,4),options);
 
 export const readDir = (path) => fsa.readdir(path).then(entries => entries.map(e => Path.join(path, e)));
 

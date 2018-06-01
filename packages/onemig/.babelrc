@@ -1,17 +1,19 @@
 {
     "plugins": [
-        "transform-object-rest-spread",
-        "transform-class-properties",
-        "transform-function-bind",
-        "dynamic-import-node"
+        "@babel/plugin-proposal-function-bind",
+        "@babel/plugin-syntax-dynamic-import"
     ],
     "presets": [
         [
-            "env",
+            "@babel/preset-env",
             {
                 "targets": {
                     "node": "current"
-                }
+                },
+                "exclude": [
+                    "proposal-async-generator-functions",
+                    "transform-async-to-generator"
+                ]
             }
         ]
     ],

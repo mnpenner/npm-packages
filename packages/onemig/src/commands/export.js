@@ -16,15 +16,14 @@ export default {
         
         try {
             const dataDir = await dbClient.query("select @@datadir").fetchValue();
-            let metaData;
+            let metaData = {};
             const metaFile = `${__dirname}/../../cache/meta.json`;
-            try {
-                metaData = await readJson(metaFile);
-                
-            } catch(err) {
-                console.log(`cache file ${Chalk.underline(metaFile)} not found`);
-                metaData = {};
-            }
+            // try {
+            //     metaData = await readJson(metaFile);
+            // } catch(err) {
+            //     console.log(`cache file ${Chalk.underline(metaFile)} not found`);
+            //     metaData = {};
+            // }
             
             const findCmd = ['sudo','find',dataDir,'-mindepth',2,'-maxdepth','2','-type','f'];
             
