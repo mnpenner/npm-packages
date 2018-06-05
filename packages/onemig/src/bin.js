@@ -1,13 +1,31 @@
+#!/usr/bin/env node
 import conn from './db';
 import dump from './dump';
 import * as async from './util/async';
 import * as fs from './util/fs';
 import objHash from 'object-hash';
 import {startTimer, stopTimer} from './util/hrtime';
+import SshClient from './ssh-client';
+import Moment from 'moment';
+import Path from 'path';
+import Chalk from 'chalk';
+import {getValue, setValue} from './util/object';
+import {Application,Command} from './console';
+// import {parseFrm} from './mysql/parseData';
+// import {Client as SshClient} from 'ssh2';
+
+// import exportCommand from './commands/export';
+import {getFiles} from './util/fs';
+import {readDir} from './util/fs';
+
+process.on('unhandledRejection', dump);
+
+
+
 
 
 function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve,ms));
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 // this is bugged!!! https://github.com/babel/babel/issues/4969
@@ -20,13 +38,71 @@ function sleep(ms) {
 //     }
 // }
 
+function isoDate(d) {
+    let str = d.toISOString();
+    const dot = str.lastIndexOf('.');
+    if(dot >= 0) {
+        str = str.slice(0, dot);
+    }
+    return str;
+}
+
 async function __main__() {
     
+
+    const app = new Application();
+
+    for(let cmd of await readDir(`${__dirname}/commands`)) {
+        app.add(require(cmd).default);
+    }
+    // app.add(exportCommand);
+    
+    // app.add(new Command({
+    //     name: 'export',
+    //     description: "Export the current database schema",
+    // }));
+
+    await app.run();
+    return;
+    
+    // dump(await parseFrm(`${__dirname}/../data/emr_client.frm`));
+    // return;
+
+    // const sshClient = new SshClient({
+    //     host: 'dev-sql',
+    //     // debug: dump,
+    // });
+
+
     let serverVars = await conn.query('show variables').fetchPairs();
     // dump(serverVars.innodb_stats_on_metadata);
     // dump(serverVars.innodb_default_row_format);
-    // process.exit();
+    // dump(serverVars.datadir);
+
+    const lastMod = Moment([2018, 4, 30]).format('ddd DD MMM YYYY HH:mm:ss'); // https://stackoverflow.com/questions/848293/shell-script-get-all-files-modified-after-date#comment84300127_848327
+
+    // let frmFiles = await sshClient.exec(['sudo','find',serverVars.datadir,'-mindepth',2,'-maxdepth','2','-type','f','-newermt',lastMod,'-name','*.frm','-print0']);
+    // frmFiles = frmFiles.slice(0,-1).split('\0');
+    // sshClient.close();
+
+    let frmFiles = ['/var/db/mysql/wx_options_ch/emr_client_program.frm',
+        '/var/db/mysql/wx_options_ch/pomsw_goal.frm',
+        '/var/db/mysql/wx_options_ch/pomsw_outcome.frm'];
+
+    const re = /([^/]+)\/([^/]+)\.frm/;
     
+    
+    let modifiedTables = frmFiles.map(f => {
+        const [, db, tbl] = re.exec(f);
+        return [db, tbl];
+    });
+    console.log(`Tables modified since last run:\n${modifiedTables.map(tbl => `- ${tbl.join('.')}`).join('\n')}`);
+    // dump(modifiedTables);
+
+
+    // process.exit();
+
+
     // let t = startTimer();
 
     // await async.forEachLimit([1,2,3,6,5,4], 3, async x => {
@@ -40,92 +116,84 @@ async function __main__() {
     //     });
     //
     // process.exit();
-    
-    const gen = conn.stream(`
-        SELECT SCHEMA_NAME \`name\`, DEFAULT_CHARACTER_SET_NAME \`defaultCharset\`, DEFAULT_COLLATION_NAME \`defaultCollation\` 
-        FROM information_schema.SCHEMATA 
-        WHERE (SCHEMA_NAME LIKE 'wx_%' OR SCHEMA_NAME LIKE 'webenginex_%' OR SCHEMA_NAME LIKE 'fbs2_%')
-            AND SCHEMA_NAME NOT LIKE '%_old' AND SCHEMA_NAME NOT IN ('wx_zlnxbcaana01_stats','wx_documentation')
-        -- LIMIT 10
-        `);
-    
-    // dump(gen);
-    for await(const row of gen) {
-        dump('bbb',row);
-    }
-    process.exit();
-    
 
-    let databases = await conn.query(`
-        SELECT SCHEMA_NAME \`name\`, DEFAULT_CHARACTER_SET_NAME \`defaultCharset\`, DEFAULT_COLLATION_NAME \`defaultCollation\` 
-        FROM information_schema.SCHEMATA 
-        WHERE (SCHEMA_NAME LIKE 'wx_%' OR SCHEMA_NAME LIKE 'webenginex_%' OR SCHEMA_NAME LIKE 'fbs2_%')
-            AND SCHEMA_NAME NOT LIKE '%_old' AND SCHEMA_NAME NOT IN ('wx_zlnxbcaana01_stats','wx_documentation')
-        -- LIMIT 10
-        `).fetchAll();
+
+
 
     let allTables = Object.create(null);
-    
-    await async.forEachLimit(databases, 5, async db => {
-        console.log(`fetching tables for ${db.name}`);
-      
-        
-        // FIXME: might be quicker if we avoid AUTO_INCREMENT and ROW_FORMAT https://dev.mysql.com/doc/refman/5.7/en/information-schema-optimization.html (tested: might be a bit faster, but still takes like 4 seconds) and conn.stream (or maybe not, the query takes forever but it isn't a lot of data)
-        let t = startTimer();
-        let tables = await conn.query("SELECT TABLE_NAME,ENGINE,TABLE_COMMENT,TABLE_COLLATION,ROW_FORMAT,AUTO_INCREMENT FROM INFORMATION_SCHEMA.TABLES WHERE TABLES.TABLE_SCHEMA=? AND TABLE_TYPE='BASE TABLE'", [db.name]).fetchAll();
-        dump(db.name,stopTimer(t));
-        // dump(tables);
 
-        await async.forEachLimit(tables, 5, async tbl => {
-            console.log(`inspecting ${db.name}.${tbl.TABLE_NAME}`);
-            let tblDef = {
-                // name: table.Name,
-                options: {
-                    // engine: tbl.Engine,
-                    // autoIncrement: tbl.Auto_increment,
-                    // comment: tbl.Comment,
-                    // charset: table.Collation !== null ? table.Collation.match(/^[^_]+/)[0] : null,
-                    // collation: tbl.Collation,
-                    // rowFormat: tbl.Row_format,
-                },
-                // stats: {
-                //     version: tbl.Version,
-                //     rows: tbl.Rows,
-                //     avgRowLength: tbl.Avg_row_length,
-                //     dataLength: tbl.Data_length,
-                //     maxDataLength: tbl.Max_data_length,
-                //     dataFree: tbl.Data_free,
-                //     createTime: tbl.Create_time,
-                //     updateTime: tbl.Update_time,
-                //     checkTime: tbl.Check_time,
-                // },
-                columns: [],
-                // indexes: [],
-                // foreignKeys: [],
-            };
-            
-            // if(tbl.Auto_increment !== null) {
-            //     tblDef.options.autoIncrement = tbl.Auto_increment;
-            // }
-            if(tbl.ENGINE !== serverVars.default_storage_engine) {
-                tblDef.options.engine = tbl.ENGINE;
-            }
-            if(tbl.TABLE_COMMENT.length) {
-                tblDef.options.comment = tbl.TABLE_COMMENT;
-            }
-            if(tbl.TABLE_COLLATION !== db.defaultCollation) {
-                tblDef.options.collation = tbl.TABLE_COLLATION;
-            }
-            if(!(
-                (tbl.ENGINE === 'InnoDB' && tbl.ROW_FORMAT === 'Compact')
-                || (tbl.ENGINE === 'MyISAM' && tbl.ROW_FORMAT === 'Dynamic')
-            )) {
-                tblDef.options.rowFormat = tbl.ROW_FORMAT;
-            }
-            
-            await async.parallel(
-                async () => {
-                    let columns = await conn.query(`
+    const tblCache = Object.create(null);
+    const dbCache = Object.create(null);
+
+    await async.forEachLimit(modifiedTables, 5, async ([dbName, tblName]) => {
+        console.log(`inspecting ${dbName}.${tblName}`);
+        let tblDef = {
+            // name: table.Name,
+            options: {
+                // engine: tbl.Engine,
+                // autoIncrement: tbl.Auto_increment,
+                // comment: tbl.Comment,
+                // charset: table.Collation !== null ? table.Collation.match(/^[^_]+/)[0] : null,
+                // collation: tbl.Collation,
+                // rowFormat: tbl.Row_format,
+            },
+            // stats: {
+            //     version: tbl.Version,
+            //     rows: tbl.Rows,
+            //     avgRowLength: tbl.Avg_row_length,
+            //     dataLength: tbl.Data_length,
+            //     maxDataLength: tbl.Max_data_length,
+            //     dataFree: tbl.Data_free,
+            //     createTime: tbl.Create_time,
+            //     updateTime: tbl.Update_time,
+            //     checkTime: tbl.Check_time,
+            // },
+            columns: [],
+            // indexes: [],
+            // foreignKeys: [],
+        };
+
+        if(!dbCache[dbName]) {
+            dbCache[dbName] = conn.query(`
+                SELECT SCHEMA_NAME \`name\`, DEFAULT_CHARACTER_SET_NAME \`defaultCharset\`, DEFAULT_COLLATION_NAME \`defaultCollation\` 
+                FROM information_schema.SCHEMATA 
+                WHERE SCHEMA_NAME=?
+                `,[dbName]).fetchRow();
+        }
+        
+        let tblQuery = getValue(tblCache,[dbName,tblName]);
+        
+        if(!tblQuery) {
+            tblQuery = conn.query("SELECT TABLE_NAME,ENGINE,TABLE_COMMENT,TABLE_COLLATION,ROW_FORMAT,AUTO_INCREMENT FROM INFORMATION_SCHEMA.TABLES WHERE TABLES.TABLE_SCHEMA=? AND TABLE_NAME=? AND TABLE_TYPE='BASE TABLE'", [dbName,tblName]).fetchRow();
+            setValue(tblCache,[dbName,tblName],tblQuery);
+        }
+        
+        
+        const [db,tbl] = await Promise.all([dbCache[dbName],tblQuery]);
+        
+
+        // if(tbl.Auto_increment !== null) {
+        //     tblDef.options.autoIncrement = tbl.Auto_increment;
+        // }
+        if(tbl.ENGINE !== serverVars.default_storage_engine) {
+            tblDef.options.engine = tbl.ENGINE;
+        }
+        if(tbl.TABLE_COMMENT.length) {
+            tblDef.options.comment = tbl.TABLE_COMMENT;
+        }
+        if(tbl.TABLE_COLLATION !== db.defaultCollation) {
+            tblDef.options.collation = tbl.TABLE_COLLATION;
+        }
+        if(!(
+            (tbl.ENGINE === 'InnoDB' && tbl.ROW_FORMAT === 'Compact')
+            || (tbl.ENGINE === 'MyISAM' && tbl.ROW_FORMAT === 'Dynamic')
+        )) {
+            tblDef.options.rowFormat = tbl.ROW_FORMAT;
+        }
+
+        await async.parallel(
+            async () => {
+                let columns = await conn.query(`
                         select 
                             COLUMN_NAME,
                             COLUMN_DEFAULT,
@@ -136,132 +204,134 @@ async function __main__() {
                             COLUMN_COMMENT
                         from information_schema.columns 
                         where table_schema=? and table_name=? 
-                        order by ORDINAL_POSITION`, [db.name, tbl.TABLE_NAME]).fetchAll();
-                    
-                    for(let col of columns) {
-                        
-                        let colDef = {
-                            name: col.COLUMN_NAME,
-                            type: col.COLUMN_TYPE,
-                            null: col.IS_NULLABLE === 'YES',
-                        };
+                        order by ORDINAL_POSITION`, [dbName, tblName]).fetchAll();
 
-                        if(col.COLUMN_COMMENT.length) {
-                            colDef.comment = col.COLUMN_COMMENT; 
-                        }
-                        
-                        if(col.COLUMN_DEFAULT !== null) {
-                            colDef.default = col.COLUMN_DEFAULT; 
-                        }
+                for(let col of columns) {
 
-                        if(col.COLLATION_NAME !== null && col.COLLATION_NAME !== tbl.TABLE_COLLATION) {
-                            colDef.collation = col.COLLATION_NAME;
-                        }
-                        
-                        
-                        tblDef.columns.push(colDef);
-                        
+                    let colDef = {
+                        name: col.COLUMN_NAME,
+                        type: col.COLUMN_TYPE,
+                        null: col.IS_NULLABLE === 'YES',
+                    };
 
-                        switch(col.DATA_TYPE) {
-                            case 'enum':
-                            case 'set':
-                                let [match,type,values] = /^(\w+)\((.*)\)$/.exec(col.COLUMN_TYPE);
-                                if(!match) {
-                                    throw new Error(`Unexpected ${col.DATA_TYPE} format: ${col.COLUMN_TYPE}`);
-                                }
-                                if(type !== col.DATA_TYPE) {
-                                    throw new Error(`Data type (${col.DATA_TYPE}) does not match column type (${type})`);
-                                }
-                                colDef.type = type;
-                                colDef.values = splitValues(values);
-                                break;
-                            case 'tinyint':
-                            case 'smallint':
-                            case 'mediumint':
-                            case 'int':
-                            case 'bigint': {
-                                let [match,type,length,unsigned,zerofill] = /^(\w+)\((\d+)\)( unsigned)?( zerofill)?$/.exec(col.COLUMN_TYPE);
-                                if(!match) {
-                                    throw new Error(`Unexpected integer format: ${col.COLUMN_TYPE}`);
-                                }
-                                if(type !== col.DATA_TYPE) {
-                                    throw new Error(`Data type (${col.DATA_TYPE}) does not match column type (${type})`);
-                                }
-                                // colDef.length = parseInt(length);
-                                // colDef.unsigned = unsigned !== undefined;
-                                // colDef.zerofill = zerofill !== undefined;
-                            } break;
-                            case 'float':
-                            case 'decimal':
-                            case 'double': {
-                                let [match,type,length,decimals,unsigned,zerofill] = /^(\w+)(?:\((\d+)(?:,(\d+))?\))?( unsigned)?( zerofill)?$/.exec(col.COLUMN_TYPE);
-                                if(!match) {
-                                    throw new Error(`Unexpected float format: ${col.COLUMN_TYPE}`);
-                                }
-                                if(type !== col.DATA_TYPE) {
-                                    throw new Error(`Data type (${col.DATA_TYPE}) does not match column type (${type})`);
-                                }
-                                // if(length !== undefined) {
-                                //     colDef.length = parseInt(length);
-                                // }
-                                // if(decimals !== undefined) {
-                                //     colDef.decimals = parseInt(decimals);
-                                // }
-                                // colDef.unsigned = unsigned !== undefined;
-                                // colDef.zerofill = zerofill !== undefined;
-                            } break;
-                            
-                        }
+                    if(col.COLUMN_COMMENT.length) {
+                        colDef.comment = col.COLUMN_COMMENT;
                     }
-                },
 
-                async () => {
-                    let indexes = await conn.query("SELECT INDEX_NAME,INDEX_TYPE,INDEX_COMMENT,NON_UNIQUE,COLUMN_NAME,SUB_PART FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA=? AND TABLE_NAME=? ORDER BY INDEX_NAME, SEQ_IN_INDEX", [db.name, tbl.TABLE_NAME]).fetchAll();
-                    
-                    if(indexes.length) {
-                        let idxMap = {};
+                    if(col.COLUMN_DEFAULT !== null) {
+                        colDef.default = col.COLUMN_DEFAULT;
+                    }
 
-                        for(let idx of indexes) {
+                    if(col.COLLATION_NAME !== null && col.COLLATION_NAME !== tbl.TABLE_COLLATION) {
+                        colDef.collation = col.COLLATION_NAME;
+                    }
 
-                            let colName = idx.COLUMN_NAME;
-                            if(idx.SUB_PART !== null) {
-                                colName += `(${idx.SUB_PART})`;
+
+                    tblDef.columns.push(colDef);
+
+
+                    switch(col.DATA_TYPE) {
+                        case 'enum':
+                        case 'set':
+                            let [match, type, values] = /^(\w+)\((.*)\)$/.exec(col.COLUMN_TYPE);
+                            if(!match) {
+                                throw new Error(`Unexpected ${col.DATA_TYPE} format: ${col.COLUMN_TYPE}`);
                             }
+                            if(type !== col.DATA_TYPE) {
+                                throw new Error(`Data type (${col.DATA_TYPE}) does not match column type (${type})`);
+                            }
+                            colDef.type = type;
+                            colDef.values = splitValues(values);
+                            break;
+                        case 'tinyint':
+                        case 'smallint':
+                        case 'mediumint':
+                        case 'int':
+                        case 'bigint': {
+                            let [match, type, length, unsigned, zerofill] = /^(\w+)\((\d+)\)( unsigned)?( zerofill)?$/.exec(col.COLUMN_TYPE);
+                            if(!match) {
+                                throw new Error(`Unexpected integer format: ${col.COLUMN_TYPE}`);
+                            }
+                            if(type !== col.DATA_TYPE) {
+                                throw new Error(`Data type (${col.DATA_TYPE}) does not match column type (${type})`);
+                            }
+                            // colDef.length = parseInt(length);
+                            // colDef.unsigned = unsigned !== undefined;
+                            // colDef.zerofill = zerofill !== undefined;
+                        }
+                            break;
+                        case 'float':
+                        case 'decimal':
+                        case 'double': {
+                            let [match, type, length, decimals, unsigned, zerofill] = /^(\w+)(?:\((\d+)(?:,(\d+))?\))?( unsigned)?( zerofill)?$/.exec(col.COLUMN_TYPE);
+                            if(!match) {
+                                throw new Error(`Unexpected float format: ${col.COLUMN_TYPE}`);
+                            }
+                            if(type !== col.DATA_TYPE) {
+                                throw new Error(`Data type (${col.DATA_TYPE}) does not match column type (${type})`);
+                            }
+                            // if(length !== undefined) {
+                            //     colDef.length = parseInt(length);
+                            // }
+                            // if(decimals !== undefined) {
+                            //     colDef.decimals = parseInt(decimals);
+                            // }
+                            // colDef.unsigned = unsigned !== undefined;
+                            // colDef.zerofill = zerofill !== undefined;
+                        }
+                            break;
 
-                            if(!idxMap.hasOwnProperty(idx.INDEX_NAME)) {
-                                // FIXME: "USING HASH" cannot be detected; https://stackoverflow.com/q/49440609/65387
-                                let idxDef = idxMap[idx.INDEX_NAME] = {
-                                    name: idx.INDEX_NAME,
-                                };
+                    }
+                }
+            },
 
-                                if(idx.INDEX_NAME === 'PRIMARY') {
-                                    idxDef.type = 'PRIMARY';
-                                } else if(idx.INDEX_TYPE !== 'BTREE') {
-                                    idxDef.type = idx.INDEX_TYPE;
-                                } else if(idx.NON_UNIQUE === 0) {
-                                    idxDef.type = 'UNIQUE';
-                                } else {
-                                    idxDef.type = 'INDEX';
-                                }
-                                idxDef.columns = [colName];
+            async () => {
+                let indexes = await conn.query("SELECT INDEX_NAME,INDEX_TYPE,INDEX_COMMENT,NON_UNIQUE,COLUMN_NAME,SUB_PART FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA=? AND TABLE_NAME=? ORDER BY INDEX_NAME, SEQ_IN_INDEX", [dbName, tblName]).fetchAll();
 
-                                // if(idx.Index_type !== 'BTREE') {
-                                //     idxDef.type = idx.Index_type; 
-                                // }
-                                if(idx.INDEX_COMMENT.length) {
-                                    idxDef.comment = idx.INDEX_COMMENT;
-                                }
+                if(indexes.length) {
+                    let idxMap = {};
+
+                    for(let idx of indexes) {
+
+                        let colName = idx.COLUMN_NAME;
+                        if(idx.SUB_PART !== null) {
+                            colName += `(${idx.SUB_PART})`;
+                        }
+
+                        if(!idxMap.hasOwnProperty(idx.INDEX_NAME)) {
+                            // FIXME: "USING HASH" cannot be detected; https://stackoverflow.com/q/49440609/65387
+                            let idxDef = idxMap[idx.INDEX_NAME] = {
+                                name: idx.INDEX_NAME,
+                            };
+
+                            if(idx.INDEX_NAME === 'PRIMARY') {
+                                idxDef.type = 'PRIMARY';
+                            } else if(idx.INDEX_TYPE !== 'BTREE') {
+                                idxDef.type = idx.INDEX_TYPE;
+                            } else if(idx.NON_UNIQUE === 0) {
+                                idxDef.type = 'UNIQUE';
                             } else {
-                                idxMap[idx.INDEX_NAME].columns.push(colName)
+                                idxDef.type = 'INDEX';
                             }
+                            idxDef.columns = [colName];
+
+                            // if(idx.Index_type !== 'BTREE') {
+                            //     idxDef.type = idx.Index_type; 
+                            // }
+                            if(idx.INDEX_COMMENT.length) {
+                                idxDef.comment = idx.INDEX_COMMENT;
+                            }
+                        } else {
+                            idxMap[idx.INDEX_NAME].columns.push(colName)
                         }
-
-                        tblDef.indexes = sortBy(Object.values(idxMap),'name');
                     }
-                },
 
-                async () => {
-                    let foreignKeys = await conn.query(`
+                    tblDef.indexes = sortBy(Object.values(idxMap), 'name');
+                }
+            },
+
+            async () => {
+                let foreignKeys = await conn.query(`
                         SELECT
                           tc.CONSTRAINT_NAME \`constraint_name\`,
                           kcu.COLUMN_NAME \`column_name\`,
@@ -283,70 +353,72 @@ async function __main__() {
                             AND tc.TABLE_NAME = :tblname
                             AND tc.CONSTRAINT_TYPE = 'FOREIGN KEY'
                         ORDER BY kcu.ORDINAL_POSITION;
-                    `, {dbname: db.name, tblname: tbl.TABLE_NAME}).fetchAll();
+                    `, {dbname: dbName, tblname: tblName}).fetchAll();
 
-                    
-                    if(foreignKeys.length) {
-                        let fkMap = {};
 
-                        for(let fk of foreignKeys) {
-                            // dump(fk);
-                            if(!fkMap.hasOwnProperty(fk.constraint_name)) {
-                                let fkDef = fkMap[fk.constraint_name] = {
-                                    name: fk.constraint_name,
-                                    columnNames: [fk.column_name],
-                                    // refTableSchema: fk.ref_table_schema,
-                                    refTableName: fk.ref_table_name,
-                                    refColumnNames: [fk.ref_column_name],
-                                    deleteRule: fk.delete_rule,
-                                    updateRule: fk.update_rule,
-                                }
-                                if(fk.ref_table_schema !== db.name) {
-                                    // FIXME: we need to generalize this for {{pcs}}
-                                    fkDef.refTableSchema = fk.ref_table_schema;
-                                }
-                            } else {
-                                fkMap[fk.constraint_name].columnNames.push(fk.column_name);
-                                fkMap[fk.constraint_name].refColumnNames.push(fk.ref_column_name);
+                if(foreignKeys.length) {
+                    let fkMap = {};
+
+                    for(let fk of foreignKeys) {
+                        // dump(fk);
+                        if(!fkMap.hasOwnProperty(fk.constraint_name)) {
+                            let fkDef = fkMap[fk.constraint_name] = {
+                                name: fk.constraint_name,
+                                columnNames: [fk.column_name],
+                                // refTableSchema: fk.ref_table_schema,
+                                refTableName: fk.ref_table_name,
+                                refColumnNames: [fk.ref_column_name],
+                                deleteRule: fk.delete_rule,
+                                updateRule: fk.update_rule,
                             }
+                            if(fk.ref_table_schema !== dbName) {
+                                // FIXME: we need to generalize this for {{pcs}}
+                                fkDef.refTableSchema = fk.ref_table_schema;
+                            }
+                        } else {
+                            fkMap[fk.constraint_name].columnNames.push(fk.column_name);
+                            fkMap[fk.constraint_name].refColumnNames.push(fk.ref_column_name);
                         }
-
-                        tblDef.foreignKeys = sortBy(Object.values(fkMap),'name');
                     }
-                },
-            );
-            
-            
-            let tblHash = objHash(tblDef);
-            if(!allTables[tbl.TABLE_NAME]) {
-                allTables[tbl.TABLE_NAME] = {};
-            }
-            if(!allTables[tbl.TABLE_NAME][tblHash]) {
-                allTables[tbl.TABLE_NAME][tblHash] = {
-                    databases: [db.name],
-                    ...tblDef,
+
+                    tblDef.foreignKeys = sortBy(Object.values(fkMap), 'name');
                 }
-            } else {
-                allTables[tbl.TABLE_NAME][tblHash].databases.push(db.name);
+            },
+        );
+
+
+        let tblHash = objHash(tblDef);
+        if(!allTables[tblName]) {
+            allTables[tblName] = {};
+        }
+        if(!allTables[tblName][tblHash]) {
+            allTables[tblName][tblHash] = {
+                databases: [dbName],
+                ...tblDef,
             }
-        });
+        } else {
+            allTables[tblName][tblHash].databases.push(dbName);
+        }
     });
     
+    // dump(allTables);
     
     await async.forEach(Object.keys(allTables), async tblName => {
         let json = {
             name: tblName,
             versions: Object.values(allTables[tblName]),
         };
-        await fs.writeText(`out/tables/${tblName}.json`,JSON.stringify(json,null,4));
+        const filename = `out/tables/${tblName}.json`;
+        await fs.writeText(filename, JSON.stringify(json, null, 4));
+        console.log(`wrote ${Chalk.underline(filename)}`);
     });
-    
+
 
     // dump(Object.keys(allTables));
     // fs.writeText('out/schema.json',JSON.stringify(out,null,4));
     // dump('done!');
     // dump(timeOffset,timeZone,databases);
-    
+
     // let timeOffset = await db.query("SELECT TIMEDIFF(NOW(), UTC_TIMESTAMP) offset").fetchValue();
     // let timeZone = await db.query("SELECT IF(@@session.time_zone = 'SYSTEM', @@system_time_zone, @@session.time_zone) timeZone").fetchValue();
     //
@@ -355,10 +427,8 @@ async function __main__() {
     //
     // let databases = await db.query("SELECT SCHEMA_NAME `name`, DEFAULT_CHARACTER_SET_NAME `defaultCharset`, DEFAULT_COLLATION_NAME `defaultCollation` FROM information_schema.SCHEMATA WHERE SCHEMA_NAME LIKE 'wx_%' OR SCHEMA_NAME LIKE 'webenginex_%' limit 2").fetchAll();
     // dump(databases);
-    
-    
-    
-    
+
+
     //
     // await async.forEach(databases.slice(0,3), async dbName => {
     //     let tables = await db.query('SELECT SCHEMA_NAME `name`, DEFAULT_CHARACTER_SET_NAME `defaultCharset`, DEFAULT_COLLATION_NAME `defaultCollation` FROM information_schema.SCHEMATA WHERE SCHEMA_NAME=?',[dbName]).fetchAll();
@@ -366,7 +436,7 @@ async function __main__() {
     // });
     // dump('done');
     // dump(databases);
-    
+
     await conn.close();
 }
 
@@ -394,7 +464,7 @@ function splitValues(subject) {
         if(ch === q) {
             if(!quoted) {
                 quoted = true;
-            } else if(subject[i+1] === q) {
+            } else if(subject[i + 1] === q) {
                 term += q;
                 i += 2;
                 continue;
@@ -414,13 +484,12 @@ function splitValues(subject) {
 }
 
 function sortBy(array, prop) {
-    return array.sort((a,b) => {
+    return array.sort((a, b) => {
         if(a[prop] === 'PRIMARY') return -1;
         if(b[prop] === 'PRIMARY') return 1;
         return a[prop].localeCompare(b[prop]);
     });
 }
-
 
 
 /*
