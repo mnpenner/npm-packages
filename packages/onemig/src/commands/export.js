@@ -26,7 +26,7 @@ export default {
                 FROM information_schema.SCHEMATA 
                 WHERE (SCHEMA_NAME LIKE 'wx_%' OR SCHEMA_NAME LIKE 'webenginex_%' OR SCHEMA_NAME LIKE 'fbs2_%')
                     AND SCHEMA_NAME NOT LIKE '%_old' AND SCHEMA_NAME NOT IN ('wx_zlnxbcaana01_stats','wx_documentation')
-                    LIMIT 2
+                    #LIMIT 2
                 `);
             
             for await(const db of dbStream) {
@@ -208,6 +208,32 @@ export default {
                                             //
                                         } else {
                                             colDef.length = parseInt(length, 10);
+                                        }
+                                    } break;
+                                    case 'year':
+                                        let [match, type, width] = /^(\w+)\((\d+)\)$/.exec(col.columnType);
+                                        if(!match) {
+                                            throw new Error(`Unexpected year format: ${col.columnType}`);
+                                        }
+                                        if(type !== col.dataType) {
+                                            throw new Error(`Data type (${col.dataType}) does not match column type (${type})`);
+                                        }
+                                        if(width !== '4') {
+                                            // YEAR(2) was removed in MySQL 8, but I can't even get it to work in MySQL 5.6
+                                            colDef.width = parseInt(width,10);
+                                        }
+                                        break;
+                                    case 'tinytext':
+                                    case 'text':
+                                    case 'mediumtext':
+                                    case 'longtext':
+                                    case 'tinyblob':
+                                    case 'blob':
+                                    case 'mediumblob':
+                                    case 'longblob':
+                                    default: {
+                                        if(col.dataType !== col.columnType) {
+                                            throw new Error(`${db.name}.${tbl.name}.${col.name}: "${col.dataType}" ≠ "${col.columnType}"`);
                                         }
                                     } break;
                                 }
