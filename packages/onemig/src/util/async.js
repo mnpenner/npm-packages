@@ -44,7 +44,7 @@ export async function forEachLimit(array, limit, callback) {
 
 export async function sequence(array, callback) {
     for(let i=0; i<array.length; ++i) {
-        await resolveWith(callback, [array[i], i], i);
+        await call(callback, array[i], i);
     }
 }
 

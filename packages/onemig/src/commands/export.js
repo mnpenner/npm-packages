@@ -6,6 +6,7 @@ import Chalk from 'chalk';
 import * as async from '../util/async';
 import objHash from 'object-hash';
 import * as fs from '../util/fs';
+import {dbNameMap,dbNames} from '../napi';
 // import conn from '../db';
 // import {Command} from '../console';
 
@@ -16,6 +17,8 @@ export default {
     description: "Export the current database schema",
     async execute(args, opts) {
         const conn = require('../db').default;
+        
+        
         const serverVars = await conn.query('show variables').fetchPairs();
         
         try {
@@ -24,13 +27,20 @@ export default {
             const dbStream = conn.stream(`
                 SELECT SCHEMA_NAME \`name\`, DEFAULT_COLLATION_NAME \`defaultCollation\` 
                 FROM information_schema.SCHEMATA 
-                WHERE (SCHEMA_NAME LIKE 'wx_%' OR SCHEMA_NAME LIKE 'webenginex_%' OR SCHEMA_NAME LIKE 'fbs2_%')
-                    AND SCHEMA_NAME NOT LIKE '%_old' AND SCHEMA_NAME NOT IN ('wx_zlnxbcaana01_stats','wx_documentation')
-                    #LIMIT 2
-                `);
+                WHERE SCHEMA_NAME IN (?)
+                    #LIMIT 100
+                `,[dbNames]);
             
             for await(const db of dbStream) {
-                const tblStream = conn.stream(`SELECT TABLE_NAME 'name',ENGINE 'engine',TABLE_COMMENT 'comment',TABLE_COLLATION 'collation', ROW_FORMAT 'rowFormat' FROM INFORMATION_SCHEMA.TABLES WHERE TABLES.TABLE_SCHEMA=? AND TABLE_TYPE='BASE TABLE'`, [db.name]);
+                const tblStream = conn.stream(`SELECT 
+                        TABLE_NAME 'name'
+                        ,ENGINE 'engine'
+                        ,TABLE_COMMENT 'comment'
+                        ,TABLE_COLLATION 'collation'
+                        #,ROW_FORMAT 'rowFormat' -- requires OPEN_FULL_TABLE: https://dev.mysql.com/doc/refman/5.7/en/information-schema-optimization.html
+                        FROM INFORMATION_SCHEMA.TABLES 
+                        WHERE TABLES.TABLE_SCHEMA=? AND TABLE_TYPE='BASE TABLE'
+                        `, [db.name]);
 
                 for await(const tbl of tblStream) {
                     dump(`${db.name}.${tbl.name}`);
@@ -69,12 +79,12 @@ export default {
                     if(tbl.collation !== db.defaultCollation) {
                         tblDef.options.collation = tbl.collation;
                     }
-                    if(!(
-                        (tbl.engine === 'InnoDB' && tbl.rowFormat === 'Compact')
-                        || (tbl.engine === 'MyISAM' && tbl.rowFormat === 'Dynamic')
-                    )) {
-                        tblDef.options.rowFormat = tbl.rowFormat;
-                    }
+                    // if(!(
+                    //     (tbl.engine === 'InnoDB' && tbl.rowFormat === 'Compact')
+                    //     || (tbl.engine === 'MyISAM' && tbl.rowFormat === 'Dynamic')
+                    // )) {
+                    //     tblDef.options.rowFormat = tbl.rowFormat;
+                    // }
 
                     await async.parallel(
                         async function fetchColumns() {
@@ -288,6 +298,10 @@ export default {
                                     idxMap[idx.name].columns.push(colName);
                                 }
                             }
+                            
+                            if(!idxMap.PRIMARY) {
+                                console.warn(Chalk.yellow(`${db.name}.${tbl.name} does not have a PRIMARY key`));
+                            }
 
                             tblDef.indexes = sortBy(Object.values(idxMap), 'name');
                         },
@@ -331,8 +345,15 @@ export default {
                                         updateRule: fk.updateRule,
                                     }
                                     if(fk.refTableSchema !== db.name) {
-                                        // FIXME: we need to generalize this for {{pcs}}
-                                        fkDef.refTableSchema = fk.refTableSchema;
+                                        const thisDb = dbNameMap.get(db.name);
+                                        const thatDb = dbNameMap.get(fk.refTableSchema);
+                                        if(thisDb && thatDb && thisDb[0] === thatDb[0]) {
+                                            // if FK points to same GSID but different app, use special syntax
+                                            fkDef.refTableSchema = {$app: thatDb[1]};
+                                        } else {
+                                            console.warn(Chalk.yellow(`Foreign key ${db.name}.${tbl.name}.${fk.constraintName} on ${fk.columnName} points to another database ${fk.refTableSchema}`));
+                                            fkDef.refTableSchema = fk.refTableSchema;
+                                        }
                                     }
                                 } else {
                                     fkMap[fk.constraintName].columnNames.push(fk.columnName);

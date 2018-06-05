@@ -14,6 +14,17 @@ export const fsa = Object.entries(FileSystem).reduce((acc, [k, v]) => {
     return acc;
 }, Object.create(null));
 
+export function access(path, mode) {
+    return fsa.access(path, mode).then(() => true, err => {
+        // if file does not exist or permission is denied, return false, otherwise throw
+        if(err.code === 'ENOENT' || err.code === 'EACCES') {
+            return false;
+        }
+        throw err;
+    });
+}
+
+export const consts = FileSystem.constants;
 export const readText = path => fsa.readFile(path, {encoding: 'utf8', flag: 'r'});
 export const readJson = file => readText(file).then(JSON.parse);
 

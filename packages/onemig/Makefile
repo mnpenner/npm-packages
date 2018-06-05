@@ -6,8 +6,10 @@ DISTDIRS := $(sort $(dir $(DISTS)))
 
 .PHONY: dev build clean debug test
 
-dev: build
-	node -r source-map-support/register dist/bin export
+# usage: make CMD=diff
+
+run: build
+	node -r source-map-support/register dist/bin $(CMD)
 
 build: $(DISTS) yarn.lock
 

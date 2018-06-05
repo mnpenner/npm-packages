@@ -53,3 +53,11 @@ export function setValue(obj, path, value) {
     }
     obj[path[end]] = value;
 }
+
+export function pick(obj, keys) {
+    const out = Object.create(null);
+    for(const k of keys) {
+        out[k] = obj[k];
+    }
+    return out;
+}
