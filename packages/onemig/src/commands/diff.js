@@ -12,6 +12,8 @@ import Path from 'path';
 import db from '../db';
 import {getStruct} from '../struct';
 import ProgressBar from 'ascii-progress';
+import Ajv from 'ajv';
+import tableSchema from '../table.schema';
 // import conn from '../db';
 // import {Command} from '../console';
 
@@ -24,6 +26,8 @@ const objHash = v => _objHash(v, {
 })
 
 const FIND_DATE_FORMAT = 'ddd DD MMM YYYY HH:mm:ss'; // https://stackoverflow.com/questions/848293/shell-script-get-all-files-modified-after-date#comment84300127_848327
+
+
 
 export default {
     name: "diff",
@@ -48,8 +52,24 @@ export default {
             blank: '░',
         });
         
+        const ajv = new Ajv({
+            allErrors: true,
+        });
+        ajv.addSchema(tableSchema,'table');
+        // console.log(JSON.stringify(tableSchema,null,4));process.exit(0);
+        
+        // const validate = ajv.getSchema('#/definitions/Table');
+        // const validate = ajv.compile(require(`../table.schema.json`));
+        
+        
         for(let filename of tableFiles) {
             const tbl = await readJson(filename);
+            if(!ajv.validate('table#/defs/Table',tbl)) {
+                console.log(filename);
+                dump(ajv.errors);
+                break;
+            }
+            console.log(`${filename} is valid!!!!`);
             for(let {databases, ...desiredStruct} of tbl.versions) {
                 for(let dbName of databases) {
                     pb.tick(0, {tbl: tbl.name, db: dbName});
@@ -70,6 +90,7 @@ export default {
                         const modified = [];
                         const changed = [];
                         const renamed = [];
+                        const altered = []; // TODO
                         const oldNames = new Map;
                         
                         // dump(currentColumns,desiredColumns);
@@ -113,7 +134,7 @@ export default {
                             // removed.set(colName,col);
                         }
                         added = Array.from(added.values());
-                        dump({added,dropped,modified,changed,renamed});
+                        dump({added,dropped,modified,changed,renamed,altered});
                         
                         
                         // dump(added,removed,modified);

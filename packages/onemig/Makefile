@@ -1,5 +1,5 @@
 NM := node_modules/.bin
-SRCS := $(shell find src -name '*.js')
+SRCS := $(shell find src \( -name '*.js' -o -name '*.json' \))
 DISTS := $(patsubst src/%,dist/%,$(SRCS))
 DISTDIRS := $(sort $(dir $(DISTS)))
 .SUFFIXES:
@@ -15,6 +15,9 @@ build: $(DISTS) yarn.lock
 
 dist/%.js: src/%.js yarn.lock .babelrc | $(DISTDIRS)
 	$(NM)/babel $< -o $@
+
+dist/%.json: src/%.json | $(DISTDIRS)
+	cp $< $@
 	
 $(DISTDIRS):
 	mkdir -p $@
