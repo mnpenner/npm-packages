@@ -21,6 +21,13 @@ export default class DatabaseWrapper {
         return new ResultWrapper(this.pool.query(sql, params));
     }
     
+    escapeValue(value) {
+        return this.pool.escape(value);
+    }
+    
+    escapeId(id) {
+        return this.pool.escapeId(id);
+    }
     
     stream(sql, params) {
         //'result','error','end'

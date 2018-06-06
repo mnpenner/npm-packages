@@ -5,6 +5,7 @@
   "dependencies": {
     "@async-generators/from-emitter": "^0.3.0",
     "@nucleuslabs/napi-js": "^1.1.0",
+    "ascii-progress": "^1.0.5",
     "async": "^2.6.0",
     "chalk": "^2.4.1",
     "cli-highlight": "^2.0.0",
