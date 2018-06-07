@@ -218,6 +218,7 @@ export async function getStruct(dbName, tblName) {
                         if(type !== col.dataType) {
                             throw new Error(`Data type (${col.dataType}) does not match column type (${type})`);
                         }
+                        colDef.type = type;
                         if(width !== '4') {
                             // YEAR(2) was removed in MySQL 8, but I can't even get it to work in MySQL 5.6
                             colDef.width = parseInt(width, 10);

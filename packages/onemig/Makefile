@@ -1,6 +1,6 @@
 NM := node_modules/.bin
 SRCS := $(shell find src \( -name '*.js' -o -name '*.json' \))
-DISTS := $(patsubst src/%,dist/%,$(SRCS))
+DISTS := $(patsubst src/%,dist/%,$(SRCS)) $(patsubst src/%.schema.js,dist/%.schema.json,$(SRCS))
 DISTDIRS := $(sort $(dir $(DISTS)))
 .SUFFIXES:
 
@@ -12,6 +12,9 @@ run: build
 	node -r source-map-support/register dist/bin $(CMD) 2> warnings.log
 
 build: $(DISTS) yarn.lock
+
+dist/%.schema.json: dist/%.schema.js dist/export-schema.js
+	node dist/export-schema.js $<#/defs/Table > $@
 
 dist/%.js: src/%.js yarn.lock .babelrc | $(DISTDIRS)
 	$(NM)/babel $< -o $@

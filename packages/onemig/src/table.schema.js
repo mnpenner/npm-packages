@@ -1,4 +1,5 @@
 import COLLATIONS from './mysql-collations';
+const CASCADE_RULES = ['RESTRICT', 'CASCADE', 'SET NULL', 'NO ACTION', 'SET DEFAULT'];
 
 function makeColumn(type, properties, required = []) {
     return {
@@ -16,6 +17,16 @@ function makeColumn(type, properties, required = []) {
     }
 }
 
+function tuple(...schemas) {
+    return {
+        type: 'array',
+        items: schemas,
+        minItems: schemas.length,
+        maxItems: schemas.length,
+        // additionalItems: false,
+    }
+}
+
 const columnTypes = [
     makeColumn(['tinyint', 'smallint', 'mediumint', 'int', 'bigint'], {
         default: {$ref: "#/defs/Int"},
@@ -26,6 +37,24 @@ const columnTypes = [
             maximum: 255,
         },
     }),
+    makeColumn(['float','double'], {
+        default: {$ref: "#/defs/Float"},
+        unsigned: {type: "boolean",default:false},
+        zerofill: {type: "boolean",default:false},
+        precision: tuple(
+            {type: 'integer',minimum:1,maximum:255},
+            {type: 'integer',minimum:0,maximum:{$data:'1/0'}}
+        )
+    }),
+    makeColumn('decimal', {
+        default: {$ref: "#/defs/Float"},
+        unsigned: {type: "boolean",default:false},
+        zerofill: {type: "boolean",default:false},
+        precision: tuple(
+            {type: 'integer',minimum:1,maximum:65,default:10},
+            {type: 'integer',minimum:0,allOf: [{maximum:30},{maximum:{$data:'1/0'}}],default:0}
+        )
+    },['precision']),
     makeColumn(['char', 'varchar'], {
         default: {type: 'string'},
         collation: {$ref: "#/defs/Collation"},
@@ -45,13 +74,22 @@ const columnTypes = [
     makeColumn(['tinyblob', 'blob', 'mediumblob', 'longblob'], {
         default: {type: 'string'},
     }),
-    makeColumn(['enum', 'set'], {
+    makeColumn('enum', {
         values: {
             type: 'array',
             minItems: 1,
-            items: {
-                type: 'string',
-            }
+            maxItems: 65535,
+            uniqueItems: true,
+            items: {type: 'string'}
+        }
+    }, ['values']),
+    makeColumn('set', {
+        values: {
+            type: 'array',
+            minItems: 1,
+            maxItems: 64,
+            uniqueItems: true,
+            items: {type: 'string'}
         }
     }, ['values']),
 ];
@@ -119,42 +157,50 @@ export default {
                 collation: {$ref: "#/defs/Collation"},
             },
         },
-
         Int: {
-            type: {
-                anyOf: [
-                    {
-                        type: "string",
-                        pattern: "^(0|-?[1-9][0-9]*)$"
-                    },
-                    {
-                        type: "integer",
-                    }
-                ]
-            }
-        },
-        NonNegInt: {
-            type: [
+            anyOf: [
+                {
+                    type: "integer",
+                },
                 {
                     type: "string",
-                    pattern: "^(0|[1-9][0-9]*)$"
-                },
+                    pattern: String.raw`^(0|-?[1-9][0-9]*)$`
+                }
+            ]
+        },
+        NonNegInt: {
+            anyOf: [
                 {
                     type: "integer",
                     minimum: 0
+                },
+                {
+                    type: "string",
+                    pattern: String.raw`^(0|[1-9][0-9]*)$`
                 }
             ]
         },
         PosInt: {
-            type: [
-                {
-                    type: "string",
-                    pattern: "^[1-9][0-9]*$"
-                },
+            anyOf: [
                 {
                     type: "integer",
                     minimum: 1
+                },
+                {
+                    type: "string",
+                    pattern: String.raw`^[1-9][0-9]*$`
                 }
+            ]
+        },
+        Float: {
+            anyOf: [
+                {
+                    type: "number",
+                },
+                {
+                    type: "string",
+                    pattern: String.raw`^-?(\d+(\.\d*)?|\.\d+)$`
+                },
             ]
         },
         Collation: {enum: COLLATIONS},
@@ -189,8 +235,8 @@ export default {
                     items: {$ref: "#/defs/Identifier"},
                     minItems: 1
                 },
-                deleteRule: {enum: ['RESTRICT', 'CASCADE', 'SET NULL', 'NO ACTION', 'SET DEFAULT']},
-                updateRule: {enum: ['RESTRICT', 'CASCADE', 'SET NULL', 'NO ACTION', 'SET DEFAULT']},
+                deleteRule: {enum: CASCADE_RULES},
+                updateRule: {enum: CASCADE_RULES},
                 refTableSchema: {
                     anyOf: [{$ref: "#/defs/AppRef"}, {$ref: "#/defs/Identifier"}],
                 },

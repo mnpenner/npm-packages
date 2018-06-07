@@ -13,7 +13,7 @@ import db from '../db';
 import {getStruct} from '../struct';
 import ProgressBar from 'ascii-progress';
 import Ajv from 'ajv';
-import tableSchema from '../table.schema';
+import tableSchema from '../table.schema.js';
 // import conn from '../db';
 // import {Command} from '../console';
 
@@ -45,17 +45,20 @@ export default {
         const tableFiles = (await readDir(Path.join(opts.dir,'tables'))).filter(f => f.endsWith('.json'));
         // const allTables = Object.create(null);
         
-        const pb = new ProgressBar({
-            total: tableFiles.length,
-            schema: " :filled.green:blank :current/:total :percent :elapseds :etas :tbl/:db",
-            filled: '█',
-            blank: '░',
-        });
+        // const pb = new ProgressBar({
+        //     total: tableFiles.length,
+        //     schema: " :filled.green:blank :current/:total :percent :elapseds :etas :tbl/:db",
+        //     filled: '█',
+        //     blank: '░',
+        // });
         
         const ajv = new Ajv({
             allErrors: true,
+            $data: true,
+            extendRefs: 'fail',
         });
-        ajv.addSchema(tableSchema,'table');
+        ajv.addSchema(tableSchema,'root');
+        
         // console.log(JSON.stringify(tableSchema,null,4));process.exit(0);
         
         // const validate = ajv.getSchema('#/definitions/Table');
@@ -64,16 +67,17 @@ export default {
         
         for(let filename of tableFiles) {
             const tbl = await readJson(filename);
-            if(!ajv.validate('table#/defs/Table',tbl)) {
+            if(!ajv.validate('root#/defs/Table',tbl)) {
                 console.log(filename);
+                // console.log(ajv.errorsText());
                 dump(ajv.errors);
                 break;
             }
-            console.log(`${filename} is valid!!!!`);
+            // console.log(`${filename} is valid!!!!`);
             for(let {databases, ...desiredStruct} of tbl.versions) {
                 for(let dbName of databases) {
-                    pb.tick(0, {tbl: tbl.name, db: dbName});
-                    // console.log(`${dbName}.${tbl.name}`)
+                    // pb.tick(0, {tbl: tbl.name, db: dbName});
+                    console.log(`${dbName}.${tbl.name}`)
                     // fetch current struct
                     const currentStruct = await getStruct(dbName,tbl.name);
                     
@@ -82,59 +86,10 @@ export default {
                         
                         // https://dev.mysql.com/doc/refman/8.0/en/alter-table.html
                         
-                        const currentColumns = createMap(currentStruct.columns);
-                        const desiredColumns = createMap(desiredStruct.columns);
-                        
-                        let added = new Map;
-                        const dropped = [];
-                        const modified = [];
-                        const changed = [];
-                        const renamed = [];
-                        const altered = []; // TODO
-                        const oldNames = new Map;
-                        
-                        // dump(currentColumns,desiredColumns);
-                        
-                        for(let [colName,col] of desiredColumns) {
-                            if(!currentColumns.has(colName)) {
-                                // dump('added',colName,currentColumns.has(colName),desiredColumns.has(colName));
-                                added.set(colName,col); // AFTER...?
-                                if(col.oldName) {
-                                    oldNames.set(col.oldName,col.name);
-                                }
-                            } else {
-                                if(!objEq(col,currentColumns.get(colName))) {
-                                    // dump('modified',colName);
-                                    modified.push(col);
-                                }
-                                currentColumns.delete(colName);
-                            }
-                        }
-                        
-                        // dump(currentColumns);
-                        for(let [colName,curCol] of currentColumns) {
-                            // dump('del',colName);
-                            if(oldNames.has(colName)) {
-                                const newName = oldNames.get(colName);
-                                const {oldName,...newDef} = added.get(newName);
-                                delete newDef.name;
-                                const {...curDef} = curCol;
-                                delete curDef.name;
-                                added.delete(newName);
-                                if(objEq(curDef,newDef)) {
-                                    renamed.push({oldName,newName});
-                                } else {
-                                    dump(curCol,newDef);
-                                    changed.push({oldName,newName,...newDef});
-                                }
-                            } else {
-                                dropped.push(colName);
-                            }
-                            // if(added.has(colName))
-                            // removed.set(colName,col);
-                        }
-                        added = Array.from(added.values());
-                        dump({added,dropped,modified,changed,renamed,altered});
+                        dump('CURRENT',currentStruct.columns);
+                        dump('DESIRED',desiredStruct.columns);
+                        const diff = diffColumns(currentStruct.columns, desiredStruct.columns);
+                        dump('DIFF',diff);
                         
                         
                         // dump(added,removed,modified);
@@ -148,7 +103,7 @@ export default {
                 // dump(table.name,databases,struct);
                 // return;
             }
-            pb.tick(1,{tbl:tbl.name,db:''});
+            // pb.tick(1,{tbl:tbl.name,db:''});
         }
         
         db.close();
@@ -161,4 +116,62 @@ function objEq(a,b) {
 
 function createMap(arr,key='name') {
     return new Map(arr.map(o => [o[key],o]));
+}
+
+function diffColumns(before,after) {
+
+    const currentColumns = createMap(before);
+    const desiredColumns = createMap(after);
+
+    let added = new Map;
+    const dropped = [];
+    const modified = [];
+    const changed = [];
+    const renamed = [];
+    const altered = []; // TODO
+    const oldNames = new Map;
+
+    // dump(currentColumns,desiredColumns);
+
+    for(let [colName,col] of desiredColumns) {
+        if(!currentColumns.has(colName)) {
+            // dump('added',colName,currentColumns.has(colName),desiredColumns.has(colName));
+            added.set(colName,col); // AFTER...?
+            if(col.oldName) {
+                oldNames.set(col.oldName,col.name);
+            }
+        } else {
+            if(!objEq(col,currentColumns.get(colName))) {
+                // dump('modified',colName);
+                modified.push(col);
+            }
+            currentColumns.delete(colName);
+        }
+    }
+
+    // dump(currentColumns);
+    for(let [colName,curCol] of currentColumns) {
+        // dump('del',colName);
+        if(oldNames.has(colName)) {
+            const newName = oldNames.get(colName);
+            const {oldName,...newDef} = added.get(newName);
+            delete newDef.name;
+            const {...curDef} = curCol;
+            delete curDef.name;
+            added.delete(newName);
+            if(objEq(curDef,newDef)) {
+                renamed.push({oldName,newName});
+            } else {
+                dump(curCol,newDef);
+                changed.push({oldName,newName,...newDef});
+            }
+        } else {
+            dropped.push(colName);
+        }
+        // if(added.has(colName))
+        // removed.set(colName,col);
+    }
+    added = Array.from(added.values());
+    
+    return {added,dropped,modified,changed,renamed,altered}
 }
