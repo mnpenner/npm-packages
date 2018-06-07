@@ -75,6 +75,7 @@ const columnTypes = [
         default: {type: 'string'},
     }),
     makeColumn('enum', {
+        collation: {$ref: "#/defs/Collation"},
         values: {
             type: 'array',
             minItems: 1,
@@ -84,6 +85,7 @@ const columnTypes = [
         }
     }, ['values']),
     makeColumn('set', {
+        collation: {$ref: "#/defs/Collation"},
         values: {
             type: 'array',
             minItems: 1,
