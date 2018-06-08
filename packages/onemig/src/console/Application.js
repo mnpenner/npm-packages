@@ -34,7 +34,7 @@ export default class Application {
             const opts = {};
             const longOpts = new Map();
             const shortOpts = new Map();
-            for(let opt of cmd.options) {
+            for(let opt of toIter(cmd.options)) {
                 if(!opt.name) throw new Error("Option is missing a name");
                 if(!opt.key) opt.key = opt.name || opt.alias;
                 if(opt.default !== undefined) {

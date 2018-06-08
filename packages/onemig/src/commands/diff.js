@@ -86,7 +86,7 @@ export default {
                     const currentStruct = await getStruct(dbName,tbl.name);
 
 
-                    [currentStruct,desiredStruct].forEach(s => s.columns.forEach(normalize));
+                    [currentStruct,desiredStruct].forEach(s => s.columns.forEach(normalizeColumn));
                     
                     if(!objEq(currentStruct,desiredStruct)) {
                         // oldName
@@ -114,6 +114,7 @@ export default {
                     }
                     
                     // dump(newStruct);
+                    break; // FIXME: ****SKIP REST OF DATABASES, JUST FOR TESTING
                 }
                 // dump(table.name,databases,struct);
                 // return;
@@ -133,7 +134,7 @@ function trimZeros(x) {
     return str;
 }
 
-function normalize(col) {
+function normalizeColumn(col) {
     col.null = !!col.null;
     if(!col.comment) delete col.comment;
     // TODO: normalize COLLATION with default collation...

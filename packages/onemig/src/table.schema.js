@@ -100,7 +100,7 @@ const columnTypes = [
             anyOf: [
                 {
                     type: 'string',
-                    pattern: String.raw`^(19[0-9]{2}|2[01][0-9]{2})$`,
+                    pattern: String.raw`^(19\d{2}|2[01]\d{2})$`,
                 },
                 {
                     type: 'integer',
@@ -108,6 +108,27 @@ const columnTypes = [
                     maximum: 2155,
                 }
             ]
+        }
+    }),
+    makeColumn('date', {
+        default: {
+            type: 'string',
+            pattern: String.raw`^\d{4}-\d{2}-\d{2}$`,
+        }
+    }),
+    makeColumn('time', {
+        default: {
+            type: 'string',
+            pattern: String.raw`^\d{2}:\d{2}:\d{2}$`,
+        }
+    }),
+    makeColumn(['datetime', 'timestamp'], {
+        default: {
+            type: 'string',
+            anyOf: [
+                {const: 'CURRENT_TIMESTAMP'},
+                {pattern: String.raw`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$`}
+            ],
         }
     }),
     makeColumn(['tinyblob', 'blob', 'mediumblob', 'longblob'], {
@@ -211,7 +232,7 @@ export default {
                 },
                 {
                     type: "string",
-                    pattern: String.raw`^(0|-?[1-9][0-9]*)$`
+                    pattern: String.raw`^(0|-?[1-9]\d*)$`
                 }
             ]
         },
@@ -223,7 +244,7 @@ export default {
                 },
                 {
                     type: "string",
-                    pattern: String.raw`^(0|[1-9][0-9]*)$`
+                    pattern: String.raw`^(0|[1-9]\d*)$`
                 }
             ]
         },
@@ -235,7 +256,7 @@ export default {
                 },
                 {
                     type: "string",
-                    pattern: String.raw`^[1-9][0-9]*$`
+                    pattern: String.raw`^[1-9]\d*$`
                 }
             ]
         },
