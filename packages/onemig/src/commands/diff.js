@@ -17,6 +17,7 @@ import tableSchema from '../table.schema.js';
 import {omit} from '../util/object';
 import {isPlainObject} from '../util/types';
 import {highlight} from 'cli-highlight';
+import {toIter} from '../util/array';
 // import conn from '../db';
 // import {Command} from '../console';
 
@@ -88,9 +89,11 @@ export default {
                         // oldName
                         
                         // https://dev.mysql.com/doc/refman/8.0/en/alter-table.html
-                        
-                        // dump('CURRENT',currentStruct.columns);
-                        // dump('DESIRED',desiredStruct.columns);
+
+                        console.log('=== CURRENT ===');
+                        dump(currentStruct.columns);
+                        console.log('=== DESIRED ===');
+                        dump(desiredStruct.columns);
                         // const diff = diffColumns(currentStruct.columns, desiredStruct.columns);
                         // dump('DIFF',diff);
                         //
@@ -184,10 +187,13 @@ function diffColumns(before,after) {
             // dump('added',colName,currentColumns.has(colName),desiredColumns.has(colName));
             added.set(colName,col); // AFTER...?
             if(col.oldName) {
-                oldNames.set(col.oldName,col.name);
+                for(let oldName of toIter(col.oldName)) {
+                    oldNames.set(oldName, col.name);
+                }
             }
         } else {
             const currentCol = currentColumns.get(colName);
+            col = omit(col,['oldName']);
             if(!objEq(col,currentCol)) {
                 // dump('modified',colName);
                 if(objEq(omit(col,['default']),omit(currentCol,['default']))) {
@@ -208,17 +214,17 @@ function diffColumns(before,after) {
         // dump('del',colName);
         if(oldNames.has(colName)) {
             const newName = oldNames.get(colName);
-            const {oldName,...newDef} = added.get(newName);
-            delete newDef.name;
-            const {...curDef} = curCol;
-            delete curDef.name;
+            const newDef = added.get(newName);
+            // delete newDef.name;
+            // const {...curDef} = curCol;
+            // delete curDef.name;
             added.delete(newName);
-            if(objEq(curDef,newDef)) {
-                renamed.push({oldName,newName});
-            } else {
-                dump(curCol,newDef);
-                changed.push({oldName,newName,...newDef});
-            }
+            // if(objEq(curDef,newDef)) {
+            //     renamed.push({oldName,newName});
+            // } else {
+                changed.push({...newDef,oldName: curCol.name});
+            // }
+            // dump('changedchangedchangedchangedchanged',changed);
         } else {
             dropped.push(colName);
         }
@@ -239,13 +245,16 @@ function columnDiffToSql(diff) {
         lines.push(`MODIFY COLUMN ${db.escapeId(col.name)} ${columnDefinition(col)}`)
     }
     for(let col of diff.changed) {
-        lines.push(`CHANGE COLUMN ${db.escapeId(col.oldName)} ${db.escapeId(col.newName)} ${columnDefinition(col)}`)
+        lines.push(`CHANGE COLUMN ${db.escapeId(col.oldName)} ${db.escapeId(col.name)} ${columnDefinition(col)}`)
     }
-    for(let col of diff.renamed) {
+    for(let col of diff.renamed) { // MySQL 8.0+
         lines.push(`RENAME COLUMN ${db.escapeId(col.oldName)} TO ${db.escapeId(col.newName)}`)
     }
     for(let col of diff.altered) {
         lines.push(`ALTER COLUMN ${db.escapeId(col.name)} ${col.default === undefined ? "DROP DEFAULT" : `SET DEFAULT ${getDefault(col)}`}`)
+    }
+    for(let col of diff.added) {
+        lines.push(`ADD COLUMN ${db.escapeId(col.name)} ${columnDefinition(col)}`)
     }
     return lines;
 }
@@ -258,11 +267,19 @@ function getDefault(col) {
 }
 
 function columnDefinition(col) {
+    let str = col.type + columnDefinition2(col);
+    if(!col.null) {
+        str += ' NOT NULL';
+    }
+    return str;
+}
+
+function columnDefinition2(col) {
     switch(col.type) {
         case 'float':
         case 'decimal':
         case 'double': {
-            let str = col.type;
+            let str = '';
             if(col.precision) {
                 str += `(${col.precision.join(',')})`
             }
@@ -272,10 +289,14 @@ function columnDefinition(col) {
             if(col.zerofill) {
                 str += ' zerofill';
             }
-            if(!col.null) {
-                str += ' NOT NULL';
-            }
             return str;
-        } 
+        }
+        case 'char':
+        case 'varchar':
+        case 'bit':
+        case 'binary':
+        case 'varbinary':
+            return `(${col.length})`;
+        
     }
 }

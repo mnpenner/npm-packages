@@ -4,6 +4,7 @@ import dump from '../dump';
 import Path from 'path';
 import {consts,access} from '../util/fs';
 import InputOption from './InputOption';
+import {toIter} from '../util/array';
 
 export default class Application {
     
@@ -120,17 +121,6 @@ export default class Application {
             console.log(`  ${Chalk.green(cmd.name.padEnd(maxLength))}  ${cmd.description}`);
         }
     }
-}
-
-const EMPTY_ARRAY = [];
-
-function toIter(x) {
-    // https://jsperf.com/generator-vs-array-e98rvh098ear
-    if(x == null) return EMPTY_ARRAY;
-    if(typeof x !== 'string' && typeof x[Symbol.iterator] === 'function') {
-        return x;
-    }
-    return [x];
 }
 
 function sortBy(array, prop) {

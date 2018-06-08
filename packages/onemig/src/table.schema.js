@@ -1,13 +1,22 @@
 import COLLATIONS from './mysql-collations';
 const CASCADE_RULES = ['RESTRICT', 'CASCADE', 'SET NULL', 'NO ACTION', 'SET DEFAULT'];
 
+
+
 function makeColumn(type, properties, required = []) {
     return {
         type: "object",
         additionalProperties: false,
         properties: {
             name: {$ref: "#/defs/Identifier"},
-            oldName: {$ref: "#/defs/Identifier"},
+            oldName: {anyOf: [
+                    {$ref: "#/defs/Identifier"},
+                    {
+                        type: 'array',
+                        minItems: 1,
+                        items: {$ref: "#/defs/Identifier"}
+                    }
+                ]},
             type: Array.isArray(type) ? {enum: type} : {const: type},
             null: {type: "boolean",default:false},
             comment: {type: "string"},

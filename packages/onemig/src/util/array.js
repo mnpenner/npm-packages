@@ -16,3 +16,14 @@ export function arraySplice(array, index, count=1, replaceWith=[]) {
     }
     return array;
 }
+
+export const EMPTY_ARRAY = [];
+
+export function toIter(x) {
+    // https://jsperf.com/generator-vs-array-e98rvh098ear
+    if(x == null) return EMPTY_ARRAY;
+    if(typeof x !== 'string' && typeof x[Symbol.iterator] === 'function') {
+        return x;
+    }
+    return [x];
+}
