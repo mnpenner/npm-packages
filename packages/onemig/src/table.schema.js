@@ -96,12 +96,26 @@ const columnTypes = [
     }),
     makeColumn('year', {
         width: {enum: [2, 4]},
+        default: {
+            anyOf: [
+                {
+                    type: 'string',
+                    pattern: String.raw`^(19[0-9]{2}|2[01][0-9]{2})$`,
+                },
+                {
+                    type: 'integer',
+                    minimum: 1901,
+                    maximum: 2155,
+                }
+            ]
+        }
     }),
     makeColumn(['tinyblob', 'blob', 'mediumblob', 'longblob'], {
         default: {type: 'string'},
     }),
     makeColumn('enum', {
         collation: {$ref: "#/defs/Collation"},
+        default: {type: 'string'},
         values: {
             type: 'array',
             minItems: 1,
@@ -112,6 +126,7 @@ const columnTypes = [
     }, ['values']),
     makeColumn('set', {
         collation: {$ref: "#/defs/Collation"},
+        default: {type: 'string'},
         values: {
             type: 'array',
             minItems: 1,

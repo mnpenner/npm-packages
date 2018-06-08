@@ -136,6 +136,7 @@ function trimZeros(x) {
 function normalize(col) {
     col.null = !!col.null;
     if(!col.comment) delete col.comment;
+    // TODO: normalize COLLATION with default collation...
     switch(col.type) {
         case 'tinyint':
         case 'smallint':
