@@ -19,7 +19,7 @@ function makeColumn(type, properties, required = []) {
                 ]},
             type: Array.isArray(type) ? {enum: type} : {const: type},
             null: {type: "boolean",default:false},
-            comment: {type: "string"},
+            comment: {$ref: "#/defs/Comment"},
             ...properties,
         },
         required: ["name", "type", ...required],
@@ -73,6 +73,23 @@ const columnTypes = [
             maximum: 4294967295,
         }
     }, ['length']),
+    makeColumn(['binary', 'varbinary'], {
+        default: {type: 'string'},
+        length: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 4294967295,
+        }
+    }, ['length']),
+    makeColumn('bit', {
+        default: {anyOf: [{type: 'string',pattern:String.raw`^b'[01]+'$`},{type: 'integer',minimum:0}]},
+        length: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 64,
+            default: 1,
+        }
+    }),
     makeColumn(['tinytext', 'text', 'mediumtext', 'longtext'], {
         default: {type: 'string'},
         collation: {$ref: "#/defs/Collation"},
@@ -164,9 +181,13 @@ export default {
                         'PERFORMANCE_SCHEMA',
                     ]
                 },
-                comment: {type: "string"},
+                comment: {$ref: "#/defs/Comment"},
                 collation: {$ref: "#/defs/Collation"},
             },
+        },
+        Comment: {
+            type: 'string',
+            maxLength: 1024,
         },
         Int: {
             anyOf: [
@@ -221,7 +242,8 @@ export default {
             additionalProperties: false,
             properties: {
                 name: {$ref: "#/defs/Identifier"},
-                type: {enum: ['PRIMARY', 'INDEX', 'UNIQUE']},
+                type: {enum: ['PRIMARY', 'INDEX', 'UNIQUE', 'FULLTEXT']},
+                comment: {$ref: "#/defs/Comment"},
                 columns: {
                     type: "array",
                     items: {type: "string"},

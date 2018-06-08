@@ -15,7 +15,7 @@ import ProgressBar from 'ascii-progress';
 import Ajv from 'ajv';
 import tableSchema from '../table.schema.js';
 import {omit} from '../util/object';
-import {isPlainObject} from '../util/types';
+import {isNumber, isPlainObject, isString} from '../util/types';
 import {highlight} from 'cli-highlight';
 import {toIter} from '../util/array';
 // import conn from '../db';
@@ -84,6 +84,9 @@ export default {
                     console.log(`${dbName}.${tbl.name}`)
                     // fetch current struct
                     const currentStruct = await getStruct(dbName,tbl.name);
+
+
+                    [currentStruct,desiredStruct].forEach(s => s.columns.forEach(normalize));
                     
                     if(!objEq(currentStruct,desiredStruct)) {
                         // oldName
@@ -120,6 +123,64 @@ export default {
         
         db.close();
     }
+}
+
+function trimZeros(x) {
+    const str = String(x).replace(/^0+/,'');
+    if(str.includes('.')) {
+        return str.replace(/\.?0*$/,'');
+    }
+    return str;
+}
+
+function normalize(col) {
+    col.null = !!col.null;
+    if(!col.comment) delete col.comment;
+    switch(col.type) {
+        case 'tinyint':
+        case 'smallint':
+        case 'mediumint':
+        case 'int':
+        case 'bigint': {
+            if(col.zerofill != null) {
+                col.zerofill = parseInt(col.zerofill);
+                col.unsigned = true;
+            } else {
+                delete col.zerofill;
+                col.unsigned = !!col.unsigned;
+            }
+            if(col.default != null) col.default = trimZeros(col.default);
+        } break;
+        case 'float':
+        case 'decimal':
+        case 'double': {
+            if(col.zerofill) {
+                col.unsigned = col.zerofill = true;
+            } else {
+                col.zerofill = false;
+                col.unsigned = !!col.unsigned;
+            }
+            if(col.default != null) col.default = trimZeros(col.default);
+        } break;
+        case 'bit': {
+            if(col.length === undefined) col.length = 1;
+            if(isNumber(col.default)) {
+                return `b'${dec2bin(col.default)}'`;
+            }
+            // if(isString(col.default)) {
+            //     let [match, bits] = /^b'([01]+)'$/.exec(col.default);
+            //     if(!match) {
+            //         throw new Error(`Unexpected bit default: ${col.default}`);
+            //     }
+            //     col.default = parseInt(bits,2);
+            // }
+        } break;
+    }
+}
+
+function dec2bin(dec){
+    // https://stackoverflow.com/a/16155417/65387
+    return (dec >>> 0).toString(2);
 }
 
 function diffSql(tableName,currentStruct,desiredStruct) {
@@ -262,7 +323,19 @@ function columnDiffToSql(diff) {
 function getDefault(col) {
     if(col.default === undefined) return undefined;
     if(col.default === null) return 'NULL';
-    if(col.default === 'CURRENT_TIMESTAMP' && ['timestamp','datetime'].includes(col.type)) return col.default;
+    switch(col.type) {
+        case 'timestamp':
+        case 'datetime':
+            if(col.default === 'CURRENT_TIMESTAMP') {
+                return col.default;
+            }
+            break;
+        case 'bit':
+            if(/^b'([01]+)'$/.test(col.default)) {
+                return col.default;
+            }
+            break;
+    }
     return db.escapeValue(col.default);
 }
 
@@ -270,6 +343,12 @@ function columnDefinition(col) {
     let str = col.type + columnDefinition2(col);
     if(!col.null) {
         str += ' NOT NULL';
+    }
+    if(col.default !== undefined) {
+        str += ` DEFAULT ${getDefault(col)}`;
+    }
+    if(col.comment) {
+        str += ` COMMENT ${db.escapeValue(col.comment)}`;
     }
     return str;
 }
