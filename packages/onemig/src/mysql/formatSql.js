@@ -1,4 +1,6 @@
 // import {log} from './debug';
+import {isPlainObject} from '../util/types';
+
 const {hasOwnProperty} = Object.prototype;
 const {map} = Array.prototype;
 import Chalk from 'chalk';
@@ -65,17 +67,6 @@ export default function formatSql(sqlQuery, values) {
     let formattedQuery = weave(sqlFrags, stringLiterals).join('');
     // console.log(`${Chalk.bold('QUERY:')} ${formattedQuery}`);
     return formattedQuery;
-}
-
-function isObject(obj) {
-    return obj !== null && typeof obj === 'object';
-}
-
-function isPlainObject(obj) {
-    return isObject(obj) && (
-            obj.constructor === Object  // obj = {}
-            || obj.constructor === undefined // obj = Object.create(null)
-        );
 }
 
 function escapeId(value) {

@@ -14,6 +14,9 @@ import {getStruct} from '../struct';
 import ProgressBar from 'ascii-progress';
 import Ajv from 'ajv';
 import tableSchema from '../table.schema.js';
+import {omit} from '../util/object';
+import {isPlainObject} from '../util/types';
+import {highlight} from 'cli-highlight';
 // import conn from '../db';
 // import {Command} from '../console';
 
@@ -81,15 +84,21 @@ export default {
                     // fetch current struct
                     const currentStruct = await getStruct(dbName,tbl.name);
                     
-                    if(objHash(currentStruct) !== objHash(desiredStruct)) {
+                    if(!objEq(currentStruct,desiredStruct)) {
                         // oldName
                         
                         // https://dev.mysql.com/doc/refman/8.0/en/alter-table.html
                         
-                        dump('CURRENT',currentStruct.columns);
-                        dump('DESIRED',desiredStruct.columns);
-                        const diff = diffColumns(currentStruct.columns, desiredStruct.columns);
-                        dump('DIFF',diff);
+                        // dump('CURRENT',currentStruct.columns);
+                        // dump('DESIRED',desiredStruct.columns);
+                        // const diff = diffColumns(currentStruct.columns, desiredStruct.columns);
+                        // dump('DIFF',diff);
+                        //
+                        // const lines = columnDiffToSql(diff);
+                        // dump(lines);
+                        
+                        const sql = diffSql(tbl.name,currentStruct,desiredStruct);
+                        console.log(highlight(sql,{language:'sql',ignoreIllegals:true}));
                         
                         
                         // dump(added,removed,modified);
@@ -110,8 +119,45 @@ export default {
     }
 }
 
+function diffSql(tableName,currentStruct,desiredStruct) {
+    const diff = diffColumns(currentStruct.columns, desiredStruct.columns);
+    const lines = columnDiffToSql(diff);
+    return `ALTER TABLE ${db.escapeId(tableName)}\n${lines.map(l => `  ${l}`).join(',\n')}\n`;
+}
+
 function objEq(a,b) {
-    return objHash(a) === objHash(b);
+    const ka = Object.keys(a);
+    const kb = Object.keys(b);
+    
+    if(ka.length !== kb.length) {
+        return false;
+    }
+    
+    for(const k of ka) {
+        if(!eq(a[k],b[k])) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+function arrEq(a,b) {
+    if(a.length !== b.length) return false;
+    for(let i=0; i<a.length; ++a) {
+        if(!eq(a[i],b[i])) return false;
+    }
+    return true;
+}
+
+function eq(a,b) {
+    if(Array.isArray(a) && Array.isArray(b)) {
+        return arrEq(a,b);
+    }
+    if(isPlainObject(a) && isPlainObject(b)) {
+        return objEq(a,b);
+    }
+    return Object.is(a,b);
 }
 
 function createMap(arr,key='name') {
@@ -141,9 +187,17 @@ function diffColumns(before,after) {
                 oldNames.set(col.oldName,col.name);
             }
         } else {
-            if(!objEq(col,currentColumns.get(colName))) {
+            const currentCol = currentColumns.get(colName);
+            if(!objEq(col,currentCol)) {
                 // dump('modified',colName);
-                modified.push(col);
+                if(objEq(omit(col,['default']),omit(currentCol,['default']))) {
+                    altered.push({
+                        name: colName,
+                        default: col.default,
+                    })
+                } else {
+                    modified.push(col);
+                }
             }
             currentColumns.delete(colName);
         }
@@ -174,4 +228,54 @@ function diffColumns(before,after) {
     added = Array.from(added.values());
     
     return {added,dropped,modified,changed,renamed,altered}
+}
+
+function columnDiffToSql(diff) {
+    const lines = [];
+    for(let colName of diff.dropped) {
+        lines.push(`DROP COLUMN ${db.escapeId(colName)}`)
+    }
+    for(let col of diff.modified) {
+        lines.push(`MODIFY COLUMN ${db.escapeId(col.name)} ${columnDefinition(col)}`)
+    }
+    for(let col of diff.changed) {
+        lines.push(`CHANGE COLUMN ${db.escapeId(col.oldName)} ${db.escapeId(col.newName)} ${columnDefinition(col)}`)
+    }
+    for(let col of diff.renamed) {
+        lines.push(`RENAME COLUMN ${db.escapeId(col.oldName)} TO ${db.escapeId(col.newName)}`)
+    }
+    for(let col of diff.altered) {
+        lines.push(`ALTER COLUMN ${db.escapeId(col.name)} ${col.default === undefined ? "DROP DEFAULT" : `SET DEFAULT ${getDefault(col)}`}`)
+    }
+    return lines;
+}
+
+function getDefault(col) {
+    if(col.default === undefined) return undefined;
+    if(col.default === null) return 'NULL';
+    if(col.default === 'CURRENT_TIMESTAMP' && ['timestamp','datetime'].includes(col.type)) return col.default;
+    return db.escapeValue(col.default);
+}
+
+function columnDefinition(col) {
+    switch(col.type) {
+        case 'float':
+        case 'decimal':
+        case 'double': {
+            let str = col.type;
+            if(col.precision) {
+                str += `(${col.precision.join(',')})`
+            }
+            if(col.unsigned || col.zerofill) {
+                str += ' unsigned';
+            }
+            if(col.zerofill) {
+                str += ' zerofill';
+            }
+            if(!col.null) {
+                str += ' NOT NULL';
+            }
+            return str;
+        } 
+    }
 }

@@ -61,3 +61,14 @@ export function pick(obj, keys) {
     }
     return out;
 }
+
+export function omit(obj, keys) {
+    const out = Object.create(null);
+    for(let k of Object.keys(obj)) {
+        if(!keys.includes(k)) {
+            out[k] = obj[k];
+        }
+    }
+    return out;
+}
+
