@@ -47,6 +47,8 @@ export default {
     ],
     async execute(args, opts) {
         const tableFiles = (await readDir(Path.join(opts.dir,'tables'))).filter(f => f.endsWith('.json'));
+        tableFiles.sort(ciCompare);
+        // shuffle(tableFiles);
         // const allTables = Object.create(null);
         
         // const pb = new ProgressBar({
@@ -93,10 +95,10 @@ export default {
                         
                         // https://dev.mysql.com/doc/refman/8.0/en/alter-table.html
 
-                        console.log('=== CURRENT ===');
-                        dump(currentStruct.columns);
-                        console.log('=== DESIRED ===');
-                        dump(desiredStruct.columns);
+                        // console.log('=== CURRENT ===');
+                        // dump(currentStruct.columns);
+                        // console.log('=== DESIRED ===');
+                        // dump(desiredStruct.columns);
                         // const diff = diffColumns(currentStruct.columns, desiredStruct.columns);
                         // dump('DIFF',diff);
                         //
@@ -109,12 +111,12 @@ export default {
                         
                         // dump(added,removed,modified);
                         
-                        process.exit(1);
+                        // process.exit(1);
                         // dump('struct changed!!!',dbName,tbl.name,currentStruct,desiredStruct);
                     }
                     
                     // dump(newStruct);
-                    break; // FIXME: ****SKIP REST OF DATABASES, JUST FOR TESTING
+                    // break; // FIXME: ****SKIP REST OF DATABASES, JUST FOR TESTING
                 }
                 // dump(table.name,databases,struct);
                 // return;
@@ -380,4 +382,20 @@ function columnDefinition2(col) {
             return `(${col.length})`;
         
     }
+}
+
+function ciCompare(a, b) {
+    return a.localeCompare(b, undefined, {sensitivity: 'base'})
+}
+
+/**
+ * Shuffles array in place. ES6 version
+ * @param {Array} a items An array containing the items.
+ */
+function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
 }
