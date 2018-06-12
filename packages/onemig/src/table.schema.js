@@ -311,24 +311,24 @@ export default {
             properties: {
                 name: {$ref: "#/defs/Identifier"},
                 oldName: {$ref: "#/defs/OldName"},
-                columnNames: {
+                columns: {
                     type: "array",
                     items: {$ref: "#/defs/Identifier"},
                     minItems: 1
                 },
-                refTableName: {type: "string"},
-                refColumnNames: {
+                refTable: {type: "string"},
+                refColumns: {
                     type: "array",
                     items: {$ref: "#/defs/Identifier"},
                     minItems: 1
                 },
-                deleteRule: {enum: CASCADE_RULES},
-                updateRule: {enum: CASCADE_RULES},
-                refTableSchema: {
+                onDelete: {enum: CASCADE_RULES},
+                onUpdate: {enum: CASCADE_RULES},
+                refDatabase: {
                     anyOf: [{$ref: "#/defs/AppRef"}, {$ref: "#/defs/Identifier"}],
                 },
             },
-            required: ["columnNames", "deleteRule", "name", "refColumnNames", "refTableName", "updateRule"],
+            required: ["columns", "onDelete", "name", "refColumns", "refTable", "onUpdate"],
         },
         AppRef: {
             type: "object",

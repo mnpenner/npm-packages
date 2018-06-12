@@ -311,11 +311,11 @@ export async function getStruct(dbName, tblName) {
                                 SELECT
                                   tc.CONSTRAINT_NAME 'constraintName',
                                   kcu.COLUMN_NAME 'columnName',
-                                  kcu.REFERENCED_TABLE_SCHEMA 'refTableSchema',
-                                  kcu.REFERENCED_TABLE_NAME 'refTableName',
+                                  kcu.REFERENCED_TABLE_SCHEMA 'refDatabase',
+                                  kcu.REFERENCED_TABLE_NAME 'refTable',
                                   kcu.REFERENCED_COLUMN_NAME 'refColumnName',
-                                  rc.DELETE_RULE 'deleteRule',
-                                  rc.UPDATE_RULE 'updateRule'
+                                  rc.DELETE_RULE 'onDelete',
+                                  rc.UPDATE_RULE 'onUpdate'
                                 FROM information_schema.TABLE_CONSTRAINTS tc
                                   JOIN information_schema.REFERENTIAL_CONSTRAINTS rc
                                     ON rc.CONSTRAINT_SCHEMA = :dbname
@@ -338,27 +338,27 @@ export async function getStruct(dbName, tblName) {
                 if(!fkMap.hasOwnProperty(fk.constraintName)) {
                     let fkDef = fkMap[fk.constraintName] = {
                         name: fk.constraintName,
-                        columnNames: [fk.columnName],
-                        // refTableSchema: fk.refTableSchema,
-                        refTableName: fk.refTableName,
-                        refColumnNames: [fk.refColumnName],
-                        deleteRule: fk.deleteRule,
-                        updateRule: fk.updateRule,
+                        columns: [fk.columnName],
+                        // refDatabase: fk.refDatabase,
+                        refTable: fk.refTable,
+                        refColumns: [fk.refColumnName],
+                        onDelete: fk.onDelete,
+                        onUpdate: fk.onUpdate,
                     }
-                    if(fk.refTableSchema !== dbName) {
+                    if(fk.refDatabase !== dbName) {
                         const thisDb = dbNameMap.get(dbName);
-                        const thatDb = dbNameMap.get(fk.refTableSchema);
+                        const thatDb = dbNameMap.get(fk.refDatabase);
                         if(thisDb && thatDb && thisDb[0] === thatDb[0]) {
                             // if FK points to same GSID but different app, use special syntax
-                            fkDef.refTableSchema = {$app: thatDb[1]};
+                            fkDef.refDatabase = {$app: thatDb[1]};
                         } else {
-                            process.stderr.write(`Foreign key ${dbName}.${tblName}.${fk.constraintName} on ${fk.columnName} points to another database ${fk.refTableSchema}`);
-                            fkDef.refTableSchema = fk.refTableSchema;
+                            process.stderr.write(`Foreign key ${dbName}.${tblName}.${fk.constraintName} on ${fk.columnName} points to another database ${fk.refDatabase}`);
+                            fkDef.refDatabase = fk.refDatabase;
                         }
                     }
                 } else {
-                    fkMap[fk.constraintName].columnNames.push(fk.columnName);
-                    fkMap[fk.constraintName].refColumnNames.push(fk.refColumnName);
+                    fkMap[fk.constraintName].columns.push(fk.columnName);
+                    fkMap[fk.constraintName].refColumns.push(fk.refColumnName);
                 }
             }
 

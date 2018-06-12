@@ -267,16 +267,16 @@ function getCreateIndexes(indexes) {
 
 function getCreateForeignKeys(foreignKeys,dbName) {
     return foreignKeys.map(fk => {
-        let sql = `FOREIGN KEY ${db.escapeId(fk.name)} ${getForeignKeyColumnsStr(fk.columnNames)} REFERENCES `;
-        if(fk.refTableSchema) {
-            sql += db.escapeId(resolveTableName(fk.refTableSchema,dbName))+'.';
+        let sql = `FOREIGN KEY ${db.escapeId(fk.name)} ${getForeignKeyColumnsStr(fk.columns)} REFERENCES `;
+        if(fk.refDatabase) {
+            sql += db.escapeId(resolveTableName(fk.refDatabase,dbName))+'.';
         }
-        sql += `${db.escapeId(fk.refTableName)}${getForeignKeyColumnsStr(fk.refColumnNames)}`;
-        if(fk.updateRule) {
-            sql += ` ON UPDATE ${fk.updateRule}`;
+        sql += `${db.escapeId(fk.refTable)}${getForeignKeyColumnsStr(fk.refColumns)}`;
+        if(fk.onUpdate) {
+            sql += ` ON UPDATE ${fk.onUpdate}`;
         }
-        if(fk.deleteRule) {
-            sql += ` ON DELETE ${fk.deleteRule}`;
+        if(fk.onDelete) {
+            sql += ` ON DELETE ${fk.onDelete}`;
         }
         return sql;
     })

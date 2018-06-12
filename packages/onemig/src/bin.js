@@ -364,20 +364,20 @@ async function __main__() {
                         if(!fkMap.hasOwnProperty(fk.constraint_name)) {
                             let fkDef = fkMap[fk.constraint_name] = {
                                 name: fk.constraint_name,
-                                columnNames: [fk.column_name],
-                                // refTableSchema: fk.ref_table_schema,
-                                refTableName: fk.ref_table_name,
-                                refColumnNames: [fk.ref_column_name],
-                                deleteRule: fk.delete_rule,
-                                updateRule: fk.update_rule,
+                                columns: [fk.column_name],
+                                // refDatabase: fk.ref_table_schema,
+                                refTable: fk.ref_table_name,
+                                refColumns: [fk.ref_column_name],
+                                onDelete: fk.delete_rule,
+                                onUpdate: fk.update_rule,
                             }
                             if(fk.ref_table_schema !== dbName) {
                                 // FIXME: we need to generalize this for {{pcs}}
-                                fkDef.refTableSchema = fk.ref_table_schema;
+                                fkDef.refDatabase = fk.ref_table_schema;
                             }
                         } else {
-                            fkMap[fk.constraint_name].columnNames.push(fk.column_name);
-                            fkMap[fk.constraint_name].refColumnNames.push(fk.ref_column_name);
+                            fkMap[fk.constraint_name].columns.push(fk.column_name);
+                            fkMap[fk.constraint_name].refColumns.push(fk.ref_column_name);
                         }
                     }
 

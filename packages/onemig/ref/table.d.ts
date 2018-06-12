@@ -42,12 +42,12 @@ interface Index {
 
 interface ForeignKey {
     name: string
-    columnNames: string[]
-    refTableName: string
-    refColumnNames: string[]
-    deleteRule: string
-    updateRule: string
-    refTableSchema?: string | AppRef
+    columns: string[]
+    refTable: string
+    refColumns: string[]
+    onDelete: string
+    onUpdate: string
+    refDatabase?: string | AppRef
 }
 
 interface AppRef {
