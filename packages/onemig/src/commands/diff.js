@@ -247,21 +247,22 @@ function getCreateColumns(columns) {
     return columns.map(col => db.escapeId(col.name)+' '+columnDefinition(col));
 }
 
+function indexDefinition(idx) {
+    switch(idx.type) {
+        case 'PRIMARY':
+            return `PRIMARY KEY ${getIndexColumnsStr(idx.columns)}`;
+        case 'INDEX':
+        case 'KEY':
+        case 'BTREE':
+            return `INDEX ${db.escapeId(idx.name)} ${getIndexColumnsStr(idx.columns)}`;
+        case 'UNIQUE':
+            return `UNIQUE KEY ${db.escapeId(idx.name)} ${getIndexColumnsStr(idx.columns)}`;
+    }
+    throw new Error(`Unsupported index type: ${idx.type}`);
+}
+
 function getCreateIndexes(indexes) {
-    return indexes.map(idx => {
-        // if(!idx.type) throw new Error(`Index is missing a type`);
-        switch(idx.type) {
-            case 'PRIMARY':
-                return `PRIMARY KEY ${getIndexColumnsStr(idx.columns)}`;
-            case 'INDEX':
-            case 'KEY':
-            case 'BTREE':
-                return `INDEX ${db.escapeId(idx.name)} ${getIndexColumnsStr(idx.columns)}`;
-            case 'UNIQUE':
-                return `UNIQUE KEY ${db.escapeId(idx.name)} ${getIndexColumnsStr(idx.columns)}`;
-        }
-        throw new Error(`Unsupported index type: ${idx.type}`);
-    })
+    return indexes.map(indexDefinition)
 }
 
 function getCreateForeignKeys(foreignKeys,dbName) {
@@ -328,9 +329,11 @@ function getCreateOptions(options) {
 }
 
 function getAlterTableSql(tableName,currentStruct,desiredStruct) {
-    const lines = [];
-    lines.push(...optionsDiff(currentStruct.options,desiredStruct.options));
-    lines.push(...columnDiff(currentStruct.columns,desiredStruct.columns));
+    const lines = [
+        ...optionsDiff(currentStruct.options,desiredStruct.options),
+        ...columnDiff(currentStruct.columns,desiredStruct.columns),
+        ...indexDiff(currentStruct.indexes,desiredStruct.indexes),
+    ];
     if(lines.length) {
         return `ALTER TABLE ${db.escapeId(tableName)}\n${lines.map(l => `  ${l}`).join(',\n')}\n`;
     }
@@ -360,6 +363,10 @@ function objDiff(before,after) {
 
 function columnDiff(cols1,cols2) {
     return columnDiffToSql(getColumnDiff(cols1,cols2));
+}
+
+function indexDiff(before,after) {
+    return indexDiffToSql(getIndexDiff(before,after));
 }
 
 function objEq(a,b) {
@@ -399,6 +406,67 @@ function eq(a,b) {
 
 function createMap(arr,key='name') {
     return new Map(arr.map(o => [o[key],o]));
+}
+
+
+function getIndexDiff(before,after) {
+
+    const currentIndexes = createMap(before);
+    const desiredIndexes = createMap(after);
+
+    let added = new Map;
+    const dropped = [];
+    const changed = []; // name *and* definition change
+    const modified = []; // definition change only
+    const renamed = []; // name change only; requires MySQL 5.7
+    const oldNames = new Map;
+
+    // dump(currentIndexes,desiredIndexes);
+
+    for(let [idxName,idx] of desiredIndexes) {
+        if(!currentIndexes.has(idxName)) {
+            // dump('added',colName,currentIndexes.has(colName),desiredIndexes.has(colName));
+            added.set(idxName,idx); // AFTER...?
+            if(idx.oldName) {
+                for(let oldName of toIter(idx.oldName)) {
+                    oldNames.set(oldName, idx.name);
+                }
+            }
+        } else {
+            const currentCol = currentIndexes.get(idxName);
+            idx = omit(idx,['oldName']);
+            if(!objEq(idx,currentCol)) {
+                modified.push(idx);
+            }
+            currentIndexes.delete(idxName);
+        }
+    }
+
+    // dump(currentIndexes);
+    for(let [idxName,curIdx] of currentIndexes) {
+        // dump('del',colName);
+        if(oldNames.has(idxName)) {
+            const newName = oldNames.get(idxName);
+            const newDef = added.get(newName);
+            // delete newDef.name;
+            // const {...curDef} = curCol;
+            // delete curDef.name;
+            added.delete(newName);
+            // if(objEq(curDef,newDef)) {
+            //     renamed.push({oldName,newName});
+            // } else {
+            changed.push({...newDef,oldName: curIdx.name});
+            // }
+            // dump('changedchangedchangedchangedchanged',changed);
+        } else {
+            dropped.push(idxName);
+        }
+        // if(added.has(colName))
+        // removed.set(colName,col);
+    }
+    added = Array.from(added.values());
+
+    return {added,dropped,modified,changed,renamed}
 }
 
 function getColumnDiff(before,after) {
@@ -470,6 +538,28 @@ function getColumnDiff(before,after) {
     return {added,dropped,modified,changed,renamed,altered}
 }
 
+function indexDiffToSql(diff) {
+    // dump(diff);process.exit(1);
+    const lines = [];
+    for(let idx of diff.dropped) {
+        lines.push(`DROP INDEX ${db.escapeId(idx.name)}`) // I *think* this works fine for PRIMARY keys too!
+    }
+    for(let idx of diff.changed) {
+        lines.push(`DROP INDEX ${db.escapeId(idx.oldName)}`)
+        lines.push(`ADD ${indexDefinition(idx)}`)
+    }
+    for(let idx of diff.modified) {
+        lines.push(`DROP INDEX ${db.escapeId(idx.name)}`)
+        lines.push(`ADD ${indexDefinition(idx)}`)
+    }
+    for(let idx of diff.renamed) {
+        lines.push(`RENAME INDEX ${db.escapeId(idx.oldName)} TO ${db.escapeId(idx.newName)}`)
+    }
+    for(let idx of diff.added) {
+        lines.push(`ADD ${indexDefinition(idx)}`)
+    }
+    return lines;
+}
 function columnDiffToSql(diff) {
     const lines = [];
     for(let colName of diff.dropped) {

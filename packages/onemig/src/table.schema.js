@@ -9,14 +9,7 @@ function makeColumn(type, properties, required = []) {
         additionalProperties: false,
         properties: {
             name: {$ref: "#/defs/Identifier"},
-            oldName: {anyOf: [
-                    {$ref: "#/defs/Identifier"},
-                    {
-                        type: 'array',
-                        minItems: 1,
-                        items: {$ref: "#/defs/Identifier"}
-                    }
-                ]},
+            oldName: {$ref: "#/defs/OldName"},
             type: Array.isArray(type) ? {enum: type} : {const: type},
             null: {type: "boolean",default:false},
             comment: {$ref: "#/defs/Comment"},
@@ -275,11 +268,22 @@ export default {
         },
         Collation: {enum: COLLATIONS},
         Identifier: {type: "string", minLength: 1, maxLength: 64},
+        OldName: {
+            anyOf: [
+                {$ref: "#/defs/Identifier"},
+                {
+                    type: 'array',
+                    minItems: 1,
+                    items: {$ref: "#/defs/Identifier"}
+                }
+            ]
+        },
         Index: {
             type: "object",
             additionalProperties: false,
             properties: {
                 name: {$ref: "#/defs/Identifier"},
+                oldName: {$ref: "#/defs/OldName"},
                 type: {enum: ['PRIMARY', 'INDEX', 'UNIQUE', 'FULLTEXT']},
                 comment: {$ref: "#/defs/Comment"},
                 columns: {
@@ -306,6 +310,7 @@ export default {
             additionalProperties: false,
             properties: {
                 name: {$ref: "#/defs/Identifier"},
+                oldName: {$ref: "#/defs/OldName"},
                 columnNames: {
                     type: "array",
                     items: {$ref: "#/defs/Identifier"},
