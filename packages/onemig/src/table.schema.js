@@ -40,6 +40,7 @@ const columnTypes = [
     makeColumn(['tinyint', 'smallint', 'mediumint', 'int', 'bigint'], {
         default: {$ref: "#/defs/Int"},
         unsigned: {type: "boolean",default:false},
+        autoIncrement: {type: "boolean",default:false},
         zerofill: {
             type: "integer",
             minimum: 1,
@@ -50,6 +51,7 @@ const columnTypes = [
         default: {$ref: "#/defs/Float"},
         unsigned: {type: "boolean",default:false},
         zerofill: {type: "boolean",default:false},
+        autoIncrement: {type: "boolean",default:false}, // apparently this works
         precision: tuple(
             {type: 'integer',minimum:1,maximum:255},
             {type: 'integer',minimum:0,maximum:{$data:'1/0'}}
@@ -287,6 +289,17 @@ export default {
                 },
             },
             required: ["columns", "name", "type"],
+            // if: {
+            //     properties: {
+            //         type: {const:'PRIMARY'},
+            //     }
+            // },
+            // then: {
+            //     required: ["columns", "type"],
+            //     properties: {
+            //         name: {const:"PRIMARY"}
+            //     }
+            // }
         },
         ForeignKey: {
             type: "object",

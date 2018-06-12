@@ -6,7 +6,7 @@ import Chalk from 'chalk';
 import * as async from '../util/async';
 import _objHash from 'object-hash';
 import * as fs from '../util/fs';
-import {dbNameMap,dbNames} from '../napi';
+import napi,{dbNameMap,dbNames} from '../napi';
 import {InputOption} from '../console';
 import Path from 'path';
 import db from '../db';
@@ -15,7 +15,7 @@ import ProgressBar from 'ascii-progress';
 import Ajv from 'ajv';
 import tableSchema from '../table.schema.js';
 import {omit} from '../util/object';
-import {isNumber, isPlainObject, isString} from '../util/types';
+import {isNumber, isObject, isPlainObject, isString} from '../util/types';
 import {highlight} from 'cli-highlight';
 import {toIter} from '../util/array';
 // import conn from '../db';
@@ -49,7 +49,7 @@ export default {
         // const tableFiles = (await readDir(Path.join(opts.dir,'tables'))).filter(f => f.endsWith('.json'));
         // tableFiles.sort(ciCompare);
         // shuffle(tableFiles);
-        const tableFiles = ['out/tables/emr_note.json'];
+        const tableFiles = ['out/tables/outreach_report_consumption_drugs_methods.json'];
         // const allTables = Object.create(null);
         
         // const pb = new ProgressBar({
@@ -97,7 +97,7 @@ export default {
                   
                     
                     if(!currentStruct) {
-                        const createTableSql = getCreateTableSql(tbl.name, desiredStruct);
+                        const createTableSql = getCreateTableSql(dbName, tbl.name, desiredStruct);
                         if(createTableSql) {
                             console.log(highlight(createTableSql, {language: 'sql', ignoreIllegals: true}));
                         }
@@ -150,7 +150,7 @@ export default {
 }
 
 function trimZeros(x) {
-    const str = String(x).replace(/^0+/,'');
+    const str = String(x).replace(/^0+(?=\d)/,'');
     if(str.includes('.')) {
         return str.replace(/\.?0*$/,'');
     }
@@ -170,7 +170,8 @@ function normalizeOptions(opt, defaultStorageEngine, defaultCollation) {
 
 function normalizeColumn(col,tableCollation) {
     col.null = !!col.null;
-    if(!col.comment) delete col.comment;
+    if(col.comment === '') delete col.comment;
+    if(col.autoIncrement === false) delete col.autoIncrement;
     // TODO: normalize COLLATION with default collation...
     switch(col.type) {
         case 'tinyint':
@@ -227,10 +228,15 @@ function dec2bin(dec){
     return (dec >>> 0).toString(2);
 }
 
-function getCreateTableSql(tblName,struct) {
+function getCreateTableSql(dbName,tblName,struct) {
     // https://dev.mysql.com/doc/refman/8.0/en/create-table.html
     let sql = `CREATE TABLE ${db.escapeId(tblName)} (\n`;
-    sql += getCreateColumns(struct.columns).map(l => `  ${l}`).join(',\n');
+    const lines = [
+        ...getCreateColumns(struct.columns),
+        ...getCreateIndexes(struct.indexes),
+        ...getCreateForeignKeys(struct.foreignKeys,dbName),
+    ];
+    sql += lines.map(l => `  ${l}`).join(',\n');
     sql += `\n)`;
     sql += getCreateOptions(struct.options).map(o => ' '+o).join('');
     return sql;
@@ -239,6 +245,72 @@ function getCreateTableSql(tblName,struct) {
 
 function getCreateColumns(columns) {
     return columns.map(col => db.escapeId(col.name)+' '+columnDefinition(col));
+}
+
+function getCreateIndexes(indexes) {
+    return indexes.map(idx => {
+        // if(!idx.type) throw new Error(`Index is missing a type`);
+        switch(idx.type) {
+            case 'PRIMARY':
+                return `PRIMARY KEY ${getIndexColumnsStr(idx.columns)}`;
+            case 'INDEX':
+            case 'KEY':
+            case 'BTREE':
+                return `INDEX ${db.escapeId(idx.name)} ${getIndexColumnsStr(idx.columns)}`;
+            case 'UNIQUE':
+                return `UNIQUE KEY ${db.escapeId(idx.name)} ${getIndexColumnsStr(idx.columns)}`;
+        }
+        throw new Error(`Unsupported index type: ${idx.type}`);
+    })
+}
+
+function getCreateForeignKeys(foreignKeys,dbName) {
+    return foreignKeys.map(fk => {
+        let sql = `FOREIGN KEY ${db.escapeId(fk.name)} ${getForeignKeyColumnsStr(fk.columnNames)} REFERENCES `;
+        if(fk.refTableSchema) {
+            sql += db.escapeId(resolveTableName(fk.refTableSchema,dbName))+'.';
+        }
+        sql += `${db.escapeId(fk.refTableName)}${getForeignKeyColumnsStr(fk.refColumnNames)}`;
+        if(fk.updateRule) {
+            sql += ` ON UPDATE ${fk.updateRule}`;
+        }
+        if(fk.deleteRule) {
+            sql += ` ON DELETE ${fk.deleteRule}`;
+        }
+        return sql;
+    })
+}
+
+function resolveTableName(obj,dbName) {
+    if(isObject(obj)) {
+        const keys = Object.keys(obj);
+        if(keys.length !== 1) throw new Error("Object notation must have exactly one key, got "+keys.join(', '));
+        switch(keys[0]) {
+            case '$app':
+                const appId = obj[keys[0]];
+                const [gsid] = dbNameMap.get(dbName);
+                return napi.dbName(gsid,appId);
+            default:
+                throw new Error(`Unsupported key: ${keys[0]}`);
+        }
+    }
+    return String(obj);
+}
+
+function getForeignKeyColumnsStr(columns) {
+    return `(${columns.map(c => db.escapeId(c)).join(', ')})`;
+}
+
+function getIndexColumnsStr(columns) {
+    return `(${columns.map(escapeIndex).join(', ')})`;
+}
+
+function escapeIndex(fullName) {
+    const m = /^(\S+)\((\d+)\)$/.exec(fullName);
+    if(m) {
+        return `${db.escapeId(m[1])}(${m[2]})`;
+    }
+    return db.escapeId(fullName);
 }
 
 function getCreateOptions(options) {
@@ -269,10 +341,19 @@ function optionsDiff(before,after) {
     return getCreateOptions(objDiff(before,after));
 }
 
+/**
+ * Returns values from `after` that are not the same as `before`
+ * 
+ * @param {object} before
+ * @param {object} after
+ * @returns {object}
+ */
 function objDiff(before,after) {
     const out = Object.create(null);
     for(const k of Object.keys(after)) {
-        out[k] = after[k];
+        if(!eq(before[k],after[k])) {
+            out[k] = after[k];
+        }
     }
     return out;
 }
@@ -433,6 +514,9 @@ function getDefault(col) {
 
 function columnDefinition(col) {
     let str = col.type + columnDefinition2(col);
+    if(col.collation) {
+        str += ` COLLATE ${col.collation}`;
+    }
     if(!col.null) {
         str += ' NOT NULL';
     }
@@ -442,11 +526,27 @@ function columnDefinition(col) {
     if(col.comment) {
         str += ` COMMENT ${db.escapeValue(col.comment)}`;
     }
+    if(col.autoIncrement) {
+        str += ` AUTO_INCREMENT`;
+    }
     return str;
 }
 
 function columnDefinition2(col) {
     switch(col.type) {
+        case 'tinyint':
+        case 'smallint':
+        case 'mediumint':
+        case 'int':
+        case 'bigint': {
+            if(col.zerofill != null) {
+                return `(${col.zerofill}) unsigned zerofill`
+            }
+            if(col.unsigned) {
+                return ' unsigned';
+            }
+            return '';  
+        } 
         case 'float':
         case 'decimal':
         case 'double': {
@@ -468,8 +568,17 @@ function columnDefinition2(col) {
         case 'binary':
         case 'varbinary':
             return `(${col.length})`;
+        case 'tinytext':
+        case 'text':
+        case 'mediumtext':
+        case 'longtext':
+        case 'tinyblob':
+        case 'blob':
+        case 'mediumblob':
+        case 'longblob':
+            return '';
     }
-    return '';
+    throw new Error(`Unsupported column type: ${col.type}`);
 }
 
 function ciCompare(a, b) {

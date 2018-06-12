@@ -53,8 +53,8 @@ export async function getStruct(dbName, tblName) {
         //     checkTime: tbl.Check_time,
         // },
         columns: [],
-        indexes: {},
-        foreignKeys: {},
+        indexes: [],
+        foreignKeys: [],
     };
 
     if(tbl.engine !== defaultStorageEngine) {
@@ -84,6 +84,7 @@ export async function getStruct(dbName, tblName) {
                                 ,DATA_TYPE 'dataType'
                                 ,COLUMN_TYPE 'columnType'
                                 ,COLUMN_COMMENT 'comment'
+                                ,EXTRA 'extra'
                                 #,NUMERIC_PRECISION 'numericPrecision'
                             from information_schema.columns 
                             where table_schema=? and table_name=? 
@@ -106,6 +107,13 @@ export async function getStruct(dbName, tblName) {
 
                 if(col.collation !== null && col.collation !== tbl.collation) {
                     colDef.collation = col.collation;
+                }
+                
+                if(col.extra === 'auto_increment') { 
+                    // TODO: what else can go in here??
+                    // https://dev.mysql.com/doc/refman/8.0/en/columns-table.html
+                    // "The EXTRA column contains VIRTUAL GENERATED or VIRTUAL STORED for generated columns"
+                    colDef.autoIncrement = true;
                 }
 
 
