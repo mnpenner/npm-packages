@@ -10,7 +10,7 @@ import {dbNameMap,dbNames} from '../napi';
 import {InputOption} from '../console';
 import Path from 'path';
 import db from '../db';
-import {getStruct} from '../struct';
+import {getDatabaseCollation, getDefaultStorageEngine, getStruct} from '../struct';
 import ProgressBar from 'ascii-progress';
 import Ajv from 'ajv';
 import tableSchema from '../table.schema.js';
@@ -46,9 +46,10 @@ export default {
         }
     ],
     async execute(args, opts) {
-        const tableFiles = (await readDir(Path.join(opts.dir,'tables'))).filter(f => f.endsWith('.json'));
-        tableFiles.sort(ciCompare);
+        // const tableFiles = (await readDir(Path.join(opts.dir,'tables'))).filter(f => f.endsWith('.json'));
+        // tableFiles.sort(ciCompare);
         // shuffle(tableFiles);
+        const tableFiles = ['out/tables/emr_note.json'];
         // const allTables = Object.create(null);
         
         // const pb = new ProgressBar({
@@ -57,6 +58,8 @@ export default {
         //     filled: '█',
         //     blank: '░',
         // });
+        
+        const defaultStorageEngine = await getDefaultStorageEngine();
         
         const ajv = new Ajv({
             allErrors: true,
@@ -87,32 +90,50 @@ export default {
                     // fetch current struct
                     const currentStruct = await getStruct(dbName,tbl.name);
 
+                    const defaultCollation = await getDatabaseCollation(dbName);
 
-                    [currentStruct,desiredStruct].forEach(s => s.columns.forEach(normalizeColumn));
+                    normalizeStruct(desiredStruct, defaultStorageEngine, defaultCollation)
+                        
+                  
                     
-                    if(!objEq(currentStruct,desiredStruct)) {
-                        // oldName
-                        
-                        // https://dev.mysql.com/doc/refman/8.0/en/alter-table.html
+                    if(!currentStruct) {
+                        const createTableSql = getCreateTableSql(tbl.name, desiredStruct);
+                        if(createTableSql) {
+                            console.log(highlight(createTableSql, {language: 'sql', ignoreIllegals: true}));
+                        }
+                    } else {
+                        normalizeStruct(currentStruct, defaultStorageEngine, defaultCollation)
 
-                        // console.log('=== CURRENT ===');
-                        // dump(currentStruct.columns);
-                        // console.log('=== DESIRED ===');
-                        // dump(desiredStruct.columns);
-                        // const diff = diffColumns(currentStruct.columns, desiredStruct.columns);
-                        // dump('DIFF',diff);
-                        //
-                        // const lines = columnDiffToSql(diff);
-                        // dump(lines);
-                        
-                        const sql = diffSql(tbl.name,currentStruct,desiredStruct);
-                        console.log(highlight(sql,{language:'sql',ignoreIllegals:true}));
-                        
-                        
-                        // dump(added,removed,modified);
-                        
-                        // process.exit(1);
-                        // dump('struct changed!!!',dbName,tbl.name,currentStruct,desiredStruct);
+                      
+                        // dump(currentStruct,desiredStruct);
+                        // process.exit(255);
+
+                        if(!objEq(currentStruct, desiredStruct)) {
+                            // oldName
+
+                            // https://dev.mysql.com/doc/refman/8.0/en/alter-table.html
+
+                            console.log('=== CURRENT ===');
+                            dump(currentStruct);
+                            console.log('=== DESIRED ===');
+                            dump(desiredStruct);
+                            // const diff = diffColumns(currentStruct.columns, desiredStruct.columns);
+                            // dump('DIFF',diff);
+                            //
+                            // const lines = columnDiffToSql(diff);
+                            // dump(lines);
+
+                            const alterTableSql = getAlterTableSql(tbl.name, currentStruct, desiredStruct);
+                            if(alterTableSql) {
+                                console.log(highlight(alterTableSql, {language: 'sql', ignoreIllegals: true}));
+                            }
+
+
+                            // dump(added,removed,modified);
+
+                            // process.exit(1);
+                            // dump('struct changed!!!',dbName,tbl.name,currentStruct,desiredStruct);
+                        }
                     }
                     
                     // dump(newStruct);
@@ -136,7 +157,18 @@ function trimZeros(x) {
     return str;
 }
 
-function normalizeColumn(col) {
+function normalizeStruct(struct, defaultStorageEngine, defaultCollation) {
+    normalizeOptions(struct.options, defaultStorageEngine, defaultCollation);
+    struct.columns.forEach(c => normalizeColumn(c,struct.options.collation||defaultCollation))
+}
+
+function normalizeOptions(opt, defaultStorageEngine, defaultCollation) {
+    if(!opt.collation) opt.collation = defaultCollation;
+    if(!opt.comment) delete opt.comment;
+    if(!opt.engine) opt.engine = defaultStorageEngine;
+}
+
+function normalizeColumn(col,tableCollation) {
     col.null = !!col.null;
     if(!col.comment) delete col.comment;
     // TODO: normalize COLLATION with default collation...
@@ -179,6 +211,14 @@ function normalizeColumn(col) {
             //     col.default = parseInt(bits,2);
             // }
         } break;
+        case 'char':
+        case 'varchar':
+        case 'tinytext':
+        case 'text':
+        case 'mediumtext':
+        case 'longtext': {
+            if(!col.collation) col.collation = tableCollation;
+        } break;
     }
 }
 
@@ -187,10 +227,58 @@ function dec2bin(dec){
     return (dec >>> 0).toString(2);
 }
 
-function diffSql(tableName,currentStruct,desiredStruct) {
-    const diff = diffColumns(currentStruct.columns, desiredStruct.columns);
-    const lines = columnDiffToSql(diff);
-    return `ALTER TABLE ${db.escapeId(tableName)}\n${lines.map(l => `  ${l}`).join(',\n')}\n`;
+function getCreateTableSql(tblName,struct) {
+    // https://dev.mysql.com/doc/refman/8.0/en/create-table.html
+    let sql = `CREATE TABLE ${db.escapeId(tblName)} (\n`;
+    sql += getCreateColumns(struct.columns).map(l => `  ${l}`).join(',\n');
+    sql += `\n)`;
+    sql += getCreateOptions(struct.options).map(o => ' '+o).join('');
+    return sql;
+}
+
+
+function getCreateColumns(columns) {
+    return columns.map(col => db.escapeId(col.name)+' '+columnDefinition(col));
+}
+
+function getCreateOptions(options) {
+    const out = [];
+    if(options.engine) {
+        out.push(`ENGINE=${options.engine}`);
+    }
+    if(options.collation) {
+        out.push(`COLLATE=${options.collation}`);
+    }
+    if(options.comment) {
+        out.push(`COMMENT=${db.escapeValue(options.comment)}`);
+    }
+    return out;
+}
+
+function getAlterTableSql(tableName,currentStruct,desiredStruct) {
+    const lines = [];
+    lines.push(...optionsDiff(currentStruct.options,desiredStruct.options));
+    lines.push(...columnDiff(currentStruct.columns,desiredStruct.columns));
+    if(lines.length) {
+        return `ALTER TABLE ${db.escapeId(tableName)}\n${lines.map(l => `  ${l}`).join(',\n')}\n`;
+    }
+    return null;
+}
+
+function optionsDiff(before,after) {
+    return getCreateOptions(objDiff(before,after));
+}
+
+function objDiff(before,after) {
+    const out = Object.create(null);
+    for(const k of Object.keys(after)) {
+        out[k] = after[k];
+    }
+    return out;
+}
+
+function columnDiff(cols1,cols2) {
+    return columnDiffToSql(getColumnDiff(cols1,cols2));
 }
 
 function objEq(a,b) {
@@ -232,7 +320,7 @@ function createMap(arr,key='name') {
     return new Map(arr.map(o => [o[key],o]));
 }
 
-function diffColumns(before,after) {
+function getColumnDiff(before,after) {
 
     const currentColumns = createMap(before);
     const desiredColumns = createMap(after);
@@ -241,8 +329,8 @@ function diffColumns(before,after) {
     const dropped = [];
     const modified = [];
     const changed = [];
-    const renamed = [];
-    const altered = []; // TODO
+    const renamed = []; // needs MySQL 8
+    const altered = []; 
     const oldNames = new Map;
 
     // dump(currentColumns,desiredColumns);
@@ -380,8 +468,8 @@ function columnDefinition2(col) {
         case 'binary':
         case 'varbinary':
             return `(${col.length})`;
-        
     }
+    return '';
 }
 
 function ciCompare(a, b) {

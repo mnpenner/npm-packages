@@ -237,6 +237,13 @@
     "@babel/helper-remap-async-to-generator" "7.0.0-beta.49"
     "@babel/plugin-syntax-async-generators" "7.0.0-beta.49"
 
+"@babel/plugin-proposal-decorators@^7.0.0-beta.49":
+  version "7.0.0-beta.49"
+  resolved "http://code.nucleuslabs.com:4873/@babel%2fplugin-proposal-decorators/-/plugin-proposal-decorators-7.0.0-beta.49.tgz#5760ab683174e60ad670dc9c5ef39f1d7d349c7b"
+  dependencies:
+    "@babel/helper-plugin-utils" "7.0.0-beta.49"
+    "@babel/plugin-syntax-decorators" "7.0.0-beta.49"
+
 "@babel/plugin-proposal-function-bind@^7.0.0-beta.49":
   version "7.0.0-beta.49"
   resolved "http://code.nucleuslabs.com:4873/@babel%2fplugin-proposal-function-bind/-/plugin-proposal-function-bind-7.0.0-beta.49.tgz#24fc8cfc7ba3a3a67c19048d9b42d7beac64e82a"
@@ -269,6 +276,12 @@
 "@babel/plugin-syntax-async-generators@7.0.0-beta.49":
   version "7.0.0-beta.49"
   resolved "http://code.nucleuslabs.com:4873/@babel%2fplugin-syntax-async-generators/-/plugin-syntax-async-generators-7.0.0-beta.49.tgz#50ee943002aedc9ab3a8d12292bd35dd9edb1df8"
+  dependencies:
+    "@babel/helper-plugin-utils" "7.0.0-beta.49"
+
+"@babel/plugin-syntax-decorators@7.0.0-beta.49":
+  version "7.0.0-beta.49"
+  resolved "http://code.nucleuslabs.com:4873/@babel%2fplugin-syntax-decorators/-/plugin-syntax-decorators-7.0.0-beta.49.tgz#1773e9089a4670868b2e9e2aa55045a13f8bd494"
   dependencies:
     "@babel/helper-plugin-utils" "7.0.0-beta.49"
 

@@ -40,3 +40,12 @@ export function isArray(obj) {
 export function isNull(obj) {
     return obj === null;
 }
+
+export function isUndefined(obj) {
+    return obj === undefined;
+}
+
+const PRIMITIVES = new Set(['string','number','boolean','symbol']); // https://developer.mozilla.org/en-US/docs/Glossary/Primitive
+export function isPrimitive(obj) {
+    return obj == null || PRIMITIVES.has(typeof obj);
+}

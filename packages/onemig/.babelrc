@@ -1,7 +1,8 @@
 {
     "plugins": [
         "@babel/plugin-proposal-function-bind",
-        "@babel/plugin-syntax-dynamic-import"
+        "@babel/plugin-syntax-dynamic-import",
+        ["@babel/plugin-proposal-decorators", { "legacy": true }]
     ],
     "presets": [
         [

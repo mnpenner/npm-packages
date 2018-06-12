@@ -4,23 +4,19 @@ import * as async from './util/async';
 import objHash from 'object-hash';
 import {dbNameMap} from './napi';
 import conn from './db';
+import {memoized} from './util/func';
 
 
-let defaultStorageEngine;
-const dbCollations = Object.create(null);
+export const getDefaultStorageEngine = memoized(() => conn.query('select @@default_storage_engine').fetchValue());
 
+export const getDatabaseCollation = memoized(dbName => conn.query('SELECT DEFAULT_COLLATION_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME=?',[dbName]).fetchValue());
 
 export async function getStruct(dbName, tblName) {
     
-    if(defaultStorageEngine === undefined) {
-        defaultStorageEngine = await conn.query('select @@default_storage_engine').fetchValue();
-    }
-
-    if(dbCollations[dbName] === undefined) {
-        dbCollations[dbName] = await conn.query('SELECT DEFAULT_COLLATION_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME=?',[dbName]).fetchValue();
-    }
-
-    const tbl = await conn.query(`SELECT 
+    const [defaultStorageEngine,dbCollation,tbl] = await Promise.all([
+        getDefaultStorageEngine(),
+        getDatabaseCollation(dbName),
+        conn.query(`SELECT 
                         TABLE_NAME 'name'
                         ,ENGINE 'engine'
                         ,TABLE_COMMENT 'comment'
@@ -28,7 +24,12 @@ export async function getStruct(dbName, tblName) {
                         #,ROW_FORMAT 'rowFormat' -- requires OPEN_FULL_TABLE: https://dev.mysql.com/doc/refman/5.7/en/information-schema-optimization.html
                         FROM INFORMATION_SCHEMA.TABLES 
                         WHERE TABLES.TABLE_SCHEMA=? AND TABLE_NAME=?
-                        `, [dbName,tblName]).fetchRow();
+                        `, [dbName,tblName]).fetchRow()
+    ]);
+    
+    if(!tbl) {
+        return null;
+    }
     
     const tblDef = {
         // name: table.Name,
@@ -62,7 +63,7 @@ export async function getStruct(dbName, tblName) {
     if(tbl.comment.length) {
         tblDef.options.comment = tbl.comment;
     }
-    if(tbl.collation !== dbCollations[dbName]) {
+    if(tbl.collation !== dbCollation) {
         tblDef.options.collation = tbl.collation;
     }
     // if(!(
