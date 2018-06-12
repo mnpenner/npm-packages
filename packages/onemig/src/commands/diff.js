@@ -92,17 +92,17 @@ export default {
 
                     const defaultCollation = await getDatabaseCollation(dbName);
 
-                    normalizeStruct(desiredStruct, defaultStorageEngine, defaultCollation)
+                    normalizeStruct(desiredStruct, defaultStorageEngine, defaultCollation, dbName)
                         
                   
                     
                     if(!currentStruct) {
-                        const createTableSql = getCreateTableSql(dbName, tbl.name, desiredStruct);
+                        const createTableSql = getCreateTableSql(tbl.name, desiredStruct);
                         if(createTableSql) {
                             console.log(highlight(createTableSql, {language: 'sql', ignoreIllegals: true}));
                         }
                     } else {
-                        normalizeStruct(currentStruct, defaultStorageEngine, defaultCollation)
+                        normalizeStruct(currentStruct, defaultStorageEngine, defaultCollation, dbName)
 
                       
                         // dump(currentStruct,desiredStruct);
@@ -157,15 +157,30 @@ function trimZeros(x) {
     return str;
 }
 
-function normalizeStruct(struct, defaultStorageEngine, defaultCollation) {
+function normalizeStruct(struct, defaultStorageEngine, defaultCollation, dbName) {
     normalizeOptions(struct.options, defaultStorageEngine, defaultCollation);
     struct.columns.forEach(c => normalizeColumn(c,struct.options.collation||defaultCollation))
+    struct.indexes.forEach(idx => normalizeIndex(idx))
+    struct.foreignKeys.forEach(fk => normalizeForeignKey(fk, dbName))
 }
 
 function normalizeOptions(opt, defaultStorageEngine, defaultCollation) {
     if(!opt.collation) opt.collation = defaultCollation;
     if(!opt.comment) delete opt.comment;
     if(!opt.engine) opt.engine = defaultStorageEngine;
+}
+
+function normalizeIndex(idx) {
+    if(idx.type === 'PRIMARY') idx.name = 'PRIMARY';
+}
+
+function normalizeForeignKey(fk,dbName) {
+    // https://dev.mysql.com/doc/refman/5.6/en/create-table-foreign-keys.html -- "For an ON DELETE or ON UPDATE that is not specified, the default action is always RESTRICT"
+    if(!fk.onDelete) fk.onDelete = 'RESTRICT';
+    if(!fk.onUpdate) fk.onDelete = 'RESTRICT';
+    if(fk.refDatabase) {
+        fk.refDatabase = resolveDatabase(fk.refDatabase,dbName);
+    }
 }
 
 function normalizeColumn(col,tableCollation) {
@@ -228,13 +243,13 @@ function dec2bin(dec){
     return (dec >>> 0).toString(2);
 }
 
-function getCreateTableSql(dbName,tblName,struct) {
+function getCreateTableSql(tblName,struct) {
     // https://dev.mysql.com/doc/refman/8.0/en/create-table.html
     let sql = `CREATE TABLE ${db.escapeId(tblName)} (\n`;
     const lines = [
         ...getCreateColumns(struct.columns),
         ...getCreateIndexes(struct.indexes),
-        ...getCreateForeignKeys(struct.foreignKeys,dbName),
+        ...getCreateForeignKeys(struct.foreignKeys),
     ];
     sql += lines.map(l => `  ${l}`).join(',\n');
     sql += `\n)`;
@@ -265,24 +280,26 @@ function getCreateIndexes(indexes) {
     return indexes.map(indexDefinition)
 }
 
-function getCreateForeignKeys(foreignKeys,dbName) {
-    return foreignKeys.map(fk => {
-        let sql = `FOREIGN KEY ${db.escapeId(fk.name)} ${getForeignKeyColumnsStr(fk.columns)} REFERENCES `;
-        if(fk.refDatabase) {
-            sql += db.escapeId(resolveTableName(fk.refDatabase,dbName))+'.';
-        }
-        sql += `${db.escapeId(fk.refTable)}${getForeignKeyColumnsStr(fk.refColumns)}`;
-        if(fk.onUpdate) {
-            sql += ` ON UPDATE ${fk.onUpdate}`;
-        }
-        if(fk.onDelete) {
-            sql += ` ON DELETE ${fk.onDelete}`;
-        }
-        return sql;
-    })
+function fkDef(fk) {
+    let sql = `FOREIGN KEY ${db.escapeId(fk.name)} ${getForeignKeyColumnsStr(fk.columns)} REFERENCES `;
+    if(fk.refDatabase) {
+        sql += db.escapeId(fk.refDatabase)+'.';
+    }
+    sql += `${db.escapeId(fk.refTable)}${getForeignKeyColumnsStr(fk.refColumns)}`;
+    if(fk.onUpdate) {
+        sql += ` ON UPDATE ${fk.onUpdate}`;
+    }
+    if(fk.onDelete) {
+        sql += ` ON DELETE ${fk.onDelete}`;
+    }
+    return sql;
 }
 
-function resolveTableName(obj,dbName) {
+function getCreateForeignKeys(foreignKeys) {
+    return foreignKeys.map(fkDef)
+}
+
+function resolveDatabase(obj,dbName) {
     if(isObject(obj)) {
         const keys = Object.keys(obj);
         if(keys.length !== 1) throw new Error("Object notation must have exactly one key, got "+keys.join(', '));
@@ -333,6 +350,7 @@ function getAlterTableSql(tableName,currentStruct,desiredStruct) {
         ...optionsDiff(currentStruct.options,desiredStruct.options),
         ...columnDiff(currentStruct.columns,desiredStruct.columns),
         ...indexDiff(currentStruct.indexes,desiredStruct.indexes),
+        ...fkDiff(currentStruct.foreignKeys,desiredStruct.foreignKeys),
     ];
     if(lines.length) {
         return `ALTER TABLE ${db.escapeId(tableName)}\n${lines.map(l => `  ${l}`).join(',\n')}\n`;
@@ -367,6 +385,9 @@ function columnDiff(cols1,cols2) {
 
 function indexDiff(before,after) {
     return indexDiffToSql(getIndexDiff(before,after));
+}
+function fkDiff(before,after) {
+    return fkDiffToSql(getForeignKeyDiff(before,after));
 }
 
 function objEq(a,b) {
@@ -408,6 +429,66 @@ function createMap(arr,key='name') {
     return new Map(arr.map(o => [o[key],o]));
 }
 
+
+function getForeignKeyDiff(before,after) {
+
+    const currentForeignKeys = createMap(before);
+    const desiredForeignKeys = createMap(after);
+
+    let added = new Map;
+    const dropped = [];
+    const changed = []; // name *and* definition change
+    const modified = []; // definition change only
+    const renamed = []; // name change only; requires MySQL 5.7
+    const oldNames = new Map;
+
+    // dump(currentIndexes,desiredIndexes);
+
+    for(let [fkName,fk] of desiredForeignKeys) {
+        if(!currentForeignKeys.has(fkName)) {
+            // dump('added',colName,currentIndexes.has(colName),desiredIndexes.has(colName));
+            added.set(fkName,fk); // AFTER...?
+            if(fk.oldName) {
+                for(let oldName of toIter(fk.oldName)) {
+                    oldNames.set(oldName, fk.name);
+                }
+            }
+        } else {
+            const currentFK = currentForeignKeys.get(fkName);
+            fk = omit(fk,['oldName']);
+            if(!objEq(fk,currentFK)) {
+                modified.push(fk);
+            }
+            currentForeignKeys.delete(fkName);
+        }
+    }
+
+    // dump(currentIndexes);
+    for(let [fkName,curfk] of currentForeignKeys) {
+        // dump('del',colName);
+        if(oldNames.has(fkName)) {
+            const newName = oldNames.get(fkName);
+            const newDef = added.get(newName);
+            // delete newDef.name;
+            // const {...curDef} = curCol;
+            // delete curDef.name;
+            added.delete(newName);
+            // if(objEq(curDef,newDef)) {
+            //     renamed.push({oldName,newName});
+            // } else {
+            changed.push({...newDef,oldName: curfk.name});
+            // }
+            // dump('changedchangedchangedchangedchanged',changed);
+        } else {
+            dropped.push(fkName);
+        }
+        // if(added.has(colName))
+        // removed.set(colName,col);
+    }
+    added = Array.from(added.values());
+
+    return {added,dropped,modified,changed,renamed}
+}
 
 function getIndexDiff(before,after) {
 
@@ -536,6 +617,29 @@ function getColumnDiff(before,after) {
     added = Array.from(added.values());
     
     return {added,dropped,modified,changed,renamed,altered}
+}
+
+function fkDiffToSql(diff) {
+    // dump(diff);process.exit(1);
+    const lines = [];
+    for(let fk of diff.dropped) {
+        lines.push(`DROP FOREIGN KEY ${db.escapeId(fk.name)}`) // I *think* this works fine for PRIMARY keys too!
+    }
+    for(let fk of diff.changed) {
+        lines.push(`DROP FOREIGN KEY ${db.escapeId(fk.oldName)}`)
+        lines.push(`ADD ${fkDef(fk)}`)
+    }
+    for(let fk of diff.modified) {
+        lines.push(`DROP FOREIGN KEY ${db.escapeId(fk.name)}`)
+        lines.push(`ADD ${fkDef(fk)}`)
+    }
+    for(let fk of diff.renamed) {
+        lines.push(`RENAME FOREIGN KEY ${db.escapeId(fk.oldName)} TO ${db.escapeId(fk.newName)}`)
+    }
+    for(let fk of diff.added) {
+        lines.push(`ADD ${fkDef(fk)}`)
+    }
+    return lines;
 }
 
 function indexDiffToSql(diff) {
