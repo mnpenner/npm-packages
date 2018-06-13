@@ -1,5 +1,6 @@
 import stringToPath from './stringToPath';
 import dump from '../dump';
+import {isBoolean,isString,isNumber,isArray} from './types';
 
 export function getValue(obj, path, def) {
     if(!obj) return def;
@@ -71,4 +72,20 @@ export function omit(obj, keys) {
     }
     return out;
 }
+
+export function toBool(str, def) {
+    if(isString(str)) {
+        let boolStr = str.trim().toLowerCase();
+        if(['1', 't', 'true', 'y', 'yes', 'on'].includes(boolStr)) return true;
+        if(['0', 'f', 'false', 'n', 'no', 'off'].includes(boolStr)) return false;
+    } else if(isBoolean(str)) {
+        return str;
+    } else if(isNumber(str)) {
+        return str !== 0;
+    } else if(isArray(str)) {
+        return str.length > 0;
+    }
+    return def;
+}
+
 

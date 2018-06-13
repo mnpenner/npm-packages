@@ -5,6 +5,7 @@ import Path from 'path';
 import {consts,access} from '../util/fs';
 import InputOption from './InputOption';
 import {toIter} from '../util/array';
+import {camelCase} from 'lodash';
 
 export default class Application {
     
@@ -36,7 +37,7 @@ export default class Application {
             const shortOpts = new Map();
             for(let opt of toIter(cmd.options)) {
                 if(!opt.name) throw new Error("Option is missing a name");
-                if(!opt.key) opt.key = opt.name || opt.alias;
+                if(!opt.key) opt.key = camelCase(opt.name);
                 if(opt.default !== undefined) {
                     opts[opt.key] = opt.default;
                 }
@@ -64,6 +65,9 @@ export default class Application {
                             throw new Error(`Value is required for ${arg}`);
                         }
                     }
+                    if((opt.value&InputOption.None)===InputOption.None) {
+                        opts[opt.key] = true;
+                    }
                 } else if(arg.startsWith('-')) {
                     const optName = arg.slice(1);
                     const opt = shortOpts.get(optName);
@@ -74,6 +78,9 @@ export default class Application {
                         if((opts[opt.key]=rawArgs[++i])===undefined) {
                             throw new Error(`Value is required for ${arg}`);
                         }
+                    }
+                    if((opt.value&InputOption.None)===InputOption.None) {
+                        opts[opt.key] = true;
                     }
                 } else {
                     args.push(arg);

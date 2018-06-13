@@ -46,10 +46,10 @@ export default {
         }
     ],
     async execute(args, opts) {
-        // const tableFiles = (await readDir(Path.join(opts.dir,'tables'))).filter(f => f.endsWith('.json'));
-        // tableFiles.sort(ciCompare);
+        const tableFiles = (await readDir(Path.join(opts.dir,'tables'))).filter(f => f.endsWith('.json'));
+        tableFiles.sort(ciCompare);
         // shuffle(tableFiles);
-        const tableFiles = ['out/tables/outreach_report_consumption_drugs_methods.json'];
+        // const tableFiles = ['out/tables/outreach_report_consumption_drugs_methods.json'];
         // const allTables = Object.create(null);
         
         // const pb = new ProgressBar({
@@ -97,7 +97,7 @@ export default {
                   
                     
                     if(!currentStruct) {
-                        const createTableSql = getCreateTableSql(tbl.name, desiredStruct);
+                        const createTableSql = getCreateTableSql(dbName,tbl.name, desiredStruct);
                         if(createTableSql) {
                             console.log(highlight(createTableSql, {language: 'sql', ignoreIllegals: true}));
                         }
@@ -105,25 +105,22 @@ export default {
                         normalizeStruct(currentStruct, defaultStorageEngine, defaultCollation, dbName)
 
                       
-                        // dump(currentStruct,desiredStruct);
-                        // process.exit(255);
-
                         if(!objEq(currentStruct, desiredStruct)) {
                             // oldName
 
                             // https://dev.mysql.com/doc/refman/8.0/en/alter-table.html
 
-                            console.log('=== CURRENT ===');
-                            dump(currentStruct);
-                            console.log('=== DESIRED ===');
-                            dump(desiredStruct);
+                            // console.log('=== CURRENT ===');
+                            // dump(currentStruct);
+                            // console.log('=== DESIRED ===');
+                            // dump(desiredStruct);
                             // const diff = diffColumns(currentStruct.columns, desiredStruct.columns);
                             // dump('DIFF',diff);
                             //
                             // const lines = columnDiffToSql(diff);
                             // dump(lines);
 
-                            const alterTableSql = getAlterTableSql(tbl.name, currentStruct, desiredStruct);
+                            const alterTableSql = getAlterTableSql(dbName,tbl.name, currentStruct, desiredStruct);
                             if(alterTableSql) {
                                 console.log(highlight(alterTableSql, {language: 'sql', ignoreIllegals: true}));
                             }
@@ -133,7 +130,9 @@ export default {
 
                             // process.exit(1);
                             // dump('struct changed!!!',dbName,tbl.name,currentStruct,desiredStruct);
-                        }
+                        } /*else {
+                            dump('before and after are equal',currentStruct,desiredStruct);process.exit(254);
+                        }*/
                     }
                     
                     // dump(newStruct);
@@ -243,9 +242,9 @@ function dec2bin(dec){
     return (dec >>> 0).toString(2);
 }
 
-function getCreateTableSql(tblName,struct) {
+function getCreateTableSql(dbName,tblName,struct) {
     // https://dev.mysql.com/doc/refman/8.0/en/create-table.html
-    let sql = `CREATE TABLE ${db.escapeId(tblName)} (\n`;
+    let sql = `CREATE TABLE ${db.escapeId(dbName)}.${db.escapeId(tblName)} (\n`;
     const lines = [
         ...getCreateColumns(struct.columns),
         ...getCreateIndexes(struct.indexes),
@@ -254,6 +253,7 @@ function getCreateTableSql(tblName,struct) {
     sql += lines.map(l => `  ${l}`).join(',\n');
     sql += `\n)`;
     sql += getCreateOptions(struct.options).map(o => ' '+o).join('');
+    sql += `;`;
     return sql;
 }
 
@@ -345,7 +345,7 @@ function getCreateOptions(options) {
     return out;
 }
 
-function getAlterTableSql(tableName,currentStruct,desiredStruct) {
+function getAlterTableSql(dbName,tableName,currentStruct,desiredStruct) {
     const lines = [
         ...optionsDiff(currentStruct.options,desiredStruct.options),
         ...columnDiff(currentStruct.columns,desiredStruct.columns),
@@ -353,7 +353,7 @@ function getAlterTableSql(tableName,currentStruct,desiredStruct) {
         ...fkDiff(currentStruct.foreignKeys,desiredStruct.foreignKeys),
     ];
     if(lines.length) {
-        return `ALTER TABLE ${db.escapeId(tableName)}\n${lines.map(l => `  ${l}`).join(',\n')}\n`;
+        return `ALTER TABLE ${db.escapeId(dbName)}.${db.escapeId(tableName)}\n${lines.map(l => `  ${l}`).join(',\n')};`;
     }
     return null;
 }
@@ -409,7 +409,7 @@ function objEq(a,b) {
 
 function arrEq(a,b) {
     if(a.length !== b.length) return false;
-    for(let i=0; i<a.length; ++a) {
+    for(let i=0; i<a.length; ++i) {
         if(!eq(a[i],b[i])) return false;
     }
     return true;
@@ -771,6 +771,13 @@ function columnDefinition2(col) {
         case 'mediumblob':
         case 'longblob':
             return '';
+        case 'year':
+            if(col.width) return `(${col.width})`;
+            return '';
+        case 'enum':
+        case 'set':
+            
+            return `(${col.values.map(c => db.escapeValue(c)).join(',')})`;
     }
     throw new Error(`Unsupported column type: ${col.type}`);
 }
