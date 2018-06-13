@@ -17,19 +17,10 @@ import tableSchema from '../table.schema.js';
 import {omit} from '../util/object';
 import {isNumber, isObject, isPlainObject, isString} from '../util/types';
 import {highlight} from 'cli-highlight';
-import {toIter} from '../util/array';
-// import conn from '../db';
+import {ciCompare, toIter} from '../util/array';
+import conn from '../db';
+import Konsole from '../util/Konsole';
 // import {Command} from '../console';
-
-const objHash = v => _objHash(v, {
-    encoding: 'base64',
-    respectType: false,
-    unorderedArrays: false,
-    unorderedSets: true,
-    unorderedObjects: true,
-})
-
-const FIND_DATE_FORMAT = 'ddd DD MMM YYYY HH:mm:ss'; // https://stackoverflow.com/questions/848293/shell-script-get-all-files-modified-after-date#comment84300127_848327
 
 
 
@@ -53,7 +44,7 @@ export default {
         for(let filename of tableFiles) {
             const tbl = await readJson(filename);
 
-            for(let {databases, ...struct} of tbl.versions) {
+            for(let {databases} of tbl.versions) {
                 for(let dbName of databases) {
                     let tables = dbMap.get(dbName);
                     if(!tables) {
@@ -64,6 +55,33 @@ export default {
             }
         }
         
-        dump(dbMap.keys());
+        const spinners = '⣾⣽⣻⢿⡿⣟⣯⣷';
+        let si = 0;
+        let di = 0;
+        const kon = new Konsole;
+        
+        
+        for(const [dbName,desiredTables] of dbMap) {
+            // kon.rewrite(`${spinners[si]} ${dbName} ${++di}/${dbMap.size}`);
+            kon.rewrite(`${(di++/dbMap.size*100).toFixed(1).padStart(5, ' ')}% ${dbName}`);
+            si = (si+1)%spinners.length;
+            
+            const currentTables = await conn.query(`SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES 
+                        WHERE TABLES.TABLE_SCHEMA=? AND TABLE_TYPE='BASE TABLE'`,[dbName]).fetchColumn();
+            const diff = setDifference(currentTables,desiredTables);
+
+            for(let tblName of diff) {
+                const sql = `DROP TABLE ${db.escapeId(dbName)}.${db.escapeId(tblName)};`;
+                kon.writeLn(highlight(sql, {language: 'sql', ignoreIllegals: true}));
+            }
+        }
+        kon.clear();
+        // dump(dbMap.keys());
+        
+        conn.close();
     }
+}
+
+function setDifference(a,b) {
+    return [...a].filter(x => !b.has(x));
 }

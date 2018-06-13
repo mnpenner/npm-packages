@@ -1,23 +1,18 @@
 import dump from '../dump';
-import {readDir, readJson, writeJson} from '../util/fs';
-import SshClient from '../ssh-client';
-import Moment from 'moment';
-import Chalk from 'chalk';
-import * as async from '../util/async';
+import {readDir, readJson} from '../util/fs';
 import _objHash from 'object-hash';
-import * as fs from '../util/fs';
-import napi,{dbNameMap,dbNames} from '../napi';
+import napi, {dbNameMap} from '../napi';
 import {InputOption} from '../console';
 import Path from 'path';
 import db from '../db';
 import {getDatabaseCollation, getDefaultStorageEngine, getStruct} from '../struct';
-import ProgressBar from 'ascii-progress';
 import Ajv from 'ajv';
 import tableSchema from '../table.schema.js';
 import {omit} from '../util/object';
-import {isNumber, isObject, isPlainObject, isString} from '../util/types';
+import {isNumber, isObject, isPlainObject} from '../util/types';
 import {highlight} from 'cli-highlight';
-import {toIter} from '../util/array';
+import {ciCompare, toIter} from '../util/array';
+import Konsole from '../util/Konsole';
 // import conn from '../db';
 // import {Command} from '../console';
 
@@ -72,9 +67,13 @@ export default {
         
         // const validate = ajv.getSchema('#/definitions/Table');
         // const validate = ajv.compile(require(`../table.schema.json`));
-        
+        const spinners = '⣾⣽⣻⢿⡿⣟⣯⣷';
+        let si = 0;
+        const kon = new Konsole;
+        let di = -1;
         
         for(let filename of tableFiles) {
+            ++di;
             const tbl = await readJson(filename);
             if(!ajv.validate('root#/defs/Table',tbl)) {
                 console.log(filename);
@@ -86,7 +85,8 @@ export default {
             for(let {databases, ...desiredStruct} of tbl.versions) {
                 for(let dbName of databases) {
                     // pb.tick(0, {tbl: tbl.name, db: dbName});
-                    console.log(`${dbName}.${tbl.name}`)
+                    kon.rewrite(`${spinners[si]} ${(di/tableFiles.length*100).toFixed(1).padStart(5, ' ')}% ${dbName}.${tbl.name}`);
+                    si = (si+1)%spinners.length;
                     // fetch current struct
                     const currentStruct = await getStruct(dbName,tbl.name);
 
@@ -99,7 +99,7 @@ export default {
                     if(!currentStruct) {
                         const createTableSql = getCreateTableSql(dbName,tbl.name, desiredStruct);
                         if(createTableSql) {
-                            console.log(highlight(createTableSql, {language: 'sql', ignoreIllegals: true}));
+                            kon.writeLn(highlight(createTableSql, {language: 'sql', ignoreIllegals: true}));
                         }
                     } else {
                         normalizeStruct(currentStruct, defaultStorageEngine, defaultCollation, dbName)
@@ -122,7 +122,7 @@ export default {
 
                             const alterTableSql = getAlterTableSql(dbName,tbl.name, currentStruct, desiredStruct);
                             if(alterTableSql) {
-                                console.log(highlight(alterTableSql, {language: 'sql', ignoreIllegals: true}));
+                                kon.writeLn(highlight(alterTableSql, {language: 'sql', ignoreIllegals: true}));
                             }
 
 
@@ -143,7 +143,7 @@ export default {
             }
             // pb.tick(1,{tbl:tbl.name,db:''});
         }
-        
+        kon.clear();
         db.close();
     }
 }
@@ -782,18 +782,3 @@ function columnDefinition2(col) {
     throw new Error(`Unsupported column type: ${col.type}`);
 }
 
-function ciCompare(a, b) {
-    return a.localeCompare(b, undefined, {sensitivity: 'base'})
-}
-
-/**
- * Shuffles array in place. ES6 version
- * @param {Array} a items An array containing the items.
- */
-function shuffle(a) {
-    for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-}
