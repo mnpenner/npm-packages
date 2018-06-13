@@ -40,48 +40,52 @@ export default class Application {
                 if(!opt.key) opt.key = camelCase(opt.name);
                 if(opt.default !== undefined) {
                     opts[opt.key] = opt.default;
+                } else if(hasFlag(opt.value,InputOption.Array)) {
+                    opts[opt.key] = [];
+                } else if(hasFlag(opt.value,InputOption.None)) {
+                    opts[opt.key] = false;
                 }
                 longOpts.set(opt.name,opt);
                 for(const alias of toIter(opt.alias)) {
                     shortOpts.set(alias,opt);
                 }
             }
+        
+            
             for(let i=0; i<rawArgs.length; ++i) {
                 const arg = rawArgs[i];
                 if(arg === '--') {
                     args.push(...rawArgs.slice(i+1));
                     break;
                 }
+                const handleOpt = opt => {
+                    if(!opt) {
+                        throw new Error(`Unrecognized option: ${arg}`)
+                    }
+                    if(hasFlag(opt.value,InputOption.Required|InputOption.Array)) {
+                        const val = rawArgs[++i];
+                        if(val === undefined) {
+                            throw new Error(`Value is required for ${arg}`);
+                        }
+                        if(hasFlag(opt.value,InputOption.Array)) {
+                            if(opts[opt.key] === undefined) {
+                                opts[opt.key] = [val];
+                            } else {
+                                opts[opt.key].push(val);
+                            }
+                        } else {
+                            opts[opt.key] = val;
+                        }
+                    } else if(hasFlag(opt.value,InputOption.None)) {
+                        opts[opt.key] = true;
+                    }
+                }
                 if(arg === '-') {
                     args.push(process.stdin);
                 } else if(arg.startsWith('--')) {
-                    const optName = arg.slice(2);
-                    const opt = longOpts.get(optName);
-                    if(!opt) {
-                        throw new Error(`Unrecognized option: ${arg}`)
-                    }
-                    if((opt.value&InputOption.Required)===InputOption.Required) {
-                        if((opts[opt.key]=rawArgs[++i])===undefined) {
-                            throw new Error(`Value is required for ${arg}`);
-                        }
-                    }
-                    if((opt.value&InputOption.None)===InputOption.None) {
-                        opts[opt.key] = true;
-                    }
+                    handleOpt(longOpts.get(arg.slice(2)))
                 } else if(arg.startsWith('-')) {
-                    const optName = arg.slice(1);
-                    const opt = shortOpts.get(optName);
-                    if(!opt) {
-                        throw new Error(`Unrecognized option: ${arg}`)
-                    }
-                    if((opt.value&InputOption.Required)===InputOption.Required) {
-                        if((opts[opt.key]=rawArgs[++i])===undefined) {
-                            throw new Error(`Value is required for ${arg}`);
-                        }
-                    }
-                    if((opt.value&InputOption.None)===InputOption.None) {
-                        opts[opt.key] = true;
-                    }
+                    handleOpt(shortOpts.get(arg.slice(1)))
                 } else {
                     args.push(arg);
                 }
@@ -128,6 +132,10 @@ export default class Application {
             console.log(`  ${Chalk.green(cmd.name.padEnd(maxLength))}  ${cmd.description}`);
         }
     }
+}
+
+function hasFlag(val,flag) {
+    return (val&flag)!==0;
 }
 
 function sortBy(array, prop) {
