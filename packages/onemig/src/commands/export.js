@@ -8,6 +8,9 @@ import objHash from 'object-hash';
 import * as fs from '../util/fs';
 import {dbNameMap,dbNames} from '../napi';
 import {getStruct} from '../struct';
+import InputOption from '../console/InputOption';
+import Konsole from '../util/Konsole';
+import Path from 'path';
 // import conn from '../db';
 // import {Command} from '../console';
 
@@ -16,6 +19,15 @@ const FIND_DATE_FORMAT = 'ddd DD MMM YYYY HH:mm:ss'; // https://stackoverflow.co
 export default {
     name: "export",
     description: "Export the current database schema",
+    options: [
+        {
+            name: 'out',
+            alias: 'd',
+            description: "Output directory. Will overwrite any files.",
+            value: InputOption.Required,
+            default: 'out',
+        }
+    ],
     async execute(args, opts) {
         const conn = require('../db').default;
         
@@ -27,8 +39,12 @@ export default {
                 SELECT SCHEMA_NAME 'name' 
                 FROM information_schema.SCHEMATA 
                 WHERE SCHEMA_NAME IN (?)
-                    #LIMIT 100
+                    #LIMIT 10
                 `,[dbNames]);
+
+            const kon = new Konsole;
+            const spinners = '⣾⣽⣻⢿⡿⣟⣯⣷';
+            let si = 0;
             
             for await(const db of dbStream) {
                 const tblStream = conn.stream(`SELECT 
@@ -39,7 +55,8 @@ export default {
                         `, [db.name]);
 
                 for await(const tbl of tblStream) {
-                    dump(`${db.name}.${tbl.name}`);
+                    kon.rewrite(`${spinners[si]} ${db.name}.${tbl.name}`);
+                    si = (si+1)%spinners.length;
                     
                     const tblDef = await getStruct(db.name,tbl.name);
                     
@@ -58,13 +75,15 @@ export default {
                     }
                 }
             }
+            
+            kon.clear();
 
             await async.forEach(Object.keys(allTables), async tblName => {
                 let json = {
                     name: tblName,
                     versions: Object.values(allTables[tblName]),
                 };
-                const filename = `out/tables/${tblName}.json`;
+                const filename = Path.join(opts.out,`tables/${tblName}.json`);
                 await fs.writeText(filename, JSON.stringify(json, null, 4));
                 console.log(`wrote ${Chalk.underline(filename)}`);
             });
