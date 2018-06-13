@@ -10,7 +10,7 @@ import DatabaseWrapper from './mysql/DatabaseWrapper';
 
 
 export default new DatabaseWrapper({
-    host: dbVars.host,
+    host: 'dev3',
     user: dbVars.login,
     // database: dbVars.name,
     password: dbVars.password,

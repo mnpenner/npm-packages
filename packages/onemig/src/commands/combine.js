@@ -19,7 +19,6 @@ import * as fs from '../util/fs';
 import {addMany} from '../util/set';
 
 
-
 export default {
     name: "combine",
     description: "Combine and reformat schemas",

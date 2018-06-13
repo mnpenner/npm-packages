@@ -9,7 +9,7 @@ DISTDIRS := $(sort $(dir $(DISTS)))
 # usage: make CMD=diff
 
 run: build
-	node -r source-map-support/register dist/bin $(CMD) 2> warnings.log
+	node -r source-map-support/register dist/bin $(CMD) #2> warnings.log
 
 build: $(DISTS) yarn.lock
 

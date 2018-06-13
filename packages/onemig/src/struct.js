@@ -300,9 +300,9 @@ export async function getStruct(dbName, tblName) {
                 }
             }
 
-            if(!idxMap.PRIMARY) {
-                process.stderr.write(`${dbName}.${tblName} does not have a PRIMARY key\n`);
-            }
+            // if(!idxMap.PRIMARY) {
+            //     process.stderr.write(`${dbName}.${tblName} does not have a PRIMARY key\n`);
+            // }
 
             tblDef.indexes = sortIndexes(Object.values(idxMap));
         },
@@ -352,7 +352,7 @@ export async function getStruct(dbName, tblName) {
                             // if FK points to same GSID but different app, use special syntax
                             fkDef.refDatabase = {$app: thatDb[1]};
                         } else {
-                            process.stderr.write(`Foreign key ${dbName}.${tblName}.${fk.constraintName} on ${fk.columnName} points to another database ${fk.refDatabase}`);
+                            // process.stderr.write(`Foreign key ${dbName}.${tblName}.${fk.constraintName} on ${fk.columnName} points to another database ${fk.refDatabase}`);
                             fkDef.refDatabase = fk.refDatabase;
                         }
                     }

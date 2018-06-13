@@ -216,7 +216,7 @@ function normalizeColumn(col,tableCollation) {
         case 'bit': {
             if(col.length === undefined) col.length = 1;
             if(isNumber(col.default)) {
-                return `b'${dec2bin(col.default)}'`;
+                col.default = `b'${dec2bin(col.default)}'`;
             }
             // if(isString(col.default)) {
             //     let [match, bits] = /^b'([01]+)'$/.exec(col.default);
@@ -233,6 +233,11 @@ function normalizeColumn(col,tableCollation) {
         case 'mediumtext':
         case 'longtext': {
             if(!col.collation) col.collation = tableCollation;
+        } break;
+        case 'time':
+        case 'datetime':
+        case 'timestamp': {
+            if(col.fsp === 0) delete col.fsp;
         } break;
     }
 }
@@ -272,6 +277,8 @@ function indexDefinition(idx) {
             return `INDEX ${db.escapeId(idx.name)} ${getIndexColumnsStr(idx.columns)}`;
         case 'UNIQUE':
             return `UNIQUE KEY ${db.escapeId(idx.name)} ${getIndexColumnsStr(idx.columns)}`;
+        case 'FULLTEXT':
+            return `FULLTEXT KEY ${db.escapeId(idx.name)} ${getIndexColumnsStr(idx.columns)}`;
     }
     throw new Error(`Unsupported index type: ${idx.type}`);
 }
@@ -646,7 +653,7 @@ function indexDiffToSql(diff) {
     // dump(diff);process.exit(1);
     const lines = [];
     for(let idx of diff.dropped) {
-        lines.push(`DROP INDEX ${db.escapeId(idx.name)}`) // I *think* this works fine for PRIMARY keys too!
+        lines.push(`DROP INDEX ${db.escapeId(idx)}`) // I *think* this works fine for PRIMARY keys too!
     }
     for(let idx of diff.changed) {
         lines.push(`DROP INDEX ${db.escapeId(idx.oldName)}`)
@@ -727,6 +734,7 @@ function columnDefinition(col) {
 }
 
 function columnDefinition2(col) {
+    // https://dev.mysql.com/doc/refman/8.0/en/create-table.html
     switch(col.type) {
         case 'tinyint':
         case 'smallint':
@@ -770,14 +778,19 @@ function columnDefinition2(col) {
         case 'blob':
         case 'mediumblob':
         case 'longblob':
+        case 'date':
             return '';
         case 'year':
             if(col.width) return `(${col.width})`;
             return '';
         case 'enum':
         case 'set':
-            
             return `(${col.values.map(c => db.escapeValue(c)).join(',')})`;
+        case 'time':
+        case 'datetime':
+        case 'timestamp':
+            if(col.fsp) return `(${col.fsp})`;
+            return '';
     }
     throw new Error(`Unsupported column type: ${col.type}`);
 }

@@ -114,7 +114,13 @@ const columnTypes = [
     makeColumn('time', {
         default: {
             type: 'string',
-            pattern: String.raw`^\d{2}:\d{2}:\d{2}$`,
+            pattern: String.raw`^\d{2}:\d{2}:\d{2}(.d{0,6})?$`,
+        },
+        fsp: { // fractional seconds part
+            type: 'integer',
+            minimum: 0,
+            maximum: 6,
+            default: 0,
         }
     }),
     makeColumn(['datetime', 'timestamp'], {
@@ -122,8 +128,14 @@ const columnTypes = [
             type: 'string',
             anyOf: [
                 {const: 'CURRENT_TIMESTAMP'},
-                {pattern: String.raw`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$`}
+                {pattern: String.raw`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{0,6})?$`}
             ],
+        },
+        fsp: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 6,
+            default: 0,
         }
     }),
     makeColumn(['tinyblob', 'blob', 'mediumblob', 'longblob'], {
