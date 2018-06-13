@@ -55,3 +55,7 @@ export function parallel(...funcs) {
 function call(fn, ...args) {
     return typeof fn === 'function' ? fn.call(this, ...args) : fn;
 }
+
+export function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
