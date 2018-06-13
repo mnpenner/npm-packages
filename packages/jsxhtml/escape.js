@@ -19,6 +19,7 @@ export function attrName(string) {
 
 // https://www.w3.org/TR/html-markup/syntax.html#attr-value-double-quoted
 export function attrValue(string) {
+    // TODO: if value is an anonymous function, should we extract it, give it a name and invoke it like <script>function $a(ev){...}</script><button onclick="return $a(event);">
     return `"${String(string).replace(/"/g, entity)}"`;
 }
 
