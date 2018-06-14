@@ -20,6 +20,11 @@ export default class DatabaseWrapper {
     query(sql, params) {
         return new ResultWrapper(this.pool.query(sql, params));
     }
+
+    async exec(sql, params) {
+        const [res] = await this.pool.query(sql, params);
+        return res;
+    }
     
     escapeValue(value) {
         return this.pool.escape(value);

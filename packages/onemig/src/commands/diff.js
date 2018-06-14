@@ -38,6 +38,11 @@ export default {
             description: "Source directory of struct JSON relative to current working directory",
             value: InputOption.Required,
             default: 'out',
+        },
+        {
+            name: 'run',
+            description: "Actually RUN the SQL. Might want to make a backup first.",
+            value: InputOption.None,
         }
     ],
     async execute(args, opts) {
@@ -98,8 +103,12 @@ export default {
                     
                     if(!currentStruct) {
                         const createTableSql = getCreateTableSql(dbName,tbl.name, desiredStruct);
+                        
                         if(createTableSql) {
                             kon.writeLn(highlight(createTableSql, {language: 'sql', ignoreIllegals: true}));
+                            if(opts.run) {
+                                await db.exec(createTableSql);
+                            }
                         }
                     } else {
                         normalizeStruct(currentStruct, defaultStorageEngine, defaultCollation, dbName)
@@ -114,6 +123,7 @@ export default {
                             // dump(currentStruct);
                             // console.log('=== DESIRED ===');
                             // dump(desiredStruct);
+                            // process.exit(1);
                             // const diff = diffColumns(currentStruct.columns, desiredStruct.columns);
                             // dump('DIFF',diff);
                             //
@@ -123,6 +133,9 @@ export default {
                             const alterTableSql = getAlterTableSql(dbName,tbl.name, currentStruct, desiredStruct);
                             if(alterTableSql) {
                                 kon.writeLn(highlight(alterTableSql, {language: 'sql', ignoreIllegals: true}));
+                                if(opts.run) {
+                                    await db.exec(alterTableSql);
+                                }
                             }
 
 
@@ -267,7 +280,15 @@ function getCreateColumns(columns) {
     return columns.map(col => db.escapeId(col.name)+' '+columnDefinition(col));
 }
 
+
 function indexDefinition(idx) {
+    let sql = indexDefinition2(idx);
+    if(idx.comment) {
+        sql += ` COMMENT ${db.escapeValue(idx.comment)}`;
+    }
+    return sql;
+}
+function indexDefinition2(idx) {
     switch(idx.type) {
         case 'PRIMARY':
             return `PRIMARY KEY ${getIndexColumnsStr(idx.columns)}`;
