@@ -91,7 +91,11 @@ export default class Application {
                 }
             }
             // dump(cmd.name,args,opts);
-            await cmd.execute(args, opts);
+            const exitCode = await cmd.execute(args, opts);
+            
+            if(Number.isInteger(exitCode)) {
+                process.exit(exitCode);
+            }
         }
     }
     

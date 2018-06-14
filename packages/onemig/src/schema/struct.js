@@ -1,10 +1,10 @@
 import Chalk from 'chalk';
-import dump from './dump';
-import * as async from './util/async';
+import dump from '../dump';
+import * as async from '../util/async';
 import objHash from 'object-hash';
-import {dbNameMap} from './napi';
-import conn from './db';
-import {memoized} from './util/func';
+import {dbNameMap} from '../napi';
+import conn from '../db';
+import {memoized} from '../util/func';
 
 
 export const getDefaultStorageEngine = memoized(() => conn.query('select @@default_storage_engine').fetchValue());

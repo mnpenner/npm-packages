@@ -7,7 +7,7 @@ import * as async from '../util/async';
 import objHash from 'object-hash';
 import * as fs from '../util/fs';
 import {dbNameMap,dbNames} from '../napi';
-import {getStruct} from '../struct';
+import {getStruct} from '../schema/struct';
 import InputOption from '../console/InputOption';
 import Konsole from '../util/Konsole';
 import Path from 'path';

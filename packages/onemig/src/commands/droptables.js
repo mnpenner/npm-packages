@@ -10,7 +10,7 @@ import napi,{dbNameMap,dbNames} from '../napi';
 import {InputOption} from '../console';
 import Path from 'path';
 import db from '../db';
-import {getDatabaseCollation, getDefaultStorageEngine, getStruct} from '../struct';
+import {getDatabaseCollation, getDefaultStorageEngine, getStruct} from '../schema/struct';
 import ProgressBar from 'ascii-progress';
 import Ajv from 'ajv';
 import tableSchema from '../table.schema.js';

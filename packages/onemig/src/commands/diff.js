@@ -5,7 +5,7 @@ import napi, {dbNameMap} from '../napi';
 import {InputOption} from '../console';
 import Path from 'path';
 import db from '../db';
-import {getDatabaseCollation, getDefaultStorageEngine, getStruct} from '../struct';
+import {getDatabaseCollation, getDefaultStorageEngine, getStruct} from '../schema/struct';
 import Ajv from 'ajv';
 import tableSchema from '../table.schema.js';
 import {omit} from '../util/object';
@@ -13,6 +13,7 @@ import {isNumber, isObject, isPlainObject} from '../util/types';
 import {highlight} from 'cli-highlight';
 import {ciCompare, toIter} from '../util/array';
 import Konsole from '../util/Konsole';
+import Validator from '../schema/validator';
 // import conn from '../db';
 // import {Command} from '../console';
 
@@ -61,12 +62,8 @@ export default {
         
         const defaultStorageEngine = await getDefaultStorageEngine();
         
-        const ajv = new Ajv({
-            allErrors: true,
-            $data: true,
-            extendRefs: 'fail',
-        });
-        ajv.addSchema(tableSchema,'root');
+        
+        const validator = Validator();
         
         // console.log(JSON.stringify(tableSchema,null,4));process.exit(0);
         
@@ -94,10 +91,12 @@ export default {
         for(let filename of tableFiles) {
             ++di;
             const tbl = await readJson(filename);
-            if(!ajv.validate('root#/defs/Table',tbl)) {
+            
+            const ajvErrors = validator.validate(tbl);
+            if(ajvErrors) {
                 console.log(filename);
                 // console.log(ajv.errorsText());
-                dump(ajv.errors);
+                dump(ajvErrors);
                 break;
             }
             // console.log(`${filename} is valid!!!!`);
@@ -117,7 +116,8 @@ export default {
                     
                     if(!currentStruct) {
                         const createTableSql = getCreateTableSql(dbName,tbl.name, desiredStruct);
-                        
+                        // TODO: stealth audit
+                        // TODO: seeds
                         if(createTableSql) {
                             kon.writeLn(highlight(createTableSql, {language: 'sql', ignoreIllegals: true}));
                             if(opts.run) {

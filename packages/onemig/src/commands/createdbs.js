@@ -5,7 +5,7 @@ import napi, {dbNameMap} from '../napi';
 import {InputOption} from '../console';
 import Path from 'path';
 import db from '../db';
-import {getDatabaseCollation, getDefaultStorageEngine, getStruct} from '../struct';
+import {getDatabaseCollation, getDefaultStorageEngine, getStruct} from '../schema/struct';
 import Ajv from 'ajv';
 import tableSchema from '../table.schema.js';
 import {omit} from '../util/object';
@@ -28,7 +28,7 @@ export default {
     ],
     async execute(args, opts) {
         for(const [gsid,agency] of Object.entries(napi.data.database.agency)) {
-            const passwordHash = mysqlHash(napi.decrypt(agency.password));
+            const passwordHash = mysqlPassword(napi.decrypt(agency.password));
             
             for(const [appId,dbName] of Object.entries(agency.db_names)) {
                 const sql = `CREATE DATABASE IF NOT EXISTS ${conn.escapeId(dbName)};\nGRANT ALL PRIVILEGES ON ${conn.escapeId(dbName)}.* TO ${db.escapeValue(agency.login)}@'localhost' IDENTIFIED BY PASSWORD ${db.escapeValue(passwordHash)};`;
@@ -39,11 +39,10 @@ export default {
     }
 }
 
-function mysqlHash(data) {
-    const hash1 = Crypto.createHash('sha1');
-    hash1.update(data);
-    const data2 = hash1.digest();
-    const hash2 = Crypto.createHash('sha1');
-    hash2.update(data2);
-    return '*' + hash2.digest('hex').toUpperCase();
+function sha1(data, encoding) {
+    return Crypto.createHash('sha1').update(data).digest(encoding);
+}
+
+function mysqlPassword(data) {
+    return  '*' + sha1(sha1(data),'hex').toUpperCase();
 }

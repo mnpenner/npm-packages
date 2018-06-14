@@ -5,7 +5,7 @@ import napi, {dbNameMap} from '../napi';
 import {InputOption} from '../console';
 import Path from 'path';
 import db from '../db';
-import {getDatabaseCollation, getDefaultStorageEngine, getStruct} from '../struct';
+import {getDatabaseCollation, getDefaultStorageEngine, getStruct} from '../schema/struct';
 import Ajv from 'ajv';
 import tableSchema from '../table.schema.js';
 import {omit} from '../util/object';
