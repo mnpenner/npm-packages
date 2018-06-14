@@ -72,6 +72,8 @@ export default {
         
         // const validate = ajv.getSchema('#/definitions/Table');
         // const validate = ajv.compile(require(`../table.schema.json`));
+        // see also: http://shapecatcher.com/unicode/block/Tai_Xuan_Jing_Symbols
+        // http://shapecatcher.com/unicode/block/Yijing_Hexagram_Symbols
         const spinners = '⣾⣽⣻⢿⡿⣟⣯⣷';
         let si = 0;
         const kon = new Konsole;
@@ -659,18 +661,19 @@ function fkDiffToSql(diff) {
     // dump(diff);process.exit(1);
     const lines = [];
     for(let fk of diff.dropped) {
-        lines.push(`DROP CONSTRAINT ${db.escapeId(fk)}`) 
+        // has to be DROP FOREIGN KEY -- https://stackoverflow.com/a/14122155/65387
+        lines.push(`DROP FOREIGN KEY ${db.escapeId(fk)}`) 
     }
     for(let fk of diff.changed) {
-        lines.push(`DROP CONSTRAINT ${db.escapeId(fk.oldName)}`)
+        lines.push(`DROP FOREIGN KEY ${db.escapeId(fk.oldName)}`)
         lines.push(`ADD ${fkDef(fk)}`)
     }
     for(let fk of diff.modified) {
-        lines.push(`DROP CONSTRAINT ${db.escapeId(fk.name)}`)
+        lines.push(`DROP FOREIGN KEY ${db.escapeId(fk.name)}`)
         lines.push(`ADD ${fkDef(fk)}`)
     }
     for(let fk of diff.renamed) {
-        lines.push(`RENAME CONSTRAINT ${db.escapeId(fk.oldName)} TO ${db.escapeId(fk.newName)}`)
+        lines.push(`RENAME FOREIGN KEY ${db.escapeId(fk.oldName)} TO ${db.escapeId(fk.newName)}`)
     }
     for(let fk of diff.added) {
         lines.push(`ADD ${fkDef(fk)}`)
