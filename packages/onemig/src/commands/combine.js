@@ -43,6 +43,8 @@ export default {
         const kon = new Konsole;
         const allTables = Object.create(null);
         
+        // TODO: check if the same table for the same database was defined multiple times but with a different definition...
+        
         for(const inputDir of opts.input) {
             const tableFiles = (await readDir(Path.join(inputDir,'tables'))).filter(f => f.endsWith('.json'));
             for(let filename of tableFiles) {

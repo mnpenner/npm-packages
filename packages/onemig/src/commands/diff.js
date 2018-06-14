@@ -295,7 +295,7 @@ function indexDefinition2(idx) {
         case 'INDEX':
         case 'KEY':
         case 'BTREE':
-            return `INDEX ${db.escapeId(idx.name)} ${getIndexColumnsStr(idx.columns)}`;
+            return `KEY ${db.escapeId(idx.name)} ${getIndexColumnsStr(idx.columns)}`;
         case 'UNIQUE':
             return `UNIQUE KEY ${db.escapeId(idx.name)} ${getIndexColumnsStr(idx.columns)}`;
         case 'FULLTEXT':
@@ -309,7 +309,15 @@ function getCreateIndexes(indexes) {
 }
 
 function fkDef(fk) {
-    let sql = `FOREIGN KEY ${db.escapeId(fk.name)} ${getForeignKeyColumnsStr(fk.columns)} REFERENCES `;
+    let sql = fkDef2(fk);
+    if(fk.comment) {
+        sql += ` COMMENT ${db.escapeValue(fk.comment)}`;
+    }
+    return sql;
+}
+
+function fkDef2(fk) {
+    let sql = `CONSTRAINT ${db.escapeId(fk.name)} FOREIGN KEY ${getForeignKeyColumnsStr(fk.columns)} REFERENCES `;
     if(fk.refDatabase) {
         sql += db.escapeId(fk.refDatabase)+'.';
     }
@@ -651,18 +659,18 @@ function fkDiffToSql(diff) {
     // dump(diff);process.exit(1);
     const lines = [];
     for(let fk of diff.dropped) {
-        lines.push(`DROP FOREIGN KEY ${db.escapeId(fk.name)}`) // I *think* this works fine for PRIMARY keys too!
+        lines.push(`DROP CONSTRAINT ${db.escapeId(fk)}`) 
     }
     for(let fk of diff.changed) {
-        lines.push(`DROP FOREIGN KEY ${db.escapeId(fk.oldName)}`)
+        lines.push(`DROP CONSTRAINT ${db.escapeId(fk.oldName)}`)
         lines.push(`ADD ${fkDef(fk)}`)
     }
     for(let fk of diff.modified) {
-        lines.push(`DROP FOREIGN KEY ${db.escapeId(fk.name)}`)
+        lines.push(`DROP CONSTRAINT ${db.escapeId(fk.name)}`)
         lines.push(`ADD ${fkDef(fk)}`)
     }
     for(let fk of diff.renamed) {
-        lines.push(`RENAME FOREIGN KEY ${db.escapeId(fk.oldName)} TO ${db.escapeId(fk.newName)}`)
+        lines.push(`RENAME CONSTRAINT ${db.escapeId(fk.oldName)} TO ${db.escapeId(fk.newName)}`)
     }
     for(let fk of diff.added) {
         lines.push(`ADD ${fkDef(fk)}`)

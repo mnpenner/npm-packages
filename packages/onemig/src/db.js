@@ -25,12 +25,13 @@ export default new DatabaseWrapper({
         }
         return next();
     },
+    foreignKeyChecks: false, // must be disabled because the tables might not be created in the correct order... and even if we could resolve a dependency tree, there's still the chance there are circular references.
     sqlMode: [
         'ONLY_FULL_GROUP_BY',
         'STRICT_TRANS_TABLES',
         'STRICT_ALL_TABLES',
         'NO_ZERO_IN_DATE',
-        'NO_ZERO_DATE',
+        'NO_ZERO_DATE', // apparently this is used.... wx_cldsl_pcs.fw_doc_ver_date
         'ERROR_FOR_DIVISION_BY_ZERO',
         'NO_AUTO_CREATE_USER',
         'NO_ENGINE_SUBSTITUTION',

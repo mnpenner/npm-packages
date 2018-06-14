@@ -3,16 +3,25 @@ import ResultWrapper from './ResultWrapper';
 import dump from '../dump';
 import fromEmitter from '@async-generators/from-emitter';
 
+function escapeIdString(id) {
+    return '`' + String(id).replace(/`/g,'``') + '`';
+}
+
 export default class DatabaseWrapper {
 
-    constructor({sqlMode, ...options}) {
+    constructor({sqlMode, foreignKeyChecks, ...options}) {
         this.pool = MySql.createPool(options);
-        if(sqlMode) {
+        if(sqlMode != null || foreignKeyChecks != null) {
             if(Array.isArray(sqlMode)) {
                 sqlMode = sqlMode.join(',');
             }
             this.pool.on('connection', conn => {
-                conn.query(`set sql_mode=?`, [sqlMode]);
+                if(sqlMode != null) {
+                    conn.query(`SET sql_mode=?`, [sqlMode]);
+                }
+                if(foreignKeyChecks != null) {
+                    conn.query(`SET foreign_key_checks=?`, [foreignKeyChecks ? 1 : 0]);
+                }
             });
         }
     }
@@ -31,7 +40,10 @@ export default class DatabaseWrapper {
     }
     
     escapeId(id) {
-        return this.pool.escapeId(id);
+        if(Array.isArray(id)) {
+            return id.map(escapeIdString).join('.')
+        }
+        return escapeIdString(id);
     }
     
     stream(sql, params) {
