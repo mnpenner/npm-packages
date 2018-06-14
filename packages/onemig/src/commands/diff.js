@@ -49,7 +49,7 @@ export default {
         const tableFiles = (await readDir(Path.join(opts.dir,'tables'))).filter(f => f.endsWith('.json'));
         tableFiles.sort(ciCompare);
         // shuffle(tableFiles);
-        // const tableFiles = ['out/tables/outreach_report_consumption_drugs_methods.json'];
+        // const tableFiles = ['out/tables/fw_client_doc_ver.json'];
         // const allTables = Object.create(null);
         
         // const pb = new ProgressBar({
@@ -74,7 +74,19 @@ export default {
         // const validate = ajv.compile(require(`../table.schema.json`));
         // see also: http://shapecatcher.com/unicode/block/Tai_Xuan_Jing_Symbols
         // http://shapecatcher.com/unicode/block/Yijing_Hexagram_Symbols
-        const spinners = '⣾⣽⣻⢿⡿⣟⣯⣷';
+        // omg yes: https://github.com/sindresorhus/cli-spinners/blob/HEAD/spinners.json
+        const spinners = [
+            "⠋",
+            "⠙",
+            "⠹",
+            "⠸",
+            "⠼",
+            "⠴",
+            "⠦",
+            "⠧",
+            "⠇",
+            "⠏"
+        ];
         let si = 0;
         const kon = new Konsole;
         let di = -1;
@@ -190,8 +202,9 @@ function normalizeIndex(idx) {
 
 function normalizeForeignKey(fk,dbName) {
     // https://dev.mysql.com/doc/refman/5.6/en/create-table-foreign-keys.html -- "For an ON DELETE or ON UPDATE that is not specified, the default action is always RESTRICT"
-    if(!fk.onDelete) fk.onDelete = 'RESTRICT';
-    if(!fk.onUpdate) fk.onDelete = 'RESTRICT';
+    // NO ACTION: A keyword from standard SQL. In MySQL, equivalent to RESTRICT. The MySQL Server rejects the delete or update operation for the parent table if there is a related foreign key value in the referenced table. Some database systems have deferred checks, and NO ACTION is a deferred check. In MySQL, foreign key constraints are checked immediately, so NO ACTION is the same as RESTRICT."
+    if(!fk.onDelete || fk.onDelete === 'NO ACTION') fk.onDelete = 'RESTRICT';
+    if(!fk.onUpdate || fk.onUpdate === 'NO ACTION') fk.onUpdate = 'RESTRICT';
     if(fk.refDatabase) {
         fk.refDatabase = resolveDatabase(fk.refDatabase,dbName);
     }
@@ -659,6 +672,7 @@ function getColumnDiff(before,after) {
 
 function fkDiffToSql(diff) {
     // dump(diff);process.exit(1);
+    // FIXME/workaround: MySQL still hasn't fixed this friggin bug from 2005 https://bugs.mysql.com/bug.php?id=15045
     const lines = [];
     for(let fk of diff.dropped) {
         // has to be DROP FOREIGN KEY -- https://stackoverflow.com/a/14122155/65387
