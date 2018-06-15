@@ -65,7 +65,10 @@ export default {
                 }
             }
         }
-        
+
+        // TODO: warnings
+        // process.stderr.write(`Foreign key ${dbName}.${tblName}.${fk.constraintName} on ${fk.columnName} points to another database ${fk.refDatabase}`);
+        // process.stderr.write(`${dbName}.${tblName} does not have a PRIMARY key\n`);
         if(errorCount > 0) {
             console.log(`Found ${errorCount} errors`);
             return 1;
