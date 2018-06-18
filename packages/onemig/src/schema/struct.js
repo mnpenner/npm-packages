@@ -63,9 +63,9 @@ export async function getStruct(dbName, tblName) {
     if(tbl.comment.length) {
         tblDef.options.comment = tbl.comment;
     }
-    if(tbl.collation !== dbCollation) {
+    // if(tbl.collation !== dbCollation) {
         tblDef.options.collation = tbl.collation;
-    }
+    // }
     // if(!(
     //     (tbl.engine === 'InnoDB' && tbl.rowFormat === 'Compact')
     //     || (tbl.engine === 'MyISAM' && tbl.rowFormat === 'Dynamic')
@@ -282,7 +282,7 @@ export async function getStruct(dbName, tblName) {
                         idxDef.type = 'PRIMARY';
                     } else if(idx.type !== 'BTREE') {
                         idxDef.type = idx.type;
-                    } else if(idx.nonUnique == 0) { // "0" is a string in MySQL 8 but a proper integer in MySQL <= 5.7 https://bugs.mysql.com/bug.php?id=89793 fixed in 8.0.11
+                    } else if(idx.nonUnique === 0) {
                         idxDef.type = 'UNIQUE';
                     } else {
                         idxDef.type = 'INDEX';

@@ -28,12 +28,22 @@ export default {
     ],
     async execute(args, opts) {
         for(const [gsid,agency] of Object.entries(napi.data.database.agency)) {
-            const passwordHash = mysqlPassword(napi.decrypt(agency.password));
+            const plainTextPassword = napi.decrypt(agency.password);
+            // const passwordHash = mysqlPassword(plainTextPassword);
+            // const passwordHash = await db.query(`SELECT PASSWORD(?)`,[plainTextPassword]).fetchValue();
+            // const createUserSql = `CREATE USER ${db.escapeValue(agency.login)} IDENTIFIED WITH mysql_native_password BY ${db.escapeValue(passwordHash)};`;
+            const createUserSql = `CREATE USER IF NOT EXISTS ${db.escapeValue(agency.login)} IDENTIFIED BY ${db.escapeValue(plainTextPassword)};`;
+            console.log(highlight(createUserSql, {language: 'sql', ignoreIllegals: true}));
             
             for(const [appId,dbName] of Object.entries(agency.db_names)) {
-                const sql = `CREATE DATABASE IF NOT EXISTS ${conn.escapeId(dbName)};\nGRANT ALL PRIVILEGES ON ${conn.escapeId(dbName)}.* TO ${db.escapeValue(agency.login)}@'localhost' IDENTIFIED BY PASSWORD ${db.escapeValue(passwordHash)};`;
+                const sql = [
+                    `CREATE DATABASE IF NOT EXISTS ${conn.escapeId(dbName)}`,
+                    `GRANT ALL PRIVILEGES ON ${conn.escapeId(dbName)}.* TO ${db.escapeValue(agency.login)}@'localhost'`,
+                ].join(';\n')+';';
                 console.log(highlight(sql, {language: 'sql', ignoreIllegals: true}));
             }
+            
+            console.log();
         }
         console.log(highlight(`FLUSH PRIVILEGES;`, {language: 'sql', ignoreIllegals: true}));
     }
