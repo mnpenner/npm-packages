@@ -11,7 +11,7 @@ import DatabaseWrapper from './mysql/DatabaseWrapper';
 // dump(dbVars.password);process.exit(0);
 
 export default new DatabaseWrapper({
-    host: 'dev3',
+    host: 'dbVars.host',
     user: dbVars.login,
     // database: dbVars.name,
     password: dbVars.password,
@@ -34,7 +34,7 @@ export default new DatabaseWrapper({
         'NO_ZERO_IN_DATE',
         'NO_ZERO_DATE', // apparently this is used.... wx_cldsl_pcs.fw_doc_ver_date
         'ERROR_FOR_DIVISION_BY_ZERO',
-        // 'NO_AUTO_CREATE_USER',
+        // 'NO_AUTO_CREATE_USER', // not allowed in MySQL 8
         'NO_ENGINE_SUBSTITUTION',
         'NO_UNSIGNED_SUBTRACTION',
         'PAD_CHAR_TO_FULL_LENGTH',

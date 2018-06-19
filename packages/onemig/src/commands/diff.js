@@ -35,10 +35,16 @@ export default {
     options: [
         {
             name: 'dir',
-            alias: 'd',
+            // alias: 'd',
             description: "Source directory of struct JSON relative to current working directory",
             value: InputOption.Required,
             default: 'out',
+        },
+        {
+            name: 'drop-columns', // TODO: implement
+            // alias: 'd',
+            description: "Drop columns that are missing from the JSON schemas",
+            value: InputOption.None,
         },
         {
             name: 'run',
