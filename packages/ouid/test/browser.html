@@ -58,7 +58,7 @@
         const mask = (1n << 64n)-1n;
         const right = i & mask;
         const mix = left ^ right;
-        return mix.toString(32).padStart(13,'0') + ' ' + (mask-mix).toString(32).padStart(13,'0');
+        return mix.toString(32).padStart(13,'0') + ' ' + BigInt.asUintN(64,~mix).toString(32).padStart(13,'0');
     }).join("\n");
     output += "\n\ntime:\n"+uuids.map(extractTime).join("\n");
     output += "\n\ncompact:\n"+uuids.map(compact).join("\n");
