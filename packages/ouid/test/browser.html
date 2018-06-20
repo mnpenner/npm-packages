@@ -10,7 +10,21 @@
     }
     
     function buf2bigint(buffer) {
-        return Array.prototype.reduce.call(new Uint32Array(buffer), (acc,cur,idx) => (acc<<32n)+BigInt(cur), 0n);
+        const dv = new DataView(buffer);
+        return (dv.getBigUint64(0,false)<<64n) | dv.getBigUint64(8,false);
+    }
+
+    function extractTime(buffer) {
+        const dv = new DataView(buffer);
+        return dv.getBigUint64(0,false)/1000000000n;
+    }
+
+    function compact(buffer) {
+        const dv = new DataView(buffer);
+        const time = dv.getBigUint64(0,false);
+        const rand = dv.getBigUint64(8,false);
+        let out = ((time-1529514038832000000n)<<64n | rand);
+        return out.toString(36);
     }
     
     const uuids = [
@@ -35,16 +49,19 @@
     
     const bigInts = uuids.map(buf => buf2bigint(buf));
 
-    output += "\n\n"+bigInts.join("\n");
-    output += "\n\n"+bigInts.map(i => i.toString(16)).join("\n");
-    output += "\n\n"+bigInts.map(i => i.toString(32)).join("\n");
-    output += "\n\n"+bigInts.map(i => {
+    output += "\n\nbigints:\n"+bigInts.join("\n");
+    output += "\n\nbase 16:\n"+bigInts.map(i => i.toString(16)).join("\n");
+    output += "\n\nbase 36:\n"+bigInts.map(i => i.toString(36)).join("\n");
+    output += "\n\nbase 32:\n"+bigInts.map(i => i.toString(32)).join("\n");
+    output += "\n\nbase 32 mixed:\n"+bigInts.map(i => {
         const left = i >> 64n;
         const mask = (1n << 64n)-1n;
         const right = i & mask;
         const mix = left ^ right;
         return mix.toString(32).padStart(13,'0') + ' ' + (mask-mix).toString(32).padStart(13,'0');
     }).join("\n");
+    output += "\n\ntime:\n"+uuids.map(extractTime).join("\n");
+    output += "\n\ncompact:\n"+uuids.map(compact).join("\n");
     
     document.getElementById('out').innerHTML = output;
 </script>
