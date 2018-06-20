@@ -3,13 +3,17 @@
 <script type="module">
     import uuid from '/dist/browser.js';
     
-    console.log(new Uint8Array(uuid()));
+    // console.log(new Uint8Array(uuid()));
 
     function buf2hex(buffer) { // buffer is an ArrayBuffer; 
         return Array.prototype.map.call(new Uint8Array(buffer), x => ('0' + x.toString(16)).slice(-2)).join('');
     }
     
-    document.getElementById('out').innerHTML = [
+    function buf2bigint(buffer) {
+        return Array.prototype.reduce.call(new Uint32Array(buffer), (acc,cur,idx) => (acc<<32n)+BigInt(cur), 0n);
+    }
+    
+    const uuids = [
         uuid(),
         uuid(),
         uuid(),
@@ -20,8 +24,27 @@
         uuid(),
         uuid(),
         uuid(),
-    ].map(buf => {
+    ];
+    
+    // console.log(uuids[0],new Uint32Array(uuids[0]),buf2bigint(uuids[0]))
+    
+    let output = uuids.map(buf => {
         let hex = buf2hex(buf);
         return `${hex.slice(0,16)} ${hex.slice(16)}`;
     }).join("\n");
+    
+    const bigInts = uuids.map(buf => buf2bigint(buf));
+
+    output += "\n\n"+bigInts.join("\n");
+    output += "\n\n"+bigInts.map(i => i.toString(16)).join("\n");
+    output += "\n\n"+bigInts.map(i => i.toString(32)).join("\n");
+    output += "\n\n"+bigInts.map(i => {
+        const left = i >> 64n;
+        const mask = (1n << 64n)-1n;
+        const right = i & mask;
+        const mix = left ^ right;
+        return mix.toString(32).padStart(13,'0') + ' ' + (mask-mix).toString(32).padStart(13,'0');
+    }).join("\n");
+    
+    document.getElementById('out').innerHTML = output;
 </script>
