@@ -173,10 +173,10 @@ export default {
     }
 }
 
-function trimZeros(x) {
+function normalizeNumber(x) {
     const str = String(x).replace(/^0+(?=\d)/,'');
     if(str.includes('.')) {
-        return str.replace(/\.?0*$/,'');
+        return str.replace(/\.?0*$/,'') || '0';
     }
     return str;
 }
@@ -226,7 +226,7 @@ function normalizeColumn(col,tableCollation) {
                 delete col.zerofill;
                 col.unsigned = !!col.unsigned;
             }
-            if(col.default != null) col.default = trimZeros(col.default);
+            if(col.default != null) col.default = normalizeNumber(col.default);
         } break;
         case 'float':
         case 'decimal':
@@ -237,7 +237,7 @@ function normalizeColumn(col,tableCollation) {
                 col.zerofill = false;
                 col.unsigned = !!col.unsigned;
             }
-            if(col.default != null) col.default = trimZeros(col.default);
+            if(col.default != null) col.default = normalizeNumber(col.default);
         } break;
         case 'bit': {
             if(col.length === undefined) col.length = 1;
