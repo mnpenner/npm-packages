@@ -51,7 +51,5 @@ data/servers.json: $(wildcard ~/Projects/server_config/napi/host/*.json)
 	jq 'select (.roles[]? | contains("mysql")) | {(input_filename | gsub(".*/|\\.json$$";"")): .}' $^ | jq -s 'add' > $@
 
 dump: build
-	node -r source-map-support/register dist/bin export -h $(HOST) -o ~/.onemig/$(HOST)
-	(cd ~/.onemig && hg addremove "$(HOST)")
-	(cd ~/.onemig && hg ci -m "Updated $(HOST)")
-	(cd ~/.onemig && hg push)
+	node -r source-map-support/register dist/bin export -h "$(HOST)" -o ~/.onemig/$(HOST)
+	cd ~/.onemig && hg addremove "$(HOST)" && hg ci -m "Updated $(HOST)" "$(HOST)" && hg push

@@ -57,9 +57,9 @@ export async function getStruct(conn, dbName, tblName) {
         foreignKeys: [],
     };
 
-    if(tbl.engine !== defaultStorageEngine) {
+    // if(tbl.engine !== defaultStorageEngine) {
         tblDef.options.engine = tbl.engine;
-    }
+    // }
     if(tbl.comment.length) {
         tblDef.options.comment = tbl.comment;
     }
