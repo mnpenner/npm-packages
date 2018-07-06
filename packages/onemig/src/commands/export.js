@@ -11,6 +11,10 @@ import {getStruct} from '../schema/struct';
 import InputOption from '../console/InputOption';
 import Konsole from '../util/Konsole';
 import Path from 'path';
+import napi from '../napi';
+import DatabaseWrapper from '../mysql/DatabaseWrapper';
+import spinners from '../spinners';
+import {setDefaults} from '../util/object';
 // import conn from '../db';
 // import {Command} from '../console';
 
@@ -21,16 +25,46 @@ export default {
     description: "Export the current database schema",
     options: [
         {
-            name: 'out',
-            alias: 'd',
+            name: 'output-dir',
+            alias: 'o',
             description: "Output directory. Will overwrite any files.",
             value: InputOption.Required,
             default: 'out',
-        }
+        },
+        {
+            name: 'host',
+            alias: 'h',
+            description: "Connect to the MySQL server on the given host.",
+            value: InputOption.Required,
+        },
+        {
+            name: 'port',
+            alias: 'P',
+            description: "The TCP/IP port number to use for the connection.",
+            value: InputOption.Required,
+        },
+        {
+            name: 'user',
+            alias: 'u',
+            description: "The MySQL user name to use when connecting to the server.",
+            value: InputOption.Required,
+        },
+        {
+            name: 'password',
+            alias: 'p',
+            description: "The password to use when connecting to the server.",
+            value: InputOption.Required,
+        },
     ],
     async execute(args, opts) {
-        const conn = require('../db').default;
+        const dbVars = napi.sharedDbVars('migrations');
         
+        const conn = new DatabaseWrapper({
+            host: opts.host || dbVars.host,
+            port: opts.port || dbVars.port,
+            user: opts.user || dbVars.login,
+            password: opts.password || dbVars.password,
+        });
         
         try {
             const allTables = Object.create(null);
@@ -43,7 +77,6 @@ export default {
                 `,[dbNames]);
 
             const kon = new Konsole;
-            const spinners = '⣾⣽⣻⢿⡿⣟⣯⣷';
             let si = 0;
             
             for await(const db of dbStream) {
@@ -55,8 +88,8 @@ export default {
                         `, [db.name]);
 
                 for await(const tbl of tblStream) {
-                    kon.rewrite(`${spinners[si]} ${db.name}.${tbl.name}`);
-                    si = (si+1)%spinners.length;
+                    kon.rewrite(`${spinners.dots12.frames[si]} ${db.name}.${tbl.name}`);
+                    si = (si+1)%spinners.dots12.frames.length;
                     
                     const tblDef = await getStruct(db.name,tbl.name);
                     
@@ -83,7 +116,7 @@ export default {
                     name: tblName,
                     versions: Object.values(allTables[tblName]),
                 };
-                const filename = Path.join(opts.out,`tables/${tblName}.json`);
+                const filename = Path.join(opts.outputDir,`tables/${tblName}.json`);
                 await fs.writeText(filename, JSON.stringify(json, null, 4));
                 console.log(`wrote ${Chalk.underline(filename)}`);
             });
@@ -93,65 +126,3 @@ export default {
     }
 }
 
-
-/**
- * Takes a string in the format "'foo','bar''baz'" and splits it into an array ["foo", "bar'baz"]
- *
- * @param {string} subject
- * @returns {Array}
- */
-function splitValues(subject) {
-    if(!subject) {
-        return [];
-    }
-    let terms = [];
-    let term = '';
-    let quoted = false;
-    const q = "'";
-    for(let i = 0; i < subject.length;) {
-        let ch = subject[i];
-        if(ch === q) {
-            if(!quoted) {
-                quoted = true;
-            } else if(subject[i + 1] === q) {
-                term += q;
-                i += 2;
-                continue;
-            } else {
-                quoted = false;
-            }
-        } else if(!quoted && ch === ',') {
-            terms.push(term);
-            term = '';
-        } else {
-            term += ch;
-        }
-        ++i;
-    }
-    terms.push(term);
-    return terms;
-}
-
-const defaultWidths = {
-    tinyint: 4,
-    utinyint: 3,
-    smallint: 6,
-    usmallint: 5,
-    mediumint: 9,
-    umediumint: 8,
-    int: 11,
-    uint: 10,
-    bigint: 20,
-    ubigint: 20,
-    decimal: [10,0],
-    udecimal: [10,0],
-    bit: 1,
-};
-
-function sortBy(array, prop) {
-    return array.sort((a, b) => {
-        if(a[prop] === 'PRIMARY') return -1;
-        if(b[prop] === 'PRIMARY') return 1;
-        return a[prop].localeCompare(b[prop]);
-    });
-}

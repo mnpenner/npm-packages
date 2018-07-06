@@ -48,4 +48,4 @@ node10:
 	sudo apt install -y nodejs
 
 data/servers.json: $(wildcard ~/Projects/server_config/napi/host/*.json)
-	jq 'select(.roles[]? | contains ("mysql")) | {host: input_filename} + .' $^ | jq -s 'map({(.host):.}) | add'
+	jq 'select (.roles[]? | contains("mysql")) | {(input_filename | gsub(".*/|\\.json$$";"")): .}' $^ | jq -s 'add' > $@

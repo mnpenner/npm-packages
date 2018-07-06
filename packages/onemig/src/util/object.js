@@ -89,3 +89,13 @@ export function toBool(str, def) {
 }
 
 
+export function setDefaults(obj, ...defaults) {
+    for(const def of defaults) {
+        for(const [k, v] of Object.entries(def)) {
+            if(obj[k] === undefined && v !== undefined) {
+                obj[k] = v;
+            }
+        }
+    }
+    return obj;
+}

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import conn from './db';
+// import conn from './db';
 import dump from './dump';
 import {Application} from './console';
 import {readDir} from './util/fs';
@@ -19,5 +19,5 @@ async function __main__() {
 
 __main__().catch(async err => {
     dump(err);
-    await conn.close();
+    // await conn.close();
 });
