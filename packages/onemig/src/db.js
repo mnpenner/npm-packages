@@ -11,7 +11,7 @@ import DatabaseWrapper from './mysql/DatabaseWrapper';
 // dump(dbVars.password);process.exit(0);
 
 export default new DatabaseWrapper({
-    host: 'dbVars.host',
+    host: dbVars.host,
     user: dbVars.login,
     // database: dbVars.name,
     password: dbVars.password,

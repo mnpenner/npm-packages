@@ -38,3 +38,14 @@ clean:
 
 node_modules:
 	mkdir -p $@
+
+node8:
+	curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+	sudo apt install -y nodejs
+	
+node10:
+	curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+	sudo apt install -y nodejs
+
+data/servers.json: $(wildcard ~/Projects/server_config/napi/host/*.json)
+	jq 'select(.roles[]? | contains ("mysql")) | {host: input_filename} + .' $^ | jq -s 'map({(.host):.}) | add'

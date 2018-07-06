@@ -50,6 +50,11 @@ export default {
             name: 'run',
             description: "Actually RUN the SQL. Might want to make a backup first.",
             value: InputOption.None,
+        },
+        {
+            name: 'database',
+            description: "Only run on these databases.",
+            value: InputOption.Required|InputOption.Array,
         }
     ],
     async execute(args, opts) {
@@ -85,6 +90,11 @@ export default {
         let si = 0;
         const kon = new Konsole;
         let di = -1;
+        let dbSet;
+        
+        if(opts.database.length) {
+            dbSet = new Set(opts.database);
+        }
         
         for(let filename of tableFiles) {
             ++di;
@@ -100,6 +110,9 @@ export default {
             // console.log(`${filename} is valid!!!!`);
             for(let {databases, ...desiredStruct} of tbl.versions) {
                 for(let dbName of databases) {
+                    if(dbSet && !dbSet.has(dbName)) {
+                        continue;
+                    }
                     // pb.tick(0, {tbl: tbl.name, db: dbName});
                     kon.rewrite(`${spinners[si]} ${(di/tableFiles.length*100).toFixed(1).padStart(5, ' ')}% ${dbName}.${tbl.name}`);
                     si = (si+1)%spinners.length;
@@ -131,9 +144,9 @@ export default {
 
                             // https://dev.mysql.com/doc/refman/8.0/en/alter-table.html
 
-                            // console.log('=== CURRENT ===');
+                            // console.log(`=== CURRENT ${dbName}.${tbl.name} ===`);
                             // dump(currentStruct);
-                            // console.log('=== DESIRED ===');
+                            // console.log(`=== DESIRED ${dbName}.${tbl.name} ===`);
                             // dump(desiredStruct);
                             // process.exit(1);
                             // const diff = diffColumns(currentStruct.columns, desiredStruct.columns);
