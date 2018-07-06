@@ -1,24 +1,25 @@
-import dump from '../dump';
-import {readDir, readJson} from '../util/fs';
-import objHash from 'object-hash';
+// import dump from '../dump';
+// import {readDir, readJson} from '../util/fs';
+// import objHash from 'object-hash';
 import napi, {dbNameMap} from '../napi';
-import {InputOption} from '../console';
-import Path from 'path';
-import db from '../db';
-import {getDatabaseCollation, getDefaultStorageEngine, getStruct} from '../schema/struct';
-import Ajv from 'ajv';
-import tableSchema from '../table.schema.js';
-import {omit} from '../util/object';
-import {isNumber, isObject, isPlainObject} from '../util/types';
+// import {InputOption} from '../console';
+// import Path from 'path';
+// import db from '../db';
+// import {getDatabaseCollation, getDefaultStorageEngine, getStruct} from '../schema/struct';
+// import Ajv from 'ajv';
+// import tableSchema from '../table.schema.js';
+// import {omit} from '../util/object';
+// import {isNumber, isObject, isPlainObject} from '../util/types';
 import {highlight} from 'cli-highlight';
-import {ciCompare, toIter} from '../util/array';
-import Konsole from '../util/Konsole';
-import Chalk from 'chalk';
-import * as async from '../util/async';
-import * as fs from '../util/fs';
-import {addMany} from '../util/set';
-import conn from '../db';
+// import {ciCompare, toIter} from '../util/array';
+// import Konsole from '../util/Konsole';
+// import Chalk from 'chalk';
+// import * as async from '../util/async';
+// import * as fs from '../util/fs';
+// import {addMany} from '../util/set';
+// import conn from '../db';
 import Crypto from 'crypto';
+import DatabaseWrapper from '../mysql/DatabaseWrapper';
 
 export default {
     name: "createdbs",
@@ -27,6 +28,8 @@ export default {
 
     ],
     async execute(args, opts) {
+  
+        
         for(const [gsid,agency] of Object.entries(napi.data.database.agency)) {
             const plainTextPassword = napi.decrypt(agency.password);
             // const passwordHash = mysqlPassword(plainTextPassword);

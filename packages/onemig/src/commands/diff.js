@@ -4,7 +4,7 @@ import _objHash from 'object-hash';
 import napi, {dbNameMap} from '../napi';
 import {InputOption} from '../console';
 import Path from 'path';
-import db from '../db';
+// import db from '../db';
 import {getDatabaseCollation, getDefaultStorageEngine, getStruct} from '../schema/struct';
 import Ajv from 'ajv';
 import tableSchema from '../table.schema.js';
@@ -14,6 +14,7 @@ import {highlight} from 'cli-highlight';
 import {ciCompare, toIter} from '../util/array';
 import Konsole from '../util/Konsole';
 import Validator from '../schema/validator';
+import DatabaseWrapper from '../mysql/DatabaseWrapper';
 // import conn from '../db';
 // import {Command} from '../console';
 
@@ -58,131 +59,144 @@ export default {
         }
     ],
     async execute(args, opts) {
-        const tableFiles = (await readDir(Path.join(opts.dir,'tables'))).filter(f => f.endsWith('.json'));
-        tableFiles.sort(ciCompare);
-        // shuffle(tableFiles);
-        // const tableFiles = ['out/tables/fw_client_doc_ver.json'];
-        // const allTables = Object.create(null);
-        
-        // const pb = new ProgressBar({
-        //     total: tableFiles.length,
-        //     schema: " :filled.green:blank :current/:total :percent :elapseds :etas :tbl/:db",
-        //     filled: '█',
-        //     blank: '░',
-        // });
-        
-        const defaultStorageEngine = await getDefaultStorageEngine();
-        
-        
-        const validator = Validator();
-        
-        // console.log(JSON.stringify(tableSchema,null,4));process.exit(0);
-        
-        // const validate = ajv.getSchema('#/definitions/Table');
-        // const validate = ajv.compile(require(`../table.schema.json`));
-        // see also: http://shapecatcher.com/unicode/block/Tai_Xuan_Jing_Symbols
-        // http://shapecatcher.com/unicode/block/Yijing_Hexagram_Symbols
-        // omg yes: https://github.com/sindresorhus/cli-spinners/blob/HEAD/spinners.json
-        // dots12 looks cool too....
-        const spinners = [
-            "⢀⠀", "⡀⠀", "⠄⠀", "⢂⠀", "⡂⠀", "⠅⠀", "⢃⠀", "⡃⠀", "⠍⠀", "⢋⠀", "⡋⠀", "⠍⠁", "⢋⠁", "⡋⠁", "⠍⠉", "⠋⠉", "⠋⠉", "⠉⠙", "⠉⠙", "⠉⠩", "⠈⢙", "⠈⡙", "⢈⠩", "⡀⢙", "⠄⡙", "⢂⠩", "⡂⢘", "⠅⡘", "⢃⠨", "⡃⢐", "⠍⡐", "⢋⠠", "⡋⢀", "⠍⡁", "⢋⠁", "⡋⠁", "⠍⠉", "⠋⠉", "⠋⠉", "⠉⠙", "⠉⠙", "⠉⠩", "⠈⢙", "⠈⡙", "⠈⠩", "⠀⢙", "⠀⡙", "⠀⠩", "⠀⢘", "⠀⡘", "⠀⠨", "⠀⢐", "⠀⡐", "⠀⠠", "⠀⢀", "⠀⡀"
-        ];
-        let si = 0;
-        const kon = new Konsole;
-        let di = -1;
-        let dbSet;
-        
-        if(opts.database.length) {
-            dbSet = new Set(opts.database);
-        }
-        
-        for(let filename of tableFiles) {
-            ++di;
-            const tbl = await readJson(filename);
-            
-            const ajvErrors = validator.validate(tbl);
-            if(ajvErrors) {
-                console.log(filename);
-                // console.log(ajv.errorsText());
-                dump(ajvErrors);
-                break;
+        const dbVars = napi.sharedDbVars('migrations');
+
+        const conn = new DatabaseWrapper({
+            host: opts.host || dbVars.host,
+            port: opts.port || dbVars.port,
+            user: opts.user || dbVars.login,
+            password: opts.password || dbVars.password,
+        });
+        try {
+
+            const tableFiles = (await readDir(Path.join(opts.dir, 'tables'))).filter(f => f.endsWith('.json'));
+            tableFiles.sort(ciCompare);
+            // shuffle(tableFiles);
+            // const tableFiles = ['out/tables/fw_client_doc_ver.json'];
+            // const allTables = Object.create(null);
+
+            // const pb = new ProgressBar({
+            //     total: tableFiles.length,
+            //     schema: " :filled.green:blank :current/:total :percent :elapseds :etas :tbl/:db",
+            //     filled: '█',
+            //     blank: '░',
+            // });
+
+            const defaultStorageEngine = await getDefaultStorageEngine(conn);
+
+
+            const validator = Validator();
+
+            // console.log(JSON.stringify(tableSchema,null,4));process.exit(0);
+
+            // const validate = ajv.getSchema('#/definitions/Table');
+            // const validate = ajv.compile(require(`../table.schema.json`));
+            // see also: http://shapecatcher.com/unicode/block/Tai_Xuan_Jing_Symbols
+            // http://shapecatcher.com/unicode/block/Yijing_Hexagram_Symbols
+            // omg yes: https://github.com/sindresorhus/cli-spinners/blob/HEAD/spinners.json
+            // dots12 looks cool too....
+            const spinners = [
+                "⢀⠀", "⡀⠀", "⠄⠀", "⢂⠀", "⡂⠀", "⠅⠀", "⢃⠀", "⡃⠀", "⠍⠀", "⢋⠀", "⡋⠀", "⠍⠁", "⢋⠁", "⡋⠁", "⠍⠉", "⠋⠉", "⠋⠉", "⠉⠙", "⠉⠙", "⠉⠩", "⠈⢙", "⠈⡙", "⢈⠩", "⡀⢙", "⠄⡙", "⢂⠩", "⡂⢘", "⠅⡘", "⢃⠨", "⡃⢐", "⠍⡐", "⢋⠠", "⡋⢀", "⠍⡁", "⢋⠁", "⡋⠁", "⠍⠉", "⠋⠉", "⠋⠉", "⠉⠙", "⠉⠙", "⠉⠩", "⠈⢙", "⠈⡙", "⠈⠩", "⠀⢙", "⠀⡙", "⠀⠩", "⠀⢘", "⠀⡘", "⠀⠨", "⠀⢐", "⠀⡐", "⠀⠠", "⠀⢀", "⠀⡀"
+            ];
+            let si = 0;
+            const kon = new Konsole;
+            let di = -1;
+            let dbSet;
+
+            if(opts.database.length) {
+                dbSet = new Set(opts.database);
             }
-            // console.log(`${filename} is valid!!!!`);
-            for(let {databases, ...desiredStruct} of tbl.versions) {
-                for(let dbName of databases) {
-                    if(dbSet && !dbSet.has(dbName)) {
-                        continue;
-                    }
-                    // pb.tick(0, {tbl: tbl.name, db: dbName});
-                    kon.rewrite(`${spinners[si]} ${(di/tableFiles.length*100).toFixed(1).padStart(5, ' ')}% ${dbName}.${tbl.name}`);
-                    si = (si+1)%spinners.length;
-                    // fetch current struct
-                    const currentStruct = await getStruct(dbName,tbl.name);
 
-                    const defaultCollation = await getDatabaseCollation(dbName);
+            for(let filename of tableFiles) {
+                ++di;
+                const tbl = await readJson(filename);
 
-                    normalizeStruct(desiredStruct, defaultStorageEngine, defaultCollation, dbName)
-                        
-                  
-                    
-                    if(!currentStruct) {
-                        const createTableSql = getCreateTableSql(dbName,tbl.name, desiredStruct);
-                        // TODO: stealth audit
-                        // TODO: seeds
-                        if(createTableSql) {
-                            kon.writeLn(highlight(createTableSql, {language: 'sql', ignoreIllegals: true}));
-                            if(opts.run) {
-                                await db.exec(createTableSql);
-                            }
+                const ajvErrors = validator.validate(tbl);
+                if(ajvErrors) {
+                    console.log(filename);
+                    // console.log(ajv.errorsText());
+                    dump(ajvErrors);
+                    break;
+                }
+                // console.log(`${filename} is valid!!!!`);
+                for(let {databases, ...desiredStruct} of tbl.versions) {
+                    for(let dbName of databases) {
+                        if(dbSet && !dbSet.has(dbName)) {
+                            continue;
                         }
-                    } else {
-                        normalizeStruct(currentStruct, defaultStorageEngine, defaultCollation, dbName)
+                        // pb.tick(0, {tbl: tbl.name, db: dbName});
+                        kon.rewrite(`${spinners[si]} ${(di / tableFiles.length * 100).toFixed(1).padStart(5, ' ')}% ${dbName}.${tbl.name}`);
+                        si = (si + 1) % spinners.length;
+                        // fetch current struct
+                        const currentStruct = await getStruct(conn,dbName, tbl.name);
 
-                      
-                        if(!objEq(currentStruct, desiredStruct)) {
-                            // oldName
+                        const defaultCollation = await getDatabaseCollation(conn,dbName);
 
-                            // https://dev.mysql.com/doc/refman/8.0/en/alter-table.html
+                        normalizeStruct(desiredStruct, defaultStorageEngine, defaultCollation, dbName)
 
-                            // console.log(`=== CURRENT ${dbName}.${tbl.name} ===`);
-                            // dump(currentStruct);
-                            // console.log(`=== DESIRED ${dbName}.${tbl.name} ===`);
-                            // dump(desiredStruct);
-                            // process.exit(1);
-                            // const diff = diffColumns(currentStruct.columns, desiredStruct.columns);
-                            // dump('DIFF',diff);
-                            //
-                            // const lines = columnDiffToSql(diff);
-                            // dump(lines);
 
-                            const alterTableSql = getAlterTableSql(dbName,tbl.name, currentStruct, desiredStruct);
-                            if(alterTableSql) {
-                                kon.writeLn(highlight(alterTableSql, {language: 'sql', ignoreIllegals: true}));
+                        if(!currentStruct) {
+                            const createTableSql = getCreateTableSql(dbName, tbl.name, desiredStruct);
+                            // TODO: stealth audit
+                            // TODO: seeds
+                            if(createTableSql) {
+                                kon.writeLn(highlight(createTableSql, {language: 'sql', ignoreIllegals: true}));
                                 if(opts.run) {
-                                    await db.exec(alterTableSql);
+                                    await db.exec(createTableSql);
                                 }
                             }
+                        } else {
+                            normalizeStruct(currentStruct, defaultStorageEngine, defaultCollation, dbName)
 
 
-                            // dump(added,removed,modified);
+                            if(!objEq(currentStruct, desiredStruct)) {
+                                // oldName
 
-                            // process.exit(1);
-                            // dump('struct changed!!!',dbName,tbl.name,currentStruct,desiredStruct);
-                        } /*else {
-                            dump('before and after are equal',currentStruct,desiredStruct);process.exit(254);
-                        }*/
+                                // https://dev.mysql.com/doc/refman/8.0/en/alter-table.html
+
+                                // console.log(`=== CURRENT ${dbName}.${tbl.name} ===`);
+                                // dump(currentStruct);
+                                // console.log(`=== DESIRED ${dbName}.${tbl.name} ===`);
+                                // dump(desiredStruct);
+                                // process.exit(1);
+                                // const diff = diffColumns(currentStruct.columns, desiredStruct.columns);
+                                // dump('DIFF',diff);
+                                //
+                                // const lines = columnDiffToSql(diff);
+                                // dump(lines);
+
+                                const alterTableSql = getAlterTableSql(dbName, tbl.name, currentStruct, desiredStruct);
+                                if(alterTableSql) {
+                                    kon.writeLn(highlight(alterTableSql, {language: 'sql', ignoreIllegals: true}));
+                                    if(opts.run) {
+                                        await db.exec(alterTableSql);
+                                    }
+                                }
+
+
+                                // dump(added,removed,modified);
+
+                                // process.exit(1);
+                                // dump('struct changed!!!',dbName,tbl.name,currentStruct,desiredStruct);
+                            }
+                            /*else {
+                                                       dump('before and after are equal',currentStruct,desiredStruct);process.exit(254);
+                                                   }*/
+                        }
+
+                        // dump(newStruct);
+                        // break; // FIXME: ****SKIP REST OF DATABASES, JUST FOR TESTING
                     }
-                    
-                    // dump(newStruct);
-                    // break; // FIXME: ****SKIP REST OF DATABASES, JUST FOR TESTING
+                    // dump(table.name,databases,struct);
+                    // return;
                 }
-                // dump(table.name,databases,struct);
-                // return;
+                // pb.tick(1,{tbl:tbl.name,db:''});
             }
-            // pb.tick(1,{tbl:tbl.name,db:''});
+            kon.clear();
+            db.close();
+        } finally {
+            conn.close();
         }
-        kon.clear();
-        db.close();
     }
 }
 

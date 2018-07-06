@@ -91,7 +91,7 @@ export default {
                     kon.rewrite(`${spinners.dots12.frames[si]} ${db.name}.${tbl.name}`);
                     si = (si+1)%spinners.dots12.frames.length;
                     
-                    const tblDef = await getStruct(db.name,tbl.name);
+                    const tblDef = await getStruct(conn,db.name,tbl.name);
                     
 
                     const tblHash = objHash(tblDef);

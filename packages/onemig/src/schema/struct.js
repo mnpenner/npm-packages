@@ -1,21 +1,21 @@
-import Chalk from 'chalk';
-import dump from '../dump';
+// import Chalk from 'chalk';
+// import dump from '../dump';
 import * as async from '../util/async';
-import objHash from 'object-hash';
+// import objHash from 'object-hash';
 import {dbNameMap} from '../napi';
-import conn from '../db';
-import {memoized} from '../util/func';
+// import conn from '../db';
+// import {memoized} from '../util/func';
 
 
-export const getDefaultStorageEngine = memoized(() => conn.query('select @@default_storage_engine').fetchValue());
+export const getDefaultStorageEngine = conn => conn.query('select @@default_storage_engine').fetchValue();
 
-export const getDatabaseCollation = memoized(dbName => conn.query('SELECT DEFAULT_COLLATION_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME=?',[dbName]).fetchValue());
+export const getDatabaseCollation = (conn,dbName) => conn.query('SELECT DEFAULT_COLLATION_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME=?',[dbName]).fetchValue();
 
-export async function getStruct(dbName, tblName) {
+export async function getStruct(conn, dbName, tblName) {
     
     const [defaultStorageEngine,dbCollation,tbl] = await Promise.all([
-        getDefaultStorageEngine(),
-        getDatabaseCollation(dbName),
+        getDefaultStorageEngine(conn),
+        getDatabaseCollation(conn,dbName),
         conn.query(`SELECT 
                         TABLE_NAME 'name'
                         ,ENGINE 'engine'

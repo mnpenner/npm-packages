@@ -4,7 +4,7 @@ import dump from './dump';
 import {Application} from './console';
 import {readDir} from './util/fs';
 
-process.on('unhandledRejection', dump);
+// process.on('unhandledRejection', dump);
 
 async function __main__() {
     const app = new Application();
@@ -18,6 +18,7 @@ async function __main__() {
 }
 
 __main__().catch(async err => {
-    dump(err);
+    console.error(err);
+    process.exit(1);
     // await conn.close();
 });

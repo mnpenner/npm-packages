@@ -1,3 +1,4 @@
+throw new Error("do not import this file");
 import MySql from 'mysql2/promise';
 import formatSql from './mysql/formatSql';
 // import {log} from './debug';
@@ -9,6 +10,7 @@ import DatabaseWrapper from './mysql/DatabaseWrapper';
 // options listed here: node_modules/mysql2/lib/connection_config.js
 
 // dump(dbVars.password);process.exit(0);
+
 
 export default new DatabaseWrapper({
     host: dbVars.host,
