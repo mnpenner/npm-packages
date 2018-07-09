@@ -48,7 +48,7 @@ node10:
 	sudo apt install -y nodejs
 
 data/servers.json: $(wildcard ~/Projects/server_config/napi/host/*.json)
-	jq 'select (.roles[]? | contains("mysql")) | {(input_filename | gsub(".*/|\\.json$$";"")): .}' $^ | jq -s 'add' > $@
+	jq -n '[inputs | select(.roles and any(.roles[]; . == "mysql")) | {(input_filename | gsub(".*/|\\.json$$";"")): .}] | add' $^ > $@
 
 dump: build
 	node -r source-map-support/register dist/bin export -h "$(HOST)" -o ~/.onemig/$(HOST)
