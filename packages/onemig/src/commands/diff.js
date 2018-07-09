@@ -14,7 +14,9 @@ import {highlight} from 'cli-highlight';
 import {ciCompare, toIter} from '../util/array';
 import Konsole from '../util/Konsole';
 import Validator from '../schema/validator';
-import DatabaseWrapper from '../mysql/DatabaseWrapper';
+import DatabaseWrapper, {escapeId} from '../mysql/DatabaseWrapper';
+import readSchema from '../schema/readSchema';
+import SpinnerKonsole from '../util/SpinnerKonsole';
 // import conn from '../db';
 // import {Command} from '../console';
 
@@ -35,11 +37,18 @@ export default {
     description: "Print the differences",
     options: [
         {
-            name: 'dir',
-            // alias: 'd',
+            name: 'source',
+            alias: 's',
             description: "Source directory of struct JSON relative to current working directory",
             value: InputOption.Required,
-            default: 'out',
+            default: 'onemig',
+        },
+        {
+            name: 'cache',
+            alias: 'c',
+            description: "Cache directory of struct JSON. If this this does not match the current MySQL schema, bad things will happen. Schema can be exported ahead-of-time via `export` command for improved performance.",
+            value: InputOption.Required,
+            // default: null,
         },
         {
             name: 'drop-columns', // TODO: implement
@@ -56,11 +65,36 @@ export default {
             name: 'database',
             description: "Only run on these databases.",
             value: InputOption.Required|InputOption.Array,
-        }
+        },
+        {
+            name: 'host',
+            alias: 'h',
+            description: "Connect to the MySQL server on the given host.",
+            value: InputOption.Required,
+        },
+        {
+            name: 'port',
+            alias: 'P',
+            description: "The TCP/IP port number to use for the connection.",
+            value: InputOption.Required,
+        },
+        {
+            name: 'user',
+            alias: 'u',
+            description: "The MySQL user name to use when connecting to the server.",
+            value: InputOption.Required,
+        },
+        {
+            name: 'password',
+            alias: 'p',
+            description: "The password to use when connecting to the server.",
+            value: InputOption.Required,
+        },
     ],
     async execute(args, opts) {
         const dbVars = napi.sharedDbVars('migrations');
-
+        const kon = new SpinnerKonsole;
+        
         const conn = new DatabaseWrapper({
             host: opts.host || dbVars.host,
             port: opts.port || dbVars.port,
@@ -68,9 +102,10 @@ export default {
             password: opts.password || dbVars.password,
         });
         try {
-
-            const tableFiles = (await readDir(Path.join(opts.dir, 'tables'))).filter(f => f.endsWith('.json'));
-            tableFiles.sort(ciCompare);
+            const tables = await readSchema(opts.source);
+            const cache = opts.cache ? await readSchema(opts.cache) : new Map;
+            
+            
             // shuffle(tableFiles);
             // const tableFiles = ['out/tables/fw_client_doc_ver.json'];
             // const allTables = Object.create(null);
@@ -85,8 +120,6 @@ export default {
             const defaultStorageEngine = await getDefaultStorageEngine(conn);
 
 
-            const validator = Validator();
-
             // console.log(JSON.stringify(tableSchema,null,4));process.exit(0);
 
             // const validate = ajv.getSchema('#/definitions/Table');
@@ -95,11 +128,7 @@ export default {
             // http://shapecatcher.com/unicode/block/Yijing_Hexagram_Symbols
             // omg yes: https://github.com/sindresorhus/cli-spinners/blob/HEAD/spinners.json
             // dots12 looks cool too....
-            const spinners = [
-                "⢀⠀", "⡀⠀", "⠄⠀", "⢂⠀", "⡂⠀", "⠅⠀", "⢃⠀", "⡃⠀", "⠍⠀", "⢋⠀", "⡋⠀", "⠍⠁", "⢋⠁", "⡋⠁", "⠍⠉", "⠋⠉", "⠋⠉", "⠉⠙", "⠉⠙", "⠉⠩", "⠈⢙", "⠈⡙", "⢈⠩", "⡀⢙", "⠄⡙", "⢂⠩", "⡂⢘", "⠅⡘", "⢃⠨", "⡃⢐", "⠍⡐", "⢋⠠", "⡋⢀", "⠍⡁", "⢋⠁", "⡋⠁", "⠍⠉", "⠋⠉", "⠋⠉", "⠉⠙", "⠉⠙", "⠉⠩", "⠈⢙", "⠈⡙", "⠈⠩", "⠀⢙", "⠀⡙", "⠀⠩", "⠀⢘", "⠀⡘", "⠀⠨", "⠀⢐", "⠀⡐", "⠀⠠", "⠀⢀", "⠀⡀"
-            ];
-            let si = 0;
-            const kon = new Konsole;
+          
             let di = -1;
             let dbSet;
 
@@ -107,17 +136,11 @@ export default {
                 dbSet = new Set(opts.database);
             }
 
-            for(let filename of tableFiles) {
+            for(let tbl of tables.values()) {
                 ++di;
-                const tbl = await readJson(filename);
-
-                const ajvErrors = validator.validate(tbl);
-                if(ajvErrors) {
-                    console.log(filename);
-                    // console.log(ajv.errorsText());
-                    dump(ajvErrors);
-                    break;
-                }
+                // dump(tbl);
+                // process.exit(0);
+           
                 // console.log(`${filename} is valid!!!!`);
                 for(let {databases, ...desiredStruct} of tbl.versions) {
                     for(let dbName of databases) {
@@ -125,10 +148,18 @@ export default {
                             continue;
                         }
                         // pb.tick(0, {tbl: tbl.name, db: dbName});
-                        kon.rewrite(`${spinners[si]} ${(di / tableFiles.length * 100).toFixed(1).padStart(5, ' ')}% ${dbName}.${tbl.name}`);
-                        si = (si + 1) % spinners.length;
+                        kon.rewrite(`${(di / tables.size * 100).toFixed(1).padStart(5, ' ')}% ${dbName}.${tbl.name}`);
                         // fetch current struct
-                        const currentStruct = await getStruct(conn,dbName, tbl.name);
+                        
+                        let currentStruct;
+                        
+                        if(cache.has(tbl.name)) {
+                            currentStruct = cache.get(tbl.name).versions.find(ver => ver.databases.includes(dbName));
+                        }
+                        
+                        if(!currentStruct) {
+                            currentStruct = await getStruct(conn,dbName, tbl.name);
+                        } 
 
                         const defaultCollation = await getDatabaseCollation(conn,dbName);
 
@@ -146,6 +177,10 @@ export default {
                                 }
                             }
                         } else {
+                            // if(!currentStruct.options) {
+                            //     dump(currentStruct);
+                            //     process.exit(1);
+                            // }
                             normalizeStruct(currentStruct, defaultStorageEngine, defaultCollation, dbName)
 
 
@@ -302,7 +337,7 @@ function dec2bin(dec){
 
 function getCreateTableSql(dbName,tblName,struct) {
     // https://dev.mysql.com/doc/refman/8.0/en/create-table.html
-    let sql = `CREATE TABLE ${db.escapeId(dbName)}.${db.escapeId(tblName)} (\n`;
+    let sql = `CREATE TABLE ${escapeId(dbName)}.${escapeId(tblName)} (\n`;
     const lines = [
         ...getCreateColumns(struct.columns),
         ...getCreateIndexes(struct.indexes),
@@ -317,7 +352,7 @@ function getCreateTableSql(dbName,tblName,struct) {
 
 
 function getCreateColumns(columns) {
-    return columns.map(col => db.escapeId(col.name)+' '+columnDefinition(col));
+    return columns.map(col => escapeId(col.name)+' '+columnDefinition(col));
 }
 
 
@@ -335,11 +370,11 @@ function indexDefinition2(idx) {
         case 'INDEX':
         case 'KEY':
         case 'BTREE':
-            return `KEY ${db.escapeId(idx.name)} ${getIndexColumnsStr(idx.columns)}`;
+            return `KEY ${escapeId(idx.name)} ${getIndexColumnsStr(idx.columns)}`;
         case 'UNIQUE':
-            return `UNIQUE KEY ${db.escapeId(idx.name)} ${getIndexColumnsStr(idx.columns)}`;
+            return `UNIQUE KEY ${escapeId(idx.name)} ${getIndexColumnsStr(idx.columns)}`;
         case 'FULLTEXT':
-            return `FULLTEXT KEY ${db.escapeId(idx.name)} ${getIndexColumnsStr(idx.columns)}`;
+            return `FULLTEXT KEY ${escapeId(idx.name)} ${getIndexColumnsStr(idx.columns)}`;
     }
     throw new Error(`Unsupported index type: ${idx.type}`);
 }
@@ -357,11 +392,11 @@ function fkDef(fk) {
 }
 
 function fkDef2(fk) {
-    let sql = `CONSTRAINT ${db.escapeId(fk.name)} FOREIGN KEY ${getForeignKeyColumnsStr(fk.columns)} REFERENCES `;
+    let sql = `CONSTRAINT ${escapeId(fk.name)} FOREIGN KEY ${getForeignKeyColumnsStr(fk.columns)} REFERENCES `;
     if(fk.refDatabase) {
-        sql += db.escapeId(fk.refDatabase)+'.';
+        sql += escapeId(fk.refDatabase)+'.';
     }
-    sql += `${db.escapeId(fk.refTable)}${getForeignKeyColumnsStr(fk.refColumns)}`;
+    sql += `${escapeId(fk.refTable)}${getForeignKeyColumnsStr(fk.refColumns)}`;
     if(fk.onUpdate) {
         sql += ` ON UPDATE ${fk.onUpdate}`;
     }
@@ -392,7 +427,7 @@ function resolveDatabase(obj,dbName) {
 }
 
 function getForeignKeyColumnsStr(columns) {
-    return `(${columns.map(c => db.escapeId(c)).join(', ')})`;
+    return `(${columns.map(c => escapeId(c)).join(', ')})`;
 }
 
 function getIndexColumnsStr(columns) {
@@ -402,9 +437,9 @@ function getIndexColumnsStr(columns) {
 function escapeIndex(fullName) {
     const m = /^(\S+)\((\d+)\)$/.exec(fullName);
     if(m) {
-        return `${db.escapeId(m[1])}(${m[2]})`;
+        return `${escapeId(m[1])}(${m[2]})`;
     }
-    return db.escapeId(fullName);
+    return escapeId(fullName);
 }
 
 function getCreateOptions(options) {
@@ -429,7 +464,7 @@ function getAlterTableSql(dbName,tableName,currentStruct,desiredStruct) {
         ...fkDiff(currentStruct.foreignKeys,desiredStruct.foreignKeys),
     ];
     if(lines.length) {
-        return `ALTER TABLE ${db.escapeId(dbName)}.${db.escapeId(tableName)}\n${lines.map(l => `  ${l}`).join(',\n')};`;
+        return `ALTER TABLE ${escapeId(dbName)}.${escapeId(tableName)}\n${lines.map(l => `  ${l}`).join(',\n')};`;
     }
     return null;
 }
@@ -701,18 +736,18 @@ function fkDiffToSql(diff) {
     const lines = [];
     for(let fk of diff.dropped) {
         // has to be DROP FOREIGN KEY -- https://stackoverflow.com/a/14122155/65387
-        lines.push(`DROP FOREIGN KEY ${db.escapeId(fk)}`) 
+        lines.push(`DROP FOREIGN KEY ${escapeId(fk)}`) 
     }
     for(let fk of diff.changed) {
-        lines.push(`DROP FOREIGN KEY ${db.escapeId(fk.oldName)}`)
+        lines.push(`DROP FOREIGN KEY ${escapeId(fk.oldName)}`)
         lines.push(`ADD ${fkDef(fk)}`)
     }
     for(let fk of diff.modified) {
-        lines.push(`DROP FOREIGN KEY ${db.escapeId(fk.name)}`)
+        lines.push(`DROP FOREIGN KEY ${escapeId(fk.name)}`)
         lines.push(`ADD ${fkDef(fk)}`)
     }
     for(let fk of diff.renamed) {
-        lines.push(`RENAME FOREIGN KEY ${db.escapeId(fk.oldName)} TO ${db.escapeId(fk.newName)}`)
+        lines.push(`RENAME FOREIGN KEY ${escapeId(fk.oldName)} TO ${escapeId(fk.newName)}`)
     }
     for(let fk of diff.added) {
         lines.push(`ADD ${fkDef(fk)}`)
@@ -724,18 +759,18 @@ function indexDiffToSql(diff) {
     // dump(diff);process.exit(1);
     const lines = [];
     for(let idx of diff.dropped) {
-        lines.push(`DROP INDEX ${db.escapeId(idx)}`) // I *think* this works fine for PRIMARY keys too!
+        lines.push(`DROP INDEX ${escapeId(idx)}`) // I *think* this works fine for PRIMARY keys too!
     }
     for(let idx of diff.changed) {
-        lines.push(`DROP INDEX ${db.escapeId(idx.oldName)}`)
+        lines.push(`DROP INDEX ${escapeId(idx.oldName)}`)
         lines.push(`ADD ${indexDefinition(idx)}`)
     }
     for(let idx of diff.modified) {
-        lines.push(`DROP INDEX ${db.escapeId(idx.name)}`)
+        lines.push(`DROP INDEX ${escapeId(idx.name)}`)
         lines.push(`ADD ${indexDefinition(idx)}`)
     }
     for(let idx of diff.renamed) {
-        lines.push(`RENAME INDEX ${db.escapeId(idx.oldName)} TO ${db.escapeId(idx.newName)}`)
+        lines.push(`RENAME INDEX ${escapeId(idx.oldName)} TO ${escapeId(idx.newName)}`)
     }
     for(let idx of diff.added) {
         lines.push(`ADD ${indexDefinition(idx)}`)
@@ -745,22 +780,22 @@ function indexDiffToSql(diff) {
 function columnDiffToSql(diff) {
     const lines = [];
     for(let colName of diff.dropped) {
-        lines.push(`DROP COLUMN ${db.escapeId(colName)}`)
+        lines.push(`DROP COLUMN ${escapeId(colName)}`)
     }
     for(let col of diff.modified) {
-        lines.push(`MODIFY COLUMN ${db.escapeId(col.name)} ${columnDefinition(col)}`)
+        lines.push(`MODIFY COLUMN ${escapeId(col.name)} ${columnDefinition(col)}`)
     }
     for(let col of diff.changed) {
-        lines.push(`CHANGE COLUMN ${db.escapeId(col.oldName)} ${db.escapeId(col.name)} ${columnDefinition(col)}`)
+        lines.push(`CHANGE COLUMN ${escapeId(col.oldName)} ${escapeId(col.name)} ${columnDefinition(col)}`)
     }
     for(let col of diff.renamed) { // MySQL 8.0+
-        lines.push(`RENAME COLUMN ${db.escapeId(col.oldName)} TO ${db.escapeId(col.newName)}`)
+        lines.push(`RENAME COLUMN ${escapeId(col.oldName)} TO ${escapeId(col.newName)}`)
     }
     for(let col of diff.altered) {
-        lines.push(`ALTER COLUMN ${db.escapeId(col.name)} ${col.default === undefined ? "DROP DEFAULT" : `SET DEFAULT ${getDefault(col)}`}`)
+        lines.push(`ALTER COLUMN ${escapeId(col.name)} ${col.default === undefined ? "DROP DEFAULT" : `SET DEFAULT ${getDefault(col)}`}`)
     }
     for(let col of diff.added) {
-        lines.push(`ADD COLUMN ${db.escapeId(col.name)} ${columnDefinition(col)}`)
+        lines.push(`ADD COLUMN ${escapeId(col.name)} ${columnDefinition(col)}`)
     }
     return lines;
 }

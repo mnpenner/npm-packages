@@ -9,6 +9,13 @@ function escapeIdString(id) {
     return '`' + String(id).replace(/`/g,'``') + '`';
 }
 
+export function escapeId(id) {
+    if(Array.isArray(id)) {
+        return id.map(escapeIdString).join('.')
+    }
+    return escapeIdString(id);
+}
+
 export default class DatabaseWrapper {
 
     constructor({sqlMode, foreignKeyChecks, ...options}) {
@@ -71,10 +78,7 @@ export default class DatabaseWrapper {
     }
     
     escapeId(id) {
-        if(Array.isArray(id)) {
-            return id.map(escapeIdString).join('.')
-        }
-        return escapeIdString(id);
+        return escapeId(id);
     }
     
     stream(sql, params) {
