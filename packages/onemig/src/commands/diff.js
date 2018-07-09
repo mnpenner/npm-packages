@@ -14,7 +14,7 @@ import {highlight} from 'cli-highlight';
 import {ciCompare, toIter} from '../util/array';
 import Konsole from '../util/Konsole';
 import Validator from '../schema/validator';
-import DatabaseWrapper, {escapeId} from '../mysql/DatabaseWrapper';
+import DatabaseWrapper from '../mysql/DatabaseWrapper';
 import readSchema from '../schema/readSchema';
 import SpinnerKonsole from '../util/SpinnerKonsole';
 // import conn from '../db';
@@ -95,7 +95,7 @@ export default {
         const dbVars = napi.sharedDbVars('migrations');
         const kon = new SpinnerKonsole;
         
-        const conn = new DatabaseWrapper({
+        const db = new DatabaseWrapper({
             host: opts.host || dbVars.host,
             port: opts.port || dbVars.port,
             user: opts.user || dbVars.login,
@@ -117,7 +117,10 @@ export default {
             //     blank: '░',
             // });
 
-            const defaultStorageEngine = await getDefaultStorageEngine(conn);
+            const {a:serverCollation,b:defaultStorageEngine} = await db.query('select @@collation_server a, @@default_storage_engine b').fetchRow();
+            const databaseCollations = await db.query('SELECT SCHEMA_NAME,DEFAULT_COLLATION_NAME FROM information_schema.SCHEMATA').fetchPairs()
+            // dump(defaultCollations)
+            // process.exit(0);
 
 
             // console.log(JSON.stringify(tableSchema,null,4));process.exit(0);
@@ -158,16 +161,15 @@ export default {
                         }
                         
                         if(!currentStruct) {
-                            currentStruct = await getStruct(conn,dbName, tbl.name);
+                            currentStruct = await getStruct(db,dbName, tbl.name);
                         } 
 
-                        const defaultCollation = await getDatabaseCollation(conn,dbName);
+                        const defaultCollation = databaseCollations[dbName] || serverCollation;
 
                         normalizeStruct(desiredStruct, defaultStorageEngine, defaultCollation, dbName)
 
-
                         if(!currentStruct) {
-                            const createTableSql = getCreateTableSql(dbName, tbl.name, desiredStruct);
+                            const createTableSql = getCreateTableSql(db,dbName, tbl.name, desiredStruct);
                             // TODO: stealth audit
                             // TODO: seeds
                             if(createTableSql) {
@@ -200,7 +202,7 @@ export default {
                                 // const lines = columnDiffToSql(diff);
                                 // dump(lines);
 
-                                const alterTableSql = getAlterTableSql(dbName, tbl.name, currentStruct, desiredStruct);
+                                const alterTableSql = getAlterTableSql(db,dbName, tbl.name, currentStruct, desiredStruct);
                                 if(alterTableSql) {
                                     kon.writeLn(highlight(alterTableSql, {language: 'sql', ignoreIllegals: true}));
                                     if(opts.run) {
@@ -230,7 +232,7 @@ export default {
             kon.clear();
             db.close();
         } finally {
-            conn.close();
+            db.close();
         }
     }
 }
@@ -335,68 +337,68 @@ function dec2bin(dec){
     return (dec >>> 0).toString(2);
 }
 
-function getCreateTableSql(dbName,tblName,struct) {
+function getCreateTableSql(db,dbName,tblName,struct) {
     // https://dev.mysql.com/doc/refman/8.0/en/create-table.html
-    let sql = `CREATE TABLE ${escapeId(dbName)}.${escapeId(tblName)} (\n`;
+    let sql = `CREATE TABLE ${db.escapeId(dbName)}.${db.escapeId(tblName)} (\n`;
     const lines = [
-        ...getCreateColumns(struct.columns),
-        ...getCreateIndexes(struct.indexes),
-        ...getCreateForeignKeys(struct.foreignKeys),
+        ...getCreateColumns(db,struct.columns),
+        ...getCreateIndexes(db,struct.indexes),
+        ...getCreateForeignKeys(db,struct.foreignKeys),
     ];
     sql += lines.map(l => `  ${l}`).join(',\n');
     sql += `\n)`;
-    sql += getCreateOptions(struct.options).map(o => ' '+o).join('');
+    sql += getCreateOptions(db,struct.options).map(o => ' '+o).join('');
     sql += `;`;
     return sql;
 }
 
 
-function getCreateColumns(columns) {
-    return columns.map(col => escapeId(col.name)+' '+columnDefinition(col));
+function getCreateColumns(db,columns) {
+    return columns.map(col => db.escapeId(col.name)+' '+columnDefinition(db,col));
 }
 
 
-function indexDefinition(idx) {
-    let sql = indexDefinition2(idx);
+function indexDefinition(db,idx) {
+    let sql = indexDefinition2(db,idx);
     if(idx.comment) {
         sql += ` COMMENT ${db.escapeValue(idx.comment)}`;
     }
     return sql;
 }
-function indexDefinition2(idx) {
+function indexDefinition2(db,idx) {
     switch(idx.type) {
         case 'PRIMARY':
-            return `PRIMARY KEY ${getIndexColumnsStr(idx.columns)}`;
+            return `PRIMARY KEY ${getIndexColumnsStr(db,idx.columns)}`;
         case 'INDEX':
         case 'KEY':
         case 'BTREE':
-            return `KEY ${escapeId(idx.name)} ${getIndexColumnsStr(idx.columns)}`;
+            return `KEY ${db.escapeId(idx.name)} ${getIndexColumnsStr(db,idx.columns)}`;
         case 'UNIQUE':
-            return `UNIQUE KEY ${escapeId(idx.name)} ${getIndexColumnsStr(idx.columns)}`;
+            return `UNIQUE KEY ${db.escapeId(idx.name)} ${getIndexColumnsStr(db,idx.columns)}`;
         case 'FULLTEXT':
-            return `FULLTEXT KEY ${escapeId(idx.name)} ${getIndexColumnsStr(idx.columns)}`;
+            return `FULLTEXT KEY ${db.escapeId(idx.name)} ${getIndexColumnsStr(db,idx.columns)}`;
     }
     throw new Error(`Unsupported index type: ${idx.type}`);
 }
 
-function getCreateIndexes(indexes) {
-    return indexes.map(indexDefinition)
+function getCreateIndexes(db,indexes) {
+    return indexes.map(idx => indexDefinition(db,idx))
 }
 
-function fkDef(fk) {
-    let sql = fkDef2(fk);
+function fkDef(db,fk) {
+    let sql = fkDef2(db,fk);
     if(fk.comment) {
         sql += ` COMMENT ${db.escapeValue(fk.comment)}`;
     }
     return sql;
 }
 
-function fkDef2(fk) {
-    let sql = `CONSTRAINT ${escapeId(fk.name)} FOREIGN KEY ${getForeignKeyColumnsStr(fk.columns)} REFERENCES `;
+function fkDef2(db,fk) {
+    let sql = `CONSTRAINT ${db.escapeId(fk.name)} FOREIGN KEY ${getForeignKeyColumnsStr(db,fk.columns)} REFERENCES `;
     if(fk.refDatabase) {
-        sql += escapeId(fk.refDatabase)+'.';
+        sql += db.escapeId(fk.refDatabase)+'.';
     }
-    sql += `${escapeId(fk.refTable)}${getForeignKeyColumnsStr(fk.refColumns)}`;
+    sql += `${db.escapeId(fk.refTable)}${getForeignKeyColumnsStr(db,fk.refColumns)}`;
     if(fk.onUpdate) {
         sql += ` ON UPDATE ${fk.onUpdate}`;
     }
@@ -406,8 +408,8 @@ function fkDef2(fk) {
     return sql;
 }
 
-function getCreateForeignKeys(foreignKeys) {
-    return foreignKeys.map(fkDef)
+function getCreateForeignKeys(db,foreignKeys) {
+    return foreignKeys.map(fk => fkDef(db,fk))
 }
 
 function resolveDatabase(obj,dbName) {
@@ -426,23 +428,23 @@ function resolveDatabase(obj,dbName) {
     return String(obj);
 }
 
-function getForeignKeyColumnsStr(columns) {
-    return `(${columns.map(c => escapeId(c)).join(', ')})`;
+function getForeignKeyColumnsStr(db,columns) {
+    return `(${columns.map(c => db.escapeId(c)).join(', ')})`;
 }
 
-function getIndexColumnsStr(columns) {
-    return `(${columns.map(escapeIndex).join(', ')})`;
+function getIndexColumnsStr(db,columns) {
+    return `(${columns.map(c => escapeIndex(db,c)).join(', ')})`;
 }
 
-function escapeIndex(fullName) {
+function escapeIndex(db,fullName) {
     const m = /^(\S+)\((\d+)\)$/.exec(fullName);
     if(m) {
-        return `${escapeId(m[1])}(${m[2]})`;
+        return `${db.escapeId(m[1])}(${m[2]})`;
     }
-    return escapeId(fullName);
+    return db.escapeId(fullName);
 }
 
-function getCreateOptions(options) {
+function getCreateOptions(db,options) {
     const out = [];
     if(options.engine) {
         out.push(`ENGINE=${options.engine}`);
@@ -456,21 +458,21 @@ function getCreateOptions(options) {
     return out;
 }
 
-function getAlterTableSql(dbName,tableName,currentStruct,desiredStruct) {
+function getAlterTableSql(db,dbName,tableName,currentStruct,desiredStruct) {
     const lines = [
-        ...optionsDiff(currentStruct.options,desiredStruct.options),
-        ...columnDiff(currentStruct.columns,desiredStruct.columns),
-        ...indexDiff(currentStruct.indexes,desiredStruct.indexes),
-        ...fkDiff(currentStruct.foreignKeys,desiredStruct.foreignKeys),
+        ...optionsDiff(db,currentStruct.options,desiredStruct.options),
+        ...columnDiff(db,currentStruct.columns,desiredStruct.columns),
+        ...indexDiff(db,currentStruct.indexes,desiredStruct.indexes),
+        ...fkDiff(db,currentStruct.foreignKeys,desiredStruct.foreignKeys),
     ];
     if(lines.length) {
-        return `ALTER TABLE ${escapeId(dbName)}.${escapeId(tableName)}\n${lines.map(l => `  ${l}`).join(',\n')};`;
+        return `ALTER TABLE ${db.escapeId(dbName)}.${db.escapeId(tableName)}\n${lines.map(l => `  ${l}`).join(',\n')};`;
     }
     return null;
 }
 
-function optionsDiff(before,after) {
-    return getCreateOptions(objDiff(before,after));
+function optionsDiff(db,before,after) {
+    return getCreateOptions(db,objDiff(before,after));
 }
 
 /**
@@ -490,15 +492,15 @@ function objDiff(before,after) {
     return out;
 }
 
-function columnDiff(cols1,cols2) {
-    return columnDiffToSql(getColumnDiff(cols1,cols2));
+function columnDiff(db,cols1,cols2) {
+    return columnDiffToSql(db,getColumnDiff(cols1,cols2));
 }
 
-function indexDiff(before,after) {
-    return indexDiffToSql(getIndexDiff(before,after));
+function indexDiff(db,before,after) {
+    return indexDiffToSql(db,getIndexDiff(before,after));
 }
-function fkDiff(before,after) {
-    return fkDiffToSql(getForeignKeyDiff(before,after));
+function fkDiff(db,before,after) {
+    return fkDiffToSql(db,getForeignKeyDiff(before,after));
 }
 
 function objEq(a,b) {
@@ -730,77 +732,77 @@ function getColumnDiff(before,after) {
     return {added,dropped,modified,changed,renamed,altered}
 }
 
-function fkDiffToSql(diff) {
+function fkDiffToSql(db,diff) {
     // dump(diff);process.exit(1);
     // FIXME/workaround: MySQL still hasn't fixed this friggin bug from 2005 https://bugs.mysql.com/bug.php?id=15045
     const lines = [];
     for(let fk of diff.dropped) {
         // has to be DROP FOREIGN KEY -- https://stackoverflow.com/a/14122155/65387
-        lines.push(`DROP FOREIGN KEY ${escapeId(fk)}`) 
+        lines.push(`DROP FOREIGN KEY ${db.escapeId(fk)}`) 
     }
     for(let fk of diff.changed) {
-        lines.push(`DROP FOREIGN KEY ${escapeId(fk.oldName)}`)
-        lines.push(`ADD ${fkDef(fk)}`)
+        lines.push(`DROP FOREIGN KEY ${db.escapeId(fk.oldName)}`)
+        lines.push(`ADD ${fkDef(db,fk)}`)
     }
     for(let fk of diff.modified) {
-        lines.push(`DROP FOREIGN KEY ${escapeId(fk.name)}`)
-        lines.push(`ADD ${fkDef(fk)}`)
+        lines.push(`DROP FOREIGN KEY ${db.escapeId(fk.name)}`)
+        lines.push(`ADD ${fkDef(db,fk)}`)
     }
     for(let fk of diff.renamed) {
-        lines.push(`RENAME FOREIGN KEY ${escapeId(fk.oldName)} TO ${escapeId(fk.newName)}`)
+        lines.push(`RENAME FOREIGN KEY ${db.escapeId(fk.oldName)} TO ${db.escapeId(fk.newName)}`)
     }
     for(let fk of diff.added) {
-        lines.push(`ADD ${fkDef(fk)}`)
+        lines.push(`ADD ${fkDef(db,fk)}`)
     }
     return lines;
 }
 
-function indexDiffToSql(diff) {
+function indexDiffToSql(db,diff) {
     // dump(diff);process.exit(1);
     const lines = [];
     for(let idx of diff.dropped) {
-        lines.push(`DROP INDEX ${escapeId(idx)}`) // I *think* this works fine for PRIMARY keys too!
+        lines.push(`DROP INDEX ${db.escapeId(idx)}`) // I *think* this works fine for PRIMARY keys too!
     }
     for(let idx of diff.changed) {
-        lines.push(`DROP INDEX ${escapeId(idx.oldName)}`)
-        lines.push(`ADD ${indexDefinition(idx)}`)
+        lines.push(`DROP INDEX ${db.escapeId(idx.oldName)}`)
+        lines.push(`ADD ${indexDefinition(db,idx)}`)
     }
     for(let idx of diff.modified) {
-        lines.push(`DROP INDEX ${escapeId(idx.name)}`)
-        lines.push(`ADD ${indexDefinition(idx)}`)
+        lines.push(`DROP INDEX ${db.escapeId(idx.name)}`)
+        lines.push(`ADD ${indexDefinition(db,idx)}`)
     }
     for(let idx of diff.renamed) {
-        lines.push(`RENAME INDEX ${escapeId(idx.oldName)} TO ${escapeId(idx.newName)}`)
+        lines.push(`RENAME INDEX ${db.escapeId(idx.oldName)} TO ${db.escapeId(idx.newName)}`)
     }
     for(let idx of diff.added) {
-        lines.push(`ADD ${indexDefinition(idx)}`)
+        lines.push(`ADD ${indexDefinition(db,idx)}`)
     }
     return lines;
 }
-function columnDiffToSql(diff) {
+function columnDiffToSql(db,diff) {
     const lines = [];
     for(let colName of diff.dropped) {
-        lines.push(`DROP COLUMN ${escapeId(colName)}`)
+        lines.push(`DROP COLUMN ${db.escapeId(colName)}`)
     }
     for(let col of diff.modified) {
-        lines.push(`MODIFY COLUMN ${escapeId(col.name)} ${columnDefinition(col)}`)
+        lines.push(`MODIFY COLUMN ${db.escapeId(col.name)} ${columnDefinition(db,col)}`)
     }
     for(let col of diff.changed) {
-        lines.push(`CHANGE COLUMN ${escapeId(col.oldName)} ${escapeId(col.name)} ${columnDefinition(col)}`)
+        lines.push(`CHANGE COLUMN ${db.escapeId(col.oldName)} ${db.escapeId(col.name)} ${columnDefinition(db,col)}`)
     }
     for(let col of diff.renamed) { // MySQL 8.0+
-        lines.push(`RENAME COLUMN ${escapeId(col.oldName)} TO ${escapeId(col.newName)}`)
+        lines.push(`RENAME COLUMN ${db.escapeId(col.oldName)} TO ${db.escapeId(col.newName)}`)
     }
     for(let col of diff.altered) {
-        lines.push(`ALTER COLUMN ${escapeId(col.name)} ${col.default === undefined ? "DROP DEFAULT" : `SET DEFAULT ${getDefault(col)}`}`)
+        lines.push(`ALTER COLUMN ${db.escapeId(col.name)} ${col.default === undefined ? "DROP DEFAULT" : `SET DEFAULT ${getDefault(db,col)}`}`)
     }
     for(let col of diff.added) {
-        lines.push(`ADD COLUMN ${escapeId(col.name)} ${columnDefinition(col)}`)
+        lines.push(`ADD COLUMN ${db.escapeId(col.name)} ${columnDefinition(db,col)}`)
     }
     return lines;
 }
 
-function getDefault(col) {
+function getDefault(db,col) {
     if(col.default === undefined) return undefined;
     if(col.default === null) return 'NULL';
     switch(col.type) {
@@ -819,8 +821,8 @@ function getDefault(col) {
     return db.escapeValue(col.default);
 }
 
-function columnDefinition(col) {
-    let str = col.type + columnDefinition2(col);
+function columnDefinition(db,col) {
+    let str = col.type + columnDefinition2(db,col);
     if(col.collation) {
         str += ` COLLATE ${col.collation}`;
     }
@@ -828,7 +830,7 @@ function columnDefinition(col) {
         str += ' NOT NULL';
     }
     if(col.default !== undefined) {
-        str += ` DEFAULT ${getDefault(col)}`;
+        str += ` DEFAULT ${getDefault(db,col)}`;
     }
     if(col.comment) {
         str += ` COMMENT ${db.escapeValue(col.comment)}`;
@@ -839,7 +841,7 @@ function columnDefinition(col) {
     return str;
 }
 
-function columnDefinition2(col) {
+function columnDefinition2(db,col) {
     // https://dev.mysql.com/doc/refman/8.0/en/create-table.html
     switch(col.type) {
         case 'tinyint':
