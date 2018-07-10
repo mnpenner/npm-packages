@@ -785,12 +785,14 @@ function indexDiffToSql(db,diff) {
 }
 function columnDiffToSql(db,diff,dropColumns) {
     const lines = [];
-    for(let colName of diff.dropped) {
-        let sql = `DROP COLUMN ${db.escapeId(colName)}`;
-        if(!dropColumns) {
-            sql = `/*(SKIP) ${sql} */`;
+    if(dropColumns) {
+        for(let colName of diff.dropped) {
+            let sql = `DROP COLUMN ${db.escapeId(colName)}`;
+            if(!dropColumns) {
+                sql = `/*(SKIP) ${sql} */`;
+            }
+            lines.push(sql)
         }
-        lines.push(sql)
     }
     for(let col of diff.modified) {
         lines.push(`MODIFY COLUMN ${db.escapeId(col.name)} ${columnDefinition(db,col)}`)
