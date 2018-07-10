@@ -205,7 +205,7 @@ export default {
                                 // const lines = columnDiffToSql(diff);
                                 // dump(lines);
 
-                                const alterTableSql = getAlterTableSql(db,dbName, tbl.name, currentStruct, desiredStruct);
+                                const alterTableSql = getAlterTableSql(db,dbName, tbl.name, currentStruct, desiredStruct, opts.dropColumns);
                                 if(alterTableSql) {
                                     kon.writeLn(highlight(alterTableSql, {language: 'sql', ignoreIllegals: true}));
                                     if(opts.run) {
@@ -461,10 +461,10 @@ function getCreateOptions(db,options) {
     return out;
 }
 
-function getAlterTableSql(db,dbName,tableName,currentStruct,desiredStruct) {
+function getAlterTableSql(db,dbName,tableName,currentStruct,desiredStruct,dropColumns) {
     const lines = [
         ...optionsDiff(db,currentStruct.options,desiredStruct.options),
-        ...columnDiff(db,currentStruct.columns,desiredStruct.columns),
+        ...columnDiff(db,currentStruct.columns,desiredStruct.columns,dropColumns),
         ...indexDiff(db,currentStruct.indexes,desiredStruct.indexes),
         ...fkDiff(db,currentStruct.foreignKeys,desiredStruct.foreignKeys),
     ];
@@ -495,8 +495,8 @@ function objDiff(before,after) {
     return out;
 }
 
-function columnDiff(db,cols1,cols2) {
-    return columnDiffToSql(db,getColumnDiff(cols1,cols2));
+function columnDiff(db,cols1,cols2,dropColumns) {
+    return columnDiffToSql(db,getColumnDiff(cols1,cols2),dropColumns);
 }
 
 function indexDiff(db,before,after) {
@@ -721,7 +721,8 @@ function getColumnDiff(before,after) {
             // if(objEq(curDef,newDef)) {
             //     renamed.push({oldName,newName});
             // } else {
-                changed.push({...newDef,oldName: curCol.name});
+            //     changed.push({...newDef,oldName: curCol.name});
+                changed.push({new: newDef, old: curCol});
             // }
             // dump('changedchangedchangedchangedchanged',changed);
         } else {
@@ -782,18 +783,27 @@ function indexDiffToSql(db,diff) {
     }
     return lines;
 }
-function columnDiffToSql(db,diff) {
+function columnDiffToSql(db,diff,dropColumns) {
     const lines = [];
     for(let colName of diff.dropped) {
-        lines.push(`DROP COLUMN ${db.escapeId(colName)}`)
+        let sql = `DROP COLUMN ${db.escapeId(colName)}`;
+        if(!dropColumns) {
+            sql = `/*(SKIP) ${sql} */`;
+        }
+        lines.push(sql)
     }
     for(let col of diff.modified) {
         lines.push(`MODIFY COLUMN ${db.escapeId(col.name)} ${columnDefinition(db,col)}`)
     }
     for(let col of diff.changed) {
-        lines.push(`CHANGE COLUMN ${db.escapeId(col.oldName)} ${db.escapeId(col.name)} ${columnDefinition(db,col)}`)
+        lines.push(`CHANGE COLUMN ${db.escapeId(col.old.name)} ${db.escapeId(col.new.name)} ${columnDefinition(db,col.new)}`)
+        if(!dropColumns) {
+            // FIXME: should we copy the old data back into this column too?
+            lines.push(`ADD COLUMN ${db.escapeId(col.old.name)} ${columnDefinition(db,{...col.old, comment: `DEPRECATED: Renamed to "${col.new.name}"`,null:true,default:null,autoIncrement:false})}`)
+        }
     }
     for(let col of diff.renamed) { // MySQL 8.0+
+        throw new Error("Renaming is not fully supported");
         lines.push(`RENAME COLUMN ${db.escapeId(col.oldName)} TO ${db.escapeId(col.newName)}`)
     }
     for(let col of diff.altered) {
