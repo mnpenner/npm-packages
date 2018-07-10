@@ -1,3 +1,5 @@
+import Util from 'util';
+
 export default class Konsole {
 
     rewrite(str) {
@@ -12,6 +14,11 @@ export default class Konsole {
         }
         process.stdout.write(str + '\n');
         this.len = null;
+    }
+    
+    writeDebug(...args) {
+        this.clear();
+        process.stdout.write(args.map(o => Util.inspect(o, {colors: true, depth: 10, showHidden: false, maxArrayLength: 10})).join(' ')+'\n');
     }
 
     clear() {

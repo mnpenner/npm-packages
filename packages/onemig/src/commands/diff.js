@@ -17,6 +17,7 @@ import Validator from '../schema/validator';
 import DatabaseWrapper from '../mysql/DatabaseWrapper';
 import readSchema from '../schema/readSchema';
 import SpinnerKonsole from '../util/SpinnerKonsole';
+import combineCaches from '../schema/combineCaches';
 // import conn from '../db';
 // import {Command} from '../console';
 
@@ -64,6 +65,11 @@ export default {
         {
             name: 'database',
             description: "Only run on these databases.",
+            value: InputOption.Required|InputOption.Array,
+        },
+        {
+            name: 'table',
+            description: "Only update these tables.",
             value: InputOption.Required|InputOption.Array,
         },
         {
@@ -134,20 +140,31 @@ export default {
           
             let di = -1;
             let dbSet;
+            let tblSet;
 
             if(opts.database.length) {
                 dbSet = new Set(opts.database);
+            } else {
+                dbSet = new Set(Object.keys(databaseCollations));
+            }
+            
+            if(opts.table.length) {
+                tblSet = new Set(opts.table);
             }
 
             for(let tbl of tables.values()) {
                 ++di;
+                
+                if(tblSet && !tblSet.has(tbl.name)) {
+                    continue;
+                }
                 // dump(tbl);
                 // process.exit(0);
            
                 // console.log(`${filename} is valid!!!!`);
                 for(let {databases, ...desiredStruct} of tbl.versions) {
                     for(let dbName of databases) {
-                        if(dbSet && !dbSet.has(dbName)) {
+                        if(!dbSet.has(dbName)) {
                             continue;
                         }
                         // pb.tick(0, {tbl: tbl.name, db: dbName});
@@ -178,7 +195,14 @@ export default {
                             if(createTableSql) {
                                 kon.writeLn(highlight(createTableSql, {language: 'sql', ignoreIllegals: true}));
                                 if(opts.run) {
-                                    await db.exec(createTableSql);
+                                    try {
+                                        await db.exec(createTableSql);
+                                        if(opts.cache) {
+                                            await updateCache(db,dbName,tbl,cache)
+                                        }
+                                    } catch(err) {
+                                        kon.writeDebug(err)
+                                    }
                                 }
                             }
                         } else {
@@ -209,7 +233,14 @@ export default {
                                 if(alterTableSql) {
                                     kon.writeLn(highlight(alterTableSql, {language: 'sql', ignoreIllegals: true}));
                                     if(opts.run) {
-                                        await db.exec(alterTableSql);
+                                        try {
+                                            await db.exec(alterTableSql);
+                                            if(opts.cache) {
+                                                await updateCache(db,dbName,tbl,cache)
+                                            }
+                                        } catch(err) {
+                                            kon.writeDebug(err)
+                                        }
                                     }
                                 }
 
@@ -233,10 +264,35 @@ export default {
                 // pb.tick(1,{tbl:tbl.name,db:''});
             }
             kon.clear();
-            db.close();
+         
+            if(opts.cache) {
+                await combineCaches([cache],opts.cache);
+            }
         } finally {
             db.close();
         }
+    }
+}
+
+async function updateCache(conn,dbName,tbl,cache) {
+    const struct = await getStruct(conn,dbName,tbl.name);
+    // dump('struct',struct);
+    const version = {
+        ...struct,
+        databases: [dbName],
+    };
+    if(cache.has(tbl.name)) {
+        const versions = cache.get(tbl.name).versions;
+        const idx = versions.findIndex(ver => ver.databases.includes(dbName));
+        if(idx >= 0) {
+            versions.splice(idx, 1);
+        }
+        versions.push(version)
+    } else {
+        cache.set(tbl.name, {
+            name: tbl.name,
+            versions: [version],
+        })
     }
 }
 
@@ -801,7 +857,12 @@ function columnDiffToSql(db,diff,dropColumns) {
         lines.push(`CHANGE COLUMN ${db.escapeId(col.old.name)} ${db.escapeId(col.new.name)} ${columnDefinition(db,col.new)}`)
         if(!dropColumns) {
             // FIXME: should we copy the old data back into this column too?
-            lines.push(`ADD COLUMN ${db.escapeId(col.old.name)} ${columnDefinition(db,{...col.old, comment: `DEPRECATED: Renamed to "${col.new.name}"`,null:true,default:null,autoIncrement:false})}`)
+            const old = {...col.old, comment: `DEPRECATED: Renamed to "${col.new.name}"`,autoIncrement:false};
+            if(old.default === undefined) {
+                old.null = true;
+                old.default = null;
+            }
+            lines.push(`ADD COLUMN ${db.escapeId(col.old.name)} ${columnDefinition(db,old)}`)
         }
     }
     for(let col of diff.renamed) { // MySQL 8.0+

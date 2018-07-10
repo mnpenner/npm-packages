@@ -17,6 +17,8 @@ import Chalk from 'chalk';
 import * as async from '../util/async';
 import * as fs from '../util/fs';
 import {addMany} from '../util/set';
+import readSchema from '../schema/readSchema';
+import combineCaches from '../schema/combineCaches';
 
 
 export default {
@@ -40,47 +42,11 @@ export default {
         if(!opts.input.length) throw new Error("One or more input directories required");
         if(!opts.output) throw new Error("Output directory required");
 
-        const kon = new Konsole;
-        const allTables = Object.create(null);
-        
-        // TODO: check if the same table for the same database was defined multiple times but with a different definition...
-        
+        const caches = [];
         for(const inputDir of opts.input) {
-            const tableFiles = (await readDir(Path.join(inputDir,'tables'))).filter(f => f.endsWith('.json'));
-            for(let filename of tableFiles) {
-                kon.rewrite(`reading ${filename}`);
-                const tbl = await readJson(filename);
-                for(let {databases, ...tblDef} of tbl.versions) {
-                    // TODO: maybe we should normalize the definition before hashing it..?
-                    const tblHash = objHash(tblDef);
-                    if(!allTables[tbl.name]) {
-                        allTables[tbl.name] = {};
-                    }
-                    if(!allTables[tbl.name][tblHash]) {
-                        allTables[tbl.name][tblHash] = {
-                            databases: new Set(databases),
-                            ...tblDef,
-                        }
-                    } else {
-                        allTables[tbl.name][tblHash].databases::addMany(databases);
-                    }
-                }
-            }
+            caches.push(await readSchema(inputDir));
         }
         
-        kon.clear();
-
-        await async.forEach(Object.keys(allTables), async tblName => {
-            let json = {
-                name: tblName,
-                versions: Object.values(allTables[tblName]).map(ver => ({
-                    ...ver,
-                    databases: Array.from(ver.databases),
-                })),
-            };
-            const filename = Path.join(opts.output,`tables/${tblName}.json`);
-            await fs.writeText(filename, JSON.stringify(json, null, 4));
-            console.log(`wrote ${Chalk.underline(filename)}`);
-        });
+        await combineCaches(caches,opts.output);
     }
 }
