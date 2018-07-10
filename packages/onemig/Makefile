@@ -1,6 +1,6 @@
 NM := node_modules/.bin
 SRCS := $(shell find src \( -name '*.js' -o -name '*.json' \))
-DISTS := $(patsubst src/%,dist/%,$(SRCS)) $(patsubst src/%.schema.js,dist/%.schema.json,$(SRCS))
+DISTS := $(patsubst src/%,dist/%,$(SRCS)) $(patsubst src/%.schema.js,dist/%.schema.json,$(SRCS)) dist/LICENSE dist/package.json dist/README.md
 DISTDIRS := $(sort $(dir $(DISTS)))
 .SUFFIXES:
 
@@ -9,7 +9,7 @@ DISTDIRS := $(sort $(dir $(DISTS)))
 # usage: make CMD=diff
 
 run: build
-	node -r source-map-support/register dist/bin $(CMD) #2> warnings.log
+	node -r source-map-support/register dist/bin $(CMD)
 
 build: $(DISTS) yarn.lock
 
@@ -21,7 +21,16 @@ dist/%.js: src/%.js yarn.lock .babelrc | $(DISTDIRS)
 
 dist/%.json: src/%.json | $(DISTDIRS)
 	cp $< $@
+
+dist/LICENSE: LICENSE | $(DISTDIRS)
+	cp $< $@
 	
+dist/README.md: README.md | $(DISTDIRS)
+	cp $< $@
+	
+dist/package.json: package.json | $(DISTDIRS)
+	jq 'del(.private, .devDependencies, .scripts, .eslintConfig, .babel)' $< > $@
+
 $(DISTDIRS):
 	mkdir -p $@
 
@@ -53,3 +62,17 @@ data/servers.json: $(wildcard ~/Projects/server_config/napi/host/*.json)
 dump: build
 	node -r source-map-support/register dist/bin export -h "$(HOST)" -o ~/.onemig/$(HOST)
 	cd ~/.onemig && hg addremove "$(HOST)" && hg ci -m "Updated $(HOST)" "$(HOST)" && hg push
+
+dump-phsa: build
+	node -r source-map-support/register dist/bin export -h code -P 2224 -o ~/.onemig/phsa
+	cd ~/.onemig && hg addremove "phsa" && hg ci -m "Updated phsa" "phsa" && hg push
+
+publish: build
+	cd dist && npm publish
+
+test-it-live:
+	rm -rf dist
+	npm version patch 
+	$(MAKE) publish 
+	sudo npm i -g @nucleuslabs/onemig 
+	onemig

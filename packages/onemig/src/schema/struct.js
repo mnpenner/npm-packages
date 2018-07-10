@@ -3,6 +3,7 @@
 import * as async from '../util/async';
 // import objHash from 'object-hash';
 import {dbNameMap} from '../napi';
+import dump from '../dump';
 // import conn from '../db';
 // import {memoized} from '../util/func';
 
@@ -358,7 +359,25 @@ export async function getStruct(conn, dbName, tblName) {
             }
 
             tblDef.foreignKeys = sortBy(Object.values(fkMap), 'name');
-        }
+        },
+        // async function fetchTriggers() {
+        //     dump('fetchin triggersss');
+        //     const triggerStream = conn.stream(`
+        //                         SELECT
+        //                             *
+        //                         FROM
+        //                             information_schema.TRIGGERS
+        //                         WHERE
+        //                             TRIGGER_SCHEMA = :dbname 
+        //                             LIMIT 2
+        //                     `, {dbname: dbName, tblname: tblName});
+        //
+        //     for await(const trigger of triggerStream) {
+        //         dump(trigger);
+        //      
+        //     }
+        //     process.exit(1);
+        // }
     )
 
 

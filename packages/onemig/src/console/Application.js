@@ -6,6 +6,7 @@ import {consts,access} from '../util/fs';
 import InputOption from './InputOption';
 import {toIter} from '../util/array';
 import {camelCase} from 'lodash';
+import pkgUp from 'pkg-up';
 
 export default class Application {
     
@@ -105,7 +106,8 @@ export default class Application {
         sortBy(commands,'name');
         
         if(!name || !version) {
-            const pkg = require(`${__dirname}/../../package.json`);
+            const pkgJson = await pkgUp(__dirname);
+            const pkg = require(pkgJson);
             if(!name) {
                 name = pkg.name;
             }
@@ -118,8 +120,11 @@ export default class Application {
         console.log();
         console.log(Chalk.yellow('Usage:'));
         
-        let exe;
-        if(await access(require.main.filename, consts.X_OK)) {
+        let exe = Path.basename(process.argv[1]);
+        
+        if(exe === 'onemig') {
+            // good!
+        } else if(await access(require.main.filename, consts.X_OK)) {
             // TODO: check if script is in PATH already, or if its in the current directory or up
             exe = Path.relative(process.cwd(),require.main.filename);
         } else {

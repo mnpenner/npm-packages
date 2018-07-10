@@ -265,7 +265,7 @@ export default {
             }
             kon.clear();
          
-            if(opts.cache) {
+            if(opts.cache && opts.run) {
                 await combineCaches([cache],opts.cache);
             }
         } finally {

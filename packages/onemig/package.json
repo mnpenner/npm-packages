@@ -1,13 +1,13 @@
 {
-  "name": "onemig",
-  "version": "0.1.0",
+  "name": "@nucleuslabs/onemig",
+  "version": "0.1.10",
   "license": "UNLICENSED",
+  "private": true,
+  "bin": "bin.js",
   "dependencies": {
     "@async-generators/from-emitter": "^0.3.0",
     "@nucleuslabs/napi-js": "^1.1.0",
     "ajv": "^6.5.0",
-    "ascii-progress": "^1.0.5",
-    "async": "^2.6.0",
     "chalk": "^2.4.1",
     "cli-highlight": "^2.0.0",
     "find-up": "^2.1.0",
@@ -17,8 +17,7 @@
     "moment": "^2.22.1",
     "mysql2": "^1.5.3",
     "object-hash": "^1.3.0",
-    "shell-escape": "^0.2.0",
-    "ssh2": "^0.6.1"
+    "pkg-up": "^2.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0-beta.49",
@@ -32,5 +31,13 @@
   },
   "engines": {
     "node": ">=10"
-  }
+  },
+  "repository": {
+    "type": "hg",
+    "url": "https://bitbucket.org/nucleuslabs/onemig"
+  },
+  "publishConfig": {
+    "registry": "http://code.nucleuslabs.com:4873"
+  },
+  "author": "NucleusLabs Information Technologies Inc."
 }
