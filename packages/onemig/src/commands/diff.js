@@ -117,7 +117,7 @@ export default {
             //     blank: '░',
             // });
 
-            const {a:serverCollation,b:defaultStorageEngine} = await db.query('select @@collation_server a, @@default_storage_engine b').fetchRow();
+            const {serverCollation,defaultStorageEngine} = await db.query('SELECT @@collation_server serverCollation, @@default_storage_engine defaultStorageEngine').fetchRow();
             const databaseCollations = await db.query('SELECT SCHEMA_NAME,DEFAULT_COLLATION_NAME FROM information_schema.SCHEMATA').fetchPairs()
             // dump(defaultCollations)
             // process.exit(0);
@@ -159,12 +159,15 @@ export default {
                         if(cache.has(tbl.name)) {
                             currentStruct = cache.get(tbl.name).versions.find(ver => ver.databases.includes(dbName));
                         }
+
+                        const defaultCollation = databaseCollations[dbName] || serverCollation;
                         
                         if(!currentStruct) {
+                            // kon.writeLn(`Cache miss on ${dbName}.${tbl.name}`);
                             currentStruct = await getStruct(db,dbName, tbl.name);
                         } 
 
-                        const defaultCollation = databaseCollations[dbName] || serverCollation;
+                  
 
                         normalizeStruct(desiredStruct, defaultStorageEngine, defaultCollation, dbName)
 
@@ -298,7 +301,7 @@ function normalizeColumn(col,tableCollation) {
             if(col.zerofill) {
                 col.unsigned = col.zerofill = true;
             } else {
-                col.zerofill = false;
+                delete col.zerofill;
                 col.unsigned = !!col.unsigned;
             }
             if(col.default != null) col.default = normalizeNumber(col.default);

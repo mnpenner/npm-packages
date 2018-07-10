@@ -12,20 +12,15 @@ export const getDefaultStorageEngine = conn => conn.query('select @@default_stor
 export const getDatabaseCollation = (conn,dbName) => conn.query('SELECT DEFAULT_COLLATION_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME=?',[dbName]).fetchValue();
 
 export async function getStruct(conn, dbName, tblName) {
-    
-    const [defaultStorageEngine,dbCollation,tbl] = await Promise.all([
-        getDefaultStorageEngine(conn),
-        getDatabaseCollation(conn,dbName),
-        conn.query(`SELECT 
-                        TABLE_NAME 'name'
-                        ,ENGINE 'engine'
-                        ,TABLE_COMMENT 'comment'
-                        ,TABLE_COLLATION 'collation'
-                        #,ROW_FORMAT 'rowFormat' -- requires OPEN_FULL_TABLE: https://dev.mysql.com/doc/refman/5.7/en/information-schema-optimization.html
-                        FROM INFORMATION_SCHEMA.TABLES 
-                        WHERE TABLES.TABLE_SCHEMA=? AND TABLE_NAME=?
-                        `, [dbName,tblName]).fetchRow()
-    ]);
+    const tbl = await conn.query(`SELECT 
+        TABLE_NAME 'name'
+        ,ENGINE 'engine'
+        ,TABLE_COMMENT 'comment'
+        ,TABLE_COLLATION 'collation'
+        #,ROW_FORMAT 'rowFormat' -- requires OPEN_FULL_TABLE: https://dev.mysql.com/doc/refman/5.7/en/information-schema-optimization.html
+        FROM INFORMATION_SCHEMA.TABLES 
+        WHERE TABLES.TABLE_SCHEMA=? AND TABLE_NAME=?
+        `, [dbName,tblName]).fetchRow();
     
     if(!tbl) {
         return null;

@@ -4,6 +4,8 @@ import dump from '../dump';
 import fromEmitter from '@async-generators/from-emitter';
 import formatSql from './formatSql';
 import {setDefaults} from '../util/object';
+import {highlight} from 'cli-highlight';
+import Util from 'util';
 
 function escapeIdString(id) {
     return '`' + String(id).replace(/`/g,'``') + '`';
@@ -58,6 +60,7 @@ export default class DatabaseWrapper {
     }
 
     query(sql, params) {
+        // console.log(highlight(sql, {language: 'sql', ignoreIllegals: true}),Util.inspect(params,{colors:true}));
         return new ResultWrapper(this.pool.query(sql, params));
     }
 
@@ -78,6 +81,7 @@ export default class DatabaseWrapper {
     }
     
     stream(sql, params) {
+        // console.log(highlight(sql, {language: 'sql', ignoreIllegals: true}),Util.inspect(params,{colors:true}));
         //'result','error','end'
         return fromEmitter(this.pool.pool.query(sql, params),{
             onNext: 'result',

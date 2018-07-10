@@ -22,26 +22,64 @@ import {highlight} from 'cli-highlight';
 import Konsole from '../util/Konsole';
 import napi from '../napi';
 import DatabaseWrapper from '../mysql/DatabaseWrapper';
+import SpinnerKonsole from '../util/SpinnerKonsole';
+import readSchema from '../schema/readSchema';
 // import {Command} from '../console';
 
 
 
 export default {
-    name: "droptables",
+    name: "drop-tables",
     description: "Drop any tables that are not present in the source code",
     options: [
         {
-            name: 'dir',
-            alias: 'd',
+            name: 'source',
+            alias: 's',
             description: "Source directory of struct JSON relative to current working directory",
             value: InputOption.Required,
-            default: 'out',
-        }
+            default: 'onemig',
+        },
+        {
+            name: 'database',
+            description: "Only run on these databases.",
+            value: InputOption.Required|InputOption.Array,
+        },
+        {
+            name: 'host',
+            alias: 'h',
+            description: "Connect to the MySQL server on the given host.",
+            value: InputOption.Required,
+        },
+        {
+            name: 'port',
+            alias: 'P',
+            description: "The TCP/IP port number to use for the connection.",
+            value: InputOption.Required,
+        },
+        {
+            name: 'user',
+            alias: 'u',
+            description: "The MySQL user name to use when connecting to the server.",
+            value: InputOption.Required,
+        },
+        {
+            name: 'password',
+            alias: 'p',
+            description: "The password to use when connecting to the server.",
+            value: InputOption.Required,
+        },
+        {
+            name: 'run',
+            description: "Actually RUN the SQL. Might want to make a backup first.",
+            value: InputOption.None,
+        },
     ],
     async execute(args, opts) {
         const dbVars = napi.sharedDbVars('migrations');
 
-        const conn = new DatabaseWrapper({
+        const tables = await readSchema(opts.source);
+        
+        const db = new DatabaseWrapper({
             host: opts.host || dbVars.host,
             port: opts.port || dbVars.port,
             user: opts.user || dbVars.login,
@@ -49,13 +87,9 @@ export default {
         });
 
         try {
-            const tableFiles = (await readDir(Path.join(opts.dir, 'tables'))).filter(f => f.endsWith('.json'));
-
             const dbMap = new Map;
 
-            for(let filename of tableFiles) {
-                const tbl = await readJson(filename);
-
+            for(let tbl of tables.values()) {
                 for(let {databases} of tbl.versions) {
                     for(let dbName of databases) {
                         let tables = dbMap.get(dbName);
@@ -67,24 +101,23 @@ export default {
                 }
             }
 
-            const spinners = '⣾⣽⣻⢿⡿⣟⣯⣷';
-            let si = 0;
             let di = 0;
-            const kon = new Konsole;
-
+            const kon = new SpinnerKonsole;
 
             for(const [dbName, desiredTables] of dbMap) {
                 // kon.rewrite(`${spinners[si]} ${dbName} ${++di}/${dbMap.size}`);
                 kon.rewrite(`${(di++ / dbMap.size * 100).toFixed(1).padStart(5, ' ')}% ${dbName}`);
-                si = (si + 1) % spinners.length;
 
-                const currentTables = await conn.query(`SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES 
+                const currentTables = await db.query(`SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES 
                         WHERE TABLES.TABLE_SCHEMA=? AND TABLE_TYPE='BASE TABLE'`, [dbName]).fetchColumn();
                 const diff = setDifference(currentTables, desiredTables);
 
                 for(let tblName of diff) {
                     const sql = `DROP TABLE ${db.escapeId(dbName)}.${db.escapeId(tblName)};`;
                     kon.writeLn(highlight(sql, {language: 'sql', ignoreIllegals: true}));
+                    if(opts.run) {
+                        await db.exec(sql);
+                    }
                 }
             }
             kon.clear();
@@ -92,7 +125,7 @@ export default {
 
             
         } finally {
-            conn.close();
+            db.close();
         }
     }
 }
