@@ -203,8 +203,12 @@ export default {
                     type: "array",
                     items: {$ref: "#/defs/ForeignKey"},
                 },
+                triggers: {
+                    type: "array",
+                    items: {$ref: "#/defs/Trigger"},
+                },
             },
-            required: ["columns", "databases", "foreignKeys", "indexes"],
+            required: ["columns", "databases"],
         },
         TableOptions: {
             type: "object",
@@ -341,6 +345,19 @@ export default {
                 },
             },
             required: ["columns", "onDelete", "name", "refColumns", "refTable", "onUpdate"],
+        },
+        Trigger: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+                name: {$ref: "#/defs/Identifier"},
+                timing: {enum: ['BEFORE','AFTER']},
+                event: {enum: ['INSERT','DELETE','UPDATE']},
+                statement: {type: 'string'},
+                definer: {type: 'string'},
+                sqlMode: {type: 'string'},
+            },
+            required: ["name","timing","event","statement"]
         },
         AppRef: {
             type: "object",

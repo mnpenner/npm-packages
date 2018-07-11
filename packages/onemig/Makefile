@@ -24,10 +24,10 @@ dist/%.json: src/%.json | $(DISTDIRS)
 
 dist/LICENSE: LICENSE | $(DISTDIRS)
 	cp $< $@
-	
+
 dist/README.md: README.md | $(DISTDIRS)
 	cp $< $@
-	
+
 dist/package.json: package.json | $(DISTDIRS)
 	jq 'del(.private, .devDependencies, .scripts, .eslintConfig, .babel)' $< > $@
 

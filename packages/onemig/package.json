@@ -10,6 +10,7 @@
     "ajv": "^6.5.0",
     "chalk": "^2.4.1",
     "cli-highlight": "^2.0.0",
+    "escape-string-regexp": "^1.0.5",
     "find-up": "^2.1.0",
     "json-schema-ref-parser": "^5.0.3",
     "lodash": "^4.17.10",

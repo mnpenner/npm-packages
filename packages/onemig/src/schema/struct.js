@@ -2,8 +2,11 @@
 // import dump from '../dump';
 import * as async from '../util/async';
 // import objHash from 'object-hash';
-import {dbNameMap} from '../napi';
+import napi, {dbNameMap} from '../napi';
 import dump from '../dump';
+import {pick} from '../util/object';
+import {isRegExp} from '../util/types';
+import escapeStringRegexp from 'escape-string-regexp';
 // import conn from '../db';
 // import {memoized} from '../util/func';
 
@@ -360,29 +363,41 @@ export async function getStruct(conn, dbName, tblName) {
 
             tblDef.foreignKeys = sortBy(Object.values(fkMap), 'name');
         },
-        // async function fetchTriggers() {
-        //     dump('fetchin triggersss');
-        //     const triggerStream = conn.stream(`
-        //                         SELECT
-        //                             *
-        //                         FROM
-        //                             information_schema.TRIGGERS
-        //                         WHERE
-        //                             TRIGGER_SCHEMA = :dbname 
-        //                             LIMIT 2
-        //                     `, {dbname: dbName, tblname: tblName});
-        //
-        //     for await(const trigger of triggerStream) {
-        //         dump(trigger);
-        //      
-        //     }
-        //     process.exit(1);
-        // }
+        async function fetchTriggers() {
+            // dump('fetchin triggersss');
+            const triggerStream = conn.stream(`
+                                SELECT
+                                    #TRIGGER_SCHEMA database,
+                                    TRIGGER_NAME name
+                                    ,ACTION_TIMING timing
+                                    ,EVENT_MANIPULATION event
+                                    ,ACTION_STATEMENT statement
+                                    #,DEFINER definer
+                                    #,SQL_MODE sqlMode
+                                FROM
+                                    information_schema.TRIGGERS
+                                WHERE
+                                    EVENT_OBJECT_SCHEMA = :dbname 
+                                    AND EVENT_OBJECT_TABLE = :tblname
+                                ORDER BY EVENT_MANIPULATION,ACTION_TIMING,ACTION_ORDER,TRIGGER_NAME
+                            `, {dbname: dbName, tblname: tblName});
+
+
+            tblDef.triggers = [];
+
+            const [gsid] = dbNameMap.get(dbName);
+            const pcsDb = napi.dbName(gsid,'pcs');
+            
+            const re = new RegExp(`${escapeStringRegexp(conn.escapeId(pcsDb))}`,'giu');
+            for await(const trigger of triggerStream) {
+                trigger.statement = trigger.statement.replace(re,'{{pcs}}'); // gross!
+                tblDef.triggers.push(pick(trigger,['name','timing','event','statement']))
+            }
+        }
     )
 
 
     return tblDef;
-
 }
 
 

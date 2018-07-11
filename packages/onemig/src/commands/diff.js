@@ -192,11 +192,13 @@ export default {
                             const createTableSql = getCreateTableSql(db,dbName, tbl.name, desiredStruct);
                             // TODO: stealth audit
                             // TODO: seeds
-                            if(createTableSql) {
-                                kon.writeLn(highlight(createTableSql, {language: 'sql', ignoreIllegals: true}));
+                            if(createTableSql.length) {
+                                kon.writeLn(highlight(createTableSql.join("\n"), {language: 'sql', ignoreIllegals: true}));
                                 if(opts.run) {
                                     try {
-                                        await db.exec(createTableSql);
+                                        for(const stmt of createTableSql) {
+                                            await db.exec(stmt);
+                                        }
                                         if(opts.cache) {
                                             await updateCache(db,dbName,tbl,cache)
                                         }
@@ -230,11 +232,13 @@ export default {
                                 // dump(lines);
 
                                 const alterTableSql = getAlterTableSql(db,dbName, tbl.name, currentStruct, desiredStruct, opts.dropColumns);
-                                if(alterTableSql) {
-                                    kon.writeLn(highlight(alterTableSql, {language: 'sql', ignoreIllegals: true}));
+                                if(alterTableSql.length) {
+                                    kon.writeLn(highlight(alterTableSql.join("\n"), {language: 'sql', ignoreIllegals: true}));
                                     if(opts.run) {
                                         try {
-                                            await db.exec(alterTableSql);
+                                            for(const stmt of alterTableSql) {
+                                                await db.exec(stmt);
+                                            }
                                             if(opts.cache) {
                                                 await updateCache(db,dbName,tbl,cache)
                                             }
@@ -307,8 +311,21 @@ function normalizeNumber(x) {
 function normalizeStruct(struct, defaultStorageEngine, defaultCollation, dbName) {
     normalizeOptions(struct.options, defaultStorageEngine, defaultCollation);
     struct.columns.forEach(c => normalizeColumn(c,struct.options.collation||defaultCollation))
-    struct.indexes.forEach(idx => normalizeIndex(idx))
-    struct.foreignKeys.forEach(fk => normalizeForeignKey(fk, dbName))
+    if(struct.indexes && struct.indexes.length) {
+        struct.indexes.forEach(idx => normalizeIndex(idx))
+    } else {
+        delete struct.indexes;
+    }
+    if(struct.foreignKeys && struct.foreignKeys.length) {
+        struct.foreignKeys.forEach(fk => normalizeForeignKey(fk, dbName))
+    } else {
+        delete struct.foreignKeys;
+    }
+    if(struct.triggers && struct.triggers.length) {
+        struct.triggers.forEach(trig => normalizeTrigger(trig))
+    } else {
+        delete struct.triggers;
+    }
 }
 
 function normalizeOptions(opt, defaultStorageEngine, defaultCollation) {
@@ -329,6 +346,12 @@ function normalizeForeignKey(fk,dbName) {
     if(fk.refDatabase) {
         fk.refDatabase = resolveDatabase(fk.refDatabase,dbName);
     }
+}
+
+function normalizeTrigger(trig) {
+    // let's just ignore these for now...
+    delete trig.definer;
+    delete trig.sqlMode;
 }
 
 function normalizeColumn(col,tableCollation) {
@@ -398,17 +421,26 @@ function dec2bin(dec){
 
 function getCreateTableSql(db,dbName,tblName,struct) {
     // https://dev.mysql.com/doc/refman/8.0/en/create-table.html
-    let sql = `CREATE TABLE ${db.escapeId(dbName)}.${db.escapeId(tblName)} (\n`;
+    let createSql = `CREATE TABLE ${db.escapeId(dbName)}.${db.escapeId(tblName)} (\n`;
     const lines = [
         ...getCreateColumns(db,struct.columns),
         ...getCreateIndexes(db,struct.indexes),
         ...getCreateForeignKeys(db,struct.foreignKeys),
     ];
-    sql += lines.map(l => `  ${l}`).join(',\n');
-    sql += `\n)`;
-    sql += getCreateOptions(db,struct.options).map(o => ' '+o).join('');
-    sql += `;`;
-    return sql;
+    createSql += lines.map(l => `  ${l}`).join(',\n');
+    createSql += `\n)`;
+    createSql += getCreateOptions(db,struct.options).map(o => ' '+o).join('');
+    createSql += `;`;
+    
+    const statements = [createSql];
+
+    if(struct.triggers) {
+        for(const trig of struct.triggers) {
+            statements.push(createTriggerSql(db,dbName,tblName,trig));
+        }
+    }
+    
+    return statements;
 }
 
 
@@ -441,7 +473,7 @@ function indexDefinition2(db,idx) {
 }
 
 function getCreateIndexes(db,indexes) {
-    return indexes.map(idx => indexDefinition(db,idx))
+    return indexes ? indexes.map(idx => indexDefinition(db,idx)) : [];
 }
 
 function fkDef(db,fk) {
@@ -468,7 +500,7 @@ function fkDef2(db,fk) {
 }
 
 function getCreateForeignKeys(db,foreignKeys) {
-    return foreignKeys.map(fk => fkDef(db,fk))
+    return foreignKeys ? foreignKeys.map(fk => fkDef(db,fk)) : []
 }
 
 function resolveDatabase(obj,dbName) {
@@ -524,10 +556,13 @@ function getAlterTableSql(db,dbName,tableName,currentStruct,desiredStruct,dropCo
         ...indexDiff(db,currentStruct.indexes,desiredStruct.indexes),
         ...fkDiff(db,currentStruct.foreignKeys,desiredStruct.foreignKeys),
     ];
+    const statements = [];
     if(lines.length) {
-        return `ALTER TABLE ${db.escapeId(dbName)}.${db.escapeId(tableName)}\n${lines.map(l => `  ${l}`).join(',\n')};`;
+        statements.push(`ALTER TABLE ${db.escapeId(dbName)}.${db.escapeId(tableName)}\n${lines.map(l => `  ${l}`).join(',\n')};`);
     }
-    return null;
+    const triggerStmts = triggerDiff(db,dbName,tableName,currentStruct.triggers,desiredStruct.triggers);
+    statements.push(...triggerStmts);
+    return statements;
 }
 
 function optionsDiff(db,before,after) {
@@ -560,6 +595,10 @@ function indexDiff(db,before,after) {
 }
 function fkDiff(db,before,after) {
     return fkDiffToSql(db,getForeignKeyDiff(before,after));
+}
+
+function triggerDiff(db,dbName,tableName,before,after) {
+    return triggerDiffToSql(db,dbName,tableName,getTriggerDiff(before,after));
 }
 
 function objEq(a,b) {
@@ -598,9 +637,42 @@ function eq(a,b) {
 }
 
 function createMap(arr,key='name') {
-    return new Map(arr.map(o => [o[key],o]));
+    return new Map(arr ? arr.map(o => [o[key],o]) : []);
 }
 
+function getTriggerDiff(before,after) {
+    const currentTriggers = createMap(before);
+    const desiredTriggers = createMap(after);
+
+
+    // dump(currentTriggers);
+    // dump(desiredTriggers);
+    
+    const out = {
+        drop: [],
+        create: [],
+        change: [],
+    }
+    
+    for(let [trigName,newTrig] of desiredTriggers) {
+        const curTrig = currentTriggers.get(trigName);
+        
+        if(!curTrig) {
+            out.create.push(newTrig);
+        } else {
+            if(!objEq(newTrig,curTrig)) {
+                out.change.push({old: curTrig, new: newTrig});
+            }
+            currentTriggers.delete(trigName);
+        }
+    }
+
+    for(let [trigName,curTrig] of currentTriggers) {
+        out.drop.push(trigName);
+    }
+
+    return out;
+}
 
 function getForeignKeyDiff(before,after) {
 
@@ -790,6 +862,34 @@ function getColumnDiff(before,after) {
     added = Array.from(added.values());
     
     return {added,dropped,modified,changed,renamed,altered}
+}
+
+function triggerDiffToSql(db,dbName,tableName,diff) {
+    
+    const stmts = [];
+    
+    for(let trigName of diff.drop) {
+        stmts.push(`DROP TRIGGER ${db.escapeId(dbName)}.${db.escapeId(trigName)};`)
+    }
+    for(let trig of diff.change) {
+        stmts.push(`DROP TRIGGER ${db.escapeId(dbName)}.${db.escapeId(trig.old.name)};`)
+        stmts.push(createTriggerSql(db,dbName,tableName,trig.new));
+    }
+    for(let trig of diff.create) {
+        stmts.push(createTriggerSql(db,dbName,tableName,trig));
+    }
+    
+    return stmts;
+}
+
+function createTriggerSql(db,dbName,tblName,trig) {
+    //   if(preg_match('#\A\s*\{\{\s*(\w+)\s*\}\}\s*\z#',$id,$m)) {
+    const [gsid] = dbNameMap.get(dbName);
+    const stmt = trig.statement.replace(/{{\s*(\w+)\s*}}/g, (_,appId) => {
+        return db.escapeId(napi.dbName(gsid,appId));
+    });
+    // TODO: definer?
+    return `CREATE TRIGGER ${db.escapeId(dbName)}.${db.escapeId(trig.name)} ${trig.timing} ${trig.event} ON ${db.escapeId(dbName)}.${db.escapeId(tblName)} FOR EACH ROW\n${stmt};` // DELIMITER ;
 }
 
 function fkDiffToSql(db,diff) {
