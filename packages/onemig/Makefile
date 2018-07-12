@@ -8,10 +8,10 @@ DISTDIRS := $(sort $(dir $(DISTS)))
 
 # usage: make CMD=diff
 
+build: $(DISTS) yarn.lock
+
 run: build
 	node -r source-map-support/register dist/bin $(CMD)
-
-build: $(DISTS) yarn.lock
 
 dist/%.schema.json: dist/%.schema.js dist/export-schema.js
 	node dist/export-schema.js $<#/defs/Table > $@
