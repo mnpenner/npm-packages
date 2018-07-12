@@ -49,10 +49,12 @@ node_modules:
 	mkdir -p $@
 
 node8:
+	sudo apt remove nodejs
 	curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 	sudo apt install -y nodejs
 	
 node10:
+	sudo apt remove nodejs
 	curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
 	sudo apt install -y nodejs
 

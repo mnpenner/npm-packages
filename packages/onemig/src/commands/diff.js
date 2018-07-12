@@ -183,10 +183,11 @@ export default {
                             // kon.writeLn(`Cache miss on ${dbName}.${tbl.name}`);
                             currentStruct = await getStruct(db,dbName, tbl.name);
                         } 
-
-                  
-
+                        
                         normalizeStruct(desiredStruct, defaultStorageEngine, defaultCollation, dbName)
+                        if(!tbl.name.startsWith('sta_')) {
+                            addStealthAuditTriggers(db, tbl.name, desiredStruct);
+                        }
 
                         if(!currentStruct) {
                             const createTableSql = getCreateTableSql(db,dbName, tbl.name, desiredStruct);
@@ -637,16 +638,89 @@ function eq(a,b) {
 }
 
 function createMap(arr,key='name') {
-    return new Map(arr ? arr.map(o => [o[key],o]) : []);
+    if(!arr || !arr.length) return new Map;
+    const f = typeof key === 'function' 
+        ? o => [key(o),o] 
+        : o => [o[key],o];
+    return new Map(arr.map(f));
+}
+
+
+const makeTriggerKey = ({timing,event}) => `${timing} ${event}`; // <-- TODO: change back to "name" for MySQL 8, where multiple triggers are allowed
+
+
+function stripIndexLength(colName) {
+    return colName.replace(/\(\d+\)$/,'');
+}
+
+function getPrimaryKeySql(db,struct,prefix) {
+    const pk = struct.indexes ? struct.indexes.find(idx => idx.type === 'PRIMARY') : undefined;
+    
+    if(pk) {
+        if(pk.columns.length === 1) {
+            return `${prefix}.${db.escapeId(pk.columns[0])}`
+        }
+        return `CONCAT(';',${pk.columns.map(c => `${prefix}.${db.escapeId(c)}`).join(',')})`
+    } 
+    return `CONCAT(';',${struct.columns.map(c => `${prefix}.${db.escapeId(c.name)}`).join(',')})`
+}
+
+function makeTrigger(db,tblName,struct,event,body) {
+    
+    const action = {
+        INSERT: 'NEW',
+        UPDATE: 'NEW',
+        DELETE: 'OLD',
+    }[event];
+    
+    
+    return {
+        name: `sta_${event.toLowerCase()}_${tblName}`.slice(0,64),
+        timing: 'AFTER',
+        event: event,
+        statement: `
+thisTrigger: BEGIN
+IF(@disable_triggers) THEN
+  LEAVE thisTrigger;
+END IF;
+INSERT INTO {{pcs}}.sta_delta_table SET
+    stt_request_token=@sta_request_token,
+    stt_user=USER(),
+    stt_database=DATABASE(),
+    stt_table=${db.escapeValue(tblName)},
+    stt_key=${getPrimaryKeySql(db,struct,action)},
+    stt_action=${db.escapeValue(event)};
+SET @sta_delta_table_id = LAST_INSERT_ID();
+${Array.isArray(body) ? body.join("\n") : body}
+END`.trim()
+    }
+}
+
+function addStealthAuditTriggers(db,tblName,struct) {
+    const triggers = createMap(struct.triggers,makeTriggerKey);
+    
+    // console.log("BEFORE");
+    // dump(triggers);
+    
+    triggers.set('AFTER INSERT', makeTrigger(db,tblName,struct,'INSERT',struct.columns.map(c => `INSERT INTO {{pcs}}.sta_delta_field SET stf_delta_table_id=@sta_delta_table_id, stf_column=${db.escapeValue(c.name)}, stf_value=BINARY NEW.${db.escapeId(c.name)};`)));
+    triggers.set('AFTER UPDATE', makeTrigger(db,tblName,struct,'UPDATE',struct.columns.map(c => `IF NOT (NEW.${db.escapeId(c.name)} <=> OLD.${db.escapeId(c.name)}) THEN
+  INSERT INTO {{pcs}}.sta_delta_field SET stf_delta_table_id=@sta_delta_table_id, stf_column=${db.escapeValue(c.name)}, stf_value=BINARY NEW.${db.escapeId(c.name)};
+END IF;`)));
+    triggers.set('AFTER DELETE', makeTrigger(db,tblName,struct,'DELETE',struct.columns.map(c => `INSERT INTO {{pcs}}.sta_delta_field SET stf_delta_table_id=@sta_delta_table_id, stf_column=${db.escapeValue(c.name)}, stf_value=BINARY OLD.${db.escapeId(c.name)};`)));
+
+    // console.log("AFTER");
+    // dump(triggers);
+    
+    struct.triggers = Array.from(triggers.values());
 }
 
 function getTriggerDiff(before,after) {
-    const currentTriggers = createMap(before);
-    const desiredTriggers = createMap(after);
-
-
+    const currentTriggers = createMap(before,makeTriggerKey);
+    const desiredTriggers = createMap(after,makeTriggerKey);
+    
     // dump(currentTriggers);
     // dump(desiredTriggers);
+    // process.exit(1);
     
     const out = {
         drop: [],
@@ -654,8 +728,9 @@ function getTriggerDiff(before,after) {
         change: [],
     }
     
-    for(let [trigName,newTrig] of desiredTriggers) {
-        const curTrig = currentTriggers.get(trigName);
+    for(let newTrig of desiredTriggers.values()) {
+        const key = makeTriggerKey(newTrig);
+        const curTrig = currentTriggers.get(key);
         
         if(!curTrig) {
             out.create.push(newTrig);
@@ -663,12 +738,12 @@ function getTriggerDiff(before,after) {
             if(!objEq(newTrig,curTrig)) {
                 out.change.push({old: curTrig, new: newTrig});
             }
-            currentTriggers.delete(trigName);
+            currentTriggers.delete(key);
         }
     }
 
-    for(let [trigName,curTrig] of currentTriggers) {
-        out.drop.push(trigName);
+    for(let curTrig of currentTriggers.values()) {
+        out.drop.push(curTrig.name);
     }
 
     return out;
@@ -957,7 +1032,11 @@ function columnDiffToSql(db,diff,dropColumns) {
         lines.push(`CHANGE COLUMN ${db.escapeId(col.old.name)} ${db.escapeId(col.new.name)} ${columnDefinition(db,col.new)}`)
         if(!dropColumns) {
             // FIXME: should we copy the old data back into this column too?
-            const old = {...col.old, comment: `DEPRECATED: Renamed to "${col.new.name}"`,autoIncrement:false};
+            const old = {
+                ...col.old, 
+                comment: `DEPRECATED: Renamed to "${col.new.name}"`,
+                autoIncrement: false,
+            };
             if(old.default === undefined) {
                 old.null = true;
                 old.default = null;
