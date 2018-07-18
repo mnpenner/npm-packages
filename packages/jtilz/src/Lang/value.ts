@@ -81,7 +81,7 @@ export function isEmpty(value: any): boolean {
 
 export function clone<T>(value: T): T {
     if(Type.isArray(value)) {
-        return [...value];
+        return [...value]; // FIXME: value.map(clone)
     }
     if(Type.isDate(value)) {
         return Object.assign(new Date(value.valueOf()),value);
@@ -96,6 +96,7 @@ export function clone<T>(value: T): T {
         return Object.assign(new RegExp(value.source, value.flags),value);
     }
     if(Type.isObject(value)) {
+        // FIXME: this should do a deep clone, no?
         return Object.assign(Object.create(Object.getPrototypeOf(value)), value);
     }
     if(Type.isFunction(value)) {
