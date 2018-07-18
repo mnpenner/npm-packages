@@ -37,9 +37,30 @@ export function isArray(obj) {
     return Array.isArray(obj);
 }
 
+export function isDate(obj) {
+    return obj instanceof Date;
+}
+
+export function isSet(obj) {
+    return obj instanceof Set;
+}
+
+export function isMap(obj) {
+    return obj instanceof Map;
+}
+
 export function isNull(obj) {
     return obj === null;
 }
+
+export function isSymbol(obj) {
+    return Object.prototype.toString.call(obj) === '[object Symbol]';
+}
+
+export function isNullish(obj) { 
+    return obj === null || obj === undefined || obj !== obj;
+}
+
 
 export function isUndefined(obj) {
     return obj === undefined;

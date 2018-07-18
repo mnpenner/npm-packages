@@ -1,6 +1,7 @@
 import stringToPath from './stringToPath';
 import dump from '../dump';
 import {isBoolean,isString,isNumber,isArray} from './types';
+import * as Type from './types';
 
 export function getValue(obj, path, def) {
     if(!obj) return def;
@@ -86,6 +87,36 @@ export function toBool(str, def) {
         return str.length > 0;
     }
     return def;
+}
+
+function deepCloneObject(obj) {
+    const clone = Object.create(null);
+    for(const key of Object.keys(obj)) {
+        clone[key] = deepClone(obj[key]);
+    }
+    return clone;
+}
+
+export function deepClone(value) {
+    if(Type.isArray(value)) {
+        return value.map(deepClone);
+    }
+    if(Type.isDate(value)) {
+        return Object.assign(new Date(value.valueOf()),value);
+    }
+    if(Type.isMap(value) || Type.isSet(value)) {
+        return Object.assign(new value.constructor(value),value);
+    }
+    if(Type.isNumber(value) || Type.isString(value) || Type.isNullish(value) || Type.isBoolean(value) || Type.isSymbol(value)) {
+        return value; // these types are immutable. no clone necessary
+    }
+    if(Type.isRegExp(value)) {
+        return Object.assign(new RegExp(value.source, value.flags),value);
+    }
+    if(Type.isObject(value)) {
+        return deepCloneObject(value);
+    }
+    throw new Error(`Could not clone value`);
 }
 
 

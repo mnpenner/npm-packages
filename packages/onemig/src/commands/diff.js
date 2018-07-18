@@ -8,7 +8,7 @@ import Path from 'path';
 import {getDatabaseCollation, getDefaultStorageEngine, getStruct} from '../schema/struct';
 import Ajv from 'ajv';
 import tableSchema from '../table.schema.js';
-import {omit} from '../util/object';
+import {deepClone, omit} from '../util/object';
 import {isNumber, isObject, isPlainObject} from '../util/types';
 import {highlight} from 'cli-highlight';
 import {ciCompare, toIter} from '../util/array';
@@ -168,11 +168,13 @@ export default {
                 // process.exit(0);
 
                 // console.log(`${filename} is valid!!!!`);
-                for(let {databases, ...desiredStruct} of tbl.versions) {
+                for(let {databases, ...plainDesiredStruct} of tbl.versions) {
                     for(let dbName of databases) {
                         if(!dbSet.has(dbName)) {
+                            // kon.writeDebug('reject',dbName);
                             continue;
                         }
+                        // kon.writeDebug('keep',dbName,tbl.name);
                         // pb.tick(0, {tbl: tbl.name, db: dbName});
                         kon.rewrite(`${(di / tables.size * 100).toFixed(1).padStart(5, ' ')}% ${dbName}.${tbl.name}`);
                         // fetch current struct
@@ -189,8 +191,12 @@ export default {
                             // kon.writeLn(`Cache miss on ${dbName}.${tbl.name}`);
                             currentStruct = await getStruct(db, dbName, tbl.name);
                         }
-
-                        normalizeStruct(desiredStruct, defaultStorageEngine, defaultCollation, dbName)
+                        
+                        // need to deep clone so that when we replace references, they don't get cached for the next db
+                        // kon.writeDebug("BEFORE NROAMLZI",plainDesiredStruct);
+                        const desiredStruct = normalizeStruct(deepClone(plainDesiredStruct), defaultStorageEngine, defaultCollation, dbName)
+                        // kon.writeDebug("BEFORE NROAMLZI",desiredStruct);
+                        
                         if(!tbl.name.startsWith('sta_')) {
                             addStealthAuditTriggers(db, tbl.name, desiredStruct);
                         }
@@ -214,6 +220,7 @@ export default {
                                             }
                                         } catch(err) {
                                             kon.writeDebug(err)
+                                            currentStruct = await getStruct(db, dbName, tbl.name);
                                             continue; // try again!
                                         }
                                     }
@@ -244,7 +251,9 @@ export default {
 
 
                                     const alterTableSql = getAlterTableSql(db, dbName, tbl.name, currentStruct, desiredStruct, opts.dropColumns);
+                                    // kon.writeDebug('keep3',dbName,tbl.name);
                                     if(alterTableSql.length) {
+                                        // kon.writeDebug('keep4',dbName,tbl.name,alterTableSql,currentStruct,desiredStruct);
                                         kon.writeLn(highlight(alterTableSql.join("\n"), {
                                             language: 'sql',
                                             ignoreIllegals: true
@@ -257,12 +266,16 @@ export default {
                                                 if(opts.cache) {
                                                     await updateCache(db, dbName, tbl, cache)
                                                 }
-                                            } catch(err) {
+                                            } catch(err) { // TODO: move this catch down to bottom of the retry loop?? (share with create)
                                                 currentStruct = await getStruct(db, dbName, tbl.name);
                                                 if(err.code === 'ER_DUP_KEY') { 
                                                     // fix for https://bugs.mysql.com/bug.php?id=15045
-                                                    // ======================= DROP ALL FOREIGN KEYS whose name intersects current+desired
+                                                    // ============TODO:=========== DROP ALL FOREIGN KEYS whose name intersects current+desired
+                                                    
+                                                    // make run CMD='diff -h dev3 --run -s /home/mpenner/Projects/webenginex/onemig --table emr_followup_program' 
+                                                    
                                                     console.log("HIT THE THING!!!!");
+                                                    kon.writeDebug(err,dbName,tbl.name)
                                                     process.exit(1);
                                                 } else if(err.code === 'ER_TRG_ALREADY_EXISTS') {
                                                     kon.writeLn(`${Chalk.red(`Error:`)} Trigger already exists (see above SQL). This likely means that a trigger with this name already exists on a ${Chalk.italic('different')} table. Please find and remove or rename this trigger, then re-run onemig. The SQL for such is:\nSELECT EVENT_OBJECT_TABLE FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA=${db.escapeValue(dbName)} AND TRIGGER_NAME='${Chalk.magenta.bold(`insert_conflicting_trigger_name_here`)}';`)
@@ -280,7 +293,9 @@ export default {
 
                                     // process.exit(1);
                                     // dump('struct changed!!!',dbName,tbl.name,currentStruct,desiredStruct);
-                                }
+                                } /*else {
+                                    kon.writeDebug('same!!!',currentStruct,desiredStruct);
+                                }*/
                                 /*else {
                                                            dump('before and after are equal',currentStruct,desiredStruct);process.exit(254);
                                                        }*/
@@ -356,6 +371,7 @@ function normalizeStruct(struct, defaultStorageEngine, defaultCollation, dbName)
     } else {
         delete struct.triggers;
     }
+    return struct;
 }
 
 function normalizeOptions(opt, defaultStorageEngine, defaultCollation) {
