@@ -272,22 +272,13 @@ export default {
                                                     await updateCache(db, dbName, tbl, cache)
                                                 }
                                             } catch(err) { // TODO: move this catch down to bottom of the retry loop?? (share with create)
-                                                currentStruct = await getStruct(db, dbName, tbl.name, false);
-                                                if(err.code === 'ER_DUP_KEY') { 
-                                                    // fix for https://bugs.mysql.com/bug.php?id=15045
-                                                    // ============TODO:=========== DROP ALL FOREIGN KEYS whose name intersects current+desired
-                                                    
-                                                    // make run CMD='diff -h dev3 --run -s /home/mpenner/Projects/webenginex/onemig --table emr_followup_program' 
-                                                    
-                                                    console.log("HIT THE THING!!!!");
-                                                    kon.writeDebug(err,dbName,tbl.name)
-                                                    process.exit(1);
-                                                } else if(err.code === 'ER_TRG_ALREADY_EXISTS') {
+                                                if(err.code === 'ER_TRG_ALREADY_EXISTS') {
                                                     kon.writeLn(`${Chalk.red(`Error:`)} Trigger already exists (see above SQL). This likely means that a trigger with this name already exists on a ${Chalk.italic('different')} table. Please find and remove or rename this trigger, then re-run onemig. The SQL for such is:\nSELECT EVENT_OBJECT_TABLE FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA=${db.escapeValue(dbName)} AND TRIGGER_NAME='${Chalk.magenta.bold(`insert_conflicting_trigger_name_here`)}';`)
                                                     break; // no need to re-try; it won't work.
-                                                } else {
-                                                    kon.writeDebug(err)
-                                                }
+                                                } 
+
+                                                kon.writeDebug(err)
+                                                currentStruct = await getStruct(db, dbName, tbl.name, false);
 
                                                 continue; // something went wrong. grab a fresh struct and try again
                                             }
@@ -612,16 +603,29 @@ function getCreateOptions(db, options) {
     return out;
 }
 
+function joinLines(lines) {
+    return lines.map(l => `  ${l}`).join(',\n')
+}
+
 function getAlterTableSql(db, dbName, tableName, currentStruct, desiredStruct, dropColumns) {
+    const statements = [];
+    
+    const fkSql = fkDiff(db, currentStruct.foreignKeys, desiredStruct.foreignKeys);
+    
+    if(fkSql.before.length) {
+        // split into two separate statements because https://bugs.mysql.com/bug.php?id=15045
+        statements.push(`ALTER TABLE ${db.escapeId(dbName)}.${db.escapeId(tableName)}\n${joinLines(fkSql.before)};`);
+    }
+    
     const lines = [
         ...optionsDiff(db, currentStruct.options, desiredStruct.options),
         ...columnDiff(db, currentStruct.columns, desiredStruct.columns, dropColumns),
         ...indexDiff(db, currentStruct.indexes, desiredStruct.indexes),
-        ...fkDiff(db, currentStruct.foreignKeys, desiredStruct.foreignKeys),
+        ...fkSql.after,
     ];
-    const statements = [];
+  
     if(lines.length) {
-        statements.push(`ALTER TABLE ${db.escapeId(dbName)}.${db.escapeId(tableName)}\n${lines.map(l => `  ${l}`).join(',\n')};`);
+        statements.push(`ALTER TABLE ${db.escapeId(dbName)}.${db.escapeId(tableName)}\n${joinLines(lines)};`);
     }
     const triggerStmts = triggerDiff(db, dbName, tableName, currentStruct.triggers, desiredStruct.triggers);
     statements.push(...triggerStmts);
@@ -1031,32 +1035,33 @@ function createTriggerSql(db, dbName, tblName, trig) {
     //     return db.escapeId(napi.dbName(gsid, appId));
     // });
     // TODO: definer?
-    return `CREATE TRIGGER ${db.escapeId(dbName)}.${db.escapeId(trig.name)} ${trig.timing} ${trig.event} ON ${db.escapeId(dbName)}.${db.escapeId(tblName)} FOR EACH ROW\n${stmt};` // DELIMITER ;
+    return `CREATE TRIGGER ${db.escapeId(dbName)}.${db.escapeId(trig.name)} ${trig.timing} ${trig.event} ON ${db.escapeId(dbName)}.${db.escapeId(tblName)} FOR EACH ROW\n${trig.statement};` // DELIMITER ;
 }
 
 function fkDiffToSql(db, diff) {
     // dump(diff);process.exit(1);
     // FIXME/workaround: MySQL still hasn't fixed this friggin bug from 2005 https://bugs.mysql.com/bug.php?id=15045
-    const lines = [];
+    const before = [];
+    const after = [];
     for(let fk of diff.dropped) {
         // has to be DROP FOREIGN KEY -- https://stackoverflow.com/a/14122155/65387
-        lines.push(`DROP FOREIGN KEY ${db.escapeId(fk)}`)
+        after.push(`DROP FOREIGN KEY ${db.escapeId(fk)}`)
     }
     for(let fk of diff.changed) {
-        lines.push(`DROP FOREIGN KEY ${db.escapeId(fk.oldName)}`)
-        lines.push(`ADD ${fkDef(db, fk)}`)
+        before.push(`DROP FOREIGN KEY ${db.escapeId(fk.oldName)}`)
+        after.push(`ADD ${fkDef(db, fk)}`)
     }
     for(let fk of diff.modified) {
-        lines.push(`DROP FOREIGN KEY ${db.escapeId(fk.name)}`)
-        lines.push(`ADD ${fkDef(db, fk)}`)
+        before.push(`DROP FOREIGN KEY ${db.escapeId(fk.name)}`)
+        after.push(`ADD ${fkDef(db, fk)}`)
     }
     for(let fk of diff.renamed) {
-        lines.push(`RENAME FOREIGN KEY ${db.escapeId(fk.oldName)} TO ${db.escapeId(fk.newName)}`)
+        after.push(`RENAME FOREIGN KEY ${db.escapeId(fk.oldName)} TO ${db.escapeId(fk.newName)}`)
     }
     for(let fk of diff.added) {
-        lines.push(`ADD ${fkDef(db, fk)}`)
+        after.push(`ADD ${fkDef(db, fk)}`)
     }
-    return lines;
+    return {before,after};
 }
 
 function indexDiffToSql(db, diff) {
