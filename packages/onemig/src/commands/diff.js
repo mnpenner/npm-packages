@@ -23,7 +23,7 @@ import {addMany} from '../util/set';
 // import conn from '../db';
 // import {Command} from '../console';
 
-const MAX_TRIES = 2;
+const MAX_TRIES = 1;
 
 export default {
     name: "diff",
@@ -97,6 +97,8 @@ export default {
     async execute(args, opts) {
         const dbVars = napi.sharedDbVars('migrations');
         const kon = new SpinnerKonsole;
+        
+        const errors = [];
 
         const db = new DatabaseWrapper({
             host: opts.host || dbVars.host,
@@ -223,6 +225,11 @@ export default {
                                                 await updateCache(db, dbName, tbl, cache)
                                             }
                                         } catch(err) {
+                                            errors.push({
+                                                database: dbName,
+                                                table: tbl.name,
+                                                error: err,
+                                            })
                                             kon.writeDebug(err)
                                             currentStruct = await getStruct(db, dbName, tbl.name, false);
                                             continue; // try again!
@@ -272,12 +279,19 @@ export default {
                                                     await updateCache(db, dbName, tbl, cache)
                                                 }
                                             } catch(err) { // TODO: move this catch down to bottom of the retry loop?? (share with create)
+                                                errors.push({
+                                                    database: dbName,
+                                                    table: tbl.name,
+                                                    error: err,
+                                                })
+                                                
                                                 if(err.code === 'ER_TRG_ALREADY_EXISTS') {
                                                     kon.writeLn(`${Chalk.red(`Error:`)} Trigger already exists (see above SQL). This likely means that a trigger with this name already exists on a ${Chalk.italic('different')} table. Please find and remove or rename this trigger, then re-run onemig. The SQL for such is:\nSELECT EVENT_OBJECT_TABLE FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA=${db.escapeValue(dbName)} AND TRIGGER_NAME='${Chalk.magenta.bold(`insert_conflicting_trigger_name_here`)}';`)
                                                     break; // no need to re-try; it won't work.
                                                 } 
 
-                                                kon.writeDebug(err)
+                                                // kon.writeDebug(err)
+                                                kon.writeLn(`${Chalk.red.bold(err.code)}: ${err.message}`);
                                                 currentStruct = await getStruct(db, dbName, tbl.name, false);
 
                                                 continue; // something went wrong. grab a fresh struct and try again
@@ -315,6 +329,14 @@ export default {
             }
         } finally {
             db.close();
+        }
+        
+        if(errors.length) {
+            console.log(`${Chalk.red(`${Chalk.bold(errors.length)} errors occurred:`)}`)
+            for(const err of errors) {
+                console.log(`- ${err.database}.${err.table}: ${err.error.code}: ${err.error.message}`);
+            }
+            return 1;
         }
     }
 }
