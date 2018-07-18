@@ -14,7 +14,7 @@ import {highlight} from 'cli-highlight';
 import {ciCompare, toIter} from '../util/array';
 import Konsole from '../util/Konsole';
 import Validator from '../schema/validator';
-import DatabaseWrapper from '../mysql/DatabaseWrapper';
+import DatabaseWrapper, {escapeIdString} from '../mysql/DatabaseWrapper';
 import readSchema from '../schema/readSchema';
 import SpinnerKonsole from '../util/SpinnerKonsole';
 import combineCaches from '../schema/combineCaches';
@@ -189,17 +189,21 @@ export default {
 
                         if(!currentStruct) {
                             // kon.writeLn(`Cache miss on ${dbName}.${tbl.name}`);
-                            currentStruct = await getStruct(db, dbName, tbl.name);
+                            currentStruct = await getStruct(db, dbName, tbl.name, false);
+                        }
+
+                        const desiredStruct = deepClone(plainDesiredStruct);
+
+                        if(!tbl.name.startsWith('sta_')) {
+                            addStealthAuditTriggers(db, tbl.name, desiredStruct);
                         }
                         
                         // need to deep clone so that when we replace references, they don't get cached for the next db
                         // kon.writeDebug("BEFORE NROAMLZI",plainDesiredStruct);
-                        const desiredStruct = normalizeStruct(deepClone(plainDesiredStruct), defaultStorageEngine, defaultCollation, dbName)
-                        // kon.writeDebug("BEFORE NROAMLZI",desiredStruct);
+                        normalizeStruct(desiredStruct, defaultStorageEngine, defaultCollation, dbName)
+                        // kon.writeDebug("AFTER NROAMLZI",desiredStruct);process.exit();
                         
-                        if(!tbl.name.startsWith('sta_')) {
-                            addStealthAuditTriggers(db, tbl.name, desiredStruct);
-                        }
+                       
 
                         for(let tries = MAX_TRIES; tries; --tries) {
                             if(!currentStruct) {
@@ -220,7 +224,7 @@ export default {
                                             }
                                         } catch(err) {
                                             kon.writeDebug(err)
-                                            currentStruct = await getStruct(db, dbName, tbl.name);
+                                            currentStruct = await getStruct(db, dbName, tbl.name, false);
                                             continue; // try again!
                                         }
                                     }
@@ -243,6 +247,7 @@ export default {
                                     // console.log(`=== DESIRED ${dbName}.${tbl.name} ===`);
                                     // dump(desiredStruct);
                                     // process.exit(1);
+                                    
                                     // const diff = diffColumns(currentStruct.columns, desiredStruct.columns);
                                     // dump('DIFF',diff);
                                     //
@@ -267,7 +272,7 @@ export default {
                                                     await updateCache(db, dbName, tbl, cache)
                                                 }
                                             } catch(err) { // TODO: move this catch down to bottom of the retry loop?? (share with create)
-                                                currentStruct = await getStruct(db, dbName, tbl.name);
+                                                currentStruct = await getStruct(db, dbName, tbl.name, false);
                                                 if(err.code === 'ER_DUP_KEY') { 
                                                     // fix for https://bugs.mysql.com/bug.php?id=15045
                                                     // ============TODO:=========== DROP ALL FOREIGN KEYS whose name intersects current+desired
@@ -367,7 +372,7 @@ function normalizeStruct(struct, defaultStorageEngine, defaultCollation, dbName)
         delete struct.foreignKeys;
     }
     if(struct.triggers && struct.triggers.length) {
-        struct.triggers.forEach(trig => normalizeTrigger(trig))
+        struct.triggers.forEach(trig => normalizeTrigger(trig, dbName))
     } else {
         delete struct.triggers;
     }
@@ -394,10 +399,16 @@ function normalizeForeignKey(fk, dbName) {
     }
 }
 
-function normalizeTrigger(trig) {
+function normalizeTrigger(trig, dbName) {
     // let's just ignore these for now...
     delete trig.definer;
     delete trig.sqlMode;
+
+    const [gsid] = dbNameMap.get(dbName);
+    trig.statement = trig.statement.replace(/{{\s*(\w+)\s*}}/g, (_, appId) => {
+        // dump('hittt');process.exit(1);
+        return escapeIdString(napi.dbName(gsid, appId));
+    });
 }
 
 function normalizeColumn(col, tableCollation) {
@@ -1015,10 +1026,10 @@ function triggerDiffToSql(db, dbName, tableName, diff) {
 
 function createTriggerSql(db, dbName, tblName, trig) {
     //   if(preg_match('#\A\s*\{\{\s*(\w+)\s*\}\}\s*\z#',$id,$m)) {
-    const [gsid] = dbNameMap.get(dbName);
-    const stmt = trig.statement.replace(/{{\s*(\w+)\s*}}/g, (_, appId) => {
-        return db.escapeId(napi.dbName(gsid, appId));
-    });
+    // const [gsid] = dbNameMap.get(dbName);
+    // const stmt = trig.statement.replace(/{{\s*(\w+)\s*}}/g, (_, appId) => {
+    //     return db.escapeId(napi.dbName(gsid, appId));
+    // });
     // TODO: definer?
     return `CREATE TRIGGER ${db.escapeId(dbName)}.${db.escapeId(trig.name)} ${trig.timing} ${trig.event} ON ${db.escapeId(dbName)}.${db.escapeId(tblName)} FOR EACH ROW\n${stmt};` // DELIMITER ;
 }

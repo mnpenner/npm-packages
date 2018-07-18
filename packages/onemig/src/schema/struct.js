@@ -15,7 +15,7 @@ export const getDefaultStorageEngine = conn => conn.query('select @@default_stor
 
 export const getDatabaseCollation = (conn,dbName) => conn.query('SELECT DEFAULT_COLLATION_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME=?',[dbName]).fetchValue();
 
-export async function getStruct(conn, dbName, tblName) {
+export async function getStruct(conn, dbName, tblName, normalizeRefs=true) {
     const tbl = await conn.query(`SELECT 
         TABLE_NAME 'name'
         ,ENGINE 'engine'
@@ -347,11 +347,11 @@ export async function getStruct(conn, dbName, tblName) {
                     if(fk.refDatabase !== dbName) {
                         const thisDb = dbNameMap.get(dbName);
                         const thatDb = dbNameMap.get(fk.refDatabase);
-                        if(thisDb && thatDb && thisDb[0] === thatDb[0]) {
+                        if(normalizeRefs && thisDb && thatDb && thisDb[0] === thatDb[0]) {
                             // if FK points to same GSID but different app, use special syntax
                             fkDef.refDatabase = {$app: thatDb[1]};
                         } else {
-                            // process.stderr.write(`Foreign key ${dbName}.${tblName}.${fk.constraintName} on ${fk.columnName} points to another database ${fk.refDatabase}`);
+                            // TODO: warn; process.stderr.write(`Foreign key ${dbName}.${tblName}.${fk.constraintName} on ${fk.columnName} points to another agency ${fk.refDatabase}`);
                             fkDef.refDatabase = fk.refDatabase;
                         }
                     }
@@ -385,12 +385,18 @@ export async function getStruct(conn, dbName, tblName) {
 
             tblDef.triggers = [];
 
-            const [gsid] = dbNameMap.get(dbName);
-            const pcsDb = napi.dbName(gsid,'pcs');
+            let gsid,pcsDb;
+            
+            if(normalizeRefs) {
+                [gsid] = dbNameMap.get(dbName);
+                pcsDb = napi.dbName(gsid, 'pcs');
+            }
             
             const re = new RegExp(`${escapeStringRegexp(conn.escapeId(pcsDb))}`,'giu');
             for await(const trigger of triggerStream) {
-                trigger.statement = trigger.statement.replace(re,'{{pcs}}'); // gross!
+                if(normalizeRefs) {
+                    trigger.statement = trigger.statement.replace(re, '{{pcs}}'); // gross!
+                }
                 tblDef.triggers.push(pick(trigger,['name','timing','event','statement']))
             }
         }

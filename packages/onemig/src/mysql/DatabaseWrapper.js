@@ -7,7 +7,7 @@ import {setDefaults} from '../util/object';
 import {highlight} from 'cli-highlight';
 import Util from 'util';
 
-function escapeIdString(id) {
+export function escapeIdString(id) {
     return '`' + String(id).replace(/`/g,'``') + '`';
 }
 
