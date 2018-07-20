@@ -23,6 +23,14 @@ import {addMany} from '../util/set';
 // import conn from '../db';
 // import {Command} from '../console';
 
+function highlightSql(sql) {
+    if(Array.isArray(sql)) sql = sql.join("\n");
+    return highlight(sql, {
+        language: 'sql',
+        ignoreIllegals: true
+    })
+}
+
 const MAX_TRIES = 1;
 
 export default {
@@ -212,13 +220,10 @@ export default {
                                 const createTableSql = getCreateTableSql(db, dbName, tbl.name, desiredStruct);
                                 // TODO: seeds
                                 if(createTableSql.length) {
-                                    kon.writeLn(highlight(createTableSql.join("\n"), {
-                                        language: 'sql',
-                                        ignoreIllegals: true
-                                    }));
                                     if(opts.run) {
                                         try {
                                             for(const stmt of createTableSql) {
+                                                kon.writeLn(highlightSql(stmt));
                                                 await db.exec(stmt);
                                             }
                                             if(opts.cache) {
@@ -234,6 +239,8 @@ export default {
                                             currentStruct = await getStruct(db, dbName, tbl.name, false);
                                             continue; // try again!
                                         }
+                                    } else {
+                                        kon.writeLn(highlightSql(createTableSql));
                                     }
                                 }
                             } else {
@@ -266,13 +273,10 @@ export default {
                                     // kon.writeDebug('keep3',dbName,tbl.name);
                                     if(alterTableSql.length) {
                                         // kon.writeDebug('keep4',dbName,tbl.name,alterTableSql,currentStruct,desiredStruct);
-                                        kon.writeLn(highlight(alterTableSql.join("\n"), {
-                                            language: 'sql',
-                                            ignoreIllegals: true
-                                        }));
                                         if(opts.run) {
                                             try {
                                                 for(const stmt of alterTableSql) {
+                                                    kon.writeLn(highlightSql(stmt));
                                                     await db.exec(stmt);
                                                 }
                                                 if(opts.cache) {
@@ -296,6 +300,8 @@ export default {
 
                                                 continue; // something went wrong. grab a fresh struct and try again
                                             }
+                                        } else {
+                                            kon.writeLn(highlightSql(alterTableSql));
                                         }
                                     }
 
