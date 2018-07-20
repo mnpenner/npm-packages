@@ -1,5 +1,6 @@
 import dump from '../dump';
 import readSchema from '../schema/readSchema';
+import Chalk from 'chalk';
 
 export default {
     name: "validate",
@@ -28,7 +29,7 @@ export default {
                     for(let dbName of databases) {
                         const key = JSON.stringify([dbName,tbl.name]);
                         if(tableMap.has(key)) {
-                            console.log(`${dbName}.${tbl.name} already has a definition in ${tableMap.get(key)}; found another definition in ${tbl.filename}`)
+                            console.log(`${Chalk.bold(dbName)}.${Chalk.bold(tbl.name)} already has a definition in ${Chalk.underline(tableMap.get(key))}; found another definition in ${Chalk.underline(tbl.filename)}`)
                             ++errorCount;
                         } else {
                             tableMap.set(key,tbl.filename);
