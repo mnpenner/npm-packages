@@ -18,6 +18,9 @@ function ouid() {
 
 module.exports = ouid;
 
-for(;;) {
-    process.stdout.write(`\r${ouid().toString('hex')}`);
-}
+// function print() {
+//     process.stdout.write(`\r${ouid().toString('hex')}`);
+//     process.nextTick(print);
+// }
+//
+// print();
