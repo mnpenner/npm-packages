@@ -1,24 +1,23 @@
-import Crypto from 'crypto';
-import BigInt from './bigint';
-import getTime from './time';
+const crypto = require('crypto');
+const [now, hrt] = [Date.now(), process.hrtime.bigint()]; // generate these as close to the same time as possible
+const start = BigInt(now) * 1000000n - hrt;
 
 /**
  * Generates a 16-byte UUID. The first 8 bytes represent the time it was created.
  *
  * @return {Buffer}
  */
-export default function uuid() {
-    const [sec,ns] = getTime();
-
-    let num = BigInt(sec + String(ns).padStart(9,'0'));
-    
-    let {quotient,remainder} = num.divmod(4294967296);
-
+function ouid() {
+    const time = start + process.hrtime.bigint();
     let buf = Buffer.allocUnsafe(16);
-    buf.writeUInt32BE(quotient.valueOf(),0,true);
-    buf.writeUInt32BE(remainder.valueOf(),4,true);
-    Crypto.randomBytes(8).copy(buf, 8);
-    
+    buf.writeUInt32BE(Number(time >> 32n), 0);
+    buf.writeUInt32BE(Number(time & 4294967295n), 4);
+    crypto.randomFillSync(buf, 8, 8);
     return buf;
 }
 
+module.exports = ouid;
+
+for(;;) {
+    process.stdout.write(`\r${ouid().toString('hex')}`);
+}

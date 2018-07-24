@@ -1,6 +1,6 @@
 {
   "name": "ouid",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Ordered UUIDs for Node and Browser",
   "main": "src/node.js",
   "browser": "src/browser.js",
@@ -25,5 +25,8 @@
   "repository": {
     "type": "hg",
     "url": "https://bitbucket.org/nucleuslabs/ouid"
+  },
+  "engines": {
+    "node": ">=10.7.0"
   }
 }
