@@ -129,7 +129,7 @@ export default {
             //     filled: '█',
             //     blank: '░',
             // });
-
+            
             const {serverCollation, defaultStorageEngine} = await db.query('SELECT @@collation_server serverCollation, @@default_storage_engine defaultStorageEngine').fetchRow();
             const databaseCollations = await db.query('SELECT SCHEMA_NAME,DEFAULT_COLLATION_NAME FROM information_schema.SCHEMATA').fetchPairs()
             // dump(defaultCollations)

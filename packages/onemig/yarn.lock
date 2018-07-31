@@ -1733,6 +1733,13 @@ mysql2@^1.5.3:
     seq-queue "0.0.5"
     sqlstring "2.3.1"
 
+mysql3@^0.1.2:
+  version "0.1.2"
+  resolved "http://code.nucleuslabs.com:4873/mysql3/-/mysql3-0.1.2.tgz#6793689560d3aa87ea90fa297e49afd39fd6a0c2"
+  dependencies:
+    "@async-generators/from-emitter" "^0.3.0"
+    mysql2 "^1.5.3"
+
 mz@^2.4.0:
   version "2.7.0"
   resolved "http://code.nucleuslabs.com:4873/mz/-/mz-2.7.0.tgz#95008057a56cafadc2bc63dde7f9ff6955948e32"

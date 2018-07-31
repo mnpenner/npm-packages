@@ -8,7 +8,7 @@ DISTDIRS := $(sort $(dir $(DISTS)))
 
 # usage: make CMD=diff
 
-build: $(DISTS) yarn.lock
+build: $(DISTS) node_modules/.yarn-integrity
 
 run: build
 	node -r source-map-support/register dist/bin $(CMD)
@@ -16,7 +16,7 @@ run: build
 dist/%.schema.json: dist/%.schema.js dist/export-schema.js
 	node dist/export-schema.js $<#/defs/Table > $@
 
-dist/%.js: src/%.js yarn.lock .babelrc | $(DISTDIRS)
+dist/%.js: src/%.js node_modules/.yarn-integrity .babelrc | $(DISTDIRS)
 	$(NM)/babel $< -o $@
 
 dist/%.json: src/%.json | $(DISTDIRS)
@@ -34,19 +34,16 @@ dist/package.json: package.json | $(DISTDIRS)
 $(DISTDIRS):
 	mkdir -p $@
 
-yarn.lock:: package.json
-	@yarn install --production=false
-	@touch -mr $@ $<
+node_modules/.yarn-integrity: yarn.lock
+	@yarn install --frozen-lockfile --production=false --check-files
+	touch $@
 
-yarn.lock:: node_modules
-	@yarn install --production=false --check-files
-	@touch -mr $@ $<
+yarn.lock: package.json
+	@yarn check --integrity
+	touch $@
 
 clean:
-	rm -rf node_modules
-
-node_modules:
-	mkdir -p $@
+	rm -rf node_modules dist
 
 node8:
 	sudo apt remove -y nodejs
