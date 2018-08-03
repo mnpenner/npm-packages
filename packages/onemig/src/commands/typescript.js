@@ -98,10 +98,7 @@ export default {
                 const colSet = new Set;
                 for(let col of ver.columns) {
                     if(!intf[col.name]) {
-                        intf[col.name] = resolveValue(dbTsTypeMap[col.type],col);
-                        if(col.null) {
-                            intf[col.name] += "|null";
-                        }
+                        intf[col.name] = col;
                     }
                     colSet.add(col.name);
                 }
@@ -110,8 +107,15 @@ export default {
             
             const required = intersection(...colSets);
             lines.push(`interface ${columnToKey(tbl.name)} {`);
-            for(const [col,type] of Object.entries(intf)) {
-                lines.push(`  ${escapeCol(col)}${required.has(col)?'':'?'}: ${type},`)
+            for(const [colName,col] of Object.entries(intf)) {
+                let colType = resolveValue(dbTsTypeMap[col.type],col)
+                if(col.null) {
+                    colType += "|null";
+                }
+                if(col.comment) {
+                    lines.push(`  /** ${col.comment} */`);
+                }
+                lines.push(`  ${escapeCol(colName)}${required.has(colName)?'':'?'}: ${colType},`)
             }
             lines.push("}\n");
         }
