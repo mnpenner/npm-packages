@@ -33,3 +33,7 @@ export function memoized(fn) {
         return ret;
     }
 }
+
+export function resolveValue(fn, ...args) {
+    return typeof fn === 'function' ? fn.call(this, ...args) : fn;
+}
