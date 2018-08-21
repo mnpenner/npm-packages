@@ -4,18 +4,18 @@ NM := node_modules/.bin
 .PHONY: build clean test
 
 start: node_modules/.yarn-integrity
-	$(NM)/webpack-serve 
+	NODE_ENV=development $(NM)/webpack-serve 
 
 build: node_modules/.yarn-integrity dist/package.json dist/LICENSE dist/README.md
-	$(NM)/tsc --build
+	NODE_ENV=production $(NM)/wp
 
 node_modules/.yarn-integrity: yarn.lock
 	@yarn install --frozen-lockfile --production=false --check-files
-	touch $@
+	@touch -mr $@ $<
 
 yarn.lock: package.json
 	@yarn check --integrity
-	touch $@
+	@touch -mr $@ $<
 
 clean:
 	rm -rf node_modules dist yarn-error.log

@@ -4,18 +4,23 @@ const webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 module.exports = {
-    entry: ['./src/index'],
-    mode: 'development',
+    entry: './src/index',
+    mode: process.env.NODE_ENV,
     output: {
         path: path.join(__dirname, 'dist'),
-        filename: 'bundle.js',
+        filename: '[name].bundle.js',
     },
-    devtool: false,
+    // devtool: false,
     module: {
         rules: [
             {
                 test: /\.tsx?$/,
-                use: ['awesome-typescript-loader'],
+                loader: 'awesome-typescript-loader',
+                options: {
+                    useBabel: true,
+                    useCache: true,
+                    babelCore: "@babel/core",
+                }
             },
         ],
     },
