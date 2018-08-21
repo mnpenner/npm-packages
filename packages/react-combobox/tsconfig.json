@@ -1,0 +1,29 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "importHelpers": false,
+        "inlineSources": true,
+        "noEmitOnError": true,
+        "pretty": true,
+        "module": "commonjs",
+        "noImplicitAny": true,
+        "suppressImplicitAnyIndexErrors": false,
+        "removeComments": true,
+        "preserveConstEnums": false,
+        "sourceMap": true,
+        "lib": ["es2018","dom"],
+        "skipLibCheck": true,
+        "outDir": "dist",
+        "target": "es2018",
+        "declaration": true,
+        "resolveJsonModule": true,
+        "esModuleInterop": false,
+        "jsx": "react"
+    },
+    "files": [
+        "src/index"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}
