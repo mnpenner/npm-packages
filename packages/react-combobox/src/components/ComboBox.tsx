@@ -11,8 +11,7 @@ const items = [
 ]
 
 export default function ComboBox() {
-    
-    return   <Downshift
+    return <Downshift
         onChange={selection => alert(`You selected ${selection.value}`)}
         itemToString={item => (item ? item.value : '')}
     >
