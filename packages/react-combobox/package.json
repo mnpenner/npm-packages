@@ -1,6 +1,6 @@
 {
   "scripts": {
-      "start": "webpack-serve"
+    "start": "webpack-serve"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0-rc.2",
@@ -20,5 +20,8 @@
     "typescript": "^3.0.1",
     "webpack": "^4.17.0",
     "webpack-serve": "^2.0.2"
+  },
+  "dependencies": {
+    "downshift": "^2.1.4"
   }
 }

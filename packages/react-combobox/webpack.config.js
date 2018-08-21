@@ -28,7 +28,9 @@ module.exports = {
             ),
         },
     },
-    plugins: [new HtmlWebpackPlugin(), new webpack.NamedModulesPlugin()],
+    plugins: [
+        new HtmlWebpackPlugin(),
+    ],
     serve: {
         clipboard: false,
         http2: false,
