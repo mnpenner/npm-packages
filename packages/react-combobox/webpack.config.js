@@ -29,4 +29,11 @@ module.exports = {
         },
     },
     plugins: [new HtmlWebpackPlugin(), new webpack.NamedModulesPlugin()],
+    serve: {
+        clipboard: false,
+        http2: false,
+        devMiddleware: {
+            stats: 'errors-only',
+        }
+    }
 }
