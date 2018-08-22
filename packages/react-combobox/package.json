@@ -20,6 +20,8 @@
     "webpack-serve": "^2.0.2"
   },
   "dependencies": {
-    "downshift": "^2.1.4"
+    "downshift": "^2.1.4",
+    "emotion": "^9.2.6",
+    "react-emotion": "^9.2.6"
   }
 }

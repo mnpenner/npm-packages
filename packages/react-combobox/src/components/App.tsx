@@ -3,9 +3,7 @@ import {hot} from 'react-hot-loader'
 import ComboBox from './ComboBox';
 
 const App = () => <>
-    <h1>
-        Hello, world.<br/>
-    </h1>
+    <h1>ComboBox</h1>
     <ComboBox/>
 </>
 

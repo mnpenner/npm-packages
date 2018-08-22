@@ -10,7 +10,7 @@ module.exports = {
         path: path.join(__dirname, 'dist'),
         filename: '[name].bundle.js',
     },
-    // devtool: false,
+    devtool: process.env.NODE_ENV === 'development' ? 'cheap-module-eval-source-map' : 'source-map',
     module: {
         rules: [
             {
@@ -18,23 +18,19 @@ module.exports = {
                 loader: 'awesome-typescript-loader',
                 options: {
                     useBabel: true,
-                    useCache: true,
-                    babelCore: "@babel/core",
+                    useCache: false,
+                    babelCore: '@babel/core',
                 }
             },
         ],
     },
     resolve: {
         extensions: ['.ts', '.tsx', '.js', '.jsx'],
-        alias: {
-            react: path.resolve(path.join(__dirname, './node_modules/react')),
-            'babel-core': path.resolve(
-                path.join(__dirname, './node_modules/@babel/core'),
-            ),
-        },
     },
     plugins: [
-        new HtmlWebpackPlugin(),
+        new HtmlWebpackPlugin({
+            title: "Combobox",
+        }),
     ],
     serve: {
         clipboard: false,

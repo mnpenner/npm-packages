@@ -137,6 +137,12 @@
   version "0.6.5"
   resolved "http://code.nucleuslabs.com:4873/@emotion%2fhash/-/hash-0.6.5.tgz#097729b84a5164f71f9acd2570ecfd1354d7b360"
 
+"@emotion/is-prop-valid@^0.6.1":
+  version "0.6.6"
+  resolved "http://code.nucleuslabs.com:4873/@emotion%2fis-prop-valid/-/is-prop-valid-0.6.6.tgz#9e1943d2db92e5350282551cb2eafdc9960582cb"
+  dependencies:
+    "@emotion/memoize" "^0.6.5"
+
 "@emotion/memoize@^0.6.1", "@emotion/memoize@^0.6.5":
   version "0.6.5"
   resolved "http://code.nucleuslabs.com:4873/@emotion%2fmemoize/-/memoize-0.6.5.tgz#f868c314b889e7c3d84868a1d1cc323fbb40ca86"
@@ -154,7 +160,7 @@
   version "0.6.12"
   resolved "http://code.nucleuslabs.com:4873/@emotion%2fstylis/-/stylis-0.6.12.tgz#3fb58220e0fc9e380bcabbb3edde396ddc1dfe6e"
 
-"@emotion/unitless@^0.6.6":
+"@emotion/unitless@^0.6.2", "@emotion/unitless@^0.6.6":
   version "0.6.6"
   resolved "http://code.nucleuslabs.com:4873/@emotion%2funitless/-/unitless-0.6.6.tgz#988957ecd0a9be00ee9de27172f8c56d41595a93"
 
@@ -1159,6 +1165,24 @@ create-ecdh@^4.0.0:
     bn.js "^4.1.0"
     elliptic "^6.0.0"
 
+create-emotion-styled@^9.2.6:
+  version "9.2.6"
+  resolved "http://code.nucleuslabs.com:4873/create-emotion-styled/-/create-emotion-styled-9.2.6.tgz#25be44a298e6e49d833ecf2247836284dc9c2042"
+  dependencies:
+    "@emotion/is-prop-valid" "^0.6.1"
+
+create-emotion@^9.2.6:
+  version "9.2.6"
+  resolved "http://code.nucleuslabs.com:4873/create-emotion/-/create-emotion-9.2.6.tgz#f64cf1c64cf82fe7d22725d1d77498ddd2d39edb"
+  dependencies:
+    "@emotion/hash" "^0.6.2"
+    "@emotion/memoize" "^0.6.1"
+    "@emotion/stylis" "^0.6.10"
+    "@emotion/unitless" "^0.6.2"
+    csstype "^2.5.2"
+    stylis "^3.5.0"
+    stylis-rule-sheet "^0.0.10"
+
 create-error-class@^3.0.0:
   version "3.0.2"
   resolved "http://code.nucleuslabs.com:4873/create-error-class/-/create-error-class-3.0.2.tgz#06be7abef947a3f14a30fd610671d401bca8b7b6"
@@ -1227,7 +1251,7 @@ css-what@2.1:
   version "2.1.0"
   resolved "http://code.nucleuslabs.com:4873/css-what/-/css-what-2.1.0.tgz#9467d032c38cfaefb9f2d79501253062f87fa1bd"
 
-csstype@^2.2.0:
+csstype@^2.2.0, csstype@^2.5.2:
   version "2.5.6"
   resolved "http://code.nucleuslabs.com:4873/csstype/-/csstype-2.5.6.tgz#2ae1db2319642d8b80a668d2d025c6196071e788"
 
@@ -1457,6 +1481,13 @@ elliptic@^6.0.0:
 emojis-list@^2.0.0:
   version "2.1.0"
   resolved "http://code.nucleuslabs.com:4873/emojis-list/-/emojis-list-2.1.0.tgz#4daa4d9db00f9819880c79fa457ae5b09a1fd389"
+
+emotion@^9.2.6:
+  version "9.2.6"
+  resolved "http://code.nucleuslabs.com:4873/emotion/-/emotion-9.2.6.tgz#48517515e769bca6d8f7ff18425a7f133b010f22"
+  dependencies:
+    babel-plugin-emotion "^9.2.6"
+    create-emotion "^9.2.6"
 
 encoding@^0.1.11:
   version "0.1.12"
@@ -3331,6 +3362,13 @@ react-dom@^16.4.2:
     object-assign "^4.1.1"
     prop-types "^15.6.0"
 
+react-emotion@^9.2.6:
+  version "9.2.6"
+  resolved "http://code.nucleuslabs.com:4873/react-emotion/-/react-emotion-9.2.6.tgz#3941f78779f9a8ad8300042ddfa9b2cb111442c2"
+  dependencies:
+    babel-plugin-emotion "^9.2.6"
+    create-emotion-styled "^9.2.6"
+
 react-hot-loader@^4.3.4:
   version "4.3.4"
   resolved "http://code.nucleuslabs.com:4873/react-hot-loader/-/react-hot-loader-4.3.4.tgz#4f9bdd55bb20d77a6ae8931fa1c187e5f0ce6279"
@@ -3825,6 +3863,14 @@ strip-indent@^2.0.0:
 strip-json-comments@~2.0.1:
   version "2.0.1"
   resolved "http://code.nucleuslabs.com:4873/strip-json-comments/-/strip-json-comments-2.0.1.tgz#3c531942e908c2697c0ec344858c286c7ca0a60a"
+
+stylis-rule-sheet@^0.0.10:
+  version "0.0.10"
+  resolved "http://code.nucleuslabs.com:4873/stylis-rule-sheet/-/stylis-rule-sheet-0.0.10.tgz#44e64a2b076643f4b52e5ff71efc04d8c3c4a430"
+
+stylis@^3.5.0:
+  version "3.5.3"
+  resolved "http://code.nucleuslabs.com:4873/stylis/-/stylis-3.5.3.tgz#99fdc46afba6af4deff570825994181a5e6ce546"
 
 supports-color@^2.0.0:
   version "2.0.0"

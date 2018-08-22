@@ -1,6 +1,15 @@
 {
-    "plugins": [
-        "react-hot-loader/babel",
-        "babel-plugin-emotion"
-    ]
+    "env": {
+        "development": {
+            "plugins": [
+                "react-hot-loader/babel",
+                ["emotion", { "sourceMap": true, "autoLabel": true }]
+            ]
+        },
+        "production": {
+            "plugins": [
+                ["emotion", { "hoist": true }]
+            ]
+        }
+    }
 }
