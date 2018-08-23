@@ -1,5 +1,6 @@
+
 import * as React from 'react';
-import Downshift, {ChildrenFunction, ControllerStateAndHelpers, GetItemPropsOptions} from 'downshift'
+import Downshift, {ControllerStateAndHelpers, GetItemPropsOptions} from 'downshift'
 import styled, {keyframes, css} from 'react-emotion';
 import EndOfBody from './EndOfBody';
 
@@ -90,8 +91,8 @@ export default () => <Downshift itemToString={item => (item ? item.label : '')}>
 const Menu = styled.div`
     position: absolute;
     background-color: white;
-     border: 1px solid #b8b8b8;
-     padding: 2px;
+    border: 1px solid #b8b8b8;
+    padding: 2px;
 `
 
 class ComboBoxInner extends React.Component<ComboBoxProps, ComboBoxState, ComboBoxSnapshot> {
@@ -102,11 +103,13 @@ class ComboBoxInner extends React.Component<ComboBoxProps, ComboBoxState, ComboB
 
     getSnapshotBeforeUpdate(prevProps: ComboBoxProps, prevState: ComboBoxState): ComboBoxSnapshot | null {
         if(this.container.current) {
-            const box = this.container.current.getBoundingClientRect();
-            const bbWidth = parseFloat(getComputedStyle(this.container.current).getPropertyValue('border-bottom-width'));
+            const rect = this.container.current.getBoundingClientRect();
+            const bbWidth = this.container.current.computedStyleMap
+                ? this.container.current.computedStyleMap().get('border-bottom-width').to('px').value
+                : parseFloat(getComputedStyle(this.container.current).getPropertyValue('border-bottom-width'));
             return {
-                x: box.left + pageXOffset,
-                y: box.bottom + pageYOffset - bbWidth
+                x: rect.left + pageXOffset,
+                y: rect.bottom + pageYOffset - bbWidth
             }
         }
         return null;
@@ -122,7 +125,7 @@ class ComboBoxInner extends React.Component<ComboBoxProps, ComboBoxState, ComboB
     }
 
     render() {
-        const {toggleMenu, isOpen, getInputProps, getMenuProps, inputValue, getItemProps, highlightedIndex, selectedItem, setState, closeMenu} = this.props;
+        const {isOpen, getInputProps, getMenuProps, inputValue, getItemProps, highlightedIndex, selectedItem, setState, closeMenu} = this.props;
 
         return <>
             <Container innerRef={this.container} onClick={() => {

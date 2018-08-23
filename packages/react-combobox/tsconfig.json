@@ -22,7 +22,10 @@
         "moduleResolution": "node"
     },
     "files": [
-        "src/index"
+        "src/index.tsx"
+    ],
+    "include": [
+        "src/types/**/*.d.ts"
     ],
     "exclude": [
         "node_modules"
