@@ -1,82 +1,7 @@
 import * as React from 'react';
-import Downshift from 'downshift'
+import Downshift, {GetItemPropsOptions} from 'downshift'
 import styled, {keyframes,css} from 'react-emotion';
 
-
-const Select = styled.div`
-    box-sizing: border-box;
-    height: 1.909rem; // Need to set a height to get Firefox + Chrome to be the same. Has to be \`em\` so that it can scale with font-size. Use http://pxtoem.com/
-    -moz-appearance: none;
-    -webkit-appearance: none;
-    border: 1px solid #b8b8b8;
-    border-radius: 3px;
-    //height: 2.25rem;
-    //line-height: 1.5;
-    padding: 0.182rem calc(0.545rem + 14px) 0.182rem 0.545rem; // Text will sit lower in FF unless we use em
-    //padding-bottom: calc(0.375rem - 1px);
-    //padding-left: calc(0.625rem - 1px);
-    //padding-right: calc(0.625rem - 1px);
-    //padding-top: calc(0.375rem - 1px);
-    position: relative;
-    vertical-align: top;
-    color: #363636;
-    cursor: pointer;
-    display: block;
-    //font: 12px Verdana, Geneva, Arial, Helvetica, sans-serif;
-    width: 100% !important; // dropdown arrow won't appear in correct location without this
-    max-width: 100% !important;
-    outline: none;
-       text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
-         background-color: #f5f5f5;
-   background-image: linear-gradient(to bottom, #fff, #e6e6e6);
-    background-repeat: repeat-x;
-    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-    
-    > option {
-        background-color: #f5f5f5;
-        //white-space: pre;
-    }
-       
-         &:hover, &:active {
-     color: #333;
-    background-color: #e6e6e6;
-  }
-       
-   &:hover {
-        border-color: #a5a5a5;
-           background-position: 0 -15px;
-     transition: background-position .1s linear;
-    }
-
-    &[disabled] {
-        cursor: not-allowed;
-        //border-color: #c9c9c9;
-        //background-image: linear-gradient(to bottom, #ffffff, #f7f7f7);
-        color: #808080;
-    }
-    
-    &::-ms-expand {
-        display: none;
-    }
-
-    
-    &:focus, &:active {
-        outline: none;
-        border-color: #23B3E8;
-        //box-shadow: 0 0 5px #2980b9; // not sure how i feel about this...
-        box-shadow: 0 1px 0 rgba(36, 182, 236, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-        //box-shadow: 0 0 0 2px rgba(220,80,90, .25);
-    }
-`;
-
-const spin = keyframes`
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-`
 const dropdownArrow = css`
     &::after {
         width: 0;
@@ -86,14 +11,50 @@ const dropdownArrow = css`
         border-style: solid;
         border-width: 6px 5px 0 5px;
     }
-    &:active::after {
-          border-color: transparent transparent #808080 transparent;
-             border-width: 0 5px 6px 5px;
-    }
-    &:hover::after {
-       border-top-color: #666666;
-    }
+    //&:active::after {
+    //      border-color: transparent transparent #808080 transparent;
+    //         border-width: 0 5px 6px 5px;
+    //}
+    //&:hover::after {
+    //   border-top-color: #666666;
+    //}
 `;
+
+
+const Container = styled.div`
+     border: 1px solid #b8b8b8;
+     display: inline-flex;
+     cursor: pointer;
+     padding: 2px 3px;
+     align-items: center;
+`;
+
+interface ArrowProps {
+    isOpen: boolean
+}
+
+const Arrow = styled.span`
+    width: 0;
+    height: 0;
+    border-style: solid;
+
+    ${({isOpen}: ArrowProps) => isOpen ? css`
+        border-width: 0 5px 6px 5px;
+        border-color: transparent transparent #808080 transparent;
+    ` : css`
+        border-width: 6px 5px 0 5px;
+        border-color: #808080 transparent transparent transparent;
+    `};
+`
+
+const spin = keyframes`
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+`
 
 
 const Wrapper = styled.div`
@@ -138,7 +99,12 @@ const Wrapper = styled.div`
  
 `;
 
-const items = [
+
+interface Item {
+    value: string
+}
+
+const items: Item[] = [
     {value: 'apple'},
     {value: 'pear'},
     {value: 'orange'},
@@ -146,14 +112,53 @@ const items = [
     {value: 'banana'},
 ]
 
-export default function ComboBox() {
+type ListItemProps = GetItemPropsOptions<Item>
+
+// const ListItem = styled.li`
+//     background-color: ${({highlightedIndex,index}: ListItemProps) => highlightedIndex === index ? 'lightgray' : 'white'};
+//     font-weight: ${({selectedItem,item}: ListItemProps) => selectedItem === item ? 'bold' : 'normal'};
+// `
+
+const ListItem = styled.li<ListItemProps>``
+
+export default class ComboBox extends React.Component {
     
-    return <>
-        <select>
-            <option>foo</option>
-        </select>
-        <Wrapper><Select>Hello</Select></Wrapper>
-        </>;
+    
+    render() {
+        return <Downshift itemToString={item => (item ? item.value : '')}>{({toggleMenu,isOpen,getInputProps,getMenuProps,inputValue,getItemProps,highlightedIndex,selectedItem}) => <div>
+            <Container onClick={() => toggleMenu()}>{selectedItem ? selectedItem.value : "Please Choose"}<Arrow isOpen={isOpen}/></Container>
+            {isOpen && <div>
+                <input {...getInputProps({autoFocus:true})}/>
+                <ul {...getMenuProps()}>
+                    {isOpen
+                        ? items
+                            .filter(item => !inputValue || item.value.includes(inputValue))
+                            .map((item, index) => (
+                                <ListItem
+                                    {...getItemProps({
+                                        key: item.value,
+                                        index,
+                                        item,
+                                        className: css({
+                                            backgroundColor: highlightedIndex === index ? 'lightgray' : 'white',
+                                            fontWeight: selectedItem === item ? 'bold' : 'normal',
+                                        })
+                                    })}
+                                >
+                                    {item.value}
+                                </ListItem>
+                            ))
+                        : null}
+                </ul>
+            </div>}
+        </div>}
+        </Downshift>;
+    }
+}
+
+function OldComboBox() {
+    
+
     
     return <Downshift
         onChange={selection => alert(`You selected ${selection.value}`)}
