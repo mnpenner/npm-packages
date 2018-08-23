@@ -1,25 +1,7 @@
 import * as React from 'react';
-import Downshift, {GetItemPropsOptions} from 'downshift'
-import styled, {keyframes,css} from 'react-emotion';
-
-const dropdownArrow = css`
-    &::after {
-        width: 0;
-        height: 0;
-        margin-top: -3px;
-        border-color: #808080 transparent transparent transparent;
-        border-style: solid;
-        border-width: 6px 5px 0 5px;
-    }
-    //&:active::after {
-    //      border-color: transparent transparent #808080 transparent;
-    //         border-width: 0 5px 6px 5px;
-    //}
-    //&:hover::after {
-    //   border-top-color: #666666;
-    //}
-`;
-
+import Downshift, {ChildrenFunction, ControllerStateAndHelpers, GetItemPropsOptions} from 'downshift'
+import styled, {keyframes, css} from 'react-emotion';
+import EndOfBody from './EndOfBody';
 
 const Container = styled.div`
      border: 1px solid #b8b8b8;
@@ -33,12 +15,13 @@ interface ArrowProps {
     isOpen: boolean
 }
 
-const Arrow = styled.span`
+const Arrow = styled.span<ArrowProps>`
     width: 0;
     height: 0;
     border-style: solid;
+    margin-left: 3px;
 
-    ${({isOpen}: ArrowProps) => isOpen ? css`
+    ${({isOpen}) => isOpen ? css`
         border-width: 0 5px 6px 5px;
         border-color: transparent transparent #808080 transparent;
     ` : css`
@@ -57,59 +40,18 @@ const spin = keyframes`
 `
 
 
-const Wrapper = styled.div`
-    display: inline-block;
-    max-width: 100%;
-    position: relative;
-    vertical-align: baseline;
-    cursor: pointer;
-    
-    &::after {
-        position: absolute;
-        top: 50%;
-        right: 8px;
-        display: block;
-        content: ' ';
-        pointer-events: none;
-    }
-        
-    ${({loading}: {loading?:boolean}) => loading ? css`
-        &::after {
-            animation: ${spin} 600ms infinite linear;
-            border: 2px solid #c0c0c0;
-            border-radius: 50%;
-            //border-right-color: transparent;
-            border-top-color: transparent;
-            box-sizing: border-box;
-            width: 14px;
-            height: 14px;
-            right: 6px;
-            margin-top: -7px;
-        }
-        
-        &:hover::after {
-           border-color: #a6a6a6;
-            border-top-color: transparent;
-        }
-        //&:active::after {
-        //    border-color: #dc505a;
-        //    border-top-color: transparent;
-        //}
-    ` : dropdownArrow}    
- 
-`;
-
-
-interface Item {
-    value: string
+interface Item<T = number> {
+    value: T
+    label: string
+    search?: string
 }
 
 const items: Item[] = [
-    {value: 'apple'},
-    {value: 'pear'},
-    {value: 'orange'},
-    {value: 'grape'},
-    {value: 'banana'},
+    {search: 'apple', label: 'Apple', value: 1},
+    {search: 'pear', label: 'Pear', value: 2},
+    {search: 'orange', label: 'Orange', value: 3},
+    {search: 'grape', label: 'Grape', value: 4},
+    {search: 'banana', label: 'Banana', value: 5},
 ]
 
 type ListItemProps = GetItemPropsOptions<Item>
@@ -121,85 +63,110 @@ type ListItemProps = GetItemPropsOptions<Item>
 
 const ListItem = styled.li<ListItemProps>``
 
-export default class ComboBox extends React.Component {
+interface ComboBoxProps extends ControllerStateAndHelpers<Item> {
+}
+
+interface ComboBoxState {
+}
+
+interface ComboBoxSnapshot {
+    x: number
+    y: number
+}
+
+
+function getDocumentCoordinates(elem: Element) {
+    // http://javascript.info/coordinates#getCoords
+    const box = elem.getBoundingClientRect();
     
-    
-    render() {
-        return <Downshift itemToString={item => (item ? item.value : '')}>{({toggleMenu,isOpen,getInputProps,getMenuProps,inputValue,getItemProps,highlightedIndex,selectedItem}) => <div>
-            <Container onClick={() => toggleMenu()}>{selectedItem ? selectedItem.value : "Please Choose"}<Arrow isOpen={isOpen}/></Container>
-            {isOpen && <div>
-                <input {...getInputProps({autoFocus:true})}/>
-                <ul {...getMenuProps()}>
-                    {isOpen
-                        ? items
-                            .filter(item => !inputValue || item.value.includes(inputValue))
-                            .map((item, index) => (
-                                <ListItem
-                                    {...getItemProps({
-                                        key: item.value,
-                                        index,
-                                        item,
-                                        className: css({
-                                            backgroundColor: highlightedIndex === index ? 'lightgray' : 'white',
-                                            fontWeight: selectedItem === item ? 'bold' : 'normal',
-                                        })
-                                    })}
-                                >
-                                    {item.value}
-                                </ListItem>
-                            ))
-                        : null}
-                </ul>
-            </div>}
-        </div>}
-        </Downshift>;
+    return {
+        x: box.left + pageXOffset,
+        y: box.top + pageYOffset,
     }
 }
 
-function OldComboBox() {
-    
+export default () => <Downshift itemToString={item => (item ? item.label : '')}>{p => <div><ComboBoxInner {...p}/></div>}</Downshift>
 
-    
-    return <Downshift
-        onChange={selection => alert(`You selected ${selection.value}`)}
-        itemToString={item => (item ? item.value : '')}
-    >
-        {({
-              getInputProps,
-              getItemProps,
-              getLabelProps,
-              getMenuProps,
-              isOpen,
-              inputValue,
-              highlightedIndex,
-              selectedItem,
-          }) => (
-            <div>
-                <label {...getLabelProps()}>Enter a fruit</label>
-                <input {...getInputProps()} />
-                <ul {...getMenuProps()}>
-                    {isOpen
-                        ? items
-                            .filter(item => !inputValue || item.value.includes(inputValue))
-                            .map((item, index) => (
-                                <li
-                                    {...getItemProps({
-                                        key: item.value,
-                                        index,
-                                        item,
-                                        style: {
-                                            backgroundColor:
-                                                highlightedIndex === index ? 'lightgray' : 'white',
-                                            fontWeight: selectedItem === item ? 'bold' : 'normal',
-                                        },
-                                    })}
-                                >
-                                    {item.value}
-                                </li>
-                            ))
-                        : null}
-                </ul>
-            </div>
-        )}
-    </Downshift>
+const Menu = styled.div`
+    position: absolute;
+    background-color: white;
+     border: 1px solid #b8b8b8;
+     padding: 2px;
+`
+
+class ComboBoxInner extends React.Component<ComboBoxProps, ComboBoxState, ComboBoxSnapshot> {
+
+    input = React.createRef<HTMLInputElement>();
+    container = React.createRef<HTMLDivElement>();
+    menu = React.createRef<HTMLDivElement>();
+
+    getSnapshotBeforeUpdate(prevProps: ComboBoxProps, prevState: ComboBoxState): ComboBoxSnapshot | null {
+        if(this.container.current) {
+            const box = this.container.current.getBoundingClientRect();
+            const bbWidth = parseFloat(getComputedStyle(this.container.current).getPropertyValue('border-bottom-width'));
+            return {
+                x: box.left + pageXOffset,
+                y: box.bottom + pageYOffset - bbWidth
+            }
+        }
+        return null;
+    }
+
+    componentDidUpdate(prevProps: ComboBoxProps, prevState: ComboBoxState, snapshot: ComboBoxSnapshot) {
+        if(this.menu.current) {
+            Object.assign(this.menu.current.style, {
+                left: `${snapshot.x}px`,
+                top: `${snapshot.y}px`
+            })
+        }
+    }
+
+    render() {
+        const {toggleMenu, isOpen, getInputProps, getMenuProps, inputValue, getItemProps, highlightedIndex, selectedItem, setState, closeMenu} = this.props;
+
+        return <>
+            <Container innerRef={this.container} onClick={() => {
+                if(isOpen) {
+                    closeMenu();
+                } else {
+                    setState({
+                        isOpen: true,
+                        inputValue: '',
+                    }, () => {
+                        if (this.input.current) {
+                            this.input.current.focus()
+                        }
+                    })
+                }
+            }}>{selectedItem ? selectedItem.label : "Please Choose"}<Arrow isOpen={isOpen}/></Container>
+
+            {isOpen && <EndOfBody>
+                <Menu innerRef={this.menu}>
+                    <input {...getInputProps({autoFocus: true, ref: this.input})}/>
+                    <ul {...getMenuProps()}>
+                        {isOpen
+                            ? items
+                                .filter(item => !inputValue || (item.search || item.label).includes(inputValue))
+                                .map((item, index) => (
+                                    <ListItem
+                                        {...getItemProps({
+                                            key: item.value,
+                                            index,
+                                            item,
+                                            className: css({
+                                                backgroundColor: highlightedIndex === index ? 'lightgray' : 'white',
+                                                fontWeight: selectedItem === item ? 'bold' : 'normal',
+                                            })
+                                        })}
+                                    >
+                                        {item.label}
+                                    </ListItem>
+                                ))
+                            : null}
+                    </ul>
+                </Menu>
+            </EndOfBody>}
+        </>
+    }
 }
+
