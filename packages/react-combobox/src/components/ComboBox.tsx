@@ -3,13 +3,15 @@ import * as React from 'react';
 import Downshift, {ControllerStateAndHelpers, GetItemPropsOptions} from 'downshift'
 import styled, {keyframes, css} from 'react-emotion';
 import EndOfBody from './EndOfBody';
+import SearchIcon from './SearchIcon';
 
 const Container = styled.div`
      border: 1px solid #b8b8b8;
      display: inline-flex;
      cursor: pointer;
-     padding: 2px 3px;
+     padding: 2px 4px;
      align-items: center;
+     font-family: "Roboto", "Helvetica", "Arial", sans-serif;
 `;
 
 interface ArrowProps {
@@ -20,7 +22,7 @@ const Arrow = styled.span<ArrowProps>`
     width: 0;
     height: 0;
     border-style: solid;
-    margin-left: 3px;
+    margin-left: 4px;
 
     ${({isOpen}) => isOpen ? css`
         border-width: 0 5px 6px 5px;
@@ -55,14 +57,27 @@ const items: Item[] = [
     {search: 'banana', label: 'Banana', value: 5},
 ]
 
-type ListItemProps = GetItemPropsOptions<Item>
+interface ListItemProps extends GetItemPropsOptions<Item> {
+    highlighted: boolean
+    selected: boolean
+}
 
 // const ListItem = styled.li`
 //     background-color: ${({highlightedIndex,index}: ListItemProps) => highlightedIndex === index ? 'lightgray' : 'white'};
 //     font-weight: ${({selectedItem,item}: ListItemProps) => selectedItem === item ? 'bold' : 'normal'};
 // `
 
-const ListItem = styled.li<ListItemProps>``
+const ListItem = styled.li<ListItemProps>`
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+    padding: 2px 4px;
+    cursor: pointer;
+    ${({highlighted}) => highlighted && css`
+        background-color: rgba(0, 0, 0, 0.08);
+    `}
+    ${({selected}) => selected && css`
+        background-color: rgba(0, 0, 0, 0.14);
+    `}
+`
 
 interface ComboBoxProps extends ControllerStateAndHelpers<Item> {
 }
@@ -73,6 +88,7 @@ interface ComboBoxState {
 interface ComboBoxSnapshot {
     x: number
     y: number
+    width: number
 }
 
 
@@ -86,13 +102,67 @@ function getDocumentCoordinates(elem: Element) {
     }
 }
 
-export default () => <Downshift itemToString={item => (item ? item.label : '')}>{p => <div><ComboBoxInner {...p}/></div>}</Downshift>
+export default function ComboBox() {
+    return (
+        <Downshift
+            itemToString={item => (item ? item.label : '')}
+            children={p => <span><ComboBoxInner {...p}/></span>}
+        />
+    )
+}
 
 const Menu = styled.div`
     position: absolute;
     background-color: white;
     border: 1px solid #b8b8b8;
     padding: 2px;
+    box-shadow: 0px 1px 5px 0px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 3px 1px -2px rgba(0, 0, 0, 0.12);
+    box-sizing: border-box;
+    //display: inline-flex;
+    //flex-direction:column;
+    //flex-wrap: nowrap;
+      
+`
+
+const MenuList = styled.ul`
+    list-style: none;
+    margin: 0;
+    padding: 0;
+`
+
+const SearchInput = styled.input`
+    margin-bottom: 2px;
+    border: 1px solid #b8b8b8;
+    padding: 2px 20px 2px 4px;
+    //width: 100px;
+    //min-width: 100%;
+    outline: none;
+
+    box-sizing: border-box;
+    width: 100%;
+     background-color: #f8f8f8;
+    //flex: 1;
+    //&:focus {
+    //    border-color: #2F92F0;
+    //}
+`
+
+const SearchWrap = styled.div`
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    position: relative;
+    flex: 1;
+    width: 100px;
+    min-width: 100%;
+`
+
+const StyledSearchIcon = styled(SearchIcon)`
+    height: .9em;
+    position: absolute;
+    right: 4px;
+    fill: #808080;
+    pointer-events: none;
 `
 
 class ComboBoxInner extends React.Component<ComboBoxProps, ComboBoxState, ComboBoxSnapshot> {
@@ -109,7 +179,8 @@ class ComboBoxInner extends React.Component<ComboBoxProps, ComboBoxState, ComboB
                 : parseFloat(getComputedStyle(this.container.current).getPropertyValue('border-bottom-width'));
             return {
                 x: rect.left + pageXOffset,
-                y: rect.bottom + pageYOffset - bbWidth
+                y: rect.bottom + pageYOffset - bbWidth,
+                width: rect.width
             }
         }
         return null;
@@ -119,7 +190,8 @@ class ComboBoxInner extends React.Component<ComboBoxProps, ComboBoxState, ComboB
         if(this.menu.current) {
             Object.assign(this.menu.current.style, {
                 left: `${snapshot.x}px`,
-                top: `${snapshot.y}px`
+                top: `${snapshot.y}px`,
+                minWidth: `${snapshot.width}px`
             })
         }
     }
@@ -145,31 +217,36 @@ class ComboBoxInner extends React.Component<ComboBoxProps, ComboBoxState, ComboB
 
             {isOpen && <EndOfBody>
                 <Menu innerRef={this.menu}>
-                    <input {...getInputProps({autoFocus: true, ref: this.input})}/>
-                    <ul {...getMenuProps()}>
-                        {isOpen
-                            ? items
-                                .filter(item => !inputValue || (item.search || item.label).includes(inputValue))
-                                .map((item, index) => (
-                                    <ListItem
-                                        {...getItemProps({
-                                            key: item.value,
-                                            index,
-                                            item,
-                                            className: css({
-                                                backgroundColor: highlightedIndex === index ? 'lightgray' : 'white',
-                                                fontWeight: selectedItem === item ? 'bold' : 'normal',
-                                            })
-                                        })}
-                                    >
-                                        {item.label}
-                                    </ListItem>
-                                ))
-                            : null}
-                    </ul>
+                    <SearchWrap>
+                        <SearchInput {...getInputProps({placeholder: 'Filter...'})} innerRef={this.input} />
+                        <StyledSearchIcon/>
+                    </SearchWrap>
+                    <MenuList {...getMenuProps({refKey: 'innerRef'})}>
+                        {items
+                            .filter(item => !inputValue || (item.search || item.label).includes(inputValue))
+                            .map((item, index) => (
+                                <ListItem
+                                    {...getItemProps({
+                                        key: item.value,
+                                        index,
+                                        item,
+                                    })}
+                                    highlighted={highlightedIndex === index}
+                                    selected={selectedItem === item}
+                                >
+                                    {item.label}
+                                </ListItem>
+                            ))
+                        }
+                    </MenuList>
                 </Menu>
             </EndOfBody>}
         </>
     }
 }
 
+/*
+TODO:
+- press enter to select item after searching
+- clicking in searchbox should not close input
+ */
