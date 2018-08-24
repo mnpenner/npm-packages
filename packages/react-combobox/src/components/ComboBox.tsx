@@ -5,13 +5,14 @@ import styled, {keyframes, css} from 'react-emotion';
 import EndOfBody from './EndOfBody';
 import SearchIcon from './SearchIcon';
 
-const Container = styled.div`
+const Container = styled.button`
      border: 1px solid #b8b8b8;
      display: inline-flex;
      cursor: pointer;
      padding: 2px 4px;
      align-items: center;
      font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+     background-color: #f8f8f8;
 `;
 
 interface ArrowProps {
@@ -22,13 +23,13 @@ const Arrow = styled.span<ArrowProps>`
     width: 0;
     height: 0;
     border-style: solid;
-    margin-left: 4px;
+    margin-left: 5px;
 
     ${({isOpen}) => isOpen ? css`
-        border-width: 0 5px 6px 5px;
+        border-width: 0 4px 6px 4px;
         border-color: transparent transparent #808080 transparent;
     ` : css`
-        border-width: 6px 5px 0 5px;
+        border-width: 6px 4px 0 4px;
         border-color: #808080 transparent transparent transparent;
     `};
 `
