@@ -2316,6 +2316,10 @@ isomorphic-fetch@^2.1.1:
     node-fetch "^1.0.1"
     whatwg-fetch ">=0.10.0"
 
+js-serialize@^0.1.10:
+  version "0.1.10"
+  resolved "http://code.nucleuslabs.com:4873/js-serialize/-/js-serialize-0.1.10.tgz#73a043dd9c82aa023504913a01a4f944c599d9a7"
+
 "js-tokens@^3.0.0 || ^4.0.0", js-tokens@^4.0.0:
   version "4.0.0"
   resolved "http://code.nucleuslabs.com:4873/js-tokens/-/js-tokens-4.0.0.tgz#19203fb59991df98e3a287050d4647cdeaf32499"

@@ -10,6 +10,7 @@ import Banana from './icons/banana';
 import Grapes from './icons/grapes';
 import Orange from './icons/orange';
 import Pear from './icons/pear';
+import charMap from '../charMap';
 
 const Container = styled.button`
      border: 1px solid #b8b8b8;
@@ -54,7 +55,7 @@ interface Item<T = number> {
     value: T
     option: ReactNode
     label?: ReactNode
-    search?: string
+    search?: number[]
 }
 
 
@@ -67,14 +68,29 @@ const Fruit = styled.span`
     margin-right: 4px;
 `
 
+function stringToWeights(str: string): number[] {
+    return Array.prototype.concat(...Array.from(str).map(ch => charMap[ch] || [-ch.codePointAt(0)!]));
+}
+
 const items: Item[] = [
-    {search: 'apple', option: <><Fruit><Apple/></Fruit> Apple</>, value: 1, label: "Apple"},
-    {search: 'pear', option: <><Fruit><Pear/></Fruit> Pear</>, value: 2, label: "Pear"},
-    {search: 'orange', option: <><Fruit><Orange/></Fruit> Orange</>, value: 3/*, label: "Orange"*/},
-    {search: 'grape', option: <><Fruit><Grapes/></Fruit> Grape</>, value: 4, label: "Grape"},
-    {search: 'banana', option: <><Fruit><Banana/></Fruit> Banana</>, value: 5, label: "Banana"},
+    {search: stringToWeights('apple'), option: <><Fruit><Apple/></Fruit> Apple</>, value: 1, label: "Apple"},
+    {search: stringToWeights('pear'), option: <><Fruit><Pear/></Fruit> Pear</>, value: 2, label: "Pear"},
+    {search: stringToWeights('orange'), option: <><Fruit><Orange/></Fruit> Orange</>, value: 3, label: "Orange"},
+    {search: stringToWeights('grape'), option: <><Fruit><Grapes/></Fruit> Grape</>, value: 4, label: "Grape"},
+    {search: stringToWeights('banana'), option: <><Fruit><Banana/></Fruit> Banana</>, value: 5, label: "Banana"},
 ]
 
+function contains(haystack: number[], needle: number[]): boolean {
+    let index = 0;
+    return needle.every(a => {
+        const i = haystack.indexOf(a, index);
+        if(i !== -1) {
+            index = i+1;
+            return true;
+        }
+        return false;
+    })
+}
 
 interface ListItemProps extends GetItemPropsOptions<Item> {
     highlighted: boolean
@@ -126,7 +142,7 @@ function getDocumentCoordinates(elem: Element) {
 export default function ComboBox() {
     return (
         <Downshift
-            itemToString={item => (item ? item.label : '')}
+            // itemToString={item => item ? String(item.value) : ''}
             defaultHighlightedIndex={0}
             children={p => <span><ComboBoxInner {...p}/></span>}
         />
@@ -258,7 +274,11 @@ class ComboBoxInner extends React.Component<ComboBoxProps, ComboBoxState, ComboB
                     </SearchWrap>
                     <MenuList {...getMenuProps({refKey: 'innerRef'})}>
                         {items
-                            .filter(item => !inputValue || (item.search ? item.search.includes(inputValue) : (isString(item.option) ? item.option.includes(inputValue) : (isString(item.label) && item.label.includes(inputValue)))))
+                        // TODO: case folding http://unicode.org/reports/tr10/   http://www.unicode.org/Public/UCA/9.0.0/allkeys.txt
+                            // > In the row with the expansion for "æ", the two underlined primary weights have the same values as the primary weights for the simple mappings for "a" and "e", respectively. This is the basis for establishing a primary equivalence between "æ" and the sequence "ae".
+                            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Collator
+                            // https://www.unicode.org/Public/UCA/latest/
+                            .filter(item => !inputValue || (item.search ? contains(item.search, stringToWeights(inputValue)) : (isString(item.option) ? item.option.includes(inputValue) : (isString(item.label) && item.label.includes(inputValue)))))
                             .map((item, index) => (
                                 <ListItem
                                     {...getItemProps({

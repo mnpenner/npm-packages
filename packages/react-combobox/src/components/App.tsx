@@ -12,7 +12,7 @@ const App = () => <>
         <option value="5">Banana</option>
     </select>
     <ComboBox/>
-    {Array(10).fill(<p>sneaky paragraph below.</p>)}
+    {Array(10).fill(null).map((_,i) => <p key={i}>sneaky paragraph below.</p>)}
 </>
 
 export default hot(module)(App)
