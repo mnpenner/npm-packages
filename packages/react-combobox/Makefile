@@ -4,7 +4,7 @@ NM := node_modules/.bin
 .PHONY: build clean test
 
 start: node_modules/.yarn-integrity
-	NODE_ENV=development $(NM)/webpack-serve 
+	NODE_ENV=development $(NM)/webpack-serve
 
 build: node_modules/.yarn-integrity dist/package.json dist/LICENSE dist/README.md
 	NODE_ENV=production $(NM)/wp

@@ -4,6 +4,12 @@ import Downshift, {ControllerStateAndHelpers, GetItemPropsOptions} from 'downshi
 import styled, {keyframes, css} from 'react-emotion';
 import EndOfBody from './EndOfBody';
 import SearchIcon from './SearchIcon';
+import {ReactNode} from 'react';
+import Apple from './icons/apple';
+import Banana from './icons/banana';
+import Grapes from './icons/grapes';
+import Orange from './icons/orange';
+import Pear from './icons/pear';
 
 const Container = styled.button`
      border: 1px solid #b8b8b8;
@@ -46,17 +52,29 @@ const spin = keyframes`
 
 interface Item<T = number> {
     value: T
-    label: string
+    option: ReactNode
+    label?: ReactNode
     search?: string
 }
 
+
+const Fruit = styled.span`
+    display: inline-block;
+    //text-align: right;
+    height: 1em;
+    width: 1em;
+    overflow: visible;
+    margin-right: 4px;
+`
+
 const items: Item[] = [
-    {search: 'apple', label: 'Apple', value: 1},
-    {search: 'pear', label: 'Pear', value: 2},
-    {search: 'orange', label: 'Orange', value: 3},
-    {search: 'grape', label: 'Grape', value: 4},
-    {search: 'banana', label: 'Banana', value: 5},
+    {search: 'apple', option: <><Fruit><Apple/></Fruit> Apple</>, value: 1, label: "Apple"},
+    {search: 'pear', option: <><Fruit><Pear/></Fruit> Pear</>, value: 2, label: "Pear"},
+    {search: 'orange', option: <><Fruit><Orange/></Fruit> Orange</>, value: 3/*, label: "Orange"*/},
+    {search: 'grape', option: <><Fruit><Grapes/></Fruit> Grape</>, value: 4, label: "Grape"},
+    {search: 'banana', option: <><Fruit><Banana/></Fruit> Banana</>, value: 5, label: "Banana"},
 ]
+
 
 interface ListItemProps extends GetItemPropsOptions<Item> {
     highlighted: boolean
@@ -72,6 +90,8 @@ const ListItem = styled.li<ListItemProps>`
     font-family: "Roboto", "Helvetica", "Arial", sans-serif;
     padding: 2px 4px;
     cursor: pointer;
+    display: flex;
+    align-items: end;
     ${({highlighted}) => highlighted && css`
         background-color: rgba(0, 0, 0, 0.08);
     `}
@@ -107,6 +127,7 @@ export default function ComboBox() {
     return (
         <Downshift
             itemToString={item => (item ? item.label : '')}
+            defaultHighlightedIndex={0}
             children={p => <span><ComboBoxInner {...p}/></span>}
         />
     )
@@ -166,6 +187,19 @@ const StyledSearchIcon = styled(SearchIcon)`
     pointer-events: none;
 `
 
+
+function resolve<TArgs extends any[],TRet>(fn: ((...args: TArgs) => TRet)|TRet, ...args: TArgs): TRet {
+    return isFunction(fn) ? fn(...args) : fn;
+}
+
+function isString(x: any): x is string {
+    return typeof x === 'string' || x instanceof String;
+}
+
+function isFunction(x: any): x is Function {
+    return typeof x === 'function';
+}
+
 class ComboBoxInner extends React.Component<ComboBoxProps, ComboBoxState, ComboBoxSnapshot> {
 
     input = React.createRef<HTMLInputElement>();
@@ -214,7 +248,7 @@ class ComboBoxInner extends React.Component<ComboBoxProps, ComboBoxState, ComboB
                         }
                     })
                 }
-            }}>{selectedItem ? selectedItem.label : "Please Choose"}<Arrow isOpen={isOpen}/></Container>
+            }}>{selectedItem ? selectedItem.label || selectedItem.option : "Please Choose"}<Arrow isOpen={isOpen}/></Container>
 
             {isOpen && <EndOfBody>
                 <Menu innerRef={this.menu}>
@@ -224,7 +258,7 @@ class ComboBoxInner extends React.Component<ComboBoxProps, ComboBoxState, ComboB
                     </SearchWrap>
                     <MenuList {...getMenuProps({refKey: 'innerRef'})}>
                         {items
-                            .filter(item => !inputValue || (item.search || item.label).includes(inputValue))
+                            .filter(item => !inputValue || (item.search ? item.search.includes(inputValue) : (isString(item.option) ? item.option.includes(inputValue) : (isString(item.label) && item.label.includes(inputValue)))))
                             .map((item, index) => (
                                 <ListItem
                                     {...getItemProps({
@@ -235,7 +269,7 @@ class ComboBoxInner extends React.Component<ComboBoxProps, ComboBoxState, ComboB
                                     highlighted={highlightedIndex === index}
                                     selected={selectedItem === item}
                                 >
-                                    {item.label}
+                                    {item.option}
                                 </ListItem>
                             ))
                         }

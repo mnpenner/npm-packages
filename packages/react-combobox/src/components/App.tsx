@@ -12,46 +12,7 @@ const App = () => <>
         <option value="5">Banana</option>
     </select>
     <ComboBox/>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
-    <p>sneaky paragraph below.</p>
+    {Array(10).fill(<p>sneaky paragraph below.</p>)}
 </>
 
 export default hot(module)(App)
