@@ -184,3 +184,10 @@ it('supports frozen objects', () => {
     Object.freeze(frozen);
     expect(jsSerialize(frozen)).toBe('Object.freeze({ans:42})');
 });
+
+it('encodes unicode using escape sequences', () => {
+    expect(jsSerialize('\u303a')).toBe('"\\u303a"');
+    expect(jsSerialize('\u{12345}')).toBe('"\\u{12345}"');
+    expect(jsSerialize('\x00\x1F\x7F')).toBe('"\\x00\\x1f\\x7f"');
+    expect(jsSerialize('he"l\\lo')).toBe('"he\\"l\\\\lo"');
+});

@@ -168,7 +168,21 @@ function serialize3(obj, opt, ctx, path) {
     } else if(obj === false) {
         return opt.compact ? '!1' : 'false';
     } else if(util.isString(obj)) {
-        return JSON.stringify(obj);
+        return '"' + Array.from(obj).map(ch => {
+            const cp = ch.codePointAt(0);
+            if(cp >= 32 && cp <= 126) {
+                if(ch === '"') return '\\"';
+                if(ch === '\\') return '\\\\';
+                return ch;
+            }
+            if(cp <= 0xFF) {
+                return '\\x' + cp.toString(16).padStart(2,'0');
+            }
+            if(cp <= 0xFFFF) {
+                return '\\u' + cp.toString(16).padStart(4,'0');
+            }
+            return '\\u{' + cp.toString(16) + '}';
+        }).join('') + '"';
     } else if(obj === undefined) {
         return opt.compact ? 'void 0' : 'undefined';
     } else if(obj === null) {
