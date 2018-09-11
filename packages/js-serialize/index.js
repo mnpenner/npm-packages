@@ -247,7 +247,7 @@ function serializeSymbol(sym, options, ctx) {
 
 const keywords = new Set(['do','if','in','for','let','new','try','var','case','else','enum','eval','false','null','this','true','void','with','break','catch','class','const','super','throw','while','yield','delete','export','import','public','return','static','switch','typeof','default','extends','finally','package','private','continue','debugger','function','arguments','interface','protected','implements','instanceof']);
 
-const propName = require('./propNameRegex');
+const propName = /^[$_a-zA-Z][$_a-zA-Z0-9]*$/;
 
 function isSafePropName(name, options) {
     return (!options.safe || !keywords.has(name)) && propName.test(name);
