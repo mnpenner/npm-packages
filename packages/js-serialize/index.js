@@ -58,6 +58,11 @@ function pathToStr(path, opt) {
     return path.map(p => util.isString(name) && isSafePropName(p,opt) ? `.${p}` : `[${serialize2(p,opt)}]`).join('');
 }
 
+function isNegativeZero(value) {
+    // https://stackoverflow.com/a/39280486/65387
+    return 1/value === -Infinity;
+}
+
 function serialize3(obj, opt, ctx, path) {
     if(util.isObject(obj)) {
         if(ctx.paths.has(obj)) {
@@ -161,7 +166,7 @@ function serialize3(obj, opt, ctx, path) {
             case -Infinity:
                 return opt.compact ? '1/-0' : '-Infinity';
         }
-        if(Object.is(obj, -0)) return '-0';
+        if(isNegativeZero(obj)) return '-0';
         return String(obj);
     } else if(obj === true) {
         return opt.compact ? '!0' : 'true';

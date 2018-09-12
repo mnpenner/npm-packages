@@ -10,8 +10,11 @@ it('serializes numbers', () => {
     expect(jsSerialize(3.14)).toBe('3.14');
     expect(jsSerialize(Math.PI)).toBe('Math.PI');
     expect(jsSerialize(0)).toBe('0');
-    expect(jsSerialize(-0)).toBe('-0');
     expect(jsSerialize(new Number(2))).toBe('2');
+});
+
+it('serializes negative zero', () => {
+    expect(jsSerialize(-0)).toBe('-0');
 });
 
 it('serializes Infinity', () => {
