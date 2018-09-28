@@ -106,6 +106,10 @@ is-promise@^2.1.0:
   version "2.1.0"
   resolved "http://code.nucleuslabs.com:4873/is-promise/-/is-promise-2.1.0.tgz#79a2a9ece7f096e80f36d2b2f3bc16c1ff4bf3fa"
 
+js-serialize@^0.1.11:
+  version "0.1.11"
+  resolved "http://code.nucleuslabs.com:4873/js-serialize/-/js-serialize-0.1.11.tgz#5d68e02bf3217a401c3c06a1642d7b8ecde0a80e"
+
 lodash@^4.17.10:
   version "4.17.11"
   resolved "http://code.nucleuslabs.com:4873/lodash/-/lodash-4.17.11.tgz#b39ea6229ef607ecd89e2c8df12536891cac9b8d"

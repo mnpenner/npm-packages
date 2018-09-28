@@ -1,0 +1,15 @@
+{
+    "env": {
+        "development": {
+            "plugins": [
+                "react-hot-loader/babel",
+                ["emotion", { "sourceMap": true, "autoLabel": true }]
+            ]
+        },
+        "production": {
+            "plugins": [
+                ["emotion", { "hoist": true }]
+            ]
+        }
+    }
+}
