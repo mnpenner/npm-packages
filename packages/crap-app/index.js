@@ -66,49 +66,7 @@ async function main(args) {
         });
     }
 
-    await copyDir(Path.join(__dirname, 'etc'), pkgName);
-    await FSP.writeFile(Path.join(pkgName, 'webpack.config.js'), `/* eslint-disable */
-const path = require('path')
-const HtmlWebpackPlugin = require('html-webpack-plugin')
-
-module.exports = {
-    entry: './src/index',
-    mode: process.env.NODE_ENV,
-    output: {
-        path: path.join(__dirname, 'dist'),
-        filename: '[name].bundle.js',
-    },
-    devtool: process.env.NODE_ENV === 'development' ? 'cheap-module-eval-source-map' : 'source-map',
-    module: {
-        rules: [
-            {
-                test: /\\.tsx?$/,
-                loader: 'awesome-typescript-loader',
-                options: {
-                    useBabel: true,
-                    useCache: false,
-                    babelCore: '@babel/core',
-                }
-            },
-        ],
-    },
-    resolve: {
-        extensions: ['.ts', '.tsx', '.js', '.jsx'],
-    },
-    plugins: [
-        new HtmlWebpackPlugin({
-            title: ${jsSerialize(pkgName)},
-        }),
-    ],
-    serve: {
-        clipboard: false,
-        http2: false,
-        devMiddleware: {
-            stats: 'errors-only',
-        }
-    }
-}    
-`)
+    await copyDir(Path.join(__dirname, 'template'), pkgName);
 
     await FSP.writeFile(Path.join(pkgName, 'LICENSE'), `The MIT License (MIT)
 
@@ -139,16 +97,8 @@ Created with [\`crap-app\`](https://yarnpkg.com/en/package/crap-app).
 
 ## Getting started
 
-Run either
-
 \`\`\`sh
 make start
-\`\`\`
-
-or
-
-\`\`\`sh
-yarn start
 \`\`\`
 `)
 
@@ -156,9 +106,9 @@ yarn start
             name: pkgName,
             version: '0.1.0',
             license: "MIT",
-            scripts: {
-                "start": "webpack-serve"
-            },
+            // scripts: {
+            //     "start": "NODE_ENV=development webpack-serve"
+            // },
             devDependencies: {
                 "@babel/core": "^7.1",
                 "@types/node": "^10",
