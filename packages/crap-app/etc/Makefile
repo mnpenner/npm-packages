@@ -3,11 +3,11 @@ MAKEFLAGS += --no-builtin-rules
 NM := node_modules/.bin
 .PHONY: build clean test
 
-start: node_modules/.yarn-integrity
-	NODE_ENV=development node --max-old-space-size=4096 $(NM)/webpack-serve
-
 build: node_modules/.yarn-integrity dist/package.json dist/LICENSE dist/README.md
 	NODE_ENV=production $(NM)/wp
+
+start: node_modules/.yarn-integrity
+	NODE_ENV=development node --max-old-space-size=4096 $(NM)/webpack-serve
 
 node_modules/.yarn-integrity: yarn.lock
 	@yarn install --frozen-lockfile --production=false --check-files

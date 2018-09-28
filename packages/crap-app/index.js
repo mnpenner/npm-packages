@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const Inquirer = require('inquirer');
 const Chalk = require('chalk');
 const FSP = require('fs').promises;
@@ -134,13 +135,30 @@ THE SOFTWARE.
 
     await FSP.writeFile(Path.join(pkgName, 'README.md'), `# ${pkgName}
     
-Generated with \`crap\`.
+Created with [\`crap-app\`](https://yarnpkg.com/en/package/crap-app).
+
+## Getting started
+
+Run either
+
+\`\`\`sh
+make start
+\`\`\`
+
+or
+
+\`\`\`sh
+yarn start
+\`\`\`
 `)
 
     await FSP.writeFile(Path.join(pkgName, 'package.json'), JSON.stringify({
             name: pkgName,
             version: '0.1.0',
             license: "MIT",
+            scripts: {
+                "start": "webpack-serve"
+            },
             devDependencies: {
                 "@babel/core": "^7.1",
                 "@types/node": "^10",
