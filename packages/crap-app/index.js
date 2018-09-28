@@ -1,7 +1,8 @@
 const Inquirer = require('inquirer');
 const Chalk = require('chalk');
 const FSP = require('fs').promises;
-// const {promisify} = require('util');
+const ChildProc = require('child_process');
+const {promisify} = require('util');
 const validatePackageName = require("validate-npm-package-name");
 const Path = require('path');
 const jsSerialize = require('js-serialize');
@@ -14,9 +15,9 @@ async function ask(question) {
 }
 
 async function* readDirR(path) {
-    const entries = await FSP.readdir(path,{withFileTypes:true});
+    const entries = await FSP.readdir(path, {withFileTypes: true});
     for(let entry of entries) {
-        const fullPath = Path.join(path,entry.name);
+        const fullPath = Path.join(path, entry.name);
         if(entry.isDirectory()) {
             yield* readDirR(fullPath);
         } else {
@@ -25,24 +26,24 @@ async function* readDirR(path) {
     }
 }
 
-async function copyDir(src,dest) {
-    const entries = await FSP.readdir(src,{withFileTypes:true});
+async function copyDir(src, dest) {
+    const entries = await FSP.readdir(src, {withFileTypes: true});
     await FSP.mkdir(dest);
     for(let entry of entries) {
-        const srcPath = Path.join(src,entry.name);
-        const destPath = Path.join(dest,entry.name);
+        const srcPath = Path.join(src, entry.name);
+        const destPath = Path.join(dest, entry.name);
         if(entry.isDirectory()) {
             // await FSP.mkdir(destPath);
-            await copyDir(srcPath,destPath);
+            await copyDir(srcPath, destPath);
         } else {
-            await FSP.copyFile(srcPath,destPath);
+            await FSP.copyFile(srcPath, destPath);
         }
     }
 }
 
 async function main(args) {
     let pkgName;
-    
+
     if(args.length) {
         pkgName = args[0];
         const valid = validatePackageName(pkgName);
@@ -63,9 +64,9 @@ async function main(args) {
             default: args[0]
         });
     }
-    
-    await copyDir(Path.join(__dirname,'etc'),pkgName);
-    await FSP.writeFile(Path.join(pkgName,'webpack.config.js'), `/* eslint-disable */
+
+    await copyDir(Path.join(__dirname, 'etc'), pkgName);
+    await FSP.writeFile(Path.join(pkgName, 'webpack.config.js'), `/* eslint-disable */
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 
@@ -108,7 +109,7 @@ module.exports = {
 }    
 `)
 
-    await FSP.writeFile(Path.join(pkgName,'LICENSE'), `The MIT License (MIT)
+    await FSP.writeFile(Path.join(pkgName, 'LICENSE'), `The MIT License (MIT)
 
 Copyright (c) ${(new Date).getFullYear()} ${OS.userInfo().username}
 
@@ -131,12 +132,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 `)
 
-    await FSP.writeFile(Path.join(pkgName,'package.json'), JSON.stringify({
-            "scripts": {
-                "start": "webpack-serve"
-            },
-            "devDependencies": {
-                "@babel/core": "^7.0.0-rc.2",
+    await FSP.writeFile(Path.join(pkgName, 'README.md'), `# ${pkgName}
+    
+Generated with \`crap\`.
+`)
+
+    await FSP.writeFile(Path.join(pkgName, 'package.json'), JSON.stringify({
+            name: pkgName,
+            version: '0.1.0',
+            license: "MIT",
+            devDependencies: {
+                "@babel/core": "^7.1",
                 "@types/node": "^10",
                 "@types/react": "^16",
                 "@types/react-dom": "^16",
@@ -150,14 +156,16 @@ THE SOFTWARE.
                 "webpack-command": "^0.4.1",
                 "webpack-serve": "^2.0.2"
             },
-            "dependencies": {
+            dependencies: {
                 "react": "^16",
                 "react-dom": "^16",
                 "emotion": "^9",
                 "react-emotion": "^9"
             }
-        }
-        ,null,4));
+        }, null, 4)
+    );
+
+    ChildProc.spawn('yarn', ['--production=false'], {cwd: Path.resolve(pkgName), stdio: 'inherit'})//yarn
 }
 
 main(process.argv.slice(2)).catch(err => {
