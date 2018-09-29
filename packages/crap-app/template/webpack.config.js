@@ -1,6 +1,7 @@
 /* eslint-disable */
 const Path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const FS = require('fs');
 
 module.exports = {
     entry: './src/index',
@@ -47,11 +48,23 @@ module.exports = {
             },
         }),
     ],
-    serve: {
-        clipboard: false,
-        http2: false,
-        devMiddleware: {
-            stats: 'errors-only',
-        }
+    devServer: {
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+        },
+        host: '0.0.0.0',
+        useLocalIp: true,
+        historyApiFallback: true,
+        overlay: true,
+        // https: {
+        //     key: FS.readFileSync('ssl/cert.key'),
+        //     cert: FS.readFileSync('ssl/cert.pem'),
+        // },
+        watchOptions: {
+            aggregateTimeout: 250,
+            poll: 50,
+            ignored: /\bnode_modules\b/
+        },
+        stats: 'minimal',
     }
 }    

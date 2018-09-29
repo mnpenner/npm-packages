@@ -66,7 +66,9 @@ async function main(args) {
         });
     }
 
-    await copyDir(Path.join(__dirname, 'template'), pkgName);
+    const outputDir = Path.resolve(pkgName);
+    
+    await copyDir(Path.join(__dirname, 'template'), outputDir);
     
 
     await FSP.writeFile(Path.join(pkgName, 'package.json'), JSON.stringify({
@@ -88,19 +90,23 @@ async function main(args) {
                 "ts-node": "^7",
                 "typescript": "^3",
                 "webpack": "^4",
-                "webpack-command": "^0.4.1",
-                "webpack-serve": "^2.0.2"
+                "webpack-cli": "^3",
+                "webpack-dev-server": "^3"
             },
             dependencies: {
                 "react": "^16",
                 "react-dom": "^16",
                 "emotion": "^9",
-                "react-emotion": "^9"
+                "react-emotion": "^9",
             }
         }, null, 4)
     );
 
-    ChildProc.spawn('yarn', ['--production=false'], {cwd: Path.resolve(pkgName), stdio: 'inherit'})//yarn
+    ChildProc.spawn('yarn', ['--production=false'], {cwd: outputDir, stdio: 'inherit'})
+    
+    // const sslDir = Path.join(outputDir,'ssl'); 
+    // await FSP.mkdir(sslDir)
+    // ChildProc.spawn('openssl', ['req','-x509','-nodes','-days','365','-newkey','rsa:2048','-keyout','cert.key','-out','cert.pem','-config',Path.resolve('cert.ini'),'-sha256'], {cwd: sslDir, stdio: 'inherit'})
 }
 
 main(process.argv.slice(2)).catch(err => {

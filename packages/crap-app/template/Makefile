@@ -7,10 +7,10 @@ NM := node_modules/.bin
 ########################################
 
 build: node_modules/.yarn-integrity dist/package.json dist/LICENSE dist/README.md
-	NODE_ENV=production $(NM)/wp
+	NODE_ENV=production $(NM)/webpack
 
 start: node_modules/.yarn-integrity
-	NODE_ENV=development node --max-old-space-size=4096 $(NM)/webpack-serve
+	NODE_ENV=development node --max-old-space-size=4096 $(NM)/webpack-dev-server --hot
 
 clean:
 	rm -rf node_modules dist yarn-error.log
