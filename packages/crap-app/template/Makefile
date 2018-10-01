@@ -6,7 +6,7 @@ NM := node_modules/.bin
 ## commands
 ########################################
 
-build: node_modules/.yarn-integrity dist/package.json dist/LICENSE dist/README.md
+build: node_modules/.yarn-integrity
 	NODE_ENV=production $(NM)/webpack
 
 start: node_modules/.yarn-integrity
@@ -18,8 +18,6 @@ clean:
 test:
 	$(NM)/ts-node tests/test
 
-publish: build test
-	cd dist && npm publish
 
 ## files
 ########################################
@@ -32,14 +30,3 @@ yarn.lock: package.json
 	@yarn check --integrity
 	@touch -mr $@ $<
 
-dist:
-	mkdir -p $@
-
-dist/LICENSE: LICENSE | dist
-	cp $< $@
-
-dist/README.md: README.md | dist
-	cp $< $@
-
-dist/package.json: package.json | dist
-	jq 'del(.private, .devDependencies, .scripts, .eslintConfig, .babel)' $< > $@

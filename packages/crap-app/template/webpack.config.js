@@ -2,8 +2,10 @@
 const Path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const FS = require('fs');
+const zopfli = require('@gfx/zopfli');
+const CompressionPlugin = require('compression-webpack-plugin');
 
-module.exports = {
+const webpackConfig = {
     entry: './src/index',
     mode: process.env.NODE_ENV,
     output: {
@@ -25,7 +27,7 @@ module.exports = {
         ],
     },
     resolve: {
-        extensions: ['.ts', '.tsx', '.js', '.jsx'],
+        extensions: ['.tsx', '.ts', '.jsx', '.js'],
     },
     plugins: [
         new HtmlWebpackPlugin({
@@ -68,3 +70,19 @@ module.exports = {
         stats: 'minimal',
     }
 }    
+
+if(process.env.NODE_ENV !== 'development') {
+    webpackConfig.plugins.unshift(
+        new CompressionPlugin({
+            test: /\.(js|json|html|map|css|svg|htc|eot|woff|ttf)($|\?)/i,
+            compressionOptions: {
+                numiterations: 5
+            },
+            algorithm(input, compressionOptions, callback) {
+                return zopfli.gzip(input, compressionOptions, callback);
+            }
+        })
+    )
+}
+
+module.exports = webpackConfig;

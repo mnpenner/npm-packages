@@ -43,7 +43,7 @@ async function copyDir(src, dest) {
 }
 
 async function main(args) {
-    let pkgName;
+    let pkgName, license = 'UNLICENSED', copyrightHolder;
 
     if(args.length) {
         pkgName = args[0];
@@ -64,17 +64,47 @@ async function main(args) {
             },
             default: args[0]
         });
+
+        license = await ask({
+            message: "License?",
+            type: 'list',
+            choices: [
+                // yarn licenses list
+                'UNLICENSED',
+                'MIT',
+                'ISC',
+                'Apache-2.0',
+                'BSD-2-Clause',
+            ],
+            // default: 'UNLICENSED'
+        });
+
+        if(license !== 'UNLICENSED') {
+            copyrightHolder = await ask({
+                message: "Copyright holder?",
+                default: OS.userInfo().username
+            });
+        }
     }
 
     const outputDir = Path.resolve(pkgName);
     
     await copyDir(Path.join(__dirname, 'template'), outputDir);
     
-
-    await FSP.writeFile(Path.join(pkgName, 'package.json'), JSON.stringify({
+    if(license !== 'UNLICENSED') {
+        const licenseText = await FSP.readFile(Path.join(__dirname,'licenses',license),{encoding:'utf8'});
+        await FSP.writeFile(Path.join(outputDir,'LICENSE'),replaceMulti(licenseText, {
+            '<year>': (new Date).getFullYear(),
+            '<owner>': OS.userInfo().username,
+            '<project>': pkgName,
+        }))
+    }
+    
+    await FSP.writeFile(Path.join(outputDir, 'package.json'), JSON.stringify({
             name: pkgName,
             version: '0.1.0',
-            license: "MIT",
+            license: license,
+            private: license === 'UNLICENSED' || undefined,
             // scripts: {
             //     "start": "NODE_ENV=development webpack-serve"
             // },
@@ -95,7 +125,9 @@ async function main(args) {
                 "webpack-cli": "^3",
                 "webpack-dev-server": "^3",
                 "react-router": "^4",
-                "react-router-dom": "^4"
+                "react-router-dom": "^4",
+                "compression-webpack-plugin": "^2",
+                "@gfx/zopfli": "^1",
             },
             dependencies: {
                 "react": "^16",
@@ -117,3 +149,12 @@ main(process.argv.slice(2)).catch(err => {
     console.error(err.stack);
     process.exit(1);
 })
+
+function replaceMulti(source, dict) {
+    const re = new RegExp(Object.keys(dict).map(escapeRegExp).join('|'),'gui');
+    return source.replace(re, m => dict[m])
+}
+
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); 
+}

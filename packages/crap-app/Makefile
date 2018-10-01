@@ -6,6 +6,10 @@ NM := node_modules/.bin
 ## commands
 ########################################
 
+wizard: node_modules/.yarn-integrity 
+	rm -rf foo
+	node --no-warnings .
+	
 prod: node_modules/.yarn-integrity 
 	rm -rf foo
 	node --no-warnings . foo
