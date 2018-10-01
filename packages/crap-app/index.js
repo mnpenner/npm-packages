@@ -83,6 +83,8 @@ async function main(args) {
                 "@types/node": "^10",
                 "@types/react": "^16",
                 "@types/react-dom": "^16",
+                "@types/react-router": "^4",
+                "@types/react-router-dom": "^4",
                 "awesome-typescript-loader": "^5",
                 "babel-plugin-emotion": "^9",
                 "html-webpack-plugin": "^3",
@@ -91,7 +93,9 @@ async function main(args) {
                 "typescript": "^3",
                 "webpack": "^4",
                 "webpack-cli": "^3",
-                "webpack-dev-server": "^3"
+                "webpack-dev-server": "^3",
+                "react-router": "^4",
+                "react-router-dom": "^4"
             },
             dependencies: {
                 "react": "^16",

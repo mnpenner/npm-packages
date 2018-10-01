@@ -19,7 +19,8 @@
         "resolveJsonModule": false,
         "esModuleInterop": false,
         "jsx": "react",
-        "moduleResolution": "node"
+        "moduleResolution": "node",
+        "allowSyntheticDefaultImports": true
     },
     "files": [
         "src/index.tsx"
