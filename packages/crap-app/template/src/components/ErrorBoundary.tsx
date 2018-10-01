@@ -3,14 +3,15 @@ import React, {ErrorInfo, ReactNode} from 'react';
 export interface Props {
     children: ReactNode
 }
+
 export interface State {
     error: null|Error
     errorInfo: null|ErrorInfo
 }
 
-export default class ErrorBoundary extends React.Component<Props,State> {
+export default class ErrorBoundary extends React.Component<Props> {
 
-    state = {error: null, errorInfo: null};
+    state: State = {error: null, errorInfo: null};
 
     componentDidCatch(error: Error, errorInfo: ErrorInfo) {
         this.setState({
@@ -27,7 +28,6 @@ export default class ErrorBoundary extends React.Component<Props,State> {
                     <pre>
                         <code>
                             {String(this.state.error)}
-                            // @ts-ignore
                             {this.state.errorInfo.componentStack}
                         </code>
                     </pre>

@@ -22,7 +22,7 @@ const TabContent = styled.div`
     background-color: #fff;
     border: 1px solid #dee2e6;
     border-top: none;
-    padding: .25rem;
+    padding: .5rem;
 `
 
 interface IRoute {
@@ -59,25 +59,26 @@ const TabItem = styled.li`
     margin-bottom: -1px;
 `
 
-const CurrentTab = styled.span`
-    background-color: #fff;
+const tab = css`
+    padding: .5rem 1rem;
     border: 1px solid transparent;
+    display: block;
+`
+
+const ActiveTab = styled.span`
+    ${tab}
+    background-color: #fff;
     border-color: #dee2e6 #dee2e6 #fff;
     color: #495057;
-    padding: .5rem 1rem;
     border-top-left-radius: .25rem;
     border-top-right-radius: .25rem;
-    display: block;
 `
 
-const NavLink = styled(Link)`
+const TabLink = styled(Link)`
+    ${tab}
     color: #007bff;
     text-decoration: none;
-    padding: .5rem 1rem;
-    border: 1px solid transparent;
-    display: block;
 `
-
 
 const App = () => (
     <BrowserRouter>
@@ -92,7 +93,7 @@ const App = () => (
                         <Route key={idx} path={path} exact={exact}>
                             {({match}: RouteComponentProps<any>) => (
                                 <TabItem>
-                                    {match ? <CurrentTab>{title}</CurrentTab> : <NavLink to={path}>{title}</NavLink>}
+                                    {match ? <ActiveTab>{title}</ActiveTab> : <TabLink to={path}>{title}</TabLink>}
                                 </TabItem>
                             )}
                         </Route>
