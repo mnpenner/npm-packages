@@ -10,7 +10,7 @@ prod: node_modules/.yarn-integrity
 	rm -rf foo
 	node --no-warnings . foo
 	cd foo && $(MAKE) build
-	http-server foo/dist
+	$(NM)/serve -s -l 8080 foo/dist
 
 dev: node_modules/.yarn-integrity 
 	rm -rf foo

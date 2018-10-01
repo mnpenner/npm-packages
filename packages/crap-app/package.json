@@ -17,6 +17,6 @@
     "registry": "https://registry.npmjs.org"
   },
   "devDependencies": {
-    "http-server": "^0.11.1"
+    "serve": "^10.0.2"
   }
 }
