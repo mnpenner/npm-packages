@@ -93,9 +93,9 @@ const App = () => (
                     <TabList>
                         {routes.map(({path, exact, title}, idx) => (
                             <Route key={idx} path={path} exact={exact}>
-                                {({match}: RouteComponentProps<any>) => (
+                                {(routeProps: RouteComponentProps) => (
                                     <TabItem>
-                                        {match ? <ActiveTab>{title}</ActiveTab> : <TabLink to={path}>{title}</TabLink>}
+                                        {routeProps.match ? <ActiveTab>{title}</ActiveTab> : <TabLink to={path}>{title}</TabLink>}
                                     </TabItem>
                                 )}
                             </Route>
@@ -103,13 +103,13 @@ const App = () => (
                     </TabList>
 
                     <TabContent>
-                        <ErrorBoundary>
-                            <Switch>
-                                {routes.map(({path, component}, idx) => (
-                                    <Route key={idx} exact path={path} component={component}/>
-                                ))}
-                            </Switch>
-                        </ErrorBoundary>
+                        <Switch>
+                            {routes.map(({path, component: Page}, idx) => (
+                                <Route key={idx} exact path={path}>
+                                    {(routeProps: RouteComponentProps) => <ErrorBoundary><Page/></ErrorBoundary>}
+                                </Route>
+                            ))}
+                        </Switch>
                     </TabContent>
                 </Container>
             </ScrollTop>
