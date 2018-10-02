@@ -1,32 +1,56 @@
 /* eslint-disable */
 const Path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const FS = require('fs');
 const zopfli = require('@gfx/zopfli');
 const CompressionPlugin = require('compression-webpack-plugin');
+const {DefinePlugin} = require('webpack');
+
+const isDevelopment = process.env.NODE_ENV === 'development'
 
 const webpackConfig = {
     entry: './src/index',
     mode: process.env.NODE_ENV,
     output: {
         path: Path.join(__dirname, 'dist'),
-        filename: process.env.NODE_ENV === 'development' ? '[name].js' : '[name].[chunkhash].js',
+        filename: isDevelopment ? '[name].js' : '[name]-[chunkhash].js',
     },
-    devtool: process.env.NODE_ENV === 'development' ? 'cheap-module-eval-source-map' : 'source-map',
+    devtool: isDevelopment ? 'cheap-module-eval-source-map' : 'source-map',
     module: {
         rules: [
             {
                 test: /\.tsx?$/,
-                loader: 'awesome-typescript-loader',
+                use: [
+                    {
+                        loader: 'babel-loader',
+                        options: {
+                            cacheDirectory: true,
+                        },
+                    },
+                    {
+                        loader: "ts-loader",
+                        options: {
+                            compilerOptions: {
+                                module: "esnext",
+                            },
+                            transpileOnly: true, // Skip typechecking to speed up bundling
+                        },
+                    },
+                ],
+            },
+            {
+                test: /\.(jpe?g|png|gif|svg)($|\?)/i,
+                loader: 'url-loader',
                 options: {
-                    useBabel: true,
-                    useCache: false,
-                    babelCore: '@babel/core',
-                }
+                    limit: 200,
+                    name: '[name]-[md5:hash:base32:10].[ext]',
+                },
             },
         ],
     },
     resolve: {
+        alias: {
+            '@': Path.join(__dirname, 'src'),
+        },
         extensions: ['.tsx', '.ts', '.jsx', '.js'],
     },
     plugins: [
@@ -49,6 +73,11 @@ const webpackConfig = {
                 sortClassName: true,
             },
         }),
+        new DefinePlugin({
+            'process.env': {
+                NODE_ENV: JSON.stringify(process.env.NODE_ENV),
+            },
+        }),
     ],
     devServer: {
         headers: {
@@ -68,11 +97,21 @@ const webpackConfig = {
             ignored: /\bnode_modules\b/
         },
         stats: 'minimal',
-    }
+    },
+    node: {
+        dgram: 'empty',
+        fs: 'empty',
+        net: 'empty',
+        tls: 'empty',
+        child_process: 'empty',
+    },
+    performance: {
+        hints: isDevelopment ? false : 'warning',
+    },
 }    
 
-if(process.env.NODE_ENV !== 'development') {
-    webpackConfig.plugins.unshift(
+if(!isDevelopment) {
+    webpackConfig.plugins.push(
         new CompressionPlugin({
             test: /\.(js|json|html|map|css|svg|htc|eot|woff|ttf)($|\?)/i,
             compressionOptions: {
@@ -81,7 +120,8 @@ if(process.env.NODE_ENV !== 'development') {
             algorithm(input, compressionOptions, callback) {
                 return zopfli.gzip(input, compressionOptions, callback);
             }
-        })
+        }),
+        // TODO: Brotli; https://www.npmjs.com/package/brotli#brotlicompressbuffer-istext--false
     )
 }
 

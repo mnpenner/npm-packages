@@ -88,18 +88,18 @@ async function main(args) {
     }
 
     const outputDir = Path.resolve(pkgName);
-    
+
     await copyDir(Path.join(__dirname, 'template'), outputDir);
-    
+
     if(license !== 'UNLICENSED') {
-        const licenseText = await FSP.readFile(Path.join(__dirname,'licenses',license),{encoding:'utf8'});
-        await FSP.writeFile(Path.join(outputDir,'LICENSE'),replaceMulti(licenseText, {
+        const licenseText = await FSP.readFile(Path.join(__dirname, 'licenses', license), {encoding: 'utf8'});
+        await FSP.writeFile(Path.join(outputDir, 'LICENSE'), replaceMulti(licenseText, {
             '<year>': (new Date).getFullYear(),
             '<owner>': OS.userInfo().username,
             '<project>': pkgName,
         }))
     }
-    
+
     await FSP.writeFile(Path.join(outputDir, 'package.json'), JSON.stringify({
             name: pkgName,
             version: '0.1.0',
@@ -110,36 +110,39 @@ async function main(args) {
             // },
             devDependencies: {
                 "@babel/core": "^7.1",
+                "@gfx/zopfli": "^1",
                 "@types/node": "^10",
                 "@types/react": "^16",
                 "@types/react-dom": "^16",
                 "@types/react-router": "^4",
                 "@types/react-router-dom": "^4",
-                "awesome-typescript-loader": "^5",
+                "babel-loader": "^8",
                 "babel-plugin-emotion": "^9",
+                "compression-webpack-plugin": "^2",
+                "file-loader": "^2",
                 "html-webpack-plugin": "^3",
                 "react-hot-loader": "^4",
+                "react-router": "^4",
+                "react-router-dom": "^4",
+                "ts-loader": "^5",
                 "ts-node": "^7",
                 "typescript": "^3",
+                "url-loader": "^1",
                 "webpack": "^4",
                 "webpack-cli": "^3",
                 "webpack-dev-server": "^3",
-                "react-router": "^4",
-                "react-router-dom": "^4",
-                "compression-webpack-plugin": "^2",
-                "@gfx/zopfli": "^1",
             },
             dependencies: {
+                "emotion": "^9",
                 "react": "^16",
                 "react-dom": "^16",
-                "emotion": "^9",
                 "react-emotion": "^9",
             }
         }, null, 4)
     );
 
     ChildProc.spawn('yarn', ['--production=false'], {cwd: outputDir, stdio: 'inherit'})
-    
+
     // const sslDir = Path.join(outputDir,'ssl'); 
     // await FSP.mkdir(sslDir)
     // ChildProc.spawn('openssl', ['req','-x509','-nodes','-days','365','-newkey','rsa:2048','-keyout','cert.key','-out','cert.pem','-config',Path.resolve('cert.ini'),'-sha256'], {cwd: sslDir, stdio: 'inherit'})
@@ -151,10 +154,10 @@ main(process.argv.slice(2)).catch(err => {
 })
 
 function replaceMulti(source, dict) {
-    const re = new RegExp(Object.keys(dict).map(escapeRegExp).join('|'),'gui');
+    const re = new RegExp(Object.keys(dict).map(escapeRegExp).join('|'), 'gui');
     return source.replace(re, m => dict[m])
 }
 
 function escapeRegExp(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); 
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

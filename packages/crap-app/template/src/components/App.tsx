@@ -6,6 +6,7 @@ import Container from './Container';
 import ErrorBoundary from './ErrorBoundary';
 import Home from './pages/Home';
 import About from './pages/About';
+import ScrollTop from './helpers/scrollTop';
 
 injectGlobal`
     body {
@@ -81,35 +82,38 @@ const TabLink = styled(Link)`
 `
 
 const App = () => (
-    <BrowserRouter>
-        <ErrorBoundary>
-            <Container>
-                <h1>Hello World</h1>
+    <ErrorBoundary>
+        <BrowserRouter>
+            <ScrollTop>
+                <Container>
+                    <h1>Hello World</h1>
 
-                <p>Welcome to your <Crap>crappy</Crap> app.</p>
-                
-                <TabList>
-                    {routes.map(({path, exact, title}, idx) => (
-                        <Route key={idx} path={path} exact={exact}>
-                            {({match}: RouteComponentProps<any>) => (
-                                <TabItem>
-                                    {match ? <ActiveTab>{title}</ActiveTab> : <TabLink to={path}>{title}</TabLink>}
-                                </TabItem>
-                            )}
-                        </Route>
-                    ))}
-                </TabList>
+                    <p>Welcome to your <Crap>crappy</Crap> app.</p>
 
-                <TabContent>
-                    <Switch>
-                        {routes.map(({path, component}, idx) => (
-                            <Route key={idx} exact path={path} component={component}/>
+                    <TabList>
+                        {routes.map(({path, exact, title}, idx) => (
+                            <Route key={idx} path={path} exact={exact}>
+                                {({match}: RouteComponentProps<any>) => (
+                                    <TabItem>
+                                        {match ? <ActiveTab>{title}</ActiveTab> : <TabLink to={path}>{title}</TabLink>}
+                                    </TabItem>
+                                )}
+                            </Route>
                         ))}
-                    </Switch>
-                </TabContent>
-            </Container>
-        </ErrorBoundary>
-    </BrowserRouter>
+                    </TabList>
+
+                    <TabContent>
+                        <Switch>
+                            {routes.map(({path, component}, idx) => (
+                                <Route key={idx} exact path={path} component={component}/>
+                            ))}
+                        </Switch>
+                    </TabContent>
+                </Container>
+            </ScrollTop>
+        </BrowserRouter>
+    </ErrorBoundary>
+
 )
 
 export default hot(module)(App)
