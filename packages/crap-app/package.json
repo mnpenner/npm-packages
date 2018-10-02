@@ -1,7 +1,7 @@
 {
   "name": "crap-app",
-  "version": "0.1.3",
-  "license": "UNLICENSED",
+  "version": "0.1.7",
+  "license": "MIT",
   "bin": "index.js",
   "description": "Creating React apps sucks. This makes it a little bit easier.",
   "dependencies": {
@@ -18,5 +18,9 @@
   },
   "devDependencies": {
     "serve": "^10.0.2"
+  },
+  "repository": {
+    "type": "hg",
+    "url": "https://bitbucket.org/mnpenner/crap"
   }
 }
