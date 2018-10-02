@@ -141,7 +141,8 @@ async function main(args) {
         }, null, 4)
     );
 
-    ChildProc.spawn('yarn', ['--production=false'], {cwd: outputDir, stdio: 'inherit'})
+    await passthru('yarn', ['--production=false'], {cwd: outputDir})
+    console.log(`\n${Chalk.cyan(pkgName)} created. Run ${Chalk.white.bgBlack(`cd ${pkgName}; make start`)} to get started.`)
 
     // const sslDir = Path.join(outputDir,'ssl'); 
     // await FSP.mkdir(sslDir)
@@ -152,6 +153,19 @@ main(process.argv.slice(2)).catch(err => {
     console.error(err.stack);
     process.exit(1);
 })
+
+function passthru(cmd,args,opts) {
+    return new Promise((resolve,reject) => {
+        const proc = ChildProc.spawn(cmd,args,{stdio:'inherit',...opts});
+        proc.on('close', code => {
+            if(code === 0) {
+                resolve();
+            } else {
+                reject(new Error(`Process exited with code ${code}`));
+            }
+        })
+    })
+}
 
 function replaceMulti(source, dict) {
     const re = new RegExp(Object.keys(dict).map(escapeRegExp).join('|'), 'gui');
