@@ -103,11 +103,13 @@ const App = () => (
                     </TabList>
 
                     <TabContent>
-                        <Switch>
-                            {routes.map(({path, component}, idx) => (
-                                <Route key={idx} exact path={path} component={component}/>
-                            ))}
-                        </Switch>
+                        <ErrorBoundary>
+                            <Switch>
+                                {routes.map(({path, component}, idx) => (
+                                    <Route key={idx} exact path={path} component={component}/>
+                                ))}
+                            </Switch>
+                        </ErrorBoundary>
                     </TabContent>
                 </Container>
             </ScrollTop>
