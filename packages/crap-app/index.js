@@ -29,12 +29,12 @@ async function* readDirR(path) {
 
 async function copyDir(src, dest) {
     const entries = await FSP.readdir(src, {withFileTypes: true});
-    await FSP.mkdir(dest);
+    // await FSP.mkdir(dest);
     for(let entry of entries) {
         const srcPath = Path.join(src, entry.name);
         const destPath = Path.join(dest, entry.name);
         if(entry.isDirectory()) {
-            // await FSP.mkdir(destPath);
+            await FSP.mkdir(destPath);
             await copyDir(srcPath, destPath);
         } else {
             await FSP.copyFile(srcPath, destPath);
@@ -49,7 +49,8 @@ async function main(args) {
         pkgName = args[0];
         const valid = validatePackageName(pkgName);
         if(!valid.validForNewPackages) {
-            console.error(valid.errors.map(x => `- ${x}`).join("\n"));
+            const errors = [...valid.errors || [], ...valid.warnings || []];
+            console.error(errors.length === 1 ? errors[0] : errors.map(x => `- ${x}`).join("\n"));
             process.exit(1);
         }
     } else {
@@ -88,8 +89,7 @@ async function main(args) {
     }
 
     const outputDir = Path.resolve(pkgName);
-
-    await copyDir(Path.join(__dirname, 'template'), outputDir);
+    await FSP.mkdir(outputDir);
 
     if(license !== 'UNLICENSED') {
         const licenseText = await FSP.readFile(Path.join(__dirname, 'licenses', license), {encoding: 'utf8'});
@@ -141,7 +141,9 @@ async function main(args) {
         }, null, 4)
     );
 
-    await passthru('yarn', ['--production=false'], {cwd: outputDir})
+    await passthru('yarn', ['install','--production=false','--audit'], {cwd: outputDir})
+    await copyDir(Path.join(__dirname, 'template'), outputDir); // create .yarnrc *after* installing for the first time; https://github.com/yarnpkg/yarn/issues/6857
+    
     console.log(`\n${Chalk.cyan(pkgName)} created. Run ${Chalk.white.bgBlack(`cd ${pkgName}; make start`)} to get started.`)
 
     // const sslDir = Path.join(outputDir,'ssl'); 

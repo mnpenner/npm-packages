@@ -1,25 +1,28 @@
 MAKEFLAGS += --no-builtin-rules
 .SUFFIXES:
 NM := node_modules/.bin
-.PHONY: test
+.PHONY: wizard prod dev
+
+__main__:
+	$(error Please specify a target)
 
 ## commands
 ########################################
 
 wizard: node_modules/.yarn-integrity 
-	rm -rf foo
+	rm -rf aaa-test-project
 	node --no-warnings .
 	
 prod: node_modules/.yarn-integrity 
-	rm -rf foo
-	node --no-warnings . foo
-	cd foo && $(MAKE) build
-	$(NM)/serve -s -l 8080 foo/dist
+	rm -rf aaa-test-project
+	node --no-warnings . aaa-test-project
+	cd aaa-test-project; $(MAKE) build
+	$(NM)/serve -s -l 8080 aaa-test-project/dist
 
 dev: node_modules/.yarn-integrity 
-	rm -rf foo
-	node --no-warnings . foo
-	cd foo && $(MAKE) start
+	rm -rf aaa-test-project
+	node --no-warnings . aaa-test-project
+	cd aaa-test-project; $(MAKE) start
 
 
 ## files

@@ -1,4 +1,5 @@
-node_modules
-.idea
-foo
-cra
+/node_modules
+/.idea
+/aaa-test-project
+/cra
+/yarn-error.log
