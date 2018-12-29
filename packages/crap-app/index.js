@@ -95,7 +95,7 @@ async function main(args) {
         const licenseText = await FSP.readFile(Path.join(__dirname, 'licenses', license), {encoding: 'utf8'});
         await FSP.writeFile(Path.join(outputDir, 'LICENSE'), replaceMulti(licenseText, {
             '<year>': (new Date).getFullYear(),
-            '<owner>': OS.userInfo().username,
+            '<owner>': copyrightHolder,
             '<project>': pkgName,
         }))
     }
@@ -122,8 +122,6 @@ async function main(args) {
                 "file-loader": "^2",
                 "html-webpack-plugin": "^3",
                 "react-hot-loader": "^4",
-                "react-router": "^4",
-                "react-router-dom": "^4",
                 "ts-loader": "^5",
                 "ts-node": "^7",
                 "typescript": "^3",
@@ -137,6 +135,8 @@ async function main(args) {
                 "react": "^16",
                 "react-dom": "^16",
                 "react-emotion": "^9",
+                "react-router": "^4",
+                "react-router-dom": "^4",
             }
         }, null, 4)
     );
