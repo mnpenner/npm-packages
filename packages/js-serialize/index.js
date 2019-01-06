@@ -18,7 +18,7 @@ function merge(target, ...sources) {
 }
 
 function serialize1(object, options) {
-    return serialize2(object,options).split('</script').join('<\\/script');
+    return serialize2(object,options).replace(/<\/(script)/ig, '<\\/$1');
 }
 
 function serialize2(object, options) {

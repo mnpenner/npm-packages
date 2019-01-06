@@ -53,7 +53,7 @@ it('serializes dates', () => {
 
 it('serializes scripts', () => {
     expect(jsSerialize('<script>alert("injection")</script>')).toBe('"<script>alert(\\"injection\\")<\\/script>"');
-    expect(jsSerialize(() => document.write('</script >'))).toBe('() => document.write(\'<\\/script >\')');
+    expect(jsSerialize(() => document.write('</ScRiPt >'))).toBe('() => document.write(\'<\\/ScRiPt >\')');
 });
 
 it('serializes arrays', () => {
