@@ -53,7 +53,13 @@ const Footer = styled.div`
     background-color: #F1F1F1;
 `
 
-export default function ModalDialog({children,title,close}) {
+interface Props {
+    children: React.ReactNode,
+    title: React.ReactNode,
+    close: ()=>void,
+}
+
+export default function ModalDialog({children,title,close}: Props) {
     return (
         <Backdrop>
             <Wrap1>
