@@ -3,9 +3,11 @@ const Path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const zopfli = require('@gfx/zopfli');
 const CompressionPlugin = require('compression-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const {DefinePlugin} = require('webpack');
 
 const isDevelopment = process.env.NODE_ENV === 'development'
+const copyrightPatt = /^!|\b(copyright|license)\b|@(preserve|license|cc_on)\b/i;
 
 const webpackConfig = {
     entry: './src/index',
@@ -45,6 +47,56 @@ const webpackConfig = {
                     name: '[name]-[md5:hash:base32:10].[ext]',
                 },
             },
+            {
+                test: /\.less$/,
+                use: [
+                    isDevelopment ? 'style-loader' : MiniCssExtractPlugin.loader,
+                    {
+                        loader: 'css-loader',
+                        options: {
+                            sourceMap: true
+                        }
+                    },
+                    {
+                        loader: 'postcss-loader',
+                        options: {
+                            ident: 'postcss',
+                            sourceMap: true,
+                            plugins: loader => {
+                                const plugins = [
+                                    require('autoprefixer')({
+                                        browsers: ['> 1%', 'last 2 Firefox versions', 'last 2 Chrome versions', 'last 2 Edge versions', 'last 2 Safari versions', 'Firefox ESR'],
+                                    }),
+                                ];
+                                if(!isDevelopment) {
+                                    plugins.push(
+                                        require('cssnano')({
+                                            discardComments: {
+                                                remove: comment => !copyrightPatt.test(comment),
+                                            },
+                                            zindex: false,
+                                            reduceIdents: false,
+                                            mergeIdents: false,
+                                            discardUnused: false,
+                                            autoprefixer: false,
+                                        })
+
+                                    );
+                                }
+                                return plugins;
+                            },
+                        }
+                    },
+                    {
+                        loader: 'less-loader',
+                        options: {
+                            strictMath: true,
+                            strictUnits: true,
+                            sourceMap: true,
+                        }
+                    },
+                ]
+            }
         ],
     },
     resolve: {
@@ -120,6 +172,10 @@ if(!isDevelopment) {
             algorithm(input, compressionOptions, callback) {
                 return zopfli.gzip(input, compressionOptions, callback);
             }
+        }),
+        new MiniCssExtractPlugin({
+            filename: '[name].[hash].css',
+            chunkFilename: 'chunk.[chunkhash].css',
         }),
         // TODO: Brotli; https://www.npmjs.com/package/brotli#brotlicompressbuffer-istext--false
     )

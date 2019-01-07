@@ -1,18 +1,13 @@
 import * as React from 'react'
 import {hot} from 'react-hot-loader'
-import styled, {css, injectGlobal} from 'react-emotion';
+import styled from '@emotion/styled';
+import {css} from '@emotion/core';
 import {BrowserRouter, Switch, Route, Link, RouteProps, RouteComponentProps} from 'react-router-dom';
 import Container from './Container';
 import ErrorBoundary from './ErrorBoundary';
 import Home from './pages/Home';
 import About from './pages/About';
 import ScrollTop from './helpers/scrollTop';
-
-injectGlobal`
-    body {
-        background-color: #F6F8FA;
-    }
-`
 
 const Crap = styled.span`
     font-style: italic;
