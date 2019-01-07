@@ -2,9 +2,42 @@
 <html lang="en">
 <head>
     <title><%= htmlWebpackPlugin.options.title %></title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css" integrity="sha256-oSrCnRYXvHG31SBifqP2PM1uje7SJUyX0nTwO2RJV54=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css" integrity="sha256-oSrCnRYXvHG31SBifqP2PM1uje7SJUyX0nTwO2RJV54=" crossorigin="anonymous"/>
 </head>
 <body>
-    <div id="react-root">Loading...</div>
+    <div id="react-root">
+        <div class="loader"></div>
+        <style>
+            #react-root {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                position: fixed;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                background-image: radial-gradient(white, #F6F8FA);
+                /*text-shadow: 1px 1px 1px rgba(0, 0, 0, .25);*/
+                /*font-family: sans-serif;*/
+            }
+            .loader {
+                border: 15px solid #f3f3f3;
+                border-top: 15px solid #3498db;
+                border-radius: 50%;
+                width: 100px;
+                height: 100px;
+                animation: spin 1.5s linear infinite;
+            }
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+        </style>
+    </div>
 </body>
 </html>
