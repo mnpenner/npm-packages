@@ -16,13 +16,12 @@ wizard: node_modules/.yarn-integrity
 prod: node_modules/.yarn-integrity 
 	rm -rf aaa-test-project
 	node --no-warnings . aaa-test-project
-	cd aaa-test-project; $(MAKE) build
-	$(NM)/serve -s -n -l 8080 aaa-test-project/dist
+	cd aaa-test-project; $(MAKE) prod
 
 dev: node_modules/.yarn-integrity 
 	rm -rf aaa-test-project
 	node --no-warnings . aaa-test-project
-	cd aaa-test-project; $(MAKE) start
+	cd aaa-test-project; $(MAKE) dev
 
 
 ## files

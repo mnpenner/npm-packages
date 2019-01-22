@@ -16,9 +16,6 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
   },
-  "devDependencies": {
-    "serve": "^10.0.2"
-  },
   "repository": {
     "type": "hg",
     "url": "https://bitbucket.org/mnpenner/crap"
