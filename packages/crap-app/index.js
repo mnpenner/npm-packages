@@ -34,8 +34,8 @@ async function copyDir(src, dest) {
         const srcPath = Path.join(src, entry.name);
         const destPath = Path.join(dest, entry.name);
         if(entry.isDirectory()) {
-            await FSP.mkdir(destPath);
-            // await copyDir(srcPath, destPath);
+            // await FSP.mkdir(destPath);
+            await copyDir(srcPath, destPath);
         } else {
             await FSP.copyFile(srcPath, destPath);
         }
@@ -109,8 +109,8 @@ async function main(args) {
             //     "start": "NODE_ENV=development webpack-serve"
             // },
             devDependencies: {
-                "@babel/core": "^7.1",
-                "@babel/plugin-syntax-dynamic-import": "^7.1",
+                "@babel/core": "^7",
+                "@babel/plugin-syntax-dynamic-import": "^7",
                 "@gfx/zopfli": "^1",
                 "@types/node": "^10",
                 "@types/react": "^16",
@@ -137,6 +137,7 @@ async function main(args) {
                 "cssnano": "^4",
                 "postcss-loader": "^3",
                 "autoprefixer": "^9",
+                // "copy-webpack-plugin": "^4",
             },
             dependencies: {
                 "@emotion/core": "^10",

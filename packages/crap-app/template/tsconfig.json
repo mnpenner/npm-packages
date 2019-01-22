@@ -8,7 +8,7 @@
         "module": "ES6",
         "noImplicitAny": true,
         "suppressImplicitAnyIndexErrors": false,
-        "removeComments": true,
+        "removeComments": false,
         "preserveConstEnums": false,
         "sourceMap": true,
         "lib": ["es2018","dom"],

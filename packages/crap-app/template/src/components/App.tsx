@@ -37,12 +37,12 @@ const routes: IRoute[] = [
         title: "Home",
         path: '/',
         exact: true,
-        component: lazy(() => import('./pages/Home')),
+        component: lazy(() => import(/* webpackPrefetch: true */ './pages/Home')),
     },
     {
         title: "About",
         path: '/about',
-        component: lazy(() => import('./pages/About')),
+        component: lazy(() => import(/* webpackPrefetch: true */ './pages/About')),
     },
 ]
 

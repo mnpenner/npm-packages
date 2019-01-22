@@ -4,6 +4,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const zopfli = require('@gfx/zopfli');
 const CompressionPlugin = require('compression-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin')
 const {DefinePlugin, ProvidePlugin} = require('webpack');
 
 const isDevelopment = process.env.NODE_ENV === 'development'
@@ -14,7 +15,8 @@ const webpackConfig = {
     mode: process.env.NODE_ENV,
     output: {
         path: Path.join(__dirname, 'dist'),
-        filename: isDevelopment ? '[name].js' : '[name]-[chunkhash].js',
+        filename: isDevelopment ? '[name].js' : '[name].[chunkhash].js',
+        chunkFilename: isDevelopment ? '[id].js' : '[chunkhash].js', // consider https://github.com/egoist/babel-plugin-webpack-chunkname
     },
     devtool: isDevelopment ? 'cheap-module-eval-source-map' : 'source-map',
     module: {
@@ -110,6 +112,7 @@ const webpackConfig = {
     plugins: [
         new HtmlWebpackPlugin({
             template: 'src/index.html',
+            favicon: 'src/images/favicon.ico',
             minify: process.env.NODE_ENV !== 'development' && {
                 caseSensitive: false,
                 removeComments: true,
@@ -165,7 +168,7 @@ const webpackConfig = {
     performance: {
         hints: isDevelopment ? false : 'warning',
     },
-}
+}    
 
 if(!isDevelopment) {
     webpackConfig.plugins.push(
