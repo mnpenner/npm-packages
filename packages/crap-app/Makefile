@@ -17,7 +17,7 @@ prod: node_modules/.yarn-integrity
 	rm -rf aaa-test-project
 	node --no-warnings . aaa-test-project
 	cd aaa-test-project; $(MAKE) build
-	$(NM)/serve -s -l 8080 aaa-test-project/dist
+	$(NM)/serve -s -n -l 8080 aaa-test-project/dist
 
 dev: node_modules/.yarn-integrity 
 	rm -rf aaa-test-project
