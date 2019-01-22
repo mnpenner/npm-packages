@@ -29,13 +29,13 @@ async function* readDirR(path) {
 
 async function copyDir(src, dest) {
     const entries = await FSP.readdir(src, {withFileTypes: true});
-    // await FSP.mkdir(dest);
+    await FSP.mkdir(dest);
     for(let entry of entries) {
         const srcPath = Path.join(src, entry.name);
         const destPath = Path.join(dest, entry.name);
         if(entry.isDirectory()) {
             await FSP.mkdir(destPath);
-            await copyDir(srcPath, destPath);
+            // await copyDir(srcPath, destPath);
         } else {
             await FSP.copyFile(srcPath, destPath);
         }
@@ -89,7 +89,7 @@ async function main(args) {
     }
 
     const outputDir = Path.resolve(pkgName);
-    await FSP.mkdir(outputDir);
+    await copyDir(Path.join(__dirname, 'template'), outputDir);
 
     if(license !== 'UNLICENSED') {
         const licenseText = await FSP.readFile(Path.join(__dirname, 'licenses', license), {encoding: 'utf8'});
@@ -110,12 +110,12 @@ async function main(args) {
             // },
             devDependencies: {
                 "@babel/core": "^7.1",
+                "@babel/plugin-syntax-dynamic-import": "^7.1",
                 "@gfx/zopfli": "^1",
                 "@types/node": "^10",
                 "@types/react": "^16",
                 "@types/react-dom": "^16",
-                "@types/react-router": "^4",
-                "@types/react-router-dom": "^4",
+                "@types/reach__router": "^1.2",
                 "babel-loader": "^8",
                 "babel-plugin-emotion": "^10",
                 "compression-webpack-plugin": "^2",
@@ -141,16 +141,16 @@ async function main(args) {
             dependencies: {
                 "@emotion/core": "^10",
                 "@emotion/styled": "^10",
-                "react": "^16",
-                "react-dom": "^16",
-                "react-router": "^4",
-                "react-router-dom": "^4",
+                "react": "^16.6",
+                "react-dom": "^16.6",
+                "@reach/router": "^1.2",
             }
         }, null, 4)
     );
 
     await passthru('yarn', ['install','--production=false','--audit'], {cwd: outputDir})
-    await copyDir(Path.join(__dirname, 'template'), outputDir); // create .yarnrc *after* installing for the first time; https://github.com/yarnpkg/yarn/issues/6857
+
+    // create .yarnrc *after* installing for the first time; https://github.com/yarnpkg/yarn/issues/6857
     
     console.log(`\n${Chalk.cyan(pkgName)} created. Run ${Chalk.white.bgBlack(`cd ${pkgName}; make start`)} to get started.`)
 

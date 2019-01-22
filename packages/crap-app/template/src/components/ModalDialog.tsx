@@ -1,6 +1,7 @@
 import * as React from 'react';
 import styled from '@emotion/styled';
 import ActionButton from "./ActionButton";
+import Boundary from "./Boundary";
 
 const Backdrop = styled.div`
      position: fixed;
@@ -67,7 +68,11 @@ export default function ModalDialog({children,title,close}: Props) {
                     <Wrap3>
                         <Dialog>
                             <Title>{title}</Title>
-                            <Content>{children}</Content>
+                            <Content>
+                                <Boundary>
+                                    {children}
+                                </Boundary>
+                            </Content>
                             <Footer>
                                 <ActionButton onClick={close}>OK</ActionButton>
                             </Footer>

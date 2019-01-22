@@ -1,4 +1,4 @@
-import React, {ErrorInfo, ReactNode} from 'react';
+import {ErrorInfo, ReactNode} from 'react';
 import styled from '@emotion/styled';
 
 export interface Props {

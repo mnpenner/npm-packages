@@ -4,7 +4,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const zopfli = require('@gfx/zopfli');
 const CompressionPlugin = require('compression-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const {DefinePlugin} = require('webpack');
+const {DefinePlugin, ProvidePlugin} = require('webpack');
 
 const isDevelopment = process.env.NODE_ENV === 'development'
 const copyrightPatt = /^!|\b(copyright|license)\b|@(preserve|license|cc_on)\b/i;
@@ -102,6 +102,8 @@ const webpackConfig = {
     resolve: {
         alias: {
             '@': Path.join(__dirname, 'src'),
+            'react-hot-loader': Path.join(__dirname, 'node_modules', 'react-hot-loader'),
+            'babel-core': Path.join(__dirname, 'node_modules', '@babel', 'core'),
         },
         extensions: ['.tsx', '.ts', '.jsx', '.js'],
     },
@@ -130,6 +132,9 @@ const webpackConfig = {
                 NODE_ENV: JSON.stringify(process.env.NODE_ENV),
             },
         }),
+        new ProvidePlugin({
+            'React': 'react',
+        })
     ],
     devServer: {
         headers: {
@@ -160,7 +165,7 @@ const webpackConfig = {
     performance: {
         hints: isDevelopment ? false : 'warning',
     },
-}    
+}
 
 if(!isDevelopment) {
     webpackConfig.plugins.push(

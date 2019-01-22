@@ -1,13 +1,16 @@
-import * as React from 'react'
+import React, {lazy, ReactNode} from 'react'
 import {hot} from 'react-hot-loader'
 import styled from '@emotion/styled';
 import {css} from '@emotion/core';
-import {BrowserRouter, Switch, Route, Link, RouteProps, RouteComponentProps} from 'react-router-dom';
+// import {BrowserRouter, Switch, Route, Link, RouteProps, RouteComponentProps} from 'react-router-dom';
+import {Router, Link, Match, MatchRenderFn, MatchRenderProps, RouteComponentProps} from "@reach/router";
 import Container from './Container';
 import ErrorBoundary from './ErrorBoundary';
 import Home from './pages/Home';
 import About from './pages/About';
-import ScrollTop from './helpers/scrollTop';
+import Boundary from "./Boundary";
+// import ScrollTop from './helpers/scrollTop';
+
 
 const Crap = styled.span`
     font-style: italic;
@@ -26,7 +29,7 @@ interface IRoute {
     path: string
     exact?: boolean
     replace?: boolean
-    component?: React.ComponentType<RouteComponentProps<any>> | React.ComponentType<any>;
+    component?: React.ComponentType<any>;
 }
 
 const routes: IRoute[] = [
@@ -34,12 +37,12 @@ const routes: IRoute[] = [
         title: "Home",
         path: '/',
         exact: true,
-        component: Home,
+        component: lazy(() => import('./pages/Home')),
     },
     {
         title: "About",
         path: '/about',
-        component: About,
+        component: lazy(() => import('./pages/About')),
     },
 ]
 
@@ -76,10 +79,20 @@ const TabLink = styled(Link)`
     text-decoration: none;
 `
 
+// const RouterPage = (
+//     props: { children: JSX.Element } & RouteComponentProps
+// ) => <span>{props.children}</span>;
+
+
+// https://github.com/reach/router/issues/141#issuecomment-451646939
+const RouterPage = (
+    props: { content: ReactNode } & RouteComponentProps
+) => <Boundary>{props.content}</Boundary>;
+
 const App = () => (
-    <ErrorBoundary>
-        <BrowserRouter>
-            <ScrollTop>
+    <Boundary>
+
+            {/*<ScrollTop>*/}
                 <Container>
                     <h1>Hello World</h1>
 
@@ -87,29 +100,27 @@ const App = () => (
 
                     <TabList>
                         {routes.map(({path, exact, title}, idx) => (
-                            <Route key={idx} path={path} exact={exact}>
-                                {(routeProps: RouteComponentProps) => (
+                            <Match key={idx} path={path}>
+                                {(routeProps: MatchRenderProps<any>) => (
                                     <TabItem>
                                         {routeProps.match ? <ActiveTab>{title}</ActiveTab> : <TabLink to={path}>{title}</TabLink>}
                                     </TabItem>
                                 )}
-                            </Route>
+                            </Match>
                         ))}
                     </TabList>
 
                     <TabContent>
-                        <Switch>
-                            {routes.map(({path, component: Page}, idx) => (
-                                <Route key={idx} exact path={path}>
-                                    {(routeProps: RouteComponentProps) => <ErrorBoundary><Page/></ErrorBoundary>}
-                                </Route>
+                        <Router>
+                            {routes.map(({path, component: Page}) => (
+                                <RouterPage key={path} path={path} content={<Page/>}/>
                             ))}
-                        </Switch>
+                        </Router>
                     </TabContent>
                 </Container>
-            </ScrollTop>
-        </BrowserRouter>
-    </ErrorBoundary>
+            {/*</ScrollTop>*/}
+
+    </Boundary>
 
 )
 

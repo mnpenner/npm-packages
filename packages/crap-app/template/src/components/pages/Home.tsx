@@ -1,10 +1,10 @@
-import React from 'react';
+import React,{lazy} from 'react';
 import corgi from '@/images/corgi.jpg';
 import ExternalLink from '../ExternalLink';
 import styled from '@emotion/styled';
-import ModalDialog from "../ModalDialog";
-import BodyEnd from "../BodyEnd";
+// import ModalDialog from "../ModalDialog";
 import CorgiDialog from "./home/CorgiDialog";
+import BodyEnd from "../BodyEnd";
 import ActionButton from "../ActionButton";
 import {appendComponent, openDialog} from "../../react-util";
 
