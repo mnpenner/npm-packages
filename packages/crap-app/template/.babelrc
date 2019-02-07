@@ -7,12 +7,14 @@
             "plugins": [
                 "react-hot-loader/babel",
                 ["emotion", { "sourceMap": true, "autoLabel": true }]
-            ]
+            ],
+            "presets": [["@babel/preset-react", {"development":  true}]]
         },
         "production": {
             "plugins": [
                 ["emotion", { "hoist": true }]
-            ]
+            ],
+            "presets": [["@babel/preset-react", {"development":  false}]]
         }
     }
 }

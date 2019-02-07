@@ -9,6 +9,13 @@ const {DefinePlugin, ProvidePlugin} = require('webpack');
 const isDevelopment = process.env.NODE_ENV === 'development'
 const copyrightPatt = /^!|\b(copyright|license)\b|@(preserve|license|cc_on)\b/i;
 
+const babelLoader = {
+    loader: 'babel-loader',
+    options: {
+        cacheDirectory: true,
+    },
+};
+
 const webpackConfig = {
     entry: './src/index',
     mode: process.env.NODE_ENV,
@@ -17,18 +24,16 @@ const webpackConfig = {
         filename: isDevelopment ? '[name].js' : '[name].[chunkhash].js',
         chunkFilename: isDevelopment ? '[id].js' : '[chunkhash].js', // consider https://github.com/egoist/babel-plugin-webpack-chunkname
     },
+    resolveLoader: {
+        modules: ['node_modules', `${__dirname}/loaders`]
+    },
     devtool: isDevelopment ? 'cheap-module-eval-source-map' : 'source-map',
     module: {
         rules: [
             {
                 test: /\.tsx?$/,
                 use: [
-                    {
-                        loader: 'babel-loader',
-                        options: {
-                            cacheDirectory: true,
-                        },
-                    },
+                    babelLoader,
                     {
                         loader: "ts-loader",
                         options: {
@@ -37,11 +42,16 @@ const webpackConfig = {
                             },
                             transpileOnly: true, // Skip typechecking to speed up bundling
                         },
-                    },
+                    }
+
                 ],
             },
             {
-                test: /\.(jpe?g|png|gif|svg)($|\?)/i,
+                test: /\.svg($|\?)/i,
+                use: [babelLoader, 'react-svg-loader'],
+            },
+            {
+                test: /\.(jpe?g|png|gif)($|\?)/i,
                 loader: 'url-loader',
                 options: {
                     limit: 200,
@@ -81,7 +91,6 @@ const webpackConfig = {
                                             discardUnused: false,
                                             autoprefixer: false,
                                         })
-
                                     );
                                 }
                                 return plugins;
@@ -167,7 +176,7 @@ const webpackConfig = {
     performance: {
         hints: isDevelopment ? false : 'warning',
     },
-}    
+}
 
 if(!isDevelopment) {
     webpackConfig.plugins.push(

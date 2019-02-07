@@ -110,6 +110,7 @@ async function main(args) {
             // },
             devDependencies: {
                 "@babel/core": "^7",
+                "@babel/preset-react": "^7",
                 "@babel/plugin-syntax-dynamic-import": "^7",
                 "@gfx/zopfli": "^1",
                 "@types/node": "^10",
