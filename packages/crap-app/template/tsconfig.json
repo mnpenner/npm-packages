@@ -5,7 +5,7 @@
         "inlineSources": true,
         "noEmitOnError": true,
         "pretty": true,
-        "module": "ES6",
+        "module": "esnext",
         "noImplicitAny": true,
         "suppressImplicitAnyIndexErrors": false,
         "removeComments": false,
@@ -21,22 +21,16 @@
         "jsx": "react",
         "moduleResolution": "node",
         "allowSyntheticDefaultImports": true,
-        "baseUrl": "."
+        "baseUrl": ".",
+        "noEmit": true
     },
     "paths": {
-        "@/*": [
-            "src/*"
-        ],
-        "brotli-webpack-plugin": ["types/modules"],
-        "microseconds": ["types/microseconds"]
+        "@/*": ["src/*"]
     },
     "files": [
         "src/index.tsx"
     ],
     "include": [
-        "src/types/**/*.d.ts"
-    ],
-    "exclude": [
-        "node_modules"
+        "src/**/*.d.ts"
     ]
 }

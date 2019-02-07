@@ -1,4 +1,4 @@
-import React, {lazy, ReactNode} from 'react'
+import {lazy, ReactNode} from 'react'
 import {hot} from 'react-hot-loader'
 import styled from '@emotion/styled';
 import {css} from '@emotion/core';
@@ -29,14 +29,13 @@ interface IRoute {
     path: string
     exact?: boolean
     replace?: boolean
-    component?: React.ComponentType<any>;
+    component: React.ComponentType<any>;
 }
 
 const routes: IRoute[] = [
     {
         title: "Home",
         path: '/',
-        exact: true,
         component: lazy(() => import(/* webpackPrefetch: true */ './pages/Home')),
     },
     {
@@ -79,15 +78,10 @@ const TabLink = styled(Link)`
     text-decoration: none;
 `
 
-// const RouterPage = (
-//     props: { children: JSX.Element } & RouteComponentProps
-// ) => <span>{props.children}</span>;
+// https://github.com/reach/router/issues/141#issuecomment-457872496
+type RouteProps = {component: React.ComponentType<any>} & RouteComponentProps;
 
-
-// https://github.com/reach/router/issues/141#issuecomment-451646939
-const RouterPage = (
-    props: { content: ReactNode } & RouteComponentProps
-) => <Boundary>{props.content}</Boundary>;
+const Route: React.FunctionComponent<RouteProps> = ({ component: Component, ...rest }) => <Boundary><Component {...rest} /></Boundary>
 
 const App = () => (
     <Boundary>
@@ -112,8 +106,8 @@ const App = () => (
 
                     <TabContent>
                         <Router>
-                            {routes.map(({path, component: Page}) => (
-                                <RouterPage key={path} path={path} content={<Page/>}/>
+                            {routes.map(({path, component}) => (
+                                <Route key={path} path={path} component={component}/>
                             ))}
                         </Router>
                     </TabContent>

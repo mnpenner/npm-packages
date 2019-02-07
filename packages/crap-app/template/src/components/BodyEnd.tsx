@@ -8,7 +8,7 @@ interface Props {
 export default class BodyEnd extends React.Component<Props> {
     el: HTMLElement
 
-    constructor(props) {
+    constructor(props: Readonly<Props>) {
         super(props);
         this.el = document.createElement('div');
         this.el.style.display = 'contents';

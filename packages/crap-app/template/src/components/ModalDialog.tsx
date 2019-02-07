@@ -54,7 +54,7 @@ const Footer = styled.div`
     background-color: #F1F1F1;
 `
 
-interface Props {
+export interface Props {
     children: React.ReactNode,
     title: React.ReactNode,
     close: ()=>void,

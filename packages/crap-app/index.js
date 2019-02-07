@@ -113,8 +113,8 @@ async function main(args) {
                 "@babel/plugin-syntax-dynamic-import": "^7",
                 "@gfx/zopfli": "^1",
                 "@types/node": "^10",
-                "@types/react": "^16",
-                "@types/react-dom": "^16",
+                "@types/react": "^16.8",
+                "@types/react-dom": "^16.8",
                 "@types/reach__router": "^1.2",
                 "babel-loader": "^8",
                 "babel-plugin-emotion": "^10",
@@ -142,8 +142,8 @@ async function main(args) {
             dependencies: {
                 "@emotion/core": "^10",
                 "@emotion/styled": "^10",
-                "react": "^16.6",
-                "react-dom": "^16.6",
+                "react": "^16.8",
+                "react-dom": "^16.8",
                 "@reach/router": "^1.2",
             }
         }, null, 4)

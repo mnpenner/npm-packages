@@ -7,6 +7,7 @@ NM := node_modules/.bin
 ########################################
 
 build: node_modules/.yarn-integrity
+	$(NM)/tsc --noEmit
 	NODE_ENV=production $(NM)/webpack
 
 start: dev
