@@ -1,0 +1,9 @@
+{
+    "name": "react-svg-loader",
+    "version": "0.1.0",
+    "main": "react-svg-loader.js",
+    "dependencies": {
+        "htmlparser2": "^3.10.1",
+        "js-serialize": "^0.1.12"
+    }
+}
