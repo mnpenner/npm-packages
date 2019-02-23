@@ -7,7 +7,7 @@ module.exports = function(content) {
     const loader = this;
     loader.cacheable && loader.cacheable();
     const callback = loader.async();
-    const sb = ["import {createElement as e} from 'react'\n",'const C=({title,desc,...props})=>'];
+    const sb = ["import {createElement as e} from 'react';\n",'const C=({title,desc,...props})=>'];
     let svgOpen = false;
 
     const parser = new htmlparser.Parser({
@@ -53,7 +53,10 @@ module.exports = function(content) {
             callback(err);
         },
         onend() {
-            sb.push(`\nC.displayName=${toJs(Path.relative(loader.rootContext, loader.resourcePath))}\nexport default C`)
+            if(process.env.NODE_ENV !== 'production') {
+                sb.push(`;\nC.displayName=${toJs(Path.relative(loader.rootContext, loader.resourcePath))}`)
+            }
+            sb.push(';\nexport default C;')
             const svg = sb.join('');
             // console.log(svg);
             callback(null, svg)

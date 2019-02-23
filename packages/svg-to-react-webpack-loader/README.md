@@ -57,7 +57,7 @@ const webpackConfig = {
             },
             {
                 test: /\.svg($|\?)/i,
-                use: [babelLoader, 'react-svg-loader'],
+                use: [babelLoader, 'svg-to-react-webpack-loader'],
             },
             ...
 ```
