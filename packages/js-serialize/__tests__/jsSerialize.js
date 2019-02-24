@@ -1,8 +1,24 @@
 const jsSerialize = require('../');
 
-it('serializes strings', () => {
-    expect(jsSerialize('foo')).toBe('"foo"');
-    expect(jsSerialize(new String('bar'))).toBe('"bar"');
+describe('strings', () => {
+    it('serializes strings', () => {
+        expect(jsSerialize('foo')).toBe('"foo"');
+        expect(jsSerialize(new String('bar'))).toBe('"bar"');
+    });
+
+    it('encodes unicode using escape sequences', () => {
+        expect(jsSerialize('\u303a')).toBe('"\\u303a"');
+        expect(jsSerialize('\u{12345}')).toBe('"\\u{12345}"');
+        expect(jsSerialize('\x1F\x7F')).toBe('"\\x1f\\x7f"');
+        expect(jsSerialize('he"l\\lo')).toBe('"he\\"l\\\\lo"');
+        expect(jsSerialize('0\u12345')).toBe('"0\\u12345"');
+        expect(jsSerialize('\x001')).toBe('"\\x001"'); // \01 would be incorrect!
+    });
+
+    it('uses single-character escape sequences', () => {
+        expect(jsSerialize('\b\f\n\r\t\v"\\',{safe:false})).toBe('"\\b\\f\\n\\r\\t\\v\\"\\\\"');
+        expect(jsSerialize('\b\f\n\r\t\v"\\',{safe:true})).toBe('"\\b\\f\\n\\r\\t\\x0B\\"\\\\"');
+    });
 });
 
 it('serializes numbers', () => {
@@ -186,11 +202,4 @@ it('supports frozen objects', () => {
     expect(jsSerialize(frozen)).toBe('{ans:42}');
     Object.freeze(frozen);
     expect(jsSerialize(frozen)).toBe('Object.freeze({ans:42})');
-});
-
-it('encodes unicode using escape sequences', () => {
-    expect(jsSerialize('\u303a')).toBe('"\\u303a"');
-    expect(jsSerialize('\u{12345}')).toBe('"\\u{12345}"');
-    expect(jsSerialize('\x00\x1F\x7F')).toBe('"\\x00\\x1f\\x7f"');
-    expect(jsSerialize('he"l\\lo')).toBe('"he\\"l\\\\lo"');
 });

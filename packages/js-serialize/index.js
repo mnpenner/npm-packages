@@ -175,9 +175,18 @@ function serialize3(obj, opt, ctx, path) {
     } else if(util.isString(obj)) {
         return '"' + Array.from(obj).map(ch => {
             const cp = ch.codePointAt(0);
+            switch(cp) {
+                case 0x08: return '\\b';
+                case 0x0C: return '\\f';
+                case 0x0A: return '\\n';
+                case 0x0D: return '\\r';
+                case 0x09: return '\\t';
+                case 0x0B: return opt.safe ? '\\x0B' : '\\v'; // IE < 9 doesn't support \v
+                // case 0x00: return '\\0'; // causes problems if the next character is a digit
+                case 0x22: return '\\"';
+                case 0x5C: return '\\\\';
+            }
             if(cp >= 32 && cp <= 126) {
-                if(ch === '"') return '\\"';
-                if(ch === '\\') return '\\\\';
                 return ch;
             }
             if(cp <= 0xFF) {

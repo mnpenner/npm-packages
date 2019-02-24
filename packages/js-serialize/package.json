@@ -1,12 +1,12 @@
 {
   "name": "js-serialize",
-  "version": "0.1.12",
+  "version": "0.2.1",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "jest"
   },
-  "author": "Mark Penner <mark@mpen.ca>",
+  "author": "Mark Penner <npm@mpen.ca>",
   "license": "MIT",
   "dependencies": {
   },
