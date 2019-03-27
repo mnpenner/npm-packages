@@ -32,19 +32,7 @@ const webpackConfig = {
         rules: [
             {
                 test: /\.tsx?$/,
-                use: [
-                    babelLoader,
-                    {
-                        loader: "ts-loader",
-                        options: {
-                            compilerOptions: {
-                                module: "esnext",
-                            },
-                            transpileOnly: true, // Skip typechecking to speed up bundling
-                        },
-                    }
-
-                ],
+                use: babelLoader,
             },
             {
                 test: /\.svg($|\?)/i,

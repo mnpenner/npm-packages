@@ -27,7 +27,7 @@ const Title = styled.h2`
    font-size: x-large;
 `
 
-export default class ErrorBoundary extends React.Component<Props> {
+export default class ErrorBoundary extends React.Component<Props, State> {
 
     state: State = {error: null, errorInfo: null};
 

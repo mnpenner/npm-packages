@@ -116,6 +116,8 @@ async function main(args) {
                 "@babel/core": "^7",
                 "@babel/preset-react": "^7",
                 "@babel/plugin-transform-react-constant-elements": "^7",
+                "@babel/preset-typescript": "^7",
+                "@babel/plugin-proposal-class-properties": "^7", // FIXME: https://github.com/babel/babel/issues/8098
                 "@babel/plugin-syntax-dynamic-import": "^7",
                 "@gfx/zopfli": "^1",
                 "@types/node": "^10",
@@ -128,7 +130,6 @@ async function main(args) {
                 "file-loader": "^2",
                 "html-webpack-plugin": "^3",
                 "react-hot-loader": "^4",
-                "ts-loader": "^5",
                 "ts-node": "^7",
                 "typescript": "^3",
                 "url-loader": "^1",
@@ -159,7 +160,7 @@ async function main(args) {
 
     // create .yarnrc *after* installing for the first time; https://github.com/yarnpkg/yarn/issues/6857
     
-    console.log(`\n${Chalk.cyan(pkgName)} created. Run ${Chalk.white.bgBlack(`cd ${pkgName}; make start`)} to get started.`)
+    console.log(`\n${Chalk.cyan(pkgName)} created. Run ${Chalk.white.bgBlack(`cd ${pkgName}; make dev`)} to get started.`)
 
     // const sslDir = Path.join(outputDir,'ssl'); 
     // await mkdir(sslDir)
