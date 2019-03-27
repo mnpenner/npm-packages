@@ -6,7 +6,7 @@
     "presets": [
         "@babel/preset-typescript",
         ["@babel/preset-env", {
-            "useBuiltIns": "entry",
+            "useBuiltIns": "usage",
             "shippedProposals":  true,
             "corejs": "3"
         }]
