@@ -1,43 +1,47 @@
 #!/usr/bin/env node
 const Inquirer = require('inquirer');
 const Chalk = require('chalk');
-const FSP = require('fs').promises;
+const FS = require('fs');
 const ChildProc = require('child_process');
 const {promisify} = require('util');
 const validatePackageName = require("validate-npm-package-name");
 const Path = require('path');
-const jsSerialize = require('js-serialize');
+// const jsSerialize = require('js-serialize');
 const OS = require('os');
-// const mkdir = promisify(FS.mkdir);
-// const writeFile = promisify(FS.writeFile);
+
+const mkdir = promisify(FS.mkdir);
+const readFile = promisify(FS.readFile);
+const writeFile = promisify(FS.writeFile);
+const readDir = promisify(FS.readdir);
+const copyFile = promisify(FS.copyFile);
 
 async function ask(question) {
     return (await Inquirer.prompt({...question, name: '_'}))._
 }
 
-async function* readDirR(path) {
-    const entries = await FSP.readdir(path, {withFileTypes: true});
-    for(let entry of entries) {
-        const fullPath = Path.join(path, entry.name);
-        if(entry.isDirectory()) {
-            yield* readDirR(fullPath);
-        } else {
-            yield fullPath;
-        }
-    }
-}
+// async function* readDirR(path) {
+//     const entries = await readDir(path, {withFileTypes: true});
+//     for(let entry of entries) {
+//         const fullPath = Path.join(path, entry.name);
+//         if(entry.isDirectory()) {
+//             yield* readDirR(fullPath);
+//         } else {
+//             yield fullPath;
+//         }
+//     }
+// }
 
 async function copyDir(src, dest) {
-    const entries = await FSP.readdir(src, {withFileTypes: true});
-    await FSP.mkdir(dest);
+    const entries = await readDir(src, {withFileTypes: true});
+    await mkdir(dest);
     for(let entry of entries) {
         const srcPath = Path.join(src, entry.name);
         const destPath = Path.join(dest, entry.name);
         if(entry.isDirectory()) {
-            // await FSP.mkdir(destPath);
+            // await mkdir(destPath);
             await copyDir(srcPath, destPath);
         } else {
-            await FSP.copyFile(srcPath, destPath);
+            await copyFile(srcPath, destPath);
         }
     }
 }
@@ -92,15 +96,15 @@ async function main(args) {
     await copyDir(Path.join(__dirname, 'template'), outputDir);
 
     if(license !== 'UNLICENSED') {
-        const licenseText = await FSP.readFile(Path.join(__dirname, 'licenses', license), {encoding: 'utf8'});
-        await FSP.writeFile(Path.join(outputDir, 'LICENSE'), replaceMulti(licenseText, {
+        const licenseText = await readFile(Path.join(__dirname, 'licenses', license), {encoding: 'utf8'});
+        await writeFile(Path.join(outputDir, 'LICENSE'), replaceMulti(licenseText, {
             '<year>': (new Date).getFullYear(),
             '<owner>': copyrightHolder,
             '<project>': pkgName,
         }))
     }
 
-    await FSP.writeFile(Path.join(outputDir, 'package.json'), JSON.stringify({
+    await writeFile(Path.join(outputDir, 'package.json'), JSON.stringify({
             name: pkgName,
             version: '0.1.0',
             license: license,
@@ -111,6 +115,7 @@ async function main(args) {
             devDependencies: {
                 "@babel/core": "^7",
                 "@babel/preset-react": "^7",
+                "@babel/plugin-transform-react-constant-elements": "^7",
                 "@babel/plugin-syntax-dynamic-import": "^7",
                 "@gfx/zopfli": "^1",
                 "@types/node": "^10",
@@ -157,7 +162,7 @@ async function main(args) {
     console.log(`\n${Chalk.cyan(pkgName)} created. Run ${Chalk.white.bgBlack(`cd ${pkgName}; make start`)} to get started.`)
 
     // const sslDir = Path.join(outputDir,'ssl'); 
-    // await FSP.mkdir(sslDir)
+    // await mkdir(sslDir)
     // ChildProc.spawn('openssl', ['req','-x509','-nodes','-days','365','-newkey','rsa:2048','-keyout','cert.key','-out','cert.pem','-config',Path.resolve('cert.ini'),'-sha256'], {cwd: sslDir, stdio: 'inherit'})
 }
 

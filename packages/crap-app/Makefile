@@ -11,16 +11,16 @@ __main__:
 
 wizard: node_modules/.yarn-integrity 
 	rm -rf aaa-test-project
-	node --no-warnings .
+	node .
 	
 prod: node_modules/.yarn-integrity 
 	rm -rf aaa-test-project
-	node --no-warnings . aaa-test-project
+	node . aaa-test-project
 	cd aaa-test-project; $(MAKE) prod
 
 dev: node_modules/.yarn-integrity 
 	rm -rf aaa-test-project
-	node --no-warnings . aaa-test-project
+	node . aaa-test-project
 	cd aaa-test-project; $(MAKE) dev
 
 

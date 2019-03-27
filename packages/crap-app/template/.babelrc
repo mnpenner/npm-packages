@@ -12,7 +12,8 @@
         },
         "production": {
             "plugins": [
-                ["emotion", { "hoist": true }]
+                ["emotion", { "hoist": true }],
+                "@babel/plugin-transform-react-constant-elements"
             ],
             "presets": [["@babel/preset-react", {"development":  false}]]
         }
