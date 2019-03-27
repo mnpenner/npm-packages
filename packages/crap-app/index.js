@@ -117,13 +117,15 @@ async function main(args) {
                 "@babel/preset-react": "^7",
                 "@babel/plugin-transform-react-constant-elements": "^7",
                 "@babel/preset-typescript": "^7",
-                "@babel/plugin-proposal-class-properties": "^7", // FIXME: https://github.com/babel/babel/issues/8098
+                "@babel/preset-env": "^7",
+                "@babel/plugin-proposal-class-properties": "^7",
                 "@babel/plugin-syntax-dynamic-import": "^7",
                 "@gfx/zopfli": "^1",
                 "@types/node": "^10",
                 "@types/react": "^16.8",
                 "@types/react-dom": "^16.8",
                 "@types/reach__router": "^1.2",
+                "core-js": "^3",
                 "babel-loader": "^8",
                 "babel-plugin-emotion": "^10",
                 "compression-webpack-plugin": "^2",
@@ -150,7 +152,8 @@ async function main(args) {
                 "@emotion/core": "^10",
                 "@emotion/styled": "^10",
                 "react": "^16.8",
-                "react-dom": "^16.8",
+                // "react-dom": "^16.8",
+                "react-dom": "npm:@hot-loader/react-dom", // https://github.com/gaearon/react-hot-loader#react--dom  https://stackoverflow.com/a/54816859/65387
                 "@reach/router": "^1.2",
             }
         }, null, 4)

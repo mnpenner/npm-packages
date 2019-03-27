@@ -1,5 +1,5 @@
 import {lazy, ReactNode} from 'react'
-import {hot} from 'react-hot-loader'
+import {hot} from 'react-hot-loader/root'
 import styled from '@emotion/styled';
 import {css} from '@emotion/core';
 // import {BrowserRouter, Switch, Route, Link, RouteProps, RouteComponentProps} from 'react-router-dom';
@@ -118,4 +118,4 @@ const App = () => (
 
 )
 
-export default hot(module)(App)
+export default hot(App)
