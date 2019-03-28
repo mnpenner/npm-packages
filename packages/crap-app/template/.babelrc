@@ -8,7 +8,8 @@
         ["@babel/preset-env", {
             "useBuiltIns": "usage",
             "shippedProposals":  true,
-            "corejs": "3"
+            "corejs": "3",
+            "modules": false
         }]
     ],
     "env": {
