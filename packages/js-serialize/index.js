@@ -53,9 +53,7 @@ function serialize2(object, options) {
 }
 
 function pathToStr(path, opt) {
-    // console.log('pathToStr',path);
-    
-    return path.map(p => util.isString(name) && isSafePropName(p,opt) ? `.${p}` : `[${serialize2(p,opt)}]`).join('');
+    return path.map(p => util.isString(p) && isSafePropName(p,opt) ? `.${p}` : `[${serialize2(p,opt)}]`).join('');
 }
 
 function isNegativeZero(value) {
@@ -168,6 +166,8 @@ function serialize3(obj, opt, ctx, path) {
         }
         if(isNegativeZero(obj)) return '-0';
         return String(obj);
+    } else if(util.isBigInt(obj)) {
+        return `${obj}n`;
     } else if(obj === true) {
         return opt.compact ? '!0' : 'true';
     } else if(obj === false) {

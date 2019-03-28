@@ -1,18 +1,19 @@
 {
   "name": "js-serialize",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "mocha __tests__"
   },
   "author": "Mark Penner <npm@mpen.ca>",
   "license": "MIT",
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
-    "@types/jest": "^20.0.7",
-    "jest": "^18.0.0",
+    "@types/chai": "^4.1.7",
+    "@types/mocha": "^5.2.6",
+    "chai": "^4.2.0",
+    "mocha": "^6.0.2",
     "xregexp": "^3.1.1"
   },
   "repository": {
