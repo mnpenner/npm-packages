@@ -203,3 +203,8 @@ it('supports frozen objects', () => {
     Object.freeze(frozen);
     expect(jsSerialize(frozen)).toBe('Object.freeze({ans:42})');
 });
+
+
+it('serializes BigInts', () => {
+    expect(jsSerialize(36893488147419103232n)).toBe('36893488147419103232n');
+});
