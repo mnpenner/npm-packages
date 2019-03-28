@@ -1,13 +1,12 @@
 {
   "name": "crap-app",
-  "version": "0.2.0",
+  "version": "0.3.1",
   "license": "MIT",
   "bin": "index.js",
   "description": "Creating React apps sucks. This makes it a little bit easier.",
   "dependencies": {
     "chalk": "^2.4.1",
     "inquirer": "^6.2.0",
-    "js-serialize": "^0.1.11",
     "validate-npm-package-name": "^3.0.0"
   },
   "engines": {
