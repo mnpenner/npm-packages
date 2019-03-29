@@ -146,6 +146,7 @@ async function main(args) {
                 "cssnano": "^4",
                 "postcss-loader": "^3",
                 "autoprefixer": "^9",
+                "svg-to-react-webpack-loader": "^0.1",
                 // "copy-webpack-plugin": "^4",
             },
             dependencies: {

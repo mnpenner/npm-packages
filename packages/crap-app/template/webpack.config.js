@@ -36,7 +36,7 @@ const webpackConfig = {
             },
             {
                 test: /\.svg($|\?)/i,
-                use: [babelLoader, 'react-svg-loader'],
+                use: [babelLoader, 'svg-to-react-webpack-loader'],
             },
             {
                 test: /\.(jpe?g|png|gif)($|\?)/i,
@@ -64,7 +64,7 @@ const webpackConfig = {
                             plugins: loader => {
                                 const plugins = [
                                     require('autoprefixer')({
-                                        browsers: ['> 1%', 'last 2 Firefox versions', 'last 2 Chrome versions', 'last 2 Edge versions', 'last 2 Safari versions', 'Firefox ESR'],
+                                        browsers: ['> 1%', 'last 2 Firefox versions', 'last 2 Chrome versions', 'last 2 Edge versions', 'last 2 Safari versions', 'Firefox ESR'], // TODO: use .browserlistrc
                                     }),
                                 ];
                                 if(!isDevelopment) {
