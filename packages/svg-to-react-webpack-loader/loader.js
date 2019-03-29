@@ -3,6 +3,9 @@ const htmlparser = require('htmlparser2')
 const toJs = require('js-serialize');
 const stdAttrs = require('./std-attrs');
 
+// TODO: put static part of SVG into a const outside of the function for performance.
+// https://babeljs.io/docs/en/babel-plugin-transform-react-constant-elements
+
 module.exports = function(content) {
     const loader = this;
     loader.cacheable && loader.cacheable();
