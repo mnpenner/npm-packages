@@ -21,6 +21,7 @@ const webpackConfig = {
     mode: process.env.NODE_ENV,
     output: {
         path: Path.join(__dirname, 'dist'),
+        publicPath: '/',
         filename: isDevelopment ? '[name].js' : '[name].[chunkhash].js',
         chunkFilename: isDevelopment ? '[name].bundle.js' : '[chunkhash].js',
     },
