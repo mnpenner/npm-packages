@@ -15,6 +15,7 @@
     "env": {
         "development": {
             "plugins": [
+                "webpack-chunkname",
                 "react-hot-loader/babel",
                 ["emotion", { "sourceMap": true, "autoLabel": true }]
             ],

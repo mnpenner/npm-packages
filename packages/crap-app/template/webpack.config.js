@@ -22,7 +22,7 @@ const webpackConfig = {
     output: {
         path: Path.join(__dirname, 'dist'),
         filename: isDevelopment ? '[name].js' : '[name].[chunkhash].js',
-        chunkFilename: isDevelopment ? '[id].js' : '[chunkhash].js', // consider https://github.com/egoist/babel-plugin-webpack-chunkname
+        chunkFilename: isDevelopment ? '[name].bundle.js' : '[chunkhash].js',
     },
     resolveLoader: {
         modules: ['node_modules', `${__dirname}/loaders`]
@@ -63,9 +63,7 @@ const webpackConfig = {
                             sourceMap: true,
                             plugins: loader => {
                                 const plugins = [
-                                    require('autoprefixer')({
-                                        browsers: ['> 1%', 'last 2 Firefox versions', 'last 2 Chrome versions', 'last 2 Edge versions', 'last 2 Safari versions', 'Firefox ESR'], // TODO: use .browserlistrc
-                                    }),
+                                    require('autoprefixer'),
                                 ];
                                 if(!isDevelopment) {
                                     plugins.push(

@@ -23,6 +23,8 @@ dev: node_modules/.yarn-integrity
 	node . aaa-test-project
 	cd aaa-test-project; $(MAKE) dev
 
+publish:
+	npm publish
 
 ## files
 ########################################

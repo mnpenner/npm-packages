@@ -1,6 +1,6 @@
 {
   "name": "crap-app",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "license": "MIT",
   "bin": "index.js",
   "description": "Creating React apps sucks. This makes it a little bit easier.",
