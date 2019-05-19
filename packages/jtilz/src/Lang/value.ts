@@ -78,3 +78,34 @@ export function isEmpty(value: any): boolean {
     }
     return false;
 }
+
+export function clone<T>(value: T): T {
+    if(Type.isArray(value)) {
+        return [...value]; // FIXME: value.map(clone)
+    }
+    if(Type.isDate(value)) {
+        return Object.assign(new Date(value.valueOf()),value);
+    }
+    if(Type.isMap(value) || Type.isSet(value)) {
+        return Object.assign(new value.constructor(value),value);
+    }
+    if(Type.isNumber(value) || Type.isString(value) || Type.isNullish(value) || Type.isBoolean(value) || Type.isSymbol(value)) {
+        return value; // these types are immutable. no clone necessary
+    }
+    if(Type.isRegExp(value)) {
+        return Object.assign(new RegExp(value.source, value.flags),value);
+    }
+    if(Type.isObject(value)) {
+        // FIXME: this should do a deep clone, no?
+        return Object.assign(Object.create(Object.getPrototypeOf(value)), value);
+    }
+    if(Type.isFunction(value)) {
+        if(Type.isNativeFunction(value)) {
+            throw new Error(`Cannot clone native functions`);
+        }
+        const fn = new Function(`return ${value.toString()}`)();
+        Object.assign(fn,value);
+        return fn;
+    }
+    throw new Error(`Could not clone value`);
+}
