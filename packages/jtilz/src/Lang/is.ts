@@ -86,7 +86,7 @@ export function isNil(obj: any): obj is null|undefined {
 }
 
 export function isObject(obj: any): obj is object {
-    return obj !== null && typeof obj === 'object';
+    return obj != null && typeof obj === 'object';
 }
 
 /**
@@ -97,10 +97,11 @@ export function isNaN(obj: any): obj is number {
 }
 
 export function isPlainObject(obj: any): obj is object {
-    return isObject(obj) && (
-        obj.constructor === Object  // obj = {}
-        || obj.constructor === undefined // obj = Object.create(null)
-    );
+    // https://stackoverflow.com/a/23441431/65387
+    // return Object.prototype.toString.call(obj) === '[object Object]';
+    if(!isObject(obj)) return false;
+    const proto = Object.getPrototypeOf(obj);
+    return proto === null || proto === Object.prototype;
 }
 
 export function isSymbol(obj: any): obj is symbol {

@@ -32,3 +32,31 @@ test(Type.isNaN.name, () => {
     expect(Type.isNaN(undefined)).toBe(false);
     expect(Type.isNaN(new Date('bacon'))).toBe(false);
 })
+
+const sneakyObject = {
+    constructor: 'foo',
+    __proto__: 'bar',
+    toString() {
+        return '[object NotAnObject]'
+    },
+    [Symbol.toStringTag]: 'NotAnObject'
+}
+
+test(Type.isPlainObject.name, () => {
+    expect(Type.isPlainObject({})).toBe(true);
+    expect(Type.isPlainObject(Object.create(null))).toBe(true);
+    expect(Type.isPlainObject(/foo/)).toBe(false);
+    expect(Type.isPlainObject(new Date)).toBe(false);
+    expect(Type.isPlainObject([])).toBe(false);
+    expect(Type.isPlainObject(()=>{})).toBe(false);
+    expect(Type.isPlainObject(sneakyObject)).toBe(true);
+})
+
+test(Type.isObject.name, () => {
+    expect(Type.isObject({})).toBe(true);
+    expect(Type.isObject(Object.create(null))).toBe(true);
+    expect(Type.isObject(/foo/)).toBe(true);
+    expect(Type.isObject([])).toBe(true);
+    expect(Type.isObject(()=>{})).toBe(false); // hmmm... but functions behave just like objects?? see also https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/isExtensible
+    expect(Type.isObject(sneakyObject)).toBe(true);
+})

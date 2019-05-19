@@ -1,6 +1,6 @@
 BIN := node_modules/.bin
 SRC_FILES := $(shell find src -name '*.ts')
-TS_DEPS := $(SRC_FILES) yarn.lock
+TS_DEPS := $(SRC_FILES) node_modules/.yarn-integrity
 
 # these are not files
 .PHONY: clean test patch
@@ -25,13 +25,13 @@ dist/node: tsconfig.node.json $(TS_DEPS) | .deps/lint
 docs: $(TS_DEPS) | .deps/lint
 	typedoc --out $@ src/index.node.ts --moduleResolution node --target es2017 --mode file --readme none --module commonjs --theme minimal
 
-yarn.lock:: package.json
-	@yarn install --production=false
-	@touch -mr $@ $<
-
-yarn.lock:: node_modules
-	@yarn install --production=false --check-files
-	@touch -mr $@ $<
+#yarn.lock:: package.json
+#	@yarn install --production=false
+#	@touch -mr $@ $<
+#
+#yarn.lock:: node_modules
+#	@yarn install --production=false --check-files
+#	@touch -mr $@ $<
 	
 node_modules .deps:
 	mkdir -p $@
@@ -43,5 +43,17 @@ publish: all
 clean:
 	rm -rf dist .deps docs
 
-test: 
+test: #node_modules/.yarn-integrity
 	$(BIN)/jest
+
+## node_modules
+########################################
+
+node_modules/.yarn-integrity: yarn.lock
+	@yarn install --frozen-lockfile --production=false --check-files
+	@touch -mr $@ $<
+
+yarn.lock: package.json
+	@yarn check --integrity
+	@touch -mr $@ $<
+
