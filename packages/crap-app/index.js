@@ -125,6 +125,7 @@ async function main(args) {
                 "@types/reach__router": "^1.2",
                 "@types/react": "^16.8",
                 "@types/react-dom": "^16.8",
+                "@types/styled-components": "^4", // TODO: upgrade to ^5 when it's released
                 "autoprefixer": "^9",
                 "babel-loader": "^8",
                 "babel-plugin-webpack-chunkname": "^1",
