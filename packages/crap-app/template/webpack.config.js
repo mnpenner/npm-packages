@@ -100,6 +100,7 @@ const webpackConfig = {
         alias: {
             '@': Path.join(__dirname, 'src'),
             'react-hot-loader': Path.join(__dirname, 'node_modules', 'react-hot-loader'),
+            'react-dom': Path.join(__dirname, 'node_modules', '@hot-loader/react-dom'), // https://github.com/gaearon/react-hot-loader#react--dom
             'babel-core': Path.join(__dirname, 'node_modules', '@babel', 'core'),
         },
         extensions: ['.tsx', '.ts', '.jsx', '.js'],

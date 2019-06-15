@@ -1,7 +1,6 @@
 import {lazy, ReactNode} from 'react'
 import {hot} from 'react-hot-loader/root'
-import styled from '@emotion/styled';
-import {css} from '@emotion/core';
+import styled, {css} from 'styled-components';
 // import {BrowserRouter, Switch, Route, Link, RouteProps, RouteComponentProps} from 'react-router-dom';
 import {Router, Link, Match, MatchRenderFn, MatchRenderProps, RouteComponentProps} from "@reach/router";
 import Container from './Container';

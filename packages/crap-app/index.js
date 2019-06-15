@@ -127,7 +127,6 @@ async function main(args) {
                 "@types/react-dom": "^16.8",
                 "autoprefixer": "^9",
                 "babel-loader": "^8",
-                "babel-plugin-emotion": "^10",
                 "babel-plugin-webpack-chunkname": "^1",
                 "compression-webpack-plugin": "^2",
                 "core-js": "^3",
@@ -149,14 +148,15 @@ async function main(args) {
                 "webpack-cli": "^3",
                 "webpack-dev-server": "^3",
                 // "copy-webpack-plugin": "^4",
+                "babel-plugin-styled-components": "^1",
             },
             dependencies: {
-                "@emotion/core": "^10",
-                "@emotion/styled": "^10",
                 "react": "^16.8",
                 // "react-dom": "^16.8",
-                "react-dom": "npm:@hot-loader/react-dom", // https://github.com/gaearon/react-hot-loader#react--dom  https://stackoverflow.com/a/54816859/65387
+                "@hot-loader/react-dom": "^16.8",
+                // "react-dom": "npm:@hot-loader/react-dom", // https://github.com/gaearon/react-hot-loader#react--dom  https://stackoverflow.com/a/54816859/65387
                 "@reach/router": "^1.2",
+                'styled-components': '^5.0.0-beta',
             }
         }, null, 4)
     );
