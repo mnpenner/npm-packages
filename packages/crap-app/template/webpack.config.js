@@ -164,6 +164,10 @@ const webpackConfig = {
     performance: {
         hints: isDevelopment ? false : 'warning',
     },
+    // TODO: extract license comments in production:
+    // https://webpack.js.org/guides/production/
+    // https://webpack.js.org/plugins/terser-webpack-plugin
+    // https://github.com/webpack-contrib/closure-webpack-plugin
 }
 
 if(!isDevelopment) {
