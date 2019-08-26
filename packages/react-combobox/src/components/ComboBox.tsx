@@ -1,6 +1,6 @@
 
 import * as React from 'react';
-import Downshift, {ControllerStateAndHelpers, GetItemPropsOptions} from 'downshift'
+import Downshift, {ControllerStateAndHelpers, DownshiftState, GetItemPropsOptions, StateChangeOptions} from 'downshift'
 import styled, {keyframes, css} from 'react-emotion';
 import EndOfBody from './EndOfBody';
 import SearchIcon from './SearchIcon';
@@ -12,7 +12,7 @@ import Orange from './icons/orange';
 import Pear from './icons/pear';
 import charMap from '../charMap';
 
-const Container = styled.button`
+const Button = styled.button`
      border: 1px solid #b8b8b8;
      display: inline-flex;
      cursor: pointer;
@@ -53,8 +53,8 @@ const spin = keyframes`
 
 interface Item<T = number> {
     value: T
-    option: ReactNode
-    label?: ReactNode
+    option?: ReactNode
+    text: string
     search?: number[]
 }
 
@@ -73,11 +73,11 @@ function stringToWeights(str: string): number[] {
 }
 
 const items: Item[] = [
-    {search: stringToWeights('apple'), option: <><Fruit><Apple/></Fruit> Apple</>, value: 1, label: "Apple"},
-    {search: stringToWeights('pear'), option: <><Fruit><Pear/></Fruit> Pear</>, value: 2, label: "Pear"},
-    {search: stringToWeights('orange'), option: <><Fruit><Orange/></Fruit> Orange</>, value: 3, label: "Orange"},
-    {search: stringToWeights('grape'), option: <><Fruit><Grapes/></Fruit> Grape</>, value: 4, label: "Grape"},
-    {search: stringToWeights('banana'), option: <><Fruit><Banana/></Fruit> Banana</>, value: 5, label: "Banana"},
+    {search: stringToWeights('apple'), option: <><Fruit><Apple/></Fruit> Apple</>, value: 1, text: "Apple"},
+    {search: stringToWeights('pear'), option: <><Fruit><Pear/></Fruit> Pear</>, value: 2, text: "Pear"},
+    {search: stringToWeights('orange'), option: <><Fruit><Orange/></Fruit> Orange</>, value: 3, text: "Orange"},
+    {search: stringToWeights('grape'), option: <><Fruit><Grapes/></Fruit> Grape</>, value: 4, text: "Grape"},
+    {search: stringToWeights('banana'), option: <><Fruit><Banana/></Fruit> Banana</>, value: 5, text: "Banana"},
 ]
 
 function contains(haystack: number[], needle: number[]): boolean {
@@ -111,9 +111,9 @@ const ListItem = styled.li<ListItemProps>`
     ${({highlighted}) => highlighted && css`
         background-color: rgba(0, 0, 0, 0.08);
     `}
-    ${({selected}) => selected && css`
-        background-color: rgba(0, 0, 0, 0.14);
-    `}
+    // ${({selected}) => selected && css`
+    //     background-color: rgba(0, 0, 0, 0.14);
+    // `}
 `
 
 interface ComboBoxProps extends ControllerStateAndHelpers<Item> {
@@ -142,11 +142,38 @@ function getDocumentCoordinates(elem: Element) {
 export default function ComboBox() {
     return (
         <Downshift
-            // itemToString={item => item ? String(item.value) : ''}
+            stateReducer={stateReducer}
+            itemToString={itemToString}
             defaultHighlightedIndex={0}
             children={p => <span><ComboBoxInner {...p}/></span>}
         />
     )
+}
+
+function itemToString(item: Item) {
+    return item.text;
+}
+
+function stateReducer(state: DownshiftState<Item>, changes: StateChangeOptions<Item>) {
+    console.log('state:',state, 'changes:',changes);
+    switch (changes.type) {
+        case Downshift.stateChangeTypes.keyDownEnter:
+        case Downshift.stateChangeTypes.clickItem:
+        case Downshift.stateChangeTypes.blurInput:
+            const {highlightedIndex, inputValue, ...rest} = changes;
+            return rest;
+        case Downshift.stateChangeTypes.clickButton:
+            return {...changes, inputValue: '', highlightedIndex: null}
+        case Downshift.stateChangeTypes.changeInput:
+            return {...changes, highlightedIndex: 0};
+        case Downshift.stateChangeTypes.mouseUp:
+            // console.log(changes);
+            // const {isOpen, ...rest} = changes;
+            // return rest;
+            return {};
+        default:
+            return changes;
+    }
 }
 
 const Menu = styled.div`
@@ -248,23 +275,10 @@ class ComboBoxInner extends React.Component<ComboBoxProps, ComboBoxState, ComboB
     }
 
     render() {
-        const {isOpen, getInputProps, getMenuProps, inputValue, getItemProps, highlightedIndex, selectedItem, setState, closeMenu} = this.props;
+        const {isOpen, getInputProps, getMenuProps, inputValue, getItemProps, highlightedIndex, selectedItem, setState, closeMenu, getToggleButtonProps} = this.props;
 
         return <>
-            <Container innerRef={this.container} onClick={() => {
-                if(isOpen) {
-                    closeMenu();
-                } else {
-                    setState({
-                        isOpen: true,
-                        inputValue: '',
-                    }, () => {
-                        if (this.input.current) {
-                            this.input.current.focus()
-                        }
-                    })
-                }
-            }}>{selectedItem ? selectedItem.label || selectedItem.option : "Please Choose"}<Arrow isOpen={isOpen}/></Container>
+            <Button innerRef={this.container} {...getToggleButtonProps()} >{selectedItem ? selectedItem.text || selectedItem.option : "Please Choose"}<Arrow isOpen={isOpen}/></Button>
 
             {isOpen && <EndOfBody>
                 <Menu innerRef={this.menu}>
@@ -278,7 +292,7 @@ class ComboBoxInner extends React.Component<ComboBoxProps, ComboBoxState, ComboB
                             // > In the row with the expansion for "æ", the two underlined primary weights have the same values as the primary weights for the simple mappings for "a" and "e", respectively. This is the basis for establishing a primary equivalence between "æ" and the sequence "ae".
                             // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Collator
                             // https://www.unicode.org/Public/UCA/latest/
-                            .filter(item => !inputValue || (item.search ? contains(item.search, stringToWeights(inputValue)) : (isString(item.option) ? item.option.includes(inputValue) : (isString(item.label) && item.label.includes(inputValue)))))
+                            .filter(item => !inputValue || (item.search ? contains(item.search, stringToWeights(inputValue)) : (isString(item.option) ? item.option.includes(inputValue) : item.text.includes(inputValue))))
                             .map((item, index) => (
                                 <ListItem
                                     {...getItemProps({
@@ -289,7 +303,7 @@ class ComboBoxInner extends React.Component<ComboBoxProps, ComboBoxState, ComboB
                                     highlighted={highlightedIndex === index}
                                     selected={selectedItem === item}
                                 >
-                                    {item.option}
+                                    {item.option || item.text}
                                 </ListItem>
                             ))
                         }
@@ -302,6 +316,6 @@ class ComboBoxInner extends React.Component<ComboBoxProps, ComboBoxState, ComboB
 
 /*
 TODO:
-- press enter to select item after searching
-- clicking in searchbox should not close input
+- clicking in searchbox should not close input; clicking outside should
+
  */

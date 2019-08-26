@@ -3,7 +3,7 @@ MAKEFLAGS += --no-builtin-rules
 NM := node_modules/.bin
 .PHONY: build clean test
 
-start: node_modules/.yarn-integrity
+dev: node_modules/.yarn-integrity
 	NODE_ENV=development node --max-old-space-size=4096 $(NM)/webpack-serve
 
 map: node_modules/.yarn-integrity
@@ -19,6 +19,9 @@ node_modules/.yarn-integrity: yarn.lock
 yarn.lock: package.json
 	@yarn check --integrity
 	@touch -mr $@ $<
+
+install:
+	@yarn install --production=false --check-files
 
 clean:
 	rm -rf node_modules dist yarn-error.log
@@ -40,3 +43,7 @@ test:
 
 publish: build test
 	cd dist && npm publish
+
+keys:
+	wget http://www.unicode.org/Public/UCA/latest/allkeys.txt -O etc/allkeys.txt
+	node etc/createMap.js
