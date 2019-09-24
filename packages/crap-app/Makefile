@@ -16,7 +16,10 @@ wizard: node_modules/.yarn-integrity
 prod: node_modules/.yarn-integrity 
 	rm -rf aaa-test-project
 	node . aaa-test-project
-	cd aaa-test-project; $(MAKE) prod
+	cd aaa-test-project && $(MAKE) prod
+
+build: aaa-test-project
+	cd aaa-test-project && /usr/bin/time -f "%C: %E -> %x" $(MAKE) build && \ls -1hl dist
 
 dev: node_modules/.yarn-integrity 
 	rm -rf aaa-test-project

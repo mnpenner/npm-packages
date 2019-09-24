@@ -4,7 +4,9 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const zopfli = require('@gfx/zopfli');
 const CompressionPlugin = require('compression-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const {DefinePlugin, ProvidePlugin} = require('webpack');
+const {DefinePlugin, ProvidePlugin, ProgressPlugin} = require('webpack');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 
 const isDevelopment = process.env.NODE_ENV === 'development'
 const copyrightPatt = /^!|\b(copyright|license)\b|@(preserve|license|cc_on)\b/i;
@@ -67,6 +69,7 @@ const webpackConfig = {
                                     require('autoprefixer'),
                                 ];
                                 if(!isDevelopment) {
+                                    // TODO: investigate postcss-preset-env https://preset-env.cssdb.org/features
                                     plugins.push(
                                         require('cssnano')({
                                             discardComments: {
@@ -164,16 +167,20 @@ const webpackConfig = {
     performance: {
         hints: isDevelopment ? false : 'warning',
     },
-    // TODO: extract license comments in production:
+    // TODO:
     // https://webpack.js.org/guides/production/
-    // https://webpack.js.org/plugins/terser-webpack-plugin
     // https://github.com/webpack-contrib/closure-webpack-plugin
 }
 
 if(!isDevelopment) {
+    const compressible = /\.(js|json|html|map|css|svg|htc|eot|woff|ttf)($|\?)/i;
+
     webpackConfig.plugins.push(
+        new ProgressPlugin(),
+        new CleanWebpackPlugin(),
         new CompressionPlugin({
-            test: /\.(js|json|html|map|css|svg|htc|eot|woff|ttf)($|\?)/i,
+            filename: '[path].gz[query]',
+            test: compressible,
             compressionOptions: {
                 numiterations: 5
             },
@@ -181,12 +188,34 @@ if(!isDevelopment) {
                 return zopfli.gzip(input, compressionOptions, callback);
             }
         }),
+        new CompressionPlugin({
+            filename: '[path].br[query]',
+            test: compressible,
+            compressionOptions: {
+                level: 11
+            },
+            algorithm: 'brotliCompress'
+        }),
         new MiniCssExtractPlugin({
             filename: '[name].[hash].css',
             chunkFilename: 'chunk.[chunkhash].css',
         }),
-        // TODO: Brotli; https://www.npmjs.com/package/brotli#brotlicompressbuffer-istext--false
-    )
+    );
+
+    webpackConfig.optimization = {
+        minimizer: [
+            // https://webpack.js.org/plugins/terser-webpack-plugin
+            new TerserPlugin({
+                cache: true,
+                parallel: true,
+                sourceMap: true,
+                terserOptions: {
+                    // https://github.com/webpack-contrib/terser-webpack-plugin#terseroptions
+                    extractComments: copyrightPatt,
+                }
+            }),
+        ],
+    }
 }
 
 module.exports = webpackConfig;

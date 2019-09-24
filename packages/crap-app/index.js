@@ -150,6 +150,8 @@ async function main(args) {
                 "webpack-dev-server": "^3",
                 // "copy-webpack-plugin": "^4",
                 "babel-plugin-styled-components": "^1",
+                "terser-webpack-plugin": "^2.1",
+                "clean-webpack-plugin": "^3",
             },
             dependencies: {
                 "react": "^16.8",
