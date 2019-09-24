@@ -1,5 +1,5 @@
-import React, {lazy} from 'react';
-import corgi from '@/images/corgi.jpg';
+import React, {lazy, useState} from 'react';
+import corgi from '@/images/choweenie.jpg';
 import ExternalLink from '../ExternalLink';
 import styled from 'styled-components';
 // import ModalDialog from "../ModalDialog";
@@ -12,33 +12,18 @@ const Img = styled.img`
     max-width: 100%;
 `
 
-interface State {
-    showDialog: boolean
-}
+export default function Home() {
+    const [showDialog, setShowDialog] = useState(false);
 
-interface Props {
-
-}
-
-export default class Home extends React.Component<Props, State> {
-
-    state: State = {
-        showDialog: false,
-    }
-
-    render() {
-        return <>
-            <Img src={corgi}/>
-            <p>This version brought to you by
-                corgis. <ExternalLink href="https://pixabay.com/en/welsh-corgi-dog-pet-doggy-animal-1581119/">Image</ExternalLink> by
-                Michel van der Vegt.</p>
-            <ActionButton onClick={() => this.setState({showDialog: true})}>Open Modal 1</ActionButton>
-            <ActionButton onClick={openCorgiDialog}>Open Modal 2</ActionButton>
-            <ActionButton onClick={() => openDialog(CorgiDialog)}>Open Modal 3</ActionButton>
-            {this.state.showDialog &&
-            <BodyEnd><CorgiDialog close={() => this.setState({showDialog: false})}/></BodyEnd>}
-        </>
-    }
+    return <>
+        <Img src={corgi}/>
+        <p>This version brought to you by this choweenie. <ExternalLink href="https://pixabay.com/photos/chihuahua-choweenie-dog-canine-4334026/">Image</ExternalLink> by
+            <ExternalLink href="https://pixabay.com/users/angela_yuriko_smith-6341455/">Angela_Yuriko_Smith</ExternalLink>.</p>
+        <ActionButton onClick={() => setShowDialog(true)}>Open Modal 1</ActionButton>
+        <ActionButton onClick={openCorgiDialog}>Open Modal 2</ActionButton>
+        <ActionButton onClick={() => openDialog(CorgiDialog)}>Open Modal 3</ActionButton>
+        {showDialog && <BodyEnd><CorgiDialog close={() => setShowDialog(false)}/></BodyEnd>}
+    </>
 }
 
 function openCorgiDialog() {

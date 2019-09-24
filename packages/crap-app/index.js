@@ -155,11 +155,13 @@ async function main(args) {
             },
             dependencies: {
                 "react": "^16.8",
-                // "react-dom": "^16.8",
+                "react-is": "^16.8",
+                "react-dom": "^16.8",
                 "@hot-loader/react-dom": "^16.8",
                 // "react-dom": "npm:@hot-loader/react-dom", // https://github.com/gaearon/react-hot-loader#react--dom  https://stackoverflow.com/a/54816859/65387
-                "@reach/router": "^1.2",
+                "@reach/router": "^1.2", // FIXME: not very happy with Reach Router
                 'styled-components': '^5.0.0-beta',
+                "stylis": "^3.5", // https://www.npmjs.com/package/stylis -- dependency of styled-components
             }
         }, null, 4)
     );
