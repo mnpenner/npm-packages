@@ -1,5 +1,6 @@
 /* eslint-disable */
 const Path = require('path')
+const FS = require('fs');
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const zopfli = require('@gfx/zopfli');
 const CompressionPlugin = require('compression-webpack-plugin');
@@ -9,6 +10,7 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 
 const isDevelopment = process.env.NODE_ENV === 'development'
+const isDevServer = process.env.WEBPACK_DEV_SERVER; // https://stackoverflow.com/a/57474397/65387
 const copyrightPatt = /^!|\b(copyright|license)\b|@(preserve|license|cc_on)\b/i;
 
 const babelLoader = {
@@ -146,10 +148,10 @@ const webpackConfig = {
         useLocalIp: true,
         historyApiFallback: true,
         overlay: true,
-        // https: {
-        //     key: FS.readFileSync('ssl/cert.key'),
-        //     cert: FS.readFileSync('ssl/cert.pem'),
-        // },
+        https: { // Enable chrome://flags/#allow-insecure-localhost to bypass the security warning, or delete this block to disable HTTPS.
+            key: FS.readFileSync('ssl/cert.key'),
+            cert: FS.readFileSync('ssl/cert.pem'),
+        },
         watchOptions: {
             aggregateTimeout: 250,
             poll: 50,
@@ -167,12 +169,10 @@ const webpackConfig = {
     performance: {
         hints: isDevelopment ? false : 'warning',
     },
-    // TODO:
-    // https://webpack.js.org/guides/production/
-    // https://github.com/webpack-contrib/closure-webpack-plugin
 }
 
 if(!isDevelopment) {
+    // https://webpack.js.org/guides/production/
     const compressible = /\.(js|json|html|map|css|svg|htc|eot|woff|ttf)($|\?)/i;
 
     webpackConfig.plugins.push(
@@ -205,6 +205,7 @@ if(!isDevelopment) {
     webpackConfig.optimization = {
         minimizer: [
             // https://webpack.js.org/plugins/terser-webpack-plugin
+            // terser-webpack-plugin produces smaller filesizes and is more compatible than closure-webpack-plugin.
             new TerserPlugin({
                 cache: true,
                 parallel: true,

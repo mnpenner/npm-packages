@@ -167,14 +167,13 @@ async function main(args) {
     );
 
     await passthru('yarn', ['install','--production=false','--audit'], {cwd: outputDir})
-
     // create .yarnrc *after* installing for the first time; https://github.com/yarnpkg/yarn/issues/6857
-    
-    console.log(`\n${Chalk.cyan(pkgName)} created. Run ${Chalk.white.bgBlack(`cd ${pkgName}; make dev`)} to get started.`)
 
-    // const sslDir = Path.join(outputDir,'ssl'); 
-    // await mkdir(sslDir)
-    // ChildProc.spawn('openssl', ['req','-x509','-nodes','-days','365','-newkey','rsa:2048','-keyout','cert.key','-out','cert.pem','-config',Path.resolve('cert.ini'),'-sha256'], {cwd: sslDir, stdio: 'inherit'})
+    const sslDir = Path.join(outputDir,'ssl');
+    await mkdir(sslDir)
+    ChildProc.spawn('openssl', ['req','-x509','-nodes','-days','365','-newkey','rsa:2048','-keyout','cert.key','-out','cert.pem','-config',Path.resolve('cert.ini'),'-sha256'], {cwd: sslDir, stdio: 'inherit'})
+
+    console.log(`\n${Chalk.cyan(pkgName)} created. Run ${Chalk.white.bgBlack(`cd ${pkgName}; make dev`)} to get started.`)
 }
 
 main(process.argv.slice(2)).catch(err => {
