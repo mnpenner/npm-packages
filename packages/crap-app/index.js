@@ -117,6 +117,8 @@ async function main(args) {
                 "@babel/plugin-proposal-class-properties": "^7",
                 "@babel/plugin-syntax-dynamic-import": "^7",
                 "@babel/plugin-transform-react-constant-elements": "^7",
+                "@babel/plugin-proposal-nullish-coalescing-operator": "^7",
+                "@babel/plugin-proposal-optional-chaining": "^7",
                 "@babel/preset-env": "^7",
                 "@babel/preset-react": "^7",
                 "@babel/preset-typescript": "^7",
@@ -131,7 +133,7 @@ async function main(args) {
                 "babel-plugin-webpack-chunkname": "^1",
                 "compression-webpack-plugin": "^2",
                 "core-js": "^3",
-                "css-loader": "^2",
+                "css-loader": "^3",
                 "cssnano": "^4",
                 "file-loader": "^2",
                 "html-webpack-plugin": "^3",
@@ -169,9 +171,9 @@ async function main(args) {
     await passthru('yarn', ['install','--production=false','--audit'], {cwd: outputDir})
     // create .yarnrc *after* installing for the first time; https://github.com/yarnpkg/yarn/issues/6857
 
-    const sslDir = Path.join(outputDir,'ssl');
-    await mkdir(sslDir)
-    ChildProc.spawn('openssl', ['req','-x509','-nodes','-days','365','-newkey','rsa:2048','-keyout','cert.key','-out','cert.pem','-config',Path.resolve('cert.ini'),'-sha256'], {cwd: sslDir, stdio: 'inherit'})
+    // const sslDir = Path.join(outputDir,'ssl');
+    // await mkdir(sslDir)
+    // ChildProc.spawn('openssl', ['req','-x509','-nodes','-days','365','-newkey','rsa:2048','-keyout','cert.key','-out','cert.pem','-config',Path.resolve('cert.ini'),'-sha256'], {cwd: sslDir, stdio: 'inherit'})
 
     console.log(`\n${Chalk.cyan(pkgName)} created. Run ${Chalk.white.bgBlack(`cd ${pkgName}; make dev`)} to get started.`)
 }

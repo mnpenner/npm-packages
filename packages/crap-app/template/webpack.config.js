@@ -6,7 +6,7 @@ const zopfli = require('@gfx/zopfli');
 const CompressionPlugin = require('compression-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const {DefinePlugin, ProvidePlugin, ProgressPlugin} = require('webpack');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 
 const isDevelopment = process.env.NODE_ENV === 'development'
@@ -19,6 +19,57 @@ const babelLoader = {
         cacheDirectory: true,
     },
 };
+
+
+const cssLoader = [
+    isDevelopment ? 'style-loader' : MiniCssExtractPlugin.loader,
+    {
+        loader: 'css-loader',
+        options: {
+            sourceMap: true,
+            modules: {
+                localIdentName: isDevelopment ? '[path][name]__[local]' : '[hash:base64]', // https://webpack.js.org/loaders/css-loader/#localidentname
+            },
+            localsConvention: 'camelCaseOnly',
+        }
+    },
+    {
+        loader: 'postcss-loader',
+        options: {
+            ident: 'postcss',
+            sourceMap: true,
+            plugins: loader => {
+                const plugins = [
+                    require('autoprefixer'),
+                ];
+                if(!isDevelopment) {
+                    // TODO: investigate postcss-preset-env https://preset-env.cssdb.org/features
+                    plugins.push(
+                        require('cssnano')({
+                            discardComments: {
+                                remove: comment => !copyrightPatt.test(comment),
+                            },
+                            zindex: false,
+                            reduceIdents: false,
+                            mergeIdents: false,
+                            discardUnused: false,
+                            autoprefixer: false,
+                        })
+                    );
+                }
+                return plugins;
+            },
+        }
+    },
+    {
+        loader: 'less-loader',
+        options: {
+            strictMath: true,
+            strictUnits: true,
+            sourceMap: true,
+        }
+    },
+]
 
 const webpackConfig = {
     entry: './src/index',
@@ -54,41 +105,7 @@ const webpackConfig = {
             {
                 test: /\.less$/,
                 use: [
-                    isDevelopment ? 'style-loader' : MiniCssExtractPlugin.loader,
-                    {
-                        loader: 'css-loader',
-                        options: {
-                            sourceMap: true
-                        }
-                    },
-                    {
-                        loader: 'postcss-loader',
-                        options: {
-                            ident: 'postcss',
-                            sourceMap: true,
-                            plugins: loader => {
-                                const plugins = [
-                                    require('autoprefixer'),
-                                ];
-                                if(!isDevelopment) {
-                                    // TODO: investigate postcss-preset-env https://preset-env.cssdb.org/features
-                                    plugins.push(
-                                        require('cssnano')({
-                                            discardComments: {
-                                                remove: comment => !copyrightPatt.test(comment),
-                                            },
-                                            zindex: false,
-                                            reduceIdents: false,
-                                            mergeIdents: false,
-                                            discardUnused: false,
-                                            autoprefixer: false,
-                                        })
-                                    );
-                                }
-                                return plugins;
-                            },
-                        }
-                    },
+                    ...cssLoader,
                     {
                         loader: 'less-loader',
                         options: {
@@ -98,6 +115,10 @@ const webpackConfig = {
                         }
                     },
                 ]
+            },
+            {
+                test: /\.css$/,
+                use: cssLoader
             }
         ],
     },
@@ -135,6 +156,7 @@ const webpackConfig = {
             'process.env': {
                 NODE_ENV: JSON.stringify(process.env.NODE_ENV),
             },
+            DEBUG: JSON.stringify(isDevelopment),
         }),
         new ProvidePlugin({
             'React': 'react',
@@ -148,10 +170,10 @@ const webpackConfig = {
         useLocalIp: true,
         historyApiFallback: true,
         overlay: true,
-        https: { // Enable chrome://flags/#allow-insecure-localhost to bypass the security warning, or delete this block to disable HTTPS.
-            key: FS.readFileSync('ssl/cert.key'),
-            cert: FS.readFileSync('ssl/cert.pem'),
-        },
+        // https: { // Enable chrome://flags/#allow-insecure-localhost to bypass the security warning, or delete this block to disable HTTPS.
+        //     key: FS.readFileSync('ssl/cert.key'),
+        //     cert: FS.readFileSync('ssl/cert.pem'),
+        // },
         watchOptions: {
             aggregateTimeout: 250,
             poll: 50,
@@ -173,7 +195,7 @@ const webpackConfig = {
 
 if(!isDevelopment) {
     // https://webpack.js.org/guides/production/
-    const compressible = /\.(js|json|html|map|css|svg|htc|eot|woff|ttf)($|\?)/i;
+    const compressible = /\.(js|json|html|map|css|svg|htc|eot|ttf)($|\?)/i;
 
     webpackConfig.plugins.push(
         new ProgressPlugin(),
@@ -189,6 +211,7 @@ if(!isDevelopment) {
             }
         }),
         new CompressionPlugin({
+            // Not currently supported by `serve` (https://github.com/zeit/serve/issues/543) but works with nginx (https://github.com/google/ngx_brotli#brotli_static)
             filename: '[path].br[query]',
             test: compressible,
             compressionOptions: {

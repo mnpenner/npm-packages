@@ -1,5 +1,5 @@
 import React, {lazy, useState} from 'react';
-import corgi from '@/images/choweenie.jpg';
+import imgSrc from '@/images/dog-2617517_640.jpg';
 import ExternalLink from '../ExternalLink';
 import styled from 'styled-components';
 // import ModalDialog from "../ModalDialog";
@@ -16,9 +16,8 @@ export default function Home() {
     const [showDialog, setShowDialog] = useState(false);
 
     return <>
-        <Img src={corgi}/>
-        <p>This version brought to you by this choweenie. <ExternalLink href="https://pixabay.com/photos/chihuahua-choweenie-dog-canine-4334026/">Image</ExternalLink> by
-            <ExternalLink href="https://pixabay.com/users/angela_yuriko_smith-6341455/">Angela_Yuriko_Smith</ExternalLink>.</p>
+        <Img src={imgSrc}/>
+        <p>This version brought to you by Christmas dog. <ExternalLink href="https://pixabay.com/photos/dog-puppy-pet-animals-christmas-2617517/">Image</ExternalLink> by <ExternalLink href="https://pixabay.com/users/stocksnap-894430/">StockSnap</ExternalLink>.</p>
         <ActionButton onClick={() => setShowDialog(true)}>Open Modal 1</ActionButton>
         <ActionButton onClick={openCorgiDialog}>Open Modal 2</ActionButton>
         <ActionButton onClick={() => openDialog(CorgiDialog)}>Open Modal 3</ActionButton>

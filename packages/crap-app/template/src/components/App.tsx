@@ -91,6 +91,8 @@ const App = () => (
 
                     <p>Welcome to your <Crap>crappy</Crap> app.</p>
 
+                    <p>Debug mode is {DEBUG ? <span css="color:green">ON</span> : <span css={css`color:red`}>OFF</span>}.</p>
+
                     <TabList>
                         {routes.map(({path, exact, title}, idx) => (
                             <Match key={idx} path={path}>
