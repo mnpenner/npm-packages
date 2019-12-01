@@ -1,4 +1,5 @@
-const crypto = require('crypto');
+import * as crypto from 'crypto';
+
 const [now, hrt] = [Date.now(), process.hrtime.bigint()]; // generate these as close to the same time as possible
 const start = BigInt(now) * 1000000n - hrt;
 
@@ -7,20 +8,10 @@ const start = BigInt(now) * 1000000n - hrt;
  *
  * @return {Buffer}
  */
-function ouid() {
+export default function ouid() {
     const time = start + process.hrtime.bigint();
     let buf = Buffer.allocUnsafe(16);
-    buf.writeUInt32BE(Number(time >> 32n), 0);
-    buf.writeUInt32BE(Number(time & 4294967295n), 4);
+    buf.writeBigUInt64BE(time, 0);
     crypto.randomFillSync(buf, 8, 8);
     return buf;
 }
-
-module.exports = ouid;
-
-// function print() {
-//     process.stdout.write(`\r${ouid().toString('hex')}`);
-//     process.nextTick(print);
-// }
-//
-// print();

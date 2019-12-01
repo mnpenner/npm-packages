@@ -13,7 +13,9 @@ yarn add ouid
 
 ## API
 
-### browser
+### <del>browser</del>
+
+Browser support has been dropped.
 
 ```js
 import ouid from 'ouid';
