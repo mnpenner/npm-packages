@@ -15,7 +15,7 @@ _build_dts: $(YI)
 
 # Transpile TS to JS.
 _build_js: $(YI)
-	BABEL_ENV=production $(NB)/babel src --out-dir dist --extensions ".ts" --source-maps true --no-comments
+	BABEL_ENV=production $(NB)/babel --out-dir dist --extensions ".ts" --source-maps true --no-comments src # FIXME: This is attempting to compile .d.ts files, maybe use rollup instead? https://github.com/microsoft/TypeScript-Babel-Starter#using-rollup
 
 # Run the TypeScript source code directly in development mode.
 dev: $(YI)
