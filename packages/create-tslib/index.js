@@ -115,11 +115,14 @@ async function main(args) {
             },
             dependencies: {
                 "dotenv": "^8"
+            },
+            engines: {
+                node: ">=12"
             }
         }, null, 4)
     );
 
-    await passthru('yarn', ['install','--production=false','--audit'], {cwd: outputDir})
+    await passthru('yarn', ['install', '--production=false', '--audit'], {cwd: outputDir})
     // create .yarnrc *after* installing for the first time; https://github.com/yarnpkg/yarn/issues/6857
 
     console.log(`\n${Chalk.cyan(pkgName)} created. Run ${Chalk.white.bgBlack(`cd ${pkgName}; make dev`)} to get started.`)
@@ -130,9 +133,9 @@ main(process.argv.slice(2)).catch(err => {
     process.exit(1);
 })
 
-function passthru(cmd,args,opts) {
-    return new Promise((resolve,reject) => {
-        const proc = ChildProc.spawn(cmd,args,{stdio:'inherit',...opts});
+function passthru(cmd, args, opts) {
+    return new Promise((resolve, reject) => {
+        const proc = ChildProc.spawn(cmd, args, {stdio: 'inherit', ...opts});
         proc.on('close', code => {
             if(code === 0) {
                 resolve();

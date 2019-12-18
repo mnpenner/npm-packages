@@ -2,7 +2,7 @@ MAKEFLAGS += --no-builtin-rules
 .SUFFIXES:
 YI := node_modules/.yarn-integrity
 NB := node_modules/.bin
-.PHONY: build sdev prod check clean
+.PHONY: build sdev prod check clean publish
 
 ## commands
 ########################################
@@ -32,6 +32,10 @@ check: $(YI)
 # Delete build files.
 clean:
 	rm -rf node_modules dist yarn-error.log
+
+# Build and publish the compiled sources to npm.
+publish: build
+	cd dist && npm publish
 
 ## files
 ########################################
