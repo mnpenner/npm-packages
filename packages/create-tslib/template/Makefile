@@ -13,7 +13,7 @@ DIST_DIRS = $(sort $(patsubst %/,%,$(dir $(DIST_FILES))))
 build: tsdecls $(DIST_FILES)
 
 # Transpile TS to JS.
-dist/%.js: src/%.ts $(YI)
+dist/%.js: src/%.ts $(YI) .babelrc
 	BABEL_ENV=production $(NB)/babel --source-maps true --no-comments "$<" -o "$@"
 
 # Copy all other file types.
