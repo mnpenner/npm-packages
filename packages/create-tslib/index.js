@@ -95,9 +95,7 @@ async function main(args) {
             version: '0.1.0',
             license: license,
             private: license === 'UNLICENSED' || undefined,
-            // scripts: {
-            //     "start": "NODE_ENV=development webpack-serve"
-            // },
+            main: 'index.js',
             devDependencies: {
                 "@types/node": "^12",
                 "typescript": "^3.7",
@@ -117,7 +115,7 @@ async function main(args) {
                 "dotenv": "^8"
             },
             engines: {
-                node: ">=12"
+                node: ">=10"
             }
         }, null, 4)
     );
