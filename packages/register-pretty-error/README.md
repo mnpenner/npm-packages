@@ -1,19 +1,22 @@
-# YourLib
+# register-pretty-error
     
-Created with [`create-tslib`](https://yarnpkg.com/en/package/create-tslib).
-
-## Getting Started
-
-### Run source code directly
+## Installation
 
 ```sh
-make dev
+yarn add --dev register-pretty-error
+```    
+    
+## Usage
+
+```
+node -r register-pretty-error yourscript.js
 ```
 
-### Build code for production
+### Before
 
-```sh
-make
-```
+![before](https://i.imgur.com/wiHdF9H.png)
 
-It will be written to `dist/`. After that, you don't need TypeScript nor babel installed. It can be distributed for node LTS.
+
+### After
+
+![after](https://i.imgur.com/rAwGLL8.png)
