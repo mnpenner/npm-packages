@@ -6,7 +6,7 @@ YI := node_modules/.yarn-integrity
 NB := node_modules/.bin
 SRC_TS = $(shell find src -type f \( -iname '*.js' -o -iname '*.ts' \) ! -iname '*.d.ts')
 SRC_OTHER = $(shell find src -type f \! -iname '*.ts' -o -iname '*.d.ts')
-DIST_FILES = $(patsubst src/%.ts,dist/%.js,$(SRC_TS)) $(patsubst src/%,dist/%,$(SRC_OTHER)) dist/package.json
+DIST_FILES = $(patsubst src/%.ts,dist/%.js,$(SRC_TS)) $(patsubst src/%,dist/%,$(SRC_OTHER)) dist/package.json dist/README.md
 DIST_DIRS = $(sort $(patsubst %/,%,$(dir $(DIST_FILES))))
 
 # Build the source code to the dist/ directory.
@@ -67,3 +67,6 @@ yarn.lock: package.json
 
 dist/package.json: package.json | dist
 	jq 'del(.private, .devDependencies, .scripts, .eslintConfig, .babel)' $< > $@
+
+dist/README.md: README.md
+	cp "$<" "$@"
