@@ -1,6 +1,6 @@
 # YourLib
     
-Created with [`create-tslib`](https://yarnpkg.com/en/package/create-tslib).
+Created with [`ctslib`](https://yarnpkg.com/en/package/create-tslib).
 
 ## Getting Started
 
