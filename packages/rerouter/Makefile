@@ -70,3 +70,6 @@ dist/package.json: package.json | dist
 
 dist/README.md: README.md
 	cp "$<" "$@"
+
+test: $(YI)
+	$(NB)/mocha --watch

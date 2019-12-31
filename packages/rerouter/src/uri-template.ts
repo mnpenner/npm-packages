@@ -1,4 +1,4 @@
-import {inspect} from "util";
+import {inspect, TextEncoder} from "util";
 import {unlinkSync} from "fs";
 
 // https://tools.ietf.org/html/rfc6570#section-3.2.1
@@ -10,9 +10,8 @@ const MODIFIER_RE = /:(?<length>\d+)|(?<repeat>\*)$/ /* FIXME: If it is an explo
       it is still not the end of the expression, scan the next
       character. */
 
-const RESERVED = new Set([':','/','?','#','[',']','@','!','$','&',"'",'(',')','*','+',',',';','='])
-const UNRESERVED = new Set('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~')
-const UR_SET = new Set([...RESERVED,...UNRESERVED]);
+const UNRESERVED = /[^a-zA-Z0-9\-._~]+/g;
+const UR_SET = /[^a-zA-Z0-9\-._~:\/?#[\]@!$&'()*+,;=]+/g;
 
 const STR = Symbol('string')
 const VAR = Symbol('var');
@@ -79,7 +78,7 @@ const IfEmp: Record<string,string> = {
     '#': '',
 }
 
-const Escaper: Record<string,Set<string>> = {
+const Escaper: Record<string,RegExp> = {
     '': UNRESERVED,
     '+': UR_SET,
     '.': UNRESERVED,
@@ -205,7 +204,7 @@ function isEmpty(x: any) {
 type UrlParamValue = string|number|string[]|number[]|Record<string,string|number>;
 
 
-function percentEncodeNotIn(x:string|number|boolean|null, set: Set<string>, length: number|null) {
+function percentEncodeNotIn(x:string|number|boolean|null, set: RegExp, length: number|null) {
     if(typeof x === 'number') {
         return String(x);
     }
@@ -217,13 +216,7 @@ function percentEncodeNotIn(x:string|number|boolean|null, set: Set<string>, leng
         x = x.slice(0,length);
     }
 
-    return Array.from(x).map(ch => {
-        if(set.has(ch)) {
-            return ch;
-
-        }
-        return percentEncode(ch);
-    }).join('');
+    return x.replace(set, percentEncode);
 }
 
 
@@ -232,8 +225,11 @@ function encodeU(x: string|number) {
 }
 
 
-function percentEncode(ch: string) {
-    return '%' + ch.codePointAt(0)!.toString(16).toUpperCase().padStart(2,'0');
+
+const UTF8_ENCODER = new TextEncoder();
+
+function percentEncode(str: string) {
+    return Array.from(UTF8_ENCODER.encode(str)).map(i => '%' + i.toString(16).toUpperCase().padStart(2,'0')).join('');
 }
 
 function encodeUR(x: string|number) {
