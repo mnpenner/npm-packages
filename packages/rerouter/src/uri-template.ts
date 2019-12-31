@@ -78,7 +78,7 @@ const IfEmp: Record<string,string> = {
     '#': '',
 }
 
-const Escaper: Record<string,RegExp> = {
+const EscapeRegexes: Record<string,RegExp> = {
     '': UNRESERVED,
     '+': UR_SET,
     '.': UNRESERVED,
@@ -162,27 +162,30 @@ export default class UriTemplate {
             switch(p.type) {
                 case VAR:
                     const vs: string[] = [];
-                    out.push(FirstMap[p.prefix]);
                     for(const v of p.vars) {
                         if(Object.prototype.hasOwnProperty.call(variables,v.name)) {
                             const x = variables[v.name];
-                            const esc = (x:any) => percentEncodeNotIn(x, Escaper[p.prefix], v.length);
+                            const esc = (x:any) => percentEncodeRegExp(x, EscapeRegexes[p.prefix], v.length);
                             let pre = '';
                             if(Named[p.prefix]) {
                                 pre = v.name + (isEmpty(x) ? IfEmp[p.prefix] : '=');
                             }
-                            if(isEmpty(x)) {
-                                vs.push(pre);
-                            } else if(Array.isArray(x)) {
-                                vs.push((v.repeat ? '' : pre) + (x as any[]).map(z => (v.repeat ? pre : '') + esc(z)).join(v.repeat ? SeparatorMap[p.prefix] : ','));
+                            if(Array.isArray(x)) {
+                                if(x.length) {
+                                    vs.push((v.repeat ? '' : pre) + (x as any[]).map(z => (v.repeat ? pre : '') + esc(z)).join(v.repeat ? SeparatorMap[p.prefix] : ','));
+                                }
                             } else if(typeof x === 'object') {
-                                vs.push((v.repeat ? '' : pre) + Object.entries(x).map(([ok,ov]) => `${esc(ok)}${v.repeat ? '=' : ','}${esc(ov)}`).join(v.repeat ? SeparatorMap[p.prefix] : ','))
+                                if(Object.keys(x).length) {
+                                    vs.push((v.repeat ? '' : pre) + Object.entries(x).map(([ok, ov]) => `${esc(ok)}${v.repeat ? '=' : ','}${esc(ov)}`).join(v.repeat ? SeparatorMap[p.prefix] : ','))
+                                }
                             } else {
                                 vs.push(pre + esc(x));
                             }
                         }
                     }
-                    out.push(vs.join(SeparatorMap[p.prefix]));
+                    if(vs.length) {
+                        out.push(FirstMap[p.prefix], vs.join(SeparatorMap[p.prefix]));
+                    }
                     break;
                 case STR:
                     out.push(p.value);
@@ -204,7 +207,7 @@ function isEmpty(x: any) {
 type UrlParamValue = string|number|string[]|number[]|Record<string,string|number>;
 
 
-function percentEncodeNotIn(x:string|number|boolean|null, set: RegExp, length: number|null) {
+function percentEncodeRegExp(x:string|number|boolean|null, set: RegExp, length: number|null) {
     if(typeof x === 'number') {
         return String(x);
     }
@@ -220,10 +223,6 @@ function percentEncodeNotIn(x:string|number|boolean|null, set: RegExp, length: n
 }
 
 
-function encodeU(x: string|number) {
-    return percentEncodeNotIn(x,UNRESERVED);
-}
-
 
 
 const UTF8_ENCODER = new TextEncoder();
@@ -232,19 +231,7 @@ function percentEncode(str: string) {
     return Array.from(UTF8_ENCODER.encode(str)).map(i => '%' + i.toString(16).toUpperCase().padStart(2,'0')).join('');
 }
 
-function encodeUR(x: string|number) {
-    if(typeof x === 'number') return String(x);
-
-    // TODO: don't re-escape %-encoded values.
-    return percentEncodeNotIn(x,UR_SET);
-}
-
 interface Match {
     score: number
     params: Record<string,UrlParamValue>
-}
-
-
-function log(...vars: any) {
-    console.log(vars.map((v:any) => inspect(v, {colors:true,depth:4,showProxy:true,breakLength:120,maxArrayLength:10})).join('  '));
 }
