@@ -317,7 +317,7 @@ export default class UriTemplate {
 
         let score = 0;
         const m = url.match(this.matchRegex);
-        console.log(`${JSON.stringify(url)}.match(${this.matchRegex})`);
+        // console.log(`${JSON.stringify(url)}.match(${this.matchRegex})`);
         if(m !== null) {
             // log('m',m);
             let params: Array<[string,NullableUrlParamValue]> = []
@@ -329,18 +329,26 @@ export default class UriTemplate {
 
                     switch(itemSpec.type) {
                         case VarType.NAMED: {
-                            const parsed = parseParams(v, SeparatorMap[itemSpec.prefix])
-                            log('parseParams',v, SeparatorMap[itemSpec.prefix],parsed);
+                            const parsed = v == null ? Object.create(null) : parseParams(v, SeparatorMap[itemSpec.prefix])
+                            // log('parseParams',v, SeparatorMap[itemSpec.prefix],parsed);
 
                             for(const vs of itemSpec.vars) {
                                 if(vs.repeat) {
                                     score -= 1;
-                                    params.push([vs.name, mapValues(parsed,x => formatElement(x,vs))])
+                                    if(isEmpty(parsed)) {
+                                        params.push([vs.name, EMPTY_OBJ])
+                                    } else {
+                                        params.push([vs.name, mapValues(parsed, x => formatElement(x, vs))])
+                                    }
                                     break;
                                 } else {
-                                    score += 2;
-                                    params.push([vs.name, formatElement(parsed[vs.name],vs)])
-                                    delete parsed[vs.name];
+                                    if(parsed[vs.name] !== undefined) {
+                                        score += 2;
+                                        params.push([vs.name, formatElement(parsed[vs.name], vs)])
+                                        delete parsed[vs.name];
+                                    } else {
+                                        params.push([vs.name, null])
+                                    }
                                 }
                             }
                         }break;
@@ -401,6 +409,7 @@ function mapValues<ValueIn=any,ValueOut=any>(obj: Record<string,ValueIn>, callba
 
 
 function parseParams(queryString: string, separator: string): Record<string,string|null> {
+    // log('parseParams',queryString,separator)
     const pairs = queryString.split(separator);
     return Object.fromEntries(pairs.map(pair => {
         const idx = pair.indexOf('=');
@@ -416,7 +425,7 @@ function parseParams(queryString: string, separator: string): Record<string,stri
 const EMPTY_OBJ = Object.freeze(Object.create(null));
 const EMPTY_ARR = Object.freeze([]);
 
-function isEmpty(x: any) {
+function isEmpty(x: any): x is null|undefined|''|[]|{} {
     return x == null || x === '' || (Array.isArray(x) ? !x.length : (typeof x === 'object' && !Object.keys(x).length))
 }
 
