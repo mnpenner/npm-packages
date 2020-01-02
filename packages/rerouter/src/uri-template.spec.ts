@@ -4,26 +4,26 @@ import extendedTests from './testcases/extended-tests.json';
 import matchCases from './testcases/match-cases.json';
 import {expect} from 'chai';
 
-// describe('UriTemplate.expand', () => {
-//     for (const testSuite of [specExamples, extendedTests]) {
-//         for (const [name, test] of Object.entries(testSuite)) {
-//             describe(name + ' ' + JSON.stringify(test.variables), () => {
-//                 for (const [input, expected] of test.testcases) {
-//                     it(`${input} -> ${Array.isArray(expected) ? expected[0] : expected}`, () => {
-//                         const templ = new UriTemplate(input);
-//                         const expanded = templ.expand(test.variables);
-//
-//                         if (Array.isArray(expected)) {
-//                             expect(expected).to.include(expanded);
-//                         } else {
-//                             expect(expected).to.equal(expanded);
-//                         }
-//                     })
-//                 }
-//             })
-//         }
-//     }
-// })
+describe('UriTemplate.expand', () => {
+    for (const testSuite of [specExamples, extendedTests]) {
+        for (const [name, test] of Object.entries(testSuite)) {
+            describe(name + ' ' + JSON.stringify(test.variables), () => {
+                for (const [input, expected] of test.testcases) {
+                    it(`${input} -> ${Array.isArray(expected) ? expected[0] : expected}`, () => {
+                        const templ = new UriTemplate(input);
+                        const expanded = templ.expand(test.variables);
+
+                        if (Array.isArray(expected)) {
+                            expect(expected).to.include(expanded);
+                        } else {
+                            expect(expected).to.equal(expanded);
+                        }
+                    })
+                }
+            })
+        }
+    }
+})
 
 describe('UriTemplate.match', () => {
     for (const testSuite of [matchCases]) {

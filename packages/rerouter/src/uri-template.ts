@@ -37,6 +37,11 @@ interface VarSpec {
     repeat: boolean
 }
 
+/*
+Character set definitions:  https://tools.ietf.org/html/rfc6570#section-1.5
+Reserved Expansion: {+var}:  https://tools.ietf.org/html/rfc6570#section-3.2.3
+ */
+
 const SeparatorMap: Record<string,string> = {
     '': ',',
     '+': ',',
@@ -134,7 +139,7 @@ export default class UriTemplate {
                     type: STR,
                     value: lit
                 })
-                const groupName = `static__${matchCounter++}`
+                const groupName = `static${matchCounter++}`
                 re.push(`(?<${groupName}>${escapeRegExp(lit)})`)
                 this.matchMap.set(groupName,{type:VarType.STATIC})
             }
@@ -192,27 +197,41 @@ export default class UriTemplate {
                         re.push(escapeRegExp(SeparatorMap[ph.prefix]));
                     }
 
-                    const groupName = item.name
+                    let groupName = item.name;
+                    if(!/^[a-z][a-z0-9_]*$/i.test(groupName)) {
+                        groupName = 'param';
+                    }
+                    groupName += String(matchCounter++);
                     re.push(`(?<${groupName}>`)
                     if (item.func != null) {
                         switch (item.func) {
                             case 'int':
-                                re.push('-?\\d')
+                                if (item.length != null) {
+                                    re.push(`\\d{${item.length}}`)
+                                } else {
+                                    re.push('-?\\d+')
+                                }
                                 break;
                             default:
                                 throw new Error(`Unrecognized UriTemplate func: ${item.func}`);
                         }
-                    } else if (ph.prefix === '+') {
-                        re.push('[^?#]')
-                    } else if (ph.prefix === '#') {
-                        re.push('.')
                     } else {
-                        re.push('[^/?#]')
-                    }
-                    if (item.length != null) {
-                        re.push(`{${item.length}}`);
-                    } else {
-                        re.push('+?')
+                        let ch: string;
+                        if (ph.prefix === '+') {
+                            ch = '[^?#]';
+                        } else if (ph.prefix === '#') {
+                            ch = '.';
+                        } else if (ph.prefix === '/' && item.repeat) {
+                            ch = '[^?#]';
+                        } else {
+                            ch = '[^/?#]';
+                        }
+                        if (item.length != null) {
+                            ch = `(?:%[0-9a-fA-F]{2}|${ch})`;
+                            re.push(ch,`{${item.length}}`);
+                        } else {
+                            re.push(ch,'+?')
+                        }
                     }
 
                     re.push(')')
@@ -224,7 +243,7 @@ export default class UriTemplate {
 
             if(isNamed) {
                 re.push('(?:',escapeRegExp(FirstMap[ph.prefix]));
-                const groupName = `kwargs__${matchCounter++}`
+                const groupName = `kwargs${matchCounter++}`
                 re.push(`(?<${groupName}>[^/?#]*)`)
                 re.push(')?')
                 this.matchMap.set(groupName, {vars:ph.vars, type:VarType.NAMED, prefix: ph.prefix});
@@ -238,7 +257,7 @@ export default class UriTemplate {
                 type: STR,
                 value: lit
             })
-            const groupName = `static__${matchCounter++}`
+            const groupName = `static${matchCounter++}`
             re.push(`(?<${groupName}>${escapeRegExp(lit)})`)
             this.matchMap.set(groupName,{type:VarType.STATIC})
         }
@@ -268,10 +287,12 @@ export default class UriTemplate {
                             }
                             if(Array.isArray(x)) {
                                 if(x.length) {
+                                    // TODO: rethink how these are encoded. maybe CSV format?
                                     vs.push((v.repeat ? '' : pre) + (x as any[]).map(z => (v.repeat ? pre : '') + esc(z)).join(v.repeat ? SeparatorMap[p.prefix] : ','));
                                 }
                             } else if(typeof x === 'object') {
                                 if(Object.keys(x).length) {
+                                    // TODO: rethink how these are encoded. maybe JSON (unquoted)?
                                     vs.push((v.repeat ? '' : pre) + Object.entries(x).map(([ok, ov]) => `${esc(ok)}${v.repeat ? '=' : ','}${esc(ov)}`).join(v.repeat ? SeparatorMap[p.prefix] : ','))
                                 }
                             } else {
@@ -303,22 +324,22 @@ export default class UriTemplate {
             if(m.groups != null) {
                 // log('m.groups',m.groups)
                 for(const [k,v] of Object.entries(m.groups)) {
-                    const varSpec = this.matchMap.get(k)!;
+                    const itemSpec = this.matchMap.get(k)!;
                     let value: UrlParamValue|null;
 
-                    switch(varSpec.type) {
+                    switch(itemSpec.type) {
                         case VarType.NAMED: {
-                            const parsed = parseParams(v, SeparatorMap[varSpec.prefix])
-                            log('parsed',parsed);
+                            const parsed = parseParams(v, SeparatorMap[itemSpec.prefix])
+                            log('parseParams',v, SeparatorMap[itemSpec.prefix],parsed);
 
-                            for(const vs of varSpec.vars) {
+                            for(const vs of itemSpec.vars) {
                                 if(vs.repeat) {
                                     score -= 1;
-                                    params.push([vs.name, parsed]) // TODO: add int and length support
+                                    params.push([vs.name, mapValues(parsed,x => formatElement(x,vs))])
                                     break;
                                 } else {
                                     score += 2;
-                                    params.push([vs.name, parsed[vs.name]])
+                                    params.push([vs.name, formatElement(parsed[vs.name],vs)])
                                     delete parsed[vs.name];
                                 }
                             }
@@ -326,8 +347,8 @@ export default class UriTemplate {
                         case VarType.DYNAMIC: {
                             score += 2;
                             if (v == null) {
-                                if (varSpec.var.repeat) {
-                                    if (Named[varSpec.prefix]) {
+                                if (itemSpec.var.repeat) {
+                                    if (Named[itemSpec.prefix]) {
                                         value = EMPTY_OBJ;
                                     } else {
                                         value = EMPTY_ARR as any;
@@ -336,15 +357,14 @@ export default class UriTemplate {
                                     value = null;
                                 }
                             } else {
-                                value = decodeURIComponent(v);
-                                if (varSpec.var.length != null) {
-                                    value = value.slice(0, varSpec.var.length);
-                                }
-                                if (varSpec.var.func === 'int') {
-                                    value = Number(value);
+                                value = v;
+                                if(itemSpec.var.repeat) {
+                                    value = value.split(SeparatorMap[itemSpec.prefix]).map(x => formatElement(x,itemSpec.var)) as string[]|number[];
+                                }  else  {
+                                    value = formatElement(value, itemSpec.var);
                                 }
                             }
-                            params.push([varSpec.var.name,value])
+                            params.push([itemSpec.var.name,value])
                         }break;
                         case VarType.STATIC: {
                             score += 3;
@@ -361,6 +381,25 @@ export default class UriTemplate {
     }
 }
 
+
+
+function formatElement(str: string|null, varSpec: VarSpec) {
+    if(str == null) return null;
+    let out: UrlParamValue = decodeURIComponent(str);
+    if(varSpec.length != null) {
+        out = out.slice(0, varSpec.length);
+    }
+    if(varSpec.func === 'int') {
+        out = Number(out);
+    }
+    return out;
+}
+
+function mapValues<ValueIn=any,ValueOut=any>(obj: Record<string,ValueIn>, callback: (value:ValueIn)=>ValueOut) {
+    return Object.fromEntries(Object.entries(obj).map(([key,value]) => [key,callback(value)]))
+}
+
+
 function parseParams(queryString: string, separator: string): Record<string,string|null> {
     const pairs = queryString.split(separator);
     return Object.fromEntries(pairs.map(pair => {
@@ -370,7 +409,7 @@ function parseParams(queryString: string, separator: string): Record<string,stri
         }
         const key = pair.slice(0,idx);
         const value = pair.slice(idx+1);
-        return [key,decodeURIComponent(value)];
+        return [key,value];
     }))
 }
 
