@@ -1,10 +1,11 @@
 import {inspect, TextEncoder} from "util";
 import {unlinkSync} from "fs";
+import log from './log';
 
 // https://tools.ietf.org/html/rfc6570#section-3.2.1
 
 const PREFIX_RE = /^[+#./;?&]/;
-const MODIFIER_RE = /:(?<length>\d+)|(?<repeat>\*)$/ /* FIXME: If it is an explode ("*"), scan the next character.  If it is a
+const MODIFIER_RE = /(?<repeat>\*)?(?::(?<func>[a-zA-Z][a-zA-Z0-9_]*))?(?::(?:(?<length>\d+)))?$/ /* FIXME: If it is an explode ("*"), scan the next character.  If it is a
       prefix (":"), continue scanning the next one to four characters
       for the max-length represented as a decimal integer and then, if
       it is still not the end of the expression, scan the next
@@ -32,6 +33,7 @@ type TemplateParts = Array<Placeholder|StringLiteral>
 interface VarSpec {
     name: string
     length: number|null
+    func: string|null
     repeat: boolean
 }
 
@@ -89,26 +91,52 @@ const EscapeRegexes: Record<string,RegExp> = {
     '#': UR_SET,
 }
 
+enum VarType {
+    NAMED,
+    STATIC,
+    DYNAMIC
+}
+
+type MapItem = {
+    type: VarType.DYNAMIC
+    var: VarSpec
+    prefix: string
+} | {
+    type: VarType.NAMED
+    vars: VarSpec[]
+    prefix: string
+} | {
+    type: VarType.STATIC
+}
+
+
+
 
 export default class UriTemplate {
 
-    parts: TemplateParts
-    re: RegExp
+    expandParts: TemplateParts
+    matchRegex: RegExp
+    matchMap: Map<string,MapItem>
 
     constructor(template: string) {
-        this.parts = []
+        this.expandParts = []
         const re: string[] = ['^'];
+        this.matchMap = new Map();
 
         let pos = 0;
         const matches = Array.from(template.matchAll(/\{(.+?)\}/g)) as Required<RegExpMatchArray>[];
+        let matchCounter = 0;
+
         for(const m of matches) {
             if(m.index! > pos) {
                 const lit = template.slice(pos,m.index);
-                this.parts.push({
+                this.expandParts.push({
                     type: STR,
                     value: lit
                 })
-                re.push(escapeRegExp(lit))
+                const groupName = `static__${matchCounter++}`
+                re.push(`(?<${groupName}>${escapeRegExp(lit)})`)
+                this.matchMap.set(groupName,{type:VarType.STATIC})
             }
             pos = m.index! + m[0].length;
             const ph: Placeholder = {
@@ -116,7 +144,7 @@ export default class UriTemplate {
                 prefix: '',
                 vars: [],
             }
-            this.parts.push(ph);
+            this.expandParts.push(ph);
             let varStr = m[1];
             const prefix = varStr.match(PREFIX_RE);
             if(prefix) {
@@ -124,16 +152,23 @@ export default class UriTemplate {
                 ph.prefix = prefix[0];
             }
             const vars = varStr.split(',');
-            let notFirst = false;
 
-            re.push(escapeRegExp(FirstMap[ph.prefix]));
+
+            const isNamed = Named[ph.prefix];
+            let isFirst = true;
+
+            if(!isNamed) {
+                re.push(escapeRegExp(FirstMap[ph.prefix]));
+            }
 
             for(const v of vars) {
                 const item: VarSpec = {
                     name: v,
                     length: null,
+                    func: null,
                     repeat: false,
                 }
+
                 const mod = v.match(MODIFIER_RE) as Required<RegExpMatchArray>|null;
                 if(mod) {
                     if(mod.groups!.repeat !== undefined) {
@@ -142,41 +177,70 @@ export default class UriTemplate {
                     if(mod.groups!.length !== undefined) {
                         item.length = Number(mod.groups!.length);
                     }
+                    if(mod.groups!.func !== undefined) {
+                        item.func = mod.groups.func;
+                    }
                     item.name = item.name.slice(0,mod.index);
                 }
                 ph.vars.push(item);
 
 
-                if(notFirst) {
-                    re.push('(?:',escapeRegExp(SeparatorMap[ph.prefix]));
+
+
+                if(!isNamed) {
+                    if(!isFirst) {
+                        re.push(escapeRegExp(SeparatorMap[ph.prefix]));
+                    }
+
+                    const groupName = item.name
+                    re.push(`(?<${groupName}>`)
+                    if (item.func != null) {
+                        switch (item.func) {
+                            case 'int':
+                                re.push('-?\\d')
+                                break;
+                            default:
+                                throw new Error(`Unrecognized UriTemplate func: ${item.func}`);
+                        }
+                    } else if (ph.prefix === '+') {
+                        re.push('[^?#]')
+                    } else if (ph.prefix === '#') {
+                        re.push('.')
+                    } else {
+                        re.push('[^/?#]')
+                    }
+                    if (item.length != null) {
+                        re.push(`{${item.length}}`);
+                    } else {
+                        re.push('+?')
+                    }
+
+                    re.push(')')
+                    this.matchMap.set(groupName, {var: item, type:VarType.DYNAMIC, prefix: ph.prefix});
                 }
 
-                re.push(`(?<${item.name}>`);
-                if(ph.prefix === '+' || ph.prefix === '#') {
-                    re.push('.')
-                } else {
-                    re.push('[^/]')
-                }
-                if(item.length != null) {
-                    re.push(`{1,${item.length}}`);
-                } else {
-                    re.push('+?')
-                }
-                re.push(')')
-                if(notFirst) {
-                    re.push(')?');
-                }
-
-                notFirst = true;
+                isFirst = false;
             }
+
+            if(isNamed) {
+                re.push('(?:',escapeRegExp(FirstMap[ph.prefix]));
+                const groupName = `kwargs__${matchCounter++}`
+                re.push(`(?<${groupName}>[^/?#]*)`)
+                re.push(')?')
+                this.matchMap.set(groupName, {vars:ph.vars, type:VarType.NAMED, prefix: ph.prefix});
+            }
+
+
         }
         if(pos < template.length) {
             const lit = template.slice(pos);
-            this.parts.push({
+            this.expandParts.push({
                 type: STR,
                 value: lit
             })
-            re.push(escapeRegExp(lit))
+            const groupName = `static__${matchCounter++}`
+            re.push(`(?<${groupName}>${escapeRegExp(lit)})`)
+            this.matchMap.set(groupName,{type:VarType.STATIC})
         }
         // TODO: default values https://docs.microsoft.com/en-us/dotnet/framework/wcf/feature-details/uritemplate-and-uritemplatetable
         // TODO: regex or int conditionals
@@ -185,12 +249,12 @@ export default class UriTemplate {
         // process.exit(0);
 
         re.push('$')
-        this.re = new RegExp(re.join(''));
+        this.matchRegex = new RegExp(re.join(''));
     }
 
     expand(variables: Record<string,UrlParamValue>): string {
         const out = [];
-        for(const p of this.parts) {
+        for(const p of this.expandParts) {
             switch(p.type) {
                 case VAR:
                     const vs: string[] = [];
@@ -230,30 +294,95 @@ export default class UriTemplate {
     match(url: string): Match|null {
         // https://reach.tech/router/ranking
 
-        const m = url.match(this.re);
+        let score = 0;
+        const m = url.match(this.matchRegex);
+        console.log(`${JSON.stringify(url)}.match(${this.matchRegex})`);
         if(m !== null) {
-            let params = EMPTY_OBJ
+            // log('m',m);
+            let params: Array<[string,NullableUrlParamValue]> = []
             if(m.groups != null) {
-                params = Object.fromEntries(Object.entries(m.groups).map(([k,v]) => {
-                    return [k,decodeURIComponent(v)]
-                }))
+                // log('m.groups',m.groups)
+                for(const [k,v] of Object.entries(m.groups)) {
+                    const varSpec = this.matchMap.get(k)!;
+                    let value: UrlParamValue|null;
+
+                    switch(varSpec.type) {
+                        case VarType.NAMED: {
+                            const parsed = parseParams(v, SeparatorMap[varSpec.prefix])
+                            log('parsed',parsed);
+
+                            for(const vs of varSpec.vars) {
+                                if(vs.repeat) {
+                                    score -= 1;
+                                    params.push([vs.name, parsed]) // TODO: add int and length support
+                                    break;
+                                } else {
+                                    score += 2;
+                                    params.push([vs.name, parsed[vs.name]])
+                                    delete parsed[vs.name];
+                                }
+                            }
+                        }break;
+                        case VarType.DYNAMIC: {
+                            score += 2;
+                            if (v == null) {
+                                if (varSpec.var.repeat) {
+                                    if (Named[varSpec.prefix]) {
+                                        value = EMPTY_OBJ;
+                                    } else {
+                                        value = EMPTY_ARR as any;
+                                    }
+                                } else {
+                                    value = null;
+                                }
+                            } else {
+                                value = decodeURIComponent(v);
+                                if (varSpec.var.length != null) {
+                                    value = value.slice(0, varSpec.var.length);
+                                }
+                                if (varSpec.var.func === 'int') {
+                                    value = Number(value);
+                                }
+                            }
+                            params.push([varSpec.var.name,value])
+                        }break;
+                        case VarType.STATIC: {
+                            score += 3;
+                        }break;
+                    }
+                }
             }
             return {
-                score: 0,
-                params,
+                score,
+                params: Object.fromEntries(params),
             }
         }
         return null;
     }
 }
 
-const EMPTY_OBJ = Object.freeze({});
+function parseParams(queryString: string, separator: string): Record<string,string|null> {
+    const pairs = queryString.split(separator);
+    return Object.fromEntries(pairs.map(pair => {
+        const idx = pair.indexOf('=');
+        if(idx === -1) {
+            return [pair,null];
+        }
+        const key = pair.slice(0,idx);
+        const value = pair.slice(idx+1);
+        return [key,decodeURIComponent(value)];
+    }))
+}
+
+const EMPTY_OBJ = Object.freeze(Object.create(null));
+const EMPTY_ARR = Object.freeze([]);
 
 function isEmpty(x: any) {
     return x == null || x === '' || (Array.isArray(x) ? !x.length : (typeof x === 'object' && !Object.keys(x).length))
 }
 
-type UrlParamValue = string|number|string[]|number[]|Record<string,string|number>;
+type UrlParamValue = string|number|string[]|number[]|Record<string,string|number|null>;
+type NullableUrlParamValue = UrlParamValue|null;
 
 function escapeRegExp(string: string) {
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#Escaping
@@ -286,7 +415,7 @@ function percentEncode(str: string) {
 
 interface Match {
     score: number
-    params: Record<string,UrlParamValue>
+    params: Record<string,UrlParamValue|null>
 }
 
 /*

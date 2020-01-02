@@ -41,8 +41,22 @@ import Chalk from 'chalk';
 import UriTemplate from "./uri-template";
 import {inspect} from "util";
 
-const templ = new UriTemplate('/schedule/{year:4}-{month:2}-{day:2}');
+// const templ = new UriTemplate('/schedule/{year:int:4}-{month:int:2}-{day:int:2}{?foo,q*}');
+// log(templ);
+// const match = templ.match('/schedule/2019-12-31?foo=bar&baz=bux'); // url+pathname + url.search + url.hash
+// log(match);
+//
+//
+// const templ2 = new UriTemplate('/books{;author}/gallery');
+// log(templ2);
+// const match2 = templ2.match('/books;author=John Grisham/gallery'); // url+pathname + url.search + url.hash
+// log(match2);
+
+
+const templ = new UriTemplate('{+path}/here');
 log(templ);
+const match = templ.match('/foo/bar/here'); // url+pathname + url.search + url.hash
+log(match);
 
 
 function log(...vars: any) {

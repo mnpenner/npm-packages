@@ -72,4 +72,4 @@ dist/README.md: README.md
 	cp "$<" "$@"
 
 test: $(YI)
-	$(NB)/mocha --reporter mochawesome
+	$(NB)/mocha --reporter mochawesome --bail
