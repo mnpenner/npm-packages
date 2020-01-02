@@ -39,25 +39,10 @@ import Chalk from 'chalk';
 
 
 import UriTemplate from "./uri-template";
-import testcases from './testcases/spec-examples.json';
 import {inspect} from "util";
 
-for(const [name,test] of Object.entries(testcases)) {
-
-    for(const [input,expected] of test.testcases) {
-        const templ = new UriTemplate(input);
-        const expanded = templ.expand(test.variables);
-        const pass = Array.isArray(expected) ? expected.includes(expanded) : expected === expanded;
-
-        console.log(pass ? Chalk.green('✔') : Chalk.red('✘'),Chalk.cyan('template:'),input,Chalk.cyan('expected:'),expected,Chalk.cyan('actual:'),expanded)
-
-        if(!pass) {
-            log(test.variables,templ);
-            process.exit(1);
-        }
-    }
-}
-
+const templ = new UriTemplate('/schedule/{year:4}-{month:2}-{day:2}');
+log(templ);
 
 
 function log(...vars: any) {

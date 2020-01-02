@@ -92,23 +92,25 @@ const EscapeRegexes: Record<string,RegExp> = {
 
 export default class UriTemplate {
 
-    placeholders: Placeholder[]
     parts: TemplateParts
+    re: RegExp
 
     constructor(template: string) {
-        this.placeholders = [];
         this.parts = []
+        const re: string[] = ['^'];
 
         let pos = 0;
-        const matches = Array.from(template.matchAll(/\{(.+?)\}/g));
+        const matches = Array.from(template.matchAll(/\{(.+?)\}/g)) as Required<RegExpMatchArray>[];
         for(const m of matches) {
-            if(m.index > pos) {
+            if(m.index! > pos) {
+                const lit = template.slice(pos,m.index);
                 this.parts.push({
                     type: STR,
-                    value: template.slice(pos,m.index)
+                    value: lit
                 })
+                re.push(escapeRegExp(lit))
             }
-            pos = m.index + m[0].length;
+            pos = m.index! + m[0].length;
             const ph: Placeholder = {
                 type: VAR,
                 prefix: '',
@@ -122,13 +124,17 @@ export default class UriTemplate {
                 ph.prefix = prefix[0];
             }
             const vars = varStr.split(',');
+            let notFirst = false;
+
+            re.push(escapeRegExp(FirstMap[ph.prefix]));
+
             for(const v of vars) {
                 const item: VarSpec = {
                     name: v,
                     length: null,
                     repeat: false,
                 }
-                const mod = v.match(MODIFIER_RE);
+                const mod = v.match(MODIFIER_RE) as Required<RegExpMatchArray>|null;
                 if(mod) {
                     if(mod.groups!.repeat !== undefined) {
                         item.repeat = true;
@@ -139,13 +145,38 @@ export default class UriTemplate {
                     item.name = item.name.slice(0,mod.index);
                 }
                 ph.vars.push(item);
+
+
+                if(notFirst) {
+                    re.push('(?:',escapeRegExp(SeparatorMap[ph.prefix]));
+                }
+
+                re.push(`(?<${item.name}>`);
+                if(ph.prefix === '+' || ph.prefix === '#') {
+                    re.push('.')
+                } else {
+                    re.push('[^/]')
+                }
+                if(item.length != null) {
+                    re.push(`{1,${item.length}}`);
+                } else {
+                    re.push('+?')
+                }
+                re.push(')')
+                if(notFirst) {
+                    re.push(')?');
+                }
+
+                notFirst = true;
             }
         }
         if(pos < template.length) {
+            const lit = template.slice(pos);
             this.parts.push({
                 type: STR,
-                value: template.slice(pos)
+                value: lit
             })
+            re.push(escapeRegExp(lit))
         }
         // TODO: default values https://docs.microsoft.com/en-us/dotnet/framework/wcf/feature-details/uritemplate-and-uritemplatetable
         // TODO: regex or int conditionals
@@ -153,7 +184,8 @@ export default class UriTemplate {
         // log(this.parts);
         // process.exit(0);
 
-
+        re.push('$')
+        this.re = new RegExp(re.join(''));
     }
 
     expand(variables: Record<string,UrlParamValue>): string {
@@ -197,8 +229,25 @@ export default class UriTemplate {
 
     match(url: string): Match|null {
         // https://reach.tech/router/ranking
+
+        const m = url.match(this.re);
+        if(m !== null) {
+            let params = EMPTY_OBJ
+            if(m.groups != null) {
+                params = Object.fromEntries(Object.entries(m.groups).map(([k,v]) => {
+                    return [k,decodeURIComponent(v)]
+                }))
+            }
+            return {
+                score: 0,
+                params,
+            }
+        }
+        return null;
     }
 }
+
+const EMPTY_OBJ = Object.freeze({});
 
 function isEmpty(x: any) {
     return x == null || x === '' || (Array.isArray(x) ? !x.length : (typeof x === 'object' && !Object.keys(x).length))
@@ -206,6 +255,10 @@ function isEmpty(x: any) {
 
 type UrlParamValue = string|number|string[]|number[]|Record<string,string|number>;
 
+function escapeRegExp(string: string) {
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#Escaping
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+}
 
 function percentEncodeRegExp(x:string|number|boolean|null, set: RegExp, length: number|null) {
     if(typeof x === 'number') {
@@ -235,3 +288,23 @@ interface Match {
     score: number
     params: Record<string,UrlParamValue>
 }
+
+/*
+
+> new URL('https://demo.software.limo/schedule/2020-01-11?foo=bar&baz=bux#quip')
+URL {
+  href: 'https://demo.software.limo/schedule/2020-01-11?foo=bar&baz=bux#quip',
+  origin: 'https://demo.software.limo',
+  protocol: 'https:',
+  username: '',
+  password: '',
+  host: 'demo.software.limo',
+  hostname: 'demo.software.limo',
+  port: '',
+  pathname: '/schedule/2020-01-11',
+  search: '?foo=bar&baz=bux',
+  searchParams: URLSearchParams { 'foo' => 'bar', 'baz' => 'bux' },
+  hash: '#quip'
+}
+
+ */

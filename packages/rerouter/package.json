@@ -21,6 +21,7 @@
         "chai": "^4.2.0",
         "chalk": "^3.0.0",
         "mocha": "^6.2.2",
+        "mochawesome": "^4.1.0",
         "register-pretty-error": "^0.1.4",
         "source-map-support": "^0.5",
         "typescript": "^3.7"
