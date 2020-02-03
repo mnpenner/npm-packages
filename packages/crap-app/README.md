@@ -10,7 +10,7 @@ Unlike [CRA](https://github.com/facebook/create-react-app) (which is great BTW),
 sudo npm i -g crap-app
 ```
 
-Or just use [npx](https://www.npmjs.com/package/npx).
+Or just use [npx](https://www.npmjs.com/package/npx) or [yarn dlx](https://next.yarnpkg.com/cli/dlx).
 
 # Usage
 
