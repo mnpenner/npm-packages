@@ -125,9 +125,7 @@ const webpackConfig = {
     resolve: {
         alias: {
             '@': Path.join(__dirname, 'src'),
-            'react-hot-loader': Path.join(__dirname, 'node_modules', 'react-hot-loader'),
-            'react-dom': Path.join(__dirname, 'node_modules', '@hot-loader/react-dom'), // https://github.com/gaearon/react-hot-loader#react--dom
-            'babel-core': Path.join(__dirname, 'node_modules', '@babel', 'core'),
+            'babel-core': require.resolve('@babel/core'), // TODO: test if this is still needed
         },
         extensions: ['.tsx', '.ts', '.jsx', '.js'],
     },
@@ -135,7 +133,7 @@ const webpackConfig = {
         new HtmlWebpackPlugin({
             template: 'src/index.html',
             favicon: 'src/images/favicon.ico',
-            minify: process.env.NODE_ENV !== 'development' && {
+            minify: isDevelopment ? false : {
                 caseSensitive: false,
                 removeComments: true,
                 collapseWhitespace: true,
@@ -193,7 +191,12 @@ const webpackConfig = {
     },
 }
 
-if(!isDevelopment) {
+if(isDevelopment) {
+    Object.assign(webpackConfig.resolve.alias,{
+        'react-dom': Path.join(__dirname, 'node_modules', '@hot-loader/react-dom'), // https://github.com/gaearon/react-hot-loader#react--dom
+        'react-hot-loader': require.resolve('react-hot-loader'),  // TODO: test if this is still needed
+    });
+} else {
     // https://webpack.js.org/guides/production/
     const compressible = /\.(js|json|html|map|css|svg|htc|eot|ttf)($|\?)/i;
 
