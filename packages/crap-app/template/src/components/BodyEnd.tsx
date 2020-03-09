@@ -23,9 +23,6 @@ export default class BodyEnd extends React.Component<Props> {
     }
 
     render() {
-        return ReactDOM.createPortal(
-            this.props.children,
-            this.el,
-        );
+        return ReactDOM.createPortal(this.props.children, this.el);
     }
 }
