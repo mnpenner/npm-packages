@@ -47,7 +47,8 @@ async function copyDir(src, dest) {
 }
 
 async function main(args) {
-    let pkgName, license = 'UNLICENSED', copyrightHolder;
+    const username = OS.userInfo().username;
+    let pkgName, license = 'UNLICENSED', copyrightHolder = username;
 
     if(args.length) {
         pkgName = args[0];
@@ -87,7 +88,7 @@ async function main(args) {
         if(license !== 'UNLICENSED') {
             copyrightHolder = await ask({
                 message: "Copyright holder?",
-                default: OS.userInfo().username
+                default: username
             });
         }
     }
@@ -104,11 +105,20 @@ async function main(args) {
         }))
     }
 
+    const readmeContents = await readFile(Path.join(__dirname, 'template', 'README.md'), {encoding: 'utf8'})
+    await writeFile(Path.join(outputDir, 'README.md'), readmeContents.replace(/\{\{\s*project\s*\}\}/gui, pkgName));
+
     await writeFile(Path.join(outputDir, 'package.json'), JSON.stringify({
             name: pkgName,
             version: '0.1.0',
             license: license,
             private: license === 'UNLICENSED' || undefined,
+            author: {
+                name: copyrightHolder,
+                email: '',
+                url: `https://www.npmjs.com/package/${pkgName}`,
+            },
+            type: 'module',
             // scripts: {
             //     "start": "NODE_ENV=development webpack-serve"
             // },
@@ -127,7 +137,7 @@ async function main(args) {
                 "@types/reach__router": "^1.2",
                 "@types/react": "^16.8",
                 "@types/react-dom": "^16.8",
-                "@types/styled-components": "^4", // TODO: upgrade to ^5 when it's released
+                "@types/styled-components": "^5",
                 "autoprefixer": "^9",
                 "babel-loader": "^8",
                 "babel-plugin-webpack-chunkname": "^1",

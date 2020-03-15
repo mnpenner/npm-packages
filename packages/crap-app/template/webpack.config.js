@@ -10,10 +10,8 @@ const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 
 const isDevelopment = process.env.NODE_ENV === 'development'
-const isDevServer = process.env.WEBPACK_DEV_SERVER; // https://stackoverflow.com/a/57474397/65387
+const isDevServer = !!process.env.WEBPACK_DEV_SERVER; // https://stackoverflow.com/a/57474397/65387
 const copyrightPatt = /^!|\b(copyright|license)\b|@(preserve|license|cc_on)\b/i;
-
-console.log('isDevServer',isDevServer);
 
 const babelLoader = {
     loader: 'babel-loader',

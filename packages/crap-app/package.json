@@ -6,7 +6,7 @@
   "description": "Creating React apps sucks. This makes it a little bit easier.",
   "dependencies": {
     "chalk": "^2.4.1",
-    "inquirer": "^6.2.0",
+    "inquirer": "^7",
     "validate-npm-package-name": "^3.0.0"
   },
   "engines": {
