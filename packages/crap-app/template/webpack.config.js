@@ -13,6 +13,8 @@ const isDevelopment = process.env.NODE_ENV === 'development'
 const isDevServer = process.env.WEBPACK_DEV_SERVER; // https://stackoverflow.com/a/57474397/65387
 const copyrightPatt = /^!|\b(copyright|license)\b|@(preserve|license|cc_on)\b/i;
 
+console.log('isDevServer',isDevServer);
+
 const babelLoader = {
     loader: 'babel-loader',
     options: {
@@ -77,7 +79,7 @@ const webpackConfig = {
     output: {
         path: Path.join(__dirname, 'dist'),
         publicPath: '/',
-        filename: isDevelopment ? '[name].js' : '[name].[chunkhash].js',
+        filename: isDevelopment ? '[name].js' : '[contenthash].js',
         chunkFilename: isDevelopment ? '[name].bundle.js' : '[chunkhash].js',
     },
     resolveLoader: {
@@ -194,7 +196,6 @@ const webpackConfig = {
 if(isDevelopment) {
     Object.assign(webpackConfig.resolve.alias,{
         'react-dom': Path.join(__dirname, 'node_modules', '@hot-loader/react-dom'), // https://github.com/gaearon/react-hot-loader#react--dom
-        'react-hot-loader': require.resolve('react-hot-loader'),  // TODO: test if this is still needed
     });
 } else {
     // https://webpack.js.org/guides/production/
@@ -223,7 +224,7 @@ if(isDevelopment) {
             algorithm: 'brotliCompress'
         }),
         new MiniCssExtractPlugin({
-            filename: '[name].[hash].css',
+            filename: '[name].[contenthash].css',
             chunkFilename: 'chunk.[chunkhash].css',
         }),
     );
