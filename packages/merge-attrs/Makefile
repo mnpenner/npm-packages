@@ -33,5 +33,5 @@ publish: all
 clean:
 	rm -rf dist 
 
-test: 
+test: yarn.lock
 	$(BIN)/jest
