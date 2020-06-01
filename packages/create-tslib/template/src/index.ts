@@ -5,7 +5,7 @@ export class Foo {
      * The coolest number.
      * @type {bigint}
      */
-    bar: bigint = 1_337n
+    bar: bigint = 1337n
 }
 
 const o: any = {};

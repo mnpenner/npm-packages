@@ -103,11 +103,6 @@ async function main(args) {
                 "@babel/core": "^7.7",
                 "@babel/cli": "^7.7",
                 "@babel/preset-typescript": "^7.7",
-                "@babel/plugin-proposal-nullish-coalescing-operator": "^7.7",
-                "@babel/plugin-syntax-numeric-separator": "^7.7",
-                "@babel/plugin-proposal-optional-chaining": "^7.7",
-                "@babel/plugin-syntax-bigint": "^7.7",
-                "@babel/plugin-syntax-nullish-coalescing-operator": "^7.7",
                 "@babel/preset-env": "^7.7",
                 "source-map-support": "^0.5"
             },
@@ -115,7 +110,7 @@ async function main(args) {
                 "dotenv": "^8"
             },
             engines: {
-                node: ">=10"
+                node: ">=12"
             }
         }, null, 4)
     );
