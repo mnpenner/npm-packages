@@ -10,23 +10,25 @@
         "@babel/node": "^7.7",
         "@babel/preset-env": "^7.7",
         "@babel/preset-typescript": "^7.7",
+        "@rollup/plugin-json": "^4.0.3",
         "@rollup/plugin-node-resolve": "^8.0.0",
         "@types/node": "^12",
         "cross-env": "^7.0.2",
         "rollup": "^2.12.0",
         "rollup-plugin-babel": "^4.4.0",
         "rollup-plugin-node-externals": "^2.2.0",
-        "source-map-support": "^0.5",
+        "source-map-support": "^0.5.19",
         "typescript": "^3.7"
     },
     "dependencies": {
-        "dotenv": "^8"
+        "chalk": "^4.0.0",
+        "string-width": "^4.2.0"
     },
     "engines": {
         "node": ">=12"
     },
     "scripts": {
-        "dev": "cross-env BABEL_ENV=development babel-node --max_old_space_size=10000 --extensions \".ts\" -r \"dotenv/config\" src/main.ts",
+        "dev": "cross-env BABEL_ENV=development babel-node --max_old_space_size=10000 --extensions \".ts\" src/main.ts",
         "tsdecls": "tsc --emitDeclarationOnly",
         "lint": "tsc --noEmit",
         "clean": "rm -rf dist yarn-error.log",

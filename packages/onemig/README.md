@@ -1,19 +1,10 @@
-# YourLib
-    
-Created with [`ctslib`](https://yarnpkg.com/en/package/create-tslib).
+# OneMig
 
 ## Getting Started
 
-### Run source code directly
-
-```sh
-make dev
+```shell script
+yarn dev
+yarn build
 ```
 
-### Build code for production
-
-```sh
-make
-```
-
-It will be written to `dist/`. After that, you don't need TypeScript nor babel installed. It can be distributed for node LTS.
+See `package.json` for more scripts.
