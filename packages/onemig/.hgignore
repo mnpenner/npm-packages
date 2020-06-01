@@ -1,9 +1,12 @@
 syntax: regexp
+
+^node_modules/
 ^\.idea/
 ^dist/
-^out/
-^cache/
-^data/
-^node_modules/
 \.log$
-^schema\.json$
+~$
+(?<![^/])Thumbs\.db$
+(?<![^/])\.gitattributes$
+(?<![^/])\.gitignore$
+(?<![^/])\.env$
+(?<![^/])\.(?![^/]+(ignore|rc)$) # all dotfiles except *ignore and *rc files

@@ -1,77 +1,72 @@
-NM := node_modules/.bin
-SRCS := $(shell find src \( -name '*.js' -o -name '*.json' \))
-DISTS := $(patsubst src/%,dist/%,$(SRCS)) $(patsubst src/%.schema.js,dist/%.schema.json,$(SRCS)) dist/LICENSE dist/package.json dist/README.md
-DISTDIRS := $(sort $(dir $(DISTS)))
+MAKEFLAGS += --no-builtin-rules
 .SUFFIXES:
+.PHONY: build dev prod check clean publish
 
-.PHONY: dev build clean debug test
+YI := node_modules/.yarn-integrity
+NB := node_modules/.bin
+SRC_TS = $(shell find src -type f \( -iname '*.js' -o -iname '*.ts' \) ! -iname '*.d.ts')
+SRC_OTHER = $(shell find src -type f \! -iname '*.ts' -o -iname '*.d.ts')
+DIST_FILES = $(patsubst src/%.ts,dist/%.js,$(SRC_TS)) $(patsubst src/%,dist/%,$(SRC_OTHER)) dist/package.json dist/README.md
+DIST_DIRS = $(sort $(patsubst %/,%,$(dir $(DIST_FILES))))
 
-# usage: make CMD=diff
+# Build the source code to the dist/ directory.
+build: tsdecls $(DIST_FILES)
 
-build: $(DISTS) node_modules/.yarn-integrity
+# Transpile TS to JS.
+dist/%.js: src/%.ts $(YI) .babelrc
+	BABEL_ENV=production $(NB)/babel --source-maps true --no-comments "$<" -o "$@"
 
-run: build
-	node -r source-map-support/register dist/bin $(CMD)
+# Copy all other file types.
+dist/%: src/% | $(DIST_DIRS)
+	cp "$<" "$@"
 
-dist/%.schema.json: dist/%.schema.js dist/export-schema.js
-	node dist/export-schema.js $<#/defs/Table > $@
+# Create dist/ directories as needed.
+$(DIST_DIRS):
+	mkdir -p "$@"
 
-dist/%.js: src/%.js node_modules/.yarn-integrity .babelrc | $(DISTDIRS)
-	$(NM)/babel $< -o $@
+# https://github.com/microsoft/TypeScript/issues/27379#issuecomment-534078265
+# https://stackoverflow.com/q/59403596/65387
+#dist/%.d.ts: src/%.ts $(YI)
+#	$(NB)/tsc --emitDeclarationOnly $< --outFile $@
 
-dist/%.json: src/%.json | $(DISTDIRS)
-	cp $< $@
+# Build TypeScript declaration (.d.ts) files.
+tsdecls: $(YI)
+	$(NB)/tsc --emitDeclarationOnly
 
-dist/LICENSE: LICENSE | $(DISTDIRS)
-	cp $< $@
+# Transpile TS to JS.
+alljs: $(YI)
+	BABEL_ENV=production $(NB)/babel --out-dir dist --extensions ".ts" --source-maps true --no-comments $(SRC_TS)
 
-dist/README.md: README.md | $(DISTDIRS)
-	cp $< $@
+# Run the TypeScript source code directly in development mode.
+dev: $(YI)
+	yarn run dev
 
-dist/package.json: package.json | $(DISTDIRS)
-	jq 'del(.private, .devDependencies, .scripts, .eslintConfig, .babel)' $< > $@
+# Build the code for production and run it. May catch compilation errors but shouldn't be executed this way in prod.
+prod: build
+	node -r dotenv/config -r source-map-support/register dist/index
 
-$(DISTDIRS):
-	mkdir -p $@
+# Check source code for TypeScript errors.
+check: $(YI)
+	$(NB)/tsc --noEmit
 
-node_modules/.yarn-integrity: yarn.lock
-	@yarn install --frozen-lockfile --production=false --check-files
-	touch $@
-
-yarn.lock: package.json
-	@yarn check --integrity
-	touch $@
-
+# Delete build files.
 clean:
-	rm -rf node_modules dist
+	rm -rf dist yarn-error.log
 
-node8:
-	sudo apt remove -y nodejs
-	curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
-	sudo apt install -y nodejs
-	
-node10:
-	sudo apt remove -y nodejs
-	curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
-	sudo apt install -y nodejs
-
-data/servers.json: $(wildcard ~/Projects/server_config/napi/host/*.json)
-	jq -n '[inputs | select(.roles and any(.roles[]; . == "mysql")) | {(input_filename | gsub(".*/|\\.json$$";"")): .}] | add' $^ > $@
-
-dump: build
-	node -r source-map-support/register dist/bin export -h "$(HOST)" -o ~/.onemig/$(HOST)
-	cd ~/.onemig && hg addremove "$(HOST)" && hg ci -m "Updated $(HOST)" "$(HOST)" && hg push
-
-dump-phsa: build
-	node -r source-map-support/register dist/bin export -h code -P 2224 -o ~/.onemig/phsa
-	cd ~/.onemig && hg addremove "phsa" && hg ci -m "Updated phsa" "phsa" && hg push
-
+# Build and publish the compiled sources to npm.
 publish: build
 	cd dist && npm publish
 
-test-it-live:
-	rm -rf dist
-	npm version patch 
-	$(MAKE) publish 
-	sudo npm i -g @nucleuslabs/onemig 
-	onemig
+$(YI): yarn.lock
+	@yarn install --frozen-lockfile --production=false --check-files
+	@touch -mr $@ $<
+
+yarn.lock: package.json
+	@yarn check --integrity
+	@touch -mr $@ $<
+
+dist/package.json: package.json | dist
+	jq 'del(.private, .devDependencies, .scripts, .eslintConfig, .babel)' $< > $@
+
+dist/README.md: README.md
+	cp "$<" "$@"

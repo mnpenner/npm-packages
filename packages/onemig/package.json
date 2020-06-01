@@ -1,43 +1,35 @@
 {
-  "name": "@nucleuslabs/onemig",
-  "version": "0.1.13",
-  "license": "UNLICENSED",
-  "private": true,
-  "bin": "bin.js",
-  "dependencies": {
-    "@async-generators/from-emitter": "^0.3.0",
-    "@nucleuslabs/napi-js": "^1.1.0",
-    "ajv": "^6.5.0",
-    "chalk": "^2.4.1",
-    "cli-highlight": "^2.0.0",
-    "escape-string-regexp": "^1.0.5",
-    "json-schema-ref-parser": "^5.0.3",
-    "lodash": "^4.17.10",
-    "make-dir": "^1.2.0",
-    "moment": "^2.22.1",
-    "mysql3": "^0.1.2",
-    "object-hash": "^1.3.0",
-    "pkg-up": "^2.0.0"
-  },
-  "devDependencies": {
-    "@babel/cli": "^7.0.0-beta.49",
-    "@babel/core": "^7.0.0-beta.49",
-    "@babel/plugin-proposal-decorators": "^7.0.0-beta.49",
-    "@babel/plugin-proposal-function-bind": "^7.0.0-beta.49",
-    "@babel/plugin-syntax-dynamic-import": "^7.0.0-beta.49",
-    "@babel/preset-env": "^7.0.0-beta.49",
-    "prettier": "1.13.3",
-    "source-map-support": "^0.5.6"
-  },
-  "engines": {
-    "node": ">=10"
-  },
-  "repository": {
-    "type": "hg",
-    "url": "https://bitbucket.org/nucleuslabs/onemig"
-  },
-  "publishConfig": {
-    "registry": "http://code.nucleuslabs.com:4873"
-  },
-  "author": "NucleusLabs Information Technologies Inc."
+    "name": "onemig",
+    "version": "0.1.0",
+    "license": "UNLICENSED",
+    "private": true,
+    "main": "main.js",
+    "devDependencies": {
+        "@babel/cli": "^7.7",
+        "@babel/core": "^7.7",
+        "@babel/node": "^7.7",
+        "@babel/preset-env": "^7.7",
+        "@babel/preset-typescript": "^7.7",
+        "@rollup/plugin-node-resolve": "^8.0.0",
+        "@types/node": "^12",
+        "cross-env": "^7.0.2",
+        "rollup": "^2.12.0",
+        "rollup-plugin-babel": "^4.4.0",
+        "rollup-plugin-node-externals": "^2.2.0",
+        "source-map-support": "^0.5",
+        "typescript": "^3.7"
+    },
+    "dependencies": {
+        "dotenv": "^8"
+    },
+    "engines": {
+        "node": ">=12"
+    },
+    "scripts": {
+        "dev": "cross-env BABEL_ENV=development babel-node --max_old_space_size=10000 --extensions \".ts\" -r \"dotenv/config\" src/main.ts",
+        "tsdecls": "tsc --emitDeclarationOnly",
+        "lint": "tsc --noEmit",
+        "clean": "rm -rf dist yarn-error.log",
+        "build": "cross-env BABEL_ENV=production rollup -c"
+    }
 }
