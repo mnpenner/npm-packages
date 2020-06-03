@@ -6,7 +6,7 @@ export const getDefaultStorageEngine = (conn:ConnectionPool) => conn.value(sql`s
 export const getDatabaseCollation = (conn:ConnectionPool,dbName:string) => conn.value(sql`SELECT DEFAULT_COLLATION_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME=${dbName}`)
 
 
-type DbColumnType = 'enum'|'set'|'tinyint'|'smallint'|'mediumint'|'int'|'bigint'|'float'|'decimal'|'double'|'char'|'varchar'|'bit'|'binary'|'varbinary'|'year'|'tinytext'|'text'|'mediumtext'|'longtext'|'tinyblob'|'blob'|'mediumblob'|'longblob'
+type DbColumnType = 'enum'|'set'|'tinyint'|'smallint'|'mediumint'|'int'|'bigint'|'float'|'decimal'|'double'|'char'|'varchar'|'bit'|'binary'|'varbinary'|'year'|'tinytext'|'text'|'mediumtext'|'longtext'|'tinyblob'|'blob'|'mediumblob'|'longblob'|'datetime'|'timestamp'|'date'|'time' // TODO: check this against mariadb docs
 
 type DbIndexType = 'PRIMARY'|'BTREE'|'UNIQUE'|'INDEX'
 
@@ -14,7 +14,7 @@ interface DbColumn {
     name: string
     type: DbColumnType
     comment?: string
-    default?: string|number
+    default?: string|number|'NULL'|'current_timestamp()'
     collation?: string
     autoIncrement?: boolean
     values?: string[]
@@ -340,7 +340,7 @@ export async function getStruct(conn: ConnectionPool, dbName: string, tblName:st
                 }
 
                 if(!idxMap.hasOwnProperty(idx.name)) {
-                    let idxDef: DbIndex = idxMap[idx.name] = {
+                    let idxDef: Partial<DbIndex> = (idxMap[idx.name] as any) = {
                         name: idx.name,
                     };
 

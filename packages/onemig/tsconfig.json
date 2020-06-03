@@ -20,7 +20,7 @@
         "esModuleInterop": true,
         "moduleResolution": "node",
         "isolatedModules": true,
-        "allowSyntheticDefaultImports": true
+        "allowSyntheticDefaultImports": true,
     },
     "files": [
         "src/main.ts"

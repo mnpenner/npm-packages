@@ -9,6 +9,10 @@ import {promises as fs} from 'fs';
 import {getStruct} from "./struct";
 import {PoolConfig} from "mysql3/ConnectionPool";
 
+// TODO:  generate json schema
+//  .\node_modules\.bin/typescript-json-schema .\src\struct.ts OneMig
+//  ./node_modules/.bin/ts-json-schema-generator -p .\src\struct.ts
+
 run({
     name: "OneMig",
     version: pkg.version,
@@ -18,6 +22,7 @@ run({
             name: "export",
             description: "Export definitions from existing database",
             async execute(opts) {
+                const t = Date.now()
                 const conn = new ConnectionPool({
                     user: opts.user,
                     password: opts.password,
@@ -42,6 +47,9 @@ run({
                     tables.push(def)
                 }
                 await conn.close()
+
+                const elapsed = Date.now()-t
+                console.log(`Fetched database structure in ${elapsed} ms`)
 
                 await fs.writeFile(`data/tables.yaml`,dump(tables))
 

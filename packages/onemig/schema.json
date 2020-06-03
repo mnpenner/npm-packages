@@ -1,0 +1,320 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "definitions": {
+        "DbColumnType": {
+            "title": "DbColumnType",
+            "enum": [
+                "bigint",
+                "binary",
+                "bit",
+                "blob",
+                "char",
+                "decimal",
+                "double",
+                "enum",
+                "float",
+                "int",
+                "longblob",
+                "longtext",
+                "mediumblob",
+                "mediumint",
+                "mediumtext",
+                "set",
+                "smallint",
+                "text",
+                "tinyblob",
+                "tinyint",
+                "tinytext",
+                "varbinary",
+                "varchar",
+                "year",
+                "datetime",
+                "timestamp",
+                "date",
+                "time"
+            ],
+            "type": "string"
+        },
+        "DbIndexType": {
+            "title": "DbIndexType",
+            "enum": [
+                "BTREE",
+                "INDEX",
+                "PRIMARY",
+                "UNIQUE"
+            ],
+            "type": "string"
+        },
+        "DbColumn": {
+            "title": "DbColumn",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "title": "name"
+                },
+                "type": {
+                    "$ref": "#/definitions/DbColumnType",
+                    "title": "type"
+                },
+                "comment": {
+                    "type": "string",
+                    "title": "comment"
+                },
+                "default": {
+                    "type": [
+                        "string",
+                        "number"
+                    ],
+                    "title": "default"
+                },
+                "collation": {
+                    "type": "string",
+                    "title": "collation"
+                },
+                "autoIncrement": {
+                    "type": "boolean",
+                    "title": "autoIncrement"
+                },
+                "values": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "title": "values"
+                },
+                "zerofill": {
+                    "type": [
+                        "number",
+                        "boolean"
+                    ],
+                    "title": "zerofill"
+                },
+                "unsigned": {
+                    "type": "boolean",
+                    "title": "unsigned"
+                },
+                "precision": {
+                    "type": "array",
+                    "items": [
+                        {
+                            "type": "number"
+                        },
+                        {
+                            "type": "number"
+                        }
+                    ],
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "title": "precision"
+                },
+                "length": {
+                    "type": "number",
+                    "title": "length"
+                },
+                "width": {
+                    "type": "number",
+                    "title": "width"
+                },
+                "nullable": {
+                    "type": "boolean",
+                    "title": "nullable"
+                }
+            },
+            "required": [
+                "name",
+                "type"
+            ]
+        },
+        "DbIndex": {
+            "title": "DbIndex",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "title": "name"
+                },
+                "type": {
+                    "$ref": "#/definitions/DbIndexType",
+                    "title": "type"
+                },
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "title": "columns"
+                },
+                "comment": {
+                    "type": "string",
+                    "title": "comment"
+                }
+            },
+            "required": [
+                "columns",
+                "name",
+                "type"
+            ]
+        },
+        "DbReferenceOption": {
+            "description": "https://mariadb.com/kb/en/foreign-keys/",
+            "title": "DbReferenceOption",
+            "enum": [
+                "CASCADE",
+                "NO ACTION",
+                "RESTRICT",
+                "SET DEFAULT",
+                "SET NULL"
+            ],
+            "type": "string"
+        },
+        "DbForeignKey": {
+            "title": "DbForeignKey",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "title": "name"
+                },
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "title": "columns"
+                },
+                "refTable": {
+                    "type": "string",
+                    "title": "refTable"
+                },
+                "refColumns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "title": "refColumns"
+                },
+                "onDelete": {
+                    "$ref": "#/definitions/DbReferenceOption",
+                    "title": "onDelete"
+                },
+                "onUpdate": {
+                    "$ref": "#/definitions/DbReferenceOption",
+                    "title": "onUpdate"
+                },
+                "refDatabase": {
+                    "type": "string",
+                    "title": "refDatabase"
+                }
+            },
+            "required": [
+                "columns",
+                "name",
+                "onDelete",
+                "onUpdate",
+                "refColumns",
+                "refTable"
+            ]
+        },
+        "DbTableOptions": {
+            "title": "DbTableOptions",
+            "type": "object",
+            "properties": {
+                "engine": {
+                    "type": "string",
+                    "title": "engine"
+                },
+                "comment": {
+                    "type": "string",
+                    "title": "comment"
+                },
+                "collation": {
+                    "type": "string",
+                    "title": "collation"
+                }
+            }
+        },
+        "DbTable": {
+            "title": "DbTable",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "title": "name"
+                },
+                "options": {
+                    "$ref": "#/definitions/DbTableOptions",
+                    "title": "options"
+                },
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DbColumn"
+                    },
+                    "title": "columns"
+                },
+                "indexes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DbIndex"
+                    },
+                    "title": "indexes"
+                },
+                "foreignKeys": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DbForeignKey"
+                    },
+                    "title": "foreignKeys"
+                },
+                "triggers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DbTrigger"
+                    },
+                    "title": "triggers"
+                }
+            },
+            "required": [
+                "columns",
+                "foreignKeys",
+                "indexes",
+                "name",
+                "options"
+            ]
+        },
+        "DbTrigger": {
+            "title": "DbTrigger",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "title": "name"
+                },
+                "timing": {
+                    "type": "string",
+                    "title": "timing"
+                },
+                "event": {
+                    "type": "string",
+                    "title": "event"
+                },
+                "statement": {
+                    "type": "string",
+                    "title": "statement"
+                }
+            },
+            "required": [
+                "event",
+                "name",
+                "statement",
+                "timing"
+            ]
+        }
+    },
+    "type": "array",
+    "items": {
+        "$ref": "#/definitions/DbTable"
+    },
+    "title": "tables"
+}

@@ -60,5 +60,5 @@ function call<TRet, TArgs extends any[]>(this: any, fn: TRet | ((...a: TArgs) =>
 }
 
 export function sortBy<T extends object>(array: T[], prop: keyof T) {
-    return array.sort((a, b) => a[prop].localeCompare(b[prop]));
+    return array.sort((a, b) => (a[prop] as unknown as string).localeCompare(b[prop] as unknown as string));
 }
