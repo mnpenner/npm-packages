@@ -236,7 +236,18 @@ function parseArgs(cmd:Command, argv: string[]): [any[],Record<string,any>] {
             args.push(arg);
         }
     }
-    // TODO: fill in unspecified options with defaults
+
+    if(cmd.options?.length) {
+        for (const opt of cmd.options) {
+            if(opt.defaultValue !== undefined) { // TODO: should we fill in undefined options?
+                const k = opt.key ?? opt.name
+                if (opts[k] === undefined) {
+                    opts[k] = resolve(opt.defaultValue)
+                }
+            }
+        }
+    }
+
     // TODO: fill global options into opts
     // TODO: fill flags into opts
     // TODO: copy named arguments into opts too

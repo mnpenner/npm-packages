@@ -12,7 +12,7 @@ export interface Command {
      * @param args Positional arguments.
      * @param app Entire app config.
      */
-    execute(options: Record<string,string>, args: string[], app: App): Promise<number|void>
+    execute(options: Record<string,any>, args: string[], app: App): Promise<number|void>
 }
 
 export enum OptType {
