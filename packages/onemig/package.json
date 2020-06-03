@@ -28,7 +28,7 @@
         "node": ">=12"
     },
     "scripts": {
-        "dev": "cross-env BABEL_ENV=development babel-node --max_old_space_size=10000 --extensions \".ts\" src/main.ts",
+        "run": "cross-env BABEL_ENV=development babel-node --max_old_space_size=10000 --extensions \".ts\" src/main.ts",
         "tsdecls": "tsc --emitDeclarationOnly",
         "lint": "tsc --noEmit",
         "clean": "rm -rf dist yarn-error.log",

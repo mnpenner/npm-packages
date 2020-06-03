@@ -1,5 +1,6 @@
 import Chalk from 'chalk';
 import stringWidth from 'string-width';
+import Path from 'path';
 import {App, Argument, Command, Option, OptType} from "./interfaces";
 
 const print = process.stdout.write.bind(process.stdout)
@@ -29,10 +30,10 @@ const helpCommand: Command = {
         {
             name: "command",
             description: "The command name.",
-            valueRequired: true,
+            required: true,
         }
     ],
-    async execute(args:string[], options:Record<string, string>, app:App) {
+    async execute(options:Record<string, string>, args:string[], app:App) {
         // console.log('exec help command',args,options)
         const cmd = getCommand(args[0], app)
         // console.log('found command',cmd)
@@ -43,7 +44,7 @@ const helpCommand: Command = {
         }
 
         printLn(Chalk.yellow("Usage:"))
-        print(`  ${app.argv0 ?? process.argv[1]} ${cmd.name}`)
+        print(`  ${Chalk.cyan(getProcName(app))} ${cmd.name}`)
         if(cmd.options?.length) {
             // TODO: print all required options
             print(Chalk.grey(' [options]'))
@@ -52,12 +53,12 @@ const helpCommand: Command = {
             print(` ${Chalk.grey('[')}--${Chalk.grey(']')}`)
             for(const arg of cmd.arguments) {
                 print(' ')
-                print(Chalk.grey(arg.valueRequired ? '<' : '['))
+                print(Chalk.grey(arg.required ? '<' : '['))
                 if(arg.repeatable) {
                     print(Chalk.grey('...'))
                 }
-                print(arg.name)
-                print(Chalk.grey(arg.valueRequired ? '>' : ']'))
+                print(Chalk.grey(arg.name))
+                print(Chalk.grey(arg.required ? '>' : ']'))
             }
         }
         printLn('\n')
@@ -96,22 +97,19 @@ function formatOption(opt: Option): [string,string] {
     }
     aliases.push(opt.name)
     let flags = aliases.map(a => Chalk.green(a.length === 1 ? `-${a}` : `--${a}`)).join(', ')
-    const takesValue = opt.valueRequired || opt.valuePlaceholder !== undefined || (opt.type && opt.type !== OptType.BOOL) || opt.defaultValue !== false;
-    if(takesValue) {
-        let valuePlaceholder = opt.valuePlaceholder
-        if(valuePlaceholder === undefined) {
-            if(Array.isArray(opt.type)) {
-                valuePlaceholder = opt.type.join('|')
-            } else if(opt.type == OptType.BOOL) {
-                valuePlaceholder = JSON.stringify(!resolve(opt.defaultValue))
-            } else if(opt.type === OptType.INT || opt.type === OptType.FLOAT) {
-                valuePlaceholder = '#'
-            } else {
-                valuePlaceholder = opt.name
-            }
+    let valuePlaceholder = opt.valuePlaceholder
+    if(valuePlaceholder === undefined) {
+        if(Array.isArray(opt.type)) {
+            valuePlaceholder = opt.type.join('|')
+        } else if(opt.type == OptType.BOOL) {
+            valuePlaceholder = JSON.stringify(!resolve(opt.defaultValue))
+        } else if(opt.type === OptType.INT || opt.type === OptType.FLOAT) {
+            valuePlaceholder = '#'
+        } else {
+            valuePlaceholder = opt.name
         }
-        flags += `=${valuePlaceholder}`
     }
+    flags += `=${valuePlaceholder}`
     let desc = opt.description ?? ''
     let defaultValueText = opt.defaultValueText
     if(defaultValueText === undefined && opt.defaultValue !== undefined) {
@@ -229,6 +227,7 @@ function parseArgs(cmd:Command, argv: string[]): [any[],Record<string,any>] {
                     case OptType.STRING:
                         value = String(value)
                         break;
+                    // TODO: other types
                 }
             }
             opts[opt.key ?? opt.name] = value
@@ -244,8 +243,8 @@ function parseArgs(cmd:Command, argv: string[]): [any[],Record<string,any>] {
     return [args,opts]
 }
 
-const TRUE_VALUES = new Set(['y','yes','t','true','1'])
-const FALSE_VALUES = new Set(['n','no','f','false','0'])
+const TRUE_VALUES = new Set(['y','yes','t','true','1','on'])
+const FALSE_VALUES = new Set(['n','no','f','false','0','off'])
 
 function toBool(str: string): boolean {
     str = str.trim().toLowerCase()
@@ -266,6 +265,16 @@ function space(len: number, str?: string) {
     return len > 0 ? ' '.repeat(len) : ''
 }
 
+function getProcName(app: App) {
+    if(app.argv0 != null) {
+        return app.argv0;
+    }
+    const relPath = Path.relative(process.cwd(), process.argv[1])
+    // console.log(relPath, process.argv[1])
+    // console.log(process.argv0,process.argv[0])
+    return `${Path.basename(process.argv[0])} ${relPath.length < process.argv[1].length ? relPath : process.argv[1]}`
+}
+
 function printHelp(app: App) {
     print(Chalk.green(app.name));
     if (app.version) {
@@ -273,7 +282,7 @@ function printHelp(app: App) {
     }
     print('\n\n')
     printLn(Chalk.yellow("Usage:"))
-    printLn(`  ${app.argv0 ?? process.argv[1]} command [options] [arguments]\n`)
+    printLn(`  ${Chalk.cyan(getProcName(app))} command ${Chalk.gray(`[options] [arguments]`)}\n`)
 
     if (app.globalOptions) {
         printLn("TODO")

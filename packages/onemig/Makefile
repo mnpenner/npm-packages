@@ -1,6 +1,8 @@
 MAKEFLAGS += --no-builtin-rules
 .SUFFIXES:
 
+dev: node_modules/.yarn-integrity
+	yarn build -w
 
 test: node_modules/.yarn-integrity
 	yarn build && node -r source-map-support/register dist/main export -Dbusman -uroot -p=

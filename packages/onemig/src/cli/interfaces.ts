@@ -22,6 +22,12 @@ export enum OptType {
     FLOAT,
     /** A string, truncated and converted to lowercase. */
     ENUM,
+    /** File must be readable. Single dash will be converted to STDIN. */
+    INPUT_FILE,
+    /** Directory must be readable. */
+    INPUT_DIRECTORY,
+    /** File's directory must exist and be writeable. Single dash will be converted to STDOUT. */
+    OUTPUT_FILE,
 }
 
 interface ArgumentOrOptionOrFlag {

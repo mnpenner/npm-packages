@@ -6,7 +6,7 @@ import {OptType} from "./cli/interfaces";
 run({
     name: "OneMig",
     version: pkg.version,
-    argv0: pkg.name,
+    // argv0: pkg.name,
     commands: [
         {
             name: "export",
