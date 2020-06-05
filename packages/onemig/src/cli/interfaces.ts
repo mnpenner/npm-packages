@@ -1,5 +1,6 @@
 export interface Command {
     name: string
+    alias: string|string[]
     description?: string
     longDescription?: string
     flags?: Flag[]
@@ -28,6 +29,7 @@ export enum OptType {
     INPUT_DIRECTORY,
     /** File's directory must exist and be writeable. Single dash will be converted to STDOUT. */
     OUTPUT_FILE,
+    OUTPUT_DIRECTORY,
 }
 
 interface ArgumentOrOptionOrFlag {

@@ -1,7 +1,9 @@
 import Chalk from 'chalk';
 import stringWidth from 'string-width';
 import Path from 'path';
-import {App, Argument, Command, Option, OptType} from "./interfaces";
+import {App, Command, Option, OptType} from "./interfaces";
+import * as fs from "fs";
+import {Stats} from "fs";
 
 const print = process.stdout.write.bind(process.stdout)
 const printLn = console.log.bind(console)
@@ -46,8 +48,17 @@ const helpCommand: Command = {
         printLn(Chalk.yellow("Usage:"))
         print(`  ${Chalk.cyan(getProcName(app))} ${cmd.name}`)
         if(cmd.options?.length) {
-            // TODO: print all required options
-            print(Chalk.grey(' [options]'))
+            let otherOptions = 0
+            for(let opt of cmd.options) {
+                if(opt.required) {
+                    print(` ${getOptName(opt)}=${getValuePlaceholder(opt)}`)
+                } else {
+                    ++otherOptions
+                }
+            }
+            if(otherOptions) {
+                print(` ${Chalk.gray('[')}options${Chalk.gray(']')}`)
+            }
         }
         if(cmd.arguments?.length) {
             print(` ${Chalk.grey('[')}--${Chalk.grey(']')}`)
@@ -57,7 +68,7 @@ const helpCommand: Command = {
                 if(arg.repeatable) {
                     print(Chalk.grey('...'))
                 }
-                print(Chalk.grey(arg.name))
+                print(arg.name)
                 print(Chalk.grey(arg.required ? '>' : ']'))
             }
         }
@@ -97,18 +108,7 @@ function formatOption(opt: Option): [string,string] {
     }
     aliases.push(opt.name)
     let flags = aliases.map(a => Chalk.green(a.length === 1 ? `-${a}` : `--${a}`)).join(', ')
-    let valuePlaceholder = opt.valuePlaceholder
-    if(valuePlaceholder === undefined) {
-        if(Array.isArray(opt.type)) {
-            valuePlaceholder = opt.type.join('|')
-        } else if(opt.type == OptType.BOOL) {
-            valuePlaceholder = JSON.stringify(!resolve(opt.defaultValue))
-        } else if(opt.type === OptType.INT || opt.type === OptType.FLOAT) {
-            valuePlaceholder = '#'
-        } else {
-            valuePlaceholder = opt.name
-        }
-    }
+    let valuePlaceholder = getValuePlaceholder(opt)
     flags += `=${valuePlaceholder}`
     let desc = opt.description ?? ''
     let defaultValueText = opt.defaultValueText
@@ -121,6 +121,20 @@ function formatOption(opt: Option): [string,string] {
     return [flags,desc]
 }
 
+function getValuePlaceholder(opt: Option): string {
+    if(opt.valuePlaceholder !== undefined) {
+        return opt.valuePlaceholder;
+    }
+    if(Array.isArray(opt.type)) {
+        return opt.type.join('|')
+    } else if(opt.type == OptType.BOOL) {
+        return JSON.stringify(!resolve(opt.defaultValue))
+    } else if(opt.type === OptType.INT || opt.type === OptType.FLOAT) {
+        return '#'
+    } else {
+        return opt.name
+    }
+}
 
 function resolve<T>(x: any):T {
     return typeof x === 'function' ? x() : x
@@ -128,7 +142,7 @@ function resolve<T>(x: any):T {
 
 function getCommand(name: string, app: App): Command {
     const cmdName = String(name).trim().toLowerCase()
-    const cmd = app.commands.find((c:Command) => c.name === cmdName)
+    const cmd = app.commands.find((c:Command) => c.name === cmdName || includes(cmdName,c.alias))
     if (cmd === undefined) {
         throw new Error(`Command "${cmdName}" is not defined.`)
     }
@@ -156,24 +170,33 @@ export function run(app: App) {
     }
 }
 
-function parseOption(alias: string, value:any, options: Option[]): [string,any] {
 
-}
 
 const EMPTY_ARRAY = []
 
+
+function includes(needle:string,haystack:string|string[]|undefined) {
+    if(!haystack) return false
+    if(Array.isArray(haystack)) return haystack.includes(needle)
+    return needle === haystack
+}
 
 
 function parseArgs(cmd:Command, argv: string[]): [any[],Record<string,any>] {
     const args: any[] = []
     const opts: Record<string,any> = Object.create(null)
-
+    let parseFlags = true
     // TODO: initialize all repeatables to empty arrays
 
     for(let i=0; i<argv.length; ++i) {
         let arg = argv[i]
 
-        if(arg.startsWith('-')) {
+        if(arg === '--') {
+            parseFlags = false
+            continue
+        }
+
+        if(parseFlags && arg.length >= 2 && arg.startsWith('-')) {
             let name: string;
             let value: any;
             if(arg.includes('=')) {
@@ -197,7 +220,7 @@ function parseArgs(cmd:Command, argv: string[]): [any[],Record<string,any>] {
             }
             // TODO: stop interpretting as option after -- is found
 
-            const opt = cmd.options && cmd.options.find(opt => opt.name === name || (opt.alias && opt.alias.includes(name)))
+            const opt = cmd.options && cmd.options.find(opt => opt.name === name || includes(name,opt.alias))
             if(!opt) {
                 abort(`"${cmd.name}" command does not have option "${name}".`)
             }
@@ -227,7 +250,29 @@ function parseArgs(cmd:Command, argv: string[]): [any[],Record<string,any>] {
                     case OptType.STRING:
                         value = String(value)
                         break;
-                    // TODO: other types
+                    case OptType.INPUT_FILE:
+                    case OptType.INPUT_DIRECTORY:
+                        // TODO: support "-"
+                        fs.accessSync(value, fs.constants.F_OK)
+                        break;
+                    case OptType.OUTPUT_FILE:
+                        // TODO: support "-"
+                        const stat = statSync(value)
+                        if(stat) {
+                            if(!stat.isFile()) {
+                                throw new Error(`'${value}' is not a file`)
+                            }
+                            // if((stat.mode & 0x222) === 0) { // TODO: does this work?
+                            //     throw new Error(`'${value}' is not writeable`);
+                            // }
+                            fs.accessSync(value, fs.constants.W_OK)
+                        } else {
+                            fs.accessSync(Path.dirname(value), fs.constants.W_OK)
+                        }
+                        break;
+                    case OptType.OUTPUT_DIRECTORY:
+                        fs.accessSync(value, fs.constants.W_OK)
+                        break;
                 }
             }
             opts[opt.key ?? opt.name] = value
@@ -239,10 +284,14 @@ function parseArgs(cmd:Command, argv: string[]): [any[],Record<string,any>] {
 
     if(cmd.options?.length) {
         for (const opt of cmd.options) {
-            if(opt.defaultValue !== undefined) { // TODO: should we fill in undefined options?
-                const k = opt.key ?? opt.name
-                if (opts[k] === undefined) {
+            const k = opt.key ?? opt.name
+            if (opts[k] === undefined) {
+                if(opt.defaultValue !== undefined) {
                     opts[k] = resolve(opt.defaultValue)
+                } else if(opt.required) {
+                    throw new Error(`"${getOptName(opt)}" option is required`)
+                } else {
+                    // TODO: should we fill in undefined options? with `null` or `undefined`?
                 }
             }
         }
@@ -252,6 +301,18 @@ function parseArgs(cmd:Command, argv: string[]): [any[],Record<string,any>] {
     // TODO: fill flags into opts
     // TODO: copy named arguments into opts too
     return [args,opts]
+}
+
+function statSync(path: string): Stats|null {
+    try {
+        return fs.lstatSync(path)
+    } catch {
+        return null
+    }
+}
+
+function getOptName(opt: Option) {
+    return (opt.name.length > 1 ? '--' : '-') + opt.name
 }
 
 const TRUE_VALUES = new Set(['y','yes','t','true','1','on'])

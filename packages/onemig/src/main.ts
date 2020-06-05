@@ -2,12 +2,10 @@ import {run} from "./cli";
 import * as pkg from '../package.json'
 import {userInfo} from 'os';
 import {OptType} from "./cli/interfaces";
-import createConnection from "./db";
 import {ConnectionPool, sql} from "mysql3";
 import {dump} from 'js-yaml';
 import {promises as fs} from 'fs';
 import {getStruct} from "./struct";
-import {PoolConfig} from "mysql3/ConnectionPool";
 
 // TODO:  generate json schema
 //  .\node_modules\.bin/typescript-json-schema .\src\struct.ts OneMig
@@ -20,6 +18,7 @@ run({
     commands: [
         {
             name: "export",
+            alias: 'x',
             description: "Export definitions from existing database",
             async execute(opts) {
                 const t = Date.now()
@@ -32,6 +31,7 @@ run({
                     printQueries: false,
                     connectionLimit: 25,
                 })
+
 
                 const tblStream = conn.stream(sql`SELECT 
                         TABLE_NAME 'name'
@@ -75,6 +75,7 @@ run({
                     description: "The database to use.",
                     valuePlaceholder: 'db_name',
                     defaultValue: process.env.DB_NAME,
+                    required: true
                 },
                 {
                     name: 'user',
