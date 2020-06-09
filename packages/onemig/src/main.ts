@@ -6,6 +6,7 @@ import {ConnectionPool, sql} from "mysql3";
 import {dump} from 'js-yaml';
 import {promises as fs} from 'fs';
 import {getStruct} from "./struct";
+import ora from 'ora';
 
 // TODO:  generate json schema
 //  .\node_modules\.bin/typescript-json-schema .\src\struct.ts OneMig
@@ -21,6 +22,8 @@ run({
             alias: 'x',
             description: "Export definitions from existing database",
             async execute(opts) {
+                const spinner = ora().start(`Exporting ${opts.database}`); // https://github.com/sindresorhus/ora/issues/146
+
                 const t = Date.now()
                 const conn = new ConnectionPool({
                     user: opts.user,
@@ -41,16 +44,20 @@ run({
 
 
                 const tables = []
+
                 for await(const tbl of tblStream) {
+                    spinner.text = `Exporting ${tbl.name}`
                     const def = await getStruct(conn,opts.database,tbl.name)
                     tables.push(def)
                 }
                 await conn.close()
 
+
                 const elapsed = Date.now()-t
-                console.log(`Fetched database structure in ${elapsed} ms`)
+                // console.log(`Fetched database structure in ${elapsed} ms`)
 
                 await fs.writeFile(`data/tables.yaml`,dump(tables,{lineWidth:120,noCompatMode:true}))
+                spinner.succeed(`Exported ${opts.database} in ${elapsed} ms`)
 
             },
             options: [

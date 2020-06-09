@@ -28,6 +28,7 @@
         "chalk": "^4.0.0",
         "js-yaml": "^3.14.0",
         "mysql3": "^0.4.13",
+        "ora": "^4.0.4",
         "string-width": "^4.2.0"
     },
     "engines": {
