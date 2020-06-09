@@ -8,30 +8,47 @@
                 "binary",
                 "bit",
                 "blob",
+                "boolean",
                 "char",
+                "char byte",
+                "date",
+                "datetime",
+                "dec",
                 "decimal",
                 "double",
+                "double precision",
                 "enum",
+                "fixed",
                 "float",
+                "geometry",
+                "geometrycollection",
                 "int",
+                "integer",
+                "json",
+                "linestring",
                 "longblob",
                 "longtext",
                 "mediumblob",
                 "mediumint",
                 "mediumtext",
+                "multilinestring",
+                "multipoint",
+                "multipolygon",
+                "numeric",
+                "point",
+                "polygon",
+                "real",
                 "set",
                 "smallint",
                 "text",
+                "time",
+                "timestamp",
                 "tinyblob",
                 "tinyint",
                 "tinytext",
                 "varbinary",
                 "varchar",
-                "year",
-                "datetime",
-                "timestamp",
-                "date",
-                "time"
+                "year"
             ],
             "type": "string"
         },
@@ -76,6 +93,27 @@
                     "type": "boolean",
                     "title": "autoIncrement"
                 },
+                "onUpdate": {
+                    "enum": [
+                        "current_timestamp()"
+                    ],
+                    "type": "string",
+                    "title": "onUpdate"
+                },
+                "generated": {
+                    "enum": [
+                        "PERSISTENT",
+                        "STORED",
+                        "VIRTUAL"
+                    ],
+                    "type": "string",
+                    "title": "generated"
+                },
+                "genExpr": {
+                    "description": "Generation expression",
+                    "type": "string",
+                    "title": "genExpr"
+                },
                 "values": {
                     "type": "array",
                     "items": {
@@ -105,7 +143,16 @@
                         }
                     ],
                     "minItems": 2,
-                    "maxItems": 2,
+                    "additionalItems": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "number"
+                            }
+                        ]
+                    },
                     "title": "precision"
                 },
                 "length": {
@@ -119,6 +166,11 @@
                 "nullable": {
                     "type": "boolean",
                     "title": "nullable"
+                },
+                "invisible": {
+                    "description": "These columns will then not be listed in the results of a SELECT * statement, nor do they need to be assigned a value in an INSERT statement, unless INSERT explicitly mentions them by name.",
+                    "type": "boolean",
+                    "title": "invisible"
                 }
             },
             "required": [
@@ -310,6 +362,20 @@
                 "statement",
                 "timing"
             ]
+        },
+        "DbIndexMap": {
+            "$ref": "#/definitions/Record<string,DbIndex>"
+        },
+        "DbFkMap": {
+            "$ref": "#/definitions/Record<string,DbForeignKey>"
+        },
+        "Record<string,DbIndex>": {
+            "title": "Record<string,DbIndex>",
+            "type": "object"
+        },
+        "Record<string,DbForeignKey>": {
+            "title": "Record<string,DbForeignKey>",
+            "type": "object"
         }
     },
     "type": "array",

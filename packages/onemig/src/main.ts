@@ -32,7 +32,6 @@ run({
                     connectionLimit: 25,
                 })
 
-
                 const tblStream = conn.stream(sql`SELECT 
                         TABLE_NAME 'name'
                         FROM INFORMATION_SCHEMA.TABLES 
@@ -51,7 +50,7 @@ run({
                 const elapsed = Date.now()-t
                 console.log(`Fetched database structure in ${elapsed} ms`)
 
-                await fs.writeFile(`data/tables.yaml`,dump(tables))
+                await fs.writeFile(`data/tables.yaml`,dump(tables,{lineWidth:120,noCompatMode:true}))
 
             },
             options: [

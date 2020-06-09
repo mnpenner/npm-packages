@@ -1,75 +1,22 @@
 import {ConnectionPool, sql} from "mysql3";
 import {parallel, sortBy, splitValues} from "./util";
+import {DbColumn, DbColumnType, DbFkMap, DbForeignKey, DbIndex, DbIndexMap, DbTable, DbTrigger} from "./dbtypes";
 
 
 export const getDefaultStorageEngine = (conn:ConnectionPool) => conn.value(sql`select @@default_storage_engine`)
 export const getDatabaseCollation = (conn:ConnectionPool,dbName:string) => conn.value(sql`SELECT DEFAULT_COLLATION_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME=${dbName}`)
 
 
-type DbColumnType = 'enum'|'set'|'tinyint'|'smallint'|'mediumint'|'int'|'bigint'|'float'|'decimal'|'double'|'char'|'varchar'|'bit'|'binary'|'varbinary'|'year'|'tinytext'|'text'|'mediumtext'|'longtext'|'tinyblob'|'blob'|'mediumblob'|'longblob'|'datetime'|'timestamp'|'date'|'time' // TODO: check this against mariadb docs
-
-type DbIndexType = 'PRIMARY'|'BTREE'|'UNIQUE'|'INDEX'
-
-interface DbColumn {
-    name: string
-    type: DbColumnType
-    comment?: string
-    default?: string|number|'NULL'|'current_timestamp()'
-    collation?: string
-    autoIncrement?: boolean
-    values?: string[]
-    zerofill?: number|boolean
-    unsigned?: boolean
-    precision?: [number,number]
-    length?: number
-    width?: number
-    nullable?: boolean
+const TYPE_ALIASES = {
+    'boolean': 'tinyint',
+    'integer': 'int',
+    'dec': 'decimal',
+    'numeric': 'decimal',
+    'fixed': 'decimal',
+    'real': 'double',
+    'double precision': 'double',
+    'char byte': 'binary',
 }
-
-interface DbIndex {
-    name: string
-    type: DbIndexType
-    columns: string[]
-    comment?: string
-}
-
-/** https://mariadb.com/kb/en/foreign-keys/ */
-type DbReferenceOption = 'RESTRICT'|'CASCADE'|'SET NULL'|'NO ACTION'|'SET DEFAULT'
-
-interface DbForeignKey {
-    name: string
-    columns: string[]
-    refTable: string
-    refColumns: string[]
-    onDelete: DbReferenceOption
-    onUpdate: DbReferenceOption
-    refDatabase?: string
-}
-
-interface DbTableOptions {
-    engine?: string
-    comment?: string
-    collation?: string
-}
-
-interface DbTable {
-    name: string
-    options: DbTableOptions
-    columns: DbColumn[]
-    indexes: DbIndex[]
-    foreignKeys: DbForeignKey[]
-    triggers?: DbTrigger[]
-}
-
-interface DbTrigger {
-    name: string
-    timing: string
-    event: string
-    statement: string
-}
-
-type DbIndexMap = Record<string,DbIndex>
-type DbFkMap = Record<string,DbForeignKey>
 
 let defaultStorageEngine: string
 let dbCollationMap: Record<string,string> = {}
@@ -142,6 +89,7 @@ export async function getStruct(conn: ConnectionPool, dbName: string, tblName:st
 
     await parallel(
         async function fetchColumns() {
+            // https://mariadb.com/kb/en/information-schema-columns-table/
             const colStream = conn.stream(sql`
                             select 
                                 COLUMN_NAME 'name'
@@ -152,6 +100,8 @@ export async function getStruct(conn: ConnectionPool, dbName: string, tblName:st
                                 ,COLUMN_TYPE 'columnType'
                                 ,COLUMN_COMMENT 'comment'
                                 ,EXTRA 'extra'
+                                ,GENERATION_EXPRESSION 'generationExpression'
+                                #,IS_GENERATED 'isGenerated'
                                 #,NUMERIC_PRECISION 'numericPrecision'
                             from information_schema.columns 
                             where table_schema=${dbName} and table_name=${tblName} 
@@ -167,19 +117,30 @@ export async function getStruct(conn: ConnectionPool, dbName: string, tblName:st
                     colDef.comment = col.comment;
                 }
 
-                if(col.default !== null) {
+                if(col.default !== null && !(col.isNullable && col.default === 'NULL')) {
                     colDef.default = col.default;
                 }
 
                 if(col.collation !== null && col.collation !== tbl.collation) {
                     colDef.collation = col.collation;
                 }
-                
-                if(col.extra === 'auto_increment') { 
-                    // TODO: what else can go in here??
-                    // https://dev.mysql.com/doc/refman/8.0/en/columns-table.html
-                    // "The EXTRA column contains VIRTUAL GENERATED or VIRTUAL STORED for generated columns"
-                    colDef.autoIncrement = true;
+
+                if(col.extra) {
+                    if (col.extra === 'auto_increment') {
+                        colDef.autoIncrement = true;
+                    } else if(col.extra.startsWith('on update ')) {
+                        colDef.onUpdate = col.extra.slice(10)
+                    } else if(col.extra.endsWith(' GENERATED')) {
+                        colDef.generated = col.extra.slice(0,-10)
+                    } else if(col.extra === 'INVISIBLE') {
+                        colDef.invisible = true
+                    } else {
+                        console.log('EXTRA',tbl.name,col)
+                    }
+                }
+
+                if(col.generationExpression !== null) {
+                    colDef.genExpr = col.generationExpression
                 }
 
 

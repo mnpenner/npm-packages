@@ -191,7 +191,7 @@ function parseArgs(cmd:Command, argv: string[]): [any[],Record<string,any>] {
     for(let i=0; i<argv.length; ++i) {
         let arg = argv[i]
 
-        if(arg === '--') {
+        if(parseFlags && arg === '--') {
             parseFlags = false
             continue
         }
@@ -201,10 +201,10 @@ function parseArgs(cmd:Command, argv: string[]): [any[],Record<string,any>] {
             let value: any;
             if(arg.includes('=')) {
                 [arg,value] = arg.split('=',2)
-            } else if(i < argv.length - 2 && argv[i+1] === '=') {
+            } /*else if(i < argv.length - 2 && argv[i+1] === '=') {
                 value = argv[i+2]
                 i += 2
-            }
+            }*/
             if(arg.startsWith('--')) {
                 name = arg.slice(2)
             } else {

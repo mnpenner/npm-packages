@@ -1,6 +1,6 @@
 export interface Command {
     name: string
-    alias: string|string[]
+    alias?: string|string[]
     description?: string
     longDescription?: string
     flags?: Flag[]
