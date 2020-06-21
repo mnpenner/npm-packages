@@ -1169,6 +1169,16 @@ chokidar@^2.1.8:
   optionalDependencies:
     fsevents "^1.2.7"
 
+clap@../clap:
+  version "0.1.0"
+  dependencies:
+    "@types/js-yaml" "^3.12.4"
+    chalk "^4.0.0"
+    js-yaml "^3.14.0"
+    mysql3 "^0.4.13"
+    ora "^4.0.4"
+    string-width "^4.2.0"
+
 class-utils@^0.3.5:
   version "0.3.6"
   resolved "https://registry.yarnpkg.com/class-utils/-/class-utils-0.3.6.tgz#f93369ae8b9a7ce02fd41faad0ca83033190c463"
