@@ -5,6 +5,8 @@ import {App, Command, Option, OptType} from "./interfaces";
 import * as fs from "fs";
 import {Stats} from "fs";
 
+export {OptType};
+
 const print = process.stdout.write.bind(process.stdout)
 const printLn = console.log.bind(console)
 
@@ -363,7 +365,11 @@ function printHelp(app: App) {
     printLn(Chalk.yellow("Available commands:"))
     const width = Math.max(...app.commands.map(c => stringWidth(c.name)))+2
     for (const cmd of app.commands) {
-        printLn(`  ${Chalk.green(cmd.name)}${space(width,cmd.name)}${cmd.description}`)
+        print(`  ${Chalk.green(cmd.name)}`)
+        if(cmd.description) {
+            print(`${space(width,cmd.name)}${cmd.description}`)
+        }
+        printLn()
     }
 
     printLn()

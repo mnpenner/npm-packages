@@ -15,6 +15,7 @@
         "@rollup/plugin-json": "^4.0.3",
         "@rollup/plugin-node-resolve": "^8.0.0",
         "@types/node": "^12",
+        "builtin-modules": "^3.1.0",
         "cross-env": "^7.0.2",
         "dotenv": "^8.2.0",
         "rollup": "^2.12.0",
