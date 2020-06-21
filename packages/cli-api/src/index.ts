@@ -1,7 +1,7 @@
 import Chalk from 'chalk';
 import stringWidth from 'string-width';
 import Path from 'path';
-import {App, Command, Option, OptType} from "./interfaces";
+import {AnyOptType, App, Command, Option, OptType} from "./interfaces";
 import * as fs from "fs";
 import {Stats} from "fs";
 
@@ -80,7 +80,11 @@ const helpCommand: Command = {
             printLn(Chalk.yellow("Arguments:"))
             const width = Math.max(...cmd.arguments.map(a => stringWidth(a.name)))
             for(const arg of cmd.arguments) {
-                printLn('  '+Chalk.green(arg.name)+space(width+2,arg.name)+arg.description)
+                print('  '+Chalk.green(arg.name))
+                if(arg.description) {
+                    print(space(width+2,arg.name)+arg.description)
+                }
+                printLn()
             }
         }
 
@@ -133,6 +137,10 @@ function getValuePlaceholder(opt: Option): string {
         return JSON.stringify(!resolve(opt.defaultValue))
     } else if(opt.type === OptType.INT || opt.type === OptType.FLOAT) {
         return '#'
+    } else if(opt.type === OptType.INPUT_FILE || opt.type === OptType.OUTPUT_FILE) {
+        return 'FILE'
+    } else if(opt.type === OptType.INPUT_DIRECTORY || opt.type === OptType.OUTPUT_DIRECTORY) {
+        return 'DIR'
     } else {
         return opt.name
     }
@@ -160,7 +168,12 @@ export default function run(app: App) {
         printHelp(app)
     } else {
         const cmd = getCommand(process.argv[2], app)
-        const [args,opts] = parseArgs(cmd,process.argv.slice(3))
+        let args,opts;
+        try {
+            [args, opts] = parseArgs(cmd, process.argv.slice(3))
+        } catch(err) {
+            abort(String(err.message))
+        }
         Promise.resolve(cmd.execute(opts, args, app)).then(code => {
             if(code !== undefined) {
                 process.exit(code)
@@ -190,6 +203,7 @@ function parseArgs(cmd:Command, argv: string[]): [any[],Record<string,any>] {
     let parseFlags = true
     // TODO: initialize all repeatables to empty arrays
 
+    let argIdx = 0;
     for(let i=0; i<argv.length; ++i) {
         let arg = argv[i]
 
@@ -233,54 +247,25 @@ function parseArgs(cmd:Command, argv: string[]): [any[],Record<string,any>] {
                     abort(`Missing required value for option "${arg}"`)
                 }
             }
-            if(opt.type !== undefined) {
-                if(typeof opt.type === 'function') {
-                    value = opt.type(value)
-                } else switch (opt.type) {
-                    case OptType.BOOL:
-                        value = toBool(value)
-                        break;
-                    case OptType.INT:
-                        value = Math.trunc(Number(value))
-                        break;
-                    case OptType.FLOAT:
-                        value = Number(value);
-                        break;
-                    case OptType.ENUM:
-                        value = String(value).trim().toLowerCase();
-                        break;
-                    case OptType.STRING:
-                        value = String(value)
-                        break;
-                    case OptType.INPUT_FILE:
-                    case OptType.INPUT_DIRECTORY:
-                        // TODO: support "-"
-                        fs.accessSync(value, fs.constants.F_OK)
-                        break;
-                    case OptType.OUTPUT_FILE:
-                        // TODO: support "-"
-                        const stat = statSync(value)
-                        if(stat) {
-                            if(!stat.isFile()) {
-                                throw new Error(`'${value}' is not a file`)
-                            }
-                            // if((stat.mode & 0x222) === 0) { // TODO: does this work?
-                            //     throw new Error(`'${value}' is not writeable`);
-                            // }
-                            fs.accessSync(value, fs.constants.W_OK)
-                        } else {
-                            fs.accessSync(Path.dirname(value), fs.constants.W_OK)
-                        }
-                        break;
-                    case OptType.OUTPUT_DIRECTORY:
-                        fs.accessSync(value, fs.constants.W_OK)
-                        break;
-                }
+            if(opt.type != null) {
+                value = coerceType(value, opt.type)
             }
             opts[opt.key ?? opt.name] = value
         } else {
             // TODO: examine cmd.arguments
-            args.push(arg);
+            let value: any = arg;
+
+            if(cmd.arguments && cmd.arguments.length > argIdx) {
+                const cmdArg = cmd.arguments[argIdx]
+                if(cmdArg.type != null) {
+                    value = coerceType(value, cmdArg.type)
+                }
+                if(cmdArg.key) {
+                    opts[cmdArg.key] = value
+                }
+            }
+            args.push(value);
+            ++argIdx
         }
     }
 
@@ -299,10 +284,75 @@ function parseArgs(cmd:Command, argv: string[]): [any[],Record<string,any>] {
         }
     }
 
+    if(cmd.arguments?.length) {
+        for(let i=0; i<cmd.arguments.length; ++i) {
+            if(cmd.arguments[i].required && argIdx <= i) {
+                throw new Error(`"${cmd.arguments[i].name}" argument is required`)
+            }
+        }
+    }
+
     // TODO: fill global options into opts
     // TODO: fill flags into opts
     // TODO: copy named arguments into opts too
     return [args,opts]
+}
+
+function coerceType(value: string, type: AnyOptType) {
+    if(Array.isArray(type)) {
+        // TODO: search for closest match of value in type or throw error
+        return String(value).trim().toLowerCase()
+    }
+    switch (type) {
+        case OptType.BOOL:
+            return toBool(value)
+        case OptType.INT:
+            return Math.trunc(Number(value))
+        case OptType.FLOAT:
+            return Number(value);
+        case OptType.ENUM:
+            return String(value).trim().toLowerCase();
+        case OptType.STRING:
+            return String(value)
+        case OptType.INPUT_FILE: {
+            const fullPath = Path.resolve(value)
+            const stat = statSync(fullPath)
+            if(!stat) {
+                throw new Error(`File ${Chalk.underline(fullPath)} does not exist`)
+            }
+            if (!stat.isFile()) {
+                throw new Error(`${Chalk.underline(fullPath)} is not a file`)
+            }
+            try {
+                fs.accessSync(value, fs.constants.R_OK)
+            } catch(err) {
+                throw new Error(`${Chalk.underline(fullPath)} is not readable`)
+            }
+        } break
+        case OptType.INPUT_DIRECTORY:
+            // TODO: support "-"
+            fs.accessSync(value, fs.constants.X_OK)
+            break
+        case OptType.OUTPUT_FILE: {
+            // TODO: support "-"
+            const stat = statSync(value)
+            if (stat) {
+                if (!stat.isFile()) {
+                    throw new Error(`'${value}' is not a file`)
+                }
+                // if((stat.mode & 0x222) === 0) { // TODO: does this work?
+                //     throw new Error(`'${value}' is not writeable`);
+                // }
+                fs.accessSync(value, fs.constants.W_OK)
+            } else {
+                fs.accessSync(Path.dirname(value), fs.constants.W_OK)
+            }
+        } break
+        case OptType.OUTPUT_DIRECTORY:
+            fs.accessSync(value, fs.constants.W_OK)
+            break
+    }
+    return value
 }
 
 function statSync(path: string): Stats|null {

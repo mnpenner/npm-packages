@@ -44,15 +44,17 @@ interface ArgumentOrOptionOrFlag {
 
 }
 
-interface ArgumentOrOption extends ArgumentOrOptionOrFlag {
+export type AnyOptType = OptType | string[] // | ((value:string)=>any)
+
+export interface ArgumentOrOption extends ArgumentOrOptionOrFlag {
     /** Type to coerce the option value to. */
-    type?: OptType|((value:string)=>any)|string[]
-    /** Placeholder value to use in help. */
-    valuePlaceholder?: string
+    type?: AnyOptType
     /** Option is repeatable by specifying the flag again. Value will be an array. */
     repeatable?: boolean
     /** Option is required. */
     required?: boolean
+    /** Property name to use in `execute()` options. */
+    key?: string
 }
 
 /** Boolean flag. */
@@ -68,7 +70,8 @@ export interface Argument extends ArgumentOrOption {
 /** Option with value. */
 export interface Option extends ArgumentOrOption {
     alias?: string|string[]
-    key?: string
+    /** Placeholder value to use in help. */
+    valuePlaceholder?: string
 }
 
 export interface App {
