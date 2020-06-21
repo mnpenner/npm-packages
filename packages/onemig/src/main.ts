@@ -1,7 +1,6 @@
-import {run} from "./cli";
+import run, {OptType} from "clap";
 import * as pkg from '../package.json'
 import {userInfo} from 'os';
-import {OptType} from "./cli/interfaces";
 import {ConnectionPool, sql} from "mysql3";
 import {dump} from 'js-yaml';
 import {promises as fs} from 'fs';
