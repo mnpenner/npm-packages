@@ -6,6 +6,7 @@ import * as fs from "fs";
 import {Stats} from "fs";
 
 export {OptType};
+export type {Command,App,Option}
 
 const print = process.stdout.write.bind(process.stdout)
 const printLn = console.log.bind(console)
@@ -175,7 +176,7 @@ export default function run(app: App) {
             abort(String(err.message))
         }
         Promise.resolve(cmd.execute(opts, args, app)).then(code => {
-            if(code !== undefined) {
+            if(code != null) {
                 process.exit(code)
             }
         }, err => {
