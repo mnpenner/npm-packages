@@ -35,6 +35,8 @@ export enum OptType {
 interface ArgumentOrOptionOrFlag {
     /** Name of the option to display in help. */
     name: string
+    /** Alternative name for this option. */
+    alias?: string|string[]
     /** Description of the option. */
     description?: string
     /** Default value if not provided. */
@@ -69,7 +71,6 @@ export interface Argument extends ArgumentOrOption {
 
 /** Option with value. */
 export interface Option extends ArgumentOrOption {
-    alias?: string|string[]
     /** Placeholder value to use in help. */
     valuePlaceholder?: string
 }

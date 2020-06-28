@@ -50,11 +50,17 @@ const helpCommand: Command = {
 
         printLn(Chalk.yellow("Usage:"))
         print(`  ${Chalk.cyan(getProcName(app))} ${cmd.name}`)
-        if(cmd.options?.length) {
+
+        const allOptions = getOptions(cmd)
+
+        if(allOptions.length) {
             let otherOptions = 0
-            for(let opt of cmd.options) {
+            for(let opt of allOptions) {
                 if(opt.required) {
-                    print(` ${getOptName(opt)}=${getValuePlaceholder(opt)}`)
+                    print(` ${getOptName(opt)}`)
+                    if(opt.type !== OptType.BOOL) {
+                        print(`=${getValuePlaceholder(opt)}`)
+                    }
                 } else {
                     ++otherOptions
                 }
@@ -75,10 +81,10 @@ const helpCommand: Command = {
                 print(Chalk.grey(arg.required ? '>' : ']'))
             }
         }
-        printLn('\n')
+        printLn()
 
         if(cmd.arguments?.length) {
-            printLn(Chalk.yellow("Arguments:"))
+            printLn(Chalk.yellow("\nArguments:"))
             const width = Math.max(...cmd.arguments.map(a => stringWidth(a.name)))
             for(const arg of cmd.arguments) {
                 print('  '+Chalk.green(arg.name))
@@ -89,19 +95,28 @@ const helpCommand: Command = {
             }
         }
 
-        if(cmd.options?.length) {
-            printLn(Chalk.yellow("Options:"))
-            const lines = cmd.options.map(formatOption)
+        if(allOptions.length) {
+            printLn(Chalk.yellow("\nOptions:"))
+            const lines = allOptions.map(formatOption)
             const width = Math.max(...lines.map(l => stringWidth(l[0])))
             for(const line of lines) {
                 printLn('  '+line[0]+space(width+2,line[0])+line[1])
             }
         }
+        if(cmd.alias) {
+            const alaises = toArray(cmd.alias)
+            printLn(Chalk.yellow(`\nAlias${alaises.length !== 1 ? 'es' : ''}: `)+toArray(cmd.alias).join(Chalk.gray(', ')))
+        }
         if(cmd.longDescription) {
-            printLn(Chalk.yellow("Description:"))
+            printLn(Chalk.yellow("\nDescription:"))
             printLn('  '+cmd.longDescription)
         }
     }
+}
+
+function toArray<T>(x: T|T[]): T[] {
+    if(!x) return EMPTY_ARRAY
+    return Array.isArray(x) ? x : [x]
 }
 
 function formatOption(opt: Option): [string,string] {
@@ -116,7 +131,9 @@ function formatOption(opt: Option): [string,string] {
     aliases.push(opt.name)
     let flags = aliases.map(a => Chalk.green(a.length === 1 ? `-${a}` : `--${a}`)).join(', ')
     let valuePlaceholder = getValuePlaceholder(opt)
-    flags += `=${valuePlaceholder}`
+    if(opt.type !== OptType.BOOL) {
+        flags += `=${valuePlaceholder}`
+    }
     let desc = opt.description ?? ''
     let defaultValueText = opt.defaultValueText
     if(defaultValueText === undefined && opt.defaultValue !== undefined) {
@@ -188,7 +205,7 @@ export default function run(app: App) {
 
 
 
-const EMPTY_ARRAY = []
+const EMPTY_ARRAY: any[] = []
 
 
 function includes(needle:string,haystack:string|string[]|undefined) {
@@ -198,11 +215,24 @@ function includes(needle:string,haystack:string|string[]|undefined) {
 }
 
 
+function getOptions(cmd: Command): Option[] {
+    return [
+        ...toArray(cmd.options),
+        ...toArray(cmd.flags).map(f => ({
+            ...f,
+            type: OptType.BOOL,
+
+        }))
+    ] as Option[]
+}
+
 function parseArgs(cmd:Command, argv: string[]): [any[],Record<string,any>] {
     const args: any[] = []
     const opts: Record<string,any> = Object.create(null)
     let parseFlags = true
     // TODO: initialize all repeatables to empty arrays
+
+    const allOptions = getOptions(cmd)
 
     let argIdx = 0;
     for(let i=0; i<argv.length; ++i) {
@@ -237,13 +267,15 @@ function parseArgs(cmd:Command, argv: string[]): [any[],Record<string,any>] {
             }
             // TODO: stop interpretting as option after -- is found
 
-            const opt = cmd.options && cmd.options.find(opt => opt.name === name || includes(name,opt.alias))
+            const opt = allOptions.find(opt => opt.name === name || includes(name,opt.alias))
             if(!opt) {
                 abort(`"${cmd.name}" command does not have option "${name}".`)
             }
             if(value === undefined) {
                 if(i < argv.length - 1) {
                     value = argv[++i]
+                } else if(opt.type == OptType.BOOL) {
+                    value = !resolve(opt.defaultValue)
                 } else {
                     abort(`Missing required value for option "${arg}"`)
                 }
@@ -270,8 +302,8 @@ function parseArgs(cmd:Command, argv: string[]): [any[],Record<string,any>] {
         }
     }
 
-    if(cmd.options?.length) {
-        for (const opt of cmd.options) {
+    if(allOptions.length) {
+        for (const opt of allOptions) {
             const k = opt.key ?? opt.name
             if (opts[k] === undefined) {
                 if(opt.defaultValue !== undefined) {
@@ -371,8 +403,9 @@ function getOptName(opt: Option) {
 const TRUE_VALUES = new Set(['y','yes','t','true','1','on'])
 const FALSE_VALUES = new Set(['n','no','f','false','0','off'])
 
-function toBool(str: string): boolean {
-    str = str.trim().toLowerCase()
+function toBool(str: string|boolean): boolean {
+    if(typeof str === 'boolean') return str
+    str = String(str).trim().toLowerCase()
     if(TRUE_VALUES.has(str)) {
         return true
     }
