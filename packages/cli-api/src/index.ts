@@ -83,6 +83,15 @@ const helpCommand: Command = {
         }
         printLn()
 
+        if(allOptions.length) {
+            printLn(Chalk.yellow("\nOptions:"))
+            const lines = allOptions.map(formatOption)
+            const width = Math.max(...lines.map(l => stringWidth(l[0])))
+            for(const line of lines) {
+                printLn('  '+line[0]+space(width+2,line[0])+line[1])
+            }
+        }
+
         if(cmd.arguments?.length) {
             printLn(Chalk.yellow("\nArguments:"))
             const width = Math.max(...cmd.arguments.map(a => stringWidth(a.name)))
@@ -95,14 +104,6 @@ const helpCommand: Command = {
             }
         }
 
-        if(allOptions.length) {
-            printLn(Chalk.yellow("\nOptions:"))
-            const lines = allOptions.map(formatOption)
-            const width = Math.max(...lines.map(l => stringWidth(l[0])))
-            for(const line of lines) {
-                printLn('  '+line[0]+space(width+2,line[0])+line[1])
-            }
-        }
         if(cmd.alias) {
             const alaises = toArray(cmd.alias)
             printLn(Chalk.yellow(`\nAlias${alaises.length !== 1 ? 'es' : ''}: `)+toArray(cmd.alias).join(Chalk.gray(', ')))
@@ -265,7 +266,6 @@ function parseArgs(cmd:Command, argv: string[]): [any[],Record<string,any>] {
                 name = arg.slice(1)
                 // TODO: parse multiple single-char flags
             }
-            // TODO: stop interpretting as option after -- is found
 
             const opt = allOptions.find(opt => opt.name === name || includes(name,opt.alias))
             if(!opt) {
