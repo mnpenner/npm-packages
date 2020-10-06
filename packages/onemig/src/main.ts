@@ -6,10 +6,16 @@ import {dump} from 'js-yaml';
 import {promises as fs} from 'fs';
 import {getStruct} from "./struct";
 import ora from 'ora';
+import highlight, {Theme} from 'cli-highlight';
 
 // TODO:  generate json schema
 //  .\node_modules\.bin/typescript-json-schema .\src\struct.ts OneMig
 //  ./node_modules/.bin/ts-json-schema-generator -p .\src\struct.ts
+
+
+const HIGHLIGHT_THEME: Theme = {
+    // TODO
+}
 
 run({
     name: "OneMig",
@@ -20,7 +26,7 @@ run({
             name: "export",
             alias: 'x',
             description: "Export definitions from existing database",
-            async execute(opts) {
+            async execute(opts, args) {
                 const spinner = ora().start(`Exporting ${opts.database}`); // https://github.com/sindresorhus/ora/issues/146
 
                 const t = Date.now()
@@ -55,9 +61,15 @@ run({
                 const elapsed = Date.now()-t
                 // console.log(`Fetched database structure in ${elapsed} ms`)
 
-                await fs.writeFile(`data/tables.yaml`,dump(tables,{lineWidth:120,noCompatMode:true}))
-                spinner.succeed(`Exported ${opts.database} in ${elapsed} ms`)
+                const yaml = dump(tables, {lineWidth: 120, noCompatMode: true})
 
+                if(args.length) {
+                    await fs.writeFile(args[0], yaml)
+                    spinner.succeed(`Exported ${opts.database} in ${elapsed} ms`)
+                } else {
+                    spinner.stop()
+                    console.log(highlight(yaml, {language: 'yaml', ignoreIllegals: true, theme: HIGHLIGHT_THEME}));
+                }
             },
             options: [
                 {
@@ -96,6 +108,14 @@ run({
                     defaultValue: process.env.DB_PASSWORD,
                     defaultValueText: process.env.DB_PASSWORD !== undefined ? '$DB_PASSWORD' : '(no pasword)',
                 },
+            ],
+            arguments: [
+                {
+                    name: 'outfile',
+                    type: OptType.OUTPUT_FILE,
+                    required: false,
+                    description: "YAML database schema to write",
+                }
             ]
         }
     ]
