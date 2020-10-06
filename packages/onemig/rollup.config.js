@@ -1,4 +1,4 @@
-import babel from 'rollup-plugin-babel';
+import babel from '@rollup/plugin-babel';
 import nodeResolve from '@rollup/plugin-node-resolve';
 import nodeExternals from 'rollup-plugin-node-externals'
 import * as tsconfig from './tsconfig.json';
@@ -21,12 +21,14 @@ export default {
         }),
         json(),
         babel({
-            exclude: 'node_modules/**',
+            include: 'src/**',
             extensions,
             comments: false,
+            babelHelpers: 'bundled', // https://github.com/rollup/plugins/tree/master/packages/babel#babelhelpers
         }),
     ],
     output: {
+        banner: '#!/usr/bin/env node',
         dir: 'dist',
         format: 'cjs',
         sourcemap: true,
