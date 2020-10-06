@@ -1,7 +1,8 @@
 import Chalk from 'chalk';
 import stringWidth from 'string-width';
 import Path from 'path';
-import {AnyOptType, App, Command, Option, OptType} from "./interfaces";
+import type {AnyOptType, App, Command, Option} from "./interfaces";
+import {OptType} from './interfaces'
 import * as fs from "fs";
 import {Stats} from "fs";
 
@@ -10,7 +11,6 @@ export type {Command,App,Option}
 
 const print = process.stdout.write.bind(process.stdout)
 const printLn = console.log.bind(console)
-
 
 function blockError(str: string) {
     const lines = str.split('\n')

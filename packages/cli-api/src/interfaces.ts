@@ -43,7 +43,8 @@ interface ArgumentOrOptionOrFlag {
     defaultValue?: any|((value:string)=>any)
     /** Default value to display in help. */
     defaultValueText?: string
-
+    /** Property name to use in `execute()` options. */
+    key?: string
 }
 
 export type AnyOptType = OptType | string[] // | ((value:string)=>any)
@@ -55,8 +56,6 @@ export interface ArgumentOrOption extends ArgumentOrOptionOrFlag {
     repeatable?: boolean
     /** Option is required. */
     required?: boolean
-    /** Property name to use in `execute()` options. */
-    key?: string
 }
 
 /** Boolean flag. */
