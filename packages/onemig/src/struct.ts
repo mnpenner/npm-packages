@@ -309,7 +309,7 @@ export async function getStruct(conn: ConnectionPool, dbName: string, tblName:st
                         idxDef.type = 'PRIMARY';
                     } else if(idx.type !== 'BTREE') {
                         idxDef.type = idx.type;
-                    } else if(idx.nonUnique === 0) {
+                    } else if(!idx.nonUnique) {
                         idxDef.type = 'UNIQUE';
                     } else {
                         idxDef.type = 'INDEX';

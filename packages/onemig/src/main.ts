@@ -1,6 +1,7 @@
 import run from "clap";
 import * as pkg from '../package.json'
 import exportCommand from './commands/export'
+import sqlCommand from './commands/sql'
 
 // TODO:  generate json schema
 //  .\node_modules\.bin/typescript-json-schema .\src\struct.ts OneMig
@@ -12,5 +13,6 @@ run({
     argv0: pkg.name,
     commands: [
         exportCommand,
+        sqlCommand,
     ]
 })
