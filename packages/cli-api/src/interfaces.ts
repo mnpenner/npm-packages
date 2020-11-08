@@ -59,7 +59,7 @@ export interface ArgumentOrOption extends ArgumentOrOptionOrFlag {
 }
 
 /** Boolean flag. */
-export interface Flag extends ArgumentOrOptionOrFlag {
+export interface Flag extends ArgumentOrOptionOrFlag,OptionOrFlag {
 
 }
 
@@ -68,8 +68,12 @@ export interface Argument extends ArgumentOrOption {
 
 }
 
+interface OptionOrFlag {
+    valueNotRequired?: boolean
+}
+
 /** Option with value. */
-export interface Option extends ArgumentOrOption {
+export interface Option extends ArgumentOrOption,OptionOrFlag {
     /** Placeholder value to use in help. */
     valuePlaceholder?: string
 }

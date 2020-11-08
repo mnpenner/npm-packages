@@ -221,6 +221,7 @@ function getOptions(cmd: Command): Option[] {
         ...toArray(cmd.options),
         ...toArray(cmd.flags).map(f => ({
             ...f,
+            valueNotRequired: true,
             type: OptType.BOOL,
 
         }))
@@ -272,10 +273,10 @@ function parseArgs(cmd:Command, argv: string[]): [any[],Record<string,any>] {
                 abort(`"${cmd.name}" command does not have option "${name}".`)
             }
             if(value === undefined) {
-                if(i < argv.length - 1) {
-                    value = argv[++i]
-                } else if(opt.type == OptType.BOOL) {
+                if(opt.valueNotRequired) {
                     value = !resolve(opt.defaultValue)
+                } else if(i < argv.length - 1) {
+                    value = argv[++i]
                 } else {
                     abort(`Missing required value for option "${arg}"`)
                 }

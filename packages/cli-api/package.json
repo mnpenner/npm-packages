@@ -41,6 +41,7 @@
         "tsdecls": "tsc --emitDeclarationOnly",
         "lint": "tsc --noEmit",
         "clean": "rm -rf dist yarn-error.log",
-        "build": "cross-env BABEL_ENV=production rollup -c"
+        "build": "cross-env BABEL_ENV=production rollup -c",
+        "dev": "cross-env BABEL_ENV=development rollup -cw"
     }
 }
