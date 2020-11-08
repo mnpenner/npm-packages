@@ -1,3 +1,14 @@
+import highlight from "cli-highlight";
+import type {SqlFrag} from 'mysql3'
+import {isFrag} from 'mysql3'
+
+export function printSql(sql: string|SqlFrag) {
+    if(isFrag(sql)) {
+        sql = sql.toSqlString()
+    }
+    console.log(highlight(sql, {language: 'sql', ignoreIllegals: true}));
+}
+
 function pick<T, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
     // https://stackoverflow.com/a/47232883/65387
     const ret: any = {};

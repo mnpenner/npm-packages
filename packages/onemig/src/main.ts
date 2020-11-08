@@ -2,6 +2,7 @@ import run from "clap";
 import * as pkg from '../package.json'
 import exportCommand from './commands/export'
 import exportDataCommand from './commands/export-data'
+import importDataCommand from './commands/import-data'
 import sqlCommand from './commands/sql'
 
 // TODO:  generate json schema
@@ -15,6 +16,7 @@ run({
     commands: [
         exportCommand,
         exportDataCommand,
+        importDataCommand,
         sqlCommand,
     ]
 })

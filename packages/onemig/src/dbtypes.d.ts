@@ -1,25 +1,74 @@
 // https://app.quicktype.io?share=IVnlXO9ffmwcLE82kGRz
 
-type DbColumnType =
+export enum DbColumnType {
     // Numeric Types
-    'boolean'|
-    'tinyint'|'smallint'|'mediumint'|'int'|'integer'|'bigint'|
-    'decimal'|'dec'|'numeric'|'fixed'|
-    'float'|'double'|'real'|'double precision'|
-    'bit'|
+    BOOLEAN = 'boolean',
+    TINYINT = 'tinyint',
+    SMALLINT = 'smallint',
+    MEDIUMINT = 'mediumint',
+    INT = 'int',
+    INTEGER = 'integer',
+    BIGINT = 'bigint',
+
+    DECIMAL = 'decimal',
+    DEC = 'dec',
+    NUMERIC = 'numeric',
+    FIXED = 'fixed',
+
+    FLOAT = 'float',
+    DOUBLE = 'double',
+    REAL = 'real',
+    DOUBLE_PRECISION = 'double precision',
+
+    BIT = 'bit',
+
     // String Types
-    'char'|'varchar'|'binary'|'char byte'|'varbinary'|
-    'tinyblob'|'blob'|'mediumblob'|'longblob'|
-    'tinytext'|'text'|'mediumtext'|'longtext'|
-    'json'|
-    'enum'|'set'|
+    CHAR = 'char',
+    VARCHAR = 'varchar',
+    BINARY = 'binary',
+    CHAR_BYTE = 'char byte',
+    VARBINARY = 'varbinary',
+
+    TINYBLOB = 'tinyblob',
+    BLOB = 'blob',
+    MEDIUMBLOB = 'mediumblob',
+    LONGBLOB = 'longblob',
+
+    TINYTEXT = 'tinytext',
+    TEXT = 'text',
+    MEDIUMTEXT = 'mediumtext',
+    LONGTEXT = 'longtext',
+
+    JSON = 'json',
+
+    ENUM = 'enum',
+    SET = 'set',
+
     // Date and Time
-    'date'|'time'|'datetime'|'timestamp'|'year'|
+    DATE = 'date',
+    TIME = 'time',
+    DATETIME = 'datetime',
+    TIMESTAMP = 'timestamp',
+    YEAR = 'year',
+
     // Geometry
-    'point'|'linestring'|'polygon'|'multipoint'|'multilinestring'|'multipolygon'|'geometrycollection'|'geometry';
+    POINT = 'point',
+    LINESTRING = 'linestring',
+    POLYGON = 'polygon',
+    MULTIPOINT = 'multipoint',
+    MULTILINESTRING = 'multilinestring',
+    MULTIPOLYGON = 'multipolygon',
+    GEOMETRYCOLLECTION = 'geometrycollection',
+    GEOMETRY = 'geometry',
+}
 
 
-type DbIndexType = 'PRIMARY' | 'BTREE' | 'UNIQUE' | 'INDEX'
+export enum DbIndexType {
+    PRIMARY = 'PRIMARY',
+    BTREE = 'BTREE',
+    UNIQUE = 'UNIQUE',
+    INDEX = 'INDEX'
+}
 
 export interface DbColumn {
     name: string
