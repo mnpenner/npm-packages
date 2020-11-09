@@ -32,7 +32,7 @@
         "cli-highlight": "^2.1.4",
         "csv-parse": "^4.14.0",
         "js-yaml": "^3.14.0",
-        "mysql3": "^0.4.13",
+        "mysql3": "^0.4.16",
         "ora": "^4.0.4",
         "string-width": "^4.2.0"
     },

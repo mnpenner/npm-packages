@@ -12,7 +12,7 @@ const cmd: Command = {
     description: "Convert YAML schema back to MySQL",
     async execute(opts, args) {
         const schemaYaml = await fs.readFile(args[0],{encoding:'utf8'})
-        const schema = yaml.safeLoad(schemaYaml)
+        const schema = yaml.safeLoadAll(schemaYaml)
 
         const lines = [];
 
@@ -71,21 +71,38 @@ function getType(col: DbColumn): string {
     if(col.length) {
         sb.push(`(${col.length})`)
     }
-    if(col.values) {
-        sb.push('('+col.values.map(sql.escapeString).join(',')+')')
+    if(col.fracDigits) {
+        sb.push(`(${col.fracDigits})`)
     }
-
-    if(col.unsigned) {
+    if(col.precision) {
+        sb.push(`(${col.precision.join(',')})`)
+    }
+    if (col.unsigned) {
         sb.push('unsigned')
     }
-    if(col.autoIncrement) {
-        sb.push('auto_increment')
+    if(col.generated || col.genExpr) {
+        if(!col.generated || !col.genExpr) throw new Error("Both `generated` and `genExpr` are required")
+        sb.push(`GENERATED ALWAYS AS (${col.genExpr})`,col.generated)
+    } else {
+        // TODO: do all of these belong in else?
+        if (col.values) {
+            sb.push('(' + col.values.map(sql.escapeString).join(',') + ')')
+        }
+        if (col.autoIncrement) {
+            sb.push('auto_increment')
+        }
+        if (col.collation) {
+            sb.push('collate', col.collation)
+        }
+        if (!col.nullable) {
+            sb.push('not null')
+        }
+        if(col.default !== undefined) {
+            sb.push('DEFAULT',String(col.default))
+        }
     }
-    if(col.collation) {
-        sb.push('collate',col.collation)
-    }
-    if(!col.nullable) {
-        sb.push('not null')
+    if(col.comment) {
+        sb.push('COMMENT',sql.escapeString(col.comment))
     }
     return sb.join(' ')
 }

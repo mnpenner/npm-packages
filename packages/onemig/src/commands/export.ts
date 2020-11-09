@@ -47,7 +47,7 @@ const cmd: Command = {
         const elapsed = Date.now()-t
         // console.log(`Fetched database structure in ${elapsed} ms`)
 
-        const yaml = dump(tables, {lineWidth: 120, noCompatMode: true})
+        const yaml =  tables.map(t => dump(t, {lineWidth: 120, noCompatMode: true})).join('---\n')
 
         if(args.length) {
             await fs.writeFile(args[0], yaml)

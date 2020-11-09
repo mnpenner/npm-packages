@@ -21,6 +21,12 @@ const TYPE_ALIASES = {
 let defaultStorageEngine: string
 let dbCollationMap: Record<string,string> = {}
 
+export async function getColumns(conn: ConnectionPool, dbName: string, tblName:string): Promise<Record<string,Omit<DbColumn,'name'>>> {
+    const struct = await getStruct(conn,dbName,tblName)
+    if(!struct) throw new Error(`Could not get definition for table ${tblName}`)
+    return Object.fromEntries(struct.columns.map(({name,...def}) => [name,def]))
+}
+
 export async function getStruct(conn: ConnectionPool, dbName: string, tblName:string) {
     const tbl = await conn.row(sql`SELECT 
         TABLE_NAME 'name'
@@ -260,6 +266,23 @@ export async function getStruct(conn: ConnectionPool, dbName: string, tblName:st
                             colDef.width = parseInt(width, 10);
                         }
                         break;
+                    case 'datetime':
+                    case 'timestamp': {
+                        const [match, type, fracStr] = /^(\w+)(?:\((\d+)\))?$/.exec(col.columnType)!;
+                        if(!match) {
+                            throw new Error(`Unexpected ${col.dataType} format: ${col.columnType}`);
+                        }
+                        if(type !== col.dataType) {
+                            throw new Error(`Data type (${col.dataType}) does not match column type (${type})`);
+                        }
+                        colDef.type = type as DbColumnType
+                        if(fracStr) {
+                            const digits = Number(fracStr)
+                            if(digits) {
+                                colDef.fracDigits = digits;
+                            }
+                        }
+                    } break;
                     case 'tinytext':
                     case 'text':
                     case 'mediumtext':
@@ -272,8 +295,7 @@ export async function getStruct(conn: ConnectionPool, dbName: string, tblName:st
                         if(col.dataType !== col.columnType) {
                             throw new Error(`${dbName}.${tblName}.${col.name}: "${col.dataType}" ≠ "${col.columnType}"`);
                         }
-                    }
-                        break;
+                    } break;
                 }
 
                 if(col.isNullable === 'YES') {

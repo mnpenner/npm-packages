@@ -32,7 +32,7 @@ function base64(b: Buffer): string {
     return b.toString('base64').replace(/={1,2}$/,'').replace(/[+\/]/g, x => B64_MAP[x]);
 }
 
-const NULL_STR = '\\N'
+export const NULL_STR = '\\N'
 
 function escape(obj: string|number|bigint|Buffer|null|boolean): string {
     if(obj === null) {

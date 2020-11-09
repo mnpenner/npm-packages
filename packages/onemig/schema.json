@@ -58,7 +58,8 @@
                 "BTREE",
                 "INDEX",
                 "PRIMARY",
-                "UNIQUE"
+                "UNIQUE",
+                "HASH"
             ],
             "type": "string"
         },
@@ -68,7 +69,9 @@
             "properties": {
                 "name": {
                     "type": "string",
-                    "title": "name"
+                    "title": "name",
+                    "minLength": 1,
+                    "maxLength": 64
                 },
                 "type": {
                     "$ref": "#/definitions/DbColumnType",
@@ -114,11 +117,19 @@
                     "type": "string",
                     "title": "genExpr"
                 },
+                "fracDigits": {
+                    "type": "number",
+                    "title": "Fractional seconds digits",
+                    "minimum": 0,
+                    "maximum": 6
+                },
                 "values": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     },
+                    "minItems": 1,
+                    "uniqueItems": true,
                     "title": "values"
                 },
                 "zerofill": {
@@ -126,7 +137,7 @@
                         "number",
                         "boolean"
                     ],
-                    "title": "zerofill"
+                    "title": "Zero-fill"
                 },
                 "unsigned": {
                     "type": "boolean",
@@ -143,17 +154,8 @@
                         }
                     ],
                     "minItems": 2,
-                    "additionalItems": {
-                        "anyOf": [
-                            {
-                                "type": "number"
-                            },
-                            {
-                                "type": "number"
-                            }
-                        ]
-                    },
-                    "title": "precision"
+                    "maxItems": 2,
+                    "title": "Precision"
                 },
                 "length": {
                     "type": "number",
@@ -378,9 +380,6 @@
             "type": "object"
         }
     },
-    "type": "array",
-    "items": {
-        "$ref": "#/definitions/DbTable"
-    },
-    "title": "tables"
+    "$ref": "#/definitions/DbTable",
+    "title": "OneMig database table"
 }

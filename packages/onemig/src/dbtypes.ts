@@ -67,7 +67,8 @@ export enum DbIndexType {
     PRIMARY = 'PRIMARY',
     BTREE = 'BTREE',
     UNIQUE = 'UNIQUE',
-    INDEX = 'INDEX'
+    INDEX = 'INDEX',
+    HASH = 'HASH'
 }
 
 export interface DbColumn {
@@ -89,6 +90,8 @@ export interface DbColumn {
     precision?: [number, number]
     length?: number
     width?: number
+    /** Number of fractional seconds digits, 0-6 */
+    fracDigits?: number
     nullable?: boolean
     /**
      * These columns will then not be listed in the results of a SELECT * statement, nor do they need to be assigned a value in an INSERT statement, unless INSERT explicitly mentions them by name.
