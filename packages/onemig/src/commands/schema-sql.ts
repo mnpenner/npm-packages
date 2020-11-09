@@ -7,8 +7,8 @@ import {DbColumn, DbIndex} from "../dbtypes";
 
 
 const cmd: Command = {
-    name: "sql",
-    alias: 's',
+    name: "schema-sql",
+    alias: 'ss',
     description: "Convert YAML schema back to MySQL",
     async execute(opts, args) {
         const schemaYaml = await fs.readFile(args[0],{encoding:'utf8'})
@@ -103,6 +103,9 @@ function getType(col: DbColumn): string {
     }
     if(col.comment) {
         sb.push('COMMENT',sql.escapeString(col.comment))
+    }
+    if(col.invisible) {
+        throw new Error("invisible not implemented")
     }
     return sb.join(' ')
 }

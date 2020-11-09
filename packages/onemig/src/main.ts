@@ -1,9 +1,9 @@
 import run from "clap";
 import * as pkg from '../package.json'
-import exportCommand from './commands/export'
+import exportCommand from './commands/export-schema'
 import exportDataCommand from './commands/export-data'
 import importDataCommand from './commands/import-data'
-import sqlCommand from './commands/sql'
+import sqlCommand from './commands/schema-sql'
 
 // TODO:  generate json schema
 //  .\node_modules\.bin/typescript-json-schema .\src\struct.ts OneMig

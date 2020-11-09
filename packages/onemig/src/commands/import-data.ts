@@ -13,7 +13,7 @@ import {DbColumn, DbColumnType} from "../dbtypes";
 const cmd: Command = {
     name: "import-data",
     alias: 'id',
-    description: "Export table data in CSV format",
+    description: "Import table data from CSV file",
     async execute(opts, args) {
         const table = opts.table ?? Path.parse(opts.filename).name
 
