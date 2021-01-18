@@ -10,6 +10,7 @@ module.exports = function(content) {
     const loader = this;
     loader.cacheable && loader.cacheable();
     const callback = loader.async();
+    // TODO: switch to new `jsx` format
     const sb = ["import {createElement as e} from 'react';\n",'const C=({title,desc,...props})=>'];
     let svgOpen = false;
 
