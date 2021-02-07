@@ -30,6 +30,8 @@ export enum OptType {
     /** File's directory must exist and be writeable. Single dash will be converted to STDOUT. */
     OUTPUT_FILE,
     OUTPUT_DIRECTORY,
+    /** An empty or non-existent directory. */
+    EMPTY_DIRECTORY,
 }
 
 interface ArgumentOrOptionOrFlag {

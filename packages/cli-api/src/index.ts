@@ -158,7 +158,7 @@ function getValuePlaceholder(opt: Option): string {
         return '#'
     } else if(opt.type === OptType.INPUT_FILE || opt.type === OptType.OUTPUT_FILE) {
         return 'FILE'
-    } else if(opt.type === OptType.INPUT_DIRECTORY || opt.type === OptType.OUTPUT_DIRECTORY) {
+    } else if(opt.type === OptType.INPUT_DIRECTORY || opt.type === OptType.OUTPUT_DIRECTORY || opt.type === OptType.EMPTY_DIRECTORY) {
         return 'DIR'
     } else {
         return opt.name
@@ -349,8 +349,9 @@ function coerceType(value: string, type: AnyOptType) {
         case OptType.STRING:
             return String(value)
         case OptType.INPUT_FILE: {
-            const fullPath = Path.resolve(value)
-            const stat = statSync(fullPath)
+            const file = Path.normalize(value)
+            const fullPath = Path.resolve(file)
+            const stat = statSync(file)
             if(!stat) {
                 throw new Error(`File ${Chalk.underline(fullPath)} does not exist`)
             }
@@ -358,33 +359,55 @@ function coerceType(value: string, type: AnyOptType) {
                 throw new Error(`${Chalk.underline(fullPath)} is not a file`)
             }
             try {
-                fs.accessSync(value, fs.constants.R_OK)
+                fs.accessSync(file, fs.constants.R_OK)
             } catch(err) {
                 throw new Error(`${Chalk.underline(fullPath)} is not readable`)
             }
-        } break
+            return file
+        }
         case OptType.INPUT_DIRECTORY:
             // TODO: support "-"
-            fs.accessSync(value, fs.constants.X_OK)
-            break
+            const dir = Path.normalize(value)
+            fs.accessSync(dir, fs.constants.X_OK)
+            return dir
         case OptType.OUTPUT_FILE: {
             // TODO: support "-"
-            const stat = statSync(value)
+            const file = Path.normalize(value)
+            const stat = statSync(file)
             if (stat) {
                 if (!stat.isFile()) {
-                    throw new Error(`'${value}' is not a file`)
+                    throw new Error(`'${file}' is not a file`)
                 }
                 // if((stat.mode & 0x222) === 0) { // TODO: does this work?
                 //     throw new Error(`'${value}' is not writeable`);
                 // }
-                fs.accessSync(value, fs.constants.W_OK)
+                fs.accessSync(file, fs.constants.W_OK)
             } else {
-                fs.accessSync(Path.dirname(value), fs.constants.W_OK)
+                fs.accessSync(Path.dirname(file), fs.constants.W_OK)
             }
-        } break
-        case OptType.OUTPUT_DIRECTORY:
+            return file
+        }
+        case OptType.OUTPUT_DIRECTORY: {
             fs.accessSync(value, fs.constants.W_OK)
-            break
+            return Path.normalize(value)
+        }
+        case OptType.EMPTY_DIRECTORY: {
+            const dir = Path.normalize(value)
+            let files = []
+            try {
+                files = fs.readdirSync(dir)
+            } catch(err) {
+                if(err.code === 'ENOENT') {
+                    fs.accessSync(Path.dirname(dir), fs.constants.W_OK)
+                } else {
+                    throw err;
+                }
+            }
+            if(files.length) {
+                throw new Error(`${Chalk.underline(dir)} is not empty`)
+            }
+            return dir
+        }
     }
     return value
 }
