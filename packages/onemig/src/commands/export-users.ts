@@ -13,7 +13,7 @@ import {promises as fs} from 'fs'
  * https://dev.mysql.com/doc/refman/8.0/en/grant.html
  * https://dev.mysql.com/doc/refman/8.0/en/privileges-provided.html
  */
-const GRANTS: Record<string,string> = {
+const GRANTS: Record<string, string> = {
     /** Enable use of ALTER TABLE. Levels: Global, database, table. */
     'Alter_priv': 'ALTER',
     /** Enable stored routines to be altered or dropped. Levels: Global, database, routine. */
@@ -84,6 +84,27 @@ const GRANTS: Record<string,string> = {
     'Delete_history_priv': 'DELETE HISTORY',
 }
 
+const TABLE_PRIVILEGES: Record<string,string> = {
+    Select: 'SELECT',
+    Insert: 'INSERT',
+    Update: 'UPDATE',
+    Delete: 'DELETE',
+    Create: 'CREATE',
+    Drop: 'DROP',
+    Grant: 'GRANT',
+    References: 'REFERENCES',
+    Index: 'INDEX',
+    Alter: 'ALTER',
+    'Create View': 'CREATE VIEW',
+    'Show view': 'SHOW VIEW',
+    Trigger: 'TRIGGER',
+    'Delete versioning rows': 'DELETE HISTORY',
+}
+
+function makeDbKey(x: Record<string, any>) {
+    return JSON.stringify([x.User.trimEnd(), x.Host.trimEnd()])
+}
+
 const cmd: Command = {
     name: "export-users",
     alias: 'xu',
@@ -94,11 +115,27 @@ const cmd: Command = {
         try {
             const users = await conn.query<Record<string, string>>(sql`select *
                                                                        from mysql.user`)
+
             if (!users.length) throw new Error("No users")
+            const rawDb = await conn.query<Record<string, string>>(sql`select *
+                                                                       from mysql.db`)
+            const rawTablePrivileges = await conn.query<Record<string, string>>(sql`select *
+                                                                                    from mysql.tables_priv`)
+
+            let DB_PRIVILEGES: string[] = []
+            if (rawDb.length) {
+                const {Grant_priv: __unused2, ...otherDbPriv} = rawDb[0]
+                DB_PRIVILEGES = Object.keys(otherDbPriv).filter(k => k.endsWith('_priv'))
+            }
+
+            const userDb = groupBy(rawDb, makeDbKey)
+            const allTablePrivs = groupBy(rawTablePrivileges, makeDbKey)
+
+            // console.log(userDb)
             // console.log(users)
 
-            const {Grant_priv, ...others} = users[0]
-            const PRIVILEGES = Object.keys(others).filter(k => k.endsWith('_priv'))
+            const {Grant_priv: __unused1, ...otherUserPriv} = users[0]
+            const USER_PRIVILEGES = Object.keys(otherUserPriv).filter(k => k.endsWith('_priv'))
 
             const out: any[] = []
             for (const rawUser of users) {
@@ -110,16 +147,16 @@ const cmd: Command = {
                 const privileges = []
 
 
-                for (const priv of PRIVILEGES) {
+                for (const priv of USER_PRIVILEGES) {
                     if (toBool(rawUser[priv])) {
-                        if(!GRANTS[priv]) throw new Error(`No mapping for privilege '${priv}'`)
+                        if (!GRANTS[priv]) throw new Error(`No mapping for privilege '${priv}'`)
                         privileges.push(GRANTS[priv])
                     }
                 }
 
                 if (!privileges.length) {
                     outUser.privileges = 'NONE'
-                } else if (privileges.length === PRIVILEGES.length) {
+                } else if (privileges.length === USER_PRIVILEGES.length) {
                     outUser.privileges = 'ALL'
                 } else {
                     outUser.privileges = privileges
@@ -162,13 +199,15 @@ const cmd: Command = {
                 //     ou.privileges = 'NONE'
                 // }
 
-                if(rawUser.plugin === 'mysql_native_password') {
-                    outUser.password = rawUser.authentication_string;
-                } else {
-                    outUser.auth = {
-                        plugin: rawUser.plugin,
-                        secret: rawUser.authentication_string,
-                        // passwordExpired: toBool(user.password_expired),
+                if (rawUser.authentication_string) {
+                    if (rawUser.plugin === 'mysql_native_password') {
+                        outUser.password = rawUser.authentication_string
+                    } else {
+                        outUser.auth = {
+                            plugin: rawUser.plugin,
+                            secret: rawUser.authentication_string,
+                            // passwordExpired: toBool(user.password_expired),
+                        }
                     }
                 }
                 const tls = {
@@ -184,6 +223,48 @@ const cmd: Command = {
                     outUser.isRole = true
                 }
 
+                if (rawDb.length) {
+                    const dbPerms = userDb.get(makeDbKey(rawUser))
+                    if (dbPerms) {
+                        outUser.databasePrivileges = {}
+                        for (const dbPriv of dbPerms) {
+                            const dbName = dbPriv.Db.trimEnd()
+                            const privileges: string[] = []
+                            for (const priv of DB_PRIVILEGES) {
+                                if (toBool(dbPriv[priv])) {
+                                    if (!GRANTS[priv]) throw new Error(`No mapping for privilege '${priv}'`)
+                                    privileges.push(GRANTS[priv])
+                                }
+                            }
+
+                            if (!privileges.length) {
+                                outUser.databasePrivileges[dbName] = 'NONE'
+                            } else if (privileges.length === USER_PRIVILEGES.length) {
+                                outUser.databasePrivileges[dbName] = 'ALL'
+                            } else {
+                                outUser.databasePrivileges[dbName] = privileges
+                            }
+                        }
+                    }
+                }
+
+                const tblPrivs = allTablePrivs.get(makeDbKey(rawUser))
+                if (tblPrivs) {
+                    outUser.tablePrivileges = {}
+                    for (const tblPriv of tblPrivs) {
+                        const dbName = tblPriv.Db.trimEnd()
+                        const tblName = tblPriv.Table_name.trimEnd()
+                        outUser.tablePrivileges[dbName] ??= {}
+                        outUser.tablePrivileges[dbName][tblName] = tblPriv.Table_priv.map(p => {
+                            if (TABLE_PRIVILEGES[p]) {
+                                return TABLE_PRIVILEGES[p]
+                            }
+                             throw new Error(`Unknown privilege: ${p}`)
+                        })
+                    }
+                }
+
+
                 out.push(outUser)
             }
 
@@ -196,10 +277,10 @@ const cmd: Command = {
 
             const yaml = dump(real, {lineWidth: 120, noCompatMode: true})
 
-            if(args.length) {
+            if (args.length) {
                 await fs.writeFile(args[0], yaml)
             } else {
-                console.log(highlight(yaml, {language: 'yaml', ignoreIllegals: true}));
+                console.log(highlight(yaml, {language: 'yaml', ignoreIllegals: true}))
             }
         } finally {
             conn.close()
