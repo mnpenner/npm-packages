@@ -62,6 +62,12 @@ columns:
     type: varchar
     length: 255
     nullable: true
+  - name: filepath
+    type: varchar
+    generated: VIRTUAL
+    genExpr: concat_ws('/',`path`,`filename`)
+    length: 4352
+    nullable: true
   - name: image_file_id
     type: binary
     length: 16
@@ -88,6 +94,9 @@ columns:
   - name: last_seen
     type: bigint
     comment: Last time this file was scanned
+  - name: not_found
+    type: bigint
+    nullable: true
 indexes:
   - name: PRIMARY
     type: PRIMARY
@@ -103,6 +112,14 @@ indexes:
       - path
       - filename
       - image_file_id
+  - name: image_file_id
+    type: INDEX
+    columns:
+      - image_file_id
+  - name: not_found
+    type: INDEX
+    columns:
+      - not_found
 foreignKeys: []
 triggers: []
 ---
@@ -124,7 +141,7 @@ columns:
     nullable: true
   - name: starred
     type: bigint
-    comment: 'May be promoted to album cover, shown first or larger than other images. Easily findable.'
+    comment: May be promoted to album cover, shown first or larger than other images. Easily findable.
     nullable: true
   - name: hidden
     type: bigint
@@ -167,7 +184,7 @@ columns:
   - name: date_taken_unix
     type: bigint
     generated: VIRTUAL
-    genExpr: 'unix_timestamp(convert_tz(`date_taken_local`,`date_taken_timezone`,@@global.time_zone)) * 1000'
+    genExpr: unix_timestamp(convert_tz(`date_taken_local`,`date_taken_timezone`,@@global.time_zone)) * 1000
     nullable: true
 indexes:
   - name: PRIMARY
@@ -248,7 +265,7 @@ columns:
   - name: compression_ratio
     type: float
     generated: VIRTUAL
-    genExpr: '`size` / (`width` * `height` * 3)'
+    genExpr: '`size` / (`width` * `height` * ifnull(`channels`,3 + ifnull(`has_alpha`,0)))'
     nullable: true
   - name: b2_file_id
     type: varchar
@@ -264,6 +281,38 @@ columns:
     values:
       - ORIGINAL
       - RESIZED
+  - name: image_set_id
+    type: binary
+    length: 16
+    nullable: true
+  - name: color_space
+    type: varchar
+    collation: ascii_general_ci
+    length: 100
+    nullable: true
+  - name: has_alpha
+    type: tinyint
+    nullable: true
+  - name: chroma_subsampling
+    type: varchar
+    collation: ascii_general_ci
+    length: 20
+    nullable: true
+  - name: color_depth
+    type: varchar
+    collation: ascii_general_ci
+    length: 20
+    nullable: true
+  - name: channels
+    type: tinyint
+    nullable: true
+  - name: is_progressive
+    type: tinyint
+    nullable: true
+  - name: output_options
+    type: longtext
+    collation: utf8mb4_bin
+    nullable: true
 indexes:
   - name: PRIMARY
     type: PRIMARY
@@ -281,6 +330,10 @@ indexes:
     type: INDEX
     columns:
       - sha1
+  - name: image_set_id
+    type: INDEX
+    columns:
+      - image_set_id
   - name: images_sha256_uidx
     type: UNIQUE
     columns:
@@ -296,25 +349,34 @@ indexes:
 foreignKeys: []
 triggers: []
 ---
-name: users
+name: image_sets
 options: {}
 columns:
   - name: id
     type: binary
     length: 16
-  - name: name
-    type: varchar
-    length: 255
+  - name: fingerprint
+    type: varbinary
+    length: 64
+    nullable: true
+  - name: count
+    type: int
+    default: 1
+    unsigned: true
     nullable: true
 indexes:
   - name: PRIMARY
     type: PRIMARY
     columns:
       - id
+  - name: fingerprint
+    type: UNIQUE
+    columns:
+      - fingerprint
 foreignKeys: []
 triggers: []
 ---
-name: user_auth
+name: oauth
 options: {}
 columns:
   - name: id
@@ -323,15 +385,70 @@ columns:
   - name: user_id
     type: binary
     length: 16
-    nullable: true
   - name: provider
     type: enum
+    default: '''GOOGLE'''
     values:
       - GOOGLE
-    nullable: true
   - name: auth_id
     type: varchar
-    length: 1000
+    collation: ascii_bin
+    length: 255
+indexes:
+  - name: PRIMARY
+    type: PRIMARY
+    columns:
+      - id
+  - name: oauth_pk
+    type: UNIQUE
+    columns:
+      - provider
+      - auth_id
+foreignKeys: []
+triggers: []
+---
+name: sessions
+options: {}
+columns:
+  - name: key
+    type: binary
+    length: 32
+  - name: user_id
+    type: binary
+    length: 16
+  - name: created_at
+    type: bigint
+  - name: expires_at
+    type: bigint
+  - name: last_active
+    type: bigint
+indexes:
+  - name: PRIMARY
+    type: PRIMARY
+    columns:
+      - key
+foreignKeys: []
+triggers: []
+---
+name: users
+options: {}
+columns:
+  - name: id
+    type: binary
+    length: 16
+  - name: name
+    type: varchar
+    collation: utf8mb4_unicode_520_ci
+    length: 500
+  - name: avatar_url
+    type: varchar
+    collation: ascii_bin
+    length: 4000
+    nullable: true
+  - name: locale
+    type: varchar
+    collation: ascii_general_ci
+    length: 100
     nullable: true
 indexes:
   - name: PRIMARY

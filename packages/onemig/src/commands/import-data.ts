@@ -1,4 +1,4 @@
-import {escapeId, sql} from "mysql3";
+import {sql} from "mysql3";
 import {Command, OptType} from "clap";
 import CsvWriter, {NULL_STR} from "../CsvWriter";
 import {createConnection, dbOptions} from "../db";
@@ -20,7 +20,7 @@ const cmd: Command = {
         console.log(`Importing file ${Chalk.yellow(opts.filename)} into table ${Chalk.magenta(table)}`);
 
         const startTime = Date.now()
-        const conn = createConnection(opts)
+        const conn = await createConnection(opts)
 
         const def = await getStruct(conn,opts.database,table)
         if(!def) throw new Error(`Could not get definition for table ${table}`)
@@ -35,7 +35,7 @@ const cmd: Command = {
         }))
 
         let batch = []
-        let columns;
+        let columns: string[]|undefined
         let rowCount = 0
         for await(const row of csvParser) {
             if(!columns) {
@@ -47,7 +47,7 @@ const cmd: Command = {
                 const colDef = colMap[colName];
                 if(!colDef) throw new Error(`Column ${colName} not found in table ${table}`)
                 let value = row[colName]
-                if(colDef.type === DbColumnType.BINARY) {
+                if(colDef.type === DbColumnType.BINARY || colDef.type === DbColumnType.VARBINARY) {
                     value = Buffer.from(value,'base64')
                 }
                 if(colDef.nullable && value === NULL_STR) {
@@ -65,7 +65,7 @@ const cmd: Command = {
             ++rowCount
         }
         if(batch.length) {
-            await conn.exec(sql`insert into ${sql.id(table)} (${sql.columns(columns)}) values ${sql.values(batch)}`)
+            await conn.exec(sql`insert into ${sql.id(table)} (${sql.columns(columns!)}) values ${sql.values(batch)}`)
             process.stdout.write('.')
         }
         console.log()

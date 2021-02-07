@@ -9,7 +9,7 @@ export default class CsvWriter {
         this.stream = fs.createWriteStream(filename)
     }
 
-    writeLine(line: string[]) {
+    writeLine(line: SupportedTypes[]) {
         this.stream.write(line.map(escape).join(',')+"\r\n");
     }
 
@@ -34,7 +34,9 @@ function base64(b: Buffer): string {
 
 export const NULL_STR = '\\N'
 
-function escape(obj: string|number|bigint|Buffer|null|boolean): string {
+type SupportedTypes = string|number|bigint|Buffer|null|boolean|Date
+
+function escape(obj: SupportedTypes): string {
     if(obj === null) {
         return NULL_STR
     }
@@ -58,6 +60,9 @@ function escape(obj: string|number|bigint|Buffer|null|boolean): string {
             return '"' + obj.replace(/"/g,'""') + '"'
         }
         return obj;
+    }
+    if(obj instanceof Date) {
+        return obj.toISOString().replace('T',' ').replace(/(?:\.000)?Z$/, '')
     }
     throw new Error("Cannot escape "+obj)
 }

@@ -7,6 +7,7 @@ import {userInfo} from "os";
 export function createConnection(opts: PoolConfig) {
     return createPool({
         connectionLimit: 25,
+        dateStrings: true,
         ...opts,
     })
 }

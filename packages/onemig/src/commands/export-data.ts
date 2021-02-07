@@ -1,4 +1,4 @@
-import {escapeId, sql} from "mysql3";
+import {sql} from "mysql3";
 import {Command, OptType} from "clap";
 import CsvWriter from "../CsvWriter";
 import {createConnection, dbOptions} from "../db";
@@ -14,13 +14,13 @@ const cmd: Command = {
 
 
         const startTime = Date.now()
-        const conn = createConnection(opts)
+        const conn = await createConnection(opts)
 
         let tables: string[]
         if (opts.table) {
             tables = [opts.table]
         } else if (opts.all) {
-            const result = await conn.query(sql`SELECT 
+            const result = await conn.query<{name:string}>(sql`SELECT 
                         TABLE_NAME 'name'
                         FROM INFORMATION_SCHEMA.TABLES 
                         WHERE TABLES.TABLE_SCHEMA=${opts.database} AND TABLE_TYPE='BASE TABLE'
@@ -37,7 +37,7 @@ const cmd: Command = {
             const csv = new CsvWriter(`${args[0]}/${tbl}.csv`)
             try {
                 let first = true
-                for await(const row of conn.stream(sql`select * from ${escapeId(tbl)}`)) {
+                for await(const row of conn.stream(sql`select * from ${sql.id(tbl)}`)) {
                     if (first) {
                         // TODO: find a way to write these headers even with 0 records
                         csv.writeLine(Object.keys(row))
@@ -76,6 +76,7 @@ const cmd: Command = {
             valuePlaceholder: 'table_name',
             description: "Table to export",
         },
+        // TODO: option to include or xclude generated columns
     ],
     flags: [
         {

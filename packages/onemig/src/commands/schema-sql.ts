@@ -12,7 +12,7 @@ const cmd: Command = {
     description: "Convert YAML schema back to MySQL",
     async execute(opts, args) {
         const schemaYaml = await fs.readFile(args[0],{encoding:'utf8'})
-        const schema = yaml.safeLoadAll(schemaYaml)
+        const schema = yaml.loadAll(schemaYaml)
 
         const lines = [];
 
