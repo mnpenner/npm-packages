@@ -29,7 +29,7 @@ export default {
         }),
     ],
     output: {
-        banner: '#!/usr/bin/env -S node -max-old-space-size=4096 --enable-source-maps',
+        banner: '#!/usr/bin/env -S node -max-old-space-size=12000 --enable-source-maps',
         dir: 'dist',
         format: 'cjs',
         sourcemap: true,

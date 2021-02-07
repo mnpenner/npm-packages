@@ -3,8 +3,8 @@ import {parallel, sortBy, splitValues} from "./util";
 import {DbColumn, DbColumnType, DbFkMap, DbForeignKey, DbIndex, DbIndexMap, DbTable, DbTrigger} from "./dbtypes";
 
 
-export const getDefaultStorageEngine = (conn:ConnectionPool) => conn.value(sql`select @@default_storage_engine`)
-export const getDatabaseCollation = (conn:ConnectionPool,dbName:string) => conn.value(sql`SELECT DEFAULT_COLLATION_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME=${dbName}`)
+export const getDefaultStorageEngine = (conn:ConnectionPool) => conn.value<string>(sql`select @@default_storage_engine`)
+export const getDatabaseCollation = (conn:ConnectionPool,dbName:string) => conn.value<string>(sql`SELECT DEFAULT_COLLATION_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME=${dbName}`)
 
 
 const TYPE_ALIASES = {
@@ -28,7 +28,7 @@ export async function getColumns(conn: ConnectionPool, dbName: string, tblName:s
 }
 
 export async function getStruct(conn: ConnectionPool, dbName: string, tblName:string) {
-    const tbl = await conn.row(sql`SELECT 
+    const tbl = await conn.row<{name:string,engine:string,comment:string,collation:string}>(sql`SELECT 
         TABLE_NAME 'name'
         ,ENGINE 'engine'
         ,TABLE_COMMENT 'comment'
@@ -96,7 +96,17 @@ export async function getStruct(conn: ConnectionPool, dbName: string, tblName:st
     await parallel(
         async function fetchColumns() {
             // https://mariadb.com/kb/en/information-schema-columns-table/
-            const colStream = conn.stream(sql`
+            const colStream = conn.stream<{
+                name: string,
+                default: string,
+                isNullable: string,
+                collation: string,
+                dataType: string,
+                columnType: string,
+                comment: string,
+                extra: string,
+                generationExpression: string,
+            }>(sql`
                             select 
                                 COLUMN_NAME 'name'
                                 ,COLUMN_DEFAULT 'default'
@@ -304,7 +314,14 @@ export async function getStruct(conn: ConnectionPool, dbName: string, tblName:st
             }
         },
         async function fetchIndexes() {
-            const idxStream = conn.stream(sql`SELECT 
+            const idxStream = conn.stream<{
+                name: string,
+                type: string,
+                comment: string,
+                nonUnique: string,
+                columnName: string,
+                subPart: string,
+            }>(sql`SELECT 
                                     INDEX_NAME 'name'
                                     ,INDEX_TYPE 'type'
                                     ,INDEX_COMMENT 'comment'
@@ -356,7 +373,15 @@ export async function getStruct(conn: ConnectionPool, dbName: string, tblName:st
             tblDef.indexes = sortIndexes(Object.values(idxMap));
         },
         async function fetchForeignKeys() {
-            const fkStream = conn.stream(sql`
+            const fkStream = conn.stream<{
+                constraintName: string,
+                columnName: string,
+                refDatabase: string,
+                refTable: string,
+                refColumnName: string,
+                onDelete: string,
+                onUpdate: string,
+            }>(sql`
                                 SELECT
                                   tc.CONSTRAINT_NAME 'constraintName',
                                   kcu.COLUMN_NAME 'columnName',
@@ -407,7 +432,12 @@ export async function getStruct(conn: ConnectionPool, dbName: string, tblName:st
         },
         async function fetchTriggers() {
             // dump('fetchin triggersss');
-            const triggerStream = conn.stream(sql`
+            const triggerStream = conn.stream<{
+                name: string,
+                timing: string,
+                event: string,
+                statement: string,
+            }>(sql`
                                 SELECT
                                     #TRIGGER_SCHEMA database,
                                     TRIGGER_NAME name

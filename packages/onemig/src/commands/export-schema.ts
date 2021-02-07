@@ -21,12 +21,12 @@ const cmd: Command = {
 
         const t = Date.now()
 
-        const conn = createConnection({
+        const conn = await createConnection({
             ...opts,
-            printQueries: false,
+            // printQueries: false,
         })
 
-        const tblStream = conn.stream(sql`SELECT 
+        const tblStream = conn.stream<{name:string}>(sql`SELECT 
                         TABLE_NAME 'name'
                         FROM INFORMATION_SCHEMA.TABLES 
                         WHERE TABLES.TABLE_SCHEMA=${opts.database} AND TABLE_TYPE='BASE TABLE'

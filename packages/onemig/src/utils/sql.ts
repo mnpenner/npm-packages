@@ -21,11 +21,17 @@ type Value = SingleValue|SingleValue[];
 type UnescapedId = string|[string]|[string,string]|[string,string,string];
 type Id = UnescapedId;
 
+/**
+ * @deprecated Use mysql3
+ */
 export function escapeString(value: string): string {
     return "'" + String(value).replace(CHARS_REGEX,m => CHARS_ESCAPE_MAP[m]) + "'";
 }
 
 
+/**
+ * @deprecated Use mysql3
+ */
 export function escapeId(id: Id): string {
     if(Array.isArray(id)) return id.map(escapeId).join('.');
     return '`' + String(id).replace(ID_GLOBAL_REGEXP, '``') + '`';

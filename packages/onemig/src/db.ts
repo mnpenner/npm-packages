@@ -1,12 +1,11 @@
-import {ConnectionPool} from "mysql3";
+import {createPool,PoolConfig} from "mysql3";
 import {OptType} from "clap";
 import {userInfo} from "os";
-import {PoolConfig} from "mysql3/ConnectionPool";
 
 
 
 export function createConnection(opts: PoolConfig) {
-    return new ConnectionPool({
+    return createPool({
         connectionLimit: 25,
         ...opts,
     })

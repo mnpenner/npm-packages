@@ -1,0 +1,342 @@
+name: b2_lost_files
+options: {}
+columns:
+  - name: account_id
+    type: varchar
+    length: 255
+    nullable: true
+  - name: bucket_id
+    type: varchar
+    length: 255
+    nullable: true
+  - name: file_id
+    type: varchar
+    length: 1000
+  - name: file_name
+    type: varchar
+    length: 255
+    nullable: true
+  - name: content_sha1
+    type: binary
+    length: 20
+    nullable: true
+  - name: content_length
+    type: int
+    unsigned: true
+    nullable: true
+  - name: content_type
+    type: varchar
+    length: 255
+    nullable: true
+  - name: upload_timestamp
+    type: bigint
+    nullable: true
+  - name: last_seen
+    type: bigint
+    nullable: true
+  - name: found
+    type: bit
+    default: b'0'
+indexes:
+  - name: PRIMARY
+    type: PRIMARY
+    columns:
+      - file_id
+  - name: b2_lost_files_content_sha1_index
+    type: INDEX
+    columns:
+      - content_sha1
+foreignKeys: []
+triggers: []
+---
+name: filenames
+options: {}
+columns:
+  - name: id
+    type: binary
+    length: 16
+  - name: path
+    type: varchar
+    length: 4096
+  - name: filename
+    type: varchar
+    length: 255
+    nullable: true
+  - name: image_file_id
+    type: binary
+    length: 16
+  - name: meta_change_time
+    type: bigint
+    comment: 'Change time of file stats such as ownership, what permissions it has etc. '
+    nullable: true
+  - name: content_modify_time
+    type: bigint
+    comment: 'File modification time. Value of mtime is updated when content of file changes. '
+    nullable: true
+  - name: birth_time
+    type: bigint
+    comment: the time when the file was created on the filesystem
+    nullable: true
+  - name: create_date_los_angeles
+    type: datetime
+    generated: VIRTUAL
+    genExpr: >-
+      convert_tz(from_unixtime(coalesce(least(`birth_time`,`content_modify_time`),`content_modify_time`,`meta_change_time`)
+      / 1000),@@global.time_zone,'America/Los_Angeles')
+    fracDigits: 3
+    nullable: true
+  - name: last_seen
+    type: bigint
+    comment: Last time this file was scanned
+indexes:
+  - name: PRIMARY
+    type: PRIMARY
+    columns:
+      - id
+  - name: filenames_last_seen_index
+    type: INDEX
+    columns:
+      - last_seen
+  - name: filepath_uidx
+    type: HASH
+    columns:
+      - path
+      - filename
+      - image_file_id
+foreignKeys: []
+triggers: []
+---
+name: images
+options: {}
+columns:
+  - name: id
+    type: binary
+    length: 16
+  - name: original_image_file_id
+    type: binary
+    length: 16
+  - name: exif
+    type: mediumtext
+    nullable: true
+  - name: dominant_color
+    type: binary
+    length: 3
+    nullable: true
+  - name: starred
+    type: bigint
+    comment: 'May be promoted to album cover, shown first or larger than other images. Easily findable.'
+    nullable: true
+  - name: hidden
+    type: bigint
+    comment: Hide sensitive content from search results.
+    nullable: true
+  - name: archived
+    type: bigint
+    comment: Hide receipts and other boring stuff.
+    nullable: true
+  - name: trashed
+    type: bigint
+    comment: Hide and prevent future uploads. Possibly deleted from b2/cloud storage.
+    nullable: true
+  - name: latitude
+    type: decimal
+    precision:
+      - 8
+      - 6
+    nullable: true
+  - name: longitude
+    type: decimal
+    precision:
+      - 9
+      - 6
+    nullable: true
+  - name: altitude
+    type: decimal
+    precision:
+      - 7
+      - 1
+    nullable: true
+  - name: date_taken_local
+    type: datetime
+    nullable: true
+  - name: date_taken_timezone
+    type: varchar
+    comment: Guessed based on lat/lng
+    length: 255
+    nullable: true
+  - name: date_taken_unix
+    type: bigint
+    generated: VIRTUAL
+    genExpr: 'unix_timestamp(convert_tz(`date_taken_local`,`date_taken_timezone`,@@global.time_zone)) * 1000'
+    nullable: true
+indexes:
+  - name: PRIMARY
+    type: PRIMARY
+    columns:
+      - id
+  - name: images_original_image_file_id_uindex
+    type: UNIQUE
+    columns:
+      - original_image_file_id
+foreignKeys: []
+triggers: []
+---
+name: image_colors
+options: {}
+columns:
+  - name: image_id
+    type: binary
+    length: 16
+  - name: color
+    type: binary
+    length: 3
+  - name: quantity
+    type: float
+indexes:
+  - name: PRIMARY
+    type: PRIMARY
+    columns:
+      - image_id
+      - color
+foreignKeys: []
+triggers: []
+---
+name: image_files
+options: {}
+columns:
+  - name: id
+    type: binary
+    length: 16
+  - name: image_id
+    type: binary
+    length: 16
+  - name: width
+    type: mediumint
+    unsigned: true
+    nullable: true
+  - name: height
+    type: mediumint
+    unsigned: true
+    nullable: true
+  - name: pixels
+    type: int
+    generated: STORED
+    genExpr: '`width` * `height`'
+    unsigned: true
+    nullable: true
+  - name: aspect_ratio
+    type: float
+    generated: STORED
+    genExpr: '`width` / `height`'
+    nullable: true
+  - name: media_type
+    type: varchar
+    length: 64
+  - name: sha1
+    type: binary
+    comment: SHA1 of file contents. NULL for sensitive files.
+    length: 20
+    nullable: true
+  - name: hmac_sha256
+    type: binary
+    comment: HMAC-SHA256 of file contents. HMAC key is secret so as to not reveal file contents.
+    length: 32
+  - name: size
+    type: int
+    comment: File size in bytes.
+    unsigned: true
+  - name: compression_ratio
+    type: float
+    generated: VIRTUAL
+    genExpr: '`size` / (`width` * `height` * 3)'
+    nullable: true
+  - name: b2_file_id
+    type: varchar
+    length: 1000
+  - name: b2_file_name
+    type: varchar
+    length: 255
+  - name: upload_timestamp
+    type: bigint
+  - name: source
+    type: enum
+    default: '''ORIGINAL'''
+    values:
+      - ORIGINAL
+      - RESIZED
+indexes:
+  - name: PRIMARY
+    type: PRIMARY
+    columns:
+      - id
+  - name: height_idx
+    type: INDEX
+    columns:
+      - height
+  - name: image_files_image_id_idx
+    type: INDEX
+    columns:
+      - image_id
+  - name: image_files_sha1_idx
+    type: INDEX
+    columns:
+      - sha1
+  - name: images_sha256_uidx
+    type: UNIQUE
+    columns:
+      - hmac_sha256
+  - name: upload_timestamp_idx
+    type: INDEX
+    columns:
+      - upload_timestamp
+  - name: width_idx
+    type: INDEX
+    columns:
+      - width
+foreignKeys: []
+triggers: []
+---
+name: users
+options: {}
+columns:
+  - name: id
+    type: binary
+    length: 16
+  - name: name
+    type: varchar
+    length: 255
+    nullable: true
+indexes:
+  - name: PRIMARY
+    type: PRIMARY
+    columns:
+      - id
+foreignKeys: []
+triggers: []
+---
+name: user_auth
+options: {}
+columns:
+  - name: id
+    type: binary
+    length: 16
+  - name: user_id
+    type: binary
+    length: 16
+    nullable: true
+  - name: provider
+    type: enum
+    values:
+      - GOOGLE
+    nullable: true
+  - name: auth_id
+    type: varchar
+    length: 1000
+    nullable: true
+indexes:
+  - name: PRIMARY
+    type: PRIMARY
+    columns:
+      - id
+foreignKeys: []
+triggers: []
