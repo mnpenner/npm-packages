@@ -1,0 +1,251 @@
+import {sql} from "mysql3"
+import {Command, OptType} from "clap"
+import {createConnection, dbOptions} from "../db"
+import highlight from 'cli-highlight'
+import {dump} from 'js-yaml'
+import {promises as fs} from 'fs'
+
+
+// const PRIVILEGES = ['Select','Insert','Update','Delete','Create','Drop','Reload','Shutdown','Process','File','References','Index','Alter','Show_db','Super','Create_tmp_table','Lock_tables','Execute','Repl_slave','Repl_client','Create_view','Show_view','Create_routine','Alter_routine','Create_user','Event','Trigger','Create_tablespace','Delete_history']
+
+
+/**
+ * https://dev.mysql.com/doc/refman/8.0/en/grant.html
+ * https://dev.mysql.com/doc/refman/8.0/en/privileges-provided.html
+ */
+const GRANTS: Record<string,string> = {
+    /** Enable use of ALTER TABLE. Levels: Global, database, table. */
+    'Alter_priv': 'ALTER',
+    /** Enable stored routines to be altered or dropped. Levels: Global, database, routine. */
+    'Alter_routine_priv': 'ALTER ROUTINE',
+    /** Enable database and table creation. Levels: Global, database, table. */
+    'Create_priv': 'CREATE',
+    /** Enable role creation. Level: Global. */
+    'Create_role_priv': 'CREATE ROLE',
+    /** Enable stored routine creation. Levels: Global, database. */
+    'Create_routine_priv': 'CREATE ROUTINE',
+    /** Enable tablespaces and log file groups to be created, altered, or dropped. Level: Global. */
+    'Create_tablespace_priv': 'CREATE TABLESPACE',
+    /** Enable use of CREATE TEMPORARY TABLE. Levels: Global, database. */
+    'Create_tmp_table_priv': 'CREATE TEMPORARY TABLES',
+    /** Enable use of CREATE USER, DROP USER, RENAME USER, and REVOKE ALL PRIVILEGES. Level: Global. */
+    'Create_user_priv': 'CREATE USER',
+    /** Enable views to be created or altered. Levels: Global, database, table. */
+    'Create_view_priv': 'CREATE VIEW',
+    /** Enable use of DELETE. Level: Global, database, table. */
+    'Delete_priv': 'DELETE',
+    /** Enable databases, tables, and views to be dropped. Levels: Global, database, table. */
+    'Drop_priv': 'DROP',
+    /** Enable roles to be dropped. Level: Global. */
+    'Drop_role_priv': 'DROP ROLE',
+    /** Enable use of events for the Event Scheduler. Levels: Global, database. */
+    'Event_priv': 'EVENT',
+    /** Enable the user to execute stored routines. Levels: Global, database, routine. */
+    'Execute_priv': 'EXECUTE',
+    /** Enable the user to cause the server to read or write files. Level: Global. */
+    'File_priv': 'FILE',
+    /** Enable privileges to be granted to or removed from other accounts. Levels: Global, database, table, routine, proxy. */
+    'Grant_priv': 'GRANT OPTION',
+    /** Enable indexes to be created or dropped. Levels: Global, database, table. */
+    'Index_priv': 'INDEX',
+    /** Enable use of INSERT. Levels: Global, database, table, column. */
+    'Insert_priv': 'INSERT',
+    /** Enable use of LOCK TABLES on tables for which you have the SELECT privilege. Levels: Global, database. */
+    'Lock_tables_priv': 'LOCK TABLES',
+    /** Enable the user to see all processes with SHOW PROCESSLIST. Level: Global. */
+    'Process_priv': 'PROCESS',
+    /** Enable user proxying. Level: From user to user. */
+    // 'xxxxxxxxxxxxxxxxx': 'PROXY',
+    /** Enable foreign key creation. Levels: Global, database, table, column. */
+    'References_priv': 'REFERENCES',
+    /** Enable use of FLUSH operations. Level: Global. */
+    'Reload_priv': 'RELOAD',
+    /** Enable the user to ask where source or replica servers are. Level: Global. */
+    'Repl_client_priv': 'REPLICATION CLIENT',
+    /** Enable replicas to read binary log events from the source. Level: Global. */
+    'Repl_slave_priv': 'REPLICATION SLAVE',
+    /** Enable use of SELECT. Levels: Global, database, table, column. */
+    'Select_priv': 'SELECT',
+    /** Enable SHOW DATABASES to show all databases. Level: Global. */
+    'Show_db_priv': 'SHOW DATABASES',
+    /** Enable use of SHOW CREATE VIEW. Levels: Global, database, table. */
+    'Show_view_priv': 'SHOW VIEW',
+    /** Enable use of mysqladmin shutdown. Level: Global. */
+    'Shutdown_priv': 'SHUTDOWN',
+    /** Enable use of other administrative operations such as CHANGE REPLICATION SOURCE TO, CHANGE MASTER TO, KILL, PURGE BINARY LOGS, SET GLOBAL, and mysqladmin debug command. Level: Global. */
+    'Super_priv': 'SUPER',
+    /** Enable trigger operations. Levels: Global, database, table. */
+    'Trigger_priv': 'TRIGGER',
+    /** Enable use of UPDATE. Levels: Global, database, table, column. */
+    'Update_priv': 'UPDATE',
+    /** Synonym for “no privileges” */
+    // 'xxxxxxxxxxxxxxxxx': 'USAGE',
+    /** Can delete rows created through system versioning. */
+    'Delete_history_priv': 'DELETE HISTORY',
+}
+
+const cmd: Command = {
+    name: "export-users",
+    alias: 'xu',
+    description: "Export users in YAML format",
+    async execute(opts, args) {
+        const startTime = Date.now()
+        const conn = await createConnection(opts)
+        try {
+            const users = await conn.query<Record<string, string>>(sql`select *
+                                                                       from mysql.user`)
+            if (!users.length) throw new Error("No users")
+            // console.log(users)
+
+            const {Grant_priv, ...others} = users[0]
+            const PRIVILEGES = Object.keys(others).filter(k => k.endsWith('_priv'))
+
+            const out: any[] = []
+            for (const rawUser of users) {
+                const outUser: Record<string, any> = {}
+                outUser.name = rawUser.User.trimEnd()
+                outUser.host = rawUser.Host.trimEnd()
+                outUser.grantOption = toBool(rawUser.Grant_priv)
+
+                const privileges = []
+
+
+                for (const priv of PRIVILEGES) {
+                    if (toBool(rawUser[priv])) {
+                        if(!GRANTS[priv]) throw new Error(`No mapping for privilege '${priv}'`)
+                        privileges.push(GRANTS[priv])
+                    }
+                }
+
+                if (!privileges.length) {
+                    outUser.privileges = 'NONE'
+                } else if (privileges.length === PRIVILEGES.length) {
+                    outUser.privileges = 'ALL'
+                } else {
+                    outUser.privileges = privileges
+                }
+
+                // ou.privileges = {
+                //     select : toBool(user.Select_priv),
+                //     insert : toBool(user.Insert_priv),
+                //     update : toBool(user.Update_priv),
+                //     delete : toBool(user.Delete_priv),
+                //     create : toBool(user.Create_priv),
+                //     drop : toBool(user.Drop_priv),
+                //     reload : toBool(user.Reload_priv),
+                //     shutdown : toBool(user.Shutdown_priv),
+                //     process : toBool(user.Process_priv),
+                //     file : toBool(user.File_priv),
+                //     references : toBool(user.References_priv),
+                //     index : toBool(user.Index_priv),
+                //     alter : toBool(user.Alter_priv),
+                //     showDb : toBool(user.Show_db_priv),
+                //     super : toBool(user.Super_priv),
+                //     createTmpTable : toBool(user.Create_tmp_table_priv),
+                //     lockTables : toBool(user.Lock_tables_priv),
+                //     execute : toBool(user.Execute_priv),
+                //     replSlave : toBool(user.Repl_slave_priv),
+                //     replClient : toBool(user.Repl_client_priv),
+                //     createView : toBool(user.Create_view_priv),
+                //     showView : toBool(user.Show_view_priv),
+                //     createRoutine : toBool(user.Create_routine_priv),
+                //     alterRoutine : toBool(user.Alter_routine_priv),
+                //     createUser : toBool(user.Create_user_priv),
+                //     event : toBool(user.Event_priv),
+                //     trigger : toBool(user.Trigger_priv),
+                //     createTablespace : toBool(user.Create_tablespace_priv),
+                //     deleteHistory : toBool(user.Delete_history_priv),
+                // }
+                // if(Object.values(ou.privileges).every(Boolean)) {
+                //     ou.privileges = 'ALL'
+                // } else if(!Object.values(ou.privileges).some(Boolean)) {
+                //     ou.privileges = 'NONE'
+                // }
+
+                if(rawUser.plugin === 'mysql_native_password') {
+                    outUser.password = rawUser.authentication_string;
+                } else {
+                    outUser.auth = {
+                        plugin: rawUser.plugin,
+                        secret: rawUser.authentication_string,
+                        // passwordExpired: toBool(user.password_expired),
+                    }
+                }
+                const tls = {
+                    sslType: rawUser.ssl_type,
+                    sslCipher: rawUser.ssl_cipher,
+                    x509Issuer: rawUser.x509_issuer,
+                    x509Subject: rawUser.x509_subject,
+                }
+                if (Object.values(tls).some(Boolean)) {
+                    outUser.tls = tls
+                }
+                if (toBool(rawUser.is_role)) {
+                    outUser.isRole = true
+                }
+
+                out.push(outUser)
+            }
+
+            const grouped = groupBy(out, ({host, ...user}) => JSON.stringify(user))
+
+            const real = Array.from(grouped.values()).map(users => ({
+                ...users[0],
+                host: users.length === 1 ? users[0].host : users.map(u => u.host),
+            }))
+
+            const yaml = dump(real, {lineWidth: 120, noCompatMode: true})
+
+            if(args.length) {
+                await fs.writeFile(args[0], yaml)
+            } else {
+                console.log(highlight(yaml, {language: 'yaml', ignoreIllegals: true}));
+            }
+        } finally {
+            conn.close()
+        }
+
+
+    },
+    options: [
+        ...dbOptions,
+
+    ],
+    flags: [],
+    arguments: [
+        {
+            name: 'outfile',
+            type: OptType.OUTPUT_FILE,
+            required: false,
+            description: "YAML file to write",
+        }
+    ]
+}
+
+function toBool(str: string) {
+    if (str === 'Y') return true
+    if (str === 'N') return false
+    return null
+}
+
+export default cmd
+
+export function groupBy<V, K extends keyof V>(arr: V[], key: K): Map<V[K], V[]>
+export function groupBy<V, K = any>(arr: V[], fn: ((x: V) => K)): Map<K, V[]>
+export function groupBy<V, K>(arr: V[], fn: any) {
+    const out = new Map<K, V[]>()
+    if (typeof fn !== 'function') {
+        const k: keyof V = fn
+        fn = (x: V) => x[k]
+    }
+    for (const x of arr) {
+        const key = fn(x)
+        const a = out.get(key)
+        if (a) {
+            a.push(x)
+        } else {
+            out.set(key, [x])
+        }
+    }
+    return out
+}
