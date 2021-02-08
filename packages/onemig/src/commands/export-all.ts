@@ -123,6 +123,7 @@ const cmd: Command = {
             defaultValue: false,
             description: "Don't export database schemas",
         },
+        // TODO: add compress/tar.gz option
     ],
     arguments: [
         {
