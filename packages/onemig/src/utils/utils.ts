@@ -4,6 +4,11 @@ export function toBool(str: string) {
     return null
 }
 
+export function fromBool(bool: boolean) {
+    return bool ? "'Y'" : "'N'"
+}
+
+
 export function groupBy<V, K extends keyof V>(arr: V[], key: K): Map<V[K], V[]>
 export function groupBy<V, K = any>(arr: V[], fn: ((x: V) => K)): Map<K, V[]>
 export function groupBy<V, K>(arr: V[], fn: any) {

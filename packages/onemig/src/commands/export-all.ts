@@ -5,7 +5,7 @@ import highlight from 'cli-highlight'
 import {dump} from 'js-yaml'
 import {promises as fs} from 'fs'
 import * as Path from 'path'
-import {exportDumpUsersToFile, exportTableDataToFile, getTableNames, getTableYaml} from '../struct'
+import {dumpYaml, exportDumpUsersToFile, exportTableDataToFile, getTableNames, getTableYaml} from '../struct'
 import * as Chalk from 'chalk'
 
 
@@ -40,30 +40,37 @@ const cmd: Command = {
                 console.log(`  Wrote ${Chalk.underline(usersFile)}`)
             }
 
-            const databaseNames = (await conn.col<string>(sql`show databases`)).filter(db => {
-                if(INTERNAL_DATABASES.has(db)) {
+            const databases = (await conn.query<{name:string,defaultCollation:string}>(sql`select SCHEMA_NAME name, DEFAULT_COLLATION_NAME collation from information_schema.SCHEMATA`)).filter(db => {
+                if(INTERNAL_DATABASES.has(db.name)) {
                     return false
                 }
-                if(skipDbRegex && skipDbRegex.test(db)) {
+                if(skipDbRegex && skipDbRegex.test(db.name)) {
                     return false
                 }
                 return true
             })
-            for(const dbName of databaseNames) {
-                console.log(`  Exporting database ${Chalk.underline(dbName)}`)
-                const dbDir = Path.join(outputDir,dbName)
+
+            if(!opts.skipDbSchema) {
+                const dbFile = Path.join(outputDir, 'databases.yaml')
+                await fs.writeFile(dbFile,dumpYaml(databases))
+                console.log(`  Wrote ${Chalk.underline(dbFile)}`)
+            }
+
+            for(const db of databases) {
+                console.log(`  Exporting database ${Chalk.underline(db.name)}`)
+                const dbDir = Path.join(outputDir,db.name)
                 await fs.mkdir(dbDir)
-                const tableNames = await getTableNames(conn, dbName)
+                const tableNames = await getTableNames(conn, db.name)
                 for(const tblName of tableNames) {
                     if(!opts.skipTableSchema) {
                         const tblSchemaFile = Path.join(dbDir, `${tblName}.yaml`)
-                        await fs.writeFile(tblSchemaFile, await getTableYaml(conn, dbName, tblName))
+                        await fs.writeFile(tblSchemaFile, await getTableYaml(conn, db.name, tblName))
                         console.log(`    Wrote ${Chalk.underline(tblSchemaFile)}`)
                     }
 
                     if(!opts.skipData) {
                         const tblDataFile = Path.join(dbDir, `${tblName}.csv`)
-                        await exportTableDataToFile(conn, dbName, tblName, tblDataFile)
+                        await exportTableDataToFile(conn, db.name, tblName, tblDataFile)
                         console.log(`    Wrote ${Chalk.underline(tblDataFile)}`)
                     }
                 }
@@ -106,6 +113,15 @@ const cmd: Command = {
             key: 'skipTableSchema',
             defaultValue: false,
             description: "Don't export table schemas",
+        },
+        {
+            name: 'skip-database-schema',
+            alias: [
+                'skip-db-schema',
+            ],
+            key: 'skipDbSchema',
+            defaultValue: false,
+            description: "Don't export database schemas",
         },
     ],
     arguments: [

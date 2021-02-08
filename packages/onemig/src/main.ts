@@ -7,6 +7,7 @@ import sqlCommand from './commands/schema-sql'
 import exportUsersCommand from './commands/export-users'
 import usersSqlCommand from './commands/users-sql'
 import exportAllCommand from './commands/export-all'
+import databasesSqlCommand from './commands/databases-sql'
 
 // TODO:  generate json schema
 //  .\node_modules\.bin/typescript-json-schema .\src\struct.ts OneMig
@@ -24,5 +25,6 @@ run({
         exportUsersCommand,
         usersSqlCommand,
         exportAllCommand,
+        databasesSqlCommand,
     ]
 })
