@@ -12,7 +12,7 @@ export function createConnection(opts: PoolConfig) {
     })
 }
 
-export const dbOptions = [
+export const dbOptionsWithoutDb = [
     {
         name: 'host',
         alias: 'h',
@@ -26,14 +26,6 @@ export const dbOptions = [
         description: "For TCP/IP connections, the port number to use.",
         type: OptType.INT,
         defaultValue: process.env.DB_PORT !== undefined ? Number(process.env.DB_PORT) : 3306,
-    },
-    {
-        name: 'database',
-        alias: 'D',
-        description: "The database to use.",
-        valuePlaceholder: 'db_name',
-        defaultValue: process.env.DB_NAME,
-        required: true
     },
     {
         name: 'user',
@@ -50,3 +42,16 @@ export const dbOptions = [
         defaultValueText: process.env.DB_PASSWORD !== undefined ? '$DB_PASSWORD' : '(no pasword)',
     }
 ]
+
+export const dbOptions = [
+    ...dbOptionsWithoutDb,
+    {
+        name: 'database',
+        alias: 'D',
+        description: "The database to use.",
+        valuePlaceholder: 'db_name',
+        defaultValue: process.env.DB_NAME,
+        required: true
+    },
+]
+

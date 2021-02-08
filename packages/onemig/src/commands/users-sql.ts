@@ -1,6 +1,6 @@
 import {escapeIdStrict, escapeValue} from "mysql3"
 import {Command, OptType} from "clap"
-import {dbOptions} from "../db"
+import {dbOptions, dbOptionsWithoutDb} from "../db"
 import highlight from 'cli-highlight'
 import * as yaml from 'js-yaml'
 import {promises as fs} from 'fs'
@@ -16,7 +16,7 @@ function makeGrant(privileges: string | string[] | null) {
         return privileges.map(p => p.trim().toUpperCase().replace(/_/g,' ')).join(', ')
     }
     const normPriv = privileges.trim().toUpperCase().replace(/\s+/g,'_')
-    if (normPriv === 'NONE' || normPriv === 'USAGE') {
+    if (normPriv === 'NONE' || normPriv === 'USAGE' || normPriv === 'NO_PRIVILEGES') {
         return 'USAGE'
     }
     if (normPriv === 'ALL' || normPriv === 'ALL_PRIVILEGES') {
@@ -59,9 +59,9 @@ const cmd: Command = {
 
                 const dbPrivs = user.databasePrivileges ?? user.databasePrivs ?? user.dbPrivs ?? user.dbPrivileges;
                 if (dbPrivs) {
-                    for (const [dbName, privs] of Object.entries(dbPrivs)) {
-
-                        lines.push(`GRANT ${makeGrant(privs)} ON ${escapeIdStrict(dbName)}.* TO ${escapeValue(user.name)}@${escapeValue(host)};`)
+                    for (const [dbName, privileges] of Object.entries(dbPrivs)) {
+                        const [privs,grant] = cleanPrivileges(privileges)
+                        lines.push(`GRANT ${makeGrant(privs)} ON ${escapeIdStrict(dbName)}.* TO ${escapeValue(user.name)}@${escapeValue(host)}${grant ? ' WITH GRANT OPTION':''};`)
                     }
                 }
                 const tblPrivs = user.tablePrivileges ?? user.tblPrivs ?? user.tablePrivs ?? user.tblPrivileges;
@@ -82,7 +82,7 @@ const cmd: Command = {
 
     },
     options: [
-        ...dbOptions,
+        ...dbOptionsWithoutDb,
 
     ],
     flags: [],

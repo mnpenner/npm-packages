@@ -3,6 +3,7 @@ import {Command, OptType} from "clap";
 import CsvWriter from "../CsvWriter";
 import {createConnection, dbOptions} from "../db";
 import * as Chalk from "chalk";
+import {exportTableDataToFile} from '../struct'
 
 
 const cmd: Command = {
@@ -34,20 +35,9 @@ const cmd: Command = {
         for (const tbl of tables) {
             process.stdout.write(`  Exporting table ${Chalk.yellow(tbl)} ...`)
             const tblTime = Date.now()
-            const csv = new CsvWriter(`${args[0]}/${tbl}.csv`)
-            try {
-                let first = true
-                for await(const row of conn.stream(sql`select * from ${sql.id(tbl)}`)) {
-                    if (first) {
-                        // TODO: find a way to write these headers even with 0 records
-                        csv.writeLine(Object.keys(row))
-                        first = false
-                    }
-                    csv.writeLine(Object.values(row))
-                }
-            } finally {
-                csv.close()
-            }
+
+            await exportTableDataToFile(conn,opts.database,tbl,`${args[0]}/${tbl}.csv`)
+
             process.stdout.write(` ${Chalk.green(Date.now() - tblTime)}ms\n`)
         }
 

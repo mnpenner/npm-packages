@@ -1,6 +1,6 @@
 import ora from "ora";
 import {ConnectionPool, sql} from "mysql3";
-import {getStruct} from "../struct";
+import {dumpAllYaml, getStruct, getTableNamesQuery} from "../struct"
 import {dump} from "js-yaml";
 import {promises as fs} from "fs";
 import highlight, {Theme} from "cli-highlight";
@@ -26,12 +26,7 @@ const cmd: Command = {
             // printQueries: false,
         })
 
-        const tblStream = conn.stream<{name:string}>(sql`SELECT 
-                        TABLE_NAME 'name'
-                        FROM INFORMATION_SCHEMA.TABLES 
-                        WHERE TABLES.TABLE_SCHEMA=${opts.database} AND TABLE_TYPE='BASE TABLE'
-                        ORDER BY name
-                        `);
+        const tblStream = conn.stream<{name:string}>(getTableNamesQuery(opts.database));
 
 
         const tables = []
@@ -47,7 +42,7 @@ const cmd: Command = {
         const elapsed = Date.now()-t
         // console.log(`Fetched database structure in ${elapsed} ms`)
 
-        const yaml =  tables.map(t => dump(t, {lineWidth: 120, noCompatMode: true})).join('---\n')
+        const yaml = dumpAllYaml(tables);
 
         if(args.length) {
             await fs.writeFile(args[0], yaml)

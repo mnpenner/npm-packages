@@ -1,6 +1,9 @@
 import {ConnectionPool, sql} from "mysql3";
 import {parallel, sortBy, splitValues} from "./util";
 import {DbColumn, DbColumnType, DbFkMap, DbForeignKey, DbIndex, DbIndexMap, DbTable, DbTrigger} from "./dbtypes";
+import * as Yaml from 'js-yaml'
+import CsvWriter from './CsvWriter'
+import {promises as fs} from 'fs'
 
 
 export const getDefaultStorageEngine = (conn:ConnectionPool) => conn.value<string>(sql`select @@default_storage_engine`)
@@ -25,6 +28,52 @@ export async function getColumns(conn: ConnectionPool, dbName: string, tblName:s
     const struct = await getStruct(conn,dbName,tblName)
     if(!struct) throw new Error(`Could not get definition for table ${tblName}`)
     return Object.fromEntries(struct.columns.map(({name,...def}) => [name,def]))
+}
+
+export async function getTableYaml(conn: ConnectionPool, dbName: string, tblName:string) {
+    return dumpYaml(await getStruct(conn,dbName,tblName))
+}
+
+export function dumpYaml(obj: any): string {
+    return Yaml.dump(obj, {lineWidth: 120, noCompatMode: true, quotingType: '"'})
+}
+
+export function dumpAllYaml(obj: any[]): string {
+    return obj.map(x => dumpYaml(x)).join('---\n')
+}
+
+export async function exportTableSchemaToFile(conn: ConnectionPool, db:string, tbl: string, filename: string) {
+    return fs.writeFile(filename, await getTableYaml(conn, db, tbl))
+}
+
+export async function exportTableDataToFile(conn: ConnectionPool, db:string, tbl: string, filename: string) {
+    const csv = new CsvWriter(filename)
+    try {
+        let first = true
+        for await(const row of conn.stream(sql`select * from ${sql.id([db,tbl])}`)) {
+            if (first) {
+                // TODO: find a way to write these headers even with 0 records
+                csv.writeLine(Object.keys(row))
+                first = false
+            }
+            csv.writeLine(Object.values(row))
+        }
+    } finally {
+        csv.close()
+    }
+}
+
+export function getTableNamesQuery(dbName: string) {
+    return sql`SELECT 
+                        TABLE_NAME 'name'
+                        FROM INFORMATION_SCHEMA.TABLES 
+                        WHERE TABLES.TABLE_SCHEMA=${dbName} AND TABLE_TYPE='BASE TABLE'
+                        ORDER BY name
+                        `
+}
+
+export function getTableNames(conn: ConnectionPool, dbName: string) {
+    return conn.col<string>(getTableNamesQuery(dbName))
 }
 
 export async function getStruct(conn: ConnectionPool, dbName: string, tblName:string) {
@@ -277,7 +326,8 @@ export async function getStruct(conn: ConnectionPool, dbName: string, tblName:st
                         }
                         break;
                     case 'datetime':
-                    case 'timestamp': {
+                    case 'timestamp':
+                    case 'time': {
                         const [match, type, fracStr] = /^(\w+)(?:\((\d+)\))?$/.exec(col.columnType)!;
                         if(!match) {
                             throw new Error(`Unexpected ${col.dataType} format: ${col.columnType}`);
