@@ -4,6 +4,7 @@ import {DbColumn, DbColumnType, DbFkMap, DbForeignKey, DbIndex, DbIndexMap, DbTa
 import * as Yaml from 'js-yaml'
 import CsvWriter from './CsvWriter'
 import {promises as fs} from 'fs'
+import {getMysqlUsers} from './utils/mysql-users'
 
 
 export const getDefaultStorageEngine = (conn:ConnectionPool) => conn.value<string>(sql`select @@default_storage_engine`)
@@ -44,6 +45,10 @@ export function dumpAllYaml(obj: any[]): string {
 
 export async function exportTableSchemaToFile(conn: ConnectionPool, db:string, tbl: string, filename: string) {
     return fs.writeFile(filename, await getTableYaml(conn, db, tbl))
+}
+
+export async function exportDumpUsersToFile(conn: ConnectionPool, filename: string) {
+    return fs.writeFile(filename, dumpYaml(await getMysqlUsers(conn)))
 }
 
 export async function exportTableDataToFile(conn: ConnectionPool, db:string, tbl: string, filename: string) {
