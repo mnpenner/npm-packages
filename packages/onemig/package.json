@@ -16,6 +16,7 @@
         "@rollup/plugin-node-resolve": "^11.1.1",
         "@types/js-yaml": "^4.0.0",
         "@types/node": "^14.14.25",
+        "@types/tar-stream": "^2.2.0",
         "builtin-modules": "^3.2.0",
         "clap": "../clap",
         "cross-env": "^7.0.3",
@@ -33,7 +34,8 @@
         "js-yaml": "^4.0.0",
         "mysql3": "^0.5.13",
         "ora": "^5.3.0",
-        "string-width": "^4.2.0"
+        "string-width": "^4.2.0",
+        "tar-stream": "^2.2.0"
     },
     "engines": {
         "node": ">=12"

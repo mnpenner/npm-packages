@@ -2,11 +2,15 @@ import * as fs from 'fs'
 import type {WriteStream} from "fs";
 
 export default class CsvWriter {
-    private stream: WriteStream;
+    private stream: NodeJS.WritableStream;
 
-    constructor(filename: string) {
+    constructor(filename: string|NodeJS.WritableStream) {
         // TODO: open for writing instead of creating a stream?
-        this.stream = fs.createWriteStream(filename)
+        if(typeof filename === 'string') {
+            this.stream = fs.createWriteStream(filename)
+        } else {
+            this.stream = filename;
+        }
     }
 
     writeLine(line: SupportedTypes[]) {
@@ -14,7 +18,7 @@ export default class CsvWriter {
     }
 
     close() {
-        this.stream.end()
+        return new Promise<void>(resolve => this.stream.end(resolve))
     }
 }
 

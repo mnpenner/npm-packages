@@ -1,13 +1,6 @@
 import run from "clap";
 import * as pkg from '../package.json'
-import exportCommand from './commands/export-schema'
-import exportDataCommand from './commands/export-data'
-import importDataCommand from './commands/import-data'
-import sqlCommand from './commands/schema-sql'
-import exportUsersCommand from './commands/export-users'
-import usersSqlCommand from './commands/users-sql'
-import exportAllCommand from './commands/export-all'
-import databasesSqlCommand from './commands/databases-sql'
+import commands from './commands'
 
 // TODO:  generate json schema
 //  .\node_modules\.bin/typescript-json-schema .\src\struct.ts OneMig
@@ -17,14 +10,5 @@ run({
     name: "OneMig",
     version: pkg.version,
     argv0: pkg.name,
-    commands: [
-        exportCommand,
-        exportDataCommand,
-        importDataCommand,
-        sqlCommand,
-        exportUsersCommand,
-        usersSqlCommand,
-        exportAllCommand,
-        databasesSqlCommand,
-    ]
+    commands
 })

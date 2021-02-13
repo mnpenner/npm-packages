@@ -47,12 +47,16 @@ export async function exportTableSchemaToFile(conn: ConnectionPool, db:string, t
     return fs.writeFile(filename, await getTableYaml(conn, db, tbl))
 }
 
+export async function getUsersYaml(conn: ConnectionPool) {
+    return dumpYaml(await getMysqlUsers(conn))
+}
 export async function exportDumpUsersToFile(conn: ConnectionPool, filename: string) {
-    return fs.writeFile(filename, dumpYaml(await getMysqlUsers(conn)))
+    return fs.writeFile(filename, await getUsersYaml(conn))
 }
 
-export async function exportTableDataToFile(conn: ConnectionPool, db:string, tbl: string, filename: string) {
+export async function exportTableDataToFile(conn: ConnectionPool, db:string, tbl: string, filename: string|NodeJS.WritableStream) {
     const csv = new CsvWriter(filename)
+    let closing: Promise<void>
     try {
         let first = true
         for await(const row of conn.stream(sql`select * from ${sql.id([db,tbl])}`)) {
@@ -64,8 +68,13 @@ export async function exportTableDataToFile(conn: ConnectionPool, db:string, tbl
             csv.writeLine(Object.values(row))
         }
     } finally {
-        csv.close()
+        closing = csv.close()
     }
+    return closing
+}
+
+export function getDatabases(conn: ConnectionPool) {
+    return conn.query<{name:string,defaultCollation:string}>(sql`select SCHEMA_NAME name, DEFAULT_COLLATION_NAME collation from information_schema.SCHEMATA`)
 }
 
 export function getTableNamesQuery(dbName: string) {
