@@ -256,11 +256,11 @@ export function getOptName(opt: Option) {
 }
 
 export function getCommand(name: string, app: App): Command {
-    const cmdName = String(name).trim().replace(/^--/,'').toLowerCase()
-    const cmd = app.commands.find((c: Command) => c.name === cmdName || includes(cmdName, c.alias))
+    const cmdName = String(name).trim().replace(/^-{1,2}/,'').toLowerCase()
+    const cmd = app.commands.find(c => c.name === cmdName || includes(cmdName, c.alias))
     if (cmd === undefined) {
         // TODO: levenshtein search for closest match? "Did you mean...?"
-        throw new Error(`Command "${cmdName}" is not defined.`)
+        throw new Error(`Command "${name}" does not exist.`)
     }
     return cmd
 }
