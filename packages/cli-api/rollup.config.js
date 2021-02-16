@@ -20,6 +20,7 @@ export default {
             optDeps: true,
         }),
         json(),
+        // TODO: change to typescript2 like node-mysql3c
         babel({
             exclude: 'node_modules/**',
             extensions,

@@ -38,6 +38,7 @@
         "node": ">=10"
     },
     "scripts": {
+        "preinstall": "npx only-allow pnpm",
         "tsdecls": "tsc --emitDeclarationOnly",
         "lint": "tsc --noEmit",
         "clean": "rm -rf dist yarn-error.log",
