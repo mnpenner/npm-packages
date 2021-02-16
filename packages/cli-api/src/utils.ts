@@ -76,3 +76,11 @@ export function statSync(path: string): FileSys.Stats | null {
         return null
     }
 }
+
+export function sortBy<T>(arr: T[], cmp: (x: T) => string): T[] {
+    const collator = new Intl.Collator() // 'en',{usage: 'sort',sensitivity:'base'}
+    const values = arr.map(cmp)
+    const keys = Array.from(arr.keys())
+    keys.sort((a, b) => collator.compare(values[a], values[b]))
+    return keys.map(i => arr[i])
+}

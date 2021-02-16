@@ -1,4 +1,4 @@
-import {AnyOptType, Command, Option, OptType} from './interfaces'
+import {AnyOptType, App, Command, Option, OptType} from './interfaces'
 import {abort, includes, resolve, statSync, toArray, toBool} from './utils'
 import Chalk from 'chalk'
 import Path from 'path'
@@ -57,7 +57,13 @@ export function getOptions(cmd: Command): Option[] {
             valueNotRequired: true,
             type: OptType.BOOL,
 
-        }))
+        })),
+        // {
+        //     name: 'help',
+        //     description: "Print help for this command",
+        //     valueNotRequired: true,
+        //     type: OptType.BOOL,
+        // }
     ] as Option[]
 }
 
@@ -160,7 +166,6 @@ export function parseArgs(cmd: Command, argv: string[]): [any[], Record<string, 
     }
 
     // TODO: fill global options into opts
-    // TODO: fill flags into opts
     // TODO: copy named arguments into opts too
     return [args, opts]
 }
@@ -248,4 +253,14 @@ function coerceType(value: string, type: AnyOptType) {
 
 export function getOptName(opt: Option) {
     return (opt.name.length > 1 ? '--' : '-') + opt.name
+}
+
+export function getCommand(name: string, app: App): Command {
+    const cmdName = String(name).trim().replace(/^--/,'').toLowerCase()
+    const cmd = app.commands.find((c: Command) => c.name === cmdName || includes(cmdName, c.alias))
+    if (cmd === undefined) {
+        // TODO: levenshtein search for closest match? "Did you mean...?"
+        throw new Error(`Command "${cmdName}" is not defined.`)
+    }
+    return cmd
 }

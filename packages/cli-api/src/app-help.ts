@@ -10,12 +10,16 @@ export function printHelp(app: App) {
     }
     print('\n\n')
     printLn(Chalk.yellow("Usage:"))
-    printLn(`  ${Chalk.cyan(getProcName(app))} command ${Chalk.gray(`[options] [arguments]`)}\n`)
+    printLn(`  ${Chalk.cyan(getProcName(app))} ${Chalk.gray('<')}command${Chalk.gray('>')} ${Chalk.gray(`[options] [arguments]`)}\n`)
 
     if (app.globalOptions) {
         printLn("TODO")
     }
 
+    printAvailableCommands(app)
+}
+
+export function printAvailableCommands(app: App) {
     printLn(Chalk.yellow("Available commands:"))
     const width = Math.max(...app.commands.map(c => stringWidth(c.name))) + 2
     for (const cmd of app.commands) {
@@ -26,5 +30,5 @@ export function printHelp(app: App) {
         printLn()
     }
 
-    printLn()
+    // printLn()
 }
