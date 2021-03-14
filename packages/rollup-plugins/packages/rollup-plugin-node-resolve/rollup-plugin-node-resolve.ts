@@ -48,6 +48,7 @@ export default function (opts: RollupPluginNodeResolveOptions = {}): Plugin {
                 if (/^\.{0,2}\//.test(importee)) {  // relative path
                     const fullPath = Path.resolve(baseDir, importee)
                     for (const ext of extensions) {
+                        // TODO: try extensionless *file* first (if it's a directory, ignore and try file extensions first). See "LOAD_AS_FILE"
                         // Try file extensions before directories: https://mpen.xyz/share/2021/03/phpstorm64_2021-03-13_12-48-06.png
                         const pathWithExt = fullPath + ext
                         if (await fileStat(pathWithExt)) {
