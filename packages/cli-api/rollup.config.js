@@ -1,9 +1,9 @@
-import babel from 'rollup-plugin-babel';
+import babel from '@rollup/plugin-babel';
 import nodeResolve from '@rollup/plugin-node-resolve';
 import nodeExternals from 'rollup-plugin-node-externals'
 import * as tsconfig from './tsconfig.json';
+import * as pkg from './package.json'
 import json from '@rollup/plugin-json';
-
 const extensions = ['.ts'];
 
 export default {
@@ -25,17 +25,18 @@ export default {
             exclude: 'node_modules/**',
             extensions,
             comments: false,
+            babelHelpers: 'bundled',
         }),
     ],
     output: [
         {
-            dir: 'dist/cjs',
+            file: pkg.main,
             format: 'cjs',
             sourcemap: true,
             exports: 'named',
         },
         {
-            dir: 'dist/es',
+            file: pkg.module,
             format: 'es',
             sourcemap: true,
         },

@@ -1,10 +1,10 @@
 {
-    "name": "clap",
+    "name": "cli-api",
     "version": "0.1.0",
     "license": "UNLICENSED",
-    "private": true,
+    "private": false,
     "main": "dist/cjs/index.js",
-    "module": "dist/es/index.js",
+    "module": "dist/es/index.mjs",
     "types": "dist/types/index.d.ts",
     "devDependencies": {
         "@babel/cli": "^7.7",
@@ -12,14 +12,15 @@
         "@babel/node": "^7.7",
         "@babel/preset-env": "^7.7",
         "@babel/preset-typescript": "^7.7",
+        "@rollup/plugin-babel": "^5.3.0",
         "@rollup/plugin-json": "^4.0.3",
         "@rollup/plugin-node-resolve": "^8.0.0",
         "@types/node": "^12",
         "builtin-modules": "^3.1.0",
         "cross-env": "^7.0.2",
         "dotenv": "^8.2.0",
+        "npm-run-all": "^4.1.5",
         "rollup": "^2.12.0",
-        "rollup-plugin-babel": "^4.4.0",
         "rollup-plugin-node-externals": "^2.2.0",
         "source-map-support": "^0.5.19",
         "ts-json-schema-generator": "^0.68.1",
@@ -43,6 +44,7 @@
         "lint": "tsc --noEmit",
         "clean": "rm -rf dist yarn-error.log",
         "build": "cross-env BABEL_ENV=production rollup -c",
-        "dev": "cross-env BABEL_ENV=development rollup -cw"
+        "dev": "cross-env BABEL_ENV=development rollup -cw",
+        "prod": "npm-run-all clean --parallel tsdecls build"
     }
 }
