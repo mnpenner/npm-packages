@@ -1,4 +1,4 @@
-import run from "clap";
+import run from "cli-api";
 import * as pkg from '../package.json'
 import commands from './commands'
 
@@ -12,3 +12,4 @@ run({
     argv0: pkg.name,
     commands
 })
+

@@ -1,5 +1,5 @@
 import {sql} from "mysql3"
-import {Command, OptType} from "clap"
+import {Command, OptType} from "cli-api"
 import {createConnection, dbOptions, dbOptionsWithoutDb} from "../db"
 import highlight from 'cli-highlight'
 import {dump} from 'js-yaml'

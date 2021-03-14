@@ -1,8 +1,9 @@
 {
     "name": "onemig",
-    "version": "0.2.1",
+    "version": "0.2.3",
     "license": "UNLICENSED",
     "private": true,
+    "bin": "src/main.js",
     "devDependencies": {
         "@babel/cli": "^7.12.13",
         "@babel/core": "^7.12.13",
@@ -18,7 +19,6 @@
         "@types/node": "^14.14.25",
         "@types/tar-stream": "^2.2.0",
         "builtin-modules": "^3.2.0",
-        "clap": "../clap",
         "cross-env": "^7.0.3",
         "dotenv": "^8.2.0",
         "rollup": "^2.38.5",
@@ -29,13 +29,15 @@
     },
     "dependencies": {
         "chalk": "^4.1.0",
+        "cli-api": "^0.1.0",
         "cli-highlight": "^2.1.10",
         "csv-parse": "^4.15.1",
         "js-yaml": "^4.0.0",
         "mysql3": "^0.5.13",
         "ora": "^5.3.0",
         "string-width": "^4.2.0",
-        "tar-stream": "^2.2.0"
+        "tar-stream": "^2.2.0",
+        "tslib": "^2.1.0"
     },
     "engines": {
         "node": ">=12"
@@ -43,13 +45,13 @@
     "scripts": {
         "preinstall": "npx only-allow pnpm",
         "_run": "cross-env BABEL_ENV=development babel-node --max_old_space_size=10000 --extensions \".ts\" src/main.ts",
-        "tsdecls": "tsc --emitDeclarationOnly",
-        "lint": "tsc --noEmit",
-        "clean": "rm -rf dist yarn-error.log",
-        "build": "cross-env BABEL_ENV=production rollup -c",
+        "_tsdecls": "tsc --emitDeclarationOnly",
+        "_lint": "tsc --noEmit",
+        "_clean": "rm -rf dist yarn-error.log",
+        "_build": "cross-env BABEL_ENV=production rollup -c",
         "dev": "cross-env BABEL_ENV=development rollup -cw",
-        "exec": "node -r dotenv/config --enable-source-maps --max-old-space-size=16384 dist/main.js",
-        "verbump": "npm version minor",
-        "publish": "pnpm run build && cd dist && pnpm publish --ignore-scripts"
+        "exec": "node -r dotenv/config --enable-source-maps --max-old-space-size=16384 dist/src/main.js",
+        "_verbump": "npm version minor",
+        "_publish": "pnpm run build && cd dist && pnpm publish --ignore-scripts"
     }
 }

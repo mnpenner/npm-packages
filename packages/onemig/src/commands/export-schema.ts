@@ -4,7 +4,7 @@ import {dumpAllYaml, getStruct, getTableNamesQuery} from "../struct"
 import {dump} from "js-yaml";
 import {promises as fs} from "fs";
 import highlight, {Theme} from "cli-highlight";
-import {Command, OptType} from "clap";
+import {Command, OptType} from "cli-api";
 import {userInfo} from "os";
 import {createConnection, dbOptions} from "../db";
 

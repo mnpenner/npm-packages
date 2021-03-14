@@ -1,7 +1,7 @@
 import * as yaml from "js-yaml";
 import {promises as fs} from "fs";
 import highlight from "cli-highlight";
-import {Command, OptType} from "clap";
+import {Command, OptType} from "cli-api";
 import * as sql from '../utils/sql'
 import {DbColumn, DbIndex} from "../dbtypes";
 

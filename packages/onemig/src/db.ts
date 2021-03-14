@@ -1,5 +1,5 @@
 import {createPool,PoolConfig} from "mysql3";
-import {OptType} from "clap";
+import {OptType} from "cli-api";
 import {userInfo} from "os";
 
 

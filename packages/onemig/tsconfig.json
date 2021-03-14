@@ -1,26 +1,29 @@
 {
     "compilerOptions": {
         "strict": true,
-        "importHelpers": false,
-        "inlineSources": true,
-        "noEmitOnError": true,
+        "inlineSources": false,
+        "noEmitOnError": false,
         "pretty": true,
         "module": "commonjs",
         "noImplicitAny": true,
         "suppressImplicitAnyIndexErrors": false,
-        "removeComments": false,
+        "removeComments": true,
         "preserveConstEnums": false,
-        "sourceMap": true,
+        "sourceMap": false,
         "lib": ["esnext"],
-        "skipLibCheck": false,
+        "skipLibCheck": true,
         "outDir": "dist",
-        "target": "esnext",
-        "declaration": true,
+        "target": "ES2020",
+        "declaration": false,
         "resolveJsonModule": true,
         "esModuleInterop": true,
         "moduleResolution": "node",
         "isolatedModules": true,
-        "allowSyntheticDefaultImports": true
+        "allowSyntheticDefaultImports": true,
+        "rootDir": ".",
+        "importHelpers": true,
+        "incremental": true,
+//        "tsBuildInfoFile": ".tsbuildinfo.json"
     },
     "files": [
         "./src/main.ts"

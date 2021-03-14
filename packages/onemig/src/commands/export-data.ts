@@ -1,5 +1,5 @@
 import {sql} from "mysql3";
-import {Command, OptType} from "clap";
+import {Command, OptType} from "cli-api";
 import CsvWriter from "../CsvWriter";
 import {createConnection, dbOptions} from "../db";
 import * as Chalk from "chalk";

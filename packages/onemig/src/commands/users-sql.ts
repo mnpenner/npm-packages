@@ -1,5 +1,5 @@
 import {escapeIdStrict, escapeValue} from "mysql3"
-import {Command, OptType} from "clap"
+import {Command, OptType} from "cli-api"
 import {dbOptions, dbOptionsWithoutDb} from "../db"
 import highlight from 'cli-highlight'
 import * as yaml from 'js-yaml'
