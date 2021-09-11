@@ -23,6 +23,7 @@
         "rootDir": ".",
         "importHelpers": true,
         "incremental": true,
+        "downlevelIteration": true,
 //        "tsBuildInfoFile": ".tsbuildinfo.json"
     },
     "files": [

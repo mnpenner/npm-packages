@@ -2,14 +2,15 @@ import {getStruct, getTableNamesQuery} from "../struct"
 import {promises as fs} from "fs"
 import {Command, OptType} from "cli-api"
 import {createConnection, dbOptions} from "../db"
-import {DbColumn} from '../dbtypes'
+import {DbColumn, DbTable} from '../dbtypes'
 import * as Lo from 'lodash'
 import {Resolvable, resolveValue} from '../utils/resolve'
 import * as inflection from 'inflection'
+import {lcsMulti} from '../utils/longest-common-substring'
 
 const dbTsTypeMap: Record<string, Resolvable<string, [DbColumn]>> = {
     enum: col => col.values? col.values.map(v => JSON.stringify(v)).join('|') : 'unknown',
-    set: 'string', // maybe?
+    set: col => col.values? 'Array<'+col.values.map(v => JSON.stringify(v)).join('|')+'>' : 'unknown',
     tinyint: 'number',
     smallint: 'number',
     mediumint: 'number',
@@ -41,7 +42,7 @@ const dbTsTypeMap: Record<string, Resolvable<string, [DbColumn]>> = {
     datetime: 'string',
     timestamp: 'string',
     date: 'string',
-    polygon: 'string',  // ???
+    polygon: 'unknown',  // ???
 }
 
 
@@ -58,14 +59,61 @@ const cmd: Command = {
         const lines = []
         lines.push(`declare namespace ${opts.namespace||columnToKey(opts.database)} {`)
 
+        const tables: DbTable[] = []
+        const enums = new Map<string,string[]>()
+
         for await(const tbl of tblStream) {
             const def = await getStruct(conn, opts.database, tbl.name)
             if(!def) continue
+            tables.push(def)
 
-            lines.push(`interface ${columnToKey(tbl.name)} {`)
             for(const col of def.columns) {
+                if(col.type === 'enum' || col.type === 'set') {
+                    const values = JSON.stringify(col.values)
+                    const name = inflection.singularize(tbl.name)+'_'+col.name;
+                    if(enums.has(values)) {
+                        enums.get(values)!.push(name)
+                    } else {
+                        enums.set(values,[name])
+                    }
+                }
+            }
+        }
+        // console.log(enums)
+
+        let enumCounter=0
+        const enumNames = new Map<string,string>()
+
+        if(opts.enums) {
+            for(const [values, colNames] of enums.entries()) {
+                const lcs = lcsMulti(colNames) // giving wrong result for booking_passenger_pri_phone_type ???
+                const items: string[] = JSON.parse(values)
+                const name = lcs ? columnToKey(lcs) : `Unknown${++enumCounter}`
+                lines.push(`const enum ${name} {`)
+                for(const it of items) {
+                    lines.push(`  ${columnToKey(it.toLowerCase())} = ${JSON.stringify(it)},`)
+                }
+                lines.push('}\n')
+                enumNames.set(values, name)
+            }
+        }
+
+
+        for(const def of tables) {
+            lines.push(`interface ${columnToKey(def.name)} {`)
+            for(const col of def.columns) {
+                // if(col.type === 'set') console.log(col)
                 let colType = resolveValue(dbTsTypeMap[col.type], col)
                 if(!colType) throw new Error(`Unhandled column type "${col.type}"`)
+                if(col.type === 'enum' || col.type === 'set') {
+                    const valuesStr = JSON.stringify(col.values)
+                    if(enumNames.has(valuesStr)) {
+                        colType += '|'+enumNames.get(valuesStr)
+                        if(col.type === 'set') {
+                            colType += '[]'
+                        }
+                    }
+                }
                 if(col.nullable) {
                     colType += "|null"
                 }
@@ -76,7 +124,7 @@ const cmd: Command = {
             }
             lines.push('}\n')
         }
-        lines.push('}')
+        lines.push('}') // namespace
 
         await conn.close()
         await fs.writeFile(args[0], lines.join("\n"))
@@ -89,6 +137,13 @@ const cmd: Command = {
             description: "Namespace",
             type: OptType.STRING,
             required: false,
+        },
+        {
+            name: 'enums',
+            // alias: 'm',
+            description: "Export enums",
+            type: OptType.BOOL,
+            defaultValue: false,
         },
     ],
     arguments: [
@@ -112,10 +167,12 @@ function escapeCol(col: string) {
 }
 
 function columnToKey(name: string) {
-    return inflection.classify(name)
+    if(/^[A-Z_]+$/.test(name)) name = name.toLowerCase()
+    name = inflection.classify(name)
     name = name.replace(/#/g, 'Nbr')
     name = name.replace(/\$/g, 'Dlr')
-    name = Lo.camelCase(name)
+    // name = Lo.camelCase(name)
     if(/^\d/.test(name)) name = '_' + name
+    return name;
     return name[0].toUpperCase() + name.slice(1)
 }
