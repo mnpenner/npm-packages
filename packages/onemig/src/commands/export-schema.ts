@@ -15,7 +15,7 @@ const HIGHLIGHT_THEME: Theme = {
 const cmd: Command = {
     name: "export-schema",
     alias: 'xs',
-    description: "Export table definitions from existing database",
+    description: "Export table definitions from existing database to YAML",
     async execute(opts, args) {
         const spinner = ora().start(`Exporting ${opts.database}`); // https://github.com/sindresorhus/ora/issues/146
 

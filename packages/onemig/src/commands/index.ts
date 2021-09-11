@@ -7,6 +7,7 @@ import usersSqlCommand from './users-sql'
 import exportAllCommand from './export-all'
 import exportAllTgzCommand from './export-all-tgz'
 import databasesSqlCommand from './databases-sql'
+import typescriptCommand from './export-typescript'
 
 export default [
     exportCommand,
@@ -18,4 +19,5 @@ export default [
     exportAllCommand,
     exportAllTgzCommand,
     databasesSqlCommand,
+    typescriptCommand,
 ]
