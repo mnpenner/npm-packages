@@ -4,7 +4,7 @@ specifiers:
   '@types/inflection': ^1.5.28
   '@types/js-yaml': ^4.0.0
   '@types/lodash': ^4.14.172
-  '@types/node': ^14
+  '@types/node': ^14.14.34
   '@types/tar-stream': ^2.2.0
   chalk: ^4.1.0
   cli-api: ^0.1.0
@@ -15,6 +15,7 @@ specifiers:
   esbuild: ^0.12.26
   inflection: ^1.13.1
   js-yaml: ^4.0.0
+  json5: ^2.2.0
   lodash: ^4.17.21
   mysql3: ^0.5.13
   ora: ^5.3.0
@@ -22,7 +23,7 @@ specifiers:
   tar-stream: ^2.2.0
   ts-json-schema-generator: ^0.84.0
   tslib: ^2.1.0
-  typescript: ^4
+  typescript: ^4.1.3
   typescript-json-schema: ^0.48.0
 
 dependencies:
@@ -32,6 +33,7 @@ dependencies:
   csv-parse: 4.15.1
   inflection: 1.13.1
   js-yaml: 4.0.0
+  json5: 2.2.0
   lodash: 4.17.21
   mysql3: 0.5.13
   ora: 5.3.0
@@ -477,6 +479,14 @@ packages:
       jsonify: 0.0.0
     dev: true
 
+  /json5/2.2.0:
+    resolution: {integrity: sha512-f+8cldu7X/y7RAJurMEJmdoKXGB/X550w2Nr3tTbezL6RwEE/iMcm+tZnXeoZtKuOq6ft8+CqzEkrIgx1fPoQA==}
+    engines: {node: '>=6'}
+    hasBin: true
+    dependencies:
+      minimist: 1.2.5
+    dev: false
+
   /jsonify/0.0.0:
     resolution: {integrity: sha1-LHS27kHZPKUbe1qu6PUDYx0lKnM=}
     dev: true
@@ -530,6 +540,10 @@ packages:
     dependencies:
       brace-expansion: 1.1.11
     dev: true
+
+  /minimist/1.2.5:
+    resolution: {integrity: sha512-FM9nNUYrRBAELZQT3xeZQ7fmMOBg6nWNmJKTcgsJeaLstP/UODVpGsr5OhXhhXg6f+qtJ8uiZ+PUxkDWcgIXLw==}
+    dev: false
 
   /moment-timezone/0.5.33:
     resolution: {integrity: sha512-PTc2vcT8K9J5/9rDEPe5czSIKgLoGsH8UNpA4qZTVw0Vd/Uz19geE9abbIOQKaAQFcnQ3v5YEXrbSc5BpshH+w==}

@@ -77,3 +77,27 @@ export function lcsMulti(strings: string[]) {
     // console.log(strings,lcs)
     return lcs
 }
+
+export function longestCommonPrefix(strs: string[]) {
+    let prefix = strs.reduce((acc, str) => str.length < acc.length ? str : acc);
+
+    for (const str of strs) {
+        while (!str.startsWith(prefix)) {
+            prefix = prefix.slice(0, -1);
+        }
+    }
+
+    return prefix;
+}
+
+export function longestCommonSuffix(strs: string[]) {
+    let suffix = strs.reduce((acc, str) => str.length < acc.length ? str : acc);
+
+    for (const str of strs) {
+        while (!str.endsWith(suffix)) {
+            suffix = suffix.slice(1);
+        }
+    }
+
+    return suffix;
+}
