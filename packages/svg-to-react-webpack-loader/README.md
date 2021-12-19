@@ -4,6 +4,44 @@ A [webpack](https://webpack.js.org/) loader that allows you to import .svg files
 
 Also allows you to add props onto the `<svg>` element at run-time, and a `<title>` and `<desc>` for accessibility.
 
+## Unmaintained
+
+Use [`@svgr/webpack`](https://react-svgr.com/docs/webpack/), add these `rules` to your `webpack.config.js`:
+
+```js
+const webpackConfig = {
+    module: {
+        rules: [
+            ...
+            {
+                type: 'asset',
+                resourceQuery: /\burl\b/,  // *.svg?url
+                parser: {
+                    dataUrlCondition: {
+                        maxSize: 200,
+                    }
+                }
+            },
+            {
+                test: /\.svg$/i,
+                issuer: /\.tsx$/,
+                loader: '@svgr/webpack',
+                options: {
+                    titleProp: true,
+                }
+            },
+            ...
+```
+
+And add a file to your project, `types/svgr.d.ts`:
+
+```ts
+declare module '*.svg' {
+    const component: React.FC<React.SVGProps<SVGSVGElement> & {title?: string}>;
+    export default component;
+}
+```
+
 ## Compilation
 
 ### Input

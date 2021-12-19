@@ -1,6 +1,6 @@
 {
     "name": "svg-to-react-webpack-loader",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "main": "loader.js",
     "author": "Mark Penner <npm@mpen.ca>",
     "license": "MIT",
@@ -10,7 +10,7 @@
     },
     "repository": {
         "type": "hg",
-        "url": "https://bitbucket.org/mnpenner/react-svg-loader"
+        "url": "https://github.com/mnpenner/svg-to-react-webpack-loader"
     },
     "publishConfig": {
         "registry": "https://registry.npmjs.org"
