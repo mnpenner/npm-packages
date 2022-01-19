@@ -1,4 +1,4 @@
-const util = require('./util');
+import * as util from './util'
 
 let nativeFuncs = new Map();
 const isRaw = Symbol('isRaw');
@@ -17,7 +17,7 @@ function merge(target, ...sources) {
     return target;
 }
 
-function serialize1(object, options?) {
+export default function serialize1(object, options?) {
     return serialize2(object,options).replace(/<\/(script)/ig, '<\\/$1');
 }
 
@@ -281,4 +281,3 @@ function serializePropertyName(name, options, ctx) {
     throw new Error(`Cannot make property name`);
 }
 
-module.exports = serialize1;

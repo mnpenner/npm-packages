@@ -1,44 +1,44 @@
-function isNativeFunction(obj) {
+export function isNativeFunction(obj: any): obj is Function {
     return isFunction(obj) && obj.toString().endsWith('{ [native code] }');
 }
 
-function isFunction(obj) {
+export function isFunction(obj:any): obj is Function {
     return typeof obj === 'function';
 }
 
-function isString(obj) {
+export function isString(obj:any): obj is string|String {
     return typeof obj === 'string' || obj instanceof String;
 }
 
-function isNumber(obj) {
+export function isNumber(obj:any) : obj is number|Number {
     return typeof obj === 'number' || obj instanceof Number;
 }
 
-function isBigInt(obj) {
+export function isBigInt(obj: any): obj is bigint {
     return typeof obj === 'bigint';
 }
 
-function isBoolean(obj) {
+export function isBoolean(obj: any): obj is boolean {
     return obj === true || obj === false;
 }
 
-function isRegExp(obj) {
+export function isRegExp(obj: any): obj is RegExp {
     return obj instanceof RegExp;
 }
 
-function isArray(obj) {
+export function isArray(obj: any): obj is any[] {
     return Array.isArray(obj);
 }
 
-function isNull(obj) {
+export function isNull(obj: any): obj is null {
     return obj === null;
 }
 
-function isObject(obj) {
+export function isObject(obj: any): obj is object {
     return obj !== null && typeof obj === 'object';
 }
 
-function isPlainObject(obj) {
+export function isPlainObject(obj: any): obj is object {
     return isObject(obj)
         && !isString(obj)
         && !isNumber(obj)
@@ -46,40 +46,8 @@ function isPlainObject(obj) {
         && !isArray(obj);
 }
 
-function isSymbol(obj) {
+export function isSymbol(obj: any): obj is Symbol {
     return Object.prototype.toString.call(obj) === '[object Symbol]';
-}
-
-/**
- * @param {Array} arr
- * @param {Function} cb
- * @returns {Array}
- * @see http://stackoverflow.com/q/5501581/65387
- */
-function map(arr, cb) {
-    let res = [];
-    for(let i=0; i<arr.length; ++i) {
-        res.push(cb(arr[i],i));
-    }
-    return res;
-}
-
-function hasAssignedValues(arr) {
-    for(let i=0; i<arr.length; ++i) {
-        if(arr.hasOwnProperty(i)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-function dotGet(obj, path, defaultValue) {
-    let parts = path.split('.');
-    for(let p of parts) {
-        obj = obj[p];
-        if(!obj) return defaultValue;
-    }
-    return obj;
 }
 
 /**
@@ -92,9 +60,9 @@ function dotGet(obj, path, defaultValue) {
  * @param {Number} maxDepth
  * @returns {null|Array.<string>}
  */
-function findFunction(lib, fn, maxDepth=3) {
-    let queue = [];
-    let path = [];
+export function findFunction(lib: any, fn: Function, maxDepth:number=3):null|string[] {
+    let queue: [path:string[],lib:any][] = [];
+    let path: string[] = [];
     let seen = new Set();
     --maxDepth;
     for(;;) {
@@ -112,8 +80,6 @@ function findFunction(lib, fn, maxDepth=3) {
         if(!queue.length) {
             return null;
         }
-        [path,lib] = queue.shift();
+        [path,lib] = queue.shift()!;
     }
 }
-
-module.exports = {isNativeFunction, isFunction, isObject, isNull, isString, isArray, isNumber, isBigInt, isRegExp, map, hasAssignedValues, isSymbol, dotGet, findFunction, isBoolean};

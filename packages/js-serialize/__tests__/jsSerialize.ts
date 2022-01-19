@@ -1,6 +1,5 @@
-const jsSerialize = require('../')
-const {Assertion, expect} = require('chai')
-import Chai from 'chai'
+import jsSerialize from '../'
+import Chai,{Assertion, expect}  from 'chai'
 
 Assertion.addMethod('wse', function(this: Chai.AssertionStatic, str: string) {
     new Assertion(this._obj).to.be.a('string')
