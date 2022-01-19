@@ -29,6 +29,7 @@ describe('strings', () => {
         expect(jsSerialize('he"l\\lo')).to.equal('"he\\"l\\\\lo"')
         expect(jsSerialize('0\u12345')).to.equal('"0\\u12345"')
         expect(jsSerialize('\x001')).to.equal('"\\x001"') // \01 would be incorrect!
+        expect(jsSerialize('\u{1f469}')).to.equal('"\\u{1f469}"')
     })
 
     it('uses single-character escape sequences', () => {
