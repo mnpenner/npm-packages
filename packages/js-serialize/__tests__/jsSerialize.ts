@@ -79,8 +79,13 @@ it('serializes maps', () => {
 
 it('serializes dates', () => {
     // expect(jsSerialize(new Date('2017-05-04T16:55:50.457Z'))).to.equal('new Date("2017-05-04T16:55:50.457Z")'); // iOS can't handle ISO dates?!
-    expect(jsSerialize(new Date('2017-05-04T16:55:50.457Z'), {compact: false})).to.equal('new Date(1493916950457)')
+    expect(jsSerialize(new Date('2017-05-04T16:55:50.457Z'), {compact: false})).to.equal('new Date(Date.UTC(2017,4,4,16,55,50,457))')
     expect(jsSerialize(new Date('2017-05-04T16:55:50.457Z'), {compact: true})).to.equal('new Date(1493916950457)')
+    expect(jsSerialize(new Date(1642572794510), {compact: true})).to.equal('new Date(1642572794510)')
+    expect(jsSerialize(new Date(1642572794510), {compact: false})).to.equal('new Date(Date.UTC(2022,0,19,6,13,14,510))')
+    expect(jsSerialize(new Date(1642572794000), {compact: false})).to.equal('new Date(Date.UTC(2022,0,19,6,13,14))')
+    expect(jsSerialize(new Date(Date.UTC(2022,0,19)), {compact: false})).to.equal('new Date(Date.UTC(2022,0,19))')
+    expect(jsSerialize(new Date(Date.UTC(2022,0,19)), {compact: true})).to.equal('new Date(1642550400000)')
 })
 
 it('serializes scripts', () => {

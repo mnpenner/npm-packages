@@ -120,7 +120,18 @@ function serializeAny(obj: any, opt: Options, ctx: Context, path: Path): string 
         }
         return 'new Map'
     } else if(obj instanceof Date) {
-        return 'new Date(' + serializeInner(obj.valueOf(), opt) + ')'
+        if(opt.compact) {
+            return `new Date(${obj.valueOf()})`
+        }
+        const parts = [obj.getUTCFullYear(),obj.getUTCMonth(),obj.getUTCDate()]
+        if((+obj % 86400000) !== 0) {
+            parts.push(obj.getUTCHours(),obj.getUTCMinutes(),obj.getUTCSeconds())
+            const ms = obj.getUTCMilliseconds()
+            if(ms) {
+                parts.push(ms)
+            }
+        }
+        return `new Date(Date.UTC(${parts.join(',')}))`
     } else if(util.isSymbol(obj)) {
         if(!wellKnownSymbols) {
             wellKnownSymbols = new Map(
