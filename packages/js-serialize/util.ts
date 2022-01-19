@@ -6,11 +6,20 @@ export function isFunction(obj:any): obj is Function {
     return typeof obj === 'function';
 }
 
-export function isString(obj:any): obj is string|String {
+export function isString(obj:any): obj is string {
+    return typeof obj === 'string'
+}
+
+export function isStringLike(obj:any): obj is string|String {
     return typeof obj === 'string' || obj instanceof String;
 }
 
-export function isNumber(obj:any) : obj is number|Number {
+export function isNumber(obj:any) : obj is number {
+    return typeof obj === 'number';
+}
+
+
+export function isNumberLike(obj:any) : obj is number|Number {
     return typeof obj === 'number' || obj instanceof Number;
 }
 
@@ -40,13 +49,13 @@ export function isObject(obj: any): obj is object {
 
 export function isPlainObject(obj: any): obj is object {
     return isObject(obj)
-        && !isString(obj)
-        && !isNumber(obj)
+        && !isStringLike(obj)
+        && !isNumberLike(obj)
         && !isRegExp(obj)
         && !isArray(obj);
 }
 
-export function isSymbol(obj: any): obj is Symbol {
+export function isSymbol(obj: any): obj is symbol {
     return Object.prototype.toString.call(obj) === '[object Symbol]';
 }
 

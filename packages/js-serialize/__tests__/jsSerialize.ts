@@ -19,7 +19,7 @@ Assertion.addMethod('wse', function(this: Chai.AssertionStatic, str: string) {
 describe('strings', () => {
     it('serializes strings', () => {
         expect(jsSerialize('foo')).to.equal('"foo"')
-        expect(jsSerialize(new String('bar'))).to.equal('"bar"')
+        expect(jsSerialize(new String('bar'))).to.equal('new String("bar")')
     })
 
     it('encodes unicode using escape sequences', () => {
@@ -42,7 +42,7 @@ it('serializes numbers', () => {
     expect(jsSerialize(3.14)).to.equal('3.14')
     expect(jsSerialize(Math.PI)).to.equal('Math.PI')
     expect(jsSerialize(0)).to.equal('0')
-    expect(jsSerialize(new Number(2))).to.equal('2')
+    expect(jsSerialize(new Number(2))).to.equal('new Number(2)')
 })
 
 it('serializes negative zero', () => {
@@ -238,6 +238,18 @@ it('supports frozen objects', () => {
     expect(jsSerialize(frozen)).to.equal('{ans:42}')
     Object.freeze(frozen)
     expect(jsSerialize(frozen)).to.equal('Object.freeze({ans:42})')
+})
+
+it('supports sealed objects', () => {
+    const sealed = {ans: 42}
+    Object.seal(sealed)
+    expect(jsSerialize(sealed)).to.equal('Object.seal({ans:42})')
+})
+
+it('supports non-extensible objects', () => {
+    const ext = {ans: 42}
+    Object.preventExtensions(ext)
+    expect(jsSerialize(ext)).to.equal('Object.preventExtensions({ans:42})')
 })
 
 
