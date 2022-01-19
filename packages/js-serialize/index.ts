@@ -224,12 +224,21 @@ function serializeNumber(obj: number, opt: Options) {
             return 'Math.SQRT1_2'
         case Math.SQRT2:
             return 'Math.SQRT2'
+        // case Number.MAX_SAFE_INTEGER:
+        //     return 'Number.MAX_SAFE_INTEGER'
+        // case Number.MIN_SAFE_INTEGER:
+        //     return 'Number.MIN_SAFE_INTEGER'
+        case Number.EPSILON:
+            return 'Number.EPSILON'
         case Infinity:
             return opt.compact ? '1/0' : 'Infinity'
         case -Infinity:
             return opt.compact ? '1/-0' : '-Infinity'
     }
     if(isNegativeZero(obj)) return '-0'
+    if(opt.compact && Number.isInteger(obj) && obj >= 1000000000000) {
+        return '0x' + obj.toString(16)
+    }
     return String(obj)
 }
 

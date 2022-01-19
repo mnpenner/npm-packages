@@ -41,8 +41,12 @@ it('serializes numbers', () => {
     expect(jsSerialize(1)).to.equal('1')
     expect(jsSerialize(3.14)).to.equal('3.14')
     expect(jsSerialize(Math.PI)).to.equal('Math.PI')
+    expect(jsSerialize(Number.EPSILON)).to.equal('Number.EPSILON')
     expect(jsSerialize(0)).to.equal('0')
     expect(jsSerialize(new Number(2))).to.equal('new Number(2)')
+    expect(jsSerialize(244838016401135,{compact:true})).to.equal('0xdeadcafebeef')
+    expect(jsSerialize(244838016401135.1,{compact:true})).to.equal('244838016401135.1')
+    expect(jsSerialize(0xFF,{compact:true})).to.equal('255')
 })
 
 it('serializes negative zero', () => {
@@ -59,6 +63,8 @@ it('serializes Infinity', () => {
 
 it('serializes NaN', () => {
     expect(jsSerialize(NaN)).to.equal('NaN')
+    expect(jsSerialize(Number.NaN)).to.equal('NaN')
+    expect(jsSerialize('wat'-1)).to.equal('NaN')
 })
 
 it('serializes regexes', () => {

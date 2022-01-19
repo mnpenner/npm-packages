@@ -18,7 +18,6 @@ export function isNumber(obj:any) : obj is number {
     return typeof obj === 'number';
 }
 
-
 export function isNumberLike(obj:any) : obj is number|Number {
     return typeof obj === 'number' || obj instanceof Number;
 }
