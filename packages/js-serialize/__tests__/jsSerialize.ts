@@ -240,18 +240,18 @@ describe('objects', () => {
 
     it('serializes recursive objects', () => {
         let foo = {foo: 1}
-        expect(jsSerialize({a: foo, b: foo}, {safe: false})).to.equal("(o=>{o={a:{foo:1}};o.b=o.a;return o})()") // shorter: (($0)=>({a:$0,b:$0}))({foo:1})
+        expect(jsSerialize({a: foo, b: foo}, {safe: false})).to.equal("(o=>(o={a:{foo:1}},o.b=o.a,o))()") // shorter: (($0)=>({a:$0,b:$0}))({foo:1})
 
         let o = {a: 'perfect'}
         o.circle = o
-        expect(jsSerialize({apc: o}, {safe: false})).to.equal('(o=>{o={apc:{a:"perfect"}};o.apc.circle=o.apc;return o})()')
-        expect(jsSerialize(o, {safe: false})).to.equal('(o=>{o={a:"perfect"};o.circle=o;return o})()')
-        expect(jsSerialize(o, {safe: true})).to.equal('(function(o){o={a:"perfect"};o.circle=o;return o})()')
+        expect(jsSerialize({apc: o}, {safe: false})).to.equal('(o=>(o={apc:{a:"perfect"}},o.apc.circle=o.apc,o))()')
+        expect(jsSerialize(o, {safe: false})).to.equal('(o=>(o={a:"perfect"},o.circle=o,o))()')
+        expect(jsSerialize(o, {safe: true})).to.equal('(function(o){return o={a:"perfect"},o.circle=o,o})()')
         expect(jsSerialize({
             a: o,
             b: [o, 1, o],
             c: {d: o, e: o, f: new Set([o])}
-        }, {safe: false})).to.equal('(o=>{o={a:{a:"perfect"},b:[,1,,],c:{f:new Set((o=>{o=[{a:"perfect"}];o[0].circle=o[0];return o})())}};o.a.circle=o.a;o.b[0]=o.a;o.b[2]=o.a;o.c.d=o.a;o.c.e=o.a;return o})()') // FIXME: the object inside the set isn't === to the object outside the set -- there are *two* copies here
+        }, {safe: false})).to.equal('(o=>(o={a:{a:"perfect"},b:[,1,,],c:{f:new Set((o=>(o=[{a:"perfect"}],o[0].circle=o[0],o))())}},o.a.circle=o.a,o.b[0]=o.a,o.b[2]=o.a,o.c.d=o.a,o.c.e=o.a,o))()') // FIXME: the object inside the set isn't === to the object outside the set -- there are *two* copies here
 
         let s = new Set()
         let rs = {s}

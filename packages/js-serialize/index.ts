@@ -55,14 +55,14 @@ function serializeInner(object: any, options?: Partial<Options>): string {
 
     // console.log('defer',ctx.defer);
 
-    const out2 = 'o=' + out1 + ';'
-        + ctx.defer.map(d => `o${pathToStr(d[0], opt)}=o${pathToStr(d[1], opt)}`).join(';')
+    const out2 = 'o=' + out1 + ','
+        + ctx.defer.map(d => `o${pathToStr(d[0], opt)}=o${pathToStr(d[1], opt)}`).join(',') + ',o'
 
-    const out3 = `(${opt.safe ? 'function(o)' : 'o=>'}{${out2};return o})()`
+    if(opt.safe) {
+        return `(function(o){return ${out2}})()`
+    }
+    return `(o=>(${out2}))()`
 
-    // console.log(out3);
-
-    return out3
 }
 
 function pathToStr(path: string[], opt: Options) {
@@ -295,6 +295,10 @@ function serializeObject(obj: any, opt: Options, ctx: Context, path: Path) {
     if(util.isFunction(obj.toJSON)) {
         return serializeInner(obj.toJSON(), opt)
     }
+    return serializePlainObject(obj, opt, ctx, path);
+}
+
+function serializePlainObject(obj: any, opt: Options, ctx: Context, path: Path) {
     let tmp = []
     for(let key of Reflect.ownKeys(obj)) {
         let existingPath = ctx.paths.get(obj[key])
