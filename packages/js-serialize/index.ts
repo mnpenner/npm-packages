@@ -17,7 +17,7 @@ function merge(target, ...sources) {
     return target;
 }
 
-function serialize1(object, options) {
+function serialize1(object, options?) {
     return serialize2(object,options).replace(/<\/(script)/ig, '<\\/$1');
 }
 
@@ -61,7 +61,7 @@ function isNegativeZero(value) {
     return 1/value === -Infinity;
 }
 
-function serialize3(obj, opt, ctx, path) {
+function serialize3(obj, opt, ctx, path?) {
     if(util.isObject(obj)) {
         if(ctx.paths.has(obj)) {
             throw new Error(`Possible recursive loop`);
