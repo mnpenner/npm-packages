@@ -4,12 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "ts-mocha __tests__/**.ts"
+    "test": "ts-mocha __tests__/**.ts",
+    "build": "spack"
   },
   "author": "Mark Penner <npm@mpen.ca>",
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {
+    "@swc/cli": "^0.1.55",
+    "@swc/core": "^1.2.131",
     "@types/chai": "^4.1.7",
     "@types/mocha": "^9.0.0",
     "@types/node": "^17.0.10",

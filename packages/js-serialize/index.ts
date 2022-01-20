@@ -111,6 +111,9 @@ function serializeAny(obj: any, opt: Options, ctx: Context, path: Path): string 
         return '[' + sb.join(',') + ']'
     } else if(obj instanceof Set) {
         if(obj.size) {
+            // FIXME: I think the issue is that set members are not referenceable by path/key -- we should instead create a 1-letter variable name inline
+            // ... but we can't really do that either because if it refers to something higher up the hierarchy, that var won't be fully defined yet
+            // thus if a Set or Map contains any upstream object, the entire Set instantiation has to be deferred... *or* we just .add() the missing elements later?
             return 'new Set(' + serializeInner(Array.from(obj), opt) + ')'
         }
         return 'new Set'
