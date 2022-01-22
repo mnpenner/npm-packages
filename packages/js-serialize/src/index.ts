@@ -5,11 +5,15 @@ const isRaw = Symbol('isRaw')
 let wellKnownSymbols: Map<symbol,string>
 const EMPTY_ARRAY = Object.freeze<any>([])
 
+
+
 function merge<T extends {}>(target: T, ...sources: Array<undefined | Partial<T>>): T {
     for(let obj of sources) {
         if(obj) {
             for(let key of Object.keys(obj)) {
+                // @ts-ignore
                 if(obj[key] !== undefined) {
+                    // @ts-ignore
                     target[key] = obj[key]
                 }
             }
@@ -103,6 +107,7 @@ function referenceCount(object: any): Map<any,number> {
         } else if(util.isObject(o)) {  // process object last because it'll get caught by some of the above stuff
             m.set(o,1)
             for(const k of Reflect.ownKeys(o)) {
+                // @ts-ignore
                 r(o[k])
             }
         }
@@ -222,9 +227,12 @@ function wrapSimpleRef(serialize: SerializerFunc) {
 
 function serializeAnySymbol(obj: symbol, ctx: Context) {
     if(!wellKnownSymbols) {
+        // @ts-ignore
         wellKnownSymbols = new Map(
             Object.getOwnPropertyNames(Symbol)
+                // @ts-ignore
                 .filter(k => util.isSymbol(Symbol[k]))
+                // @ts-ignore
                 .map(k => [Symbol[k], k])
         )
     }

@@ -68,4 +68,11 @@ npm i js-serialize -S
 
 > jsSerialize(() => '</script>')
 '() => \'<\\/script>\''
+
+> s=new Set
+Set(0) {}
+> s.add(s)
+<ref *1> Set(1) { [Circular *1] }
+> jsSerialize(s)
+'($0=>($0=new Set,$0.add($0)))()'
 ```
