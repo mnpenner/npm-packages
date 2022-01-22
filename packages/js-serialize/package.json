@@ -2,22 +2,30 @@
   "name": "js-serialize",
   "version": "0.3.0",
   "description": "",
-  "main": "index.js",
+  "source": "index.ts",
+  "main": "dist/jsSerialize.js",
+  "module": "dist/jsSerialize.mjs",
+  "types": "dist/jsSerialize.d.ts",
+  "context": "node",
+  "engines": {
+    "node": ">= 14"
+  },
   "scripts": {
+    "testset": "ts-mocha __tests__/**.ts --grep \"serializes recursive sets\"",
     "test": "ts-mocha __tests__/**.ts",
-    "build": "spack"
+    "build": "parcel build"
   },
   "author": "Mark Penner <npm@mpen.ca>",
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {
-    "@swc/cli": "^0.1.55",
-    "@swc/core": "^1.2.131",
+    "@parcel/transformer-typescript-types": "^2.2.1",
     "@types/chai": "^4.1.7",
     "@types/mocha": "^9.0.0",
     "@types/node": "^17.0.10",
     "chai": "^4.2.0",
     "mocha": "^6.0.2",
+    "parcel": "^2.2.1",
     "ts-mocha": "^9.0.2",
     "typescript": "^4.5.4",
     "xregexp": "^3.1.1"
