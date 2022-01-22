@@ -27,9 +27,6 @@ npm i js-serialize -S
 > jsSerialize(new Set([4,5]))
 'new Set([4,5])'
 
-> jsSerialize(new Set([4,5]))
-'new Set([4,5])'
-
 > jsSerialize(new Map([["a",1],["b",2]]))
 'new Map([["a",1],["b",2]])'
 
@@ -75,4 +72,7 @@ Set(0) {}
 <ref *1> Set(1) { [Circular *1] }
 > jsSerialize(s)
 '($0=>($0=new Set,$0.add($0)))()'
+
+> jsSerialize(["hello world", "hello long string", "hello world", "hello long string"])
+'($0=>["hello world",$0="hello long string","hello world",$0])()'
 ```

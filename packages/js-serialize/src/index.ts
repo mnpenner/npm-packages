@@ -37,7 +37,7 @@ interface Context {
     opts: Options,
 }
 
-export default function jsSerialize(object: any, options?: Partial<Options>): string {
+function jsSerialize(object: any, options?: Partial<Options>): string {
     return startSerialize(object, options).replace(/<\/(script)/ig, '<\\/$1')
 }
 
@@ -535,3 +535,4 @@ function serializePropertyName(name: PropertyKey, ctx: Context) {
     throw new Error(`Cannot make property name`)
 }
 
+export = jsSerialize
