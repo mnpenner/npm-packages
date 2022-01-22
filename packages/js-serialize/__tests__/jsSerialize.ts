@@ -242,7 +242,7 @@ describe('objects', () => {
         let s = new Set()
         // let rs = {s}
         s.add(s)
-        expect(jsSerialize(s,{safe:false})).to.equal('($0=>(($0=new Set,$0.add($0))))()');
+        expect(jsSerialize(s,{safe:false})).to.equal('($0=>($0=new Set,$0.add($0)))()');
 
 
         let o: any = {a: 'perfect'}
@@ -266,6 +266,35 @@ describe('objects', () => {
         expect(jsSerialize({apc: o}, {safe: false})).to.equal('($0=>({apc:($0={},Object.assign($0,{a:"perfect",circle:$0}))}))()')
         // expect(jsSerialize(o, {safe: false})).to.equal('(o=>(o={a:"perfect"},o.circle=o,o))()')
         // expect(jsSerialize(o, {safe: true})).to.equal('(function(o){return o={a:"perfect"},o.circle=o,o})()')
+    })
+
+    it('serializes recursive maps', () => {
+        const m = new Map
+        m.set(0,m)
+        m.set(m,m)
+        expect(jsSerialize(m)).to.equal("($0=>($0=new Map,$0.set(0,$0).set($0,$0)))()")
+    })
+
+    it('serializes map references', () => {
+        const m = new Map
+        expect(jsSerialize([m,m])).to.equal("($0=>[$0=new Map,$0])()")
+    })
+
+    it('serializes set references', () => {
+        const s = new Set
+        expect(jsSerialize([s,s])).to.equal("($0=>[$0=new Set,$0])()")
+    })
+
+    it('serializes array references', () => {
+        const a: any[] = []
+        expect(jsSerialize([a,a])).to.equal("($0=>[$0=[],$0])()")
+
+        const b = new Array(5)
+        expect(jsSerialize([b,b])).to.equal("($0=>[$0=new Array(5),$0])()")
+
+        let c = new Array(4)
+        c[1] = 4
+        expect(jsSerialize([c,c])).to.equal("($0=>[($0=new Array(4),$0[1]=4,$0),$0])()")
     })
 
     it('supports frozen objects', () => {

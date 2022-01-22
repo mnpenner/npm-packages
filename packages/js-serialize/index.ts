@@ -53,14 +53,17 @@ function startSerialize(object: any, options?: Partial<Options>): string {
         }, options)),
     }
 
-    const js = serializeAny(object, ctx);
+    let js = serializeAny(object, ctx);
 
     if(dupes.length) {
         let varDecl = dupes.map(x=>x[1]).join(',')
         if(dupes.length > 1) {
             varDecl = `(${varDecl})`
         }
-        return `(${varDecl}=>(${js}))()`
+        if(js.startsWith('{')) {
+            js = `(${js})`
+        }
+        return `(${varDecl}=>${js})()`
     }
 
     return js
@@ -149,11 +152,13 @@ function serializeArray(obj: any[], ctx: Context) {
     }
     let sb = []
     let hasProp = false
+    let isSparse = false
     for(let i = 0; i < obj.length; ++i) {
         if(obj.hasOwnProperty(i)) {
             hasProp = true
             sb.push(serializeAny(obj[i], ctx))
         } else {
+            isSparse = true
             sb.push('')
         }
     }
@@ -165,6 +170,17 @@ function serializeArray(obj: any[], ctx: Context) {
     }
     const inner = sb.join(',')
     if(varName) {
+        if(isSparse) {
+            // FIXME: this is re-doing work done in the above loop...optimize this
+            let sb=[`(${varName}=new Array(${obj.length})`]
+            for(let i = 0; i < obj.length; ++i) {
+                if(obj.hasOwnProperty(i)) {
+                    sb.push(`${varName}[${i}]=${serializeAny(obj[i], ctx)}`)
+                }
+            }
+            sb.push(`${varName})`)
+            return sb.join(',')
+        }
         return `(${varName}=[],${varName}.push(${inner}),${varName})`
     }
     return `[${inner}]`
@@ -185,8 +201,15 @@ function serializeSet(obj: Set<any>, ctx: Context) {
 }
 
 function serializeMap(obj: Map<any,any>, ctx: Context) {
+    const varName = ctx.refs.get(obj)
     if(obj.size) {
+        if(varName) {
+            return `(${varName}=new Map,${varName}` +Array.from(obj).map(([k,v]) => `.set(${serializeAny(k,ctx)},${serializeAny(v,ctx)})`).join('')+')'
+        }
         return 'new Map(' + serializeAny(Array.from(obj), ctx) + ')'
+    }
+    if(varName) {
+        return `${varName}=new Map`
     }
     return 'new Map'
 }
