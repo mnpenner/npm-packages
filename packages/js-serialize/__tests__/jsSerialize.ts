@@ -285,6 +285,23 @@ describe('objects', () => {
         expect(jsSerialize([s,s])).to.equal("($0=>[$0=new Set,$0])()")
     })
 
+    it('serializes object references', () => {
+        const o = {}
+        expect(jsSerialize([o,o])).to.equal("($0=>[$0={},$0])()")
+    })
+
+    it('serializes object frozen references', () => {
+        const o = Object.freeze({})
+        expect(jsSerialize([o,o])).to.equal("($0=>[$0=Object.freeze({}),$0])()")
+    })
+
+    it('serializes object recursive sealed references', () => {
+        let o: any = {}
+        o.ref = o
+        Object.seal(o)
+        expect(jsSerialize([o,o])).to.equal("($0=>[($0={},Object.seal(Object.assign($0,{ref:$0}))),$0])()")
+    })
+
     it('serializes array references', () => {
         const a: any[] = []
         expect(jsSerialize([a,a])).to.equal("($0=>[$0=[],$0])()")

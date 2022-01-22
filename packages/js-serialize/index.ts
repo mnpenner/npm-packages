@@ -297,27 +297,29 @@ function serializeNull(obj: null, ctx: Context) {
     return 'null'
 }
 
-function forceSerializeAnyObject(obj: any, ctx: Context) {
-    const tmp = serializeObject(obj, ctx)
+function maybeFreeze(obj: any, js: string) {
     if(Object.isFrozen(obj)) {
-        return `Object.freeze(${tmp})`
+        return `Object.freeze(${js})`
     }
     if(Object.isSealed(obj)) {
-        return `Object.seal(${tmp})`
+        return `Object.seal(${js})`
     }
     if(!Object.isExtensible(obj)) {
-        return `Object.preventExtensions(${tmp})`
+        return `Object.preventExtensions(${js})`
     }
-    return tmp
+    return js
 }
 
 function serializeAnyObject(obj: any, ctx: Context) {
-    const tmp = forceSerializeAnyObject(obj, ctx)
+    const tmp = serializeObject(obj, ctx)
     const name = ctx.refs.get(obj)
     if(name) {
-        return `(${name}={},Object.assign(${name},${tmp}))`
+        if(Reflect.ownKeys(obj).length) {
+            return `(${name}={},${maybeFreeze(obj,`Object.assign(${name},${tmp})`)})`
+        }
+        return `${name}=${maybeFreeze(obj,'{}')}`
     }
-    return tmp
+    return maybeFreeze(obj,tmp)
 }
 
 function serializeAny(obj: any, ctx: Context): string {
