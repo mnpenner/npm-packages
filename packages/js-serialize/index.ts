@@ -206,6 +206,20 @@ function serializeDate(obj: Date, ctx: Context) {
     return `new Date(Date.UTC(${parts.join(',')}))`
 }
 
+type SerializerFunc = (obj:any, ctx: Context) => string
+
+function wrapSimpleRef(serialize: SerializerFunc) {
+    return (obj: any, ctx: Context) => {
+        const js = serialize(obj, ctx)
+        const varName = ctx.refs.get(obj)
+        if(varName) {
+            ctx.seen.add(obj)
+            return `${varName}=${js}`
+        }
+        return js
+    }
+}
+
 function serializeAnySymbol(obj: symbol, ctx: Context) {
     if(!wellKnownSymbols) {
         wellKnownSymbols = new Map(
@@ -316,16 +330,16 @@ function serializeAny(obj: any, ctx: Context): string {
         return serializeMap(obj, ctx);
     }
     if(obj instanceof Date) {
-        return serializeDate(obj, ctx);
+        return wrapSimpleRef(serializeDate)(obj, ctx);
     }
     if(util.isSymbol(obj)) {
-        return serializeAnySymbol(obj, ctx);
+        return wrapSimpleRef(serializeAnySymbol)(obj, ctx);
     }
     if(util.isFunction(obj)) {
-        return serializeAnyFunction(obj, ctx);
+        return wrapSimpleRef(serializeAnyFunction)(obj, ctx);
     }
     if(util.isRegExp(obj)) {
-        return serializeRegExp(obj, ctx);
+        return wrapSimpleRef(serializeRegExp)(obj, ctx);
     }
     if(util.isNumberLike(obj)) {
         return serializeNumberLike(obj, ctx)

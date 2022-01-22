@@ -194,7 +194,7 @@ describe('objects', () => {
             finally: 3,
             for: 4,
             five: 5
-        })).to.equal(`{"class":1,"do":2,"finally":3,"for":4,five:5}`)
+        }, {safe: true})).to.equal(`{"class":1,"do":2,"finally":3,"for":4,five:5}`)
         expect(jsSerialize({
             class: 1,
             do: 2,
@@ -233,7 +233,9 @@ describe('objects', () => {
         expect(jsSerialize(obj)).to.equal('"bar"')
         expect(jsSerialize({x: obj})).to.equal('{x:"bar"}')
     })
+})
 
+describe('recursion', () => {
     it('passes options recursively', () => {
         expect(jsSerialize({foo: {bar: true}}, {compact: true})).to.equal('{foo:{bar:!0}}')
     })
@@ -274,7 +276,30 @@ describe('objects', () => {
         m.set(m,m)
         expect(jsSerialize(m)).to.equal("($0=>($0=new Map,$0.set(0,$0).set($0,$0)))()")
     })
+})
 
+describe('object modifiers', () => {
+    it('supports frozen objects', () => {
+        const frozen = {ans: 42}
+        expect(jsSerialize(frozen)).to.equal('{ans:42}')
+        Object.freeze(frozen)
+        expect(jsSerialize(frozen)).to.equal('Object.freeze({ans:42})')
+    })
+
+    it('supports sealed objects', () => {
+        const sealed = {ans: 42}
+        Object.seal(sealed)
+        expect(jsSerialize(sealed)).to.equal('Object.seal({ans:42})')
+    })
+
+    it('supports non-extensible objects', () => {
+        const ext = {ans: 42}
+        Object.preventExtensions(ext)
+        expect(jsSerialize(ext)).to.equal('Object.preventExtensions({ans:42})')
+    })
+})
+
+describe('references', () => {
     it('serializes map references', () => {
         const m = new Map
         expect(jsSerialize([m,m])).to.equal("($0=>[$0=new Map,$0])()")
@@ -319,22 +344,8 @@ describe('objects', () => {
         expect(jsSerialize([c,c])).to.equal("($0=>[($0=new Array(4),$0[1]=4,$0),$0])()")
     })
 
-    it('supports frozen objects', () => {
-        const frozen = {ans: 42}
-        expect(jsSerialize(frozen)).to.equal('{ans:42}')
-        Object.freeze(frozen)
-        expect(jsSerialize(frozen)).to.equal('Object.freeze({ans:42})')
-    })
-
-    it('supports sealed objects', () => {
-        const sealed = {ans: 42}
-        Object.seal(sealed)
-        expect(jsSerialize(sealed)).to.equal('Object.seal({ans:42})')
-    })
-
-    it('supports non-extensible objects', () => {
-        const ext = {ans: 42}
-        Object.preventExtensions(ext)
-        expect(jsSerialize(ext)).to.equal('Object.preventExtensions({ans:42})')
+    it('symbol references', () => {
+        const s = Symbol()
+        expect(jsSerialize([s,s])).to.equal("($0=>[$0=Symbol(),$0])()")
     })
 })
