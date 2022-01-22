@@ -290,6 +290,11 @@ describe('objects', () => {
         expect(jsSerialize([o,o])).to.equal("($0=>[$0={},$0])()")
     })
 
+    it('deduplicates long strings', () => {
+        expect(jsSerialize(['12345678901','abc','12345678901'])).to.equal('["12345678901","abc","12345678901"]')
+        expect(jsSerialize(['123456789012','abc','123456789012'])).to.equal('($0=>[$0="123456789012","abc",$0])()')
+    })
+
     it('serializes object frozen references', () => {
         const o = Object.freeze({})
         expect(jsSerialize([o,o])).to.equal("($0=>[$0=Object.freeze({}),$0])()")

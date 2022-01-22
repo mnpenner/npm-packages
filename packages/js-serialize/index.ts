@@ -21,13 +21,15 @@ function merge<T extends {}>(target: T, ...sources: Array<undefined | Partial<T>
 type Path = PropertyKey[]
 
 interface Options {
+    /** Make the output code slightly more compact (and harder to read) */
     compact: boolean
+    /** Slightly improve compatibility with older browsers */
     safe: boolean
 }
 
 interface Context {
     seen: Set<any>,
-    refs: Map<any,string>,
+    refs: Map<any,string>,  // TODO: combine 'seen' into refs; e.g. {seen: boolean, name:string}
     opts: Options,
 }
 
@@ -39,7 +41,10 @@ function startSerialize(object: any, options?: Partial<Options>): string {
     const counts = referenceCount(object);
 
     let c = 0;
-    const dupes = [...counts].filter(x => x[1] > 1).sort((a,b) => b[1]-a[1]).map(x => [x[0], `$${c++}`])
+    const dupes: [any,string][] = [...counts]
+        .filter(x => x[1] > 1)
+        .sort((a,b) => b[1]-a[1])
+        .map(x => [x[0], `$${c++}`])
     // console.log(dupes)
     const refs = new Map(dupes)
     // console.log(refs)
@@ -69,35 +74,7 @@ function startSerialize(object: any, options?: Partial<Options>): string {
     return js
 }
 
-// function serialize3(object: any, options?: Partial<Options>): string {
-//     let opt = merge<Options>({
-//         compact: false,
-//         safe: true,
-//     }, options)
-//
-//     let ctx: Context = {
-//         paths: new Map(),
-//         defer: [],
-//     }
-//
-//     let out1 = serializeAny(object, opt, ctx, [])
-//
-//     if(!ctx.defer.length) {
-//         return out1
-//     }
-//
-//     // circular *or* repeated objects
-//
-//     // console.log('defer',ctx.defer);
-//
-//     const out2 = 'o=' + out1 + ','
-//         + ctx.defer.map(d => `o${pathToStr(d[0], opt)}=o${pathToStr(d[1], opt)}`).join(',') + ',o'
-//
-//     if(opt.safe) {
-//         return `(function(o){return ${out2}})()`
-//     }
-//     return `(o=>(${out2}))()`
-// }
+const STRING_REF_MIN_LENGTH = 12
 
 function referenceCount(object: any): Map<any,number> {
     const m = new Map
@@ -113,7 +90,7 @@ function referenceCount(object: any): Map<any,number> {
                 r(v)
             }
         } else if(util.isString(o)) {
-            if(o.length >= 32) {
+            if(o.length >= STRING_REF_MIN_LENGTH) {  // TODO: make this part of the "compact" option
                 m.set(o,1)
             }
         } else if(o instanceof Map) {
@@ -323,7 +300,7 @@ function serializeAnyObject(obj: any, ctx: Context) {
 }
 
 function serializeAny(obj: any, ctx: Context): string {
-    if(ctx.seen.has(obj)) {
+    if(ctx.seen.has(obj) && ctx.refs.has(obj)) {
         return ctx.refs.get(obj)!
     }
     if(util.isArray(obj)) {
@@ -419,6 +396,18 @@ function serializeNumber(obj: number, ctx: Context) {
 }
 
 function serializeStringLike(obj: string | String, ctx: Context) {
+    const js = doSerializeStringLike(obj, ctx)
+    if(obj.length >= STRING_REF_MIN_LENGTH) {
+        const varName = ctx.refs.get(obj)
+        if(varName) {
+            ctx.seen.add(obj)
+            return `${varName}=${js}`
+        }
+    }
+    return js
+}
+
+function doSerializeStringLike(obj: string | String, ctx: Context) {
     const tmp = serializeString(String(obj), ctx)
     if(obj instanceof String) {
         return `new String(${tmp})`
