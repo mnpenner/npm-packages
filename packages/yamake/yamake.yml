@@ -1,0 +1,11 @@
+rules:
+  default:
+    input: src/index.ts
+    output: dist/index.js
+    cmd: esbuild
+    args:
+      - --bundle
+      - src/index.ts
+      - --outdir=dist
+      - --platform=node
+      - --target=node14
