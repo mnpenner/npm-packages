@@ -1,6 +1,12 @@
 rules:
   default:
-    input: src/index.ts
+    input:
+    - src/index.ts
+    auxInput:
+    - node_modules/.modules.yaml
+    - tsconfig.json
+    - package.json
+    - pnpm-lock.yaml
     output: dist/index.js
     cmd: esbuild
     args:

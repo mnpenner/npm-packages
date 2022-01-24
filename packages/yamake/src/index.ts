@@ -4,6 +4,7 @@ import * as childProc from 'child_process'
 import * as Path from 'path'
 import {constants as fsconst} from 'fs'
 import Chalk from 'chalk'
+import { hrtime } from 'process';
 
 function toStringArray(arg: any): string[] {
     if(arg == null) return []
@@ -22,10 +23,18 @@ function shellescapeArg(s: string) {
     return s;
 }
 
-async function mtime(file: string) {
-    const stat = await fs.stat(file, {bigint: true})
+async function mtime(file: string): Promise<bigint|null> {
+    try {
+        const stat = await fs.stat(file, {bigint: true})
+        return stat.mtimeNs
+    } catch(err: any) {
+        if(err.code === 'ENOENT') {
+            return null;
+        }
+        throw err;
+    }
     // console.log(stat)
-    return stat.mtimeNs
+
 }
 
 function max<T>(args: Array<T>): T {
@@ -51,6 +60,14 @@ async function access(path: string, mode:ValueOf<typeof fsconst>) {
     }
 }
 
+async function getLastModTime(files: string[]): Promise<bigint|null> {
+    const times = await Promise.all(files.map(f =>mtime(f)))
+    if(times.includes(null)) {
+        return null
+    }
+    return max(times)
+}
+
 async function main(mainArgs: string[]): Promise<number | void> {
     const doc = yaml.load(await fs.readFile('./yamake.yml', 'utf8')) as any
     const ruleName = mainArgs.length >= 1 ? mainArgs[0] : 'default'
@@ -60,18 +77,31 @@ async function main(mainArgs: string[]): Promise<number | void> {
         return 1
     }
     const input = toStringArray(rule.input)
+    const auxInput = toStringArray(rule.auxInput)
     const output = toStringArray(rule.output)
 
-    const inputLastMod = max(await Promise.all(input.map(f =>mtime(f))))
-    const outputLastMod = max(await Promise.all(output.map(f =>mtime(f))))
-    if(outputLastMod > inputLastMod) {
-        console.info(`Inputs not modified`)
-        // return 0
+    const inputTimes = await Promise.all(input.map(f =>mtime(f)))
+    if(inputTimes.includes(null)) {
+        console.info(`Missing input file`)
+        return 2
     }
+    const outputTimes = await Promise.all(output.map(f =>mtime(f)))
+    if(!outputTimes.includes(null)) {
+        const auxInputTimes = auxInput.length ? (await Promise.all(auxInput.map(f =>mtime(f)))).filter(t => t !== null) : []
+        const inputLastMod = max([...inputTimes,...auxInputTimes])!
+        const outputLastMod = max(outputTimes)!
+        if(outputLastMod > inputLastMod) {
+            console.info(`Inputs not modified`)
+            return 0
+        }
+    }
+    // TODO: check if the input files are the outputs of any other rules and automatically run those build rules too
+    // --> what if a file appears in the output of 2 or more different rules...? what does make do?
+    const deps = toStringArray(rule.dependencies ?? rule.deps);
     let cmd = rule.command ?? rule.cmd;
     const cmdArgs = toStringArray(rule.arguments ?? rule.args)
-    const binDir = Path.join(process.cwd(),'node_modules','.bin')
-    const nmPath = Path.join(binDir,cmd)
+    // const binDir = Path.join(process.cwd(),'node_modules','.bin')
+    // const nmPath = Path.join(binDir,cmd)
     // const executable = await access(nmPath, fsconst.R_OK)
     // // console.log(process.argv0, process.argv[0])
     // if(executable) {
@@ -79,12 +109,46 @@ async function main(mainArgs: string[]): Promise<number | void> {
     //     // cmd = process.argv0
     //     cmd = 'node.exe'
     // }
-    const {Path: envPath, ...env} = process.env
-    env.PATH = binDir+';'+envPath
+    // const {Path: envPath, ...env} = process.env
+    // env.PATH = binDir+';'+envPath
     // console.log(env)
     // console.log('$ ' + [cmd,...cmdArgs].map(shellescapeArg).join(' '))
     console.log(Chalk.cyanBright.bold('$ ') + Chalk.green(shellescapeArg(cmd)) + cmdArgs.map(x => ' '+Chalk.underline(x)).join(''))
-    childProc.spawn(cmd,cmdArgs,{stdio: 'inherit',shell:true})
+
+    const start = hrtime.bigint()
+    const code = await spawn(ruleName, cmd, cmdArgs)
+    const elapsed = toMs(hrtime.bigint() - start)
+    console.log(`${Chalk.bold.whiteBright(ruleName)} exited with code ${Chalk.green(code)} in ${Chalk.blue(elapsed)}ms`)
+}
+
+function toMs(ns: bigint): number {
+    return Number(ns/1000n)/1000
+}
+
+function spawn(prefix: string, cmd: string, args: string[]): Promise<number> {
+    return new Promise((resolve,reject) => {
+        const proc = childProc.spawn(cmd,args,{stdio: ['ignore','pipe','pipe'],shell:true})
+        proc.stdout.on('data', (data:Buffer) => {
+            const lines = data.toString('utf8').trimEnd().split(/\r?\n|\n/g)
+            for(const line of lines) {
+                console.log(Chalk.gray(`[${prefix}]`)+' '+line)
+            }
+        })
+        proc.stderr.on('data', (data:Buffer) => {
+            const lines = data.toString('utf8').trimEnd().split(/\r?\n|\n/g)
+            for(const line of lines) {
+                console.error(Chalk.gray(`[${prefix}]`)+' '+line)
+            }
+            // console.log(`[${ruleName}]E`,String(data))
+        })
+        proc.on('error', err => {
+            reject(err)
+        })
+        proc.on('close', exitCode => {
+            resolve(exitCode ?? 0)
+        })
+    })
+
 }
 
 main(process.argv.slice(2))
