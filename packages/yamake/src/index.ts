@@ -4,7 +4,14 @@ import * as childProc from 'child_process'
 import * as Path from 'path'
 import {constants as fsconst} from 'fs'
 import Chalk from 'chalk'
-import { hrtime } from 'process';
+import {hrtime} from 'process'
+import * as crypto from 'crypto'
+import {EOL} from 'os'
+import type {WriteStream} from 'node:tty'
+
+function objectHash(obj: any): string {
+    return crypto.createHash('md5').update(JSON.stringify(obj)).digest('base64url')
+}
 
 function toStringArray(arg: any): string[] {
     if(arg == null) return []
@@ -80,79 +87,143 @@ async function getMtimes(files: string[]): Promise<Map<string,bigint|null>> {
     return m
 }
 
+const MAKE_FILE = './yamake.yml'
+const CACHE_FILE = './.ymcache.yml'
+
 async function main(mainArgs: string[]): Promise<number | void> {
-    const doc = yaml.load(await fs.readFile('./yamake.yml', 'utf8')) as any
+    const doc = yaml.load(await fs.readFile(MAKE_FILE, 'utf8')) as any
+    let cache: any
+    try {
+        cache = yaml.load(await fs.readFile(CACHE_FILE, 'utf8')) as any
+    } catch(_){}
+    cache ??= {}
+
     const ruleName = mainArgs.length >= 1 ? mainArgs[0] : 'default'
-    const rule = doc.rules?.[ruleName]
-    if(!rule) {
-        console.error(`Rule "${ruleName}" not found`)
-        return 1
-    }
-    const input = toStringArray(rule.inputs ?? rule.input)
-    const auxInput = toStringArray(rule.auxInputs ?? rule.auxInput)
-    const output = toStringArray(rule.outputs ?? rule.output)
 
-    const inputTimes = await Promise.all(input.map(f =>mtime(f)))
-    if(inputTimes.includes(null)) {
-        console.info(`Missing input file`)
-        return 2
-    }
-    const outputTimes = await Promise.all(output.map(f =>mtime(f)))
-    if(!outputTimes.includes(null)) {
-        const auxInputTimes = auxInput.length ? (await Promise.all(auxInput.map(f =>mtime(f)))).filter(t => t !== null) : []
-        const inputLastMod = max([...inputTimes,...auxInputTimes])!
-        const outputLastMod = max(outputTimes)!
-        if(outputLastMod > inputLastMod) {
-            console.info(`Inputs not modified`)
-            return 0
+    async function resolveRule(ruleName: string): Promise<number> {
+        const rule = doc.rules?.[ruleName]
+        if(!rule) {
+            console.error(`Rule "${ruleName}" not found`)
+            return 1
         }
-    }
-    // TODO: check if the input files are the outputs of any other rules and automatically run those build rules too
-    // --> what if a file appears in the output of 2 or more different rules...? what does make do?
-    const deps = toStringArray(rule.dependencies ?? rule.deps);
-    let cmd = rule.command ?? rule.cmd;
-    const cmdArgs = toStringArray(rule.arguments ?? rule.args)
-    // const binDir = Path.join(process.cwd(),'node_modules','.bin')
-    // const nmPath = Path.join(binDir,cmd)
-    // const executable = await access(nmPath, fsconst.R_OK)
-    // // console.log(process.argv0, process.argv[0])
-    // if(executable) {
-    //     cmdArgs.unshift(nmPath)
-    //     // cmd = process.argv0
-    //     cmd = 'node.exe'
-    // }
-    // const {Path: envPath, ...env} = process.env
-    // env.PATH = binDir+';'+envPath
-    // console.log(env)
-    // console.log('$ ' + [cmd,...cmdArgs].map(shellescapeArg).join(' '))
-    console.log(Chalk.cyanBright.bold('$ ') + Chalk.green(shellescapeArg(cmd)) + cmdArgs.map(x => ' '+Chalk.underline(x)).join(''))
+        const input = toStringArray(rule.inputs ?? rule.input)
+        const auxInput = toStringArray(rule.auxInputs ?? rule.auxInput)
+        const output = toStringArray(rule.outputs ?? rule.output)
+        const deps = toStringArray(rule.dependencies ?? rule.deps);
 
-    const start = hrtime.bigint()
-    const code = await spawn(ruleName, cmd, cmdArgs)
-    const elapsed = toMs(hrtime.bigint() - start)
-    console.log(`${Chalk.bold.whiteBright(ruleName)} exited with code ${Chalk.green(code)} in ${Chalk.blue(elapsed)}ms`)
+        await Promise.all(deps.map(d => resolveRule(d)))
+
+
+        const startTime = Date.now()
+        const inputTimes = await Promise.all(input.map(f =>mtime(f)))
+        if(inputTimes.includes(null)) {
+            console.info(`Missing input file`)
+            return 2
+        }
+        const outputTimes = await Promise.all(output.map(f =>mtime(f)))
+
+        if(!outputTimes.includes(null)) {
+            const auxInputTimes = auxInput.length ? (await Promise.all(auxInput.map(f =>mtime(f)))).filter(t => t !== null) : []
+            const allInputTimes = [...inputTimes,...auxInputTimes]
+            const inputLastMod = allInputTimes.length ? max(allInputTimes) : cache?.[ruleName]?.lastSuccessfulBuild
+            if(inputLastMod) {
+                const outputLastMod = max(outputTimes)!
+                if(outputLastMod > inputLastMod) {
+                    console.info(`Inputs not modified`)
+                    return 0
+                }
+            }
+        }
+        // TODO: check if the input files are the outputs of any other rules and automatically run those build rules too
+        // --> what if a file appears in the output of 2 or more different rules...? what does make do?
+
+        let cmd: string = rule.command ?? rule.cmd;
+        if(cmd == null) return 0;
+        let cmdArgs: string[];
+        if(Array.isArray(cmd)) {
+            [cmd,...cmdArgs] = cmd
+        } else {
+            cmdArgs = toStringArray(rule.arguments ?? rule.args)
+        }
+
+
+        // const binDir = Path.join(process.cwd(),'node_modules','.bin')
+        // const nmPath = Path.join(binDir,cmd)
+        // const executable = await access(nmPath, fsconst.R_OK)
+        // // console.log(process.argv0, process.argv[0])
+        // if(executable) {
+        //     cmdArgs.unshift(nmPath)
+        //     // cmd = process.argv0
+        //     cmd = 'node.exe'
+        // }
+        // const {Path: envPath, ...env} = process.env
+        // env.PATH = binDir+';'+envPath
+        // console.log(env)
+        // console.log('$ ' + [cmd,...cmdArgs].map(shellescapeArg).join(' '))
+        console.log(Chalk.cyanBright.bold('$ ') + Chalk.green(shellescapeArg(cmd)) + cmdArgs.map(x => ' '+Chalk.underline(x)).join(''))
+
+        const start = hrtime.bigint()
+        const code = await spawn(ruleName, cmd, cmdArgs)
+        const elapsed = toMs(hrtime.bigint() - start)
+        console.log(`${Chalk.cyan(ruleName)} exited with code ${Chalk[code === 0 ? 'green' : 'red'](code)} in ${Chalk.blue(elapsed)}ms`)
+        if(code === 0) {
+            cache[ruleName] = {
+                lastSuccessfulBuild: startTime,
+                buildTime: elapsed,
+            }
+        }
+        return code
+    }
+
+    const ret = await resolveRule(ruleName)
+    await fs.writeFile(CACHE_FILE, yaml.dump(cache))
+    return ret
 }
 
 function toMs(ns: bigint): number {
     return Number(ns/1000n)/1000
 }
 
+function jsonReplacer(this:any,key:string,value:any):any {
+    if(value instanceof Set) {
+        return Array.from(value)
+    }
+    if(value instanceof Map) {
+        return Object.fromEntries(value.entries())
+    }
+    return value
+}
+
+export function jsonStringify(obj: any,space?:string|number): string {
+    return JSON.stringify(obj, jsonReplacer, space)
+}
+
+
+function varDump(x: any) {
+    if(x === undefined) return '(undefined)'
+    return jsonStringify(x,2)
+}
+
+function logJson(...args: any[]) {
+    console.log(args.map(a => varDump(a)).join("\n---\n"))
+}
+
+function pipe2console(prefix: string, stream: WriteStream) {
+    return function(data: Buffer) {
+        const str = data.toString('utf8').replace(/(\r?\n|\n)$/,'')
+        if(!str) return
+        const lines = str.split(/\r?\n|\n/g)
+        for(const line of lines) {
+            stream.write(Chalk.gray(`[${prefix}]`)+' '+line+EOL)
+        }
+    }
+}
+
 function spawn(prefix: string, cmd: string, args: string[]): Promise<number> {
     return new Promise((resolve,reject) => {
         const proc = childProc.spawn(cmd,args,{stdio: ['ignore','pipe','pipe'],shell:true})
-        proc.stdout.on('data', (data:Buffer) => {
-            const lines = data.toString('utf8').trimEnd().split(/\r?\n|\n/g)
-            for(const line of lines) {
-                console.log(Chalk.gray(`[${prefix}]`)+' '+line)
-            }
-        })
-        proc.stderr.on('data', (data:Buffer) => {
-            const lines = data.toString('utf8').trimEnd().split(/\r?\n|\n/g)
-            for(const line of lines) {
-                console.error(Chalk.gray(`[${prefix}]`)+' '+line)
-            }
-            // console.log(`[${ruleName}]E`,String(data))
-        })
+        proc.stdout.on('data', pipe2console(prefix, process.stdout))
+        proc.stderr.on('data', pipe2console(prefix, process.stderr))
         proc.on('error', err => {
             reject(err)
         })

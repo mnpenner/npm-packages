@@ -1,5 +1,12 @@
 rules:
   default:
+    deps: build
+  node_modules:
+    input: package.json
+    output: pnpm-lock.yaml
+    cmd: pnpm
+    args: install
+  build:
     input:
     - src/index.ts
     auxInput:
@@ -8,8 +15,9 @@ rules:
     - package.json
     - pnpm-lock.yaml
     output: dist/index.js
-    cmd: esbuild
-    args:
+    deps: node_modules
+    cmd:
+      - esbuild
       - --bundle
       - src/index.ts
       - --outdir=dist
