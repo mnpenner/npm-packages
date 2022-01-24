@@ -55,6 +55,17 @@ function max<T>(args: Array<T>): T {
     return m
 }
 
+function min<T>(args: Array<T>): T {
+    if(!args.length) throw new Error("Missing args")
+    let m = args[0]
+    for(let i=1; i<args.length; ++i) {
+        if(args[i] < m) {
+            m = args[i]
+        }
+    }
+    return m
+}
+
 type ValueOf<T> = T[keyof T];
 
 
@@ -90,6 +101,16 @@ async function getMtimes(files: string[]): Promise<Map<string,bigint|null>> {
 const MAKE_FILE = './yamake.yml'
 const CACHE_FILE = './.ymcache.yml'
 
+const TIME_FORMATTER = Intl.DateTimeFormat([],{
+    // timeZone: 'America/Los_Angeles',
+    timeStyle: 'medium',
+    dateStyle: undefined,
+})
+
+function formatTime(d: bigint) {
+    return TIME_FORMATTER.format(toMs(d))
+}
+
 async function main(mainArgs: string[]): Promise<number | void> {
     const doc = yaml.load(await fs.readFile(MAKE_FILE, 'utf8')) as any
     let cache: any
@@ -121,13 +142,17 @@ async function main(mainArgs: string[]): Promise<number | void> {
             return 2
         }
         const outputTimes = await Promise.all(output.map(f =>mtime(f)))
+        const lastSuccessfulBuildMs: number = cache?.[ruleName]?.lastSuccessfulBuild ?? Number.NEGATIVE_INFINITY
 
         if(!outputTimes.includes(null)) {
             const auxInputTimes = auxInput.length ? (await Promise.all(auxInput.map(f =>mtime(f)))).filter(t => t !== null) : []
             const allInputTimes = [...inputTimes,...auxInputTimes]
             const inputLastMod = allInputTimes.length ? max(allInputTimes) : cache?.[ruleName]?.lastSuccessfulBuild
             if(inputLastMod) {
-                const outputLastMod = max(outputTimes)!
+                // FIXME: outputTimes are in **NANOSECONDS**
+                const allOutputTimes = outputTimes.filter(t => t! >= lastSuccessfulBuildMs)
+                console.log(ruleName,formatTime(inputLastMod),allOutputTimes.map(formatTime))
+                const outputLastMod = allOutputTimes.length ? min(outputTimes)! : lastSuccessfulBuildMs
                 if(outputLastMod > inputLastMod) {
                     console.info(`Inputs not modified`)
                     return 0
@@ -160,7 +185,7 @@ async function main(mainArgs: string[]): Promise<number | void> {
         // env.PATH = binDir+';'+envPath
         // console.log(env)
         // console.log('$ ' + [cmd,...cmdArgs].map(shellescapeArg).join(' '))
-        console.log(Chalk.cyanBright.bold('$ ') + Chalk.green(shellescapeArg(cmd)) + cmdArgs.map(x => ' '+Chalk.underline(x)).join(''))
+        console.log(Chalk.cyanBright.bold('$ ') + Chalk.green.underline(cmd) + cmdArgs.map(x => ' '+Chalk.underline(x)).join(''))
 
         const start = hrtime.bigint()
         const code = await spawn(ruleName, cmd, cmdArgs)
@@ -221,7 +246,7 @@ function pipe2console(prefix: string, stream: WriteStream) {
 
 function spawn(prefix: string, cmd: string, args: string[]): Promise<number> {
     return new Promise((resolve,reject) => {
-        const proc = childProc.spawn(cmd,args,{stdio: ['ignore','pipe','pipe'],shell:true})
+        const proc = childProc.spawn(cmd,args,{stdio: ['ignore','pipe','pipe'],shell:true})  // FIXME: I don't think `cmd` is escaped when shell:true
         proc.stdout.on('data', pipe2console(prefix, process.stdout))
         proc.stderr.on('data', pipe2console(prefix, process.stderr))
         proc.on('error', err => {

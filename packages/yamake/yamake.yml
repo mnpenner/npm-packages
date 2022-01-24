@@ -3,9 +3,10 @@ rules:
     deps: build
   node_modules:
     input: package.json
-    output: pnpm-lock.yaml
-    cmd: pnpm
-    args: install
+    output:
+    - pnpm-lock.yaml
+    - node_modules/.modules.yaml
+    cmd: [pnpm, install]
   build:
     input:
     - src/index.ts
