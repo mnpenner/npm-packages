@@ -68,6 +68,18 @@ async function getLastModTime(files: string[]): Promise<bigint|null> {
     return max(times)
 }
 
+async function getMtimes(files: string[]): Promise<Map<string,bigint|null>> {
+    const m = new Map<string,bigint|null>()
+    const promises = []
+    for(const f of files) {
+        promises.push(mtime(f).then(t => {
+            m.set(f,t)
+        }))
+    }
+    await Promise.all(promises)
+    return m
+}
+
 async function main(mainArgs: string[]): Promise<number | void> {
     const doc = yaml.load(await fs.readFile('./yamake.yml', 'utf8')) as any
     const ruleName = mainArgs.length >= 1 ? mainArgs[0] : 'default'
@@ -76,9 +88,9 @@ async function main(mainArgs: string[]): Promise<number | void> {
         console.error(`Rule "${ruleName}" not found`)
         return 1
     }
-    const input = toStringArray(rule.input)
-    const auxInput = toStringArray(rule.auxInput)
-    const output = toStringArray(rule.output)
+    const input = toStringArray(rule.inputs ?? rule.input)
+    const auxInput = toStringArray(rule.auxInputs ?? rule.auxInput)
+    const output = toStringArray(rule.outputs ?? rule.output)
 
     const inputTimes = await Promise.all(input.map(f =>mtime(f)))
     if(inputTimes.includes(null)) {
