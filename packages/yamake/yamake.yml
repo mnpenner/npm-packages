@@ -4,23 +4,18 @@ rules:
   node_modules:
     input: package.json
     output:
-    - pnpm-lock.yaml
-    - node_modules/.modules.yaml
-    cmd: [pnpm, install]
+      - pnpm-lock.yaml
+      - node_modules/.modules.yaml
+    cmd: [ pnpm, install ]
   build:
     input:
-    - src/index.ts
+      - src/index.ts
     auxInput:
-    - node_modules/.modules.yaml
-    - tsconfig.json
-    - package.json
-    - pnpm-lock.yaml
+      - node_modules/.modules.yaml
+      - tsconfig.json
+      - package.json
+      - pnpm-lock.yaml
     output: dist/index.js
     deps: node_modules
-    cmd:
-      - esbuild
-      - --bundle
-      - src/index.ts
-      - --outdir=dist
-      - --platform=node
-      - --target=node14
+    suppressOutput: false
+    cmd: [ esbuild, --bundle, src/index.ts, --outdir=dist, --platform=node, --target=node14 ]

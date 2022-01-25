@@ -10,7 +10,7 @@ import {EOL} from 'os'
 import type {WriteStream} from 'node:tty'
 
 function objectHash(obj: any): string {
-    return crypto.createHash('md5').update(JSON.stringify(obj)).digest('base64url')
+    return crypto.createHash('md5').update(jsonStringify(obj)).digest('base64url')
 }
 
 function toStringArray(arg: any): string[] {
@@ -86,6 +86,22 @@ async function getLastModTime(files: string[]): Promise<bigint|null> {
     return max(times)
 }
 
+function isNotNull<T>(x: T|null): x is T {
+    return x != null
+}
+
+function doesNotContainNull<T>(arr: Array<T|null>): arr is Array<T> {
+    return arr.every(x => x != null)
+}
+
+async function getValidMtimesArr(files: string[]): Promise<Array<bigint>> {
+    return (await getMtimesArr(files)).filter(isNotNull)
+}
+async function getMtimesArr(files: string[]): Promise<Array<bigint|null>> {
+    if(!files?.length) return []
+    return Promise.all(files.map(f =>mtime(f)))
+}
+
 async function getMtimes(files: string[]): Promise<Map<string,bigint|null>> {
     const m = new Map<string,bigint|null>()
     const promises = []
@@ -101,14 +117,15 @@ async function getMtimes(files: string[]): Promise<Map<string,bigint|null>> {
 const MAKE_FILE = './yamake.yml'
 const CACHE_FILE = './.ymcache.yml'
 
-const TIME_FORMATTER = Intl.DateTimeFormat([],{
+const TIME_FORMATTER = Intl.DateTimeFormat(['en-CA'],{
     // timeZone: 'America/Los_Angeles',
     timeStyle: 'medium',
-    dateStyle: undefined,
+    dateStyle: 'short',
 })
 
-function formatTime(d: bigint) {
-    return TIME_FORMATTER.format(toMs(d))
+function formatTime(d: bigint|null) {
+    if(d == null) return '(null)'
+    return TIME_FORMATTER.format(nsToMs(d))
 }
 
 async function main(mainArgs: string[]): Promise<number | void> {
@@ -127,34 +144,40 @@ async function main(mainArgs: string[]): Promise<number | void> {
             console.error(`Rule "${ruleName}" not found`)
             return 1
         }
+
         const input = toStringArray(rule.inputs ?? rule.input)
         const auxInput = toStringArray(rule.auxInputs ?? rule.auxInput)
         const output = toStringArray(rule.outputs ?? rule.output)
         const deps = toStringArray(rule.dependencies ?? rule.deps);
 
-        await Promise.all(deps.map(d => resolveRule(d)))
-
+        if(deps.length) {
+            const exitCodes = await Promise.all(deps.map(d => resolveRule(d)))  // TODO: flatten deps into parallelizable tree
+            const someFail = exitCodes.find(c => c !== 0)
+            if(someFail != null) {
+                console.info(`[${ruleName}] Failed to build dependency; aborting`)
+                return someFail
+            }
+        }
 
         const startTime = Date.now()
         const inputTimes = await Promise.all(input.map(f =>mtime(f)))
         if(inputTimes.includes(null)) {
-            console.info(`Missing input file`)
+            console.info(`[${ruleName}] Missing input file`)
             return 2
         }
         const outputTimes = await Promise.all(output.map(f =>mtime(f)))
-        const lastSuccessfulBuildMs: number = cache?.[ruleName]?.lastSuccessfulBuild ?? Number.NEGATIVE_INFINITY
+        const lastSuccessfulBuildMs: number = cache?.[ruleName]?.lastSuccessfulBuild;
+        const lastSuccessfulBuildNanos: bigint = lastSuccessfulBuildMs != null ? msToNs(lastSuccessfulBuildMs) : BigInt(Number.MIN_SAFE_INTEGER)
 
-        if(!outputTimes.includes(null)) {
-            const auxInputTimes = auxInput.length ? (await Promise.all(auxInput.map(f =>mtime(f)))).filter(t => t !== null) : []
+        if(doesNotContainNull(outputTimes)) {
+            const auxInputTimes = await getValidMtimesArr(auxInput)
             const allInputTimes = [...inputTimes,...auxInputTimes]
-            const inputLastMod = allInputTimes.length ? max(allInputTimes) : cache?.[ruleName]?.lastSuccessfulBuild
+            const inputLastMod = allInputTimes.length ? max(allInputTimes) : null
             if(inputLastMod) {
-                // FIXME: outputTimes are in **NANOSECONDS**
-                const allOutputTimes = outputTimes.filter(t => t! >= lastSuccessfulBuildMs)
-                console.log(ruleName,formatTime(inputLastMod),allOutputTimes.map(formatTime))
-                const outputLastMod = allOutputTimes.length ? min(outputTimes)! : lastSuccessfulBuildMs
-                if(outputLastMod > inputLastMod) {
-                    console.info(`Inputs not modified`)
+                const allOutputTimes = outputTimes.filter(t => t >= lastSuccessfulBuildNanos)
+                const oldestOutputModTime = allOutputTimes.length ? min(allOutputTimes)! : lastSuccessfulBuildNanos
+                if(oldestOutputModTime > inputLastMod) {
+                    console.info(`[${ruleName}] Inputs not modified`)
                     return 0
                 }
             }
@@ -163,7 +186,10 @@ async function main(mainArgs: string[]): Promise<number | void> {
         // --> what if a file appears in the output of 2 or more different rules...? what does make do?
 
         let cmd: string = rule.command ?? rule.cmd;
-        if(cmd == null) return 0;
+        if(cmd == null) {
+            console.info(`[${ruleName}] No command`)
+            return 0;
+        }
         let cmdArgs: string[];
         if(Array.isArray(cmd)) {
             [cmd,...cmdArgs] = cmd
@@ -187,26 +213,35 @@ async function main(mainArgs: string[]): Promise<number | void> {
         // console.log('$ ' + [cmd,...cmdArgs].map(shellescapeArg).join(' '))
         console.log(Chalk.cyanBright.bold('$ ') + Chalk.green.underline(cmd) + cmdArgs.map(x => ' '+Chalk.underline(x)).join(''))
 
+        const suppressOutput = Boolean(rule.suppressOutput ?? rule.ignoreOutput ?? rule.quiet)
+
+
         const start = hrtime.bigint()
-        const code = await spawn(ruleName, cmd, cmdArgs)
-        const elapsed = toMs(hrtime.bigint() - start)
+        const code = await spawn(ruleName, cmd, cmdArgs, {suppressOutput})
+        const elapsed = nsToMs(hrtime.bigint() - start)
         console.log(`${Chalk.cyan(ruleName)} exited with code ${Chalk[code === 0 ? 'green' : 'red'](code)} in ${Chalk.blue(elapsed)}ms`)
         if(code === 0) {
             cache[ruleName] = {
                 lastSuccessfulBuild: startTime,
-                buildTime: elapsed,
+                buildDuration: elapsed,
+                ruleHash: objectHash(rule),
             }
         }
         return code
     }
+
 
     const ret = await resolveRule(ruleName)
     await fs.writeFile(CACHE_FILE, yaml.dump(cache))
     return ret
 }
 
-function toMs(ns: bigint): number {
+function nsToMs(ns: bigint): number {
     return Number(ns/1000n)/1000
+}
+
+function msToNs(ms: number): bigint {
+    return BigInt(Math.floor(ms))*1000000n
 }
 
 function jsonReplacer(this:any,key:string,value:any):any {
@@ -244,11 +279,17 @@ function pipe2console(prefix: string, stream: WriteStream) {
     }
 }
 
-function spawn(prefix: string, cmd: string, args: string[]): Promise<number> {
+interface SpawnOptions {
+    suppressOutput?: boolean
+}
+
+function spawn(prefix: string, cmd: string, args: string[], opts: SpawnOptions): Promise<number> {
     return new Promise((resolve,reject) => {
-        const proc = childProc.spawn(cmd,args,{stdio: ['ignore','pipe','pipe'],shell:true})  // FIXME: I don't think `cmd` is escaped when shell:true
-        proc.stdout.on('data', pipe2console(prefix, process.stdout))
-        proc.stderr.on('data', pipe2console(prefix, process.stderr))
+        const proc = childProc.spawn(cmd,args,{stdio: opts.suppressOutput ? 'ignore' : ['ignore','pipe','pipe'],shell:true})  // FIXME: I don't think `cmd` is escaped when shell:true
+        if(!opts.suppressOutput) {
+            proc.stdout!.on('data', pipe2console(prefix, process.stdout))
+            proc.stderr!.on('data', pipe2console(prefix, process.stderr))
+        }
         proc.on('error', err => {
             reject(err)
         })
