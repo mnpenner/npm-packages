@@ -103,15 +103,23 @@ async function getMtimesArr(files: string[]): Promise<Array<bigint|null>> {
 }
 
 async function getMtimes(files: string[]): Promise<Map<string,bigint|null>> {
-    const m = new Map<string,bigint|null>()
+    return promiseMap(files, mtime);
+}
+
+async function promiseMap<TIn, TOut>(inputs: TIn[], fn: (x:TIn)=>Promise<TOut>): Promise<Map<TIn,TOut>> {
+    const m = new Map<TIn,TOut>()
     const promises = []
-    for(const f of files) {
-        promises.push(mtime(f).then(t => {
+    for(const f of inputs) {
+        promises.push(Promise.resolve(fn(f)).then(t => {
             m.set(f,t)
         }))
     }
     await Promise.all(promises)
     return m
+}
+
+function filterMap<K,V>(map: Map<K,V>, fn: (v:V,k:K)=>boolean): [K,V][] {
+    return Array.from(map).filter(([k,v]) => fn(v,k))
 }
 
 const MAKE_FILE = './yamake.yml'
@@ -139,6 +147,7 @@ async function main(mainArgs: string[]): Promise<number | void> {
     const ruleName = mainArgs.length >= 1 ? mainArgs[0] : 'default'
 
     async function resolveRule(ruleName: string): Promise<number> {
+        const info = (...data: any[]) => console.info(Chalk.gray(`[${ruleName}]`),...data)
         const rule = doc.rules?.[ruleName]
         if(!rule) {
             console.error(`Rule "${ruleName}" not found`)
@@ -151,18 +160,24 @@ async function main(mainArgs: string[]): Promise<number | void> {
         const deps = toStringArray(rule.dependencies ?? rule.deps);
 
         if(deps.length) {
-            const exitCodes = await Promise.all(deps.map(d => resolveRule(d)))  // TODO: flatten deps into parallelizable tree
-            const someFail = exitCodes.find(c => c !== 0)
-            if(someFail != null) {
-                console.info(`[${ruleName}] Failed to build dependency; aborting`)
-                return someFail
+            const exitCodes = await promiseMap(deps, resolveRule);  // TODO: flatten deps into parallelizable tree
+            const failedDeps = filterMap(exitCodes, v => v !== 0)
+            if(failedDeps.length) {
+                info(`${failedDeps.length} dependencies failed; aborting`, Object.fromEntries(failedDeps))
+                return failedDeps[0][1]
             }
+            // const exitCodes = await Promise.all(deps.map(d => resolveRule(d)))
+            // const someFail = exitCodes.find(c => c !== 0)
+            // if(someFail != null) {
+            //     console.info(`[${ruleName}] Failed to build dependency; aborting`)
+            //     return someFail
+            // }
         }
 
         const startTime = Date.now()
         const inputTimes = await Promise.all(input.map(f =>mtime(f)))
         if(inputTimes.includes(null)) {
-            console.info(`[${ruleName}] Missing input file`)
+            info(`Missing input file`)
             return 2
         }
         const outputTimes = await Promise.all(output.map(f =>mtime(f)))
@@ -177,7 +192,7 @@ async function main(mainArgs: string[]): Promise<number | void> {
                 const allOutputTimes = outputTimes.filter(t => t >= lastSuccessfulBuildNanos)
                 const oldestOutputModTime = allOutputTimes.length ? min(allOutputTimes)! : lastSuccessfulBuildNanos
                 if(oldestOutputModTime > inputLastMod) {
-                    console.info(`[${ruleName}] Inputs not modified`)
+                    info(`Inputs not modified`)
                     return 0
                 }
             }
@@ -187,7 +202,7 @@ async function main(mainArgs: string[]): Promise<number | void> {
 
         let cmd: string = rule.command ?? rule.cmd;
         if(cmd == null) {
-            console.info(`[${ruleName}] No command`)
+            info(`No command`)
             return 0;
         }
         let cmdArgs: string[];
@@ -211,7 +226,7 @@ async function main(mainArgs: string[]): Promise<number | void> {
         // env.PATH = binDir+';'+envPath
         // console.log(env)
         // console.log('$ ' + [cmd,...cmdArgs].map(shellescapeArg).join(' '))
-        console.log(Chalk.cyanBright.bold('$ ') + Chalk.green.underline(cmd) + cmdArgs.map(x => ' '+Chalk.underline(x)).join(''))
+        info(Chalk.cyanBright.bold('$ ') + Chalk.green.underline(cmd) + cmdArgs.map(x => ' '+Chalk.underline(x)).join(''))
 
         const suppressOutput = Boolean(rule.suppressOutput ?? rule.ignoreOutput ?? rule.quiet)
 
@@ -219,7 +234,7 @@ async function main(mainArgs: string[]): Promise<number | void> {
         const start = hrtime.bigint()
         const code = await spawn(ruleName, cmd, cmdArgs, {suppressOutput})
         const elapsed = nsToMs(hrtime.bigint() - start)
-        console.log(`${Chalk.cyan(ruleName)} exited with code ${Chalk[code === 0 ? 'green' : 'red'](code)} in ${Chalk.blue(elapsed)}ms`)
+        info(`Exited with code ${Chalk[code === 0 ? 'green' : 'red'](code)} in ${Chalk.blue(elapsed)}ms`)
         if(code === 0) {
             cache[ruleName] = {
                 lastSuccessfulBuild: startTime,
