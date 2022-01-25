@@ -192,7 +192,7 @@ async function main(mainArgs: string[]): Promise<number | void> {
                 const allOutputTimes = outputTimes.filter(t => t >= lastSuccessfulBuildNanos)
                 const oldestOutputModTime = allOutputTimes.length ? min(allOutputTimes)! : lastSuccessfulBuildNanos
                 if(oldestOutputModTime > inputLastMod) {
-                    info(`Inputs not modified`)
+                    info(`Inputs not modified`)  // TODO: instead print "dist/oldest.js is newer than src/newest.ts"
                     return 0
                 }
             }
