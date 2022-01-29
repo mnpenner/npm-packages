@@ -16,6 +16,24 @@ rules:
       - package.json
       - pnpm-lock.yaml
     output: dist/index.js
-    deps: node_modules
+    mkdir: dist
+    deps:
+    - node_modules
+    - dist/package.json
+    - dist/README.md
     suppressOutput: false
-    cmd: [ esbuild, --bundle, src/index.ts, --outdir=dist, --platform=node, --target=node14 ]
+    cmd: [ npx, esbuild, --bundle, src/index.ts, --outdir=dist, --platform=node, --target=node14 ]
+  dist/package.json:
+    input: package.json
+    output: dist/package.json
+    cmd: jq 'del(.devDependencies,.private,.scripts)' $< > $@
+  dist/README.md:
+    input: README.md
+    output: dist/README.md
+    cmd: cp $< $@
+  version:
+    cmd: npm version patch
+  publish:
+    odeps: [version, build]
+    cwd: dist
+    cmd: npm publish
