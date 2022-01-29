@@ -240,8 +240,10 @@ async function main(mainArgs: string[]): Promise<number | void> {
             return 2
         }
         const outputTimes = await Promise.all(output.map(f =>mtime(f)))
-        const lastSuccessfulBuildMs: number = cache?.[ruleName]?.lastSuccessfulBuild;
+        const lastSuccessfulBuildMs: number = cache?.rules?.[ruleName]?.lastSuccessfulBuild;
         const lastSuccessfulBuildNanos: bigint = lastSuccessfulBuildMs != null ? msToNs(lastSuccessfulBuildMs) : BigInt(Number.MIN_SAFE_INTEGER)
+
+        // TODO: factor in ruleHash for cache-busting. e.g. if the `cmd` is changed but the input/files aren't, it should still rebuild (and maybe output why)
 
         if(doesNotContainNull(outputTimes)) {
             // FIXME: should dependencies run if nothing's modified? how goes GNU Make do it?
@@ -322,7 +324,8 @@ async function main(mainArgs: string[]): Promise<number | void> {
         const elapsed = nsToMs(hrtime.bigint() - start)
         info(`Exited with code ${Chalk[code === 0 ? 'green' : 'red'](code)} in ${Chalk.blue(elapsed)}ms`)
         if(code === 0) {
-            cache[ruleName] = {
+            cache.rules ??= {}
+            cache.rules[ruleName] = {
                 lastSuccessfulBuild: startTime,
                 buildDuration: elapsed,
                 ruleHash: objectHash(rule),

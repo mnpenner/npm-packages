@@ -34,10 +34,12 @@ rules:
   dist/package.json:
     input: package.json
     output: dist/package.json
+    mkdir: dist
     cmd: jq 'del(.devDependencies,.private,.scripts)' $< > $@
   dist/README.md:
     input: README.md
     output: dist/README.md  # TODO: support dist/%
+    mkdir: dist
     cmd: cp $< $@
   version:
     cmd: npm version patch
@@ -45,3 +47,13 @@ rules:
     odeps: [version, build]
     cwd: dist
     cmd: npm publish
+files:  # TODO:
+  - input: [ README.md, pnpm-lock.yaml ]
+    output: dist/%  # or maybe we should do regex capture groups, in case input is in src/
+    cmd: cp $< dist/
+  - input: package.json
+    output: dist/package.json
+    cmd: jq 'del(.devDependencies,.private,.scripts)' $< > $@
+#  dist/README.md:  # TODO: need a way to take advantage of `cp [OPTION]... SOURCE... DIRECTORY` syntax; i.e. $? from https://www.gnu.org/software/make/manual/html_node/Automatic-Variables.html
+#    input: README.md
+#    cmd: cp $< $@
