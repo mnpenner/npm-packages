@@ -1,12 +1,20 @@
 rules:
   default:
     deps: build
+  pnpm-lock.yaml:
+    input: package.json
+    output: pnpm-lock.yaml
+    cmd: [ pnpm, install, --lockfile-only ]
   node_modules:
+    input: pnpm-lock.yaml  # TODO: should automatically trigger pnpm-lock.yaml?
+    output: node_modules/.modules.yaml
+    cmd: [ pnpm, install, --frozen-lockfile ]
+  node_modules.bak:
     input: package.json
     output:
       - pnpm-lock.yaml
       - node_modules/.modules.yaml
-    cmd: [ pnpm, install ]
+    cmd: [ pnpm, install, --color ]
   build:
     input:
       - src/index.ts
@@ -29,7 +37,7 @@ rules:
     cmd: jq 'del(.devDependencies,.private,.scripts)' $< > $@
   dist/README.md:
     input: README.md
-    output: dist/README.md
+    output: dist/README.md  # TODO: support dist/%
     cmd: cp $< $@
   version:
     cmd: npm version patch

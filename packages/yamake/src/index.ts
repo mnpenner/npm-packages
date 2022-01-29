@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import * as yaml from 'js-yaml'
 import * as fs from 'fs/promises'
 import * as childProc from 'child_process'
@@ -169,6 +170,8 @@ function parseArgs(args: string[]) {
             out.args.push(arg)
         }
     }
+    // TODO: parse opts
+    // TODO: parse flags for forwarding to rule
     return out
 }
 
@@ -184,6 +187,9 @@ async function main(mainArgs: string[]): Promise<number | void> {
 
     const ruleName = parsedArgs.args.length >= 1 ? parsedArgs.args[0] : 'default'
 
+    // TODO: auto-install node_modules based on which lockfile/tools are installed; add option to disable
+    // TODO: support rule shorthand `default: build`
+
     async function resolveRule(ruleName: string, depth:number=0): Promise<number> {
         // '  '.repeat(depth)+
         const info = (...data: any[]) => console.info(Chalk.gray(`｢${ruleName}｣`),...data)  // TODO: color each rule differently?
@@ -198,6 +204,7 @@ async function main(mainArgs: string[]): Promise<number | void> {
         const output = toStringArray(rule.outputs ?? rule.output)
         const deps = toStringArray(rule.dependencies ?? rule.deps);
         const odeps = toStringArray(rule.orderedDependencies ?? rule.odeps ?? rule.prerequisites ?? rule.prereqs);
+        // TODO: find implicit dependencies from input<->output
         const cwd = rule.cwd ?? rule.workingDir ?? rule.workingDirectory ?? process.cwd();
         const emptyDir = toStringArray(rule.emptyDir)
         const makeDir = toStringArray(rule.mkdir ?? rule.mkdirp ?? rule.makeDir ?? rule.makeDirectory)  // TODO: allow `true` to create any directories for output files
