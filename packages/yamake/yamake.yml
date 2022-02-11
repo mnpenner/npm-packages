@@ -35,6 +35,7 @@ rules:
     input: package.json
     output: dist/package.json
     mkdir: dist
+    shell: sh
     cmd: jq 'del(.devDependencies,.private,.scripts)' $< > $@
   dist/README.md:
     input: README.md

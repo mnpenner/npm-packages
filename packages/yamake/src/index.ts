@@ -25,14 +25,15 @@ import {
     toStringArray
 } from './util'
 import {resolveExe} from './winpath'
+import assert from 'assert'
 // import crossSpawn from 'cross-spawn'
 
-
+const isWindows = process.platform === 'win32'
 
 // https://github.com/moxystudio/node-cross-spawn/issues/150
 // https://stackoverflow.com/questions/37459717/error-spawn-enoent-on-windows/37487465
 async function crossSpawn(cmd: string, args: string[], opts: Omit<childProc.SpawnOptions,'shell'|'windowsVerbatimArguments'>) {
-    if(process.platform === 'win32') {
+    if(isWindows) {
         cmd = await resolveExe(cmd)  // TODO: factor in opts.env.PATH
 
     //     return childProc.spawn(`"${cmd}"`,args, {
@@ -218,30 +219,64 @@ async function main(mainArgs: string[]): Promise<number | void> {
         let nodeScript: string = rule.nodeScript ?? rule.node ?? rule.jsBin ?? rule.jsbin;
         let cmd: string;
         let cmdArgs: string[]
+        let shell = rule.shell;
+        // info('shell is',shell)
+        const ruleCmd = rule.command ?? rule.cmd
+        const ruleArgs = rule.arguments ?? rule.args
 
         if(nodeScript) {
             cmd = process.execPath;
             // TODO: node options
             cmdArgs = ['--', ...toStringArray(nodeScript)]
         } else {
-            cmd = rule.command ?? rule.cmd;
+            cmd = ruleCmd;
             if(cmd == null) {
                 info(`No command`)
                 return 0;
             }
             if(Array.isArray(cmd)) {
+                if(ruleArgs) {
+                    info("Don't use args when setting cmd as an array")
+                    return 5;
+                }
                 [cmd, ...cmdArgs] = cmd
+                if(shell == null) {
+                    shell = false;
+                }
+            } else if(ruleArgs) {
+                if(!Array.isArray(ruleArgs)) {
+                    info("Args must be an array")
+                    return 3;
+                }
+                cmdArgs = ruleArgs
+                if(shell == null) {
+                    shell = false;
+                }
             } else {
                 // TODO: https://www.gnu.org/software/make/manual/html_node/Automatic-Variables.html
                 // TODO: support $1, $2, ... command-line args
-                if(input.length) {
-                    cmd = cmd.replace(/(?<!\\)\$</g, escapeShellArg(input[0]))
+
+
+                assert(!ruleArgs?.length)
+
+                cmdArgs = [];
+                if(shell == null) {
+                    shell = true;
                 }
-                if(output.length) {
-                    cmd = cmd.replace(/(?<!\\)\$@/g, output.map(o => escapeShellArg(o)).join(' '))
+                if(shell) {
+                    if(input.length) {
+                        cmd = cmd.replace(/(?<!\\)\$<(?![$@%<>?^+|*&!])/g, escapeShellArg(input[0]))
+                    }
+                    if(output.length) {
+                        cmd = cmd.replace(/(?<!\\)\$@(?![$@%<>?^+|*&!])/g, output.map(o => escapeShellArg(o)).join(' '))
+                    }
                 }
-                cmdArgs = toStringArray(rule.arguments ?? rule.args)
             }
+        }
+
+        if(shell && cmdArgs?.length) {
+            info("Cannot enable shell and have arguments")
+            return 4;
         }
 
 
@@ -258,13 +293,19 @@ async function main(mainArgs: string[]): Promise<number | void> {
         // env.PATH = binDir+';'+envPath
         // console.log(env)
         // console.log('$ ' + [cmd,...cmdArgs].map(shellescapeArg).join(' '))
-        info(Chalk.cyanBright.bold('$ ') + Chalk.green.underline(cmd) + cmdArgs.map(x => ' '+Chalk.underline(x)).join(''))
+
+        if(shell) {
+            const whatShell = shell === true ? (isWindows ? process.env.ComSpec : '/bin/sh') : shell;
+            info(Chalk.redBright.bold(whatShell + '$ ') + Chalk.white(cmd))
+            // info(Chalk.cyanBright.bold('$ ') + Chalk.green.underline(whatShell) + ['-c',cmd].map(x => ' ' + Chalk.underline(x)).join(''))
+        } else {
+            info(Chalk.cyanBright.bold('$ ') + Chalk.green.underline(cmd) + cmdArgs.map(x => ' ' + Chalk.underline(x)).join(''))
+        }
 
         const suppressOutput = Boolean(rule.suppressOutput ?? rule.ignoreOutput ?? rule.quiet)
 
-
         const start = hrtime.bigint()
-        const code = await spawn(ruleName, cmd, cmdArgs, {suppressOutput,interactive,cwd})
+        const code = await spawn(ruleName, cmd, cmdArgs, {suppressOutput,interactive,cwd,shell})
         const elapsed = nsToMs(hrtime.bigint() - start)
         info(`Exited with code ${Chalk[code === 0 ? 'green' : 'red'](code)} in ${Chalk.blue(elapsed)}ms`)
         if(code === 0) {
@@ -323,14 +364,16 @@ interface SpawnOptions {
     suppressOutput?: boolean
     interactive?: boolean
     cwd?: string
+    shell?: boolean|string
 }
 
 async function spawn(prefix: string, cmd: string, args: string[], opts: SpawnOptions): Promise<number> {
     return new Promise(async (resolve,reject) => {
         const spawnOpts: SpawnOptionsWithoutStdio = {
             stdio: opts.suppressOutput ? 'ignore' : [opts.interactive ? 'inherit' : 'ignore','pipe','pipe'],
-            shell: false,
+            shell: opts.shell,
             cwd: opts.cwd,
+            // windowsVerbatimArguments: false,
         }
 
         // console.log({cmd,args,spawnOpts})
