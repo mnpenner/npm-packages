@@ -2,129 +2,64 @@
 import * as yaml from 'js-yaml'
 import * as fs from 'fs/promises'
 import * as childProc from 'child_process'
+import {SpawnOptionsWithoutStdio} from 'child_process'
 import * as Path from 'path'
-import {constants as fsconst} from 'fs'
 import Chalk from 'chalk'
 import {hrtime} from 'process'
-import * as crypto from 'crypto'
 import {EOL} from 'os'
 import type {WriteStream} from 'node:tty'
-import {SpawnOptionsWithoutStdio} from 'child_process'
 import rimraf from 'rmfr'
 import mkdirp from 'mkdirp'
+import {
+    doesNotContainNull,
+    escapeShellArg,
+    filterMap,
+    getValidMtimesArr,
+    max,
+    min,
+    msToNs,
+    mtime,
+    nsToMs,
+    objectHash,
+    promiseMap,
+    toStringArray
+} from './util'
+import {resolveExe} from './winpath'
+// import crossSpawn from 'cross-spawn'
 
-function objectHash(obj: any): string {
-    return crypto.createHash('md5').update(jsonStringify(obj)).digest('base64url')
-}
 
-function toStringArray(arg: any): string[] {
-    if(arg == null) return []
-    if(!Array.isArray(arg)) {
-        return [String(arg)]
+
+// https://github.com/moxystudio/node-cross-spawn/issues/150
+// https://stackoverflow.com/questions/37459717/error-spawn-enoent-on-windows/37487465
+async function crossSpawn(cmd: string, args: string[], opts: Omit<childProc.SpawnOptions,'shell'|'windowsVerbatimArguments'>) {
+    if(process.platform === 'win32') {
+        cmd = await resolveExe(cmd)  // TODO: factor in opts.env.PATH
+
+    //     return childProc.spawn(`"${cmd}"`,args, {
+    //         ...opts,
+    //         shell: true,
+    //         windowsVerbatimArguments: false,
+    //     })
+    //
+    //     // const cmdString = 'cmd.exe /D /S /C ' + [cmd,...args].map(a => escapeWindowsArg(a)).join(' ')
+    //     // console.log('CMD:',cmdString)
+    //     // return childProc.spawn(cmdString, {
+    //     //     ...opts,
+    //     //     shell: false,
+    //     //     windowsVerbatimArguments: true,
+    //     // })
+    //     // https://github.com/moxystudio/node-cross-spawn/blob/5d843849e1ed434b7030e0aa49281c2bf4ad2e71/lib/parse.js#L57
+    //     return childProc.spawn(process.env.ComSpec || 'cmd.exe',['/d','/s','/c',escapeWindowsArg(cmd),...args.map(a => escapeWindowsArg(a))], {
+    //         ...opts,
+    //         shell: false,
+    //         windowsVerbatimArguments: true,
+    //     })
     }
-    return arg.map(x => String(x))
+    return childProc.spawn(cmd, args, opts)
 }
 
-function escapeShellArg(s: string) {
-    if (!/^[A-Za-z0-9=._\/-]+$/.test(s)) {
-        s = "'" + s.replace(/'/g, "'\\''") + "'";
-        // s = s.replace(/^(?:'')+/g, '') // unduplicate single-quote at the beginning
-        //     .replace(/\\'''/g, "\\'"); // remove non-escaped single-quote if there are enclosed between 2 escaped
-    }
-    return s;
-}
-
-async function mtime(file: string): Promise<bigint|null> {
-    try {
-        const stat = await fs.stat(file, {bigint: true})
-        return stat.mtimeNs
-    } catch(err: any) {
-        if(err.code === 'ENOENT') {
-            return null;
-        }
-        throw err;
-    }
-    // console.log(stat)
-
-}
-
-function max<T>(args: Array<T>): T {
-    if(!args.length) throw new Error("Missing args")
-    let m = args[0]
-    for(let i=1; i<args.length; ++i) {
-        if(args[i] > m) {
-            m = args[i]
-        }
-    }
-    return m
-}
-
-function min<T>(args: Array<T>): T {
-    if(!args.length) throw new Error("Missing args")
-    let m = args[0]
-    for(let i=1; i<args.length; ++i) {
-        if(args[i] < m) {
-            m = args[i]
-        }
-    }
-    return m
-}
-
-type ValueOf<T> = T[keyof T];
 
 
-async function access(path: string, mode:ValueOf<typeof fsconst>) {
-    try {
-        await fs.access(path, mode)
-        return true
-    } catch(_) {
-        return false
-    }
-}
-
-async function getLastModTime(files: string[]): Promise<bigint|null> {
-    const times = await Promise.all(files.map(f =>mtime(f)))
-    if(times.includes(null)) {
-        return null
-    }
-    return max(times)
-}
-
-function isNotNull<T>(x: T|null): x is T {
-    return x != null
-}
-
-function doesNotContainNull<T>(arr: Array<T|null>): arr is Array<T> {
-    return arr.every(x => x != null)
-}
-
-async function getValidMtimesArr(files: string[]): Promise<Array<bigint>> {
-    return (await getMtimesArr(files)).filter(isNotNull)
-}
-async function getMtimesArr(files: string[]): Promise<Array<bigint|null>> {
-    if(!files?.length) return []
-    return Promise.all(files.map(f =>mtime(f)))
-}
-
-async function getMtimes(files: string[]): Promise<Map<string,bigint|null>> {
-    return promiseMap(files, mtime);
-}
-
-async function promiseMap<TIn, TOut>(inputs: TIn[], fn: (x:TIn)=>Promise<TOut>): Promise<Map<TIn,TOut>> {
-    const m = new Map<TIn,TOut>()
-    const promises = []
-    for(const f of inputs) {
-        promises.push(Promise.resolve(fn(f)).then(t => {
-            m.set(f,t)
-        }))
-    }
-    await Promise.all(promises)
-    return m
-}
-
-function filterMap<K,V>(map: Map<K,V>, fn: (v:V,k:K)=>boolean): [K,V][] {
-    return Array.from(map).filter(([k,v]) => fn(v,k))
-}
 
 const MAKE_FILE = './yamake.yml'
 const CACHE_FILE = './.ymcache.yml'
@@ -280,24 +215,33 @@ async function main(mainArgs: string[]): Promise<number | void> {
             }
         }
 
-        let cmd: string = rule.command ?? rule.cmd;
-        if(cmd == null) {
-            info(`No command`)
-            return 0;
-        }
-        let cmdArgs: string[];
-        if(Array.isArray(cmd)) {
-            [cmd,...cmdArgs] = cmd
+        let nodeScript: string = rule.nodeScript ?? rule.node ?? rule.jsBin ?? rule.jsbin;
+        let cmd: string;
+        let cmdArgs: string[]
+
+        if(nodeScript) {
+            cmd = process.execPath;
+            // TODO: node options
+            cmdArgs = ['--', ...toStringArray(nodeScript)]
         } else {
-            // TODO: https://www.gnu.org/software/make/manual/html_node/Automatic-Variables.html
-            // TODO: support $1, $2, ... command-line args
-            if(input.length) {
-                cmd = cmd.replace(/(?<!\\)\$</g, escapeShellArg(input[0]))
+            cmd = rule.command ?? rule.cmd;
+            if(cmd == null) {
+                info(`No command`)
+                return 0;
             }
-            if(output.length) {
-                cmd = cmd.replace(/(?<!\\)\$@/g, output.map(o => escapeShellArg(o)).join(' '))
+            if(Array.isArray(cmd)) {
+                [cmd, ...cmdArgs] = cmd
+            } else {
+                // TODO: https://www.gnu.org/software/make/manual/html_node/Automatic-Variables.html
+                // TODO: support $1, $2, ... command-line args
+                if(input.length) {
+                    cmd = cmd.replace(/(?<!\\)\$</g, escapeShellArg(input[0]))
+                }
+                if(output.length) {
+                    cmd = cmd.replace(/(?<!\\)\$@/g, output.map(o => escapeShellArg(o)).join(' '))
+                }
+                cmdArgs = toStringArray(rule.arguments ?? rule.args)
             }
-            cmdArgs = toStringArray(rule.arguments ?? rule.args)
         }
 
 
@@ -338,14 +282,6 @@ async function main(mainArgs: string[]): Promise<number | void> {
     const ret = await resolveRule(ruleName)
     await fs.writeFile(CACHE_FILE, yaml.dump(cache))
     return ret
-}
-
-function nsToMs(ns: bigint): number {
-    return Number(ns/1000n)/1000
-}
-
-function msToNs(ms: number): bigint {
-    return BigInt(Math.floor(ms))*1000000n
 }
 
 function jsonReplacer(this:any,key:string,value:any):any {
@@ -389,15 +325,16 @@ interface SpawnOptions {
     cwd?: string
 }
 
-function spawn(prefix: string, cmd: string, args: string[], opts: SpawnOptions): Promise<number> {
-    return new Promise((resolve,reject) => {
+async function spawn(prefix: string, cmd: string, args: string[], opts: SpawnOptions): Promise<number> {
+    return new Promise(async (resolve,reject) => {
         const spawnOpts: SpawnOptionsWithoutStdio = {
             stdio: opts.suppressOutput ? 'ignore' : [opts.interactive ? 'inherit' : 'ignore','pipe','pipe'],
-            shell: true,
+            shell: false,
             cwd: opts.cwd,
         }
 
-        const proc = childProc.spawn(cmd,args,spawnOpts)  // FIXME: I don't think `cmd` is escaped when shell:true
+        // console.log({cmd,args,spawnOpts})
+        const proc = await crossSpawn(cmd,args,spawnOpts)  // FIXME: I don't think `cmd` is escaped when shell:true
         if(!opts.suppressOutput) {
             proc.stdout!.on('data', pipe2console(prefix, process.stdout))
             proc.stderr!.on('data', pipe2console(prefix, process.stderr))

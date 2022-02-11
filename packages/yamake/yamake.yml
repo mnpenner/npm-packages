@@ -17,7 +17,7 @@ rules:
     cmd: [ pnpm, install, --color ]
   build:
     input:
-      - src/index.ts
+      - src/index.ts  # TODO: support globs
     auxInput:
       - node_modules/.modules.yaml
       - tsconfig.json
@@ -47,6 +47,9 @@ rules:
     odeps: [version, build]
     cwd: dist
     cmd: npm publish
+  run:
+    deps: build
+    node: [ dist/index.js, build ]
 files:  # TODO:
   - input: [ README.md, pnpm-lock.yaml ]
     output: dist/%  # or maybe we should do regex capture groups, in case input is in src/
