@@ -11,6 +11,7 @@ import type {WriteStream} from 'node:tty'
 import rimraf from 'rmfr'
 import mkdirp from 'mkdirp'
 import {
+    camel2kebab,
     doesNotContainNull,
     escapeShellArg,
     filterMap,
@@ -113,7 +114,13 @@ function parseArgs(args: string[]) {
 
 async function main(mainArgs: string[]): Promise<number | void> {
     const parsedArgs = parseArgs(mainArgs)
-    const interactive = parsedArgs.flags.has('interactive')
+    let interactive: null|boolean = null;
+    if(parsedArgs.flags.has('interactive')) {
+        interactive = true;
+    } else if(parsedArgs.flags.has('non-interactive')) {
+        interactive = false;
+    }
+    // const interactive = parsedArgs.flags.has('interactive')
     const doc = yaml.load(await fs.readFile(MAKE_FILE, 'utf8')) as any
     let cache: any
     try {
@@ -211,7 +218,7 @@ async function main(mainArgs: string[]): Promise<number | void> {
         if(makeDir.length) {
             for(const dir of makeDir) {
                 const fullPath = Path.resolve(cwd,dir)
-                info(`Creating directory "${fullPath}"`)
+                info(`Creating directory "${fullPath}"`)  // TODO: only print if it doesn't exist
                 await mkdirp(fullPath)
             }
         }
@@ -224,10 +231,32 @@ async function main(mainArgs: string[]): Promise<number | void> {
         const ruleCmd = rule.command ?? rule.cmd
         const ruleArgs = rule.arguments ?? rule.args
 
+        if(rule.interactive && interactive === false) {
+            info(`Interactive rule cannot run in non-interactive mode`)
+            return 6;
+        }
+
         if(nodeScript) {
             cmd = process.execPath;
             // TODO: node options
-            cmdArgs = ['--', ...toStringArray(nodeScript)]
+            cmdArgs = []
+            if(rule.nodeOptions) {
+                for(const [k,v] of Object.entries(rule.nodeOptions)) {
+                    const flag = '--'+camel2kebab(k)
+                    if(v===true) {
+                        cmdArgs.push(flag)
+                    } else if(v === false) {
+                        cmdArgs.push(flag+'=false')
+                    } else if(Array.isArray(v)) {
+                        for(const x of v) {
+                            cmdArgs.push(flag+'='+x)
+                        }
+                    } else {
+                        cmdArgs.push(flag+'='+v)
+                    }
+                }
+            }
+            cmdArgs.push('--', ...toStringArray(nodeScript))
         } else {
             cmd = ruleCmd;
             if(cmd == null) {
@@ -305,7 +334,7 @@ async function main(mainArgs: string[]): Promise<number | void> {
         const suppressOutput = Boolean(rule.suppressOutput ?? rule.ignoreOutput ?? rule.quiet)
 
         const start = hrtime.bigint()
-        const code = await spawn(ruleName, cmd, cmdArgs, {suppressOutput,interactive,cwd,shell})
+        const code = await spawn(ruleName, cmd, cmdArgs, {suppressOutput,interactive:Boolean(rule.interactive != null ? rule.interactive : interactive),cwd,shell})
         const elapsed = nsToMs(hrtime.bigint() - start)
         info(`Exited with code ${Chalk[code === 0 ? 'green' : 'red'](code)} in ${Chalk.blue(elapsed)}ms`)
         if(code === 0) {
@@ -349,6 +378,8 @@ function logJson(...args: any[]) {
     console.log(args.map(a => varDump(a)).join("\n---\n"))
 }
 
+
+
 function pipe2console(prefix: string, stream: WriteStream) {
     return function(data: Buffer) {
         const str = data.toString('utf8').replace(/(\r?\n|\n)$/,'')
@@ -376,8 +407,13 @@ async function spawn(prefix: string, cmd: string, args: string[], opts: SpawnOpt
             // windowsVerbatimArguments: false,
         }
 
-        // console.log({cmd,args,spawnOpts})
+
+        // TODO: wnpx ts-node --transpile-only src/index.ts --interactive versioni
+        console.log('process.stdin.isTTY',process.stdin.isTTY)
+        console.log({cmd,args,spawnOpts})
+
         const proc = await crossSpawn(cmd,args,spawnOpts)  // FIXME: I don't think `cmd` is escaped when shell:true
+        // TODO: implement stdoutFile to pipe to file instead
         if(!opts.suppressOutput) {
             proc.stdout!.on('data', pipe2console(prefix, process.stdout))
             proc.stderr!.on('data', pipe2console(prefix, process.stderr))

@@ -37,11 +37,15 @@ rules:
     mkdir: dist
     shell: sh
     cmd: jq 'del(.devDependencies,.private,.scripts)' $< > $@
+    stdoutFile: true
   dist/README.md:
     input: README.md
     output: dist/README.md  # TODO: support dist/%
     mkdir: dist
     cmd: cp $< $@
+  versioni:
+    interactive: true  # TODO: implement
+    cmd: yarn version
   version:
     cmd: npm version patch
   publish:
@@ -51,6 +55,9 @@ rules:
   run:
     deps: build
     node: [ dist/index.js, build ]
+    nodeOptions:
+      enableSourceMaps: true
+      maxOldSpaceSize: 16384
 files:  # TODO:
   - input: [ README.md, pnpm-lock.yaml ]
     output: dist/%  # or maybe we should do regex capture groups, in case input is in src/

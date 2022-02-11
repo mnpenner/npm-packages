@@ -1,9 +1,10 @@
 import fs from 'fs/promises'
 import Path from 'path'
 import {access, escapeRegExp, promiseMap} from './util'
+import {logJson} from './json'
 
 const envPathArray = process.env.PATH ? process.env.PATH.split(';') : []  // FIXME: this isn't technically correct: https://stackoverflow.com/questions/5114985/echo-path-on-separate-lines#comment5746924_5115119
-const envPathExtArray = process.env.PATHEXT ? process.env.PATHEXT.toLowerCase().split(';') : []
+const envPathExtArray = process.env.PATHEXT ? process.env.PATHEXT.toLowerCase().split(';') : ['.com','.exe','.bat','.cmd'];
 const envPathExtRegex = envPathExtArray.length ? new RegExp('\\.(?:' + envPathExtArray.map(e => escapeRegExp(e.replace(/^\./, ''))).join('|') + ')$', 'iu') : /x^/
 
 // console.log(pathRegex)
@@ -38,7 +39,8 @@ export async function resolveExe(cmd: string): Promise<string> {
     }
 
     resolved = await (async () => {
-        if(envPathExtRegex.test(cmd)) {
+        if(/\.[^\/\\]+$/.test(cmd)) {
+            // has a file extension
             return cmd
         }
 
@@ -51,6 +53,7 @@ export async function resolveExe(cmd: string): Promise<string> {
 
         if(!/[\/\\]/.test(cmd)) {
             if(!exeMap) exeMap = await buildExeMap()
+            // console.log(exeMap)
 
             for(const ext of envPathExtArray) {
                 const withExt = key + ext

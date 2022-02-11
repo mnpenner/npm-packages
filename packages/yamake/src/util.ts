@@ -143,3 +143,9 @@ export function memo1<T,U>(fn: (x:T)=>U) {
         return v
     }
 }
+
+export function camel2kebab(str: string): string {
+    return str.replace(/([a-z])([A-Z]+)/g, (_,a,b) => {
+        return a + '-' + b.toLowerCase()
+    })
+}
