@@ -7,6 +7,7 @@ import {Resolvable, resolveValue} from '../utils/resolve'
 import * as inflection from 'inflection'
 import {longestCommonSuffix} from '../utils/longest-common-substring'
 import * as json5 from 'json5'
+import {escapeIdStrict} from 'mysql3'
 
 const dbTsTypeMap: Record<string, Resolvable<string, [DbColumn]>> = {
     enum: col => col.values ? col.values.map(v => json5.stringify(v)).join('|') : 'unknown',
@@ -57,7 +58,9 @@ const cmd: Command = {
 
         const tblStream = conn.stream<{ name: string }>(getTableNamesQuery(opts.database))
         const lines = []
-        lines.push(`import {sql} from 'mysql3'\n`)
+        if(opts.mysql3) {
+            lines.push(`import {ConnectionPool, sql, SqlFrag} from 'mysql3'\n`)
+        }
         if(opts.namespace) {
             lines.push(`export namespace ${opts.namespace || columnToKey(opts.database)} {`)
         }
@@ -160,6 +163,33 @@ const cmd: Command = {
             lines.push('})\n')
         }
 
+        if(opts.mysql3 && opts.tablemap && opts.colmaps) {
+            lines.push(`export class ${columnToKey(opts.classname ?? opts.database)} {`)
+            lines.push(`  constructor(private readonly db: ConnectionPool){}`)
+            for(const def of tables) {
+                const tableName = inflection.camelize(def.name, false)
+                const interfaceName = columnToKey(def.name)
+                const columnNames = def.columns.map(c => c.name)
+                // TODO: support C extends {[K extends string]: keyof ${interfaceName}}
+                lines.push(`  query${tableName}<C extends keyof ${interfaceName}>(columns: C[]|null, postfix: SqlFrag|((t:SqlFrag)=>SqlFrag)) {`)
+                lines.push(`    const t=sql.id('t')`)
+                lines.push(`    let q=sql\`select \${sql.columns(columns??${json5.stringify(columnNames)})} from ${dumbScape(def.name)} as \${t}\``)
+                lines.push(`    if(postfix) q=sql\`\${q} \${typeof postfix === 'function' ? postfix(t) : postfix}\``)
+                lines.push(`    return this.db.query<Pick<${interfaceName}, C>>(q)`)
+                lines.push(`  }`)
+                const pk = def.indexes.find(idx => idx.type === 'PRIMARY' && idx.columns.length === 1)
+                if(pk) {
+                    const name = columnToKey(inflection.singularize(def.name))
+                    const pkCol = pk.columns[0];
+                    const varName = inflection.camelize(pkCol, true)
+                    lines.push(`  get${name}<C extends keyof ${interfaceName}>(${varName}: ${interfaceName}[${json5.stringify(pkCol)}], columns?: C[]) {`)
+                    lines.push(`    return this.db.row<${interfaceName}>(sql\`select \${sql.columns(columns??${json5.stringify(columnNames)})} from ${dumbScape(def.name)} where ${dumbScape(pkCol)}=\${${varName}}\`)`)
+                    lines.push(`  }`)
+                }
+            }
+            lines.push(`}`)
+        }
+
         if(opts.namespace) {
             lines.push('}')
         }
@@ -196,6 +226,12 @@ const cmd: Command = {
             type: OptType.STRING,
             required: false,
         },
+        {
+            name: 'classname',
+            description: "Database class name",
+            type: OptType.STRING,
+            required: false,
+        },
     ],
     arguments: [
         {
@@ -209,6 +245,12 @@ const cmd: Command = {
 
 export default cmd
 
+/**
+ * Escapes a strict to be used as MySQL column id, and then escapes again to be used inside a JS template string
+ */
+function dumbScape(name: string) {
+    return escapeIdStrict(name).replace(/`/g,'\\`')
+}
 
 function escapeCol(col: string) {
     if(/\W/i.test(col)) {
@@ -227,3 +269,5 @@ function columnToKey(name: string) {
     return name
     return name[0].toUpperCase() + name.slice(1)
 }
+
+// RUN: noder dist/onemig.js export-typescript --database busman --colmaps --tablemap --mysql3 --classname KyDB data/kymark.ts
