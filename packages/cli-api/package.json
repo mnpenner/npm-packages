@@ -1,6 +1,6 @@
 {
     "name": "cli-api",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "license": "UNLICENSED",
     "private": false,
     "main": "dist/cjs/index.js",
@@ -46,5 +46,9 @@
         "build": "cross-env BABEL_ENV=production rollup -c",
         "dev": "cross-env BABEL_ENV=development rollup -cw",
         "prod": "npm-run-all clean --parallel tsdecls build"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/mnpenner/node-cli-api.git"
     }
 }
