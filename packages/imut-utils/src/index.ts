@@ -1,6 +1,5 @@
 
 
 
-export function foo() {
-    console.log('hello')
-}
+export * from './map'
+export * from './set'
