@@ -3,6 +3,7 @@ type Fn<TArgs extends ReadonlyArray<unknown>=unknown[], TRet=unknown> = (...args
 type AnyFn = (...args: any[]) => any
 type EventCallback<T=never> = (ev: T) => void
 type VoidFn = () => void
+type FP<T> = (a:T) => T
 
 // Objects
 type EmptyObject = Record<PropertyKey, never>
