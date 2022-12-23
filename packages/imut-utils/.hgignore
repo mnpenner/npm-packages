@@ -1,16 +1,10 @@
 syntax: regexp
 
-# (^|/)\.yarn/(?!(patches|plugins|releases|sdks|versions|cache)(/|$)).+
-^\.yarn/(?!plugins|releases)
+# https://github.com/yarnpkg/berry/issues/454#issuecomment-530312089
+^\.yarn/(?!(plugins|releases)/)
 ^\.pnp\.
 
 ^dist/
-
-# Swap the comments on the following lines if you don't wish to use zero-installs
-# Documentation here: https://yarnpkg.com/features/zero-installs
-#.pnp.*
-
-
 
 # Default ignored files
 ^\.idea/shelf/
