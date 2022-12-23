@@ -1,7 +1,7 @@
 syntax: regexp
 
 # (^|/)\.yarn/(?!(patches|plugins|releases|sdks|versions|cache)(/|$)).+
-^\.yarn/
+^\.yarn/(?!plugins|releases)
 ^\.pnp\.
 
 ^dist/
