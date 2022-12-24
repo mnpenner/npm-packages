@@ -1,36 +1,43 @@
+import type {FP} from './types'
+import {Nil} from './types'
+
 /**
  * Appends elements onto the end of the array.
  */
-export function arrayPush<T>(array: T[], ...values: T[]): T[] {
-    return [...array, ...values]
+export function arrayPush<T>(array: T[]|Nil, ...values: T[]): T[] {
+    return [...array??[], ...values]
 }
-export function fpArrayPush<T>(...values: T[]): FP<T[]> {
-    return (a:T[]) => arrayPush(a, ...values)
+
+export function fpArrayPush<T>(...values: T[]) {
+    return (a: T[]|Nil) => arrayPush(a, ...values)
 }
 
 /**
  * Prepends elements onto the end of the array.
  */
-export function arrayUnshift<T>(array: T[], ...values: T[]): T[] {
-    return [...values, ...array]
+export function arrayUnshift<T>(array: T[]|Nil, ...values: T[]): T[] {
+    return [...values, ...array??[]]
 }
-export function fpArrayUnshift<T>(...values: T[]): FP<T[]> {
-    return (a:T[]) => arrayUnshift(a, ...values)
+
+export function fpArrayUnshift<T>(...values: T[]) {
+    return (a: T[]|Nil) => arrayUnshift(a, ...values)
 }
 
 /**
  * Deletes elements from an array by index.
  */
-export function arrayDeleteIndex<T>(array: T[], ...indices: number[]): T[] {
-    indices.sort((a,b) => b-a)
+export function arrayDeleteIndex<T>(array: T[]|Nil, ...indices: number[]): T[] {
+    if(!array?.length) return []
+    indices.sort((a, b) => b - a)
     const ret = [...array]
     for(const i of indices) {
         ret.splice(i, 1)
     }
     return ret
 }
-export function fpArrayDeleteIndex<T>(...indices: number[]): FP<T[]> {
-    return (a:T[]) => arrayDeleteIndex(a, ...indices)
+
+export function fpArrayDeleteIndex<T>(...indices: number[]) {
+    return (a: T[]|Nil) => arrayDeleteIndex(a, ...indices)
 }
 
 function fpLooseEq<T>(value: any) {
@@ -44,45 +51,70 @@ function fpStrictEq<T>(value: any) {
 /**
  * Deletes up to one element from an array, searching by value.
  */
-export function arrayDeleteOneValue<T>(array: T[], value: T, strict: boolean): T[] {
+export function arrayDeleteOneValue<T>(array: T[]|Nil, value: T, strict: boolean): T[] {
+    if(!array?.length) return []
     const idx = array.findIndex((strict ? fpStrictEq : fpLooseEq)(value))
     return idx < 0 ? array : arrayDeleteIndex(array, idx)
 }
-export function fpArrayDeleteOneValue<T>(value: T, strict: boolean): FP<T[]> {
-    return (a:T[]) => arrayDeleteOneValue(a, value, strict)
+
+export function fpArrayDeleteOneValue<T>(value: T, strict: boolean) {
+    return (a: T[]|Nil) => arrayDeleteOneValue(a, value, strict)
 }
 
 /**
  * Filters the array to elements that pass the predicate.
  */
-export function arraySelect<T>(array: T[], predicate: (v: T, i:number)=>boolean): T[] {
-    return array.filter((v,i) => predicate(v,i))
+export function arraySelect<T>(array: T[]|Nil, predicate: (v: T, i: number) => boolean): T[] {
+    if(!array?.length) return []
+    return array.filter((v, i) => predicate(v, i))
 }
-export function fpArraySelect<T>(predicate: (v: T, i:number)=>boolean): FP<T[]> {
-    return (a:T[]) => arraySelect(a, predicate)
+
+export function fpArraySelect<T>(predicate: (v: T, i: number) => boolean) {
+    return (a: T[]|Nil) => arraySelect(a, predicate)
 }
 
 /**
  * Removes elements that do *not* pass the predicate.
  */
-export function arrayReject<T>(array: T[], predicate: (v: T, i:number)=>boolean): T[] {
-    return array.filter((v,i) => !predicate(v,i))
-}
-export function fpArrayReject<T>(predicate: (v: T, i:number)=>boolean): FP<T[]> {
-    return (a:T[]) => arrayReject(a, predicate)
+export function arrayReject<T>(array: T[]|Nil, predicate: (v: T, i: number) => boolean): T[] {
+    if(!array?.length) return []
+    return array.filter((v, i) => !predicate(v, i))
 }
 
+export function fpArrayReject<T>(predicate: (v: T, i: number) => boolean) {
+    return (a: T[]) => arrayReject(a, predicate)
+}
 
-export function arraySort<T>(array: T[], compareFn: (a:T,b:T) => number) {
+export function arraySort<T>(array: T[]|Nil, compareFn: (a: T, b: T) => number) {
+    if(!array?.length) return []
     return [...array].sort(compareFn)
 }
-export function arraySortNumbersAsc(array: number[]) {
-    return arraySort(array, (a,b) => a - b)
-}
-export function arraySortNumbersDesc(array: number[]) {
-    return arraySort(array, (a,b) => b - a)
+
+export function arraySortNumbers(array: number[]|Nil, ascending=true) {
+    if(!array?.length) return []
+    return arraySort(array, ascending ? (a, b) => a - b : (a, b) => b - a)
 }
 
-export function arraySortStringsAsc(array: string[], locales?: string, options?: Intl.CollatorOptions) {
-    return arraySort(array, new Intl.Collator(locales, options).compare)
+interface CollatorOptions extends Intl.CollatorOptions {
+    /**
+     * A string with a BCP 47 language tag, or an array of such strings.
+     */
+    locales?: string | string[]
+    /**
+     * Sort in ascending order (alphabetically, A->Z).
+     */
+    ascending?: boolean
+}
+
+export function arraySortStrings(array: string[]|Nil, options: CollatorOptions = {
+    sensitivity: 'base',
+    numeric: true,
+    usage: 'sort',
+    ascending: true,
+}) {
+    if(!array?.length) return []
+    const {locales, ascending, ...opts} = options
+    const collator = new Intl.Collator(locales, opts)
+    const compare = ascending ? collator.compare : (a:string,b:string) => -collator.compare(a,b)
+    return arraySort(array, compare)
 }

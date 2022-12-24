@@ -1,3 +1,5 @@
+import type {Fn, AnyFn} from './types'
+
 // https://github.com/microsoft/TypeScript/issues/37663
 export type Resolvable<TValue = unknown, TArgs extends ReadonlyArray<unknown> = []> = TValue | ((...args: TArgs) => TValue)
 
