@@ -1,5 +1,6 @@
 import type {FP} from './types'
 import {Nil} from './types'
+import {Resolvable, resolveValue} from './resolvable'
 
 /**
  * Appends elements onto the end of the array.
@@ -118,3 +119,4 @@ export function arraySortStrings(array: string[]|Nil, options: CollatorOptions =
     const compare = ascending ? collator.compare : (a:string,b:string) => -collator.compare(a,b)
     return arraySort(array, compare)
 }
+
