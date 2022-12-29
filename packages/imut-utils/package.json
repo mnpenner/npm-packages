@@ -1,9 +1,8 @@
 {
   "name": "@mnpenner/imut-utils",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "packageManager": "yarn@3.3.1",
   "main": "dist/index.js",
-  "type": "module",
   "types": "dist/index.d.ts",
   "files": [
     "/dist"
