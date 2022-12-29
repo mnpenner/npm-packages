@@ -1,6 +1,7 @@
 import type {FP} from './types'
 import {Nil} from './types'
 import {Resolvable, resolveValue} from './resolvable'
+import {binarySearch} from './extra'
 
 /**
  * Appends elements onto the end of the array.
@@ -12,6 +13,37 @@ export function arrayPush<T>(array: T[]|Nil, ...values: T[]): T[] {
 export function fpArrayPush<T>(...values: T[]) {
     return (a: T[]|Nil) => arrayPush(a, ...values)
 }
+
+/**
+ * Insert one or more elements into an array at the given position.
+ */
+export function arrayInsert<T>(array: T[]|Nil, index:number, ...values: T[]): T[] {
+    const copy = array ? [...array] : []
+    copy.splice(index,0,...values)
+    return copy
+}
+export function fpArrayInsert<T>(index:number, ...values: T[]) {
+    return (a: T[]|Nil) => arrayInsert(a, index, ...values)
+}
+
+/**
+ * Insert numbers into a sorted array, using binary search to find their position.
+ *
+ * @param array Array of numbers. Must be sorted in ascending order.
+ * @param values Values to insert. These needn't be sorted; each one will be searched for individually.
+ */
+export function arrayInsertSorted(array: number[]|Nil, ...values: number[]): number[] {
+    const copy = array ? [...array] : []
+    for(const v of values) {
+        const index = binarySearch(copy,v)
+        copy.splice(index < 0 ? ~index : index,0,v)
+    }
+    return copy
+}
+export function fpArrayInsertSorted<T>(...values: number[]) {
+    return (a: number[]|Nil) => arrayInsertSorted(a, ...values)
+}
+
 
 /**
  * Prepends elements onto the end of the array.

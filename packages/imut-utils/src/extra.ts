@@ -20,3 +20,19 @@ export function mapToArray<K,V,R>(map: Iterable<[K,V]>, callback: (v:V, k:K, i:n
 export function setToArray<V,R>(set: Iterable<V>, callback: (v:V, i:number)=>R): R[] {
     return Array.from(set, callback)
 }
+
+// TODO: take in a "compare" func so this works on more than just numbers.
+export function binarySearch(nums: number[], target: number): number {
+    let left: number = 0;
+    let right: number = nums.length - 1;
+
+    while (left <= right) {
+        const mid: number = Math.floor((left + right) / 2);
+
+        if (nums[mid] === target) return mid;
+        if (target < nums[mid]) right = mid - 1;
+        else left = mid + 1;
+    }
+
+    return ~left;
+}

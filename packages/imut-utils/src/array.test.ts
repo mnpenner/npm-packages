@@ -4,7 +4,7 @@ import {
     fpArrayPush,
     fpArrayReject,
     fpArrayDeleteOneValue,
-    fpArrayUnshift, arraySortNumbers,  arraySortStrings
+    fpArrayUnshift, arraySortNumbers, arraySortStrings, fpArrayInsert, arrayInsertSorted, fpArrayInsertSorted
 } from './array'
 
 
@@ -22,6 +22,20 @@ test(fpArrayUnshift.name, () => {
     expect(out).toStrictEqual([1,5,3,3,1,2,7,4,6,5])
 })
 
+test(fpArrayInsert.name, () => {
+    expect(fpArrayInsert(0,99)([1,3,5])).toStrictEqual([99,1,3,5])
+    expect(fpArrayInsert(1,99)([1,3,5])).toStrictEqual([1,99,3,5])
+    expect(fpArrayInsert(1,99)([1,3,5])).toStrictEqual([1,99,3,5])
+    expect(fpArrayInsert(9,99)([1,3,5])).toStrictEqual([1,3,5,99])
+    expect(fpArrayInsert(2,77,88,99)([1,3,5])).toStrictEqual([1,3,77,88,99,5])
+    expect(fpArrayInsert(2)([1,3,5])).toStrictEqual([1,3,5])
+})
+
+test(fpArrayInsertSorted.name, () => {
+    expect(fpArrayInsertSorted(6,2,4)([1,3,5,7])).toStrictEqual([1,2,3,4,5,6,7])
+    expect(fpArrayInsertSorted(9,-9)([1,3,5,7])).toStrictEqual([-9,1,3,5,7,9])
+    expect(fpArrayInsertSorted(3,5)([1,3,5,7])).toStrictEqual([1,3,3,5,5,7])
+})
 
 
 test(fpArrayDeleteIndex.name, () => {
