@@ -1,6 +1,6 @@
 {
   "name": "@mnpenner/imut-utils",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "packageManager": "yarn@3.3.1",
   "main": "dist/index.mjs",
   "type": "module",
@@ -11,7 +11,8 @@
   "scripts": {
     "build": "rollup -c",
     "test": "jest --silent=false",
-    "publish-patch": "npm version patch && hg ci -m \"Publish v$(jq -r '.version' package.json)\" && npm publish"
+    "publish-patch": "npm version patch && hg ci -m \"Publish v$(jq -r '.version' package.json)\" && npm publish",
+    "release": "yarn run build && yarn run test && yarn run publish-patch"
   },
   "devDependencies": {
     "@rollup/plugin-terser": "^0.2.1",
