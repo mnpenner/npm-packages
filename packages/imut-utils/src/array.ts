@@ -1,6 +1,4 @@
-import type {FP} from './types'
-import {Nil} from './types'
-import {Resolvable, resolveValue} from './resolvable'
+import type {Nil} from './types'
 import {binarySearch} from './extra'
 
 /**

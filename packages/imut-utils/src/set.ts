@@ -1,4 +1,4 @@
-import {FP, Nil} from './types'
+import type {FP, Nil} from './types'
 
 /**
  * Add or remove a value from a set.
