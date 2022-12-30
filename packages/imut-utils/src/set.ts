@@ -1,9 +1,9 @@
-import type {FP, Nil} from './types'
+import type {FP, nil} from './types'
 
 /**
  * Add or remove a value from a set.
  */
-export function setCheck<T>(set: Set<T> | Nil, value: T, add: boolean): Set<T> {
+export function setCheck<T>(set: Set<T> | nil, value: T, add: boolean): Set<T> {
     const ret = new Set(set)
     if(add) {
         ret.add(value)
@@ -14,25 +14,25 @@ export function setCheck<T>(set: Set<T> | Nil, value: T, add: boolean): Set<T> {
 }
 
 export function fpSetCheck<T>(value: T, add: boolean): FP<Set<T>> {
-    return (set: Set<T>|Nil) => setCheck(set, value, add)
+    return (set: Set<T>|nil) => setCheck(set, value, add)
 }
 
 
 /**
  * Adds one or more values to a set.
  */
-export function setAdd<T>(set: Set<T>|Nil, ...values: T[]): Set<T> {
+export function setAdd<T>(set: Set<T>|nil, ...values: T[]): Set<T> {
     return new Set([...set??[], ...values])
 }
 
 export function fpSetAdd<T>(...values: T[]): FP<Set<T>> {
-    return (set: Set<T>|Nil) => setAdd(set, ...values)
+    return (set: Set<T>|nil) => setAdd(set, ...values)
 }
 
 /**
  * Removes one or more values to a set.
  */
-export function setRemove<T>(set: Set<T> | Nil, ...values: T[]): Set<T> {
+export function setRemove<T>(set: Set<T> | nil, ...values: T[]): Set<T> {
     const ret = new Set(set)
     for(const v of values) {
         ret.delete(v)
@@ -41,7 +41,7 @@ export function setRemove<T>(set: Set<T> | Nil, ...values: T[]): Set<T> {
 }
 
 export function fpSetRemove<T>(...values: T[]): FP<Set<T>> {
-    return (set: Set<T>|Nil) => setRemove(set, ...values)
+    return (set: Set<T>|nil) => setRemove(set, ...values)
 }
 
 /**

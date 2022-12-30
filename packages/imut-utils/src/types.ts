@@ -8,7 +8,7 @@ export type FP<T> = (a:T) => T
 // Objects
 export type EmptyObject = Record<PropertyKey, never>
 export type AnyObject = Record<PropertyKey, unknown>
-export type Nil = null|undefined
+export type nil = null|undefined
 
 export type Override<Base, Extension, DeleteKeys extends PropertyKey=never> = Omit<Base, keyof Extension|DeleteKeys> & Extension
 export type RequiredKeys<Type, Key extends keyof Type> = Omit<Type, Key> & Required<Pick<Type, Key>>
