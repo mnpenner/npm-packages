@@ -9,6 +9,9 @@ export type FP<T> = (a:T) => T
 export type EmptyObject = Record<PropertyKey, never>
 export type AnyObject = Record<PropertyKey, unknown>
 export type nil = null|undefined
+export type ValueOf<T> = T[keyof T];
+
+export type NonNil<T> = Exclude<T,nil>  // N.B. This is slightly different than NonNullable<T>
 
 export type Override<Base, Extension, DeleteKeys extends PropertyKey=never> = Omit<Base, keyof Extension|DeleteKeys> & Extension
 export type RequiredKeys<Type, Key extends keyof Type> = Omit<Type, Key> & Required<Pick<Type, Key>>
