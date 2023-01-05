@@ -51,4 +51,14 @@ describe(fpMergeMap.name, () => {
             ['d', [5,6]],
         ]))
     })
+    it('passes key', () => {
+        const setValueToKey = (value: string|undefined, key: string) => `${key}-${value}`
+        const map = new Map([['a', 'alpha'], ['b', 'beta']])
+        const out = fpMergeMap<string, string>(m => [
+            ['a', setValueToKey],
+            ['b', setValueToKey],
+            ['c', setValueToKey],
+        ])(map)
+        expect(out).toStrictEqual(new Map([['a', 'a-alpha'], ['b', 'b-beta'],['c','c-undefined']]))
+    })
 })

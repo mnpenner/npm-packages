@@ -25,4 +25,17 @@ describe(fpShallowMerge.name, () => {
             b: 2*2+1,
         })
     })
+    it('passes key', () => {
+        type ObjType = {alpha:string,beta:string,gamma:string}
+        const dasherize = (value: string, key: string) => `${key}-${value}`
+        expect(fpShallowMerge<ObjType>({alpha: dasherize, beta: dasherize})({
+            alpha: 'a',
+            beta: 'b',
+            gamma: 'c',
+        })).toEqual({
+            alpha: 'alpha-a',
+            beta: 'beta-b',
+            gamma: 'c',
+        })
+    })
 })
