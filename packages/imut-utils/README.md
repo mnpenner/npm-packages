@@ -71,8 +71,14 @@ None. That's a feature.
 
 [No](https://semver.org/#spec-item-4). You should pin against a minor a patch version until this reaches 1.x. I will try to make API breaks minor bumps (until 1.0, then majors are breaks, per semver).
 
+Or just copy the functions you like out of [the src](https://github.com/mnpenner/imut-utils/tree/default/src).
+
 ## Docs?
 
 Read [the d.ts files](https://www.npmjs.com/package/@mnpenner/imut-utils?activeTab=explore).
 
 `fp` stands for "functional programming" or something. I couldn't come up with a good name for "function that returns a function that expects the previous state as input" so I just copied the naming from [lodash/fp](https://github.com/lodash/lodash/wiki/FP-Guide). It's basically what React's `SetStateAction<S>` accepts.
+
+## License
+
+MIT
