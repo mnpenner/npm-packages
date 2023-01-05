@@ -47,4 +47,4 @@ export function resolveValue(val, ...args) {
 }
 ```
 
-Where `args` is the current value so that you can add to it, concat it, or chain it with another function from this lib (or another lib, no judgement! -- but do tell me, so I can add it).
+Where `args` is the current value and key so that you can add to it, concat it, or chain it with another function from this lib (or another lib, no judgement! -- but do tell me, so I can add it).
