@@ -39,22 +39,23 @@ function App(props: AppProps) {
 }
 ```
 
-Where you see `Resolvable` in the type definitions basically just means I will call this function on it:
+Or here's another fun one:
 
-```js
-export function resolveValue(val, ...args) {
-    return typeof val === 'function' ? val(...args) : val;
-}
+```ts
+const [timings, setTimings] = useState<Map<string, number[]>>(() => new Map)
+// ...
+const startTime = Date.now()
+await doSomethingThatTakesAwhile()
+setTimings(fpMapSet(timingKey, fpArrayInsertSorted(Date.now() - startTime)))
 ```
 
-Where `args` is the current value and key so that you can add to it, concat it, or chain it with another function from this lib (or another lib, no judgement! -- but do tell me, so I can add it).
-
+Now you have a Map full of *sorted* arrays. And you didn't need to initialize the map either, most of the array functions will create an empty array if the current state is `undefined`.
 
 ## Why?
 
 There are a lot of other immutable libs for React out there. Why use this one?
 
-Simplicity. I'm not a fan of libs that use Proxies under the hood to track what mutations you've performed, they sometimes interfere where `this` is expected to be of a certain type, and they add unnecessary overhead. [immutability-helper](https://github.com/kolodny/immutability-helper) is pretty good, but it's a *little* harder extend, and you have to be comfortable with some fancy syntax. It allows makes me slightly uncomfortable that there could be a key collision if I ever use an object with a property called `$push`.
+Simplicity. I'm not a fan of libs that use Proxies under the hood to track what mutations you've performed, they sometimes interfere where `this` is expected to be of a certain type, and they add unnecessary overhead. [immutability-helper](https://github.com/kolodny/immutability-helper) is pretty good, but it's a *little* harder extend, and you have to be comfortable with some fancy syntax. It also makes me slightly uncomfortable that there could be a key collision if I ever use an object with a property called `$push`.
 
 Want to extend this lib? Just add a new function to your project, there's nothing to integrate. Most of the functions here are [just a few lines](https://github.com/mnpenner/imut-utils/blob/a783281d4e1e8fc5ea96e22f53861a4f4cae9d53/src/array.ts#L12), the only benefit is that they have tests that you now don't have to write.
 
@@ -76,6 +77,16 @@ Or just copy the functions you like out of [the src](https://github.com/mnpenner
 ## Docs?
 
 Read [the d.ts files](https://www.npmjs.com/package/@mnpenner/imut-utils?activeTab=explore).
+
+Where you see `Resolvable` in the type definitions basically just means I will call this function on it:
+
+```js
+export function resolveValue(val, ...args) {
+    return typeof val === 'function' ? val(...args) : val;
+}
+```
+
+Where `args` is the current value and key so that you can add to it, concat it, or chain it with another function from this lib (or another lib, no judgement! -- but do tell me, so I can add it).
 
 `fp` stands for "functional programming" or something. I couldn't come up with a good name for "function that returns a function that expects the previous state as input" so I just copied the naming from [lodash/fp](https://github.com/lodash/lodash/wiki/FP-Guide). It's basically what React's `SetStateAction<S>` accepts.
 
