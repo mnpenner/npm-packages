@@ -48,3 +48,31 @@ export function resolveValue(val, ...args) {
 ```
 
 Where `args` is the current value and key so that you can add to it, concat it, or chain it with another function from this lib (or another lib, no judgement! -- but do tell me, so I can add it).
+
+
+## Why?
+
+There are a lot of other immutable libs for React out there. Why use this one?
+
+Simplicity. I'm not a fan of libs that use Proxies under the hood to track what mutations you've performed, they sometimes interfere where `this` is expected to be of a certain type, and they add unnecessary overhead. [immutability-helper](https://github.com/kolodny/immutability-helper) is pretty good, but it's a *little* harder extend, and you have to be comfortable with some fancy syntax. It allows makes me slightly uncomfortable that there could be a key collision if I ever use an object with a property called `$push`.
+
+Want to extend this lib? Just add a new function to your project, there's nothing to integrate. Most of the functions here are [just a few lines](https://github.com/mnpenner/imut-utils/blob/a783281d4e1e8fc5ea96e22f53861a4f4cae9d53/src/array.ts#L12), the only benefit is that they have tests that you now don't have to write.
+
+
+## How big is it?
+
+1.2 kB minified+gzipped [apparently](https://bundlephobia.com/package/@mnpenner/imut-utils@0.1.17). But it's tree-shakeable; the output is ES modules. You shouldn't pay for what you don't use if you use a bundler.
+
+## Dependencies?
+
+None. That's a feature.
+
+## Is it stable?
+
+[No](https://semver.org/#spec-item-4). You should pin against a minor a patch version until this reaches 1.x. I will try to make API breaks minor bumps (until 1.0, then majors are breaks, per semver).
+
+## Docs?
+
+Read [the d.ts files](https://www.npmjs.com/package/@mnpenner/imut-utils?activeTab=explore).
+
+`fp` stands for "functional programming" or something. I couldn't come up with a good name for "function that returns a function that expects the previous state as input" so I just copied the naming from [lodash/fp](https://github.com/lodash/lodash/wiki/FP-Guide). It's basically what React's `SetStateAction<S>` accepts.
