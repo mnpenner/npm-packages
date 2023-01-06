@@ -1,5 +1,5 @@
 import type {nil} from './types'
-import {binarySearch} from './extra'
+import {binarySearch,assert} from './extra'
 
 /**
  * Appends elements onto the end of the array.
@@ -10,6 +10,21 @@ export function arrayPush<T>(array: T[]|nil, ...values: T[]): T[] {
 
 export function fpArrayPush<T>(...values: T[]) {
     return (a: T[]|nil) => arrayPush(a, ...values)
+}
+
+
+/**
+ * Pops an element off the end of the array.
+ */
+export function arrayPop<T>(array: T[]|nil,howMany=1): T[] {
+    assert(Number.isInteger(howMany))
+    assert(howMany >= 0)
+    if(!array) return []
+    if(howMany === 0) return array
+    return array.slice(0,-howMany)
+}
+export function fpArrayPop<T>(howMany=1) {
+    return (a: T[]|nil) => arrayPop(a, howMany)
 }
 
 /**

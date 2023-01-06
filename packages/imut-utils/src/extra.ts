@@ -21,6 +21,19 @@ export function setToArray<V,R>(set: Iterable<V>, callback: (v:V, i:number)=>R):
     return Array.from(set, callback)
 }
 
+export class AssertionError extends Error {
+    constructor(message: string, options?: ErrorOptions) {
+        super(message, options);  // 'Error' breaks prototype chain here
+        this.name = new.target.name
+        Object.setPrototypeOf(this, new.target.prototype);  // restore prototype chain
+    }
+}
+
+
+export function assert(condition: any): void|never {
+    if(!condition) throw new AssertionError("Assertion failed")
+}
+
 // TODO: take in a "compare" func so this works on more than just numbers.
 export function binarySearch(nums: number[], target: number): number {
     let left: number = 0;

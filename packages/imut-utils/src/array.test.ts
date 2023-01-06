@@ -4,7 +4,13 @@ import {
     fpArrayPush,
     fpArrayReject,
     fpArrayDeleteOneValue,
-    fpArrayUnshift, arraySortNumbers, arraySortStrings, fpArrayInsert, arrayInsertSorted, fpArrayInsertSorted
+    fpArrayUnshift,
+    arraySortNumbers,
+    arraySortStrings,
+    fpArrayInsert,
+    arrayInsertSorted,
+    fpArrayInsertSorted,
+    fpArrayPop
 } from './array'
 
 
@@ -14,6 +20,29 @@ test(fpArrayPush.name, () => {
     expect(arr).toStrictEqual([3,1,2,7,4,6,5])
     expect(out).toStrictEqual([3,1,2,7,4,6,5,1,5,3])
 })
+
+describe(fpArrayPop.name, () => {
+    it('takes 0 args', () => {
+        expect(fpArrayPop()([1,2,3])).toStrictEqual([1,2])
+    })
+    it('throws on bad input', () => {
+        expect(() => fpArrayPop(-1)([1,2,3])).toThrow()
+        expect(() => fpArrayPop(3.14)([1,2,3])).toThrow()
+    })
+    it('pops multiple', () => {
+        expect(fpArrayPop(0)([1, 2, 3])).toStrictEqual([1, 2, 3])
+        expect(fpArrayPop(1)([1, 2, 3])).toStrictEqual([1, 2])
+        expect(fpArrayPop(2)([1, 2, 3])).toStrictEqual([1])
+        expect(fpArrayPop(3)([1, 2, 3])).toStrictEqual([])
+        expect(fpArrayPop(4)([1, 2, 3])).toStrictEqual([])
+    })
+    it('handles nil', () => {
+        expect(fpArrayPop()([])).toStrictEqual([])
+        expect(fpArrayPop()(null)).toStrictEqual([])
+        expect(fpArrayPop()(undefined)).toStrictEqual([])
+    })
+})
+
 
 test(fpArrayUnshift.name, () => {
     const arr = [3,1,2,7,4,6,5]
