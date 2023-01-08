@@ -10,19 +10,23 @@ npm install @mnpenner/imut-utils
 
 ## Links
 
-- Docs: https://mnpenner.github.io/imut-utils/
+- Docs: https://mnpenner.github.io/imut-utils
 - Repo: https://github.com/mnpenner/imut-utils
+  - Code: https://github.com/mnpenner/imut-utils/tree/default/src
+  - Issues: https://github.com/mnpenner/imut-utils/issues
 - Npm: https://www.npmjs.com/package/@mnpenner/imut-utils
 - Yarn: https://yarnpkg.com/package/@mnpenner/imut-utils
 - Bundlephobia: https://bundlephobia.com/package/@mnpenner/imut-utils
 - Unpkg: https://unpkg.com/@mnpenner/imut-utils
 - jsDelivr: https://cdn.jsdelivr.net/npm/@mnpenner/imut-utils
 
-## Usage
+## Quick Start
 
 This library is designed to be paired with React, but has no such dependency. Here's an example lightly modified from a project I'm working on:
 
 ```ts
+import {fpShallowMerge, fpMapSet} from '@mnpenner/imut-utils'
+
 function App(props: AppProps) {
     const [state, setState] = useState<Map<string, SomeState>>(() => new Map)
     
@@ -85,21 +89,13 @@ None. That's a feature.
 
 ## Is it stable?
 
-[No](https://semver.org/#spec-item-4). You should pin against a minor a patch version until this reaches 1.x. I will try to make API breaks minor bumps (until 1.0, then majors are breaks, per semver).
+No. You should pin against a *minor* or *patch* version until this reaches 1.0. I will try to make API breaks *minor* bumps (until 1.0, then *majors* are breaks, per [semver](https://semver.org/#spec-item-4)). Note that `^` does exactly this, so you probably don't have to do anything.
 
-Or just copy the functions you like out of [the src](https://github.com/mnpenner/imut-utils/tree/default/src).
+Or just copy the functions you like out of [the src](https://github.com/mnpenner/imut-utils/tree/default/src). If you prefer JS and don't want to build this package yourself, just copy from [Unpkg](https://unpkg.com/@mnpenner/imut-utils).
 
-## Misc
+## Naming
 
-```js
-export function resolveValue(val, ...args) {
-    return typeof val === 'function' ? val(...args) : val;
-}
-```
-
-Where `args` is the current value and key so that you can add to it, concat it, or chain it with another function from this lib (or another lib, no judgement! -- but do tell me, so I can add it).
-
-`fp` stands for "functional programming" or something. I couldn't come up with a good name for "function that returns a function that expects the previous state as input" so I just copied the naming from [lodash/fp](https://github.com/lodash/lodash/wiki/FP-Guide). It's basically what React's `SetStateAction<S>` accepts.
+`fp` stands for "functional programming" or something. I couldn't come up with a good name for "function that returns a function that expects the previous state as input" so I just copied the naming from [lodash/fp](https://github.com/lodash/lodash/wiki/FP-Guide). It's basically what React's `SetStateAction<S>` (returned by `useState`) accepts.
 
 ## Contributions
 

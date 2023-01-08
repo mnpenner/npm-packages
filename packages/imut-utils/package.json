@@ -1,6 +1,6 @@
 {
   "name": "@mnpenner/imut-utils",
-  "version": "0.1.24",
+  "version": "0.1.25",
   "packageManager": "yarn@3.3.1",
   "main": "dist/index.mjs",
   "type": "module",
@@ -15,7 +15,7 @@
     "all": "run-p build test docs",
     "docs": "typedoc --out docs --gitRemote 'https://github.com/mnpenner/imut-utils.git' --gitRevision default --sourceLinkTemplate 'https://github.com/mnpenner/imut-utils/blob/default/{path}#L{line}' --basePath . src/index.ts && hg addremove docs",
     "push": "hg pushall",
-    "release": "run-s all publish-patch push"
+    "release": "run-s all publish-patch"
   },
   "devDependencies": {
     "@rollup/plugin-terser": "^0.2.1",
