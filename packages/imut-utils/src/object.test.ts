@@ -21,12 +21,12 @@ describe(fpShallowMerge.name, () => {
             a: 1,
             b: 2
         })).toEqual({
-            a: 2+1,
-            b: 2*2+1,
+            a: 2 + 1,
+            b: 2 * 2 + 1,
         })
     })
     it('passes key', () => {
-        type ObjType = {alpha:string,beta:string,gamma:string}
+        type ObjType = { alpha: string, beta: string, gamma: string }
         const dasherize = (value: string, key: string) => `${key}-${value}`
         expect(fpShallowMerge<ObjType>({alpha: dasherize, beta: dasherize})({
             alpha: 'a',
@@ -36,6 +36,14 @@ describe(fpShallowMerge.name, () => {
             alpha: 'alpha-a',
             beta: 'beta-b',
             gamma: 'c',
+        })
+    })
+    it('merge in undefined if you want', () => {
+        type ObjType = { alpha: string, beta: string, gamma: string }
+        expect(fpShallowMerge<ObjType>(undefined, null)({alpha: 'a', beta: 'b', gamma: 'c'})).toEqual({
+            alpha: 'a',
+            beta: 'b',
+            gamma: 'c'
         })
     })
 })
