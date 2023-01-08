@@ -8,6 +8,10 @@ yarn add @mnpenner/imut-utils
 npm install @mnpenner/imut-utils
 ```
 
+## Docs
+
+https://mnpenner.github.io/imut-utils/
+
 ## Usage
 
 This library is designed to be paired with React, but has no such dependency. Here's an example lightly modified from a project I'm working on:
@@ -79,11 +83,7 @@ None. That's a feature.
 
 Or just copy the functions you like out of [the src](https://github.com/mnpenner/imut-utils/tree/default/src).
 
-## Docs?
-
-Read [the d.ts files](https://www.npmjs.com/package/@mnpenner/imut-utils?activeTab=explore).
-
-Where you see `Resolvable` in the type definitions basically just means I will call this function on it:
+## Misc
 
 ```js
 export function resolveValue(val, ...args) {
