@@ -8,9 +8,15 @@ yarn add @mnpenner/imut-utils
 npm install @mnpenner/imut-utils
 ```
 
-## Docs
+## Links
 
-https://mnpenner.github.io/imut-utils/
+- Docs: https://mnpenner.github.io/imut-utils/
+- Repo: https://github.com/mnpenner/imut-utils
+- Npm: https://www.npmjs.com/package/@mnpenner/imut-utils
+- Yarn: https://yarnpkg.com/package/@mnpenner/imut-utils
+- Bundlephobia: https://bundlephobia.com/package/@mnpenner/imut-utils
+- Unpkg: https://unpkg.com/@mnpenner/imut-utils
+- jsDelivr: https://cdn.jsdelivr.net/npm/@mnpenner/imut-utils
 
 ## Usage
 
@@ -71,7 +77,7 @@ Want to extend this lib? Just add a new function to your project, there's nothin
 
 ## How big is it?
 
-1.2 kB minified+gzipped [apparently](https://bundlephobia.com/package/@mnpenner/imut-utils@0.1.17). But it's tree-shakeable; the output is ES modules. You shouldn't pay for what you don't use if you use a bundler.
+[1.4 kB minified+gzipped](https://bundlephobia.com/package/@mnpenner/imut-utils@0.1.23), but it's tree-shakeable; the output is ES modules. You shouldn't pay for what you don't use when bundled.
 
 ## Dependencies?
 
