@@ -12,7 +12,8 @@
     "build": "rollup -c",
     "test": "jest --silent=false",
     "publish-patch": "npm version patch && hg ci -m \"Publish v$(jq -r '.version' package.json)\" && npm publish",
-    "release": "yarn run build && yarn run test && yarn run publish-patch && hg pushall"
+    "release": "yarn run build && yarn run test && yarn run publish-patch && hg pushall",
+    "docs": "typedoc --out docs src/index.ts"
   },
   "devDependencies": {
     "@rollup/plugin-terser": "^0.2.1",
@@ -22,6 +23,7 @@
     "rollup": "^3.9.0",
     "ts-jest": "^29.0.3",
     "tslib": "^2.4.1",
+    "typedoc": "^0.23.24",
     "typescript": "^4.9.4"
   }
 }
