@@ -40,10 +40,24 @@ describe(fpShallowMerge.name, () => {
     })
     it('merge in undefined if you want', () => {
         type ObjType = { alpha: string, beta: string, gamma: string }
-        expect(fpShallowMerge<ObjType>(undefined, null)({alpha: 'a', beta: 'b', gamma: 'c'})).toEqual({
+        const orig: ObjType = {alpha: 'a', beta: 'b', gamma: 'c'}
+        const ret = fpShallowMerge<ObjType>(undefined, null)(orig)
+        expect(ret).toEqual({
             alpha: 'a',
             beta: 'b',
             gamma: 'c'
         })
+        expect(ret).toBe(orig)
+    })
+    it("doesn't mutate", () => {
+        type ObjType = { alpha: string, beta: string, gamma: string }
+        const orig: ObjType = {alpha: 'a', beta: 'b', gamma: 'c'}
+        const ret = fpShallowMerge<ObjType>({alpha:'foo'})(orig)
+        expect(orig).toStrictEqual({
+            alpha: 'a',
+            beta: 'b',
+            gamma: 'c'
+        })
+        expect(ret).not.toBe(orig)
     })
 })
