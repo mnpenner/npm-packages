@@ -13,7 +13,7 @@
     "test": "jest --silent=false",
     "publish-patch": "npm version patch && hg ci -m \"Publish v$(jq -r '.version' package.json)\" && npm publish",
     "all": "run-p build test docs",
-    "docs": "typedoc --out docs src/index.ts",
+    "docs": "typedoc --out docs src/index.ts && hg addremove docs",
     "push": "hg pushall",
     "release": "run-s all publish-patch push"
   },
