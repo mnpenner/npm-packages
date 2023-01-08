@@ -1,4 +1,4 @@
-import {fpMapSet, fpMergeMap} from './map'
+import {fpMapDelete, fpMapSet, fpMergeMap} from './map'
 import {arrayDeleteOneValue, fpArrayDeleteOneValue, fpArrayPush, fpArraySelect, fpArrayUnshift} from './array'
 
 
@@ -14,6 +14,26 @@ describe(fpMapSet.name, () => {
         const out = fpMapSet<string, number>('b', v => (v ?? 0) * 2)(map)
         expect(out).not.toBe(map)
         expect(out).toStrictEqual(new Map([['a', 1], ['b', 4]]))
+    })
+})
+
+describe(fpMapDelete.name, () => {
+    it('deletes', () => {
+        const map = new Map([['a', 1], ['b', 2]])
+        const out = fpMapDelete('b')(map)
+        expect(out).not.toBe(map)
+        expect(out).toStrictEqual(new Map([['a', 1]]))
+    })
+    it('works with nil map', () => {
+        expect(fpMapDelete('a')(null)).toStrictEqual(new Map)
+        expect(fpMapDelete('b')(undefined)).toStrictEqual(new Map)
+
+    })
+    it("works when doesn't match", () => {
+        expect(fpMapDelete('c')(new Map([['a', 1], ['b', 2]]))).toStrictEqual(new Map([['a', 1], ['b', 2]]))
+    })
+    it("deletes multiple", () => {
+        expect(fpMapDelete('a','c')(new Map([['a', 1], ['b', 2], ['c', 2]]))).toStrictEqual(new Map([['b', 2]]))
     })
 })
 
