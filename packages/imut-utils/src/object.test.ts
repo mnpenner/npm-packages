@@ -1,4 +1,4 @@
-import {fpShallowMerge} from './object'
+import {fpRelaxedMerge, fpShallowMerge} from './object'
 
 describe(fpShallowMerge.name, () => {
     it('uses expected precedence', () => {
@@ -41,13 +41,21 @@ describe(fpShallowMerge.name, () => {
     it('merge in undefined if you want', () => {
         type ObjType = { alpha: string, beta: string, gamma: string }
         const orig: ObjType = {alpha: 'a', beta: 'b', gamma: 'c'}
-        const ret = fpShallowMerge<ObjType>(undefined, null)(orig)
+        const ret = fpRelaxedMerge<ObjType>(undefined, null)(orig)
         expect(ret).toEqual({
             alpha: 'a',
             beta: 'b',
             gamma: 'c'
         })
         expect(ret).toBe(orig)
+    })
+    it('default is null', () => {
+        type ObjType = { alpha: string, beta: string, gamma: string }
+        expect(fpRelaxedMerge<ObjType>({alpha: 'a', beta: 'b'},{gamma:'c'})(null)).toEqual({
+            alpha: 'a',
+            beta: 'b',
+            gamma: 'c'
+        })
     })
     it("doesn't mutate", () => {
         type ObjType = { alpha: string, beta: string, gamma: string }

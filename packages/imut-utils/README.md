@@ -1,5 +1,7 @@
 # imut-utils
 
+Immutability helper for React.
+
 ## Installation
 
 ```sh
