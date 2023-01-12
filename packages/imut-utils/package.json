@@ -1,6 +1,6 @@
 {
   "name": "@mnpenner/imut-utils",
-  "version": "0.1.27",
+  "version": "0.1.28",
   "packageManager": "yarn@3.3.1",
   "main": "dist/index.mjs",
   "type": "module",
@@ -13,7 +13,7 @@
     "test": "jest --silent=false",
     "patch": "npm version patch && VER=$(jq -r '.version' package.json) && hg ci -m \"Publish v$VER\" && hg tag \"v$VER\"",
     "all": "run-p build test docs",
-    "docs": "typedoc --out docs --gitRemote 'https://github.com/mnpenner/imut-utils.git' --gitRevision default --sourceLinkTemplate 'https://github.com/mnpenner/imut-utils/blob/default/{path}#L{line}' --basePath . src/index.ts && hg addremove docs",
+    "docs": "typedoc src/index.ts && hg addremove docs",
     "push": "hg pushall",
     "release": "run-s all patch && npm publish && hg push"
   },
@@ -27,6 +27,7 @@
     "ts-jest": "^29.0.3",
     "tslib": "^2.4.1",
     "typedoc": "^0.23.24",
+    "typedoc-plugin-missing-exports": "^1.0.0",
     "typescript": "^4.9.4"
   },
   "repository": {

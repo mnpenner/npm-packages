@@ -1,0 +1,11 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["./src/index.ts", "./src/secondary-entry.ts"],
+  "out": "docs",
+  "gitRemote": "default",
+  "gitRevision": "default",
+  "sourceLinkTemplate": "https://github.com/mnpenner/imut-utils/blob/default/{path}#L{line}",
+  "basePath": ".",
+  "plugin": ["typedoc-plugin-missing-exports"],
+  "excludeExternals": true
+}
