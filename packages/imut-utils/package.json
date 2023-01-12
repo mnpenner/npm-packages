@@ -1,6 +1,6 @@
 {
   "name": "@mnpenner/imut-utils",
-  "version": "0.1.26",
+  "version": "0.1.27",
   "packageManager": "yarn@3.3.1",
   "main": "dist/index.mjs",
   "type": "module",
@@ -11,11 +11,11 @@
   "scripts": {
     "build": "rollup -c",
     "test": "jest --silent=false",
-    "publish-patch": "npm version patch && VER=$(jq -r '.version' package.json) && hg ci -m \"Publish v$VER\" && hg tag \"v$VER\" && npm publish",
+    "patch": "npm version patch && VER=$(jq -r '.version' package.json) && hg ci -m \"Publish v$VER\" && hg tag \"v$VER\"",
     "all": "run-p build test docs",
     "docs": "typedoc --out docs --gitRemote 'https://github.com/mnpenner/imut-utils.git' --gitRevision default --sourceLinkTemplate 'https://github.com/mnpenner/imut-utils/blob/default/{path}#L{line}' --basePath . src/index.ts && hg addremove docs",
     "push": "hg pushall",
-    "release": "run-s all publish-patch"
+    "release": "run-s all patch && npm publish && hg push"
   },
   "devDependencies": {
     "@rollup/plugin-terser": "^0.2.1",

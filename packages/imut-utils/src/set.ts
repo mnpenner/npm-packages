@@ -1,4 +1,4 @@
-import type {FP, nil} from './types'
+import type {ID, nil} from './types'
 
 /**
  * Add or remove a value from a set.
@@ -13,7 +13,7 @@ export function setCheck<T>(set: Set<T> | nil, value: T, add: boolean): Set<T> {
     return ret
 }
 
-export function fpSetCheck<T>(value: T, add: boolean): FP<Set<T>> {
+export function fpSetCheck<T>(value: T, add: boolean): ID<Set<T>> {
     return (set: Set<T>|nil) => setCheck(set, value, add)
 }
 
@@ -25,7 +25,7 @@ export function setAdd<T>(set: Set<T>|nil, ...values: T[]): Set<T> {
     return new Set([...set??[], ...values])
 }
 
-export function fpSetAdd<T>(...values: T[]): FP<Set<T>> {
+export function fpSetAdd<T>(...values: T[]): ID<Set<T>> {
     return (set: Set<T>|nil) => setAdd(set, ...values)
 }
 
@@ -40,7 +40,7 @@ export function setRemove<T>(set: Set<T> | nil, ...values: T[]): Set<T> {
     return ret
 }
 
-export function fpSetRemove<T>(...values: T[]): FP<Set<T>> {
+export function fpSetRemove<T>(...values: T[]): ID<Set<T>> {
     return (set: Set<T>|nil) => setRemove(set, ...values)
 }
 

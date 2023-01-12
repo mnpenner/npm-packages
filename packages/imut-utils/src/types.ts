@@ -3,7 +3,10 @@ export type Fn<TArgs extends ReadonlyArray<unknown>=unknown[], TRet=unknown> = (
 export type AnyFn = (...args: any[]) => any
 export type EventCallback<T=never> = (ev: T) => void
 export type VoidFn = () => void
-export type FP<T> = (a:T) => T
+/**
+ * Identity function. Return type is the same as the argument type (but values may differ).
+ */
+export type ID<T> = (a:T) => T
 
 // Objects
 export type EmptyObject = Record<PropertyKey, never>

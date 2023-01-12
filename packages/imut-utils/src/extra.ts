@@ -34,6 +34,7 @@ export function assert(condition: any): void|never {
     if(!condition) throw new AssertionError("Assertion failed")
 }
 
+
 // TODO: take in a "compare" func so this works on more than just numbers.
 export function binarySearch(nums: number[], target: number): number {
     let left: number = 0;
