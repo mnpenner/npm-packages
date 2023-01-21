@@ -42,3 +42,21 @@ export function mapDelete<K, V>(map: Map<K, V>|nil, ...keys: K[]): Map<K, V> {
 export function fpMapDelete<K, V>(...keys: K[]) {
     return (map: Map<K, V>|nil) => mapDelete(map,...keys)
 }
+
+/**
+ * Pushes one or more values into a Map of arrays at the specified key.
+ * If the key does not exist, a new array will be created.
+ * Mutates the map.
+ *
+ * @param map Map to update
+ * @param key Key to update
+ * @param value Value(s) to append
+ */
+export function mapPush<K,V>(map: Map<K,V[]>, key: K, ...value: V[]): void {
+    const arr = map.get(key)
+    if(arr === undefined) {
+        map.set(key, value)
+    } else {
+        arr.push(...value)
+    }
+}

@@ -1,4 +1,4 @@
-import {fpMapDelete, fpMapSet, fpMergeMap} from './map'
+import {fpMapDelete, fpMapSet, fpMergeMap, mapPush} from './map'
 import {arrayDeleteOneValue, fpArrayDeleteOneValue, fpArrayPush, fpArraySelect, fpArrayUnshift} from './array'
 
 
@@ -80,5 +80,23 @@ describe(fpMergeMap.name, () => {
             ['c', setValueToKey],
         ])(map)
         expect(out).toStrictEqual(new Map([['a', 'a-alpha'], ['b', 'b-beta'],['c','c-undefined']]))
+    })
+})
+
+describe(mapPush.name, () => {
+    it('works', () => {
+        const map = new Map([
+            ['a',[]],
+            ['b',[2,3]],
+        ])
+        mapPush(map,'a',1)
+        mapPush(map,'b',4,5)
+        mapPush(map,'c',6)
+        expect(map).toStrictEqual(new Map([
+                ['a',[1]],
+                ['b',[2,3,4,5]],
+                ['c',[6]],
+            ])
+        )
     })
 })
