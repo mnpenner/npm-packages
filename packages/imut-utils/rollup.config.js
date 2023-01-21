@@ -6,7 +6,7 @@ export default {
     output: {
         dir: 'dist',
         format: 'esm',
-        entryFileNames: '[name].mjs'
+        entryFileNames: '[name].mjs',
     },
     plugins: [
         typescript(),
