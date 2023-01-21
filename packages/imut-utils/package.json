@@ -1,15 +1,17 @@
 {
   "name": "@mnpenner/imut-utils",
-  "version": "0.1.32",
+  "version": "0.1.33",
   "packageManager": "yarn@3.3.1",
-  "main": "dist/index.mjs",
+  "exports": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
   "type": "module",
   "types": "dist/index.d.mts",
   "files": [
     "/dist"
   ],
   "scripts": {
-    "build": "rollup -c && rename -f 's/.ts$/.mts/' dist/*.ts",
+    "_build": "rollup -c && rename -f 's/.ts$/.mts/' dist/*.ts",
+    "build": "rollup -c",
     "test": "jest --silent=false",
     "patch": "npm version patch && VER=$(jq -r '.version' package.json) && hg ci -m \"Publish v$VER\" && hg tag \"v$VER\"",
     "all": "run-p build test docs",
