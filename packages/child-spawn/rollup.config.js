@@ -27,5 +27,6 @@ export default {
             mangle: false,
             module: true,
         }),
-    ]
+    ],
+    external: ['chalk']
 };
