@@ -1,0 +1,42 @@
+{
+  "name": "child-spawn",
+  "version": "0.1.0",
+  "packageManager": "yarn@3.3.1",
+  "exports": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "type": "module",
+  "types": "dist/index.d.mts",
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -cw",
+    "test": "jest --silent=false",
+    "patch": "npm version patch && VER=$(jq -r '.version' package.json) && hg ci -m \"Publish v$VER\" && hg tag \"v$VER\"",
+    "all": "run-p build test docs",
+    "docs": "typedoc src/index.ts && hg addremove docs",
+    "push": "hg pushall",
+    "release": "run-s all patch && npm publish && hg push"
+  },
+  "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.0",
+    "@rollup/plugin-typescript": "^11.0.0",
+    "@types/jest": "^29.2.6",
+    "jest": "^29.3.1",
+    "npm-run-all": "^4.1.5",
+    "ts-jest": "^29.0.5",
+    "ts-node": "^10.9.1",
+    "tslib": "^2.4.1",
+    "typedoc": "^0.23.24",
+    "typedoc-plugin-missing-exports": "^1.0.0",
+    "typescript": "^4.9.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mnpenner/child-spawn.git"
+  },
+  "dependencies": {
+    "rollup": "^3.10.1"
+  }
+}
