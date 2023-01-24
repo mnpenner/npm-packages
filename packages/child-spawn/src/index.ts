@@ -128,8 +128,8 @@ export function json(cmd: TemplateStringsArray, ...args: CommandArg[]) {
 
 
 async function main(args: string[]): Promise<number | void> {
-    const foo = await nl`echo ${"foo\nbar"}`
-    console.log(foo)
+    const lines = await nl`echo ${"foo\nbar"}`
+    console.log(lines)
 
     const pkg = await json`jq -c . package.json`
     console.log(pkg)
