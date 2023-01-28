@@ -132,7 +132,7 @@ export function isObject(obj: any): obj is (object|UnknownFunction) {
 }
 
 /**
- * Value is a plain object, created using typical {object:"notation"} or an object with no prototype (`{__proto__:null}` or `Object.create(null)`). Functions, Dates, Maps, Sets, Errors, RegExps, arrays and libraries like Math are *not* considered plain, nor are objects that have tampered with `[Symbol.toStringTag]`.
+ * Value is a plain object, created using typical `{object: "notation"}` or an object with no prototype (`{__proto__:null}` or `Object.create(null)`). Functions, Dates, Maps, Sets, Errors, RegExps, arrays and libraries like Math are *not* considered plain, nor are objects that have tampered with `[Symbol.toStringTag]`.
  */
 export function isPlainObject(obj: any): obj is Record<PropertyKey,unknown> {
     if(obj == null || Object.prototype.toString.call(obj) !== '[object Object]') return false
