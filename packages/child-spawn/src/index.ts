@@ -82,11 +82,14 @@ interface ExecError extends ExecException {
 
 function execParse<T>(cmdParts: TemplateStringsArray, args: CommandArg[], parse: (stdout: string) => T) {
     return new ErrPromise<T,ExecError>((resolve, reject) => {
+        const shell = process.env.SHELL || 'bash'
+        // TODO: choose escaping strategy based on shell (support sh and maybe PowerShell or cmd.exe)
         const cmd = escapeBashTemplate(cmdParts, args)
         process.stdout.write(chalk.greenBright('$') + ' ' + cmd) // TODO: colorize command
 
         const start = process.hrtime()
-        const proc = exec(cmd, {shell: process.env.SHELL ?? 'bash'}, (error, stdout, stderr) => {
+
+        const proc = exec(cmd, {shell}, (error, stdout, stderr) => {
             const [sec, ns] = process.hrtime(start)
             process.stdout.write('  ' + chalk.gray(durationFormatter.format(sec * 1000 + ns / 1e6) + 'ms') + '\n')
 
