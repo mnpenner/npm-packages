@@ -1,6 +1,6 @@
 {
   "name": "child-spawn",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "packageManager": "yarn@3.3.1",
   "exports": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -12,7 +12,7 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -cw",
-    "test": "jest --silent=false",
+    "test": "jest --silent=false --passWithNoTests",
     "patch": "npm version patch && VER=$(jq -r '.version' package.json) && hg ci -m \"Publish v$VER\" && hg tag \"v$VER\"",
     "all": "run-p build test docs",
     "docs": "typedoc src/index.ts && hg addremove docs",

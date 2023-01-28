@@ -7,7 +7,7 @@ import assert from 'node:assert'
 
 type CommandArg = string | number | CommandArg[]
 
-function escapeString(obj: string) {
+function escapeBashString(obj: string) {
     if(!obj) return "''"
     return "$'" + Array.from(obj).map(ch => {
         const cp = ch.codePointAt(0)!
@@ -48,24 +48,27 @@ function escapeString(obj: string) {
     }).join('') + "'"
 }
 
-function escapeVar(str: CommandArg): string {
+function escapeBashArg(str: CommandArg): string {
     if(Array.isArray(str)) {
-        return str.map(s => escapeVar(s)).join(' ')
+        return str.map(s => escapeBashArg(s)).join(' ')
     }
     if(typeof str === 'number') {
         return str.toLocaleString('en-US', {useGrouping: false, maximumFractionDigits: 20})
     }
-    if(/^[0-9a-zA-Z_./]+$/.test(str)) {
-        return str
+    if(typeof str === 'string') {
+        if(/^[0-9a-zA-Z_./]+$/.test(str)) {
+            return str
+        }
+        return escapeBashString(str)
     }
-    return escapeString(str)
+    throw new Error(`Unsupported shell arg type: ${typeof str}`)
 }
 
-function escapeShellTemplate([cmdStart, ...cmdRest]: TemplateStringsArray, args: CommandArg[]) {
+function escapeBashTemplate([cmdStart, ...cmdRest]: TemplateStringsArray, args: CommandArg[]) {
     assert(cmdRest.length === args.length)
     const out = [cmdStart]
     for(let i = 0; i < args.length; ++i) {
-        out.push(escapeVar(args[i]), cmdRest[i])
+        out.push(escapeBashArg(args[i]), cmdRest[i])
     }
     return out.join('')
 }
@@ -79,7 +82,7 @@ interface ExecError extends ExecException {
 
 function execParse<T>(cmdParts: TemplateStringsArray, args: CommandArg[], parse: (stdout: string) => T) {
     return new ErrPromise<T,ExecError>((resolve, reject) => {
-        const cmd = escapeShellTemplate(cmdParts, args)
+        const cmd = escapeBashTemplate(cmdParts, args)
         process.stdout.write(chalk.greenBright('$') + ' ' + cmd) // TODO: colorize command
 
         const start = process.hrtime()
@@ -101,7 +104,7 @@ function execParse<T>(cmdParts: TemplateStringsArray, args: CommandArg[], parse:
                 return reject(fixed)
             }
 
-            if(stderr) console.error(chalk.gray(stderr.trimEnd()))
+            if(stderr) console.error(chalk.yellow(stderr.trimEnd()))
             resolve(parse(stdout))
         })
     })
@@ -110,43 +113,54 @@ function execParse<T>(cmdParts: TemplateStringsArray, args: CommandArg[], parse:
     // and .ignore() to ignore failure statuses... which I guess is like .catch but it should restore the success handler
 }
 
+/**
+ * Escape a command, return it as a string. Useful for nesting commands to pass to subshells, ssh or kubectl.
+ */
+export function escBash(cmd: TemplateStringsArray, ...args: CommandArg[]): string {
+    return escapeBashTemplate(cmd, args)
+}
+
+/**
+ * Just get stdout as text. Trim trailing newline.
+ */
+export function txt(cmd: TemplateStringsArray, ...args: CommandArg[]) {
+    return execParse(cmd, args, stdout => stdout.replace(/\n$/,''))
+}
+
+
+/**
+ * Split on newlines.
+ */
 export function nl(cmd: TemplateStringsArray, ...args: CommandArg[]) {
     return execParse(cmd, args, stdout => stdout.replace(/\n$/,'').split('\n'))
 }
 
-export function nulls(cmd: TemplateStringsArray, ...args: CommandArg[]) {
+/**
+ * Split on null-separators (\0)
+ */
+export function split0(cmd: TemplateStringsArray, ...args: CommandArg[]) {
     return execParse(cmd, args, stdout => stdout.replace(/\x00$/,'').split('\0'))
 }
 
+/**
+ * Split on newlines and spaces.
+ */
+export function awk(cmd: TemplateStringsArray, ...args: CommandArg[]) {
+    return execParse(cmd, args, stdout => stdout.replace(/\n$/,'').split('\n').map(line => line.trim().split(/\s+/g)))
+}
+
+/**
+ * For debugging. Do not use.
+ */
 export function debug(cmd: TemplateStringsArray, ...args: CommandArg[]) {
     return execParse(cmd, args, varDump)
 }
 
+/**
+ * Parse stdout as JSON.
+ */
 export function json(cmd: TemplateStringsArray, ...args: CommandArg[]) {
     return execParse(cmd, args, stdout => JSON.parse(stdout))
 }
 
 
-async function main(args: string[]): Promise<number | void> {
-    const lines = await nl`echo ${"foo\nbar"}`
-    console.log(lines)
-
-    const pkg = await json`jq -c . package.json`
-    console.log(pkg)
-
-    const files = await nulls`find . -maxdepth 2 -type f -print0`
-    console.log(files)
-}
-
-
-main(process.argv.slice(process.argv.findIndex(f => f === __filename) + 1))
-    .then(exitCode => {
-        if(typeof exitCode === 'number') {
-            process.exitCode = exitCode
-        }
-    }, err => {
-        if(err != null) {
-            console.error(err)
-        }
-        process.exitCode = 255
-    })
