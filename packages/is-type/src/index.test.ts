@@ -713,3 +713,47 @@ test(lib.isNumberLike.name, () => {
     expect(lib.isNumberLike(new Set())).toBe(false)
     expect(lib.isNumberLike(new Map())).toBe(false)
 })
+
+test(lib.isBoolean.name, () => {
+    expect(lib.isBoolean(false)).toBe(true)
+    expect(lib.isBoolean(true)).toBe(true)
+
+    expect(lib.isBoolean(new Boolean(true))).toBe(false)
+
+    expect(lib.isBoolean(3.14)).toBe(false)
+    expect(lib.isBoolean(new Number('3.14'))).toBe(false)
+    expect(lib.isBoolean('str')).toBe(false)
+    expect(lib.isBoolean(new String('str'))).toBe(false)
+    expect(lib.isBoolean(null)).toBe(false)
+    expect(lib.isBoolean(undefined)).toBe(false)
+    expect(lib.isBoolean(Symbol())).toBe(false)
+    expect(lib.isBoolean(/re/)).toBe(false)
+    expect(lib.isBoolean([])).toBe(false)
+    expect(lib.isBoolean({})).toBe(false)
+    expect(lib.isBoolean(Object.create(null))).toBe(false)
+    expect(lib.isBoolean(new Date)).toBe(false)
+    expect(lib.isBoolean(new Set())).toBe(false)
+    expect(lib.isBoolean(new Map())).toBe(false)
+})
+
+
+test(lib.isBooleanLike.name, () => {
+    expect(lib.isBooleanLike(false)).toBe(true)
+    expect(lib.isBooleanLike(true)).toBe(true)
+    expect(lib.isBooleanLike(new Boolean(true))).toBe(true)
+
+    expect(lib.isBooleanLike(3.14)).toBe(false)
+    expect(lib.isBooleanLike(new Number('3.14'))).toBe(false)
+    expect(lib.isBooleanLike('str')).toBe(false)
+    expect(lib.isBooleanLike(new String('str'))).toBe(false)
+    expect(lib.isBooleanLike(null)).toBe(false)
+    expect(lib.isBooleanLike(undefined)).toBe(false)
+    expect(lib.isBooleanLike(Symbol())).toBe(false)
+    expect(lib.isBooleanLike(/re/)).toBe(false)
+    expect(lib.isBooleanLike([])).toBe(false)
+    expect(lib.isBooleanLike({})).toBe(false)
+    expect(lib.isBooleanLike(Object.create(null))).toBe(false)
+    expect(lib.isBooleanLike(new Date)).toBe(false)
+    expect(lib.isBooleanLike(new Set())).toBe(false)
+    expect(lib.isBooleanLike(new Map())).toBe(false)
+})
