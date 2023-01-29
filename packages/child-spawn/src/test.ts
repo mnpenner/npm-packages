@@ -1,4 +1,4 @@
-import {awk, escBash, json, nl, txt, split0} from './index'
+import {awk, escBash, json, nl, txt, split0, escDash} from './index'
 
 async function main(args: string[]): Promise<number | void> {
     const text = await txt`echo ${"foo\nbar"}`
@@ -13,11 +13,16 @@ async function main(args: string[]): Promise<number | void> {
     const files = await split0`find . -maxdepth 1 -type f -print0`
     console.log(files)
 
-    const inception = await txt`bash -c ${escBash`echo ${`foo bar`}`}`  // FIXME: doesn't escape properly for `sh`
+    const inception = await txt`sh -c ${escDash`echo ${`foo bar`}`}`
     console.log(inception)
 
     const table = await awk`cat table.txt`
     console.log(table)
+
+    const ascii = await txt`printf '%q' ${Array.from({length:128}, (_,i) => String.fromCodePoint(i)).join('')}`
+    console.log(ascii)
+    // TODO: passthru``
+
 }
 
 
