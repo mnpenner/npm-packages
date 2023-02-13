@@ -1,6 +1,6 @@
 {
   "name": "@mnpenner/imut-utils",
-  "version": "0.1.35",
+  "version": "0.1.36",
   "packageManager": "yarn@3.3.1",
   "exports": "./dist/index.cjs",
   "module": "./dist/index.mjs",
