@@ -8,18 +8,18 @@ import type {nil} from './types'
  * The target object *should* be the full object (with all keys defined), and the objects to be merged may be partial.
  * If the target and objects to be merged do not sum up to the full object then the return type will be invalid.
  */
-export function fpShallowMerge<T>(...objects: Array<{
+export function fpShallowMerge<T extends {}>(...objects: Array<{
     [K in keyof T]?: Resolvable<T[K], [T[K], K]>;
-}>): (obj: T) => T & {} {
+}>): (obj: T) => T {
     return (obj: T) => {
-        objects = objects.filter(o => o != null)
-        if(!objects.length) {
+        const filtered = objects.filter(o => o != null)
+        if(!filtered.length) {
             return obj
         }
-        const ret = Object.assign(Object.create(null), obj)
-        for(const o of objects) {
-            for(const k of Object.keys(o!) as (keyof T)[]) {
-                ret[k] = resolveValue(o![k], ret[k], k)
+        const ret = Object.assign(Object.create(null) as {}, obj)
+        for(const o of filtered) {
+            for(const k of Object.keys(o) as Array<keyof T>) {
+                ret[k] = resolveValue(o[k], ret[k], k) as T[keyof T]
             }
         }
         return ret

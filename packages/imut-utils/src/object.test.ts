@@ -10,7 +10,7 @@ describe(fpShallowMerge.name, () => {
         })
     })
     it('allows undefined input', () => {
-        expect(fpShallowMerge<Record<string, number> | undefined>({b: 2, c: 9}, {c: 3, d: 4})(undefined)).toEqual({
+        expect(fpRelaxedMerge<Record<string, number>>({b: 2, c: 9}, {c: 3, d: 4})(undefined)).toEqual({
             b: 2,
             c: 3,
             d: 4,
@@ -67,5 +67,23 @@ describe(fpShallowMerge.name, () => {
             gamma: 'c'
         })
         expect(ret).not.toBe(orig)
+    })
+    it('chills out', () => {
+        type State = {
+            scale: number
+            xOffset: number
+            yOffset: number
+        }
+        let state: State = {
+            scale: 0,
+            xOffset: 0,
+            yOffset: 0,
+        }
+        const setState = (fn: (prev: State) => State) => {
+            state = fn(state)
+        }
+        // I can't get this to work without explicitly setting the <Type>
+        // https://stackoverflow.com/questions/75432863/how-to-get-typescript-to-infer-type-from-the-function-its-being-passed-to
+        setState(fpShallowMerge<State>({xOffset: 2, yOffset: 3}))
     })
 })
