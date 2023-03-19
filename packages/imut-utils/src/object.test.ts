@@ -1,4 +1,4 @@
-import {fpRelaxedMerge, fpShallowMerge} from './object'
+import {fpObjSet, fpRelaxedMerge, fpShallowMerge} from './object'
 
 describe(fpShallowMerge.name, () => {
     it('uses expected precedence', () => {
@@ -86,4 +86,28 @@ describe(fpShallowMerge.name, () => {
         // https://stackoverflow.com/questions/75432863/how-to-get-typescript-to-infer-type-from-the-function-its-being-passed-to
         setState(fpShallowMerge<State>({xOffset: 2, yOffset: 3}))
     })
+})
+
+
+describe(fpObjSet.name, () => {
+    type Size = {
+        width: number
+        height: number
+    }
+    it('basic', () => {
+        const oldSize: Size = {width:512,height:768}
+        const newSize = fpObjSet<Size>('width', w => w+64)(oldSize)
+        expect(newSize).toEqual({
+            width: 576,
+            height: 768
+        })
+        expect(oldSize).toEqual({width:512,height:768})
+        expect(newSize).not.toBe(oldSize)
+    })
+    // it('creates objects', () => {
+    //     const newSize = fpObjSet<Size>('width', 128)(null)
+    //     expect(newSize).toEqual({
+    //         width: 128,
+    //     })
+    // })
 })

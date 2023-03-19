@@ -19,7 +19,7 @@ export function fpShallowMerge<T extends {}>(...objects: Array<{
         const ret = Object.assign(Object.create(null) as {}, obj)
         for(const o of filtered) {
             for(const k of Object.keys(o) as Array<keyof T>) {
-                ret[k] = resolveValue(o[k], ret[k], k) as T[keyof T]
+                ret[k] = resolveValue(o[k] as any, ret[k], k) as T[keyof T]
             }
         }
         return ret
@@ -38,3 +38,7 @@ export const fpRelaxedMerge: {
     } | nil>): (obj: T | nil) => T & {}
 } = fpShallowMerge as any
 
+
+export function fpObjSet<T extends {}>(key: keyof T, value: Resolvable<T[typeof key], [T[typeof key]]>) {
+    return (obj: T) => ({__proto__: null, ...obj, [key]: resolveValue(value, obj[key])})
+}

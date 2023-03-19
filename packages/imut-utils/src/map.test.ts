@@ -5,7 +5,7 @@ import {arrayDeleteOneValue, fpArrayDeleteOneValue, fpArrayPush, fpArraySelect, 
 describe(fpMapSet.name, () => {
     it('sets', () => {
         const map = new Map([['a', 1], ['b', 2]])
-        const out = fpMapSet('b', 3)(map)
+        const out = fpMapSet<string,number>('b', 3)(map)
         expect(out).not.toBe(map)
         expect(out).toStrictEqual(new Map([['a', 1], ['b', 3]]))
     })
