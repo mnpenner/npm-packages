@@ -1,4 +1,7 @@
 import {fpObjSet, fpRelaxedMerge, fpShallowMerge} from './object'
+import {fpMapSet} from './map'
+import {describe} from '@jest/globals'
+
 
 describe(fpShallowMerge.name, () => {
     it('uses expected precedence', () => {
@@ -51,7 +54,7 @@ describe(fpShallowMerge.name, () => {
     })
     it('default is null', () => {
         type ObjType = { alpha: string, beta: string, gamma: string }
-        expect(fpRelaxedMerge<ObjType>({alpha: 'a', beta: 'b'},{gamma:'c'})(null)).toEqual({
+        expect(fpRelaxedMerge<ObjType>({alpha: 'a', beta: 'b'}, {gamma: 'c'})(null)).toEqual({
             alpha: 'a',
             beta: 'b',
             gamma: 'c'
@@ -60,7 +63,7 @@ describe(fpShallowMerge.name, () => {
     it("doesn't mutate", () => {
         type ObjType = { alpha: string, beta: string, gamma: string }
         const orig: ObjType = {alpha: 'a', beta: 'b', gamma: 'c'}
-        const ret = fpShallowMerge<ObjType>({alpha:'foo'})(orig)
+        const ret = fpShallowMerge<ObjType>({alpha: 'foo'})(orig)
         expect(orig).toStrictEqual({
             alpha: 'a',
             beta: 'b',
@@ -86,6 +89,40 @@ describe(fpShallowMerge.name, () => {
         // https://stackoverflow.com/questions/75432863/how-to-get-typescript-to-infer-type-from-the-function-its-being-passed-to
         setState(fpShallowMerge<State>({xOffset: 2, yOffset: 3}))
     })
+    it('handles disjunct types', () => {
+        type Key = string
+        type A = { type: 'A', a: string }
+        type B = { type: 'B', b: number }
+        type Value = A | B
+        type Store = { data: Map<Key, Value> }
+
+        const obj: Store = {
+            data: new Map([['a', {
+                type: 'A',
+                a: 'alpha',
+            }], ['b', {
+                type: 'B',
+                b: 1,
+            }]])
+        }
+
+        const result = fpShallowMerge<Store>({
+            data: fpMapSet<Key,Value>('b', {
+                type: 'B',
+                b: 2,
+            })
+        })(obj)
+
+        expect(result).toEqual({
+            data: new Map([['a', {
+                type: 'A',
+                a: 'alpha',
+            }], ['b', {
+                type: 'B',
+                b: 2,
+            }]])
+        })
+    })
 })
 
 
@@ -95,13 +132,13 @@ describe(fpObjSet.name, () => {
         height: number
     }
     it('basic', () => {
-        const oldSize: Size = {width:512,height:768}
-        const newSize = fpObjSet<Size>('width', w => w+64)(oldSize)
+        const oldSize: Size = {width: 512, height: 768}
+        const newSize = fpObjSet<Size>('width', w => w + 64)(oldSize)
         expect(newSize).toEqual({
             width: 576,
             height: 768
         })
-        expect(oldSize).toEqual({width:512,height:768})
+        expect(oldSize).toEqual({width: 512, height: 768})
         expect(newSize).not.toBe(oldSize)
     })
     // it('creates objects', () => {
