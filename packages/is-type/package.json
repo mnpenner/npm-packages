@@ -1,12 +1,12 @@
 {
   "name": "@mnpenner/is-type",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": false,
   "packageManager": "yarn@3.3.1",
   "exports": "./dist/index.cjs",
   "module": "./dist/index.mjs",
-  "types": "dist/index.d.mts",
   "type": "module",
+  "types": "dist/index.d.ts",
   "files": [
     "/dist"
   ],
