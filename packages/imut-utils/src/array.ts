@@ -86,16 +86,21 @@ export function fpArrayDeleteIndex<T>(...indices: number[]) {
     return (a: T[]|nil) => arrayDeleteIndex(a, ...indices)
 }
 
-function fpLooseEq<T>(value: any) {
+function looseEq(a: any, b: any) {
+    return a == b
+}
+
+function fpLooseEq(value: any) {
     return (other: any) => other == value
 }
 
-function fpStrictEq<T>(value: any) {
+function fpStrictEq(value: any) {
     return (other: any) => Object.is(value, other)
 }
 
 /**
  * Deletes up to one element from an array, searching by value.
+ * @deprecated
  */
 export function arrayDeleteOneValue<T>(array: T[]|nil, value: T, strict: boolean): T[] {
     if(!array?.length) return []
@@ -103,32 +108,72 @@ export function arrayDeleteOneValue<T>(array: T[]|nil, value: T, strict: boolean
     return idx < 0 ? array : arrayDeleteIndex(array, idx)
 }
 
+/**
+ * @deprecated
+ */
 export function fpArrayDeleteOneValue<T>(value: T, strict: boolean) {
     return (a: T[]|nil) => arrayDeleteOneValue(a, value, strict)
 }
 
 /**
- * Filters the array to elements that pass the predicate.
+ * Deletes up to one element from an array, searching by value.
  */
-export function arraySelect<T>(array: T[]|nil, predicate: (v: T, i: number) => boolean): T[] {
-    if(!array?.length) return []
-    return array.filter((v, i) => predicate(v, i))
+export function arrayDeleteValue<T>(array: T[]|nil, value: T, strict: boolean, limit?: number): T[] {
+    return arrayReject(array, strict ? x => Object.is(x,value) : x => x == value, limit)
 }
 
-export function fpArraySelect<T>(predicate: (v: T, i: number) => boolean) {
-    return (a: T[]|nil) => arraySelect(a, predicate)
+export function fpArrayDeleteValue<T>(value: T, strict: boolean, limit?: number) {
+    return (a: T[]|nil) => arrayDeleteValue(a, value, strict, limit)
+}
+
+/**
+ * Filters the array to elements that pass the predicate.
+ * If limit is provided, returned array will be at most that length.
+ */
+export function arraySelect<T>(array: T[]|nil, predicate: (v: T, i: number) => boolean, limit?: number): T[] {
+    if(!array?.length) return []
+    if(limit == null) {
+        return array.filter((v, i) => predicate(v, i))
+    }
+    if(limit <= 0) return []
+    let selected: T[] = []
+    for(const [i,v] of array.entries()) {
+        if(predicate(v,i)) {
+            selected.push(v)
+            if(selected.length >= limit) break
+        }
+    }
+    return selected
+}
+
+export function fpArraySelect<T>(predicate: (v: T, i: number) => boolean, limit?: number) {
+    return (a: T[]|nil) => arraySelect(a, predicate, limit)
 }
 
 /**
  * Removes elements that do *not* pass the predicate.
+ * If limit is provided, at most that many elements will be deleted. i.e. new length will be >= array.length - limit.
  */
-export function arrayReject<T>(array: T[]|nil, predicate: (v: T, i: number) => boolean): T[] {
+export function arrayReject<T>(array: T[]|nil, predicate: (v: T, i: number) => boolean, limit?: number): T[] {
     if(!array?.length) return []
-    return array.filter((v, i) => !predicate(v, i))
+    if(limit == null) {
+        return array.filter((v, i) => !predicate(v, i))
+    }
+    if(limit <= 0) return array
+    let selected: T[] = []
+    let rejected = 0
+    for(const [i,v] of array.entries()) {
+        if(rejected < limit && predicate(v,i)) {
+            ++rejected
+        } else {
+            selected.push(v)
+        }
+    }
+    return selected
 }
 
-export function fpArrayReject<T>(predicate: (v: T, i: number) => boolean) {
-    return (a: T[]) => arrayReject(a, predicate)
+export function fpArrayReject<T>(predicate: (v: T, i: number) => boolean, limit?: number) {
+    return (a: T[]) => arrayReject(a, predicate, limit)
 }
 
 export function arraySort<T>(array: T[]|nil, compareFn: (a: T, b: T) => number) {

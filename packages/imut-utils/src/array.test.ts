@@ -10,7 +10,7 @@ import {
     fpArrayInsert,
     arrayInsertSorted,
     fpArrayInsertSorted,
-    fpArrayPop
+    fpArrayPop, fpArrayDeleteValue
 } from './array'
 
 
@@ -74,19 +74,41 @@ test(fpArrayDeleteIndex.name, () => {
     expect(out).toStrictEqual([3,2,4,5])
 })
 
-test(fpArraySelect.name, () => {
-    const arr = [3,1,2,7,4,6,5]
-    const out = fpArraySelect<number>((v, i) => v > 5 || i === 0)(arr)
-    expect(arr).toStrictEqual([3,1,2,7,4,6,5])
-    expect(out).toStrictEqual([3,7,6])
+describe(fpArraySelect.name, () => {
+    it('basic', () => {
+        const arr = [3,1,2,7,4,6,5]
+        const out = fpArraySelect<number>((v, i) => v > 5 || i === 0)(arr)
+        expect(arr).toStrictEqual([3,1,2,7,4,6,5])
+        expect(out).toStrictEqual([3,7,6])
+    })
+    it('more', () => {
+        expect(fpArraySelect<number>(n => n % 2 === 0)([1, 2, 3, 4, 5, 6])).toEqual([2,4,6])
+        expect(fpArraySelect<number>(n => n % 2 === 0, 2)([1, 2, 3, 4, 5, 6])).toEqual([2,4])
+        expect(fpArraySelect<number>(n => n % 2 === 0, 0)([1, 2, 3, 4, 5, 6])).toEqual([])
+    })
 })
 
 
-test(fpArrayReject.name, () => {
-    const arr = [3,1,2,7,4,6,5]
-    const out = fpArrayReject<number>((v, i) => v > 5 || i === 0)(arr)
-    expect(arr).toStrictEqual([3,1,2,7,4,6,5])
-    expect(out).toStrictEqual([1,2,4,5])
+describe(fpArrayReject.name, () => {
+    it('basic', () => {
+        const arr = [3, 1, 2, 7, 4, 6, 5]
+        const out = fpArrayReject<number>((v, i) => v > 5 || i === 0)(arr)
+        expect(arr).toStrictEqual([3, 1, 2, 7, 4, 6, 5])
+        expect(out).toStrictEqual([1, 2, 4, 5])
+    })
+    it('more', () => {
+        expect(fpArrayReject<number>(n => n % 2 === 0)([1, 2, 3, 4, 5, 6])).toEqual([1, 3, 5])
+        expect(fpArrayReject<number>(n => n % 2 === 0, 2)([1, 2, 3, 4, 5, 6])).toEqual([1, 3, 5, 6])
+        expect(fpArrayReject<number>(n => n % 2 === 0, 0)([1, 2, 3, 4, 5, 6])).toEqual([1, 2, 3, 4, 5, 6])
+    })
+})
+
+describe(fpArrayDeleteValue.name, () => {
+    expect(fpArrayDeleteValue<number>(2, true)([1, 2, 1, 2])).toEqual([1, 1])
+    expect(fpArrayDeleteValue<number>(2, false)([1, 2, 1, 2])).toEqual([1, 1])
+    expect(fpArrayDeleteValue<number | string>('2', false)([1, 2, 1, 2])).toEqual([1, 1])
+    expect(fpArrayDeleteValue<number>(2, true, 1)([1, 2, 1, 2])).toEqual([1, 1, 2])
+    expect(fpArrayDeleteValue<number>(1, false, 2)([1, 2, 1, 2, 1, 2])).toEqual([2, 2, 1, 2])
 })
 
 
