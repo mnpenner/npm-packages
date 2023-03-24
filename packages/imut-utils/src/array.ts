@@ -1,5 +1,6 @@
 import type {nil} from './types'
 import {binarySearch, assert} from './extra'
+import {Resolvable, resolveValue} from './resolvable'
 
 /**
  * Appends elements onto the end of the array.
@@ -235,12 +236,15 @@ export function fpArraySplice<T>(index: number, count = 1, ...replaceWith: T[]) 
     return (a: T[]|nil) => arraySplice(a, index, count, ...replaceWith)
 }
 
-export function arrayFindAndReplace<T>(array: T[], predicate: (v: T, i: number) => boolean, replaceWith: T): T[] {
+type ArrayPredicate<T> = (v: T, i: number) => boolean
+type ArrayElementResolvable<T> = Resolvable<T,[T,number]>
+
+export function arrayFindAndReplace<T>(array: T[], predicate: ArrayPredicate<T>, replaceWith: ArrayElementResolvable<T>): T[] {
     const idx = array.findIndex(predicate)
     if(idx < 0) return array
-    return arraySplice(array, idx, 1, replaceWith)
+    return arraySplice(array, idx, 1, resolveValue(replaceWith,array[idx],idx))
 }
 
-export function fpArrayFindAndReplace<T>(predicate: (v: T, i: number) => boolean, replaceWith: T) {
+export function fpArrayFindAndReplace<T>(predicate: ArrayPredicate<T>, replaceWith: ArrayElementResolvable<T>) {
     return (a: T[]|nil) => arrayFindAndReplace(a ?? [], predicate, replaceWith)
 }

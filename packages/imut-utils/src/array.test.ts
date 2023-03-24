@@ -177,8 +177,9 @@ describe(arraySortStrings.name, () => {
 })
 
 test(fpArrayFindAndReplace.name, () => {
-    expect(fpArrayFindAndReplace(x => x === 5, 3)([1, 2, 5, 4])).toEqual([1, 2, 3, 4])
-    expect(fpArrayFindAndReplace(x => x === 6, 3)([1, 2, 5, 4])).toEqual([1, 2, 5, 4])
+    expect(fpArrayFindAndReplace<number>(x => x === 5, 3)([1, 2, 5, 4])).toEqual([1, 2, 3, 4])
+    expect(fpArrayFindAndReplace<number>(x => x === 6, 3)([1, 2, 5, 4])).toEqual([1, 2, 5, 4])
+    expect(fpArrayFindAndReplace<number>(x => x === 5, x => x*2)([1, 2, 5, 4])).toEqual([1, 2, 10, 4])
 })
 
 test(fpArraySplice.name, () => {
