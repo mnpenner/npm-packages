@@ -38,11 +38,9 @@ function Select_Example2() {
 }
 
 function SelectFieldset() {
-    const [value, setValue] = useState(8)
-
     return (
         <fieldset>
-            <legend>>&lt;Select&gt;</legend>
+            <legend>&lt;Select&gt;</legend>
             <Select_Example1/>
             <Select_Example2/>
         </fieldset>

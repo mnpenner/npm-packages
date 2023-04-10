@@ -5,15 +5,16 @@ import {useUpdateEffect} from 'react-use'
 export type TextChangeEvent = {
     value: string
 }
-export type TextChangeEventHandler = EventCallback<TextChangeEvent>  // FIXME: TypeScript can't find this helper type...
+export type TextChangeEventHandler = EventCallback<TextChangeEvent>
 
 export type TextInputProps = OverrideProps<'input', {
-    onChange: TextChangeEventHandler
-    format: (value: string) => string
+    onChange?: TextChangeEventHandler
+    value?: string
+    format?: (value: string) => string
 }, 'type'>
 
 
-export function TextInput({onChange, value, format = collapseWhitespace, onBlur, ...props}: TextInputProps) {
+export function TextInput({onChange, value = '', format = collapseWhitespace, onBlur, ...props}: TextInputProps) {
     const [inputValue, setInputValue] = useState(value)
     const attrs: ComponentPropsWithoutRef<'input'> = {
         ...props,
@@ -25,6 +26,7 @@ export function TextInput({onChange, value, format = collapseWhitespace, onBlur,
     }
     if(onChange || onBlur) {
         attrs.onBlur = ev => {
+            // TODO: should we call `setInputValue` as well?
             onChange?.({
                 value: format != null ? format(inputValue) : inputValue
             })
