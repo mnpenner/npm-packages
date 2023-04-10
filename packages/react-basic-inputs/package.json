@@ -1,18 +1,20 @@
 {
   "name": "@mnpenner/react-basic-inputs",
   "packageManager": "yarn@3.5.0",
-  "exports": "./dist/index.cjs",
-  "module": "./dist/index.mjs",
+  "exports": "./dist/bundle.cjs",
+  "module": "./dist/bundle.mjs",
+  "types": "./dist/bundle.d.ts",
   "type": "module",
-  "types": "dist/index.d.ts",
   "files": [
-    "/dist"
+    "./dist"
   ],
   "scripts": {
     "dev:build": "rollup -cw",
-    "bundle:build": "rollup -c",
     "dev:serve": "serve",
-    "dev": "run-p \"dev:**\""
+    "dev": "run-p \"dev:**\"",
+    "bundle:clean": "rimraf -g \"dist/*\"",
+    "bundle:build": "rollup -c",
+    "bundle": "run-s bundle:clean bundle:build"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^24.0.1",
@@ -21,11 +23,13 @@
     "@rollup/plugin-terser": "^0.4.1",
     "@rollup/plugin-typescript": "^11.1.0",
     "@types/jest": "^29.5.0",
+    "@types/react": "^18.0.33",
     "@types/react-dom": "^18.0.11",
     "jest": "^29.5.0",
     "npm-run-all": "^4.1.5",
     "react": ">=17 <19",
     "react-dom": ">=17 <19",
+    "rimraf": "^5.0.0",
     "rollup": "^3.20.2",
     "serve": "^14.2.0",
     "ts-jest": "^29.1.0",

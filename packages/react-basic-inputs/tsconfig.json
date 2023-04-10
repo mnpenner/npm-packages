@@ -3,6 +3,10 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
+    "lib": [
+      "ESNext",
+      "dom"
+    ],
     "moduleResolution": "node",
     "declaration": true,
     "outDir": "./dist",
@@ -11,13 +15,12 @@
     "strict": true,
     "exactOptionalPropertyTypes": true,
     "skipLibCheck": true,
-    "jsx": "react-jsxdev"
+    "jsx": "react-jsx"
   },
   "files": [
-    "src/index.ts",
-    "src/dev.tsx"
+    "src/bundle.ts"
   ],
   "include": [
-    "src/**.d.ts"
+    "src/**/*.d.ts"
   ]
 }

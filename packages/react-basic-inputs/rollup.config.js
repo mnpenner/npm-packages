@@ -3,38 +3,44 @@ import terser from '@rollup/plugin-terser';
 import {nodeResolve} from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import replace from '@rollup/plugin-replace';
+import pkgJson from './package.json' assert {type: 'json'}
 
 const production = !process.env.ROLLUP_WATCH;
 
-const input = [
-    "src/index.ts",
-]
-const output = [
-    {
-        dir: 'dist',
-        format: 'esm',
-        entryFileNames: '[name].mjs',
-    },
-]
-const plugins = [
-    nodeResolve(),
-    commonjs(),
-    typescript(),
-    replace({
-        preventAssignment: true,
-        values: {
-            'process.env.NODE_ENV': JSON.stringify(production ? 'production' : 'development'),
+/** @type {import('rollup').RollupOptions} */
+const config = {
+    output: [
+        {
+            dir: 'dist',
+            format: 'esm',
+            entryFileNames: '[name].mjs',
         },
-    }),
-]
+    ],
+    plugins: [
+        nodeResolve(),
+        commonjs(),
+        typescript({
+            tsconfig: production ? 'tsconfig.json' : 'tsconfig.dev.json',
+        }),
+        replace({
+            preventAssignment: true,
+            values: {
+                'process.env.NODE_ENV': JSON.stringify(production ? 'production' : 'development'),
+            },
+        }),
+    ],
+    context: 'globalThis',
+}
 
 if(production) {
-    output.push({
+    config.input = 'src/bundle.ts'
+    config.output.push({
         dir: 'dist',
         format: 'cjs',
         entryFileNames: '[name].cjs',
     })
-    plugins.push(terser({
+    config.external = new RegExp('^(' + Object.keys(pkgJson.peerDependencies).join('|') + ')($|/)')
+    config.plugins.push(terser({
         format: {
             comments: 'some',
             beautify: true,
@@ -45,12 +51,7 @@ if(production) {
         module: true,
     }))
 } else {
-    input.push('src/dev.tsx')
+    config.input = 'src/dev.tsx'
 }
 
-export default {
-    input,
-    output,
-    plugins,
-    context: 'globalThis',
-}
+export default config
