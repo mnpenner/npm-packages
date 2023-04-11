@@ -34,11 +34,14 @@ export type SelectProps<T extends NonNil> = OverrideProps<'select', {
     value?: T | null
     onChange?: SelectChangeEventHandler<T>
     /**
-     * Set to `false` or `null` to disable showing an extra option when `value` is invalid.
-     * Omit or set to `true` to stringify the `value` and add it as an extra option.
-     * Or pass a function that takes a `value` and produces an option.
+     * Function used to create an <option> when `value` cannot be found in the list of `options`.
+     * Set to `null` to disable this behavior.
+     * By default, stringifies `value`.
      */
-    invalidValueOption?: InvalidValueToOption<T> | false | true | null
+    invalidValueOption?: InvalidValueToOption<T> | null
+    /**
+     * Text to display when `value` is nullish.
+     */
     placeholder?: ReactNode
 }, 'children' | 'defaultValue'>
 
@@ -57,7 +60,7 @@ const INVALID_OPTION_KEY = '1a53f789-77f5-4ce6-a829-b00e563f1ee8'
 export function Select<T extends NonNil>({
     options,
     value,
-    invalidValueOption,
+    invalidValueOption = defaultMakeInvalidValueOption,
     onChange,
     placeholder,
     ...selectAttrs
@@ -66,8 +69,7 @@ export function Select<T extends NonNil>({
     const isValid = useMemo(() => value != null && options.some(o => o.value == value), [options, value])
 
     const extraOption = useMemo(() => {
-        if(value == null || invalidValueOption === false || invalidValueOption === null) return null
-        if(invalidValueOption === true || invalidValueOption === undefined) return defaultMakeInvalidValueOption(value)
+        if(value == null || !invalidValueOption) return null
         return invalidValueOption(value)
     }, [invalidValueOption, value])
 

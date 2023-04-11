@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "dev:build": "rollup -cw",
-    "dev:serve": "serve",
+    "dev:serve": "serve -l tcp://0.0.0.0:8080",
     "dev": "run-p \"dev:**\"",
     "bundle:clean": "rimraf -g \"dist/*\"",
     "bundle:build": "rollup -c",

@@ -1,6 +1,13 @@
 import {Select, SelectOption} from './Select'
 import {useState} from 'react'
 import {TextInput} from './TextInput'
+import {EmailInput} from './EmailInput'
+import {DecimalInput} from './DecimalInput'
+import {NumericInput} from './NumericInput'
+import {PhoneInput} from './PhoneInput'
+import {SearchInput} from './SearchInput'
+import {UrlInput} from './UrlInput'
+import {NumberInput} from './NumberInput'
 
 
 const FRUIT_OPTIONS: SelectOption<number>[] = [
@@ -114,19 +121,33 @@ function TextInput_Example2() {
         <>
             <div>Collapse Spaces</div>
             <TextInput value={value} onChange={ev => setValue(ev.value)}/>
+            <button type="button" onClick={() => setValue('\t"     "\t')}>Set Space</button>
             <output>{JSON.stringify(value)}</output>
         </>
     )
 }
 
 function TextInputFieldset() {
-
-
     return (
         <fieldset>
             <legend>&lt;TextInput&gt;</legend>
             <TextInput_Example1/>
             <TextInput_Example2/>
+        </fieldset>
+    )
+}
+
+function OtherTextInputsFieldset() {
+    return (
+        <fieldset>
+            <legend>Other Text Inputs</legend>
+            <EmailInput placeholder="Email"/>
+            <NumberInput placeholder={123}/>
+            <DecimalInput placeholder="456"/>
+            <NumericInput placeholder="3.14"/>
+            <PhoneInput placeholder="867-5309"/>
+            <SearchInput placeholder="Google"/>
+            <UrlInput placeholder="example.org"/>
         </fieldset>
     )
 }
@@ -137,6 +158,7 @@ export default function App() {
         <form>
             <SelectFieldset/>
             <TextInputFieldset/>
+            <OtherTextInputsFieldset/>
         </form>
     )
 }

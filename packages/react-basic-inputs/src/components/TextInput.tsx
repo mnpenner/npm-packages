@@ -10,6 +10,10 @@ export type TextChangeEventHandler = EventCallback<TextChangeEvent>
 export type TextInputProps = OverrideProps<'input', {
     onChange?: TextChangeEventHandler
     value?: string
+    /**
+     * Function used to format value on blur. Set to `null` to disable.
+     * Collapses whitespace by default.
+     */
     format?: (value: string) => string
 }, 'type'>
 
@@ -24,7 +28,9 @@ export function TextInput({onChange, value = '', format = collapseWhitespace, on
             setInputValue(ev.target.value)
         },
         onBlur: ev => {
+            // TODO: should we avoid formatting if the user didn't type anything?
             const formattedValue = format != null ? format(inputValue) : inputValue
+            // TODO: should we avoid calling onChange if the formatted value hasn't changed...?
             onChange?.({
                 value: formattedValue
             })
