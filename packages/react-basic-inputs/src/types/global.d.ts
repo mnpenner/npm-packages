@@ -11,8 +11,8 @@ type UnknownObject = Record<PropertyKey, unknown>
 type Override<Base, Extension, DeleteKeys extends PropertyKey = never> =
     Omit<Base, keyof Extension | DeleteKeys>
     & Extension
-type RequiredKeys<Type, Key extends keyof Type> = Omit<Type, Key> & Required<Pick<Type, Key>>
-type OptionalKeys<Type, Key extends keyof Type> = Omit<Type, Key> & Partial<Pick<Type, Key>>
+type PartiallyRequired<Type, Key extends keyof Type> = Omit<Type, Key> & Required<Pick<Type, Key>>
+type PartiallyOptional<Type, Key extends keyof Type> = Omit<Type, Key> & Partial<Pick<Type, Key>>
 
 /**
  * Nullish. Either `null` or `undefined`.
