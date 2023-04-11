@@ -26,6 +26,8 @@ type NonNil = {}  // eslint-disable-line @typescript-eslint/ban-types
 
 type OverrideProps<Base, Extension, DeleteKeys extends PropertyKey = never> = Override<import('react').ComponentPropsWithoutRef<Base>, Extension, DeleteKeys>
 
+type OmitProps<Base, DeleteKeys extends PropertyKey> = Omit<import('react').ComponentPropsWithoutRef<Base>, DeleteKeys>
+
 // https://stackoverflow.com/a/74881032/65387
 type MapKeyType<M> = M extends Map<infer K, any> ? K : never;
 type MapValueType<M> = M extends Map<any, infer V> ? V : never;

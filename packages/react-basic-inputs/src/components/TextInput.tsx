@@ -19,6 +19,8 @@ export type TextInputProps = OverrideProps<'input', {
 
 
 export function TextInput({onChange, value = '', format = collapseWhitespace, onBlur, ...props}: TextInputProps) {
+    // TODO: try without setting `value` at all.... with a ref we can manually set it. or will that break typing? we
+    // can probably drop the change event altogether.
     const [inputValue, setInputValue] = useState(value)
     const attrs: ComponentPropsWithoutRef<'input'> = {
         ...props,

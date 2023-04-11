@@ -8,6 +8,12 @@ import {PhoneInput} from './PhoneInput'
 import {SearchInput} from './SearchInput'
 import {UrlInput} from './UrlInput'
 import {NumberInput} from './NumberInput'
+import {ColorInput} from './ColorInput'
+import {MonthInput} from './MonthInput'
+import {DateInput} from './DateInput'
+import {WeekInput} from './WeekInput'
+import {DatetimeLocalInput} from './DatetimeLocalInput'
+import {TimeInput} from './TimeInput'
 
 
 const FRUIT_OPTIONS: SelectOption<number>[] = [
@@ -152,6 +158,35 @@ function OtherTextInputsFieldset() {
     )
 }
 
+function ColorFieldset() {
+    const [value, setValue] = useState("#FF0000")
+    // TODO: choose font color using color-contrast: https://caniuse.com/mdn-css_types_color_color-contrast
+    return (
+        <fieldset>
+            <legend>Color</legend>
+            <ColorInput value={value} onChange={ev => setValue(ev.target.value)}/>
+            <div style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                backgroundColor: value
+            }}>{JSON.stringify(value)}</div>
+        </fieldset>
+    )
+}
+
+function DateFieldset() {
+    return (
+        <fieldset>
+            <legend>Date Inputs</legend>
+            <DateInput/>
+            <MonthInput/>
+            <WeekInput/>
+            <TimeInput/>
+            <DatetimeLocalInput/>
+        </fieldset>
+    )
+}
+
 
 export default function App() {
     return (
@@ -159,6 +194,8 @@ export default function App() {
             <SelectFieldset/>
             <TextInputFieldset/>
             <OtherTextInputsFieldset/>
+            <ColorFieldset/>
+            <DateFieldset/>
         </form>
     )
 }
