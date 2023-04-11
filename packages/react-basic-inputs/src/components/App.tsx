@@ -17,6 +17,15 @@ const FRUIT_OPTIONS: SelectOption<number>[] = [
     {text: "Strawberry", value: 10},
 ]
 
+const DUPLICATE_OPTIONS: SelectOption<number>[] = [
+    {text: "Apple", value: 0},
+    {text: "Banana", value: 1},
+    {text: "Cherry", value: 2},
+    {text: "Banana 2", value: 1},
+    {text: "Banana 2-2", value: 1, key: '1(2)'},  // force an adversarial collision
+    {text: "Banana 3", value: 1},
+]
+
 function Select_Example3() {
     return (
         <>
@@ -47,6 +56,18 @@ function Select_Example1() {
     )
 }
 
+function Select_Dupe() {
+    const [value, setValue] = useState(1)
+    return (
+        <>
+            <div>Basic</div>
+            <Select options={DUPLICATE_OPTIONS} value={value} onChange={ev => setValue(ev.value)}/>
+            <button type="button" onClick={() => setValue(1)}>Set Banana</button>
+            <output>{JSON.stringify(value)}</output>
+        </>
+    )
+}
+
 function Select_Example2() {
     const [value, setValue] = useState(15)
     return (
@@ -72,6 +93,7 @@ function SelectFieldset() {
             <Select_Example1/>
             <Select_Example2/>
             <Select_Example4/>
+            <Select_Dupe/>
         </fieldset>
     )
 }

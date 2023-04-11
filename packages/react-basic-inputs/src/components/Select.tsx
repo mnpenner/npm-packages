@@ -21,7 +21,12 @@ export type SelectChangeEventHandler<T> = EventCallback<SelectChangeEvent<T>>
 
 export type InvalidValueToOption<T> = (value: T) => SelectOption<T>
 
-const defaultMakeInvalidValueOption: InvalidValueToOption<any> = value => ({value, text: String(value), disabled: true})
+const defaultMakeInvalidValueOption: InvalidValueToOption<any> = value => ({
+    value,
+    text: String(value),
+    disabled: true,
+    key: INVALID_OPTION_KEY
+})
 
 
 export type SelectProps<T extends NonNil> = OverrideProps<'select', {
@@ -47,6 +52,7 @@ function defaultMakeKey<T>(opt: SelectOption<T>, idx: number): Key {
 }
 
 const PLACEHOLDER_KEY = '3c9369b7-0a5e-46ea-93c2-e8b9fec67fdb'
+const INVALID_OPTION_KEY = '1a53f789-77f5-4ce6-a829-b00e563f1ee8'
 
 export function Select<T extends NonNil>({
     options,
@@ -107,11 +113,23 @@ export function Select<T extends NonNil>({
         refreshSelectedIndex()
     }, [refreshSelectedIndex])
 
+    const usedKeys = new Map<Key, number>
+
     return (
         <select {...selectAttrs} onChange={handleChange} ref={setRef}>
             {fixedOptions.map((opt, idx) => {
                 const {value, text, key, ...optAttrs} = opt
-                return <option {...optAttrs} key={defaultMakeKey(opt, idx)}>{opt.text}</option>
+                let fixedKey = defaultMakeKey(opt, idx)
+                for(; ;) {
+                    let suffix = usedKeys.get(fixedKey)
+                    if(suffix === undefined) {
+                        usedKeys.set(fixedKey, 1)
+                        break
+                    }
+                    usedKeys.set(fixedKey, ++suffix)
+                    fixedKey = `${fixedKey}(${suffix})`
+                }
+                return <option {...optAttrs} key={fixedKey}>{opt.text}</option>
             })}
         </select>
     )
