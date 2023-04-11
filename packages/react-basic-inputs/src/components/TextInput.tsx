@@ -22,16 +22,15 @@ export function TextInput({onChange, value = '', format = collapseWhitespace, on
         value: inputValue,
         onChange: ev => {
             setInputValue(ev.target.value)
-        }
-    }
-    if(onChange || onBlur) {
-        attrs.onBlur = ev => {
-            // TODO: should we call `setInputValue` as well?
+        },
+        onBlur: ev => {
+            const formattedValue = format != null ? format(inputValue) : inputValue
             onChange?.({
-                value: format != null ? format(inputValue) : inputValue
+                value: formattedValue
             })
             onBlur?.(ev)
-        }
+            setInputValue(formattedValue)
+        },
     }
     useUpdateEffect(() => {
         setInputValue(value)

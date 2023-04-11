@@ -11,29 +11,56 @@ const FRUIT_OPTIONS: SelectOption<number>[] = [
     {text: "Grape", value: 4},
     {text: "Kiwi", value: 5},
     {text: "Mango", value: 6},
-    {text: "Orange", value: 7},
+    {text: "Orange", value: 7, style: {color: 'orange'}},
     {text: "Peach", value: 8},
     {text: "Pineapple", value: 9},
     {text: "Strawberry", value: 10},
 ]
 
+function Select_Example3() {
+    return (
+        <>
+            <div>Uncontrolled</div>
+            <Select options={FRUIT_OPTIONS}/>
+        </>
+    )
+}
+
+function Select_Example4() {
+    return (
+        <>
+            <div>Placeholder</div>
+            <Select options={FRUIT_OPTIONS} placeholder="-- Please Select --"/>
+        </>
+    )
+}
+
+
 function Select_Example1() {
     const [value, setValue] = useState(8)
     return (
-        <div>
+        <>
+            <div>Basic</div>
             <Select options={FRUIT_OPTIONS} value={value} onChange={ev => setValue(ev.value)}/>
             <output>{JSON.stringify(value)}</output>
-        </div>
+        </>
     )
 }
 
 function Select_Example2() {
     const [value, setValue] = useState(15)
     return (
-        <div>
-            <Select options={FRUIT_OPTIONS} value={value} onChange={ev => setValue(ev.value)}/>
+        <>
+            <div>Invalid Option & External Setter</div>
+            <Select placeholder="-- Not Selected --" options={FRUIT_OPTIONS} value={value}
+                    onChange={ev => setValue(ev.value)}/>
+            <button type="button" onClick={() => setValue(null as any)}>Set Null</button>
+            <button type="button" onClick={() => setValue(2)}>Set Cherry</button>
+            <button type="button" onClick={() => setValue(11)}>Set Invalid</button>
+            <button type="button" onClick={() => setValue(Math.floor(Math.random() * 20))}>Set Random</button>
+            <button type="button" onClick={() => setValue(v => v + 1)}>Next</button>
             <output>{JSON.stringify(value)}</output>
-        </div>
+        </>
     )
 }
 
@@ -41,19 +68,32 @@ function SelectFieldset() {
     return (
         <fieldset>
             <legend>&lt;Select&gt;</legend>
+            <Select_Example3/>
             <Select_Example1/>
             <Select_Example2/>
+            <Select_Example4/>
         </fieldset>
     )
 }
 
 function TextInput_Example1() {
+    return (
+        <>
+            <div>Uncontrolled Input</div>
+            <TextInput/>
+        </>
+    )
+}
+
+
+function TextInput_Example2() {
     const [value, setValue] = useState("\tHello  \"\n\r\x0B\x0C\xA0\" world ")
     return (
-        <div>
+        <>
+            <div>Collapse Spaces</div>
             <TextInput value={value} onChange={ev => setValue(ev.value)}/>
             <output>{JSON.stringify(value)}</output>
-        </div>
+        </>
     )
 }
 
@@ -64,6 +104,7 @@ function TextInputFieldset() {
         <fieldset>
             <legend>&lt;TextInput&gt;</legend>
             <TextInput_Example1/>
+            <TextInput_Example2/>
         </fieldset>
     )
 }

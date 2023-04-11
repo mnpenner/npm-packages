@@ -39,7 +39,7 @@ rules:
     - allowSingleExtends: true
   react/no-unescaped-entities:
     - error
-    - forbid: [ '>', "\"", "}" ]
+    - forbid: [ '>', '}' ]
   '@typescript-eslint/no-unused-vars':
     - warn
     - ignoreRestSiblings: true

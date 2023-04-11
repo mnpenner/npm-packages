@@ -14,8 +14,15 @@ type Override<Base, Extension, DeleteKeys extends PropertyKey = never> =
 type RequiredKeys<Type, Key extends keyof Type> = Omit<Type, Key> & Required<Pick<Type, Key>>
 type OptionalKeys<Type, Key extends keyof Type> = Omit<Type, Key> & Partial<Pick<Type, Key>>
 
+/**
+ * Nullish. Either `null` or `undefined`.
+ */
 type nil = null | undefined
-type NonNil<T> = NonNullable<T>
+
+/**
+ * Not null or undefined.
+ */
+type NonNil = {}  // eslint-disable-line @typescript-eslint/ban-types
 
 type OverrideProps<Base, Extension, DeleteKeys extends PropertyKey = never> = Override<import('react').ComponentPropsWithoutRef<Base>, Extension, DeleteKeys>
 

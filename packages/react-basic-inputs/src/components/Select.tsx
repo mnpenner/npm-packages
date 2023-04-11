@@ -1,14 +1,14 @@
-import {ChangeEvent, Key, ReactNode} from 'react'
+import {ChangeEvent, Key, ReactNode, useCallback, useMemo, useRef} from 'react'
 import useEvent from '../hooks/useEvent'
 import {Resolvable, resolveValue} from '../util/resolvable'
-import {useRefEffect} from '../hooks/useRefEffect'
+import {useUpdateEffect} from 'react-use'
 
 
 export type SelectOption<T> = OverrideProps<'option', {
     value: T
     text: ReactNode
     key?: Resolvable<Key, [SelectOption<T>, number]>
-}, 'children'>
+}, 'children' | 'selected'>
 
 export interface SelectChangeEvent<T> {
     value: T
@@ -17,21 +17,27 @@ export interface SelectChangeEvent<T> {
     index: number
 }
 
-export type OptGroup<T> = [label: string, options: SelectOption<T>[]]
-
 export type SelectChangeEventHandler<T> = EventCallback<SelectChangeEvent<T>>
 
-export type SelectProps<T> = OverrideProps<'select', {
+export type InvalidValueToOption<T> = (value: T) => SelectOption<T>
+
+const defaultMakeInvalidValueOption: InvalidValueToOption<any> = value => ({value, text: String(value), disabled: true})
+
+
+export type SelectProps<T extends NonNil> = OverrideProps<'select', {
     options: SelectOption<T>[]
-    value: T
-    onChange: SelectChangeEventHandler<T>
-}, 'children'>
+    value?: T | null
+    onChange?: SelectChangeEventHandler<T>
+    /**
+     * Set to `false` or `null` to disable showing an extra option when `value` is invalid.
+     * Omit or set to `true` to stringify the `value` and add it as an extra option.
+     * Or pass a function that takes a `value` and produces an option.
+     */
+    invalidValueOption?: InvalidValueToOption<T> | false | true | null
+    placeholder?: ReactNode
+}, 'children' | 'defaultValue'>
 
-export type GroupSelectProps<T> = Override<SelectProps<T>, {
-    options: OptGroup<T>[]
-}>
-
-function makeKey<T>(opt: SelectOption<T>, idx: number): React.Key {
+function defaultMakeKey<T>(opt: SelectOption<T>, idx: number): Key {
     if(opt.key != null) {
         return resolveValue(opt.key, opt, idx)
     } else if(typeof opt.value === 'string' || typeof opt.value === 'number') {
@@ -40,11 +46,42 @@ function makeKey<T>(opt: SelectOption<T>, idx: number): React.Key {
     return idx
 }
 
-export function Select<T>({options, value, onChange, ...selectAttrs}: SelectProps<T>) {
+const PLACEHOLDER_KEY = '3c9369b7-0a5e-46ea-93c2-e8b9fec67fdb'
+
+export function Select<T extends NonNil>({
+    options,
+    value,
+    invalidValueOption,
+    onChange,
+    placeholder,
+    ...selectAttrs
+}: SelectProps<T>) {
+    const isNotSelected = value == null
+    const isValid = useMemo(() => value != null && options.some(o => o.value == value), [options, value])
+
+    const extraOption = useMemo(() => {
+        if(value == null || invalidValueOption === false || invalidValueOption === null) return null
+        if(invalidValueOption === true || invalidValueOption === undefined) return defaultMakeInvalidValueOption(value)
+        return invalidValueOption(value)
+    }, [invalidValueOption, value])
+
+    const fixedOptions = useMemo(() => {
+        if(isValid) return options
+        const fixedOptions = [...options]
+        if(isNotSelected) {
+            if(placeholder != null) {
+                fixedOptions.unshift({text: placeholder, hidden: true, value: null as any, key: PLACEHOLDER_KEY})
+            }
+        } else if(extraOption) {
+            fixedOptions.push(extraOption)
+        }
+        return fixedOptions
+    }, [isValid, options, isNotSelected, extraOption, placeholder])
+
     const handleChange = useEvent<ChangeEvent<HTMLSelectElement>>(ev => {
-        const idx = ev.currentTarget.selectedIndex
-        const opt = options[idx]
-        onChange({
+        const idx = ev.target.selectedIndex
+        const opt = fixedOptions[idx]
+        onChange?.({
             value: opt.value,
             // option: opt,
             // event: ev,
@@ -52,48 +89,30 @@ export function Select<T>({options, value, onChange, ...selectAttrs}: SelectProp
         })
     })
 
-    const ref = useRefEffect<HTMLSelectElement>(el => {
-        if(el.selectedIndex < 0 || options[el.selectedIndex].value != value) {
-            el.selectedIndex = options.findIndex(opt => opt.value == value)
+    const ref = useRef<HTMLSelectElement | null>(null)
+
+    const refreshSelectedIndex = useCallback(() => {
+        if(!ref.current) return
+        if(ref.current.selectedIndex < 0 || fixedOptions[ref.current.selectedIndex].value != value) {
+            ref.current.selectedIndex = fixedOptions.findIndex(opt => opt.value == value)
         }
-    })
+    }, [fixedOptions, value])
+
+    const setRef = (el: HTMLSelectElement | null) => {
+        ref.current = el
+        refreshSelectedIndex()
+    }
+
+    useUpdateEffect(() => {
+        refreshSelectedIndex()
+    }, [refreshSelectedIndex])
 
     return (
-        <select {...selectAttrs} onChange={handleChange} ref={ref}>
-            {options.map((opt, idx) => {
+        <select {...selectAttrs} onChange={handleChange} ref={setRef}>
+            {fixedOptions.map((opt, idx) => {
                 const {value, text, key, ...optAttrs} = opt
-                return <option {...optAttrs} key={makeKey(opt, idx)}>{opt.text}</option>
+                return <option {...optAttrs} key={defaultMakeKey(opt, idx)}>{opt.text}</option>
             })}
         </select>
     )
 }
-
-// export function GroupSelect<T>({options, value, onChange, ...attrs}: GroupSelectProps<T>) {
-//     const flatOptions = useMemo(() => options?.length ? options.flatMap(o => o[1]) : EMPTY_ARRAY, [options])
-//
-//     const handleChange = useCallback((ev: ChangeEvent<HTMLSelectElement>) => {
-//         const opt = flatOptions[ev.target.selectedIndex]
-//         onChange({
-//             value: opt.value,
-//             option: opt,
-//             event: ev,
-//             index: ev.target.selectedIndex,
-//         })
-//     }, [onChange])
-//
-//     const ref = useCallback((el: HTMLSelectElement | null) => {
-//         if (el && (el.selectedIndex < 0 || flatOptions[el.selectedIndex].value != value)) {
-//             el.selectedIndex = flatOptions.findIndex(opt => opt.value == value)
-//         }
-//     }, [value])
-//
-//     return (
-//         <select {...attrs} onChange={handleChange} ref={ref}>
-//             {options.map(([optgroup,opts], idx) => (
-//                 <optgroup key={optgroup} label={optgroup}>
-//                     {opts.map((opt, idx) => <option key={makeKey(opt,idx)}>{opt.label}</option>)}
-//                 </optgroup>
-//             ))}
-//         </select>
-//     )
-// }
