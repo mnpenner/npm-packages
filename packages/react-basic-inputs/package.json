@@ -1,5 +1,6 @@
 {
   "name": "@mnpenner/react-basic-inputs",
+  "version": "0.1.1",
   "packageManager": "yarn@3.5.0",
   "exports": "./dist/bundle.cjs",
   "module": "./dist/bundle.mjs",
@@ -14,7 +15,9 @@
     "dev": "run-p \"dev:**\"",
     "bundle:clean": "rimraf -g \"dist/*\"",
     "bundle:build": "rollup -c",
-    "bundle": "run-s bundle:clean bundle:build"
+    "bundle": "run-s bundle:clean bundle:build",
+    "patch": "npm version patch && VER=$(jq -r '.version' package.json) && hg ci -m \"Publish v$VER\" && hg tag \"v$VER\"",
+    "release": "run-s bundle patch && npm publish && hg push"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^24.0.1",
