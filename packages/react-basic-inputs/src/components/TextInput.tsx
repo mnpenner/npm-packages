@@ -23,7 +23,7 @@ export function TextInput({onChange, value = '', format = collapseWhitespace, on
     // TODO: try without setting `value` at all.... with a ref we can manually set it. or will that break typing? we
     // can probably drop the change event altogether.
     const [inputValue, setInputValue] = useState(value)
-    const lastValue = useRef<undefined | string>(undefined)
+    const lastValue = useRef(value)
     const props: ComponentPropsWithoutRef<'input'> = {
         ...otherProps,
         type: 'text',
@@ -34,14 +34,15 @@ export function TextInput({onChange, value = '', format = collapseWhitespace, on
         onBlur: ev => {
             // TODO: should we avoid formatting if the user didn't type anything?
             // logJson(lastValue.current,ev.target.value,lastValue.current !== ev.target.value)
-            if (lastValue.current !== ev.target.value) {  // FIXME: this isn't quite right...
-                const formattedValue = format != null ? format(ev.target.value) : ev.target.value
+            // logJson(lastValue.current,inputValue,lastValue.current === inputValue)
+            if (lastValue.current !== inputValue) {  // FIXME: should this fire if you set the value with buttons?
+                const formattedValue = format != null ? format(inputValue) : inputValue
                 // TODO: should we avoid calling onChange if the formatted value hasn't changed...?
 
                 onChange?.({
                     value: formattedValue
                 })
-                lastValue.current = ev.target.value
+                lastValue.current = inputValue
                 setInputValue(formattedValue)
             }
             onBlur?.(ev)
@@ -50,11 +51,7 @@ export function TextInput({onChange, value = '', format = collapseWhitespace, on
     }
     useUpdateEffect(() => {
         setInputValue(value)
+        lastValue.current = value
     }, [value])
-    return <input ref={el => {
-        // FIXME: why does this fire all the time...?
-        if (lastValue.current === undefined && el !== null) {
-            lastValue.current = el.value
-        }
-    }} {...props} />
+    return <input {...props} />
 }
