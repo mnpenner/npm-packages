@@ -1,4 +1,4 @@
-import {ComponentPropsWithoutRef, useState} from 'react'
+import {ComponentPropsWithoutRef, useRef, useState} from 'react'
 import {collapseWhitespace} from '../util/format'
 import {useUpdateEffect} from 'react-use'
 import {EventCallback, OverrideProps} from "../types/utility";
@@ -19,12 +19,13 @@ export type TextInputProps = OverrideProps<'input', {
 }, 'type'>
 
 
-export function TextInput({onChange, value = '', format = collapseWhitespace, onBlur, ...props}: TextInputProps) {
+export function TextInput({onChange, value = '', format = collapseWhitespace, onBlur, ...otherProps}: TextInputProps) {
     // TODO: try without setting `value` at all.... with a ref we can manually set it. or will that break typing? we
     // can probably drop the change event altogether.
     const [inputValue, setInputValue] = useState(value)
-    const attrs: ComponentPropsWithoutRef<'input'> = {
-        ...props,
+    const lastValue = useRef<undefined | string>(undefined)
+    const props: ComponentPropsWithoutRef<'input'> = {
+        ...otherProps,
         type: 'text',
         value: inputValue,
         onChange: ev => {
@@ -32,17 +33,28 @@ export function TextInput({onChange, value = '', format = collapseWhitespace, on
         },
         onBlur: ev => {
             // TODO: should we avoid formatting if the user didn't type anything?
-            const formattedValue = format != null ? format(inputValue) : inputValue
-            // TODO: should we avoid calling onChange if the formatted value hasn't changed...?
-            onChange?.({
-                value: formattedValue
-            })
+            // logJson(lastValue.current,ev.target.value,lastValue.current !== ev.target.value)
+            if (lastValue.current !== ev.target.value) {  // FIXME: this isn't quite right...
+                const formattedValue = format != null ? format(ev.target.value) : ev.target.value
+                // TODO: should we avoid calling onChange if the formatted value hasn't changed...?
+
+                onChange?.({
+                    value: formattedValue
+                })
+                lastValue.current = ev.target.value
+                setInputValue(formattedValue)
+            }
             onBlur?.(ev)
-            setInputValue(formattedValue)
+
         },
     }
     useUpdateEffect(() => {
         setInputValue(value)
     }, [value])
-    return <input {...attrs} />
+    return <input ref={el => {
+        // FIXME: why does this fire all the time...?
+        if (lastValue.current === undefined && el !== null) {
+            lastValue.current = el.value
+        }
+    }} {...props} />
 }

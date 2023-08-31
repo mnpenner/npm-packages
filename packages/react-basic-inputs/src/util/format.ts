@@ -13,11 +13,16 @@ export function formatEmail(str: string | nil): string {
 export function formatUrl(str: string | nil): string {
     if(!str) return ''
     str = String(str).trim()
+    const endSlash = str.endsWith('/')
     if(!/^\w[-\w]*:/.test(str)) {
         str = 'https://' + str
     }
     try {
-        return new URL(str).href
+        let href = new URL(str).href
+        if (!endSlash) {
+            href = href.replace(/\/$/, '')
+        }
+        return href
     } catch {
         return str
     }
