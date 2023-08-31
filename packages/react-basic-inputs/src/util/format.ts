@@ -1,3 +1,5 @@
+import {nil} from "../types/utility";
+
 export function collapseWhitespace(str: string | nil): string {
     if(!str) return ''
     return String(str).replace(/\s+/gu, ' ').trim()

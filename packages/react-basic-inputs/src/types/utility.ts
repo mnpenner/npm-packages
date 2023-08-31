@@ -1,0 +1,52 @@
+// Functions
+export type Fn<TArgs extends ReadonlyArray<unknown> = unknown[], TRet = unknown> = (...args: TArgs[]) => TRet
+export type AnyFn = (...args: any[]) => any
+export type EventCallback<T = never> = (ev: T) => void
+export type VoidFn = () => void
+
+// Objects
+export type EmptyObject = Record<PropertyKey, never>
+export type UnknownObject = Record<PropertyKey, unknown>
+
+export type Override<Base, Extension, DeleteKeys extends PropertyKey = never> =
+    Omit<Base, keyof Extension | DeleteKeys>
+    & Extension
+export type PartiallyRequired<Type, Key extends keyof Type> = Omit<Type, Key> & Required<Pick<Type, Key>>
+export type PartiallyOptional<Type, Key extends keyof Type> = Omit<Type, Key> & Partial<Pick<Type, Key>>
+
+/**
+ * Nullish. Either `null` or `undefined`.
+ */
+export type nil = null | undefined
+
+/**
+ * Not null or undefined.
+ */
+export type NonNil = {}  // eslint-disable-line @typescript-eslint/ban-types
+
+export type OverrideProps<Base extends import('react').ElementType, Extension, DeleteKeys extends PropertyKey = never> = Override<import('react').ComponentPropsWithoutRef<Base>, Extension, DeleteKeys>
+
+export type OmitProps<Base extends import('react').ElementType, DeleteKeys extends PropertyKey> = Omit<import('react').ComponentPropsWithoutRef<Base>, DeleteKeys>
+
+// https://stackoverflow.com/a/74881032/65387
+export type MapKeyType<M> = M extends Map<infer K, any> ? K : never;
+export type MapValueType<M> = M extends Map<any, infer V> ? V : never;
+
+/** Hack to de-conflict React's HTMLInputElement vs the standard dom lib */
+export type HtmlInputElement = HTMLElementTagNameMap['input']
+export type InputChangeEvent = import('react').ChangeEvent<HtmlInputElement>
+
+export type ArrayType<T extends any[]> = T[number]
+
+
+// https://stackoverflow.com/a/69062575/65387 ->
+// https://stackoverflow.com/questions/65805600/type-union-not-checking-for-excess-properties#answer-65805753 ->
+// https://stackoverflow.com/questions/52677576/typescript-discriminated-union-allows-invalid-state/52678379#52678379
+type _UnionKeys<T> = T extends T ? keyof T : never;
+
+type _StrictUnionHelper<T, TAll> =
+    T extends any
+        ? T & Partial<Record<Exclude<_UnionKeys<TAll>, keyof T>, never>> : never;
+
+// See also: https://github.com/ts-essentials/ts-essentials#xor
+export type XOR<T> = _StrictUnionHelper<T, T>

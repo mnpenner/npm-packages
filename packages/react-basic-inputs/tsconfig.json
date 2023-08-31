@@ -19,8 +19,5 @@
   },
   "files": [
     "src/bundle.ts"
-  ],
-  "include": [
-    "src/**/*.d.ts"
   ]
 }

@@ -1,5 +1,6 @@
 import {useCallback, useDebugValue, useLayoutEffect, useRef} from 'react'
 import {NOOP} from '../util/constants'
+import {EventCallback} from "../types/utility";
 
 /**
  * @see https://github.com/reactjs/rfcs/blob/useevent/text/0000-useevent.md

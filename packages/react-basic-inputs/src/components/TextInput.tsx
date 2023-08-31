@@ -1,6 +1,7 @@
 import {ComponentPropsWithoutRef, useState} from 'react'
 import {collapseWhitespace} from '../util/format'
 import {useUpdateEffect} from 'react-use'
+import {EventCallback, OverrideProps} from "../types/utility";
 
 export type TextChangeEvent = {
     value: string

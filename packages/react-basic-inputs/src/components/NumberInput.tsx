@@ -1,3 +1,5 @@
+import {OverrideProps} from "../types/utility";
+
 export type NumberInputProps = OverrideProps<'input', {
     value?: number
     placeholder?: string | number

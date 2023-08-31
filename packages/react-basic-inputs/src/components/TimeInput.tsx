@@ -1,3 +1,5 @@
+import {OmitProps} from "../types/utility";
+
 export type TimeInputProps = OmitProps<'input', 'type'>
 
 export function TimeInput(props: TimeInputProps) {

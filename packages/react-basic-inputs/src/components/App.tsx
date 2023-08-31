@@ -194,7 +194,7 @@ function ColorFieldset() {
     return (
         <fieldset>
             <legend>Color</legend>
-            <ColorInput value={value} onChange={ev => setValue(ev.target.value)}/>
+            <ColorInput value={value} onChange={ev => setValue(ev.value)}/>
             <div style={{
                 display: 'flex',
                 justifyContent: 'flex-end',

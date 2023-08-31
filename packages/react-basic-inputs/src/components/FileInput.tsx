@@ -1,3 +1,5 @@
+import {OmitProps} from "../types/utility";
+
 export type FileInputProps = OmitProps<'input', 'type'>
 
 export function FileInput(props: FileInputProps) {
