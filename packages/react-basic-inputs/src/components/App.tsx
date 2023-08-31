@@ -1,5 +1,5 @@
 import {Select, SelectOption} from './Select'
-import {useState} from 'react'
+import {ReactNode, useState} from 'react'
 import {TextInput} from './TextInput'
 import {EmailInput} from './EmailInput'
 import {DecimalInput} from './DecimalInput'
@@ -21,14 +21,29 @@ const FRUIT_OPTIONS: SelectOption<number>[] = [
     {text: "Banana", value: 1},
     {text: "Cherry", value: 2},
     {text: "Date", value: 3},
-    {text: "Grape", value: 4},
-    {text: "Kiwi", value: 5},
-    {text: "Mango", value: 6},
-    {text: "Orange", value: 7, style: {color: 'orange'}},
-    {text: "Peach", value: 8},
-    {text: "Pineapple", value: 9},
-    {text: "Strawberry", value: 10},
+    {text: "Elderberry", value: 4},
+    {text: "Fig", value: 5},
+    {text: "Grape", value: 6},
+    {text: "Honeydew", value: 7},
+    {text: "Kiwi", value: 8},
+    {text: "Lemon", value: 9},
+    {text: "Mango", value: 10},
+    {text: "Nectarine", value: 11},
+    {text: "Orange", value: 12, style: {color: 'orange'}},
+    {text: "Peach", value: 13},
+    {text: "Pineapple", value: 14},
+    {text: "Quince", value: 15},
+    {text: "Raspberry", value: 16},
+    {text: "Strawberry", value: 17},
+    {text: "Tangerine", value: 18},
+    {text: "Ugli fruit", value: 19},
+    {text: "Vanilla bean", value: 20},
+    {text: "Watermelon", value: 21},
+    {text: "Xigua", value: 22},
+    {text: "Yellow passion fruit", value: 23},
+    {text: "Zucchini", value: 24}
 ]
+
 
 const DUPLICATE_OPTIONS: SelectOption<number>[] = [
     {text: "Apple", value: 0},
@@ -42,7 +57,7 @@ const DUPLICATE_OPTIONS: SelectOption<number>[] = [
 function Select_Example3() {
     return (
         <>
-            <div>Uncontrolled</div>
+            <h3>Uncontrolled</h3>
             <Select options={FRUIT_OPTIONS}/>
         </>
     )
@@ -51,7 +66,7 @@ function Select_Example3() {
 function Select_Example4() {
     return (
         <>
-            <div>Placeholder</div>
+            <h3>Placeholder</h3>
             <Select options={FRUIT_OPTIONS} placeholder="-- Please Select --"/>
         </>
     )
@@ -62,7 +77,7 @@ function Select_Example1() {
     const [value, setValue] = useState(8)
     return (
         <>
-            <div>Basic</div>
+            <h3>Basic</h3>
             <Select options={FRUIT_OPTIONS} value={value} onChange={ev => setValue(ev.value)}/>
             <output>{JSON.stringify(value)}</output>
         </>
@@ -73,7 +88,7 @@ function Select_Dupe() {
     const [value, setValue] = useState(1)
     return (
         <>
-            <div>Basic</div>
+            <h3>Basic</h3>
             <Select options={DUPLICATE_OPTIONS} value={value} onChange={ev => setValue(ev.value)}/>
             <button type="button" onClick={() => setValue(1)}>Set Banana</button>
             <output>{JSON.stringify(value)}</output>
@@ -85,14 +100,16 @@ function Select_Example2() {
     const [value, setValue] = useState(15)
     return (
         <>
-            <div>Invalid Option & External Setter</div>
+            <h3>Invalid Option & External Setter</h3>
             <Select placeholder="-- Not Selected --" options={FRUIT_OPTIONS} value={value}
                     onChange={ev => setValue(ev.value)}/>
-            <button type="button" onClick={() => setValue(null as any)}>Set Null</button>
-            <button type="button" onClick={() => setValue(2)}>Set Cherry</button>
-            <button type="button" onClick={() => setValue(11)}>Set Invalid</button>
-            <button type="button" onClick={() => setValue(Math.floor(Math.random() * 20))}>Set Random</button>
-            <button type="button" onClick={() => setValue(v => v + 1)}>Next</button>
+            <div>
+                <button type="button" onClick={() => setValue(null as any)}>Set Null</button>
+                <button type="button" onClick={() => setValue(2)}>Set Cherry</button>
+                <button type="button" onClick={() => setValue(11)}>Set Invalid</button>
+                <button type="button" onClick={() => setValue(Math.floor(Math.random() * 20))}>Set Random</button>
+                <button type="button" onClick={() => setValue(v => v + 1)}>Next</button>
+            </div>
             <output>{JSON.stringify(value)}</output>
         </>
     )
@@ -114,7 +131,7 @@ function SelectFieldset() {
 function TextInput_Example1() {
     return (
         <>
-            <div>Uncontrolled Input</div>
+            <h3>Uncontrolled Input</h3>
             <TextInput/>
         </>
     )
@@ -125,7 +142,7 @@ function TextInput_Example2() {
     const [value, setValue] = useState("\tHello  \"\n\r\x0B\x0C\xA0\" world ")
     return (
         <>
-            <div>Collapse Spaces</div>
+            <h3>Collapse Spaces</h3>
             <TextInput value={value} onChange={ev => setValue(ev.value)}/>
             <button type="button" onClick={() => setValue('\t"     "\t')}>Set Space</button>
             <output>{JSON.stringify(value)}</output>
@@ -135,18 +152,31 @@ function TextInput_Example2() {
 
 function TextInputFieldset() {
     return (
-        <fieldset>
-            <legend>&lt;TextInput&gt;</legend>
+        <FieldSet legend="<TextInput>">
             <TextInput_Example1/>
             <TextInput_Example2/>
+        </FieldSet>
+    )
+}
+
+
+type FieldSetProps = {
+    legend: string
+    children: ReactNode
+}
+
+function FieldSet({legend, children}: FieldSetProps) {
+    return (
+        <fieldset>
+            <legend>{legend}</legend>
+            <div>{children}</div>
         </fieldset>
     )
 }
 
 function OtherTextInputsFieldset() {
     return (
-        <fieldset>
-            <legend>Other Text Inputs</legend>
+        <FieldSet legend="Other Text Inputs">
             <EmailInput placeholder="Email"/>
             <NumberInput placeholder={123}/>
             <DecimalInput placeholder="456"/>
@@ -154,7 +184,7 @@ function OtherTextInputsFieldset() {
             <PhoneInput placeholder="867-5309"/>
             <SearchInput placeholder="Google"/>
             <UrlInput placeholder="example.org"/>
-        </fieldset>
+        </FieldSet>
     )
 }
 

@@ -768,13 +768,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jridgewell/source-map@npm:^0.3.2":
-  version: 0.3.3
-  resolution: "@jridgewell/source-map@npm:0.3.3"
+"@jridgewell/source-map@npm:^0.3.3":
+  version: 0.3.5
+  resolution: "@jridgewell/source-map@npm:0.3.5"
   dependencies:
     "@jridgewell/gen-mapping": ^0.3.0
     "@jridgewell/trace-mapping": ^0.3.9
-  checksum: ae1302146339667da5cd6541260ecbef46ae06819a60f88da8f58b3e64682f787c09359933d050dea5d2173ea7fa40f40dd4d4e7a8d325c5892cccd99aaf8959
+  checksum: 1ad4dec0bdafbade57920a50acec6634f88a0eb735851e0dda906fa9894e7f0549c492678aad1a10f8e144bfe87f238307bf2a914a1bc85b7781d345417e9f6f
   languageName: node
   linkType: hard
 
@@ -806,15 +806,15 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@mnpenner/react-basic-inputs@workspace:."
   dependencies:
-    "@rollup/plugin-commonjs": ^24.0.1
-    "@rollup/plugin-node-resolve": ^15.0.2
+    "@rollup/plugin-commonjs": ^25.0.4
+    "@rollup/plugin-node-resolve": ^15.2.1
     "@rollup/plugin-replace": ^5.0.2
-    "@rollup/plugin-terser": ^0.4.1
-    "@rollup/plugin-typescript": ^11.1.0
+    "@rollup/plugin-terser": ^0.4.3
+    "@rollup/plugin-typescript": ^11.1.3
     "@types/eslint": ^8
     "@types/jest": ^29.5.0
-    "@types/react": ^18.0.33
-    "@types/react-dom": ^18.0.11
+    "@types/react": ^18.2.21
+    "@types/react-dom": ^18.2.7
     "@typescript-eslint/eslint-plugin": ^5.57.1
     "@typescript-eslint/parser": ^5.57.1
     eslint: ^8.38.0
@@ -830,7 +830,7 @@ __metadata:
     serve: ^14.2.0
     ts-jest: ^29.1.0
     tslib: ^2.5.0
-    typescript: ^5.0.4
+    typescript: ^5.2.2
   peerDependencies:
     react: ">=17 <19"
     react-dom: ">=17 <19"
@@ -884,9 +884,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rollup/plugin-commonjs@npm:^24.0.1":
-  version: 24.0.1
-  resolution: "@rollup/plugin-commonjs@npm:24.0.1"
+"@rollup/plugin-commonjs@npm:^25.0.4":
+  version: 25.0.4
+  resolution: "@rollup/plugin-commonjs@npm:25.0.4"
   dependencies:
     "@rollup/pluginutils": ^5.0.1
     commondir: ^1.0.1
@@ -899,13 +899,13 @@ __metadata:
   peerDependenciesMeta:
     rollup:
       optional: true
-  checksum: ff5b09f5c350640fe6836fcc97bf5c5612bf78b26eaaad01bf1aee955f0b136135d1a8950a02f680779aec1f16f2c6b6cf89d6080e84ed09be62737abb6b3a5f
+  checksum: 073b92b765a1f8ab8db8e1aa216c1950e62f6c0c41210d10bb7530c4fc63670a16c19c0bbbf73e2752467c4468ad4c8134cf4724924388c3eed83df45630fda6
   languageName: node
   linkType: hard
 
-"@rollup/plugin-node-resolve@npm:^15.0.2":
-  version: 15.0.2
-  resolution: "@rollup/plugin-node-resolve@npm:15.0.2"
+"@rollup/plugin-node-resolve@npm:^15.2.1":
+  version: 15.2.1
+  resolution: "@rollup/plugin-node-resolve@npm:15.2.1"
   dependencies:
     "@rollup/pluginutils": ^5.0.1
     "@types/resolve": 1.20.2
@@ -918,7 +918,7 @@ __metadata:
   peerDependenciesMeta:
     rollup:
       optional: true
-  checksum: 328eafee06ff967a36441b55e77fbd0d4f599d256e5d1977800ee71915846c46bc1b6185df35c7b512ad2b4023b05b65a332be77b8b00b9d8a20f87d056b8166
+  checksum: e8f706db6ab826e80d1c9a85d2d1e736f2f78a34ea5d49dd0004d6603249a504696967674b2f021cd144536b88d24ffa058383f08b61b4b665be3c7bfacc006a
   languageName: node
   linkType: hard
 
@@ -937,25 +937,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rollup/plugin-terser@npm:^0.4.1":
-  version: 0.4.1
-  resolution: "@rollup/plugin-terser@npm:0.4.1"
+"@rollup/plugin-terser@npm:^0.4.3":
+  version: 0.4.3
+  resolution: "@rollup/plugin-terser@npm:0.4.3"
   dependencies:
-    serialize-javascript: ^6.0.0
-    smob: ^0.0.6
-    terser: ^5.15.1
+    serialize-javascript: ^6.0.1
+    smob: ^1.0.0
+    terser: ^5.17.4
   peerDependencies:
     rollup: ^2.x || ^3.x
   peerDependenciesMeta:
     rollup:
       optional: true
-  checksum: 684244206df147fbeba66e7327f45cf2134513a89b5e576570cacf67cc517b679eea99cf739a4f13542249d4aba774866c8d406f040ad6a7f4f9b691077da039
+  checksum: 0d697e816f32e9609c48defbda6f3ed90548126fbf673451cfde2c576a7511073cd25d45a9669f179d0b89485e62f56cabeb65428c2232469ab6057ae5dc7709
   languageName: node
   linkType: hard
 
-"@rollup/plugin-typescript@npm:^11.1.0":
-  version: 11.1.0
-  resolution: "@rollup/plugin-typescript@npm:11.1.0"
+"@rollup/plugin-typescript@npm:^11.1.3":
+  version: 11.1.3
+  resolution: "@rollup/plugin-typescript@npm:11.1.3"
   dependencies:
     "@rollup/pluginutils": ^5.0.1
     resolve: ^1.22.1
@@ -968,7 +968,7 @@ __metadata:
       optional: true
     tslib:
       optional: true
-  checksum: 64ed5abbae392032fb190a5d3a29beb73f968919aed964ed5545e2732de6a1670f97131785e9376c06f784ae61545c5ad47352c126f3830aaa16b669bee2e9b9
+  checksum: cde5475d16fb201bc6755eb676e72136591e9d4996b566ca702ab37870ba2554ba96a7cdacf4cd4b75ab004ae0d9fb4b32da014d3fae1d41c9bb783a843551f1
   languageName: node
   linkType: hard
 
@@ -1157,16 +1157,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-dom@npm:^18.0.11":
-  version: 18.0.11
-  resolution: "@types/react-dom@npm:18.0.11"
+"@types/react-dom@npm:^18.2.7":
+  version: 18.2.7
+  resolution: "@types/react-dom@npm:18.2.7"
   dependencies:
     "@types/react": "*"
-  checksum: 579691e4d5ec09688087568037c35edf8cfb1ab3e07f6c60029280733ee7b5c06d66df6fcc90786702c93ac8cb13bc7ff16c79ddfc75d082938fbaa36e1cdbf4
+  checksum: e02ea908289a7ad26053308248d2b87f6aeafd73d0e2de2a3d435947bcea0422599016ffd1c3e38ff36c42f5e1c87c7417f05b0a157e48649e4a02f21727d54f
   languageName: node
   linkType: hard
 
-"@types/react@npm:*, @types/react@npm:^18.0.33":
+"@types/react@npm:*":
   version: 18.0.33
   resolution: "@types/react@npm:18.0.33"
   dependencies:
@@ -1174,6 +1174,17 @@ __metadata:
     "@types/scheduler": "*"
     csstype: ^3.0.2
   checksum: 4fbd2b2b6a26378bdfde121081a6406ec2d39e4ba87ea5f6897ab7bb2198713165e6fd703ad4ed7ba1d4f23ef54a4c9f108f3105c7ed8e136411ee6bdebc5669
+  languageName: node
+  linkType: hard
+
+"@types/react@npm:^18.2.21":
+  version: 18.2.21
+  resolution: "@types/react@npm:18.2.21"
+  dependencies:
+    "@types/prop-types": "*"
+    "@types/scheduler": "*"
+    csstype: ^3.0.2
+  checksum: ffed203bfe7aad772b8286f7953305c9181ac3a8f27d3f5400fbbc2a8e27ca8e5bbff818ee014f39ca0d19d2b3bb154e5bdbec7e232c6f80b59069375aa78349
   languageName: node
   linkType: hard
 
@@ -1382,12 +1393,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"acorn@npm:^8.5.0, acorn@npm:^8.8.0":
+"acorn@npm:^8.8.0":
   version: 8.8.2
   resolution: "acorn@npm:8.8.2"
   bin:
     acorn: bin/acorn
   checksum: f790b99a1bf63ef160c967e23c46feea7787e531292bb827126334612c234ed489a0dc2c7ba33156416f0ffa8d25bf2b0fdb7f35c2ba60eb3e960572bece4001
+  languageName: node
+  linkType: hard
+
+"acorn@npm:^8.8.2":
+  version: 8.10.0
+  resolution: "acorn@npm:8.10.0"
+  bin:
+    acorn: bin/acorn
+  checksum: 538ba38af0cc9e5ef983aee196c4b8b4d87c0c94532334fa7e065b2c8a1f85863467bb774231aae91613fcda5e68740c15d97b1967ae3394d20faddddd8af61d
   languageName: node
   linkType: hard
 
@@ -5533,7 +5553,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"serialize-javascript@npm:^6.0.0":
+"serialize-javascript@npm:^6.0.1":
   version: 6.0.1
   resolution: "serialize-javascript@npm:6.0.1"
   dependencies:
@@ -5671,10 +5691,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"smob@npm:^0.0.6":
-  version: 0.0.6
-  resolution: "smob@npm:0.0.6"
-  checksum: 360b8b72896974411ec6ca9a352b306bd4233aea44309dbebaeb41fc822cf770b094589e42a8a025ae291f043cbfc4199fc01dd909e45c7bd3c23d287c7e5bac
+"smob@npm:^1.0.0":
+  version: 1.4.0
+  resolution: "smob@npm:1.4.0"
+  checksum: f693b42698c90262dee4324eae635ea2aa16782161274b47417f87e353880487cdea8e6d9d07fb9b2a0e0df472ef0c5a1bfc07395edd8acfad7062797c1293ca
   languageName: node
   linkType: hard
 
@@ -6045,17 +6065,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"terser@npm:^5.15.1":
-  version: 5.16.8
-  resolution: "terser@npm:5.16.8"
+"terser@npm:^5.17.4":
+  version: 5.19.3
+  resolution: "terser@npm:5.19.3"
   dependencies:
-    "@jridgewell/source-map": ^0.3.2
-    acorn: ^8.5.0
+    "@jridgewell/source-map": ^0.3.3
+    acorn: ^8.8.2
     commander: ^2.20.0
     source-map-support: ~0.5.20
   bin:
     terser: bin/terser
-  checksum: f4a3ef4848a71f74f637c009395cf5a28660b56237fb8f13532cecfb24d6263e2dfbc1a511a11a94568988898f79cdcbecb9a4d8e104db35a0bea9639b70a325
+  checksum: dde1b387891ad953760cec56b168d1f2b1eae5f47410bec57f3587daa9719ee0cf3155961adf77cdff9ea88e086dd49c78a721eafdcbdd0dd590c47c8e660a37
   languageName: node
   linkType: hard
 
@@ -6227,23 +6247,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^5.0.4":
-  version: 5.0.4
-  resolution: "typescript@npm:5.0.4"
+"typescript@npm:^5.2.2":
+  version: 5.2.2
+  resolution: "typescript@npm:5.2.2"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 82b94da3f4604a8946da585f7d6c3025fff8410779e5bde2855ab130d05e4fd08938b9e593b6ebed165bda6ad9292b230984f10952cf82f0a0ca07bbeaa08172
+  checksum: 7912821dac4d962d315c36800fe387cdc0a6298dba7ec171b350b4a6e988b51d7b8f051317786db1094bd7431d526b648aba7da8236607febb26cf5b871d2d3c
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@^5.0.4#~builtin<compat/typescript>":
-  version: 5.0.4
-  resolution: "typescript@patch:typescript@npm%3A5.0.4#~builtin<compat/typescript>::version=5.0.4&hash=85af82"
+"typescript@patch:typescript@^5.2.2#~builtin<compat/typescript>":
+  version: 5.2.2
+  resolution: "typescript@patch:typescript@npm%3A5.2.2#~builtin<compat/typescript>::version=5.2.2&hash=85af82"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: bb309d320c59a26565fb3793dba550576ab861018ff3fd1b7fccabbe46ae4a35546bc45f342c0a0b6f265c801ccdf64ffd68f548f117ceb7f0eac4b805cd52a9
+  checksum: 07106822b4305de3f22835cbba949a2b35451cad50888759b6818421290ff95d522b38ef7919e70fb381c5fe9c1c643d7dea22c8b31652a717ddbd57b7f4d554
   languageName: node
   linkType: hard
 

@@ -3,11 +3,11 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
+    "moduleResolution": "node",
     "lib": [
       "ESNext",
       "dom"
     ],
-    "moduleResolution": "node",
     "declaration": true,
     "outDir": "./dist",
     "esModuleInterop": true,

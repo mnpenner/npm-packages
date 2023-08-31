@@ -19,8 +19,8 @@ npm install @mnpenner/react-basic-inputs
 - Npm: https://www.npmjs.com/package/@mnpenner/react-basic-inputs
 - Yarn: https://yarnpkg.com/package/@mnpenner/react-basic-inputs
 - Bundlephobia: https://bundlephobia.com/package/@mnpenner/react-basic-inputs
-- Unpkg: https://unpkg.com/@mnpenner/react-basic-inputs
-- jsDelivr: https://cdn.jsdelivr.net/npm/@mnpenner/react-basic-inputs
+- Unpkg: https://unpkg.com/@mnpenner/react-basic-inputs/dist/bundle.mjs
+- jsDelivr: https://cdn.jsdelivr.net/npm/@mnpenner/react-basic-inputs/dist/bundle.mjs
 
 ## Components
 

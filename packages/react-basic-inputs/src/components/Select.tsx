@@ -112,6 +112,7 @@ export function Select<T extends NonNil>({
     }
 
     useUpdateEffect(() => {
+        // TODO: can we avoid this effect? https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
         refreshSelectedIndex()
     }, [refreshSelectedIndex])
 
