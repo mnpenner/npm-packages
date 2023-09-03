@@ -14,25 +14,26 @@ export type InputProps = OverrideProps<'input', {
 
 
 export function Input({value = '', onChange, onBlur, ...otherProps}: InputProps) {
-    const [inputValue, setInputValue] = useState(value)
+    const [currentValue, setCurrentValue] = useState(value)
     const lastValue = useRef(value)
 
     useUpdateEffect(() => {
-        setInputValue(value)
+        setCurrentValue(value)
+        lastValue.current = value
     }, [value])
 
     const props: ComponentPropsWithoutRef<'input'> = {
         type: 'text',
         ...otherProps,
-        value: inputValue,
+        value: currentValue,
         onChange: ev => {
-            setInputValue(ev.target.value)
+            setCurrentValue(ev.target.value)
         },
         onBlur: ev => {
-            if (ev.target.value !== lastValue.current) {
-                lastValue.current = ev.target.value
+            if (currentValue !== lastValue.current) {
+                lastValue.current = currentValue
                 onChange?.({
-                    value: ev.target.value
+                    value: currentValue
                 })
             }
             onBlur?.(ev)
