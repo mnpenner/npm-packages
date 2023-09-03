@@ -14,6 +14,9 @@ import {DateInput} from './DateInput'
 import {WeekInput} from './WeekInput'
 import {DatetimeLocalInput} from './DatetimeLocalInput'
 import {TimeInput} from './TimeInput'
+import {Input} from "./Input";
+import {UsernameInput} from "./UsernameInput";
+import {PasswordInput} from "./PasswordInput";
 
 
 const FRUIT_OPTIONS: SelectOption<number>[] = [
@@ -159,6 +162,21 @@ function TextInputFieldset() {
     )
 }
 
+function InputFieldset() {
+    const [value, setValue] = useState("Hello")
+    return (
+        <FieldSet legend="<Input>">
+            <div>
+                <Input/>
+            </div>
+            <div>
+                <Input value={value} onChange={e => setValue(e.value)}/>
+                <output>{JSON.stringify(value)}</output>
+            </div>
+        </FieldSet>
+    )
+}
+
 
 type FieldSetProps = {
     legend: string
@@ -206,14 +224,22 @@ function ColorFieldset() {
 
 function DateFieldset() {
     return (
-        <fieldset>
-            <legend>Date Inputs</legend>
+        <FieldSet legend="Date Inputs">
             <DateInput/>
             <MonthInput/>
             <WeekInput/>
             <TimeInput/>
             <DatetimeLocalInput/>
-        </fieldset>
+        </FieldSet>
+    )
+}
+
+function UserPassFields() {
+    return (
+        <FieldSet legend="Username & Password">
+            <UsernameInput/>
+            <PasswordInput autoComplete="new-password"/>
+        </FieldSet>
     )
 }
 
@@ -222,10 +248,12 @@ export default function App() {
     return (
         <form>
             <SelectFieldset/>
+            <InputFieldset/>
             <TextInputFieldset/>
             <OtherTextInputsFieldset/>
             <ColorFieldset/>
             <DateFieldset/>
+            <UserPassFields/>
         </form>
     )
 }

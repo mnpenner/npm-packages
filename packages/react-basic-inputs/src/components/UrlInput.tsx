@@ -5,5 +5,5 @@ import {formatUrl} from '../util/format'
 export type UrlInputProps = Omit<TextInputProps, 'inputMode'>
 
 export function UrlInput(props: UrlInputProps) {
-    return <TextInput inputMode="url" format={formatUrl} {...props}/>
+    return <TextInput inputMode="url" formatOnChange={formatUrl} {...props}/>
 }

@@ -15,15 +15,23 @@ export type TextInputProps = OverrideProps<'input', {
      * Function used to format value on blur. Set to `null` to disable.
      * Collapses whitespace by default.
      */
-    format?: (value: string) => string
+    formatOnChange?: (value: string) => string
 }, 'type'>
 
 
-export function TextInput({onChange, value = '', format = collapseWhitespace, onBlur, ...otherProps}: TextInputProps) {
+export function TextInput({onChange, value = '', formatOnChange = collapseWhitespace, onBlur, ...otherProps}: TextInputProps) {
     // TODO: try without setting `value` at all.... with a ref we can manually set it. or will that break typing? we
     // can probably drop the change event altogether.
     const [inputValue, setInputValue] = useState(value)
     const lastValue = useRef(value)
+
+    // if(value !== inputValue) {
+    //     logJson(value,inputValue)
+    //     setInputValue(value)
+    //     lastValue.current = value
+    // }
+
+
     const props: ComponentPropsWithoutRef<'input'> = {
         ...otherProps,
         type: 'text',
@@ -36,7 +44,7 @@ export function TextInput({onChange, value = '', format = collapseWhitespace, on
             // logJson(lastValue.current,ev.target.value,lastValue.current !== ev.target.value)
             // logJson(lastValue.current,inputValue,lastValue.current === inputValue)
             if (lastValue.current !== inputValue) {  // FIXME: should this fire if you set the value with buttons?
-                const formattedValue = format != null ? format(inputValue) : inputValue
+                const formattedValue = formatOnChange != null ? formatOnChange(inputValue) : inputValue
                 // TODO: should we avoid calling onChange if the formatted value hasn't changed...?
 
                 onChange?.({
@@ -53,5 +61,6 @@ export function TextInput({onChange, value = '', format = collapseWhitespace, on
         setInputValue(value)
         lastValue.current = value
     }, [value])
+
     return <input {...props} />
 }

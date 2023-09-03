@@ -35,3 +35,8 @@ export function fullWide(n: number): string {
         return n.toFixed(14).replace(/\.?0+$/, '')
     }
 }
+
+export function formatUsername(str: string | nil) {
+    if (!str) return ''
+    return String(str).replace(/\s+/gu, '').toLowerCase()
+}

@@ -32,7 +32,7 @@ const config = {
     context: 'globalThis',
 }
 
-if(production) {
+if (production) {
     config.input = 'src/bundle.ts'
     config.output.push({
         dir: 'dist',
@@ -40,16 +40,18 @@ if(production) {
         entryFileNames: '[name].cjs',
     })
     config.external = new RegExp('^(' + Object.keys(pkgJson.peerDependencies).join('|') + ')($|/)')
-    config.plugins.push(terser({
-        format: {
-            comments: 'some',
-            beautify: true,
-            ecma: '2022',
-        },
-        compress: false,
-        mangle: false,
-        module: true,
-    }))
+    config.plugins.push(
+        terser({
+            format: {
+                comments: 'some',
+                beautify: true,
+                ecma: '2022',
+            },
+            compress: false,
+            mangle: false,
+            module: true,
+        }),
+    )
 } else {
     config.input = 'src/dev.tsx'
 }
