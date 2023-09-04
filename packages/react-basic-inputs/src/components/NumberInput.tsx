@@ -1,11 +1,47 @@
-import {OverrideProps} from "../types/utility";
+import {EventCallback, HtmlInputElement, OverrideProps} from "../types/utility";
+import {Input} from "./Input";
+import {ComponentPropsWithoutRef, forwardRef} from "react";
+import {formatStrNumber, numberToString, stringToNumber} from "../util/format";
 
-export type NumberInputProps = OverrideProps<'input', {
+export type NumberChangeEvent = {
+    value: number
+    type: 'change'
+    timeStamp: number
+    target: HtmlInputElement
+}
+export type NumberChangeEventHandler = EventCallback<NumberChangeEvent>
+
+export type NumberInputProps = OverrideProps<typeof Input, {
     value?: number
     placeholder?: string | number
+    onChange?: NumberChangeEventHandler
 }, 'type'>
 
 // TODO: format as a number and return Number type for ev.value
-export function NumberInput({placeholder, ...props}: NumberInputProps) {
-    return <input type="number" {...props} placeholder={placeholder == null ? undefined : String(placeholder)}/>
-}
+
+
+export const NumberInput = forwardRef<HtmlInputElement, NumberInputProps>(function NumberInput({placeholder, formatOnChange = formatStrNumber, onChange, value, ...otherProps}, ref) {
+    const props: ComponentPropsWithoutRef<typeof Input> = {
+        inputMode: 'decimal',
+        ...otherProps,
+        formatOnChange,
+        type: 'number',
+    }
+
+    if (value !== undefined) {
+        props.value = numberToString(value)
+    }
+    if (placeholder != null) {
+        props.placeholder = String(placeholder)
+    }
+    if (onChange != null) {
+        props.onChange = ev => {
+            onChange({
+                ...ev,
+                value: stringToNumber(ev.value)
+            })
+        }
+    }
+
+    return <Input {...props} ref={ref}/>
+})
