@@ -36,6 +36,7 @@ export type MapValueType<M> = M extends Map<any, infer V> ? V : never;
 
 /** Hack to de-conflict React's HTMLInputElement vs the standard dom lib */
 export type HtmlInputElement = HTMLElementTagNameMap['input']
+export type HtmlSelectElement = HTMLElementTagNameMap['select']
 export type HtmlInputChangeEvent = import('react').ChangeEvent<HtmlInputElement>
 
 export type ArrayType<T extends any[]> = T[number]

@@ -2,7 +2,7 @@ import {ChangeEvent, Key, ReactNode, useCallback, useMemo, useRef} from 'react'
 import useEvent from '../hooks/useEvent'
 import {Resolvable, resolveValue} from '../util/resolvable'
 import {useUpdateEffect} from 'react-use'
-import {EventCallback, NonNil, OverrideProps} from "../types/utility";
+import {EventCallback, HtmlSelectElement, NonNil, OverrideProps} from "../types/utility";
 
 
 export type SelectOption<T> = OverrideProps<'option', {
@@ -14,8 +14,11 @@ export type SelectOption<T> = OverrideProps<'option', {
 export interface SelectChangeEvent<T> {
     value: T
     // option: SelectOption<T>
-    // event: ChangeEvent<HTMLSelectElement>
+    // event: ChangeEvent<HtmlSelectElement>
     index: number
+    type: 'change'
+    timeStamp: number
+    target: HtmlSelectElement
 }
 
 export type SelectChangeEventHandler<T> = EventCallback<SelectChangeEvent<T>>
@@ -58,6 +61,7 @@ function defaultMakeKey<T>(opt: SelectOption<T>, idx: number): Key {
 const PLACEHOLDER_KEY = '3c9369b7-0a5e-46ea-93c2-e8b9fec67fdb'
 const INVALID_OPTION_KEY = '1a53f789-77f5-4ce6-a829-b00e563f1ee8'
 
+// TODO: how to forwardRef?
 export function Select<T extends NonNil>({
     options,
     value,
@@ -87,7 +91,7 @@ export function Select<T extends NonNil>({
         return fixedOptions
     }, [isValid, options, isNotSelected, extraOption, placeholder])
 
-    const handleChange = useEvent<ChangeEvent<HTMLSelectElement>>(ev => {
+    const handleChange = useEvent<ChangeEvent<HtmlSelectElement>>(ev => {
         const idx = ev.target.selectedIndex
         const opt = fixedOptions[idx]
         onChange?.({
@@ -95,10 +99,13 @@ export function Select<T extends NonNil>({
             // option: opt,
             // event: ev,
             index: idx,
+            type: 'change',
+            timeStamp: ev.timeStamp,
+            target: ev.target,
         })
     })
 
-    const ref = useRef<HTMLSelectElement | null>(null)
+    const ref = useRef<HtmlSelectElement | null>(null)
 
     const refreshSelectedIndex = useCallback(() => {
         if(!ref.current) return
@@ -107,7 +114,7 @@ export function Select<T extends NonNil>({
         }
     }, [fixedOptions, value])
 
-    const setRef = (el: HTMLSelectElement | null) => {
+    const setRef = (el: HtmlSelectElement | null) => {
         ref.current = el
         refreshSelectedIndex()
     }
