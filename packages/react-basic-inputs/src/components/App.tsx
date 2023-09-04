@@ -109,7 +109,7 @@ function Select_Example2() {
             <div>
                 <button type="button" onClick={() => setValue(null as any)}>Set Null</button>
                 <button type="button" onClick={() => setValue(2)}>Set Cherry</button>
-                <button type="button" onClick={() => setValue(11)}>Set Invalid</button>
+                <button type="button" onClick={() => setValue(FRUIT_OPTIONS.length + 1)}>Set Invalid</button>
                 <button type="button" onClick={() => setValue(Math.floor(Math.random() * 20))}>Set Random</button>
                 <button type="button" onClick={() => setValue(v => v + 1)}>Next</button>
             </div>

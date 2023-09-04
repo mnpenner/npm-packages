@@ -12,7 +12,9 @@ export type Override<Base, Extension, DeleteKeys extends PropertyKey = never> =
     Omit<Base, keyof Extension | DeleteKeys>
     & Extension
 export type PartiallyRequired<Type, Key extends keyof Type> = Omit<Type, Key> & Required<Pick<Type, Key>>
-export type PartiallyOptional<Type, Key extends keyof Type> = Omit<Type, Key> & Partial<Pick<Type, Key>>
+// export type PartiallyOptional<Type, Key extends keyof Type> = Omit<Type, Key> & Partial<Pick<Type, Key>>
+export type Optionalize<T1 extends T2, T2> = Omit<T1, keyof T2> & Partial<Pick<T1, keyof T2>>;
+
 
 /**
  * Nullish. Either `null` or `undefined`.
@@ -34,7 +36,7 @@ export type MapValueType<M> = M extends Map<any, infer V> ? V : never;
 
 /** Hack to de-conflict React's HTMLInputElement vs the standard dom lib */
 export type HtmlInputElement = HTMLElementTagNameMap['input']
-export type InputChangeEvent = import('react').ChangeEvent<HtmlInputElement>
+export type HtmlInputChangeEvent = import('react').ChangeEvent<HtmlInputElement>
 
 export type ArrayType<T extends any[]> = T[number]
 
