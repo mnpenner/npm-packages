@@ -4,6 +4,6 @@
     "jsx": "react-jsxdev"
   },
   "files": [
-    "src/dev.tsx"
+    "./dev.tsx"
   ]
 }

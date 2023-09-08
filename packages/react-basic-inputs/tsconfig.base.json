@@ -4,21 +4,13 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "node",
-    "lib": [
-      "ESNext",
-      "dom"
-    ],
-    "types": ["bun-types"],
     "declaration": true,
-    "outDir": "./dist",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "exactOptionalPropertyTypes": true,
     "skipLibCheck": true,
-    "jsx": "react-jsx"
-  },
-  "files": [
-    "src/bundle.ts"
-  ]
+    "resolveJsonModule": true,
+    "outDir": "./dist"
+  }
 }

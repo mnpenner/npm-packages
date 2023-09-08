@@ -13,7 +13,7 @@
     "dev:build": "rollup -cw",
     "dev:serve": "serve -l tcp://0.0.0.0:8080",
     "dev": "run-p \"dev:**\"",
-    "serve": "bun run serve.ts",
+    "serve": "bun run --hot dev/serve.ts",
     "bundle:clean": "rimraf -g \"dist/*\"",
     "bundle:build": "rollup -c",
     "bundle": "run-s bundle:clean bundle:build",
