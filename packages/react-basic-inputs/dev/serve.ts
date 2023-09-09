@@ -20,17 +20,19 @@ const server = Bun.serve({
             if(url.pathname === '/') {
                 return new Response(Bun.file("./index.html"))
             }
-            const file = Bun.file(Path.join(ROOT_DIR, url.pathname))
-            if(await file.exists()) {
-                return new Response(file)
-            }
-            return new Response("Not Found", {status: 404})
+            return new Response(Bun.file(Path.join(ROOT_DIR, url.pathname)))
         })()
-        setImmediate(() => {
+        queueMicrotask(() => {
+            // FIXME: this might still error and return something different...
             console.log(`<${reqId} ${res.status} | ${res.headers.get('Content-Length') ?? '?'} B`)
         })
-
         return res
+    },
+    error(error) {
+        if(error.code === 'ENOENT') {
+            return new Response("Not Found", {status: 404})
+        }
+        throw error;
     },
 })
 
