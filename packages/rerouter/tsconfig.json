@@ -2,7 +2,7 @@
     "compilerOptions": {
         "strict": true,
         "importHelpers": false,
-        "inlineSources": true,
+        "inlineSources": false,
         "noEmitOnError": true,
         "pretty": true,
         "module": "ESNext",
@@ -11,13 +11,15 @@
         "noImplicitAny": true,
         "suppressImplicitAnyIndexErrors": false,
         "removeComments": false,
-        "preserveConstEnums": false,
-        "sourceMap": true,
+        "preserveConstEnums": true,
+        "sourceMap": false,
         "skipLibCheck": false,
+        "exactOptionalPropertyTypes": true,
         "outDir": "dist",
         "declaration": true,
         "resolveJsonModule": true,
         "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
         "moduleResolution": "node",
         "isolatedModules": true,
         "allowSyntheticDefaultImports": true,
@@ -28,7 +30,7 @@
         "types": ["bun-types"]
     },
     "files": [
-        "src/index.ts"
+        "src/dev.ts"
     ],
     "include": [
         "src/**/*.d.ts"

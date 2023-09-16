@@ -1,7 +1,5 @@
 // https://tools.ietf.org/html/rfc6570#section-3.2.1
 
-import log from 'log'
-
 const PREFIX_RE = /^[+#./;?&]/
 const MODIFIER_RE = /(?<repeat>\*)?(?::(?<func>[a-zA-Z][a-zA-Z0-9_]*))?(?::(?:(?<length>\d+)))?$/ /* FIXME: If it is an explode ("*"), scan the next character.  If it is a
       prefix (":"), continue scanning the next one to four characters
@@ -114,7 +112,7 @@ type MapItem = {
 }
 
 
-export default class UriTemplate {
+export class UriTemplate {
 
     expandParts: TemplateParts
     matchRegex: RegExp
