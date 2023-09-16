@@ -1,11 +1,19 @@
-import UriTemplate from "./uri-template"
-import specExamples from './testcases/spec-examples.json'
-import extendedTests from './testcases/extended-tests.json'
-import matchCases from './testcases/match-cases.json'
+import UriTemplate, {UrlParamValue} from "./uri-template"
+import specExamples from './testcases/spec-examples.json' assert {type: "json"}
+import extendedTests from './testcases/extended-tests.json' assert {type: "json"}
+import matchCases from './testcases/match-cases.json' assert {type: "json"}
 import {expect, describe, it} from 'bun:test'
 
+type TestCase = [input:string, output:string|string[]]
+type TestExample = {
+    level: number
+    variables: Record<string,UrlParamValue>,
+    testcases: TestCase[]
+}
+type TestSuite = Record<string,TestExample>
+
 describe('UriTemplate.expand', () => {
-    for(const testSuite of [specExamples, extendedTests]) {
+    for(const testSuite of [specExamples, extendedTests] as unknown as TestSuite[]) {
         for(const [name, test] of Object.entries(testSuite)) {
             describe(name + ' ' + JSON.stringify(test.variables), () => {
                 for(const [input, expected] of test.testcases) {
@@ -14,9 +22,10 @@ describe('UriTemplate.expand', () => {
                         const expanded = templ.expand(test.variables)
 
                         if(Array.isArray(expected)) {
-                            expect(expected).toInclude(expanded)
+                            // TODO: this should be the other way around, like `toBeOneOf`: https://discord.com/channels/876711213126520882/1152457503595053119
+                            expect(expected).toContain(expanded)
                         } else {
-                            expect(expected).toEqual(expanded)
+                            expect(expanded).toEqual(expected)
                         }
                     })
                 }
@@ -26,7 +35,7 @@ describe('UriTemplate.expand', () => {
 })
 
 describe('UriTemplate.match', () => {
-    for(const testSuite of [matchCases]) {
+    for(const testSuite of [matchCases] as unknown as TestSuite[]) {
         for(const [name, test] of Object.entries(testSuite)) {
             describe(name + ' ' + JSON.stringify(test.variables), () => {
                 for(const [input, expected] of test.testcases) {
@@ -42,7 +51,7 @@ describe('UriTemplate.match', () => {
                             // console.log('match.params=',match.params);
                             if(match?.params) {
                                 for(const k of Object.keys(match.params)) {
-                                    expect(match.params[k]).toEqual(test.variables[k], k)
+                                    expect(match.params[k]).toEqual(test.variables[k])
                                 }
                             }
                         }
