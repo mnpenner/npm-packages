@@ -1,7 +1,13 @@
 {
-  "name": "rerouter",
-  "version": "0.1.0",
-  "main": "index.js",
+  "name": "@mpen/rerouter",
+  "version": "0.1.1",
+  "packageManager": "bun",
+  "exports": "./dist/bundle.cjs",
+  "module": "./dist/bundle.mjs",
+  "types": "./dist/bundle.d.ts",
+  "files": [
+    "./dist"
+  ],
   "type": "module",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.4",
@@ -26,6 +32,8 @@
     "dev": "bun run --hot src/dev.ts",
     "bundle:clean": "rimraf -g \"dist/*\"",
     "bundle:build": "rollup -c",
-    "bundle": "run-s bundle:clean bundle:build"
+    "bundle": "run-s bundle:clean bundle:build",
+    "patch": "npm version patch && VER=$(jq -r '.version' package.json) && hg ci -m \"Publish v$VER\" && hg tag \"v$VER\"",
+    "release": "run-s bundle patch && npm publish && hg push"
   }
 }

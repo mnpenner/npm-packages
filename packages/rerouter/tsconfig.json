@@ -13,7 +13,7 @@
         "removeComments": false,
         "preserveConstEnums": true,
         "sourceMap": false,
-        "skipLibCheck": false,
+        "skipLibCheck": true,
         "exactOptionalPropertyTypes": true,
         "outDir": "dist",
         "declaration": true,
@@ -27,12 +27,10 @@
         "paths": {
             "*": ["src/*"]
         },
-        "types": ["bun-types"]
+        "types": ["bun-types"],
     },
     "files": [
-        "src/dev.ts"
-    ],
-    "include": [
-        "src/**/*.d.ts"
+        "src/dev.ts",
+        "src/bundle.ts",
     ]
 }
