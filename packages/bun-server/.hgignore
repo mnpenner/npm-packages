@@ -1,0 +1,4 @@
+syntax: regexp
+
+^(dist|node_modules)/
+(^|/)\.
