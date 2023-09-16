@@ -303,7 +303,7 @@ export class UriTemplate {
         return out.join('')
     }
 
-    match(url: string): Match | null {
+    match(url: string): UriMatch | null {
         // https://reach.tech/router/ranking
 
         let score = 0
@@ -463,9 +463,11 @@ function percentEncode(str: string) {
     return Array.from(UTF8_ENCODER.encode(str)).map(i => '%' + i.toString(16).toUpperCase().padStart(2, '0')).join('')
 }
 
-interface Match {
+export type UriParams = Record<string, UrlParamValue | null>
+
+export type UriMatch = {
     score: number
-    params: Record<string, UrlParamValue | null>
+    params: UriParams
 }
 
 /*
