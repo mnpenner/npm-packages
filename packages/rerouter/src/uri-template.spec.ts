@@ -49,7 +49,7 @@ describe('UriTemplate.match', () => {
                             const match = templ.match(mu)
                             expect(match).not.toBeNull()
                             // console.log('match.params=',match.params);
-                            if(match?.params) {
+                            if(match) {
                                 for(const k of Object.keys(match.params)) {
                                     expect(match.params[k]).toEqual(test.variables[k])
                                 }
