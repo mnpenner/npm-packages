@@ -1,6 +1,6 @@
 {
   "name": "@mpen/rerouter",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "packageManager": "bun",
   "exports": "./dist/bundle.cjs",
   "module": "./dist/bundle.mjs",
