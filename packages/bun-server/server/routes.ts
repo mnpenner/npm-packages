@@ -10,7 +10,9 @@ const routes: RouteMap = {
         template: new UriTemplate('/hello{?q*}'),
         async get(req, res) {
 
-            return new Response(Bun.file("./package.json"))
+            res.write("hello!")
+            // res.respond(Bun.file("./package.json"))
+            // return new Response(Bun.file("./package.json"))
             // console.log(req)
         }
     }

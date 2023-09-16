@@ -19,19 +19,30 @@ export function mapDefined<TItem, TReturn>(array: TItem[] | nil, callback: (valu
 export type nil = null | undefined
 
 
-export function findMax<T>(array: T[], callback: (value: T, index: number) => number): T {
-    if(!array?.length) throw new Error("Empty array")
+// export function findMax<T>(array: T[], callback: (value: T, index: number) => number): T {
+//     if(!array?.length) throw new Error("Empty array")
+//
+//     let maxEl = array[0]
+//     let maxVal = callback(array[0], 0)
+//
+//     for(let i = 1; i < array.length; ++i) {
+//         const val = callback(array[i], i)
+//         if(val > maxVal) {
+//             maxEl = array[i]
+//             maxVal = val
+//         }
+//     }
+//
+//     return maxEl
+// }
 
-    let maxEl = array[0]
-    let maxVal = callback(array[0], 0)
-
-    for(let i = 1; i < array.length; ++i) {
-        const val = callback(array[i], i)
-        if(val > maxVal) {
-            maxEl = array[i]
-            maxVal = val
-        }
-    }
-
-    return maxEl
+export type Full<T> = {
+    [P in keyof T]-?: T[P];
 }
+
+export type PartialRecord<V,K extends keyof any=string> = {
+    [P in K]?: V
+}
+
+export type AnyFn = (...args: any[]) => any
+export const NOOP: AnyFn = Object.freeze(() => {/* do nothing*/})

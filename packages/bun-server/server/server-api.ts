@@ -1,7 +1,19 @@
 import type {UriTemplate, UrlParamValue, UriMatch, UriParams} from '@mpen/rerouter'
 
+
+export type ChunkType = string|ArrayBuffer|Buffer
+
 export interface BunResponse {
 
+    respond(res: Response): void
+    respond(...args: ConstructorParameters<typeof Response>): void
+
+    status: number | bigint;
+    sendHeaders(headers: HeadersInit): void
+
+    write(chunk: ChunkType): void
+    close(): void
+    error(e: Error): void
 }
 
 export interface BunRequest {
@@ -34,7 +46,7 @@ export interface BunUrl extends URL {
     path: string
 }
 
-export type Handler = (req: BunRequest, res: BunResponse) => Promise<Response>
+export type Handler = (req: BunRequest, res: BunResponse) => void|Promise<void>
 
 export type RouteMap = Record<string,Route>
 

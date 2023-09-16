@@ -1,8 +1,8 @@
 import * as Path from 'node:path'
 import routes from './routes'
-import {findMax, mapDefined, nil} from './util'
+import {PartialRecord, findMax, mapDefined, nil, NOOP} from './util'
 import assert from 'assert'
-import {BunRequest, BunUrl, Handler, HttpRequestMethod, Route} from './server-api'
+import {BunRequest, BunResponse, BunUrl, ChunkType, Handler, HttpRequestMethod, Route} from './server-api'
 import {UriMatch} from '@mpen/rerouter'
 import {performance} from 'perf_hooks'
 import Chalk from 'chalk'
@@ -95,22 +95,51 @@ const server = Bun.serve({
 
             // https://stackoverflow.com/questions/77117179/how-do-i-pipe-a-writablestream-to-a-readablestream
 
-            const eres = {
-                write(str: string | ArrayBuffer) {
-                    writer.write(str)
-                }
+            let resHeaders: HeadersInit|undefined
+            let fullResponse: Response|undefined
+
+            const bunRes: BunResponse = {
+                status: 200,
+                sendHeaders(headers: HeadersInit) {
+                    resHeaders = headers
+                },
+                respond(res: any, ...args: any[]) {
+                    if(!args) throw new Error("Missing args")
+                    if(res instanceof Response) {
+                        fullResponse = res
+                    } else {
+                        fullResponse = new Response(res,...args)
+                    }
+                },
+                write: NOOP,
+                error: NOOP,
+                close: NOOP,
             }
 
-            const rs = new ReadableStream(ws)
-            const res = new Response()
+            const stream = new ReadableStream<ChunkType>({
+                start(controller) {
+                    bunRes.write = controller.enqueue
+                    bunRes.close = controller.close
+                    bunRes.error = controller.error
+                },
+            })
 
-            const handler = (bestRoute as unknown as Record<typeof method,Handler>)[method]
+            const handler = (bestRoute as unknown as PartialRecord<Handler>)[method]
 
             if(handler) {
-                const tres = await handler(bunReq, eres)
-                if(tres) {
-                    return tres
+                await handler(bunReq, bunRes)
+                if(fullResponse) {
+                    return fullResponse
                 }
+
+                const options: ResponseInit = Object.create(null)
+                if(resHeaders) {
+                    options.headers = resHeaders
+                }
+                if(bunRes.status) {
+                    options.status = bunRes.status
+                }
+                return new Response(stream, options)
             }
 
             return new Response("Method Not Allowed", {status: 405})

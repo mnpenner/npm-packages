@@ -13,7 +13,7 @@
     "strict": true,
     "exactOptionalPropertyTypes": true,
     "skipLibCheck": true,
-    "noUncheckedIndexedAccess": true,
+    "noUncheckedIndexedAccess": false,
     "resolveJsonModule": true,
     "outDir": "./dist"
   },
