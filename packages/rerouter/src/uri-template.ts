@@ -1,7 +1,3 @@
-import {inspect, TextEncoder} from "util";
-import {unlinkSync} from "fs";
-import log from './log';
-
 // https://tools.ietf.org/html/rfc6570#section-3.2.1
 
 const PREFIX_RE = /^[+#./;?&]/;

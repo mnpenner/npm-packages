@@ -1,22 +1,22 @@
-import UriTemplate from "./uri-template";
-import specExamples from './testcases/spec-examples.json';
-import extendedTests from './testcases/extended-tests.json';
-import matchCases from './testcases/match-cases.json';
-import {expect} from 'chai';
+import UriTemplate from "./uri-template"
+import specExamples from './testcases/spec-examples.json'
+import extendedTests from './testcases/extended-tests.json'
+import matchCases from './testcases/match-cases.json'
+import {expect, describe, it} from 'bun:test'
 
 describe('UriTemplate.expand', () => {
-    for (const testSuite of [specExamples, extendedTests]) {
-        for (const [name, test] of Object.entries(testSuite)) {
+    for(const testSuite of [specExamples, extendedTests]) {
+        for(const [name, test] of Object.entries(testSuite)) {
             describe(name + ' ' + JSON.stringify(test.variables), () => {
-                for (const [input, expected] of test.testcases) {
+                for(const [input, expected] of test.testcases) {
                     it(`${input} -> ${Array.isArray(expected) ? expected[0] : expected}`, () => {
-                        const templ = new UriTemplate(input);
-                        const expanded = templ.expand(test.variables);
+                        const templ = new UriTemplate(input)
+                        const expanded = templ.expand(test.variables)
 
-                        if (Array.isArray(expected)) {
-                            expect(expected).to.include(expanded);
+                        if(Array.isArray(expected)) {
+                            expect(expected).toInclude(expanded)
                         } else {
-                            expect(expected).to.equal(expanded);
+                            expect(expected).toEqual(expanded)
                         }
                     })
                 }
@@ -26,22 +26,23 @@ describe('UriTemplate.expand', () => {
 })
 
 describe('UriTemplate.match', () => {
-    for (const testSuite of [matchCases]) {
-        for (const [name, test] of Object.entries(testSuite)) {
+    for(const testSuite of [matchCases]) {
+        for(const [name, test] of Object.entries(testSuite)) {
             describe(name + ' ' + JSON.stringify(test.variables), () => {
-                for (const [input, expected] of test.testcases) {
-                    const matchingUrls = Array.isArray(expected) ? expected : [expected];
+                for(const [input, expected] of test.testcases) {
+                    const matchingUrls = Array.isArray(expected) ? expected : [expected]
                     it(`${input} -> ${matchingUrls[0]}`, () => {
-                        const templ = new UriTemplate(input);
+                        const templ = new UriTemplate(input)
+
                         // console.log('Regex=',templ.matchRegex);
                         for(const mu of matchingUrls) {
                             // console.log('URL=',mu);
-                            const match = templ.match(mu);
-                            expect(match).to.not.be.null;
+                            const match = templ.match(mu)
+                            expect(match).not.toBeNull()
                             // console.log('match.params=',match.params);
-                            if (match.params) {
-                                for (const k of Object.keys(match.params)) {
-                                    expect(match.params[k]).to.eql(test.variables[k], k);
+                            if(match?.params) {
+                                for(const k of Object.keys(match.params)) {
+                                    expect(match.params[k]).toEqual(test.variables[k], k)
                                 }
                             }
                         }
@@ -54,76 +55,76 @@ describe('UriTemplate.match', () => {
 
     describe("Custom tests", () => {
         it("matches schedule page", () => {
-            const templ = new UriTemplate('/schedule/{year:int:4}-{month:int:2}-{day:int:2}');
-            const match = templ.match('/schedule/2019-12-31');
-            expect(match).to.eql({
+            const templ = new UriTemplate('/schedule/{year:int:4}-{month:int:2}-{day:int:2}')
+            const match = templ.match('/schedule/2019-12-31')
+            expect(match).toEqual({
                 "params": {
                     "day": 31,
                     "month": 12,
                     "year": 2019,
                 },
                 "score": 15
-            });
+            })
         })
 
         it("does not matches schedule when query params are appended", () => {
-            const templ = new UriTemplate('/schedule/{year:int:4}-{month:int:2}-{day:int:2}');
-            const match = templ.match('/schedule/2019-12-31?foo=bar&baz=bux');
-            expect(match).to.be.null;
+            const templ = new UriTemplate('/schedule/{year:int:4}-{month:int:2}-{day:int:2}')
+            const match = templ.match('/schedule/2019-12-31?foo=bar&baz=bux')
+            expect(match).toBeNull()
         })
 
         it("matches schedule w/ extraneous vars", () => {
-            const templ = new UriTemplate('/schedule/{year:int:4}-{month:int:2}-{day:int:2}{?foo,q*}');
-            const match = templ.match('/schedule/2019-12-31?foo=bar&baz=bux');
-            expect(match).to.eql({score: 16, params: {year: 2019, month: 12, day: 31, foo: 'bar', q: {baz: 'bux'}}})
+            const templ = new UriTemplate('/schedule/{year:int:4}-{month:int:2}-{day:int:2}{?foo,q*}')
+            const match = templ.match('/schedule/2019-12-31?foo=bar&baz=bux')
+            expect(match).toEqual({score: 16, params: {year: 2019, month: 12, day: 31, foo: 'bar', q: {baz: 'bux'}}})
         })
 
         it("matches root", () => {
-            const templ = new UriTemplate('/');
-            const match = templ.match('/');
-            expect(match).to.eql({score:3,params:{}})
+            const templ = new UriTemplate('/')
+            const match = templ.match('/')
+            expect(match).toEqual({score: 3, params: {}})
         })
 
         it("matches {+path}/here", () => {
-            const templ = new UriTemplate('{+path}/here');
-            const match = templ.match('/foo/bar/here');
-            expect(match).to.eql({score:5,params:{path:'/foo/bar'}})
+            const templ = new UriTemplate('{+path}/here')
+            const match = templ.match('/foo/bar/here')
+            expect(match).toEqual({score: 5, params: {path: '/foo/bar'}})
         })
 
         it("matches lists", () => {
-            const templ = new UriTemplate('foo{list*}bar');
-            const match = templ.match('foobar,bazbar');
-            expect(match).to.eql({score:8,params:{list:['bar','baz']}})
+            const templ = new UriTemplate('foo{list*}bar')
+            const match = templ.match('foobar,bazbar')
+            expect(match).toEqual({score: 8, params: {list: ['bar', 'baz']}})
         })
 
         it("matches lists2", () => {
-            const templ = new UriTemplate('foo{list}bar');
-            const match = templ.match('foobar,bazbar');
-            expect(match).to.eql({score:8,params:{list:'bar,baz'}})
+            const templ = new UriTemplate('foo{list}bar')
+            const match = templ.match('foobar,bazbar')
+            expect(match).toEqual({score: 8, params: {list: 'bar,baz'}})
         })
 
         it("matches kwargs", () => {
-            const templ = new UriTemplate('foo{?args}bar');
-            const match = templ.match('foo?args=foobar');
-            expect(match).to.eql({score:8,params:{args:'foo'}})
+            const templ = new UriTemplate('foo{?args}bar')
+            const match = templ.match('foo?args=foobar')
+            expect(match).toEqual({score: 8, params: {args: 'foo'}})
         })
 
         it("matches kwargs2", () => {
-            const templ = new UriTemplate('foo{?args*}bar');
-            const match = templ.match('foo?args=foobar');
-            expect(match).to.eql({score:5,params:{args:{args:'foo'}}})
+            const templ = new UriTemplate('foo{?args*}bar')
+            const match = templ.match('foo?args=foobar')
+            expect(match).toEqual({score: 5, params: {args: {args: 'foo'}}})
         })
 
         it("matches kwargs3", () => {
-            const templ = new UriTemplate('foo{?args*}bar');
-            const match = templ.match('foobar');
-            expect(match).to.eql({score:5,params:{args:{}}})
+            const templ = new UriTemplate('foo{?args*}bar')
+            const match = templ.match('foobar')
+            expect(match).toEqual({score: 5, params: {args: {}}})
         })
 
         it("matches kwargs3 score", () => {
-            const templ = new UriTemplate('foobar');
-            const match = templ.match('foobar');
-            expect(match).to.eql({score:3,params:{}}) // TODO: rethink this scoring
+            const templ = new UriTemplate('foobar')
+            const match = templ.match('foobar')
+            expect(match).toEqual({score: 3, params: {}}) // TODO: rethink this scoring
         })
     })
 })

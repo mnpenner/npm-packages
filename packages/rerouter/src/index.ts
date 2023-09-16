@@ -39,7 +39,7 @@ import Chalk from 'chalk';
 
 
 import UriTemplate from "./uri-template";
-import {inspect} from "util";
+import log from 'log'
 
 // const templ = new UriTemplate('/schedule/{year:int:4}-{month:int:2}-{day:int:2}{?foo,q*}');
 // log(templ);
@@ -58,7 +58,3 @@ log(templ);
 const match = templ.match('/foo/bar/here'); // url+pathname + url.search + url.hash
 log(match);
 
-
-function log(...vars: any) {
-    console.log(vars.map((v:any) => inspect(v, {colors:true,depth:4,showProxy:true,breakLength:120,maxArrayLength:10})).join('  '));
-}
