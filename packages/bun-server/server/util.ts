@@ -45,4 +45,9 @@ export type PartialRecord<V,K extends keyof any=string> = {
 }
 
 export type AnyFn = (...args: any[]) => any
+export type UnkFn = (...args: unknown[]) => unknown
+type VoidFn = () => void
+
 export const NOOP: AnyFn = Object.freeze(() => {/* do nothing*/})
+
+// export const sleep = (ms: number) => new Promise(r => setTimeout(r,ms))

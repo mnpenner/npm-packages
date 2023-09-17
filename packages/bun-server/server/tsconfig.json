@@ -17,7 +17,8 @@
     "resolveJsonModule": true,
     "outDir": "./dist"
   },
-  "files": [
-    "./serve.ts"
-  ]
+//  "files": [
+//    "./serve.ts"
+//  ],
+//  "include": ["server/**.ts"]
 }
