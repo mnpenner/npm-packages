@@ -12,12 +12,13 @@ const routes: RouteMap = {
         async get(req, res) {
 
             // res.sendHeaders({'Transfer-Encoding':'chunked','foo':'bar'})
-            res.tryWrite("hello")
-            await sleep(1200)
+            // res.tryWrite("hello")
+            await sleep(800)
+            res.flushHeaders()
             res.tryWrite(" world")
             await sleep(1200)
             res.tryWrite("!")
-            res.close()
+            res.end()
 
 
             // res.close()

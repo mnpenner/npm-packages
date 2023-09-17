@@ -3,10 +3,10 @@ import routes from './routes'
 import {PartialRecord, mapDefined, nil, NOOP} from './util'
 import assert from 'assert'
 import {
-    BunRequest,
-    BunResponse,
+    BunRequestInterface,
+    BunResponseInterface,
     BunUrl,
-    ChunkType,
+    Chunkable,
     Handler,
     HttpRequestMethod,
     ReadableHTTPResponseSinkController,
@@ -17,6 +17,7 @@ import {performance} from 'perf_hooks'
 import Chalk from 'chalk'
 import {humanFileSize} from './file-size'
 import {Deferred} from './promise'
+import {HybridResponse} from './bun-response'
 
 declare global {  /* eslint-disable no-var */
     var requestId: number
@@ -78,143 +79,68 @@ const server = Bun.serve({
             // eurl.params = bestMatch.params
             // eurl.path = path
             // req.parsedUrl = url
-            const bunReq: BunRequest = {
-                headers: req.headers,
-                method: req.method as HttpRequestMethod,
-                url: bunUrl,
-                body: {
-                    stream() {
-                        return req.body
-                    },
-                    text() {
-                        return req.text()
-                    },
-                    json() {
-                        return req.json()
-                    },
-                    blob() {
-                        return req.blob()
-                    },
-                    buffer() {
-                        return req.arrayBuffer()
-                    },
-                    async infer() {
-                        // TODO: use contentType to parse body
-                    },
-                    used: req.bodyUsed,
-                },
-            }
 
 
-            // https://stackoverflow.com/questions/77117179/how-do-i-pipe-a-writablestream-to-a-readablestream
-
-            let resHeaders: HeadersInit|undefined
-            let fullResponse: Response|undefined
-
-            const headersSent = new Deferred<void>
-            const bodySent = new Deferred<void>
-
-            const bunRes: BunResponse = {
-                status: 200,
-                sendHeaders(headers: HeadersInit) {
-                    resHeaders = headers
-                    headersSent.resolve()
-                },
-                respond(res: any, ...args: any[]) {
-                    this.close()
-                    if(!args) throw new Error("Missing args")
-                    if(res instanceof Response) {
-                        fullResponse = res
-                    } else {
-                        fullResponse = new Response(res,...args)
-                    }
-                },
-                write: NOOP,
-                tryWrite: NOOP,
-                error: NOOP,
-                close: NOOP,
-            }
-
-            // console.log('hihihi2')
-            const stream = new ReadableStream<ChunkType>({
-                // FIXME: this is kind of broken: https://discord.com/channels/876711213126520882/1115490432219095081/1152756323964952576
-                // type: 'direct' as any,
-                start(controller) {
-                    // console.log(controller)
-                    // controller.enqueue("hello!!!")
-                    // controller.close()
 
 
-                    // FIXME: should be write. i don't want this to be buffered.
-                    // bunRes.write = controller.enqueue.bind(controller)
 
-
-                    bunRes.write = (chunk: ChunkType) => {
-                        if(bodySent.isPending) {
-                            controller.enqueue(chunk)
-                        } else {
-                            throw new Error("Body closed")
-                        }
-                    }
-
-                    bunRes.tryWrite = (chunk: ChunkType) => {
-                        if(bodySent.isPending) {
-                            controller.enqueue(chunk)
-                            return true
-                        }
-                        return false
-                    }
-
-                    bunRes.close = () => {
-                        if(!bodySent.isPending) return false
-                        controller.close()
-                        headersSent.resolve()
-                        bodySent.resolve()
-                        return true
-                    }
-
-                    bunRes.error = (err: Error) => {
-                        controller.error(err)
-                        headersSent.reject(err)
-                    }
-                },
-            })
-
-            // console.log('b4')
-            const timeout = setTimeout(() => {
-                // console.log('timeout')
-                if(headersSent.isPending) {
-                    bunRes.status = 504
-                }
-                // TODO: write something into response too if it's still empty...?
-
-                // bunRes.write("timeout!")
-                bunRes.close()
-            }, TIMEOUT)
-
-            bodySent.promise.then(() => {
-                clearTimeout(timeout)
-            })
 
             const handler = (bestRoute as unknown as PartialRecord<Handler>)[method]
 
             if(handler) {
+                const bunReq: BunRequestInterface = {
+                    headers: req.headers,
+                    method: req.method as HttpRequestMethod,
+                    url: bunUrl,
+                    body: {
+                        stream() {
+                            return req.body
+                        },
+                        text() {
+                            return req.text()
+                        },
+                        json() {
+                            return req.json()
+                        },
+                        blob() {
+                            return req.blob()
+                        },
+                        buffer() {
+                            return req.arrayBuffer()
+                        },
+                        async infer() {
+                            // TODO: use contentType to parse body
+                        },
+                        used: req.bodyUsed,
+                    },
+                }
+                const bunRes = new HybridResponse()
                 handler(bunReq, bunRes)
 
-                await headersSent.promise
+                const timeout = setTimeout(() => {
+                    if(bunRes.bodyClosed) {
+                        return
+                    }
+                    // console.log('timeout')
+                    if(!bunRes.headersSent) {
+                        bunRes.status = 504
+                    }
 
-                if(fullResponse) {
-                    return fullResponse
-                }
+                    if(!bunRes.bodyStarted) {
+                        // TODO: set based on Accept content-type?
+                        bunRes.write("Timed out waiting to build server response")
+                    }
+                    // TODO: write something into response too if it's still empty...?
 
-                const options: ResponseInit = Object.create(null)
-                if(resHeaders) {
-                    options.headers = resHeaders
-                }
-                if(bunRes.status) {
-                    options.status = bunRes.status
-                }
-                return new Response(stream, options)
+                    // bunRes.write("timeout!")
+                    bunRes.end()
+                }, TIMEOUT)
+
+                const res = await bunRes.buildResponse()
+
+                clearTimeout(timeout)
+
+                return res
             }
 
             return new Response("Method Not Allowed", {status: 405})

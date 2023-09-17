@@ -1,10 +1,11 @@
 import type {UriTemplate, UrlParamValue, UriMatch, UriParams} from '@mpen/rerouter'
 import {AnyFn} from './util'
+import {HybridResponse} from './bun-response'
 
 
-export type ChunkType = string|ArrayBuffer|Buffer
+export type Chunkable = string|ArrayBufferLike|TypedArray
 
-export interface BunResponse {
+export interface BunResponseInterface {
 
     respond(res: Response): void
     respond(...args: ConstructorParameters<typeof Response>): void
@@ -12,13 +13,13 @@ export interface BunResponse {
     status: number | bigint;
     sendHeaders(headers: HeadersInit): void
 
-    write(chunk: ChunkType): void
-    tryWrite(chunk: ChunkType): boolean
+    write(chunk: Chunkable): void
+    tryWrite(chunk: Chunkable): boolean
     close(): void
     error(e: Error): void
 }
 
-export interface BunRequest {
+export interface BunRequestInterface {
     headers: Headers
     method: HttpRequestMethod
     body: RequestBody
@@ -48,7 +49,7 @@ export interface BunUrl extends URL {
     path: string
 }
 
-export type Handler = (req: BunRequest, res: BunResponse) => void|Promise<void>
+export type Handler = (req: BunRequestInterface, res: HybridResponse) => void|Promise<void>
 
 export type RouteMap = Record<string,Route>
 
