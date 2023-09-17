@@ -58,10 +58,10 @@ import log from 'log'
     console.log(templ.match('/foo/bar/here'))
 }
 {
-    const templ = new UriTemplate('/people/{firstName}-{lastName}/SSN')
+    const templ = new UriTemplate<{firstName:string,lastName:string}>('/people/{firstName}-{lastName}/SSN')
     // console.log(templ);
     console.log(templ.match('/people/Björk-Guðmundsdóttir/SSN'))
-    console.log(templ.expand({firstName: 'Mark', lastName: 'Penner'}))
+    console.log(templ.expand({firstName: 'Mark', lastName: "Penner"}))
 }
 {
     const templ = new UriTemplate('/query{?firstName,lastName}')

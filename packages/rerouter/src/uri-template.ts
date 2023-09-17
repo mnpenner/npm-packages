@@ -112,7 +112,7 @@ type MapItem = {
 }
 
 
-export class UriTemplate {
+export class UriTemplate<P extends UriParams> {
 
     expandParts: TemplateParts
     matchRegex: RegExp
@@ -262,7 +262,7 @@ export class UriTemplate {
         this.matchRegex = new RegExp(re.join(''))
     }
 
-    expand(variables: Record<string, UrlParamValue>): string {
+    expand(variables: P): string {
         const out = []
         for(const p of this.expandParts) {
             switch(p.type) {
@@ -281,7 +281,7 @@ export class UriTemplate {
                                     // TODO: rethink how these are encoded. maybe CSV format?
                                     vs.push((v.repeat ? '' : pre) + (x as any[]).map(z => (v.repeat ? pre : '') + esc(z)).join(v.repeat ? SeparatorMap[p.prefix] : ','))
                                 }
-                            } else if(typeof x === 'object') {
+                            } else if(x != null && typeof x === 'object') {
                                 if(Object.keys(x).length) {
                                     // TODO: rethink how these are encoded. maybe JSON (unquoted)?
                                     vs.push((v.repeat ? '' : pre) + Object.entries(x).map(([ok, ov]) => `${esc(ok)}${v.repeat ? '=' : ','}${esc(ov)}`).join(v.repeat ? SeparatorMap[p.prefix] : ','))
@@ -303,7 +303,7 @@ export class UriTemplate {
         return out.join('')
     }
 
-    match(url: string): UriMatch | null {
+    match(url: string): UriMatch<P> | null {
         // https://reach.tech/router/ranking
 
         let score = 0
@@ -376,7 +376,7 @@ export class UriTemplate {
             }
             return {
                 score,
-                params: Object.fromEntries(params),
+                params: Object.fromEntries(params) as P,
             }
         }
         return null
@@ -422,7 +422,7 @@ function isEmpty(x: any): x is null | undefined | '' | [] | {} {
     return x == null || x === '' || (Array.isArray(x) ? !x.length : (typeof x === 'object' && !Object.keys(x).length))
 }
 
-export type UrlParamValue = string | number | string[] | number[] | Record<string, string | number | null>;
+export type UrlParamValue = string | number | boolean | string[] | number[] | Record<string, string | number | boolean | null>;
 type NullableUrlParamValue = UrlParamValue | null;
 
 function escapeRegExp(string: string) {
@@ -463,11 +463,11 @@ function percentEncode(str: string) {
     return Array.from(UTF8_ENCODER.encode(str)).map(i => '%' + i.toString(16).toUpperCase().padStart(2, '0')).join('')
 }
 
-export type UriParams = Record<string, UrlParamValue | null>
+export type UriParams = Record<string, NullableUrlParamValue>
 
-export type UriMatch = {
+export type UriMatch<P extends UriParams> = {
     score: number
-    params: UriParams
+    params: P
 }
 
 /*
