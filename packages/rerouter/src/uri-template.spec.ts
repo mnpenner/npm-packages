@@ -174,6 +174,7 @@ describe('UriTemplate.match', () => {
                 path: "/foo/bar",
                 list: ["red", "green", "blue"],
                 keys: [["semi", ";"], ["dot", "."], ["comma", ","]],
+                dict: {"semi":";", "dot":".", "comma":","},
                 v: "6",
                 x: "1024",
                 y: "768",
@@ -214,6 +215,15 @@ describe('UriTemplate.match', () => {
                 expect(new UriTemplate('{list*}').expand(vars)).toEqual('red,green,blue')
                 expect(new UriTemplate('{keys}').expand(vars)).toEqual('semi,%3B,dot,.,comma,%2C')
                 expect(new UriTemplate('{keys*}').expand(vars)).toEqual('semi=%3B,dot=.,comma=%2C')
+                expect(new UriTemplate('{dict}').expand(vars)).toEqual('semi,%3B,dot,.,comma,%2C')
+                expect(new UriTemplate('{dict*}').expand(vars)).toEqual('semi=%3B,dot=.,comma=%2C')
+            })
+
+            it("Variable Match", () => {
+                expect(new UriTemplate('{list}').match('red,green,blue')?.params).toEqual({list:'red,green,blue'})
+                expect(new UriTemplate('{list*}').match('red,green,blue')?.params).toEqual({list:['red','green','blue']})
+                expect(new UriTemplate('{keys}').match('semi,%3B,dot,.,comma,%2C')?.params).toEqual({keys:"semi,;,dot,.,comma,,"})  // Not so sure about this one...
+                expect(new UriTemplate('{keys*}').match('semi=%3B,dot=.,comma=%2C')?.params).toEqual({keys:["semi=;","dot=.","comma=,"]})
             })
 
             it("Reserved Expansion: {+var}", () => {

@@ -324,7 +324,7 @@ export class UriTemplate<P extends UriParams> {
                     switch(itemSpec.type) {
                         case VarType.NAMED: {
                             const parsed = v == null ? Object.create(null) : parseParams(v, SeparatorMap[itemSpec.prefix])
-                            // log('parseParams',v, SeparatorMap[itemSpec.prefix],parsed);
+                            // console.log('parseParams',v, SeparatorMap[itemSpec.prefix],parsed);
 
                             for(const vs of itemSpec.vars) {
                                 if(vs.repeat) {
