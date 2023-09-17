@@ -29,6 +29,7 @@ type TemplateParts = Array<Placeholder | StringLiteral>
 
 interface VarSpec {
     name: string
+    /** Max length, in characters. */
     length: number | null
     func: string | null
     repeat: boolean
@@ -271,7 +272,9 @@ export class UriTemplate<P extends UriParams> {
                     for(const v of p.vars) {
                         if(Object.hasOwn(variables, v.name)) {
                             const x = variables[v.name]
-                            const esc = (x: Escapable) => percentEncodeRegExp(x, ReservedExpansion[p.prefix], v.length)
+                            if(x == null) continue
+                            const sep = v.repeat ? SeparatorMap[p.prefix] : ','
+                            const esc = (x: Primitive|PrimitivePair) => percentEncodeRegExp(x, ReservedExpansion[p.prefix], v.length, v.repeat ? '=' : ',')
                             let pre = ''
                             if(Named[p.prefix]) {
                                 pre = v.name + (isEmpty(x) ? IfEmp[p.prefix] : '=')
@@ -279,12 +282,12 @@ export class UriTemplate<P extends UriParams> {
                             if(Array.isArray(x)) {
                                 if(x.length) {
                                     // TODO: rethink how these are encoded. maybe CSV format?
-                                    vs.push((v.repeat ? '' : pre) + (x as any[]).map(z => (v.repeat ? pre : '') + esc(z)).join(v.repeat ? SeparatorMap[p.prefix] : ','))
+                                    vs.push((v.repeat ? '' : pre) + x.map(z => (v.repeat ? pre : '') + esc(z)).join(sep))
                                 }
-                            } else if(x != null && typeof x === 'object') {
+                            } else if(typeof x === 'object') {
                                 if(Object.keys(x).length) {
                                     // TODO: rethink how these are encoded. maybe JSON (unquoted)?
-                                    vs.push((v.repeat ? '' : pre) + Object.entries(x).map(([ok, ov]) => `${esc(ok)}${v.repeat ? '=' : ','}${esc(ov)}`).join(v.repeat ? SeparatorMap[p.prefix] : ','))
+                                    vs.push((v.repeat ? '' : pre) + Object.entries(x).map(([ok, ov]) => `${esc(ok)}${v.repeat ? '=' : ','}${esc(ov)}`).join(sep))
                                 }
                             } else {
                                 vs.push(pre + esc(x))
@@ -311,12 +314,12 @@ export class UriTemplate<P extends UriParams> {
         // console.log(`${JSON.stringify(url)}.match(${this.matchRegex})`);
         if(m !== null) {
             // log('m',m);
-            let params: Array<[string, NullableUrlParamValue]> = []
+            let params: Array<[string, UrlParamValue]> = []
             if(m.groups != null) {
                 // log('m.groups',m.groups)
                 for(const [k, v] of Object.entries(m.groups)) {
                     const itemSpec = this.matchMap.get(k)!
-                    let value: UrlParamValue | null
+                    let value: UrlParamValue
 
                     switch(itemSpec.type) {
                         case VarType.NAMED: {
@@ -422,30 +425,43 @@ function isEmpty(x: any): x is null | undefined | '' | [] | {} {
     return x == null || x === '' || (Array.isArray(x) ? !x.length : (typeof x === 'object' && !Object.keys(x).length))
 }
 
-export type UrlParamValue = string | number | boolean | string[] | number[] | Record<string, string | number | boolean | null>;
-type NullableUrlParamValue = UrlParamValue | null;
+
+type Primitive = string | number | boolean | null
+type PrimitivePair = [key:string,value:Primitive]
+type PrimitiveMap = {[K in string]: Primitive}
+export type UrlParamValue = Primitive | Primitive[] | PrimitivePair[] | PrimitiveMap;
 
 function escapeRegExp(string: string) {
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#Escaping
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // $& means the whole matched string
 }
 
-type Escapable = string | number | boolean | null
-
-function percentEncodeRegExp(x: Escapable, reserved: boolean, length: number | null) {
-    if(typeof x === 'number') {
-        return String(x)
+export function fullWide(n: number): string {
+    try {
+        return n.toLocaleString('en-US', {useGrouping: false, maximumFractionDigits: 20})
+    } catch {
+        return n.toFixed(14).replace(/\.?0+$/, '')
     }
-    if(x === true) return '1'
-    if(x === false) return '0'
-    if(x === null) return ''
+}
+
+function percentEncodeRegExp(value: Primitive|PrimitivePair, reserved: boolean, length: number | null, separator: string): string {
+    if(typeof value === 'number') {
+        return fullWide(value)
+    }
+    if(value === true) return '1'
+    if(value === false) return '0'
+    if(value == null) return ''
+
+    if(Array.isArray(value)) {
+        return value.map(v => percentEncodeRegExp(v,reserved,length,separator)).join(separator)
+    }
 
     if(length != null) {
-        x = x.slice(0, length)
+        value = value.slice(0, length)
     }
 
     if(reserved) {
-        return x.replace(/%[0-9a-fA-F]{2}|./ugs, m => {
+        return value.replace(/%[0-9a-fA-F]{2}|./ugs, m => {
             let v = PERCENT_RE.test(m) ? decodeURIComponent(m) : m
             if(UR_SET.test(v)) {
                 return percentEncode(v)
@@ -453,7 +469,7 @@ function percentEncodeRegExp(x: Escapable, reserved: boolean, length: number | n
             return m
         })
     }
-    return x.replace(UNRESERVED, percentEncode)
+    return value.replace(UNRESERVED, percentEncode)
 }
 
 
@@ -463,7 +479,7 @@ function percentEncode(str: string) {
     return Array.from(UTF8_ENCODER.encode(str)).map(i => '%' + i.toString(16).toUpperCase().padStart(2, '0')).join('')
 }
 
-export type UriParams = Record<string, NullableUrlParamValue>
+export type UriParams = Record<string, UrlParamValue>
 
 export type UriMatch<P extends UriParams> = {
     score: number
