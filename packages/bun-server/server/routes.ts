@@ -1,14 +1,14 @@
 import {UriParams, UriTemplate} from '@mpen/rerouter'
-import {createRoute, Route, RouteMap} from './server-api'
+import {createRoute, CompiledRoute, CompiledRouteMap, routeMap} from './server-api'
 import {sleep} from 'bun'
 import {byteSize, PartialRecord} from './util'
 
 
 
 
-const routes = {
-    hello: createRoute<{q:Record<string,string>}>({
-        template: new UriTemplate('/hello{?q*}'),
+export default routeMap({
+    hello: {
+        template: new UriTemplate<{q:Record<string,string>}>('/hello{?q*}'),
         async get(req, res) {
 
 
@@ -26,8 +26,11 @@ const routes = {
 
             // console.log("return from route")
         }
-    })
-} satisfies RouteMap
-
-export default routes
-
+    },
+    world: {
+        template: new UriTemplate<{who:string}>('/hello/{who}'),
+        async get(req, res) {
+            res.respond(`Hello ${req.url.params.who}`)
+        }
+    }
+})

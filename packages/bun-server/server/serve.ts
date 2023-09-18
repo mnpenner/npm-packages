@@ -1,6 +1,6 @@
 import routes from './routes'
 import {PartialRecord} from './util'
-import {BunRequestInterface, BunUrl, Handler, HttpRequestMethod, Route} from './server-api'
+import {BunRequestInterface, BunUrl, Handler, HttpRequestMethod, CompiledRoute} from './server-api'
 import {UriMatch} from '@mpen/rerouter'
 import {performance} from 'perf_hooks'
 import Chalk from 'chalk'
@@ -22,7 +22,7 @@ const TIMEOUT = 1000
 const numberFormatter = Intl.NumberFormat(undefined, {maximumFractionDigits: 2})
 
 const server = Bun.serve({
-    port: 8080,
+    port: 3000,
     hostname: '::',
     development: true,
     async fetch(req) {
@@ -34,7 +34,7 @@ const server = Bun.serve({
         console.log(Chalk.grey(`>${reqId}`)+` ${Chalk.whiteBright.bold(req.method)} ${path} | ${formatSize(req.headers.get('Content-Length'))} | ${formatContentType(req.headers.get('Content-Type'))}`)
 
         const res = await (async () => {
-            let bestRoute: Route | undefined
+            let bestRoute: CompiledRoute | undefined
             let maxScore = Number.NEGATIVE_INFINITY
             let bestMatch: UriMatch<any> | null = null
 

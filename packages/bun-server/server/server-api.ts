@@ -58,20 +58,51 @@ export interface BunUrl extends URL {
 
 export type Handler<P extends UriParams=any> = (req: BunRequest<P>, res: HybridResponse) => void | Promise<void>
 
-export type RouteMap = Record<string, Route<any>>
+export type CompiledRouteMap<T extends Record<string, any>> = {
+    [R in keyof T]: CompiledRoute<T[R]>;
+}
+
+export type PatternRouteMap<T extends Record<string, any>> = {
+    [R in keyof T]: PatternRoute<T[R]>;
+}
+
+
+export function routeMap<T extends Record<string, any>>(arg: CompiledRouteMap<T>) { return arg; }
+
+// export type RouteMap = Record<string, CompiledRoute<any>>
 // export type RouteMap = {
 //     [k in string]: Route<UriParams>
 // }
 
-export function createRoute<P extends UriParams>(obj: Route<P>) {
+export function createRoute<P extends UriParams>(obj: CompiledRoute<P>) {
     return obj
 }
 
-export interface Route<P extends UriParams=any> {
-    template: UriTemplate<P>
+export interface MethodHandlers<P extends UriParams=any> {
+    request?: Handler<P>
     get?: Handler<P>
+    head?: Handler<P>
     post?: Handler<P>
+    put?: Handler<P>
+    delete?: Handler<P>
+    connect?: Handler<P>
+    options?: Handler<P>
+    trace?: Handler<P>
+    patch?: Handler<P>
 }
+
+export interface CompiledRoute<P extends UriParams=any> extends MethodHandlers<P> {
+    template: UriTemplate<P>
+}
+
+export interface NamedRoute<P extends UriParams=any> extends CompiledRoute<P> {
+    name: string|undefined
+}
+
+export interface PatternRoute<P extends UriParams=any> extends MethodHandlers<P> {
+    url: string|UriTemplate<P>
+}
+
 
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods
 export const HttpRequestMethods = ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH'] as const
