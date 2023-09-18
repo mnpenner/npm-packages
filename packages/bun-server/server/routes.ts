@@ -30,7 +30,7 @@ export default routeMap({
     world: {
         template: new UriTemplate<{who:string}>('/hello/{who}'),
         async get(req, res) {
-            res.respond(`Hello ${req.url.params.who}`)
+            res.text(`Hello ${req.url.params.who}`)
         }
     }
 })

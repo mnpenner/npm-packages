@@ -2,6 +2,9 @@ import {ReadWriteStream} from './read-write-stream'
 import {Deferred} from './promise'
 import {Chunkable} from './server-api'
 import assert from 'assert'
+import {byteSize, fullWide} from './util'
+
+type ResponseOptions = Omit<ResponseInit,'statusText'>
 
 export class HybridResponse {
     private _stream?: ReadWriteStream
@@ -74,8 +77,20 @@ export class HybridResponse {
         return this.respond(Bun.file(path, options))
     }
 
-    json(body?: any, options?: ResponseInit | number) {
+    json(body: any, options?: ResponseOptions | number) {
         return this.respond(Response.json(body, options))
+    }
+
+    text(text: string, status=200) {
+        const encoder = new TextEncoder();
+        const array = encoder.encode(text)
+        return this.respond(array, {
+            headers: {
+                'Content-Type': 'text/plain;charset=utf-8',
+                'Content-Length': String(array.byteLength),
+            },
+            status,
+        })
     }
 
     get headers(): Headers {

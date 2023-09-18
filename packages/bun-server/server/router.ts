@@ -73,9 +73,15 @@ router.get('/bookings/{id:int}', (req,res) => {
 })
 
 router.registerMap({
+    hello: {
+        url: '/foo{?q*}',
+        get(req, res) {
+            res.respond(`Hello ${req.url.params.who}`)  // FIXME: params should resolve to UriParams
+        }
+    },
     world: {
         url: new UriTemplate<{who:string}>('/hello/{who}'),
-        async get(req, res) {
+        get(req, res) {
             res.respond(`Hello ${req.url.params.who}`)
         }
     }
