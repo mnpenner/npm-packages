@@ -1,21 +1,28 @@
 import type {UriTemplate, UrlParamValue, UriMatch, UriParams} from '@mpen/rerouter'
-import {AnyFn} from './util'
-import {HybridResponse} from './bun-response'
+import {AnyFn, PartialRecord} from './util'
+
+import {HybridResponse} from './hybrid-response'
+import {BunRequest} from './bun-request'
 
 
-export type Chunkable = string|ArrayBufferLike|TypedArray
+export type Chunkable = string | ArrayBufferLike | TypedArray
 
 export interface BunResponseInterface {
 
     respond(res: Response): void
+
     respond(...args: ConstructorParameters<typeof Response>): void
 
     status: number | bigint;
+
     sendHeaders(headers: HeadersInit): void
 
     write(chunk: Chunkable): void
+
     tryWrite(chunk: Chunkable): boolean
+
     close(): void
+
     error(e: Error): void
 }
 
@@ -49,21 +56,26 @@ export interface BunUrl extends URL {
     path: string
 }
 
-export type Handler = (req: BunRequestInterface, res: HybridResponse) => void|Promise<void>
+export type Handler<P extends UriParams=any> = (req: BunRequest<P>, res: HybridResponse) => void | Promise<void>
 
-export type RouteMap = Record<string,Route>
+export type RouteMap = Record<string, Route<any>>
+// export type RouteMap = {
+//     [k in string]: Route<UriParams>
+// }
 
-export interface Route {
-    template: UriTemplate
+export function createRoute<P extends UriParams>(obj: Route<P>) {
+    return obj
+}
 
-    get?: Handler
-    post?: Handler
+export interface Route<P extends UriParams=any> {
+    template: UriTemplate<P>
+    get?: Handler<P>
+    post?: Handler<P>
 }
 
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods
 export const HttpRequestMethods = ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH'] as const
 export type HttpRequestMethod = typeof HttpRequestMethods[number]
-
 
 
 // export interface ReadableHTTPResponseSinkController {

@@ -1,23 +1,21 @@
-import {UriTemplate} from '@mpen/rerouter'
-import {Route, RouteMap} from './server-api'
+import {UriParams, UriTemplate} from '@mpen/rerouter'
+import {createRoute, Route, RouteMap} from './server-api'
 import {sleep} from 'bun'
+import {byteSize, PartialRecord} from './util'
 
 
 
 
-const routes: RouteMap = {
-
-    hello: {
+const routes = {
+    hello: createRoute<{q:Record<string,string>}>({
         template: new UriTemplate('/hello{?q*}'),
         async get(req, res) {
 
-            // res.sendHeaders({'Transfer-Encoding':'chunked','foo':'bar'})
-            // res.tryWrite("hello")
-            await sleep(800)
+
+
+            // res.respond("yoyoyoy")
             res.flushHeaders()
-            res.tryWrite(" world")
-            await sleep(1200)
-            res.tryWrite("!")
+            res.write(new Uint8Array([72,101,108,108,111]))
             res.end()
 
 
@@ -28,8 +26,8 @@ const routes: RouteMap = {
 
             // console.log("return from route")
         }
-    }
-}
+    })
+} satisfies RouteMap
 
 export default routes
 
