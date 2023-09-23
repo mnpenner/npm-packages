@@ -2,13 +2,17 @@ import {UriParams, UriTemplate} from '@mpen/rerouter'
 import {createRoute, CompiledRoute, CompiledRouteMap, routeMap} from './server-api'
 import {sleep} from 'bun'
 import {byteSize, PartialRecord} from './util'
+import {Router} from './router'
+
+
+const router = new Router()
 
 
 
 
-export default routeMap({
+router.registerMap({
     hello: {
-        template: new UriTemplate<{q:Record<string,string>}>('/hello{?q*}'),
+        url: new UriTemplate<{q:Record<string,string>}>('/hello{?q*}'),
         async get(req, res) {
 
 
@@ -28,9 +32,11 @@ export default routeMap({
         }
     },
     world: {
-        template: new UriTemplate<{who:string}>('/hello/{who}'),
+        url: new UriTemplate<{who:string}>('/hello/{who}'),
         async get(req, res) {
             res.text(`Hello ${req.url.params.who}`)
         }
     }
 })
+
+export default router

@@ -1,4 +1,4 @@
-import routes from './routes'
+import router from './routes'
 import {PartialRecord} from './util'
 import {BunRequestInterface, BunUrl, Handler, HttpRequestMethod, CompiledRoute} from './server-api'
 import {UriMatch} from '@mpen/rerouter'
@@ -34,32 +34,21 @@ const server = Bun.serve({
         console.log(Chalk.grey(`>${reqId}`)+` ${Chalk.whiteBright.bold(req.method)} ${path} | ${formatSize(req.headers.get('Content-Length'))} | ${formatContentType(req.headers.get('Content-Type'))}`)
 
         const res = await (async () => {
-            let bestRoute: CompiledRoute | undefined
-            let maxScore = Number.NEGATIVE_INFINITY
-            let bestMatch: UriMatch<any> | null = null
-
-            for(const [routeName, route] of Object.entries(routes)) {
-                const match = route.template.match(path)
-                if(match) {
-                    if(match.score > maxScore) {
-                        maxScore = match.score
-                        bestRoute = route
-                        bestMatch = match
-                    }
-                }
-            }
+            const result = router.match(path)
 
 
-            if(!bestRoute || !bestMatch) {
+            if(!result) {
                 return new Response("Not Found", {status: 404})
             }
 
+
+
             const method = req.method.toLowerCase()
-            const handler = (bestRoute as unknown as PartialRecord<Handler>)[method]
+            const handler = (result.route.handlers as unknown as PartialRecord<Handler>)[method]
 
             if(handler) {
                 const bunUrl: BunUrl = Object.assign(url, {
-                    params: bestMatch.params,
+                    params: result.match.params,
                     path: path,
                 })
                 const bunReq = new BunRequest(req, bunUrl)
