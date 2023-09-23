@@ -63,7 +63,7 @@ export type CompiledRouteMap<T extends Record<string, any>> = {
 }
 
 export type PatternRouteMap<T extends Record<string, any>> = {
-    [R in keyof T]: PatternRoute<T[R]>;
+    [R in keyof T]: PatternRoute<T[R] extends UriParams ? T[R] : UriParams>;
 }
 
 
@@ -91,16 +91,20 @@ export interface MethodHandlers<P extends UriParams=any> {
     patch?: Handler<P>
 }
 
+export type TemplateInterface<P extends UriParams> = Pick<UriTemplate<P>, 'match'|'expand'>
+
 export interface CompiledRoute<P extends UriParams=any> extends MethodHandlers<P> {
-    template: UriTemplate<P>
+    template: TemplateInterface<P>
 }
 
-export interface NamedRoute<P extends UriParams=any> extends CompiledRoute<P> {
+export interface NamedRoute<P extends UriParams=any> {
     name: string|undefined
+    template: TemplateInterface<P>
+    handlers: MethodHandlers<P>
 }
 
 export interface PatternRoute<P extends UriParams=any> extends MethodHandlers<P> {
-    url: string|UriTemplate<P>
+    url: string|TemplateInterface<P>
 }
 
 
