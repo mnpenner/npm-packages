@@ -9,6 +9,7 @@ const production = !process.env.ROLLUP_WATCH;
 
 /** @type {import('rollup').RollupOptions} */
 const config = {
+    input: `src/${production ? 'index.ts' : 'example.tsx'}`,
     output: [
         {
             dir: 'dist',
@@ -19,9 +20,7 @@ const config = {
     plugins: [
         nodeResolve(),
         commonjs(),
-        typescript({
-            tsconfig: 'src/tsconfig.json',
-        }),
+        typescript(),
         replace({
             preventAssignment: true,
             values: {
@@ -33,7 +32,6 @@ const config = {
 }
 
 if(production) {
-    config.input = 'src/index.js'
     config.output.push({
         dir: 'dist',
         format: 'cjs',
@@ -52,8 +50,6 @@ if(production) {
             module: true,
         }),
     )
-} else {
-    config.input = 'src/example.tsx'
 }
 
 export default config

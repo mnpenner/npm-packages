@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unknown-property */
 /* eslint-disable react/prop-types */
 
-export default function(one, {two, three}) {
+function main(one: any, {two, three}: any) {
     let inject = '<b>  i\'nj\ne"ct   </b>'
     let obj = {bar: 'baz', quux: [1, 2]}
 
@@ -33,7 +33,7 @@ export default function(one, {two, three}) {
 
     console.log(html)
 
-    document.getElementById('react-root').innerHTML = html
+    // document.getElementById('react-root').innerHTML = html
 }
 
 function BlueBox(props) {
@@ -43,3 +43,5 @@ function BlueBox(props) {
         </div>
     )
 }
+
+main(1,{two:2,three:3})

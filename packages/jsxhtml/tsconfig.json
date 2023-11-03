@@ -13,13 +13,16 @@
         "resolveJsonModule": true,
         "lib": [
             "ESNext",
-            "dom"
+            "es2015.iterable"
         ],
         "jsx": "react-jsx",
-        "jsxImportSource": "@mpen/jsxhtml",
-        "outDir": "../dist"
+        "jsxImportSource": ".",
+        "outDir": "./dist"
     },
     "files": [
-        "./index.ts"
+        "./src/example.tsx"
+    ],
+    "include": [
+        "./src/jsx.d.ts"
     ]
 }

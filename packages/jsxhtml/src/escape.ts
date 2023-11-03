@@ -53,6 +53,7 @@ export function attr(rawAttr: string, rawVal: AttributeValue) {
 }
 
 export function attrs(attributes: Attributes) {
+    if(attributes == null) return ''
     if(util.isObject(attributes)) {
         attributes = Object.entries(attributes);
     }

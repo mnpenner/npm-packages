@@ -30,6 +30,8 @@ export type JsxhtmlNode =
 
 export type JsxhtmlChildren = JsxhtmlNode[]
 
+export type Props = AttrObj & {children?: JsxhtmlChildren}
+
 // export type JsxFn = (tag: string, props: AttrObj, children:undefined|JsxhtmlChildren) => JsxhtmlElement
 export type Component = (props: AttrObj & {children?: JsxhtmlChildren}) => JsxhtmlElement
 
