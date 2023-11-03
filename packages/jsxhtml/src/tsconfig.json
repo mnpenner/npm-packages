@@ -1,0 +1,24 @@
+{
+    // Visit https://aka.ms/tsconfig to read more about this file
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "node",
+        "declaration": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
+        "exactOptionalPropertyTypes": true,
+        "skipLibCheck": true,
+        "resolveJsonModule": true,
+        "lib": [
+            "ESNext",
+            "dom"
+        ],
+        "jsx": "react-jsx",
+        "outDir": "../dist"
+    },
+    "files": [
+        "./index.ts"
+    ]
+}

@@ -1,0 +1,37 @@
+{
+  "name": "@mpen/jsxhtml",
+  "version": "0.1.1",
+  "packageManager": "bun@1.0.7",
+  "exports": "./dist/bundle.cjs",
+  "module": "./dist/bundle.mjs",
+  "types": "./dist/bundle.d.ts",
+  "type": "module",
+  "files": [
+    "./dist"
+  ],
+  "scripts": {
+    "dev:build": "rollup -cw",
+    "dev:serve": "serve -l tcp://0.0.0.0:8080",
+    "dev": "run-p \"dev:**\"",
+    "serve": "bun run --hot dev/serve.ts",
+    "bundle:clean": "rimraf -g \"dist/*\"",
+    "bundle:build": "rollup -c",
+    "bundle": "run-s bundle:clean bundle:build",
+    "patch": "npm version patch && VER=$(jq -r '.version' package.json) && hg ci -m \"Publish v$VER\" && hg tag \"v$VER\"",
+    "release": "run-s bundle patch && npm publish && hg push"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-replace": "^5.0.5",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.5",
+    "@types/eslint": "^8.44.6",
+    "npm-run-all": "^4.1.5",
+    "rimraf": "^5.0.5",
+    "rollup": "^4.2.0",
+    "tslib": "^2.6.2",
+    "typescript": "^5.2.2"
+  },
+  "peerDependencies": {}
+}

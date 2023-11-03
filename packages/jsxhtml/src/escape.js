@@ -1,7 +1,7 @@
-import entityMap from './entityMap';
+import entityMap from './entityMap.js';
 const classNames = require('classnames');
-import * as util from './util';
-import styleObjectToString from './styleObjectToString';
+import * as util from './util.js';
+import styleObjectToString from './styleObjectToString.js';
 
 function entity(ch) {
     return util.hasProp(entityMap, ch) ? `&${entityMap[ch]};` : `&#x${ch.codePointAt().toString(16)};`;

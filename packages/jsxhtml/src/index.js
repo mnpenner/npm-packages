@@ -1,6 +1,6 @@
-import JsxhtmlElement from './JsxhtmlElement';
-import * as util from './util';
-import * as esc from './escape';
+import JsxhtmlElement from './JsxhtmlElement.js';
+import * as util from './util.js';
+import * as esc from './escape.js';
 
 export default function jsxhtml(tag, attrs, ...children) {
     if(util.isFunction(tag)) {

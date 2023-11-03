@@ -1,5 +1,5 @@
-import * as esc from './escape';
-import {render} from './index';
+import * as esc from './escape.js';
+import {render} from './index.js';
 
 // https://www.w3.org/TR/html-markup/syntax.html#syntax-elements
 const voidElements = new Set(['area', 'base', 'br', 'col', 'command', 'embed', 'hr', 'img', 'input', 'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
