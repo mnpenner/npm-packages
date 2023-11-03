@@ -1,7 +1,9 @@
-import JsxhtmlElement from './JsxhtmlElement'
+import JsxhtmlElement, {isJsx} from './JsxhtmlElement'
 import * as util from '@mnpenner/is-type'
 import * as esc from './escape'
-import {AnyFn, HtmlSafe, JsxhtmlNode} from './types'
+import {AnyFn, HtmlSafe, JsxhtmlChildren, JsxhtmlNode} from './types'
+import {isIterable} from '@mnpenner/is-type'
+import {getStringTag, mapIter} from './util'
 
 
 function isHtmlSafe(x: any): x is HtmlSafe {
@@ -13,7 +15,7 @@ export function render(el: JsxhtmlNode): string {
         return '';
     }
 
-    if(el instanceof JsxhtmlElement) {
+    if(isJsx(el)) {
         return el.toString();
     }
 
@@ -23,8 +25,8 @@ export function render(el: JsxhtmlNode): string {
 
     if(util.isString(el)) {
         return esc.htmlContent(el)
-            .replace(/ {2}/g, ' &nbsp;')
-            .replace(/\r?\n|\r/g, '<br>');
+            // .replace(/ {2}/g, ' &nbsp;')  // TODO: decide if we should really do these replacements
+            // .replace(/\r?\n|\r/g, '<br>');
     }
 
     if(util.isNumber(el)) {
@@ -39,10 +41,11 @@ export function render(el: JsxhtmlNode): string {
         return render((el as AnyFn)());
     }
 
-    if(el[Symbol.iterator] !== undefined) {
-        return Array.from(el).map(x => render(x)).join('');
+    if(isIterable(el)) {
+        return mapIter(el, x => render(x)).join('')
     }
 
-    console.info(Object.prototype.toString.call(el),el);
-    throw new Error(`Unsupported type`);
+    // console.info(Object.prototype.toString.call(el),el);
+    // console.error('UNHANDLED ELEMENT:',el)
+    throw new Error(`Unsupported type: ${getStringTag(el)}`);
 }

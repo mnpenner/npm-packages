@@ -24,15 +24,14 @@ export type JsxhtmlNode =
     | HtmlSafe
     | string
     | number
-    | JsxhtmlNode[]
     | UnkFn
     | Iterable<JsxhtmlNode>
 
 export type JsxhtmlChildren = JsxhtmlNode[]
 
-export type Props = AttrObj & {children?: JsxhtmlChildren}
+export type Props = Omit<AttrObj,'children'> & {children?: JsxhtmlNode}
 
 // export type JsxFn = (tag: string, props: AttrObj, children:undefined|JsxhtmlChildren) => JsxhtmlElement
-export type Component = (props: AttrObj & {children?: JsxhtmlChildren}) => JsxhtmlElement
+export type Component = (props: Props) => JsxhtmlElement
 
 // export type JsxhtmlConstructor = (...args: ConstructorParameters<typeof JsxhtmlElement>) => JsxhtmlElement

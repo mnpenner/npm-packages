@@ -13,7 +13,8 @@
         "resolveJsonModule": true,
         "lib": [
             "ESNext",
-            "es2015.iterable"
+            "es2015.iterable",
+            "dom"
         ],
         "jsx": "react-jsx",
         "jsxImportSource": ".",

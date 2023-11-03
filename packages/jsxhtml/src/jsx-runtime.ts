@@ -1,5 +1,5 @@
 import {Attributes, Component, JsxhtmlChildren, Props} from './types'
-import JsxhtmlElement from './JsxhtmlElement'
+import JsxhtmlElement, {JsxhtmlFragment} from './JsxhtmlElement'
 import * as util from '@mnpenner/is-type'
 
 
@@ -10,4 +10,8 @@ export function jsx(tag: string | Component, props: Props): JsxhtmlElement {
     }
 
     return new JsxhtmlElement(tag as string, props)
+}
+
+export function Fragment({children}: Props) {
+    return new JsxhtmlFragment(children)
 }
