@@ -1,13 +1,8 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
 // taken from https://dev.w3.org/html5/html-author/charref
-// should have taken from https://www.w3.org/TR/2011/WD-html5-20110113/named-character-references.html or http://w3c.github.io/html/syntax.html#named-character-references
+// should have taken from https://www.w3.org/TR/2011/WD-html5-20110113/named-character-references.html or
+// http://w3c.github.io/html/syntax.html#named-character-references
 
-exports.default = {
+const entityMap: Record<string, string> = {
     '\u0009': 'Tab',
     '\u000A': 'NewLine',
     '\u0021': 'excl',
@@ -1323,4 +1318,6 @@ exports.default = {
     '\uFB02': 'fllig',
     '\uFB03': 'ffilig',
     '\uFB04': 'ffllig',
-};
+}
+
+export default entityMap

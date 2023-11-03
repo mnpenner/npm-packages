@@ -1,7 +1,5 @@
-/** @jsx jsxhtml */
 /* eslint-disable react/no-unknown-property */
 /* eslint-disable react/prop-types */
-import jsxhtml from './index'
 
 export default function(one, {two, three}) {
     let inject = '<b>  i\'nj\ne"ct   </b>'

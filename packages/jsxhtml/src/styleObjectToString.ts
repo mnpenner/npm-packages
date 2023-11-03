@@ -1,6 +1,8 @@
 /* eslint-disable */
 // ripped from react-dom
 
+import {UnkFn} from './types'
+
 const _uppercasePattern = /([A-Z])/g;
 
 /**
@@ -11,11 +13,8 @@ const _uppercasePattern = /([A-Z])/g;
  *
  * For CSS style names, use `hyphenateStyleName` instead which works properly
  * with all vendor prefixes, including `ms`.
- *
- * @param {string} string
- * @return {string}
  */
-function hyphenate(string) {
+function hyphenate(string: string): string {
     return string.replace(_uppercasePattern, '-$1').toLowerCase();
 }
 
@@ -33,21 +32,17 @@ const msPattern = /^ms-/;
  *
  * As Modernizr suggests (http://modernizr.com/docs/#prefixed), an `ms` prefix
  * is converted to `-ms-`.
- *
- * @param {string} string
- * @return {string}
  */
-function hyphenateStyleName(string) {
+function hyphenateStyleName(string: string): string {
     return hyphenate(string).replace(msPattern, '-ms-');
 }
 
 /**
  * Memoizes the return value of a function that accepts one string argument.
  */
-
-function memoizeStringOnly(callback) {
-    let cache = {};
-    return function(string) {
+function memoizeStringOnly(callback: (arg: string)=>string) {
+    let cache: Record<string,unknown> = {};
+    return function(this: unknown, string: string) {
         if(!cache.hasOwnProperty(string)) {
             cache[string] = callback.call(this, string);
         }
@@ -55,7 +50,7 @@ function memoizeStringOnly(callback) {
     };
 }
 
-const makeStyleName = memoizeStringOnly(function(styleName) {
+const makeStyleName = memoizeStringOnly(function(styleName: string) {
     return hyphenateStyleName(styleName);
 });
 
@@ -64,7 +59,7 @@ const makeStyleName = memoizeStringOnly(function(styleName) {
  * CSS properties which accept numbers but are not in units of "px".
  */
 
-const isUnitlessNumber = {
+const isUnitlessNumber: Record<string,boolean> = {
     animationIterationCount: true,
     borderImageOutset: true,
     borderImageSlice: true,
@@ -113,7 +108,7 @@ const isUnitlessNumber = {
  * @param {*} value CSS property value such as `10px`.
  * @return {string} Normalized style value with dimensions applied.
  */
-function makeStyleValue(name, value) {
+function makeStyleValue(name: string, value: any): string {
     // Note that we've removed escapeTextForBrowser() calls here since the
     // whole string will be escaped when the attribute is injected into
     // the markup. If you provide unsafe user data here they can inject
@@ -152,7 +147,7 @@ function makeStyleValue(name, value) {
  * @param {object} styles
  * @return {?string}
  */
-export default function styleObjectToString(styles) {
+export default function styleObjectToString(styles: Record<string,any>): string {
     let serialized = '';
     for(let styleName in styles) {
         if(!styles.hasOwnProperty(styleName)) {

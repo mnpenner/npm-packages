@@ -1,16 +1,14 @@
-import JsxhtmlElement from './JsxhtmlElement.js';
-import * as util from './util.js';
-import * as esc from './escape.js';
+import JsxhtmlElement from './JsxhtmlElement'
+import * as util from '@mnpenner/is-type'
+import * as esc from './escape'
+import {AnyFn, HtmlSafe, JsxhtmlNode} from './types'
 
-export default function jsxhtml(tag, attrs, ...children) {
-    if(util.isFunction(tag)) {
-        return tag({...attrs, children});
-    }
 
-    return new JsxhtmlElement(tag, attrs || [], children);
+function isHtmlSafe(x: any): x is HtmlSafe {
+    return util.isPlainObject(x) && util.isString(x.__html)
 }
 
-export function render(el) {
+export function render(el: JsxhtmlNode): string {
     if(el === null || el === undefined || el === false) {
         return '';
     }
@@ -19,7 +17,7 @@ export function render(el) {
         return el.toString();
     }
 
-    if(util.isObject(el) && util.isString(el.__html)) {
+    if(isHtmlSafe(el)) {
         return el.__html;
     }
 
@@ -38,7 +36,7 @@ export function render(el) {
     }
 
     if(util.isFunction(el) || util.isGeneratorFunction(el)) {
-        return render(el());
+        return render((el as AnyFn)());
     }
 
     if(el[Symbol.iterator] !== undefined) {

@@ -16,6 +16,7 @@
             "dom"
         ],
         "jsx": "react-jsx",
+        "jsxImportSource": "@mpen/jsxhtml",
         "outDir": "../dist"
     },
     "files": [
