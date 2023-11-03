@@ -1,5 +1,4 @@
 import * as lib from './index'
-import {isDate} from './index'
 
 test(lib.isFunction.name, () => {
     expect(lib.isFunction(() => {})).toBe(true)
@@ -22,6 +21,32 @@ test(lib.isFunction.name, () => {
     expect(lib.isFunction(new Date)).toBe(false)
     expect(lib.isFunction(new Set())).toBe(false)
     expect(lib.isFunction(new Map())).toBe(false)
+})
+
+test(lib.isGeneratorFunction.name, () => {
+    expect(lib.isGeneratorFunction(function*(){})).toBe(true)
+    expect(lib.isGeneratorFunction(function* named(){})).toBe(true)
+
+    expect(lib.isGeneratorFunction(() => {})).toBe(false)
+    expect(lib.isGeneratorFunction(function(){})).toBe(false)
+    expect(lib.isGeneratorFunction(function fn(){})).toBe(false)
+    expect(lib.isGeneratorFunction(new Date().valueOf)).toBe(false)
+    expect(lib.isGeneratorFunction(Function.prototype)).toBe(false)
+
+    expect(lib.isGeneratorFunction(null)).toBe(false)
+    expect(lib.isGeneratorFunction(undefined)).toBe(false)
+    expect(lib.isGeneratorFunction(false)).toBe(false)
+    expect(lib.isGeneratorFunction(true)).toBe(false)
+    expect(lib.isGeneratorFunction('str')).toBe(false)
+    expect(lib.isGeneratorFunction(3.14)).toBe(false)
+    expect(lib.isGeneratorFunction(Symbol())).toBe(false)
+    expect(lib.isGeneratorFunction(/re/)).toBe(false)
+    expect(lib.isGeneratorFunction([])).toBe(false)
+    expect(lib.isGeneratorFunction({})).toBe(false)
+    expect(lib.isGeneratorFunction(Object.create(null))).toBe(false)
+    expect(lib.isGeneratorFunction(new Date)).toBe(false)
+    expect(lib.isGeneratorFunction(new Set())).toBe(false)
+    expect(lib.isGeneratorFunction(new Map())).toBe(false)
 })
 
 test(lib.isDate.name, () => {

@@ -2,12 +2,20 @@ export type Falsy = false|0|-0|0n|''|null|undefined|HTMLAllCollection
 export type Truthy = Exclude<any,Falsy>
 export type Primitive = string|number|bigint|boolean|undefined|symbol|null
 export type UnknownFunction = (...args: unknown[]) => unknown
+export type UnknownGeneratorFunction = (...args: unknown[]) => Generator<unknown, unknown, unknown>
 
 /**
  * Object is callable.
  */
 export function isFunction(obj: any): obj is UnknownFunction {
     return typeof obj === 'function'
+}
+
+/**
+ * Object is callable.
+ */
+export function isGeneratorFunction(obj: any): obj is UnknownGeneratorFunction {
+    return isFunction(obj) && Object.prototype.toString.call(obj) === "[object GeneratorFunction]";
 }
 
 /**
