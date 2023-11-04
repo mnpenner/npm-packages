@@ -1,11 +1,13 @@
-import type JsxhtmlElement from './JsxhtmlElement'
+import type {JsxNode} from './jsx-nodes'
+import type {StyleObject} from './styleObjectToString'
 
 export interface Stringable {
     toString(): string
 }
 
 export type PlainObject = Record<PropertyKey, unknown>
-export type AttributeValue = Stringable | PlainObject
+export type ClassNames = import('classnames').Argument
+export type AttributeValue = Stringable | StyleObject | ClassNames
 export type AttrKvPair = [name: string, value: AttributeValue]
 export type AttrArr = AttrKvPair[]
 export type AttrObj = Record<string, AttributeValue>
@@ -16,22 +18,19 @@ export type AnyFn = (...args: any[]) => any
 
 export type HtmlSafe = { __html: string }
 
-export type JsxhtmlNode =
-    null
-    | undefined
-    | false
-    | JsxhtmlElement
-    | HtmlSafe
-    | string
-    | number
-    | UnkFn
-    | Iterable<JsxhtmlNode>
+export type JsxRenderable = any
 
-export type JsxhtmlChildren = JsxhtmlNode[]
+export type JsxChildren = JsxRenderable | JsxRenderable[]
 
-export type Props = Omit<AttrObj,'children'> & {children?: JsxhtmlNode}
+export type CommonProps = Omit<AttrObj, 'children' | 'style' | 'class'> & {
+    children?: JsxChildren,
+    style?: StyleObject | string,
+    class?: ClassNames
+}
 
 // export type JsxFn = (tag: string, props: AttrObj, children:undefined|JsxhtmlChildren) => JsxhtmlElement
-export type Component = (props: Props) => JsxhtmlElement
+export type Component = (props: CommonProps) => JsxNode
+
+export type StringChildren = { children: string | string[] | Iterable<string> }
 
 // export type JsxhtmlConstructor = (...args: ConstructorParameters<typeof JsxhtmlElement>) => JsxhtmlElement

@@ -1,5 +1,5 @@
 import { Elysia } from 'elysia'
-import JsxhtmlElement, {isJsx} from './JsxhtmlElement'
+import {JsxElement,isJsx} from './jsx-nodes'
 
 
 export function html() {
@@ -7,7 +7,7 @@ export function html() {
         .onAfterHandle(({ response }) => {
             if(isJsx(response)) {
                 // console.log('RESPONSE',response)
-                return new Response(`<!doctype html>${response}`, {
+                return new Response(String(response), {
                     headers: {
                         'content-type': 'text/html; charset=utf8'
                     }

@@ -1,16 +1,16 @@
-import JsxhtmlElement, {isJsx} from './JsxhtmlElement'
+import {JsxElement,isJsx} from './jsx-nodes'
 import * as util from '@mnpenner/is-type'
 import * as esc from './escape'
-import {AnyFn, HtmlSafe, JsxhtmlChildren, JsxhtmlNode} from './types'
+import {AnyFn, HtmlSafe, JsxChildren, JsxRenderable} from './types'
 import {isIterable} from '@mnpenner/is-type'
-import {getStringTag, mapIter} from './util'
+import {fullWide, getStringTag, mapIter} from './util'
 
 
 function isHtmlSafe(x: any): x is HtmlSafe {
     return util.isPlainObject(x) && util.isString(x.__html)
 }
 
-export function render(el: JsxhtmlNode): string {
+export function render(el: JsxRenderable): string {
     if(el === null || el === undefined || el === false) {
         return '';
     }
@@ -30,14 +30,14 @@ export function render(el: JsxhtmlNode): string {
     }
 
     if(util.isNumber(el)) {
-        return String(el);
+        return fullWide(el);
     }
 
     if(Array.isArray(el)) {
         return el.map(x => render(x)).join('');
     }
 
-    if(util.isFunction(el) || util.isGeneratorFunction(el)) {
+    if(util.isFunction(el)) {
         return render((el as AnyFn)());
     }
 

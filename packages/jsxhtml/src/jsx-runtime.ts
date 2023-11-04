@@ -1,17 +1,17 @@
-import {Attributes, Component, JsxhtmlChildren, Props} from './types'
-import JsxhtmlElement, {JsxhtmlFragment} from './JsxhtmlElement'
+import {Attributes, Component, JsxChildren, CommonProps} from './types'
+import {JsxElement, JsxFragment, JsxNode} from './jsx-nodes'
 import * as util from '@mnpenner/is-type'
 
 
 
-export function jsx(tag: string | Component, props: Props): JsxhtmlElement {
+export function jsx(tag: string | Component, props: CommonProps): JsxNode {
     if(util.isFunction(tag)) {
         return (tag as Component)(props)
     }
 
-    return new JsxhtmlElement(tag as string, props)
+    return new JsxElement(tag as string, props)
 }
 
-export function Fragment({children}: Props) {
-    return new JsxhtmlFragment(children)
+export function Fragment({children}: CommonProps) {
+    return new JsxFragment(children)
 }

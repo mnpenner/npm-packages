@@ -3,7 +3,7 @@
 
 import {UnkFn} from './types'
 
-const _uppercasePattern = /([A-Z])/g;
+const _uppercasePattern = /([A-Z])/g
 
 /**
  * Hyphenates a camelcased string, for example:
@@ -15,10 +15,10 @@ const _uppercasePattern = /([A-Z])/g;
  * with all vendor prefixes, including `ms`.
  */
 function hyphenate(string: string): string {
-    return string.replace(_uppercasePattern, '-$1').toLowerCase();
+    return string.replace(_uppercasePattern, '-$1').toLowerCase()
 }
 
-const msPattern = /^ms-/;
+const msPattern = /^ms-/
 
 /**
  * Hyphenates a camelcased CSS property name, for example:
@@ -34,32 +34,32 @@ const msPattern = /^ms-/;
  * is converted to `-ms-`.
  */
 function hyphenateStyleName(string: string): string {
-    return hyphenate(string).replace(msPattern, '-ms-');
+    return hyphenate(string).replace(msPattern, '-ms-')
 }
 
 /**
  * Memoizes the return value of a function that accepts one string argument.
  */
-function memoizeStringOnly(callback: (arg: string)=>string) {
-    let cache: Record<string,unknown> = {};
+function memoizeStringOnly(callback: (arg: string) => string) {
+    let cache: Record<string, unknown> = {}
     return function(this: unknown, string: string) {
         if(!cache.hasOwnProperty(string)) {
-            cache[string] = callback.call(this, string);
+            cache[string] = callback.call(this, string)
         }
-        return cache[string];
-    };
+        return cache[string]
+    }
 }
 
 const makeStyleName = memoizeStringOnly(function(styleName: string) {
-    return hyphenateStyleName(styleName);
-});
+    return hyphenateStyleName(styleName)
+})
 
 
 /**
  * CSS properties which accept numbers but are not in units of "px".
  */
 
-const isUnitlessNumber: Record<string,boolean> = {
+const isUnitlessNumber: Record<string, boolean> = {
     animationIterationCount: true,
     borderImageOutset: true,
     borderImageSlice: true,
@@ -96,7 +96,7 @@ const isUnitlessNumber: Record<string,boolean> = {
     strokeMiterlimit: true,
     strokeOpacity: true,
     strokeWidth: true
-};
+}
 
 
 /**
@@ -119,20 +119,20 @@ function makeStyleValue(name: string, value: any): string {
     // which has lead to a greater discussion about how we're going to
     // trust URLs moving forward. See #2115901
 
-    let isEmpty = value == null || typeof value === 'boolean' || value === '';
+    let isEmpty = value == null || typeof value === 'boolean' || value === ''
     if(isEmpty) {
-        return '';
+        return ''
     }
 
-    let isNonNumeric = isNaN(value);
-    if(isNonNumeric || value === 0 || (isUnitlessNumber.hasOwnProperty(name) && isUnitlessNumber[name])) {
-        return '' + value; // cast to string
+    let isNonNumeric = isNaN(value)
+    if(isNonNumeric || value === 0 || (Object.hasOwn(isUnitlessNumber, name) && isUnitlessNumber[name])) {
+        return '' + value // cast to string
     }
 
     if(typeof value === 'string') {
-        value = value.trim();
+        value = value.trim()
     }
-    return value + 'px';
+    return value + 'px'
 }
 
 /**
@@ -147,17 +147,19 @@ function makeStyleValue(name: string, value: any): string {
  * @param {object} styles
  * @return {?string}
  */
-export default function styleObjectToString(styles: Record<string,any>): string {
-    let serialized = '';
+export default function styleObjectToString(styles: StyleObject): string {
+    let serialized = ''
     for(let styleName in styles) {
-        if(!styles.hasOwnProperty(styleName)) {
-            continue;
+        if(!Object.hasOwn(styles, styleName)) {
+            continue
         }
-        let styleValue = styles[styleName];
+        let styleValue = styles[styleName]
         if(styleValue != null) {
-            serialized += makeStyleName(styleName) + ':';
-            serialized += makeStyleValue(styleName, styleValue) + ';';
+            serialized += makeStyleName(styleName) + ':'
+            serialized += makeStyleValue(styleName, styleValue) + ';'
         }
     }
-    return serialized;
+    return serialized
 }
+
+export type StyleObject = Record<string, any>

@@ -21,10 +21,13 @@ export function attrName(string: Stringable) {
 // https://www.w3.org/TR/html-markup/syntax.html#attr-value-double-quoted
 export function attrValue(string: Stringable) {
     // TODO: if value is an anonymous function, should we extract it, give it a name and invoke it like <script>function $a(ev){...}</script><button onclick="return $a(event);">
-    return `"${String(string).replace(/"/g, entity)}"`;
+    // if(isNumber(string)) {
+    //     return fullWide(string)
+    // }
+    return `"${String(string).replace(/"/gu, entity)}"`;
 }
 
-export function attr(rawAttr: string, rawVal: AttributeValue) {
+export function attrKvPair(rawAttr: string, rawVal: AttributeValue) {
     let escAttr = attrName(rawAttr);
 
     if(/^data-/.test(rawAttr) && !util.isString(rawVal)) {
@@ -35,11 +38,9 @@ export function attr(rawAttr: string, rawVal: AttributeValue) {
         return escAttr;
     }
 
-    if(rawVal === false || rawVal === undefined) {
+    if(rawVal === false || rawVal == null) {
         return null;
     }
-
-    // fixme: what to do for `null`?
 
     if(rawAttr === 'class' && !util.isString(rawVal)) {
         rawVal = classNames(rawVal as any);
@@ -57,12 +58,16 @@ export function attrs(attributes: Attributes) {
     if(util.isObject(attributes)) {
         attributes = Object.entries(attributes);
     }
-    return (attributes as AttrArr).map(([k,v]) => attr(k,v)).filter(x => x).map(x => ` ${x}`).join('');
+    return (attributes as AttrArr).map(([k,v]) => attrKvPair(k,v)).filter(x => x).map(x => ` ${x}`).join('');
 }
 
 // https://www.w3.org/TR/html-markup/syntax.html#text-syntax
 export function htmlContent(string: Stringable) {
-    return String(string).replace(/<|&(?=[0-9a-zA-Z]+;)/g, entity);
+    return String(string).replace(/<|&(?=[0-9a-zA-Z]+;)/gu, entity);
+}
+
+export function htmlComment(string: Stringable) {
+    return String(string).replace(/-->/gu, '--&gt;');
 }
 
 /**
