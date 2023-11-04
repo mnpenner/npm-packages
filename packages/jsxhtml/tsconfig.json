@@ -13,7 +13,6 @@
         "resolveJsonModule": true,
         "lib": [
             "ESNext",
-            "es2015.iterable",
             "dom"
         ],
         "jsx": "react-jsx",
@@ -21,7 +20,8 @@
         "outDir": "./dist"
     },
     "files": [
-        "./src/example.tsx"
+        "./src/example.tsx",
+        "./src/render.ts"
     ],
     "include": [
         "./src/jsx.d.ts"

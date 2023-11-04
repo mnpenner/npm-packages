@@ -16,7 +16,7 @@ export function RawHtml({children}: StringChildren) {
  */
 export function Comment({children}: StringChildren) {
     // console.log(children)
-    return new JsxComment(flattenString(children))
+    return new JsxComment(' '+flattenString(children)+' ')
 }
 
 /**

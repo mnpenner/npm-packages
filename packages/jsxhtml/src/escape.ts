@@ -70,6 +70,10 @@ export function htmlComment(string: Stringable) {
     return String(string).replace(/-->/gu, '--&gt;');
 }
 
+export function escapeScript(string: Stringable) {
+    return String(string).replace(/<\/(script)/igu, '<\\/$1')
+}
+
 /**
  * Generic HTML escape. Works for both attribute values and HTML content.
  *

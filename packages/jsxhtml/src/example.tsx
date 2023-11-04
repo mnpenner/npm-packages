@@ -10,14 +10,13 @@ function BlueBox(props: CommonProps) {
 
 
 import {Elysia} from 'elysia'
-import {html} from './elysia-plugin'
+import {elysiaJsx} from './elysia-plugin'
 import {Comment, HtmlDocument, RawHtml} from './custom'
-import React from 'react'
 
 const PORT = 3000
 
 new Elysia()
-    .use(html())
+    .use(elysiaJsx())
     .get('/', () => {
         let inject = '<b>  i\'nj\ne"ct   </b>'
         let obj = {bar: 'baz', quux: [1, 2]}
@@ -72,12 +71,13 @@ new Elysia()
                     {7 / 3}<br />
                     {NaN}<br />
                     {1 / -0}<br />
-                    {3e50}
+                    {3e50}<br/>
 
                     <RawHtml children="Hello <b>bold</b> world" />
 
                 </div>
                 <script>
+                    console.log('&lt;/script>');
                     console.log(document.getElementById('fooput').dataset.foo)
                 </script>
             </body>

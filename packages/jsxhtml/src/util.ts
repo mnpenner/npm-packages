@@ -1,4 +1,6 @@
-import {isIterable} from '@mnpenner/is-type'
+import {isFunction, isIterable} from '@mnpenner/is-type'
+import {FlatString, JsxChildren, JsxComponent} from './types'
+import {JsxComment} from './jsx-nodes'
 
 
 export function mapIter<In, Out>(iterable: Iterable<In>, cb: (el: In, i: number) => Out): Out[] {
@@ -18,7 +20,7 @@ export function getStringTag(value: any): string {
     return Object.prototype.toString.call(value).slice(8, -1)
 }
 
-export function isEmpty(children: any): boolean {
+export function isEmptyChildren(children: JsxChildren): boolean {
     return children == null || (Array.isArray(children) && children.length === 0)
 }
 
@@ -31,6 +33,8 @@ export function fullWide(n: number): string {
 }
 
 
-export function flattenString(content: string | Iterable<string>, sep = '') {
-    return isIterable(content) ? Array.from(content).join(sep) : content
+export function flattenString(content: FlatString, sep = '') {
+    return isIterable(content) ? Array.from(content).join(sep) : String(content)
 }
+
+export const isJsxComponent = isFunction as ((x: any) => x is JsxComponent)

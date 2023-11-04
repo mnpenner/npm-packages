@@ -1,10 +1,9 @@
-import { Elysia } from 'elysia'
-import {JsxElement,isJsx} from './jsx-nodes'
+import {isJsx} from './jsx-nodes'
 
-
-export function html() {
+export function elysiaJsx() {
+    const {Elysia} = require('elysia') as typeof import('elysia')
     return new Elysia()
-        .onAfterHandle(({ response }) => {
+        .onAfterHandle(({response}) => {
             if(isJsx(response)) {
                 // console.log('RESPONSE',response)
                 return new Response(String(response), {

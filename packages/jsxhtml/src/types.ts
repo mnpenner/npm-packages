@@ -20,7 +20,7 @@ export type HtmlSafe = { __html: string }
 
 export type JsxRenderable = any
 
-export type JsxChildren = JsxRenderable | JsxRenderable[]
+export type JsxChildren = JsxRenderable | Iterable<JsxRenderable>
 
 export type CommonProps = Omit<AttrObj, 'children' | 'style' | 'class'> & {
     children?: JsxChildren,
@@ -29,8 +29,10 @@ export type CommonProps = Omit<AttrObj, 'children' | 'style' | 'class'> & {
 }
 
 // export type JsxFn = (tag: string, props: AttrObj, children:undefined|JsxhtmlChildren) => JsxhtmlElement
-export type Component = (props: CommonProps) => JsxNode
+export type JsxComponent<P=CommonProps> = ((props: P) => JsxNode) & {displayName?: string, name?: string}
 
-export type StringChildren = { children: string | string[] | Iterable<string> }
+export type FlatString =  string | Iterable<string>
+
+export interface StringChildren { children: FlatString }
 
 // export type JsxhtmlConstructor = (...args: ConstructorParameters<typeof JsxhtmlElement>) => JsxhtmlElement
