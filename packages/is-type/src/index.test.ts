@@ -10,6 +10,9 @@ test(lib.isFunction.name, () => {
     expect(lib.isFunction(function*(){})).toBe(true)
     expect(lib.isFunction(function* named(){})).toBe(true)
 
+    expect(lib.isFunction(async function(){})).toBe(true)
+    expect(lib.isFunction(async ()=>{})).toBe(true)
+
     expect(lib.isFunction(null)).toBe(false)
     expect(lib.isFunction(undefined)).toBe(false)
     expect(lib.isFunction(false)).toBe(false)
@@ -29,6 +32,9 @@ test(lib.isFunction.name, () => {
 test(lib.isGeneratorFunction.name, () => {
     expect(lib.isGeneratorFunction(function*(){})).toBe(true)
     expect(lib.isGeneratorFunction(function* named(){})).toBe(true)
+
+    expect(lib.isGeneratorFunction(async function(){})).toBe(false)
+    expect(lib.isGeneratorFunction(async ()=>{})).toBe(false)
 
     expect(lib.isGeneratorFunction(() => {})).toBe(false)
     expect(lib.isGeneratorFunction(function(){})).toBe(false)
@@ -50,6 +56,35 @@ test(lib.isGeneratorFunction.name, () => {
     expect(lib.isGeneratorFunction(new Date)).toBe(false)
     expect(lib.isGeneratorFunction(new Set())).toBe(false)
     expect(lib.isGeneratorFunction(new Map())).toBe(false)
+})
+
+test(lib.isAsyncFunction.name, () => {
+    expect(lib.isAsyncFunction(async function(){})).toBe(true)
+    expect(lib.isAsyncFunction(async ()=>{})).toBe(true)
+
+    expect(lib.isAsyncFunction(function*(){})).toBe(false)
+    expect(lib.isAsyncFunction(function* named(){})).toBe(false)
+
+    expect(lib.isAsyncFunction(() => {})).toBe(false)
+    expect(lib.isAsyncFunction(function(){})).toBe(false)
+    expect(lib.isAsyncFunction(function fn(){})).toBe(false)
+    expect(lib.isAsyncFunction(new Date().valueOf)).toBe(false)
+    expect(lib.isAsyncFunction(Function.prototype)).toBe(false)
+
+    expect(lib.isAsyncFunction(null)).toBe(false)
+    expect(lib.isAsyncFunction(undefined)).toBe(false)
+    expect(lib.isAsyncFunction(false)).toBe(false)
+    expect(lib.isAsyncFunction(true)).toBe(false)
+    expect(lib.isAsyncFunction('str')).toBe(false)
+    expect(lib.isAsyncFunction(3.14)).toBe(false)
+    expect(lib.isAsyncFunction(Symbol())).toBe(false)
+    expect(lib.isAsyncFunction(/re/)).toBe(false)
+    expect(lib.isAsyncFunction([])).toBe(false)
+    expect(lib.isAsyncFunction({})).toBe(false)
+    expect(lib.isAsyncFunction(Object.create(null))).toBe(false)
+    expect(lib.isAsyncFunction(new Date)).toBe(false)
+    expect(lib.isAsyncFunction(new Set())).toBe(false)
+    expect(lib.isAsyncFunction(new Map())).toBe(false)
 })
 
 test(lib.isDate.name, () => {
@@ -120,6 +155,7 @@ test(lib.isIterable.name, () => {
     expect(lib.isIterable(Object.entries(Object.create(null)))).toBe(true)
     expect(lib.isIterable(Object.keys({}))).toBe(true)
     expect(lib.isIterable(Object.values({}))).toBe(true)
+    expect(lib.isIterable(function*(){}())).toBe(true)
 })
 
 

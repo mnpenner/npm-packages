@@ -3,6 +3,7 @@ export type Truthy = Exclude<any,Falsy>
 export type Primitive = string|number|bigint|boolean|undefined|symbol|null
 export type UnknownFunction = (...args: unknown[]) => unknown
 export type UnknownGeneratorFunction = (...args: unknown[]) => Generator<unknown, unknown, unknown>
+export type UnknownAsyncFunction = (...args: unknown[]) => Promise<unknown>
 
 /**
  * Object is callable. Includes functions & generator functions.
@@ -16,6 +17,13 @@ export function isFunction(obj: any): obj is UnknownFunction {
  */
 export function isGeneratorFunction(obj: any): obj is UnknownGeneratorFunction {
     return isFunction(obj) && Object.prototype.toString.call(obj) === "[object GeneratorFunction]";
+}
+
+/**
+ * Object is an async function.
+ */
+export function isAsyncFunction(obj: any): obj is UnknownAsyncFunction {
+    return isFunction(obj) && Object.prototype.toString.call(obj) === "[object AsyncFunction]";
 }
 
 /**
