@@ -1,9 +1,9 @@
-import {JsxElement,isJsx} from './jsx-nodes'
+import {JsxElement,isJsxNode} from './jsx-nodes'
 import * as util from '@mnpenner/is-type'
 import * as esc from './escape'
 import {AnyFn, HtmlSafe, JsxChildren, JsxRenderable} from './types'
 import {isIterable} from '@mnpenner/is-type'
-import {fullWide, getStringTag, mapIter} from './util'
+import {fullWide, getStringTag, isEmptyRender, mapIter} from './util'
 
 
 function isHtmlSafe(x: any): x is HtmlSafe {
@@ -11,11 +11,11 @@ function isHtmlSafe(x: any): x is HtmlSafe {
 }
 
 export function render(el: JsxRenderable): string {
-    if(el === null || el === undefined || el === false) {
+    if(isEmptyRender(el)) {
         return '';
     }
 
-    if(isJsx(el)) {
+    if(isJsxNode(el)) {
         return el.toString();
     }
 

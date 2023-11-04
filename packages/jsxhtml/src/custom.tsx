@@ -1,4 +1,4 @@
-import {DocTypeProps, JsxComment, JsxDocType, JsxRawHtml} from './jsx-nodes'
+import {DocTypeProps, EMPTY, JsxComment, JsxDocType, JsxEmpty, JsxRawHtml} from './jsx-nodes'
 import {isIterable} from '@mnpenner/is-type'
 import {flattenString} from './util'
 import {AttrObj, CommonProps, JsxChildren, StringChildren} from './types'
@@ -36,4 +36,11 @@ export function HtmlDocument({children, ...htmlAttrs}: CommonProps) {
         {children}
         </html>
     </>
+}
+
+/**
+ * No output.
+ */
+export function Empty() {
+    return EMPTY
 }

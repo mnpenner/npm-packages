@@ -24,6 +24,10 @@ export function isEmptyChildren(children: JsxChildren): boolean {
     return children == null || (Array.isArray(children) && children.length === 0)
 }
 
+export function isEmptyRender(el: any): boolean {
+    return el === null || el === undefined || el === false
+}
+
 export function fullWide(n: number): string {
     try {
         return n.toLocaleString('en-US', {useGrouping: false, maximumFractionDigits: 20})

@@ -8,7 +8,7 @@ export {Fragment} from './jsx-runtime'
 export function jsxDEV(tag: string | JsxComponent, props: CommonProps, key: unknown, isStaticChildren: unknown, source: unknown, self: unknown): JsxNode {
     let node: JsxNode = (jsx as AnyFn)(...arguments)
 
-    if(isJsxComponent(tag)) {
+    if(isJsxComponent(tag) && !(node instanceof JsxComment)) {
         const name = tag.displayName ?? tag.name ?? 'Unknown'
         node = new JsxFragment([new JsxComment(`<${name}>`), node, new JsxComment(`</${name}>`)])
     }

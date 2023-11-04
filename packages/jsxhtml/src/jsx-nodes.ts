@@ -12,10 +12,10 @@ const voidElements = new Set(['area', 'base', 'br', 'col', 'command', 'embed', '
 // TODO: handle <!DOCTYPE html>
 
 export abstract class JsxNode {
-    // public static isJsxhtmlElement = true
+    abstract toString(): string;
 }
 
-export function isJsx(x: any): x is JsxNode {
+export function isJsxNode(x: any): x is JsxNode {
     return x instanceof JsxNode
 }
 
@@ -48,10 +48,7 @@ export class JsxElement extends JsxNode {
     }
 }
 
-// TODO: Script tag has funny parsing rules.... no?
-
 export class JsxRawHtml extends JsxNode {
-
     get [Symbol.toStringTag]() {
         return 'JsxRawHtml'
     }
@@ -107,6 +104,8 @@ export class JsxEmpty extends JsxNode {
         return ''
     }
 }
+
+export const EMPTY = new JsxEmpty()
 
 export class JsxFragment extends JsxNode {
     get [Symbol.toStringTag]() {

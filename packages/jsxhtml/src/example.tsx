@@ -36,8 +36,13 @@ new Elysia()
                     border-radius: 5px;
                 {'}'}
             </style>
+            <style children={String.raw`
+                .numbers {
+                    color: blue;
+                }
+            `}/>
             <body>
-                <Comment children="hello comment"/>
+                <Comment children="hello comment" />
                 <Comment>
                     Hello &lt; secret comment
                     Multi-line {'-->'}
@@ -67,17 +72,19 @@ new Elysia()
                         ))}
                     </ul>
 
-                    {3.14159265358979323846264338327950288419716}<br />
-                    {7 / 3}<br />
-                    {NaN}<br />
-                    {1 / -0}<br />
-                    {3e50}<br/>
+                    <div class="numbers">
+                        {3.14159265358979323846264338327950288419716}<br />
+                        {7 / 3}<br />
+                        {NaN}<br />
+                        {1 / -0}<br />
+                        {3e50}<br />
+                    </div>
 
                     <RawHtml children="Hello <b>bold</b> world" />
 
                 </div>
                 <script>
-                    console.log('&lt;/script>');
+                    console.log('{'<'}/script{'>'}');
                     console.log(document.getElementById('fooput').dataset.foo)
                 </script>
             </body>
