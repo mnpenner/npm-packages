@@ -3,6 +3,7 @@ import classNames from 'classnames'
 import * as util from '@mnpenner/is-type'
 import styleObjectToString from './styleObjectToString'
 import {AttrArr, Attributes, AttributeValue, Stringable} from './types'
+import {isFunction} from '@mnpenner/is-type'
 
 function entity(ch: string) {
     return Object.hasOwn(entityMap, ch) ? `&${entityMap[ch]};` : `&#x${ch.codePointAt(0)!.toString(16)};`;
@@ -19,18 +20,23 @@ export function attrName(string: Stringable) {
 }
 
 // https://www.w3.org/TR/html-markup/syntax.html#attr-value-double-quoted
-export function attrValue(string: Stringable) {
+export function attrValue(value: Stringable) {
     // TODO: if value is an anonymous function, should we extract it, give it a name and invoke it like <script>function $a(ev){...}</script><button onclick="return $a(event);">
     // if(isNumber(string)) {
     //     return fullWide(string)
     // }
-    return `"${String(string).replace(/"/gu, entity)}"`;
+    if(isFunction(value)) {
+        // "onclick" attributes are invoked immediately
+        value = `(${value}).call(this)`
+    }
+    return `"${String(value).replace(/"/gu, entity)}"`;
 }
 
 export function attrKvPair(rawAttr: string, rawVal: AttributeValue) {
     let escAttr = attrName(rawAttr);
 
     if(/^data-/.test(rawAttr) && !util.isString(rawVal)) {
+        // TODO: should we make a special exception for data- attributes? I guess we want to preserve null/true/false...
         rawVal = JSON.stringify(rawVal);
     }
 

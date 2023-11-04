@@ -32,15 +32,15 @@ new Elysia()
             </head>
             <style>
                 .cr-blue-box {'{'}
-                    border: 5px solid blue;
-                    border-radius: 5px;
+                border: 5px solid blue;
+                border-radius: 5px;
                 {'}'}
             </style>
             <style children={String.raw`
                 .numbers {
                     color: blue;
                 }
-            `}/>
+            `} />
             <body>
                 <Comment children="hello comment" />
                 <Comment>
@@ -71,17 +71,20 @@ new Elysia()
                             <li>{li}</li>
                         ))}
                     </ul>
-
-                    <div class="numbers">
-                        {3.14159265358979323846264338327950288419716}<br />
-                        {7 / 3}<br />
-                        {NaN}<br />
-                        {1 / -0}<br />
-                        {3e50}<br />
-                    </div>
-
-                    <RawHtml children="Hello <b>bold</b> world" />
-
+                </div>
+                <div class="numbers">
+                    {3.14159265358979323846264338327950288419716}<br />
+                    {7 / 3}<br />
+                    {NaN}<br />
+                    {1 / -0}<br />
+                    {3e50}<br />
+                </div>
+                <RawHtml children="Hello <b>bold</b> world" />
+                <div>
+                    <button onClick={() => console.log(`You clicked ${event.offsetX}, ${event.offsetY}`)}>Event XY</button>
+                    <button onClick={externalFunc}>External1</button>
+                    <button onClick={externalFunc}>External2</button>
+                    <button onClick={() => console.log("hello")}>Hello quotes</button>
                 </div>
                 <script>
                     console.log('{'<'}/script{'>'}');
@@ -92,3 +95,7 @@ new Elysia()
     })
     .listen(PORT)
 console.log(`Listening on http://localhost:${PORT}`)
+
+function externalFunc(this: HTMLButtonElement) {
+    console.log(this)
+}
