@@ -7,6 +7,9 @@ test(lib.isFunction.name, () => {
     expect(lib.isFunction(new Date().valueOf)).toBe(true)
     expect(lib.isFunction(Function.prototype)).toBe(true)
 
+    expect(lib.isFunction(function*(){})).toBe(true)
+    expect(lib.isFunction(function* named(){})).toBe(true)
+
     expect(lib.isFunction(null)).toBe(false)
     expect(lib.isFunction(undefined)).toBe(false)
     expect(lib.isFunction(false)).toBe(false)

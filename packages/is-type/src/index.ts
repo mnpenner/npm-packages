@@ -5,14 +5,14 @@ export type UnknownFunction = (...args: unknown[]) => unknown
 export type UnknownGeneratorFunction = (...args: unknown[]) => Generator<unknown, unknown, unknown>
 
 /**
- * Object is callable.
+ * Object is callable. Includes functions & generator functions.
  */
 export function isFunction(obj: any): obj is UnknownFunction {
     return typeof obj === 'function'
 }
 
 /**
- * Object is callable.
+ * Object is a generator function (`function*`)
  */
 export function isGeneratorFunction(obj: any): obj is UnknownGeneratorFunction {
     return isFunction(obj) && Object.prototype.toString.call(obj) === "[object GeneratorFunction]";
