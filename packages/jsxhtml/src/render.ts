@@ -1,9 +1,9 @@
-import {JsxElement,isJsxNode} from './jsx-nodes'
 import * as util from '@mnpenner/is-type'
 import * as esc from './escape'
-import {AnyFn, HtmlSafe, JsxChildren, JsxRenderable} from './types'
+import {AnyFn, HtmlSafe, JsxRenderable} from './types'
 import {isIterable} from '@mnpenner/is-type'
 import {fullWide, getStringTag, isEmptyRender, mapIter} from './util'
+import {isJsxNode} from './jsx-node'
 
 
 function isHtmlSafe(x: any): x is HtmlSafe {
@@ -12,33 +12,33 @@ function isHtmlSafe(x: any): x is HtmlSafe {
 
 export function render(el: JsxRenderable): string {
     if(isEmptyRender(el)) {
-        return '';
+        return ''
     }
 
     if(isJsxNode(el)) {
-        return el.toString();
+        return el.toString()
     }
 
     if(isHtmlSafe(el)) {
-        return el.__html;  // TODO: do we still need this now that we have <RawHtml> ?
+        return el.__html  // TODO: do we still need this now that we have <RawHtml> ?
     }
 
     if(util.isString(el)) {
         return esc.htmlContent(el)
-            // .replace(/ {2}/g, ' &nbsp;')  // TODO: decide if we should really do these replacements
-            // .replace(/\r?\n|\r/g, '<br>');
+        // .replace(/ {2}/g, ' &nbsp;')  // TODO: decide if we should really do these replacements
+        // .replace(/\r?\n|\r/g, '<br>');
     }
 
     if(util.isNumber(el)) {
-        return fullWide(el);
+        return fullWide(el)
     }
 
     if(Array.isArray(el)) {
-        return el.map(x => render(x)).join('');
+        return el.map(x => render(x)).join('')
     }
 
     if(util.isFunction(el)) {
-        return render((el as AnyFn)());
+        return render((el as AnyFn)())
     }
 
     if(isIterable(el)) {
@@ -47,5 +47,5 @@ export function render(el: JsxRenderable): string {
 
     // console.info(Object.prototype.toString.call(el),el);
     // console.error('UNHANDLED ELEMENT:',el)
-    throw new Error(`Unsupported type: ${getStringTag(el)}`);
+    throw new Error(`Unsupported type: ${getStringTag(el)}`)
 }

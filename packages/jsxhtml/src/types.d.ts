@@ -1,5 +1,5 @@
-import type {JsxNode} from './jsx-nodes'
 import type {StyleObject} from './styleObjectToString'
+import {JsxNode} from './jsx-node'
 
 export interface Stringable {
     toString(): string

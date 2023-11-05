@@ -1,4 +1,4 @@
-import {isJsxNode} from './jsx-nodes'
+import {isJsxNode} from './jsx-node'
 
 export function elysiaJsx() {
     const {Elysia} = require('elysia') as typeof import('elysia')

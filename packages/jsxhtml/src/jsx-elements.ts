@@ -1,23 +1,15 @@
 import * as esc from './escape'
+import {attrs, escapeScript, htmlComment} from './escape'
 import {render} from './render'
-import {Attributes, AttrObj, JsxChildren, JsxRenderable, CommonProps} from './types'
-import {isIterable} from '@mnpenner/is-type'
-import {flattenString, isEmptyChildren, mapIter} from './util'
-import {attrs, escapeScript, htmlComment, htmlContent} from './escape'
+import {CommonProps, JsxChildren} from './types'
+import {flattenString, isEmptyChildren} from './util'
+import {JsxNode} from './jsx-node'
 
 // https://www.w3.org/TR/html-markup/syntax.html#syntax-elements
 // https://www.w3.org/TR/2011/WD-html-markup-20110113/syntax.html#syntax-elements
 const voidElements = new Set(['area', 'base', 'br', 'col', 'command', 'embed', 'hr', 'img', 'input', 'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr'])
 
 // TODO: handle <!DOCTYPE html>
-
-export abstract class JsxNode {
-    abstract toString(): string;
-}
-
-export function isJsxNode(x: any): x is JsxNode {
-    return x instanceof JsxNode
-}
 
 export class JsxElement extends JsxNode {
     constructor(private readonly tag: string, private readonly props: CommonProps) {

@@ -1,5 +1,7 @@
-export * from './jsx-nodes'
-export * from './custom'
+export * from './jsx-elements'
+export * from './custom-components'
+export {isJsxNode} from './jsx-node'
+export {JsxNode} from './jsx-node'
 
 // For compat with {"jsx": "react"}
 import type {CommonProps, JsxComponent, JsxRenderable} from './types'

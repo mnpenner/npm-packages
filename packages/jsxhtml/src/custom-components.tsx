@@ -1,7 +1,6 @@
-import {DocTypeProps, EMPTY, JsxComment, JsxDocType, JsxEmpty, JsxRawHtml} from './jsx-nodes'
-import {isIterable} from '@mnpenner/is-type'
+import {DocTypeProps, EMPTY, JsxComment, JsxDocType, JsxRawHtml} from './jsx-elements'
 import {flattenString} from './util'
-import {AttrObj, CommonProps, JsxChildren, StringChildren} from './types'
+import {CommonProps, StringChildren} from './types'
 
 
 /**
@@ -16,7 +15,7 @@ export function RawHtml({children}: StringChildren) {
  */
 export function Comment({children}: StringChildren) {
     // console.log(children)
-    return new JsxComment(' '+flattenString(children)+' ')
+    return new JsxComment(` ${flattenString(children)} `)
 }
 
 /**

@@ -1,7 +1,8 @@
 import type {AnyFn, CommonProps, JsxComponent} from './types'
-import {JsxComment, JsxFragment, JsxNode} from './jsx-nodes'
+import {JsxComment, JsxFragment} from './jsx-elements'
 import {jsx} from './jsx-runtime'
 import {isJsxComponent} from './util'
+import {JsxNode} from './jsx-node'
 
 export {jsx, Fragment} from './jsx-runtime'
 

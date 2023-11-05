@@ -12,7 +12,7 @@ function BlueBox(props: CommonProps) {
 
 import {Elysia} from 'elysia'
 import {elysiaJsx} from './elysia-plugin'
-import {Comment, HtmlDocument, RawHtml} from './custom'
+import {Comment, HtmlDocument, RawHtml} from './custom-components'
 
 const PORT = 3000
 
