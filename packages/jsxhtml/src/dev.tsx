@@ -124,8 +124,8 @@ function externalFunc(this: HTMLButtonElement) {
 
 // console.log(<div class={["foo","bar"]} style={{color:'blue',border:1}}>Hello JsxHtml</div>.toString())
 
-const serverContent = <>I'm "going" to <script>alert('hack')</script> myself!</>
-console.log(<div>{serverContent}</div>.toString())
+// const serverContent = <>I'm "going" to <script>alert('hack')</script> myself!</>
+// console.log(<div>{serverContent}</div>.toString())
 
 // const html = "HTML <b>generated</b> from some WYSIWYG."
 // console.log('SAFE: ' + <div>{html}</div>)

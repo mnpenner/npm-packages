@@ -1,6 +1,6 @@
 {
     "name": "@mpen/jsxhtml",
-    "version": "0.1.8",
+    "version": "0.1.9",
     "packageManager": "bun@1.0.7",
     "exports": "./index.cjs",
     "module": "./index.mjs",
@@ -22,7 +22,7 @@
         "bundle:build": "rollup -c",
         "bundle": "run-s bundle:clean bundle:build",
         "copy:pkg": "jq 'del(.scripts,.devDependencies)' package.json > ./dist/package.json",
-        "copy:readme": "cp README.md ./src/jsx.d.ts ./dist/",
+        "copy:readme": "cp README.md ./dist/",
         "commit": "VER=$(jq -r '.version' package.json) && hg ci -m \"Commit v$VER\" && hg tag \"v$VER\"",
         "bumpver": "npm version patch",
         "release": "run-s bundle bumpver 'copy:**' commit && (cd dist && npm publish --access=public) && hg pushall"
