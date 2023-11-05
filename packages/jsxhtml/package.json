@@ -1,46 +1,53 @@
 {
-  "name": "@mpen/jsxhtml",
-  "version": "0.1.6",
-  "packageManager": "bun@1.0.7",
-  "exports": "./bundle.cjs",
-  "module": "./bundle.mjs",
-  "types": "./bundle.d.ts",
-  "type": "module",
-  "scripts": {
-    "dev:build": "rollup -cw",
-    "dev:serve": "serve -l tcp://0.0.0.0:8080",
-    "dev": "run-p \"dev:**\"",
-    "serve": "bun run --hot dev/serve.ts",
-    "bundle:clean": "rimraf -g \"dist/*\"",
-    "bundle:build": "rollup -c",
-    "bundle": "run-s bundle:clean bundle:build",
-    "copy:pkg": "jq 'del(.scripts,.devDependencies)' package.json > ./dist/package.json",
-    "copy:readme": "cp README.md ./dist/",
-    "commit": "VER=$(jq -r '.version' package.json) && hg ci -m \"Commit v$VER\" && hg tag \"v$VER\"",
-    "bumpver": "npm version patch",
-    "release": "run-s bundle bumpver 'copy:**' commit && npm publish dist && hg pushall"
-  },
-  "devDependencies": {
-    "@mnpenner/is-type": "^0.1.6",
-    "@rollup/plugin-commonjs": "^25.0.7",
-    "@rollup/plugin-node-resolve": "^15.2.3",
-    "@rollup/plugin-replace": "^5.0.5",
-    "@rollup/plugin-terser": "^0.4.4",
-    "@rollup/plugin-typescript": "^11.1.5",
-    "@types/eslint": "^8.44.6",
-    "@typescript-eslint/eslint-plugin": "^6.9.1",
-    "@typescript-eslint/parser": "^6.9.1",
-    "bun-types": "^1.0.8",
-    "classnames": "^2.3.2",
-    "elysia": "^0.7.21",
-    "eslint": "^8.52.0",
-    "npm-run-all": "^4.1.5",
-    "rimraf": "^5.0.5",
-    "rollup": "^4.2.0",
-    "tslib": "^2.6.2",
-    "typescript": "^5.2.2"
-  },
-  "optionalDependencies": {
-    "elysia": ">=0.7.21"
-  }
+    "name": "@mpen/jsxhtml",
+    "version": "0.1.7",
+    "packageManager": "bun@1.0.7",
+    "exports": "./bundle.cjs",
+    "module": "./bundle.mjs",
+    "types": "./bundle.d.ts",
+    "type": "module",
+    "keywords": [
+        "jsx",
+        "html",
+        "render",
+        "server-side",
+        "elysia"
+    ],
+    "scripts": {
+        "dev:build": "rollup -cw",
+        "dev:serve": "serve -l tcp://0.0.0.0:8080",
+        "dev": "run-p \"dev:**\"",
+        "serve": "bun run --hot dev/serve.ts",
+        "bundle:clean": "rimraf -g \"dist/*\"",
+        "bundle:build": "rollup -c",
+        "bundle": "run-s bundle:clean bundle:build",
+        "copy:pkg": "jq 'del(.scripts,.devDependencies)' package.json > ./dist/package.json",
+        "copy:readme": "cp README.md ./dist/",
+        "commit": "VER=$(jq -r '.version' package.json) && hg ci -m \"Commit v$VER\" && hg tag \"v$VER\"",
+        "bumpver": "npm version patch",
+        "release": "run-s bundle bumpver 'copy:**' commit && (cd dist && npm publish --access=public) && hg pushall"
+    },
+    "devDependencies": {
+        "@mnpenner/is-type": "^0.1.6",
+        "@rollup/plugin-commonjs": "^25.0.7",
+        "@rollup/plugin-node-resolve": "^15.2.3",
+        "@rollup/plugin-replace": "^5.0.5",
+        "@rollup/plugin-terser": "^0.4.4",
+        "@rollup/plugin-typescript": "^11.1.5",
+        "@types/eslint": "^8.44.6",
+        "@typescript-eslint/eslint-plugin": "^6.9.1",
+        "@typescript-eslint/parser": "^6.9.1",
+        "bun-types": "^1.0.8",
+        "classnames": "^2.3.2",
+        "elysia": "^0.7.21",
+        "eslint": "^8.52.0",
+        "npm-run-all": "^4.1.5",
+        "rimraf": "^5.0.5",
+        "rollup": "^4.2.0",
+        "tslib": "^2.6.2",
+        "typescript": "^5.2.2"
+    },
+    "optionalDependencies": {
+        "elysia": ">=0.7.21"
+    }
 }

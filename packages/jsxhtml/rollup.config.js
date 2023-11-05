@@ -9,7 +9,7 @@ const production = !process.env.ROLLUP_WATCH;
 
 /** @type {import('rollup').RollupOptions} */
 const config = {
-    input: `src/${production ? 'index.ts' : 'example.tsx'}`,
+    input: ['./src/index.ts', './src/jsx-runtime.ts', './src/jsx-dev-runtime.ts'],
     output: [
         {
             dir: 'dist',
