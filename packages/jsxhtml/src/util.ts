@@ -1,6 +1,5 @@
 import {isFunction, isIterable} from '@mnpenner/is-type'
 import {FlatString, JsxChildren, JsxComponent} from './types'
-import {JsxComment} from './jsx-elements'
 
 
 export function mapIter<In, Out>(iterable: Iterable<In>, cb: (el: In, i: number) => Out): Out[] {

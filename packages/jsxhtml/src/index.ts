@@ -1,7 +1,7 @@
 export * from './jsx-elements'
 export * from './custom-components'
+export * from './elysia-plugin'
 export {isJsxNode} from './jsx-node'
-export {JsxNode} from './jsx-node'
 
 // For compat with {"jsx": "react"}
 import type {CommonProps, JsxComponent, JsxRenderable} from './types'
