@@ -1,6 +1,6 @@
 {
     "name": "@mpen/jsxhtml",
-    "version": "0.1.9",
+    "version": "0.1.10",
     "packageManager": "bun@1.0.7",
     "exports": "./index.cjs",
     "module": "./index.mjs",
