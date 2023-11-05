@@ -32,6 +32,7 @@ export class JsxElement extends JsxNode {
     }
 
     toString(): string {
+        const normalizedTagName = String(this.tag).trim().toLowerCase()
         let tag = esc.tagName(this.tag)
         const {children, ...props} = this.props
         let attrs = esc.attrs(props)
@@ -41,7 +42,7 @@ export class JsxElement extends JsxNode {
         if(isEmptyChildren(children)) {
             return `<${tag}${attrs}></${tag}>`
         }
-        if(this.tag.toLowerCase() === 'script') {
+        if(normalizedTagName === 'script') {
             return `<${tag}${attrs}>${escapeScript(flattenString(children))}</${tag}>`
         }
         return `<${tag}${attrs}>${render(children)}</${tag}>`

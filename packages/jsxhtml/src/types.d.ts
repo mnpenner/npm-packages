@@ -34,5 +34,6 @@ export type JsxComponent<P=CommonProps> = ((props: P) => JsxNode) & {displayName
 export type FlatString =  string | Iterable<string>
 
 export interface StringChildren { children: FlatString }
+export interface ChildrenOnly { children: JsxChildren }
 
 // export type JsxhtmlConstructor = (...args: ConstructorParameters<typeof JsxhtmlElement>) => JsxhtmlElement

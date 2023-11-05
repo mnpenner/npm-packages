@@ -5,7 +5,6 @@ export function elysiaJsx() {
     return new Elysia()
         .onAfterHandle(({response}) => {
             if(isJsxNode(response)) {
-                // console.log('RESPONSE',response)
                 return new Response(String(response), {
                     headers: {
                         'content-type': 'text/html; charset=utf8'

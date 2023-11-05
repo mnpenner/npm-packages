@@ -1,4 +1,5 @@
 import {CommonProps} from './types'
+import React from './index'
 
 function BlueBox(props: CommonProps) {
     return (
@@ -81,7 +82,8 @@ new Elysia()
                 </div>
                 <RawHtml children="Hello <b>bold</b> world" />
                 <div>
-                    <button onClick={() => console.log(`You clicked ${event.offsetX}, ${event.offsetY}`)}>Event XY</button>
+                    <button onClick={() => console.log(`You clicked ${event.offsetX}, ${event.offsetY}`)}>Event XY
+                    </button>
                     <button onClick={externalFunc}>External1</button>
                     <button onClick={externalFunc}>External2</button>
                     <button onClick={() => console.log("hello")}>Hello quotes</button>
@@ -93,9 +95,38 @@ new Elysia()
             </body>
         </HtmlDocument>
     })
+    .get('/two', () => {
+        return (
+            <HtmlDocument lang="en">
+                <head>
+                    <title>Hello JsxHtml</title>
+                </head>
+                <body>
+                    Hi there!
+                </body>
+            </HtmlDocument>
+        )
+    })
+    .get('/hack', () => {
+        const userGeneratedContent = `I'm "going" to <script>alert('hack')</script> you!`
+        const breakQuote = `break"quote`
+        return <div class={breakQuote}>{userGeneratedContent}</div>
+    })
+    .get('/dev', () => {
+        return <BlueBox>box</BlueBox>
+    })
     .listen(PORT)
 console.log(`Listening on http://localhost:${PORT}`)
 
 function externalFunc(this: HTMLButtonElement) {
     console.log(this)
 }
+
+// console.log(<div class={["foo","bar"]} style={{color:'blue',border:1}}>Hello JsxHtml</div>.toString())
+
+const serverContent = <>I'm "going" to <script>alert('hack')</script> myself!</>
+console.log(<div>{serverContent}</div>.toString())
+
+// const html = "HTML <b>generated</b> from some WYSIWYG."
+// console.log('SAFE: ' + <div>{html}</div>)
+// console.log('NOT SAFE: ' + <RawHtml>{html}</RawHtml>)
