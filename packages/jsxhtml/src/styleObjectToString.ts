@@ -1,24 +1,11 @@
 /* eslint-disable */
 // ripped from react-dom
 
-import {UnkFn} from './types'
+import {StyleObject} from './types'
 
-const _uppercasePattern = /([A-Z])/g
-
-/**
- * Hyphenates a camelcased string, for example:
- *
- *   > hyphenate('backgroundColor')
- *   < "background-color"
- *
- * For CSS style names, use `hyphenateStyleName` instead which works properly
- * with all vendor prefixes, including `ms`.
- */
-function hyphenate(string: string): string {
-    return string.replace(_uppercasePattern, '-$1').toLowerCase()
-}
-
-const msPattern = /^ms-/
+// https://github.com/facebook/react/blob/ce2bc58a9f6f3b0bfc8c738a0d8e2a5f3a332ff5/packages/react-dom-bindings/src/shared/hyphenateStyleName.js#L10
+const uppercasePattern = /([A-Z])/g;
+const msPattern = /^ms-/;
 
 /**
  * Hyphenates a camelcased CSS property name, for example:
@@ -33,70 +20,108 @@ const msPattern = /^ms-/
  * As Modernizr suggests (http://modernizr.com/docs/#prefixed), an `ms` prefix
  * is converted to `-ms-`.
  */
-function hyphenateStyleName(string: string): string {
-    return hyphenate(string).replace(msPattern, '-ms-')
+function hyphenateStyleName(name: string): string {
+    return name
+        .replace(uppercasePattern, '-$1')
+        .toLowerCase()
+        .replace(msPattern, '-ms-');
 }
 
 /**
  * Memoizes the return value of a function that accepts one string argument.
  */
 function memoizeStringOnly(callback: (arg: string) => string) {
-    let cache: Record<string, unknown> = {}
+    const cache = new Map<string,string>()
     return function(this: unknown, string: string) {
-        if(!cache.hasOwnProperty(string)) {
-            cache[string] = callback.call(this, string)
+        let value = cache.get(string)
+        if(value === undefined) {
+            value = callback.call(this, string)
+            cache.set(string, value)
         }
-        return cache[string]
+        return value
     }
 }
 
-const makeStyleName = memoizeStringOnly(function(styleName: string) {
-    return hyphenateStyleName(styleName)
-})
+const makeStyleName = memoizeStringOnly(hyphenateStyleName)
 
 
+// https://github.com/facebook/react/blob/ce2bc58a9f6f3b0bfc8c738a0d8e2a5f3a332ff5/packages/react-dom-bindings/src/shared/isUnitlessNumber.js#L13
 /**
  * CSS properties which accept numbers but are not in units of "px".
  */
-
-const isUnitlessNumber: Record<string, boolean> = {
-    animationIterationCount: true,
-    borderImageOutset: true,
-    borderImageSlice: true,
-    borderImageWidth: true,
-    boxFlex: true,
-    boxFlexGroup: true,
-    boxOrdinalGroup: true,
-    columnCount: true,
-    flex: true,
-    flexGrow: true,
-    flexPositive: true,
-    flexShrink: true,
-    flexNegative: true,
-    flexOrder: true,
-    gridRow: true,
-    gridColumn: true,
-    fontWeight: true,
-    lineClamp: true,
-    lineHeight: true,
-    opacity: true,
-    order: true,
-    orphans: true,
-    tabSize: true,
-    widows: true,
-    zIndex: true,
-    zoom: true,
-
-    // SVG-related properties
-    fillOpacity: true,
-    floodOpacity: true,
-    stopOpacity: true,
-    strokeDasharray: true,
-    strokeDashoffset: true,
-    strokeMiterlimit: true,
-    strokeOpacity: true,
-    strokeWidth: true
-}
+const unitlessNumbers = new Set([
+    'animationIterationCount',
+    'aspectRatio',
+    'borderImageOutset',
+    'borderImageSlice',
+    'borderImageWidth',
+    'boxFlex',
+    'boxFlexGroup',
+    'boxOrdinalGroup',
+    'columnCount',
+    'columns',
+    'flex',
+    'flexGrow',
+    'flexPositive',
+    'flexShrink',
+    'flexNegative',
+    'flexOrder',
+    'gridArea',
+    'gridRow',
+    'gridRowEnd',
+    'gridRowSpan',
+    'gridRowStart',
+    'gridColumn',
+    'gridColumnEnd',
+    'gridColumnSpan',
+    'gridColumnStart',
+    'fontWeight',
+    'lineClamp',
+    'lineHeight',
+    'opacity',
+    'order',
+    'orphans',
+    'scale',
+    'tabSize',
+    'widows',
+    'zIndex',
+    'zoom',
+    'fillOpacity', // SVG-related properties
+    'floodOpacity',
+    'stopOpacity',
+    'strokeDasharray',
+    'strokeDashoffset',
+    'strokeMiterlimit',
+    'strokeOpacity',
+    'strokeWidth',
+    'MozAnimationIterationCount', // Known Prefixed Properties
+    'MozBoxFlex', // TODO: Remove these since they shouldn't be used in modern code
+    'MozBoxFlexGroup',
+    'MozLineClamp',
+    'msAnimationIterationCount',
+    'msFlex',
+    'msZoom',
+    'msFlexGrow',
+    'msFlexNegative',
+    'msFlexOrder',
+    'msFlexPositive',
+    'msFlexShrink',
+    'msGridColumn',
+    'msGridColumnSpan',
+    'msGridRow',
+    'msGridRowSpan',
+    'WebkitAnimationIterationCount',
+    'WebkitBoxFlex',
+    'WebKitBoxFlexGroup',
+    'WebkitBoxOrdinalGroup',
+    'WebkitColumnCount',
+    'WebkitColumns',
+    'WebkitFlex',
+    'WebkitFlexGrow',
+    'WebkitFlexPositive',
+    'WebkitFlexShrink',
+    'WebkitLineClamp',
+]);
 
 
 /**
@@ -125,7 +150,7 @@ function makeStyleValue(name: string, value: any): string {
     }
 
     let isNonNumeric = isNaN(value)
-    if(isNonNumeric || value === 0 || (Object.hasOwn(isUnitlessNumber, name) && isUnitlessNumber[name])) {
+    if(isNonNumeric || value === 0 || unitlessNumbers.has(name)) {
         return '' + value // cast to string
     }
 
@@ -149,11 +174,7 @@ function makeStyleValue(name: string, value: any): string {
  */
 export default function styleObjectToString(styles: StyleObject): string {
     let serialized = ''
-    for(let styleName in styles) {
-        if(!Object.hasOwn(styles, styleName)) {
-            continue
-        }
-        let styleValue = styles[styleName]
+    for(const [styleName,styleValue] of Object.entries(styles)) {
         if(styleValue != null) {
             serialized += makeStyleName(styleName) + ':'
             serialized += makeStyleValue(styleName, styleValue) + ';'
@@ -162,4 +183,3 @@ export default function styleObjectToString(styles: StyleObject): string {
     return serialized
 }
 
-export type StyleObject = Record<string, any>

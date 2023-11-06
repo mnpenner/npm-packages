@@ -41,7 +41,7 @@ new Elysia()
                     color: blue;
                 }
             `} />
-            <body>
+            <body >
                 <Comment children="hello comment" />
                 <Comment>
                     Hello &lt; secret comment
@@ -60,9 +60,9 @@ new Elysia()
                     <p style={{
                         'color': 'red',
                         'border': '1px solid blue',
-                        'paddingTop': 5,
+                        'paddingTop': '5px',
                         'padding-bottom': '10px',
-                        'paddingLeft': 0
+                        'paddingLeft': 0,
                     }}>bacon {'&'} cheese</p>
                     <BlueBox>hello world</BlueBox>
 

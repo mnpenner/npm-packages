@@ -1,4 +1,3 @@
-import type {StyleObject} from './styleObjectToString'
 import {JsxNode} from './jsx-node'
 
 export interface Stringable {
@@ -7,6 +6,7 @@ export interface Stringable {
 
 export type PlainObject = Record<PropertyKey, unknown>
 export type ClassNames = import('classnames').Argument
+export type StyleObject = import('csstype').Properties | import('csstype').PropertiesHyphen
 export type AttributeValue = Stringable | StyleObject | ClassNames
 export type AttrKvPair = [name: string, value: AttributeValue]
 export type AttrArr = AttrKvPair[]
