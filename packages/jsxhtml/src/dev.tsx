@@ -1,5 +1,4 @@
 import {CommonProps} from './types'
-import React from './index'
 
 function BlueBox(props: CommonProps) {
     return (

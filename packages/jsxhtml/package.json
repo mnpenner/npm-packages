@@ -1,11 +1,10 @@
 {
     "name": "@mpen/jsxhtml",
-    "version": "0.1.10",
+    "version": "0.1.11",
     "packageManager": "bun@1.0.7",
     "exports": "./index.cjs",
     "module": "./index.mjs",
     "types": "./index.d.ts",
-    "type": "module",
     "keywords": [
         "jsx",
         "html",
