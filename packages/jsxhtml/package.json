@@ -1,10 +1,16 @@
 {
   "name": "@mpen/jsxhtml",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "packageManager": "bun@1.0.7",
   "exports": "./index.cjs",
   "module": "./index.mjs",
-  "types": "./types/index.d.ts",
+  "types": "./index.d.ts",
+  "sideEffects": false,
+  "author": {
+    "name": "Mark Penner",
+    "email": "npm@mpen.ca",
+    "url": "https://github.com/mnpenner"
+  },
   "keywords": [
     "jsx",
     "html",
