@@ -18,7 +18,7 @@ function isNegativeZero(num: number): num is -0 {
     return num === 0 && 1 / num === -Infinity;
 }
 
-export function numberToBase50(num: number): string {
+export function base10to50(num: number): string {
     const isNeg = num < 0 || isNegativeZero(num)
     let out = ''
 
@@ -40,7 +40,7 @@ export function numberToBase50(num: number): string {
     return out
 }
 
-export function base50ToNumber(base50Str: string): number {
+export function base50to10(base50Str: string): number {
     let result = 0;
     let negate = 1;
     let i = 0

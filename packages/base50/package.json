@@ -1,6 +1,6 @@
 {
   "name": "@mpen/base50",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "packageManager": "bun",
   "exports": "./dist/bundle.cjs",
   "module": "./dist/bundle.mjs",
