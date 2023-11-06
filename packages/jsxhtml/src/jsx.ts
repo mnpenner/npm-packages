@@ -4,6 +4,6 @@
 
 declare namespace JSX {
     type IntrinsicElements = {
-        [_ in import('./tags/IntrinsicElements').HtmlElements]: import('./types').CommonProps
+        [_ in import('./htmlspec/IntrinsicElements').HtmlElements]: import('./types').CommonProps
     }
 }
