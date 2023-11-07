@@ -34,7 +34,7 @@ if(production) {
     config.output.push({
         dir: 'dist',
         format: 'cjs',
-        entryFileNames: '[name].cjs',
+        entryFileNames: '[name].js',
         exports: "named"
     })
     // config.external = new RegExp('^(' + Object.keys(pkgJson.peerDependencies).join('|') + ')($|/)')
