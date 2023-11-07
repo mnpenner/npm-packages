@@ -13,8 +13,11 @@ export function RawHtml({children}: StringChildren) {
 /**
  * An HTML `<!-- comment -->`
  */
-export function Comment({children}: StringChildren) {
+export function C({children}: StringChildren) {
     // console.log(children)
+    if(process.env.NODE_ENV === 'production') {
+        return EMPTY
+    }
     return new JsxComment(` ${flattenString(children)} `)
 }
 

@@ -11,7 +11,7 @@ function BlueBox(props: CommonProps) {
 
 import {Elysia} from 'elysia'
 import {elysiaJsx} from './elysia-plugin'
-import {Comment, HtmlDocument, RawHtml} from './custom-components'
+import {C, HtmlDocument, RawHtml} from './custom-components'
 
 const PORT = 3000
 
@@ -42,11 +42,11 @@ new Elysia()
                 }
             `} />
             <body >
-                <Comment children="hello comment" />
-                <Comment>
+                <C children="hello comment" />
+                <C>
                     Hello &lt; secret comment
                     Multi-line {'-->'}
-                </Comment>
+                </C>
                 <div>
                     <ol class={[{foo: true}, 'bar']}>
                         <li>{one}</li>

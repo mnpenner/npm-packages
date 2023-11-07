@@ -2,9 +2,14 @@
   "name": "@mpen/jsxhtml",
   "version": "0.1.18",
   "packageManager": "bun@1.0.7",
-  "exports": "./index.cjs",
+  "main": "./index.cjs",
   "module": "./index.mjs",
   "types": "./index.d.ts",
+  "exports": {
+    ".": "./index.mjs",
+    "./jsx-runtime": "./jsx-runtime.mjs",
+    "./jsx-dev-runtime": "./jsx-dev-runtime.mjs"
+  },
   "private": true,
   "sideEffects": false,
   "author": {
