@@ -1,5 +1,4 @@
-import {AnyAttributes} from '../jsx-types'
-import {AllGlobalAttributes} from './GlobalAttributes'
+import {AnyAttributes, CommonProps} from '../jsx-types'
 import {AnchorElement} from './AnchorElement'
 
 
@@ -10,7 +9,7 @@ export type IntrinsicElements = {
      *
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a
      */
-    a: AnchorElement & AllGlobalAttributes,
+    a: AnchorElement & CommonProps,
     abbr: AnyAttributes,
     acronym: AnyAttributes,
     address: AnyAttributes,

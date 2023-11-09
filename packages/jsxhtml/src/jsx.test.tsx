@@ -41,5 +41,6 @@ it('tab index', () => {
 })
 
 it('anchor', () => {
+    expect(String(<a>with children</a>)).toEqual('<a>with children</a>')
     expect(String(<a href={"/foo"} target={'_blank'} />)).toEqual('<a href="/foo" target="_blank"></a>')
 })
