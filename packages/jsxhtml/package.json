@@ -1,6 +1,6 @@
 {
   "name": "@mpen/jsxhtml",
-  "version": "0.1.19",
+  "version": "0.1.20",
   "packageManager": "bun@1.0.7",
   "main": "./index.cjs",
   "module": "./index.mjs",
@@ -29,6 +29,7 @@
     "dev:serve": "serve -l tcp://0.0.0.0:8080",
     "dev": "run-p \"dev:**\"",
     "serve": "bun run --hot dev/serve.ts",
+    "test": "bun test",
     "bundle:clean": "rimraf -g \"dist/*\"",
     "bundle:build": "rollup -c",
     "bundle": "run-s bundle:clean bundle:build",

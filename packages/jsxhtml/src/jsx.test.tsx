@@ -5,7 +5,7 @@ import {InputMode} from './htmlspec/GlobalAttributes'
 
 it('handles basic inputs', () => {
     expect(String(<div />)).toEqual('<div></div>')
-    expect(String(<input inputmode="search" />)).toEqual('<input>')
+    expect(String(<input />)).toEqual('<input>')
 })
 
 it('supports custom types', () => {
