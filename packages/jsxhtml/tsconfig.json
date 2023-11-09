@@ -19,7 +19,8 @@
         ],
         "jsx": "react-jsx",
         "jsxImportSource": ".",
-        "outDir": "./dist"
+        "outDir": "./dist",
+        "types": ["bun-types","./src/jsx.ts"]
     },
     "files": [
         "./src/dev.tsx",

@@ -1,11 +1,13 @@
 import {JsxNode} from './jsx-node'
+import {AllGlobalAttributes} from './htmlspec/GlobalAttributes'
+import {Override} from './util-types'
 
 export interface Stringable {
     toString(): string
 }
 
 export type PlainObject = Record<PropertyKey, unknown>
-export type ClassNames = import('classnames').Argument
+export type ClassNames = import('classcat').Class
 export type StyleObject = import('csstype').Properties | import('csstype').PropertiesHyphen
 export type AttributeValue = Stringable | StyleObject | ClassNames
 export type AttrKvPair = [name: string, value: AttributeValue]
@@ -22,14 +24,21 @@ export type JsxRenderable = any
 
 export type JsxChildren = JsxRenderable | Iterable<JsxRenderable>
 
-export type CommonProps = Omit<AttrObj, 'children' | 'style' | 'class'> & {
+export type SpecialProps = {
     children?: JsxChildren,
     style?: StyleObject | string,
+    /**
+     * CSS class.
+     */
     class?: ClassNames
 }
 
+export type CommonProps = Override<AllGlobalAttributes, SpecialProps>
+
+export type AnyAttributes = Override<AttrObj, CommonProps>
+
 // export type JsxFn = (tag: string, props: AttrObj, children:undefined|JsxhtmlChildren) => JsxhtmlElement
-export type JsxComponent<P=CommonProps> = ((props: P) => JsxNode) & {displayName?: string, name?: string}
+export type JsxComponent<P=AnyAttributes> = ((props: P) => JsxNode) & {displayName?: string, name?: string}
 
 export type FlatString =  string | Iterable<string>
 

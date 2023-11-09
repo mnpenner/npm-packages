@@ -1,6 +1,6 @@
 import {DocTypeProps, EMPTY, JsxComment, JsxDocType, JsxRawHtml} from './jsx-elements'
 import {flattenString} from './util'
-import {CommonProps, StringChildren} from './types'
+import {AnyAttributes, StringChildren} from './jsx-types'
 
 
 /**
@@ -31,7 +31,7 @@ export function DocType(props: DocTypeProps) {
 /**
  * `<!DOCTYPE html><html ...>{children}</html>`
  */
-export function HtmlDocument({children, ...htmlAttrs}: CommonProps) {
+export function HtmlDocument({children, ...htmlAttrs}: AnyAttributes) {
     return <>
         <DocType html />
         <html {...htmlAttrs}>

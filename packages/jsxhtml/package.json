@@ -36,7 +36,7 @@
     "copy:readme": "cp README.md ./dist/",
     "commit": "VER=$(jq -r '.version' package.json) && hg ci -m \"Commit v$VER\" && hg tag \"v$VER\"",
     "bumpver": "npm version patch",
-    "release": "run-s bundle bumpver 'copy:**' commit && (cd dist && npm publish --access=public) && hg pushall"
+    "release": "run-s test bundle bumpver 'copy:**' commit && (cd dist && npm publish --access=public) && hg pushall"
   },
   "devDependencies": {
     "@mnpenner/is-type": "^0.1.6",
@@ -61,5 +61,8 @@
   },
   "optionalDependencies": {
     "elysia": ">=0.7.21"
+  },
+  "dependencies": {
+    "classcat": "^5.0.4"
   }
 }

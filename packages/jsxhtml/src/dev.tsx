@@ -1,6 +1,7 @@
-import {CommonProps} from './types'
+/// <reference lib="dom" />
+import {AnyAttributes} from './jsx-types'
 
-function BlueBox(props: CommonProps) {
+function BlueBox(props: AnyAttributes) {
     return (
         <div class="cr-blue-box">
             {props.children}

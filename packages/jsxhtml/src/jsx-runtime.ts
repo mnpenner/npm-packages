@@ -1,12 +1,12 @@
-import {Attributes, JsxComponent, JsxChildren, CommonProps, ChildrenOnly} from './types'
-import {EMPTY, JsxElement, JsxFragment} from './jsx-elements'
+import {Attributes, JsxComponent, JsxChildren, AnyAttributes, ChildrenOnly} from './jsx-types'
+import {EMPTY, JsxElement, JsxFragment, JsxRawHtml} from './jsx-elements'
 import * as util from '@mnpenner/is-type'
 import {isEmptyRender, isJsxComponent} from './util'
 import {isJsxNode, JsxNode} from './jsx-node'
 
 
 // https://github.com/facebook/react/blob/ce2bc58a9f6f3b0bfc8c738a0d8e2a5f3a332ff5/packages/react/src/jsx/ReactJSXElementValidator.js#L305
-export function jsx(tag: string | JsxComponent, props: CommonProps, key?: unknown, isStaticChildren?: unknown, source?: unknown, self?: unknown): JsxNode {
+export function jsx(tag: string | JsxComponent, props: AnyAttributes, key?: unknown, isStaticChildren?: unknown, source?: unknown, self?: unknown): JsxNode {
     if(isJsxComponent(tag)) {
         const node = tag(props)
         if(!isJsxNode(node)) {
@@ -22,7 +22,11 @@ export function jsx(tag: string | JsxComponent, props: CommonProps, key?: unknow
 
     return new JsxElement(tag, props)
 }
-export const jsxs = jsx
+
+export function jsxs(...args: Parameters<typeof jsx>): JsxNode {
+    // Processes all the children immediately so that this is fast to render later.
+    return new JsxRawHtml(jsx(...args).toString())
+}
 
 export function Fragment({children}: ChildrenOnly) {
     return new JsxFragment(children)

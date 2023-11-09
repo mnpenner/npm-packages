@@ -1,8 +1,8 @@
 import entityMap from './entityMap'
-import classNames from 'classnames'
+import classcat from 'classcat'
 import * as util from '@mnpenner/is-type'
 import styleObjectToString from './styleObjectToString'
-import {AttrArr, Attributes, AttributeValue, Stringable} from './types'
+import {AttrArr, Attributes, AttributeValue, Stringable} from './jsx-types'
 import {isFunction} from '@mnpenner/is-type'
 
 function entity(ch: string) {
@@ -49,7 +49,7 @@ export function attrKvPair(rawAttr: string, rawVal: AttributeValue) {
     }
 
     if(rawAttr === 'class' && !util.isString(rawVal)) {
-        rawVal = classNames(rawVal as any);
+        rawVal = classcat(rawVal as any);
     }
 
     if(rawAttr === 'style' && util.isPlainObject(rawVal)) {

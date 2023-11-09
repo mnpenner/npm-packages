@@ -1,7 +1,7 @@
 /* eslint-disable */
 // ripped from react-dom
 
-import {StyleObject} from './types'
+import {StyleObject} from './jsx-types'
 
 // https://github.com/facebook/react/blob/ce2bc58a9f6f3b0bfc8c738a0d8e2a5f3a332ff5/packages/react-dom-bindings/src/shared/hyphenateStyleName.js#L10
 const uppercasePattern = /([A-Z])/g;

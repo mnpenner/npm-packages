@@ -1,6 +1,6 @@
 import * as util from '@mnpenner/is-type'
 import * as esc from './escape'
-import {AnyFn, HtmlSafe, JsxRenderable} from './types'
+import {AnyFn, HtmlSafe, JsxRenderable} from './jsx-types'
 import {isIterable} from '@mnpenner/is-type'
 import {fullWide, getStringTag, isEmptyRender, mapIter} from './util'
 import {isJsxNode} from './jsx-node'

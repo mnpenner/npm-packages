@@ -4,10 +4,10 @@ export * from './elysia-plugin'
 export {isJsxNode} from './jsx-node'
 
 // For compat with {"jsx": "react"}
-import type {CommonProps, JsxComponent, JsxRenderable} from './types'
+import type {AnyAttributes, JsxComponent, JsxRenderable} from './jsx-types'
 import {jsx as _jsx, Fragment as _Fragment} from './jsx-runtime'
 namespace React {
-    export function createElement(tag: string | JsxComponent, props: CommonProps, ...children: JsxRenderable[]) {
+    export function createElement(tag: string | JsxComponent, props: AnyAttributes, ...children: JsxRenderable[]) {
         return _jsx(tag, {...props, children})
     }
     export const Fragment = _Fragment

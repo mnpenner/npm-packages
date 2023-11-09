@@ -1,7 +1,7 @@
 import * as esc from './escape'
 import {attrs, escapeScript, htmlComment} from './escape'
 import {render} from './render'
-import {CommonProps, JsxChildren} from './types'
+import {AnyAttributes, JsxChildren} from './jsx-types'
 import {flattenString, isEmptyChildren} from './util'
 import {JsxNode} from './jsx-node'
 
@@ -12,7 +12,7 @@ const voidElements = new Set(['area', 'base', 'br', 'col', 'command', 'embed', '
 // TODO: handle <!DOCTYPE html>
 
 export class JsxElement extends JsxNode {
-    constructor(private readonly tag: string, private readonly props: CommonProps) {
+    constructor(private readonly tag: string, private readonly props: AnyAttributes) {
         super()
         if(!isEmptyChildren(props.children) && voidElements.has(tag)) {
             throw new Error(`'${tag}' is a void element, it cannot have any children`)
