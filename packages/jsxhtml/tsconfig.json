@@ -24,6 +24,7 @@
     },
     "files": [
         "./src/dev.tsx",
+        "./src/jsx.tsx",
         "./src/index.ts",
         "./src/jsx-runtime.ts",
         "./src/jsx-dev-runtime.ts"
