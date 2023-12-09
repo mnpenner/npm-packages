@@ -1,13 +1,20 @@
-import {ArrayOptions, Type, UnsafeOptions} from '@sinclair/typebox'
+import {ArrayOptions, SchemaOptions, Type, UnsafeOptions} from '@sinclair/typebox'
+import { Value } from '@sinclair/typebox/value'
+import * as FileSys from 'fs'
+import { TypeCompiler } from '@sinclair/typebox/compiler'
+
+import * as Yaml from 'js-yaml'
 import pkgJson from '../package.json'
 
 type StringEnumOptions = Omit<UnsafeOptions, 'type' | 'enum'>
 
-const StringEnum = <T extends string[]>(values: [...T], options?: StringEnumOptions) => Type.Unsafe<T[number]>({
-    ...options,
-    type: 'string',
-    enum: values,
-})
+// const StringEnum = <T extends string[]>(values: [...T], options?: StringEnumOptions) => Type.Unsafe<T[number]>({
+//     ...options,
+//     type: 'string',
+//     enum: values,
+// })
+
+const AnyOf = <T extends any[]>(values: [...T], options?: SchemaOptions) => Type.Union(values.map(val => Type.Literal(val)), options)
 
 type SetTypeOptions = Omit<ArrayOptions, 'uniqueItems'>
 
@@ -18,7 +25,7 @@ const StringSet = (options: SetTypeOptions) => Type.Array(Type.String(), {
 
 const OptionalString = Type.Optional(Type.String())
 
-const TextCollation = StringEnum([
+const TextCollation = AnyOf([
     "armscii8_bin",
     "armscii8_general_ci",
     "armscii8_general_nopad_ci",
@@ -343,7 +350,7 @@ const TextCollation = StringEnum([
     "utf8mb4_vietnamese_ci"
 ])
 
-const DbColumnType = StringEnum([
+const DbColumnType = AnyOf([
     "bigint",
     "binary",
     "bit",
@@ -390,7 +397,7 @@ const DbColumnType = StringEnum([
     "year"
 ])
 
-const DbIndexType = StringEnum([
+const DbIndexType = AnyOf([
     "BTREE",
     "INDEX",
     "PRIMARY",
@@ -398,7 +405,7 @@ const DbIndexType = StringEnum([
     "HASH"
 ])
 
-const DbReferenceOption = StringEnum([
+const DbReferenceOption = AnyOf([
     "CASCADE",
     "NO ACTION",
     "RESTRICT",
@@ -422,8 +429,8 @@ const DbColumn = Type.Object({
     default: Type.Optional(Type.Union([Type.String(), Type.Number()])),
     collation: Type.Optional(TextCollation),
     autoIncrement: Type.Optional(Type.Boolean()),
-    onUpdate: Type.Optional(StringEnum(["current_timestamp()"])),
-    generated: Type.Optional(StringEnum([
+    onUpdate: Type.Optional(AnyOf(["current_timestamp()"])),
+    generated: Type.Optional(AnyOf([
         "PERSISTENT",
         "STORED",
         "VIRTUAL"
@@ -512,13 +519,14 @@ const DbTable = Type.Object({
     title: "Table definition"
 })
 
+const ROOT = DbTable
 
 async function main(programArgs: string[]): Promise<number | void> {
 
     const schema = {
         $schema: JSON_SCHEMA_VERSION,
         $id: SCHEMA_ID,
-        ...DbTable,
+        ...ROOT,
     }
 
     console.log(schema)
@@ -527,6 +535,53 @@ async function main(programArgs: string[]): Promise<number | void> {
 
 
     Bun.write(`${__dirname}/../schema2.json`, schemaString)
+
+
+
+    const dbSchemaYaml = FileSys.readFileSync(`${__dirname}/../data/imagegather.yaml`, 'utf8')
+
+    // console.log(dbSchemaYaml)
+
+
+
+    const schemaValidator = TypeCompiler.Compile(Type.Array(DbTable))
+
+    // Bun.write(`${__dirname}/../schema2.js`, schemaValidator.Code())
+
+    // https://github.com/oven-sh/bun/issues/5960#issuecomment-1848296133
+    // const schemaFile = Bun.file(`${__dirname}/../data/imagegather.yaml`)
+
+    // console.log(schemaFile.size)
+    //
+    // const dbSchemaYaml = await schemaFile.text()
+    //
+    // console.log(dbSchemaYaml)
+    //
+    const tableSchemas = Yaml.loadAll(dbSchemaYaml)
+
+    const errors = [...schemaValidator.Errors(tableSchemas)]
+
+    if(errors.length) {
+        console.error(`Found ${errors.length} error(s):`, errors)
+        return 1
+    }
+    // console.log([...schemaValidator.Errors(tableSchemas)])
+
+    const tableSpecs = schemaValidator.Decode(tableSchemas)
+    console.log(tableSpecs)
+
+    // console.log(tableSchemas[0])
+    //
+    // const t1 = Value.Errors(DbTable, tableSchemas[0])
+    //
+    // console.log(t1)
+
+    // const dbTables = tableSchemas.map(tbl => Value.Decode(DbTable, tbl))
+
+    // console.log(dbTables)
+
+
+
 }
 
 
