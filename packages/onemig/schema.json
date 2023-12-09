@@ -63,7 +63,7 @@
                 "eucjpms_bin",
                 "eucjpms_japanese_ci",
                 "eucjpms_japanese_nopad_ci",
-                "eucjpms_nopad_bin"
+                "eucjpms_nopad_bin",
                 "euckr_bin",
                 "euckr_korean_ci",
                 "euckr_korean_nopad_ci",
@@ -325,7 +325,7 @@
                 "utf8mb4_unicode_520_nopad_ci",
                 "utf8mb4_unicode_ci",
                 "utf8mb4_unicode_nopad_ci",
-                "utf8mb4_vietnamese_ci",
+                "utf8mb4_vietnamese_ci"
             ]
         },
         "DbColumnType": {
