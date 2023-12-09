@@ -1,18 +1,38 @@
-import {ArrayOptions, SchemaOptions, Type, UnsafeOptions} from '@sinclair/typebox'
+import {ArrayOptions, SchemaOptions, Type, UnsafeOptions, TLiteral, TUnion, TEnum, TEnumKey} from '@sinclair/typebox'
 import { Value } from '@sinclair/typebox/value'
 import * as FileSys from 'fs'
 import { TypeCompiler } from '@sinclair/typebox/compiler'
-
 import * as Yaml from 'js-yaml'
 import pkgJson from '../package.json'
+import {isPojo} from '@mnpenner/is-type'
 
-type StringEnumOptions = Omit<UnsafeOptions, 'type' | 'enum'>
+// type StringEnumOptions = Omit<UnsafeOptions, 'type' | 'enum'>
 
 // const StringEnum = <T extends string[]>(values: [...T], options?: StringEnumOptions) => Type.Unsafe<T[number]>({
 //     ...options,
 //     type: 'string',
 //     enum: values,
 // })
+
+// type IntoStringLiteralUnion<T> = {[K in keyof T]: T[K] extends string ? TLiteral<T[K]>: never }
+//
+// export function StringEnum<T extends string[]>(values: [...T]): TUnion<IntoStringLiteralUnion<T>> {
+//     return {
+//         enum: [...values],
+//         type: 'string',
+//     } as any // note: this is also ok. But just be aware that the properties of the
+//              // underlying schema will show the `anyOf` and not the `enum`. This
+//              // is generally ok if you don't need to reflect on the schema.
+// }
+//
+// type StringLiteralOptions<T> = {[K in keyof T]: T[K] extends string ? TEnumKey: never }
+//
+//
+// export function StringLiteralEnum<T extends (string)[]>(values: [...T]): TEnum<StringLiteralOptions<T>> {
+//     const options = values.reduce((acc, c) => ({ ...acc, [c]: c } ), {}) as StringLiteralOptions<T>
+//     return Type.Enum(options as any) as any
+// }
+
 
 const AnyOf = <T extends any[]>(values: [...T], options?: SchemaOptions) => Type.Union(values.map(val => Type.Literal(val)), options)
 
@@ -521,17 +541,75 @@ const DbTable = Type.Object({
 
 const ROOT = DbTable
 
-async function main(programArgs: string[]): Promise<number | void> {
+function objectHash(x: any) {
+    return JSON.stringify(x)
+}
+
+function makeSchema(root: any) {
+    const map = new Map<string,[any,number]>
+    let counter = 0
+
+    function recurse(obj: any) {
+        if(isPojo(obj)) {
+            const k = objectHash(obj)
+            const c = map.get(k)
+            if(c != null) {
+                map.set(k, [obj,c[1]+1])
+            } else {
+                map.set(k,[obj,1])
+
+            }
+            for(const value of Object.values(obj)) {
+                recurse(value)
+            }
+        }
+    }
+
+    recurse(root)
+
+    // console.log(map)
 
     const schema = {
         $schema: JSON_SCHEMA_VERSION,
         $id: SCHEMA_ID,
-        ...ROOT,
+        definitions: {} as Record<string,any>
     }
 
-    console.log(schema)
+    const pruned = new Map<any,string>()
+    for(const [hash,[obj,count]] of map.entries()) {
+        if(count > 1) {
+            const key = (counter++).toString(36)
+            pruned.set(hash,key)
+            schema.definitions[key] = obj
+        }
+    }
 
-    const schemaString = JSON.stringify(schema, null, 2)
+
+    // FIXME: this is kind of a ghetto way to replace some nested values
+   return {...schema,...JSON.parse(JSON.stringify(root,(key,value) => {
+       const k = pruned.get(objectHash(value))
+       if(k != null) {
+           return {$ref: `#/definitions/${k}`}
+       }
+       return value
+   }))}
+}
+
+async function main(programArgs: string[]): Promise<number | void> {
+
+    // console.log(makeSchema(ROOT))
+    //
+    // return
+    //
+    // const schema = {
+    //     $schema: JSON_SCHEMA_VERSION,
+    //     $id: SCHEMA_ID,
+    //     ...ROOT,
+    // }
+    //
+    // console.log(schema)
+
+    const schemaString = JSON.stringify(makeSchema(ROOT), null, 2)
 
 
     Bun.write(`${__dirname}/../schema2.json`, schemaString)
