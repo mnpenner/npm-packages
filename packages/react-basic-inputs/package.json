@@ -1,10 +1,14 @@
 {
-  "name": "@mnpenner/react-basic-inputs",
-  "version": "0.1.1",
+  "name": "@mpen/react-basic-inputs",
+  "version": "0.1.2",
   "packageManager": "yarn@3.5.0",
-  "exports": "./dist/bundle.cjs",
-  "module": "./dist/bundle.mjs",
-  "types": "./dist/bundle.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/bundle.mjs",
+      "require": "./dist/bundle.cjs",
+      "types": "./dist/bundle.d.ts"
+    }
+  },
   "type": "module",
   "files": [
     "./dist"
@@ -18,7 +22,7 @@
     "bundle:build": "rollup -c",
     "bundle": "run-s bundle:clean bundle:build",
     "patch": "npm version patch && VER=$(jq -r '.version' package.json) && hg ci -m \"Publish v$VER\" && hg tag \"v$VER\"",
-    "release": "run-s bundle patch && npm publish && hg push"
+    "release": "run-s bundle patch && npm publish --access=public && hg push"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.4",
@@ -32,7 +36,6 @@
     "@types/react-dom": "^18.2.7",
     "@typescript-eslint/eslint-plugin": "^5.57.1",
     "@typescript-eslint/parser": "^5.57.1",
-    "bun-types": "^0.8.1",
     "eslint": "^8.38.0",
     "eslint-plugin-react": "^7.32.2",
     "eslint-plugin-react-hooks": "^4.6.0",
