@@ -1,3 +1,3 @@
-export {Select} from './components/Select'
-export {TextInput} from './components/TextInput'
-export {Input} from './components/Input'
+export * from './components/Select'
+export * from './components/TextInput'
+export * from './components/Input'
