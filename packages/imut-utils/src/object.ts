@@ -16,7 +16,7 @@ export function fpShallowMerge<T extends {}>(...objects: Array<{
         if(!filtered.length) {
             return obj
         }
-        const ret = Object.assign(Object.create(null) as {}, obj)
+        const ret = Object.assign(Object.create(null), obj)
         for(const o of filtered) {
             for(const k of Object.keys(o) as Array<keyof T>) {
                 ret[k] = resolveValue(o[k] as any, ret[k], k) as T[keyof T]

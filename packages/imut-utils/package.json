@@ -15,7 +15,7 @@
   ],
   "scripts": {
     "build": "rollup -c",
-    "test": "jest --silent=false",
+    "test": "bun test; tsc --noEmit",
     "patch": "npm version patch && VER=$(jq -r '.version' package.json) && hg ci -m \"Publish v$VER\" && hg tag \"v$VER\"",
     "all": "run-p build test docs",
     "docs": "typedoc src/index.ts && hg addremove docs",
@@ -33,7 +33,7 @@
     "tslib": "^2",
     "typedoc": "^0.23",
     "typedoc-plugin-missing-exports": "^1",
-    "typescript": "^4"
+    "typescript": "^5"
   },
   "repository": {
     "type": "git",

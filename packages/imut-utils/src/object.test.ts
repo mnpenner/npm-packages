@@ -1,6 +1,6 @@
 import {fpObjSet, fpRelaxedMerge, fpShallowMerge} from './object'
 import {fpMapSet} from './map'
-import {describe} from '@jest/globals'
+import {Next} from './resolvable'
 
 
 describe(fpShallowMerge.name, () => {
@@ -131,6 +131,7 @@ describe(fpObjSet.name, () => {
         width: number
         height: number
     }
+
     it('basic', () => {
         const oldSize: Size = {width: 512, height: 768}
         const newSize = fpObjSet<Size>('width', w => w + 64)(oldSize)
@@ -140,6 +141,28 @@ describe(fpObjSet.name, () => {
         })
         expect(oldSize).toEqual({width: 512, height: 768})
         expect(newSize).not.toBe(oldSize)
+    })
+    it('nested', () => {
+        type UsageType = {
+            input: number
+            output: number
+        }
+        type UsageState = {
+            usage: Record<string,UsageType>
+            cost: number
+        }
+        function setState(state: Next<UsageState>) {}
+        const tokensUsed = 100
+        const info = {
+            id: 'model-id',
+            output: 0.0100,
+        }
+        setState(fpShallowMerge<UsageState>({
+            usage: fpObjSet(info.id,fpShallowMerge<UsageType>({
+                output: o => (o??0) + tokensUsed,
+            })),
+            cost: c => c + tokensUsed/1000 * info.output,
+        }))
     })
     // it('creates objects', () => {
     //     const newSize = fpObjSet<Size>('width', 128)(null)
