@@ -1,6 +1,6 @@
 {
   "name": "@mpen/imut-utils",
-  "version": "0.1.44",
+  "version": "0.1.45",
   "packageManager": "yarn@3.3.1",
   "exports": {
     ".": {
@@ -20,7 +20,7 @@
     "all": "run-p build test docs",
     "docs": "typedoc src/index.ts && hg addremove docs",
     "push": "hg pushall",
-    "release": "run-s all patch && npm publish --access=public && hg push"
+    "release": "run-s build patch && npm publish --access=public && hg push"
   },
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4",
