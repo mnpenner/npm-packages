@@ -107,7 +107,7 @@ describe(fpShallowMerge.name, () => {
         }
 
         const result = fpShallowMerge<Store>({
-            data: fpMapSet<Key,Value>('b', {
+            data: fpMapSet<Key, Value>('b', {
                 type: 'B',
                 b: 2,
             })
@@ -121,6 +121,31 @@ describe(fpShallowMerge.name, () => {
                 type: 'B',
                 b: 2,
             }]])
+        })
+    })
+
+    it('merges symbols', () => {
+        const s1 = Symbol()
+        const s2 = Symbol()
+        const s3 = Symbol()
+
+        const result = fpShallowMerge<any>({
+                b: 2,
+                [s2]: 'xxx',
+                [s3]: 's3'
+            }
+        )({
+                a: 1,
+                [s1]: 's1',
+                [s2]: 's2',
+            }
+        )
+        expect(result).toEqual({
+            a: 1,
+            b: 2,
+            [s1]: 's1',
+            [s2]: 'xxx',
+            [s3]: 's3'
         })
     })
 })
@@ -148,20 +173,23 @@ describe(fpObjSet.name, () => {
             output: number
         }
         type UsageState = {
-            usage: Record<string,UsageType>
+            usage: Record<string, UsageType>
             cost: number
         }
-        function setState(state: Next<UsageState>) {}
+
+        function setState(state: Next<UsageState>) {
+        }
+
         const tokensUsed = 100
         const info = {
             id: 'model-id',
             output: 0.0100,
         }
         setState(fpShallowMerge<UsageState>({
-            usage: fpObjSet(info.id,fpShallowMerge<UsageType>({
-                output: o => (o??0) + tokensUsed,
+            usage: fpObjSet(info.id, fpShallowMerge<UsageType>({
+                output: o => (o ?? 0) + tokensUsed,
             })),
-            cost: c => c + tokensUsed/1000 * info.output,
+            cost: c => c + tokensUsed / 1000 * info.output,
         }))
     })
     // it('creates objects', () => {
