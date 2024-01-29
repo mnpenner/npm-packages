@@ -40,5 +40,5 @@ export const fpRelaxedMerge: {
 
 
 export function fpObjSet<T extends {}>(key: keyof T, value: Resolvable<T[typeof key], [T[typeof key]]>) {
-    return (obj: T) => ({__proto__: null, ...obj, [key]: resolveValue(value, obj[key])})
+    return (obj: T) => ({__proto__: null, ...obj, [key]: resolveValue(value, obj[key])} as T)
 }
