@@ -1,4 +1,11 @@
-import {FormEventHandler, forwardRef, useImperativeHandle, useLayoutEffect, useRef, useState} from 'react'
+import {
+    FormEventHandler,
+    forwardRef,
+    useImperativeHandle,
+    useLayoutEffect,
+    useRef,
+    useState
+} from 'react'
 import {HtmlTextAreaElement, OverrideProps, VoidFn} from '../types/utility'
 import {useEventHandler} from '../hooks/useEvent'
 
@@ -31,7 +38,7 @@ export const TextArea = forwardRef<TextAreaRef, TextAreaProps>(function TextArea
 
     useImperativeHandle(fwdRef, () => ({
         element: ref.current,
-        resize: adjustHeight,
+        resize: adjustHeight,  // "resize" or "refreshHeight"?
     }), [setHeight, ref.current])
 
     const input = useEventHandler<FormEventHandler<HtmlTextAreaElement>>(ev => {
@@ -44,9 +51,9 @@ export const TextArea = forwardRef<TextAreaRef, TextAreaProps>(function TextArea
     }, [])
 
     return <textarea rows={1} {...rest} style={{
-        ...style,
-        overflow: 'hidden',
+        overflow: 'hidden',  // these 2 styles aren't needed if the caller sets them in CSS.
         resize: 'none',
+        ...style,
         height: height,
     }} onInput={input} ref={ref} />
 })
