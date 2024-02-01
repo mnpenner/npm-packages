@@ -35,6 +35,7 @@ export type MapKeyType<M> = M extends Map<infer K, any> ? K : never;
 export type MapValueType<M> = M extends Map<any, infer V> ? V : never;
 
 /** Hack to de-conflict React's HTMLInputElement vs the standard dom lib */
+export type HtmlTextAreaElement = HTMLElementTagNameMap['textarea']
 export type HtmlInputElement = HTMLElementTagNameMap['input']
 export type HtmlSelectElement = HTMLElementTagNameMap['select']
 export type HtmlInputChangeEvent = import('react').ChangeEvent<HtmlInputElement>

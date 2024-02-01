@@ -17,6 +17,7 @@ import {TimeInput} from './TimeInput'
 import {Input} from "./Input";
 import {UsernameInput} from "./UsernameInput";
 import {PasswordInput} from "./PasswordInput";
+import {TextArea} from './TextArea'
 
 
 const FRUIT_OPTIONS: SelectOption<number>[] = [
@@ -243,6 +244,14 @@ function UserPassFields() {
     )
 }
 
+function TextAreaFields() {
+    return (
+        <FieldSet legend="TextArea">
+            <TextArea/>
+        </FieldSet>
+    )
+}
+
 // TODO: password + file
 export default function App() {
     return (
@@ -254,6 +263,7 @@ export default function App() {
             <ColorFieldset/>
             <DateFieldset/>
             <UserPassFields/>
+            <TextAreaFields/>
         </form>
     )
 }

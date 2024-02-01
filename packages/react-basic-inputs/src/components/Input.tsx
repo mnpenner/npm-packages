@@ -39,6 +39,8 @@ export const Input = forwardRef<HtmlInputElement, InputProps>(function Input({va
         onChange: ev => {
             setCurrentValue(ev.target.value)
         },
+        // TODO: fire a change event onPaste ?
+        // formatOnPaste?
         onInput: ev => {
             modified.current = true
             onInput?.(ev)

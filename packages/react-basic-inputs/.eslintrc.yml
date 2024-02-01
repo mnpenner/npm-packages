@@ -34,6 +34,7 @@ rules:
   '@typescript-eslint/no-inferrable-types': warn
   '@typescript-eslint/no-explicit-any': off
   '@typescript-eslint/no-non-null-assertion': off
+  'prefer-rest-params': off
   '@typescript-eslint/no-empty-interface':
     - warn
     - allowSingleExtends: true

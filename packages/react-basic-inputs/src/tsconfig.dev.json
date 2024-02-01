@@ -1,5 +1,5 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "./tsconfig.bundle.json",
   "compilerOptions": {
     "jsx": "react-jsxdev"
   },

@@ -12,5 +12,9 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "outDir": "./dist"
-  }
+  },
+  "references": [
+    {"path": "./src/tsconfig.bundle.json"},
+    {"path": "./src/tsconfig.dev.json"}
+  ]
 }
