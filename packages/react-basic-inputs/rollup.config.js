@@ -20,7 +20,7 @@ const config = {
         nodeResolve(),
         commonjs(),
         typescript({
-            tsconfig: production ? 'src/tsconfig.json' : 'src/tsconfig.dev.json',
+            tsconfig: production ? 'src/tsconfig.bundle.json' : 'src/tsconfig.dev.json',
         }),
         replace({
             preventAssignment: true,
