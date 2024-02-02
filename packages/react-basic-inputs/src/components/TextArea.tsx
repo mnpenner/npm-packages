@@ -1,6 +1,6 @@
 import {
     FormEventHandler,
-    forwardRef,
+    forwardRef, useCallback,
     useImperativeHandle,
     useLayoutEffect,
     useRef,
@@ -11,35 +11,39 @@ import {useEventHandler} from '../hooks/useEvent'
 
 export type TextAreaRef = {
     element: HtmlTextAreaElement,
-    resize: VoidFn,
+    adjustHeight: VoidFn,
 }
 
 
-export type TextAreaProps = OverrideProps<'textarea', {}>
+export type TextAreaProps = OverrideProps<'textarea', {
+    /** Initial/minimum height. "0" or "auto" are good choices. Defaults to "auto" */
+    initialHeight?: string
+}>
 
 export const TextArea = forwardRef<TextAreaRef, TextAreaProps>(function TextArea({
     onInput,
     style,
+    initialHeight = 'auto',
     ...rest
 }, fwdRef) {
     const ref = useRef<HtmlTextAreaElement>(null)
-    const [height, setHeight] = useState('auto')
+    const [height, setHeight] = useState(initialHeight)
 
-    const adjustHeight = () => {
+    const adjustHeight = useCallback(() => {
         const textarea = ref.current
         if(!textarea) return
         // Reset the height to 'auto' to ensure the scrollHeight gets recalculated correctly
-        textarea.style.height = 'auto'
+        textarea.style.height = initialHeight
         // Set the height to scrollHeight to fit the content
         const newHeight = `${textarea.scrollHeight}px`
         setHeight(newHeight)
-        textarea.style.height = newHeight // This line ensures the height is applied immediately
-    }
+        textarea.style.height = newHeight  // This line ensures the height is applied immediately
+    }, [initialHeight])
 
     useImperativeHandle(fwdRef, () => ({
         element: ref.current,
-        resize: adjustHeight,  // "resize" or "refreshHeight"?
-    }), [setHeight, ref.current])
+        adjustHeight: adjustHeight,
+    }), [adjustHeight])
 
     const input = useEventHandler<FormEventHandler<HtmlTextAreaElement>>(ev => {
         adjustHeight()
@@ -48,9 +52,19 @@ export const TextArea = forwardRef<TextAreaRef, TextAreaProps>(function TextArea
 
     useLayoutEffect(() => {
         adjustHeight()
-    }, [])
 
-    return <textarea rows={1} {...rest} style={{
+        const textarea = ref.current
+        if(!textarea) return
+        const resizeObserver = new ResizeObserver(entries => {
+            adjustHeight()
+        })
+        resizeObserver.observe(textarea)
+        return () => {
+            resizeObserver.unobserve(textarea)
+        }
+    }, [adjustHeight])
+
+    return <textarea {...rest} style={{
         overflow: 'hidden',  // these 2 styles aren't needed if the caller sets them in CSS.
         resize: 'none',
         ...style,

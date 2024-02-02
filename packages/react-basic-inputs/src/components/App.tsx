@@ -248,6 +248,8 @@ function TextAreaFields() {
     return (
         <FieldSet legend="TextArea">
             <TextArea/>
+            <TextArea initialHeight="0"/>
+            <TextArea rows={3}/>
         </FieldSet>
     )
 }
