@@ -12,7 +12,10 @@ export type RadioMenuOption<T extends NonNil> = OverrideProps<'input', {
     text: ReactNode
     key?: Resolvable<Key, [RadioMenuOption<T>, number]>
     itemClassName?: string
-}, 'type' | 'children' | 'checked' | 'name'>
+    labelClassName?: string
+    inputClassName?: string
+    textClassName?: string
+}, 'type' | 'children' | 'checked' | 'name' | 'className'>
 
 
 
@@ -66,7 +69,7 @@ export function RadioMenu<T extends NonNil>(menu: RadioMenuProps<T>) {
     return (
         <ul className={menu.className}>
             {fixedOptions.map((opt, idx) => {
-                const {value, text, key, itemClassName, ...rest} = opt
+                const {value, text, key, itemClassName, labelClassName, inputClassName, textClassName, ...rest} = opt
                 cast<JSX.IntrinsicElements['input']>(rest)
                 const fixedKey = fixer.fix(opt, idx)
                 if(menu.value !== undefined) {
@@ -74,10 +77,10 @@ export function RadioMenu<T extends NonNil>(menu: RadioMenuProps<T>) {
                 }
                 // const checked = value === undefined ? undefined : eq(value, menu.value)
                 return (
-                    <li key={fixedKey} className={itemClassName}>
-                        <label>
-                            <input {...rest} value={idx} onChange={onChange} name={name} type="radio" />
-                            <span>{text}</span>
+                    <li key={fixedKey} className={itemClassName} aria-disabled={rest.disabled}>
+                        <label className={labelClassName}>
+                            <input {...rest} className={inputClassName} value={idx} onChange={onChange} name={name} type="radio" />
+                            <span className={textClassName}>{text}</span>
                         </label>
                     </li>
                 )
