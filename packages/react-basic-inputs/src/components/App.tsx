@@ -18,6 +18,7 @@ import {Input} from "./Input";
 import {UsernameInput} from "./UsernameInput";
 import {PasswordInput} from "./PasswordInput";
 import {TextArea} from './TextArea'
+import {RadioMenu} from './RadioMenu'
 
 
 const FRUIT_OPTIONS: SelectOption<number>[] = [
@@ -254,6 +255,18 @@ function TextAreaFields() {
     )
 }
 
+function RadioMenuFields() {
+    return (
+        <FieldSet legend="RadioMenu">
+            <RadioMenu options={[
+                {text:"Opt1",value:1},
+                {text:"Opt2",value:2},
+                {text:"Opt3",value:3},
+            ]}/>
+        </FieldSet>
+    )
+}
+
 // TODO: password + file
 export default function App() {
     return (
@@ -266,6 +279,7 @@ export default function App() {
             <DateFieldset/>
             <UserPassFields/>
             <TextAreaFields/>
+            <RadioMenuFields/>
         </form>
     )
 }

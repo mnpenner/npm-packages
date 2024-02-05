@@ -3,6 +3,7 @@ import useEvent from '../hooks/useEvent'
 import {Resolvable, resolveValue} from '../util/resolvable'
 import {useUpdateEffect} from 'react-use'
 import {EventCallback, HtmlSelectElement, NonNil, OverrideProps} from "../types/utility";
+import {KeyFixer} from '../util/key-fixer'
 
 
 export type SelectOption<T> = OverrideProps<'option', {
@@ -124,22 +125,13 @@ export function Select<T extends NonNil>({
         refreshSelectedIndex()
     }, [refreshSelectedIndex])
 
-    const usedKeys = new Map<Key, number>
+    const fixer = new KeyFixer()
 
     return (
         <select {...selectAttrs} onChange={handleChange} ref={setRef}>
             {fixedOptions.map((opt, idx) => {
                 const {value, text, key, ...optAttrs} = opt
-                let fixedKey = defaultMakeKey(opt, idx)
-                for(; ;) {
-                    let suffix = usedKeys.get(fixedKey)
-                    if(suffix === undefined) {
-                        usedKeys.set(fixedKey, 1)
-                        break
-                    }
-                    usedKeys.set(fixedKey, ++suffix)
-                    fixedKey = `${fixedKey}(${suffix})`
-                }
+                const fixedKey = fixer.fix(opt, idx)
                 return <option {...optAttrs} key={fixedKey}>{opt.text}</option>
             })}
         </select>
