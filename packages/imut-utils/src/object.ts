@@ -10,7 +10,7 @@ const ownKeys: <T extends object>(o:T) => Array<keyof T> = Reflect.ownKeys as An
  * The target object *should* be the full object (with all keys defined), and the objects to be merged may be partial.
  * If the target and objects to be merged do not sum up to the full object then the return type will be invalid.
  */
-export function fpShallowMerge<T extends AnyObject>(...objects: Array<{
+export function fpShallowMerge<T extends {}>(...objects: Array<{
     [K in keyof T]?: Resolvable<T[K], [T[K], K]>;
 }>): (obj: T) => T {
     return (obj: T) => {
@@ -42,6 +42,6 @@ export const fpRelaxedMerge: {
 } = fpShallowMerge as any
 
 
-export function fpObjSet<T extends AnyObject>(key: keyof T, value: Resolvable<T[typeof key], [T[typeof key]]>) {
+export function fpObjSet<T extends {}>(key: keyof T, value: Resolvable<T[typeof key], [T[typeof key]]>) {
     return (obj: T) => ({__proto__: null, ...obj, [key]: resolveValue(value, obj[key])} as T)
 }
