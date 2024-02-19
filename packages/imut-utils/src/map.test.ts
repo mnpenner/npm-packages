@@ -1,13 +1,19 @@
-import {fpMapDelete, fpMapSet, fpMergeMap, mapPush} from './map'
+import {fpMapDelete, fpMapSet, fpMaybeMapSet, fpMergeMap, mapPush} from './map'
 import {arrayDeleteOneValue, fpArrayDeleteOneValue, fpArrayPush, fpArraySelect, fpArrayUnshift} from './array'
 
 
 describe(fpMapSet.name, () => {
-    it('sets', () => {
+    it('overwrites values', () => {
         const map = new Map([['a', 1], ['b', 2]])
         const out = fpMapSet<string,number>('b', 3)(map)
         expect(out).not.toBe(map)
         expect(out).toStrictEqual(new Map([['a', 1], ['b', 3]]))
+    })
+    it('sets new values', () => {
+        const map = new Map([['a', 1], ['b', 2]])
+        const out = fpMapSet<string,number>('c', 3)(map)
+        expect(out).not.toBe(map)
+        expect(out).toStrictEqual(new Map([['a', 1], ['b',2], ['c',3]]))
     })
     it('resolves', () => {
         const map = new Map([['a', 1], ['b', 2]])
@@ -16,6 +22,30 @@ describe(fpMapSet.name, () => {
         expect(out).toStrictEqual(new Map([['a', 1], ['b', 4]]))
     })
 })
+
+describe(fpMaybeMapSet.name, () => {
+    it('sets', () => {
+        const map = new Map([['a', 1], ['b', 2]])
+        const out = fpMaybeMapSet<string,number>('b', 3)(map)
+        expect(out).not.toBe(map)
+        expect(out).toStrictEqual(new Map([['a', 1], ['b', 3]]))
+    })
+    it('returns nil when given nil', () => {
+        expect(fpMaybeMapSet<string,number>('b', 3)(null)).toBe(null)
+        expect(fpMaybeMapSet<string,number>('b', 3)(undefined)).toBe(undefined)
+    })
+    it("doesn't set values that don't already exist", () => {
+        expect(fpMaybeMapSet<string,number>('b', 3)(new Map([['a', 1], ['b', 2]]))).toStrictEqual(new Map([['a', 1], ['b', 3]]))
+        expect(fpMaybeMapSet<string,number>('c', 3)(new Map([['a', 1], ['b', 2]]))).toStrictEqual(new Map([['a', 1], ['b', 2]]))
+    })
+    it('resolves', () => {
+        const map = new Map([['a', 1], ['b', 2]])
+        const out = fpMaybeMapSet<string, number>('b', v => v * 2)(map)
+        expect(out).not.toBe(map)
+        expect(out).toStrictEqual(new Map([['a', 1], ['b', 4]]))
+    })
+})
+
 
 describe(fpMapDelete.name, () => {
     it('deletes', () => {
