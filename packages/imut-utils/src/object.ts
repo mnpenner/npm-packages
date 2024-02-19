@@ -1,7 +1,7 @@
 import {Resolvable, resolveValue} from './resolvable'
 import type {AnyFn, AnyObject, nil} from './types'
 
-const ownKeys: <T extends AnyObject>(o:T) => Array<keyof T> = Reflect.ownKeys as AnyFn
+const ownKeys: <T extends object>(o:T) => Array<keyof T> = Reflect.ownKeys as AnyFn
 
 /**
  * Merge one or more objects into a target object, similar to
