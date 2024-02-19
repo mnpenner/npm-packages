@@ -14,9 +14,13 @@ export function fpMapSet<K, V>(key: K, value: Resolvable<V, [V | undefined]>) {
     return (map: Map<K, V>|nil) => mapSet(map, key, value)
 }
 
-export function fpMaybeMapSet<K, V>(key: K, value: Resolvable<V, [V, K]>) {
-    return (map: Map<K, V> | nil) => {
-        if(map == null || !map.has(key)) return map
+/**
+ * Update an existing value in a map.
+ * Returns the map as-is if the key does not exist.
+ */
+export function fpMapUpdate<K, V>(key: K, value: Resolvable<V, [V, K]>) {
+    return (map: Map<K, V>) => {
+        if(!map.has(key)) return map
         const ret = new Map(map)
         ret.set(key, resolveValue(value, ret.get(key)!, key))
         return ret

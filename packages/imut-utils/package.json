@@ -1,6 +1,6 @@
 {
   "name": "@mpen/imut-utils",
-  "version": "0.1.49",
+  "version": "0.1.50",
   "packageManager": "yarn@3.3.1",
   "exports": {
     ".": {
