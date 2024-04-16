@@ -1,9 +1,9 @@
-export type Falsy = false|0|-0|0n|''|null|undefined|HTMLAllCollection
-export type Truthy = Exclude<any,Falsy>
+export type Falsy = false|0|-0|0n|''|null|undefined|HTMLAllCollection  // NaN is not a type
 export type Primitive = string|number|bigint|boolean|undefined|symbol|null
 export type UnknownFunction = (...args: unknown[]) => unknown
 export type UnknownGeneratorFunction = (...args: unknown[]) => Generator<unknown, unknown, unknown>
 export type UnknownAsyncFunction = (...args: unknown[]) => Promise<unknown>
+export type Truthy = true|1|-1|1n|-1n|'0'|{}|UnknownFunction|symbol  // https://github.com/microsoft/TypeScript/issues/4196
 
 /**
  * Object is callable. Includes functions & generator functions.

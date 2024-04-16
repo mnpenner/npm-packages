@@ -1,4 +1,5 @@
 import * as lib from './index'
+import {isTruthy} from './index'
 
 test(lib.isFunction.name, () => {
     expect(lib.isFunction(() => {})).toBe(true)
@@ -582,6 +583,11 @@ test(lib.isTruthy.name, () => {
     expect(lib.isTruthy(true)).toBe(true)
     expect(lib.isTruthy('str')).toBe(true)
     expect(lib.isTruthy(3.14)).toBe(true)
+
+    let x: unknown
+    if(isTruthy(x)) {
+        x
+    }
 })
 
 test(lib.isFalsy.name, () => {
@@ -610,6 +616,11 @@ test(lib.isFalsy.name, () => {
     expect(lib.isFalsy(true)).toBe(false)
     expect(lib.isFalsy('str')).toBe(false)
     expect(lib.isFalsy(3.14)).toBe(false)
+
+    let x: unknown
+    if(lib.isFalsy(x)) {
+        x
+    }
 })
 
 test(lib.isRegExp.name, () => {

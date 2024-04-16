@@ -1,6 +1,6 @@
 {
   "name": "@mpen/is-type",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "packageManager": "yarn@3.3.1",
   "exports": {
     ".": {
@@ -21,7 +21,7 @@
     "all": "run-p build test docs",
     "docs": "typedoc src/index.ts && hg addremove docs",
     "push": "hg pushall",
-    "release": "run-s all patch && npm publish && hg pushall"
+    "release": "run-s all patch && npm publish --access=public && hg pushall"
   },
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4.0",
