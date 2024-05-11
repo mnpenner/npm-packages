@@ -64,6 +64,13 @@ describe('UriTemplate.match', () => {
 
 
     describe("Custom tests", () => {
+        it("simple", () => {
+            const templ = new UriTemplate('/hello/{who}')
+            const match = templ.match('/hello/mark')
+            expect(match?.params).toEqual({who: 'mark'})
+        })
+
+
         it("matches schedule page", () => {
             const templ = new UriTemplate('/schedule/{year:int:4}-{month:int:2}-{day:int:2}')
             const match = templ.match('/schedule/2019-12-31')
