@@ -132,7 +132,9 @@ export function Select<T extends NonNil>({
             {fixedOptions.map((opt, idx) => {
                 const {value, text, key, ...optAttrs} = opt
                 const fixedKey = fixer.fix(opt, idx)
-                return <option {...optAttrs} key={fixedKey}>{opt.text}</option>
+                // React wants each option to have a value, even though we aren't using it, otherwise it warns:
+                // "Cannot infer the option value of complex children. Pass a `value` prop or use a plain string as children to <option>."
+                return <option {...optAttrs} key={fixedKey} value={fixedKey}>{opt.text}</option>
             })}
         </select>
     )
