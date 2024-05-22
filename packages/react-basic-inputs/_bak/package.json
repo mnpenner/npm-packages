@@ -11,18 +11,18 @@
   },
   "type": "module",
   "files": [
-    "./dist"
+    "../dist"
   ],
   "scripts": {
-    "dev:build": "rollup -cw",
-    "dev:serve": "serve -l tcp://0.0.0.0:8080",
-    "dev": "run-p \"dev:**\"",
+    "dev:build": "../node_modules/.bin/rollup -cw",
+    "dev:serve": "../node_modules/.bin/serve -l tcp://0.0.0.0:8080",
+    "dev": "../node_modules/.bin/run-p \\\"dev:**\\\"",
     "serve": "bun run --hot dev/serve.ts",
-    "bundle:clean": "rimraf -g \"dist/*\"",
-    "bundle:build": "rollup -c",
-    "bundle": "run-s bundle:clean bundle:build",
+    "bundle:clean": "../node_modules/.bin/rimraf -g \\\"dist/*\\\"",
+    "bundle:build": "../node_modules/.bin/rollup -c",
+    "bundle": "../node_modules/.bin/run-s bundle:clean bundle:build",
     "patch": "npm version patch && VER=$(jq -r '.version' package.json) && hg ci -m \"Publish v$VER\" && hg tag \"v$VER\"",
-    "release": "run-s bundle patch && npm publish --access=public && hg push"
+    "release": "../node_modules/.bin/run-s bundle patch && npm publish --access=public && hg push"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.4",

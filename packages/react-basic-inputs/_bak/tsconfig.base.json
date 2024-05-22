@@ -11,10 +11,10 @@
     "exactOptionalPropertyTypes": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "outDir": "./dist"
+    "outDir": "../dist"
   },
   "references": [
-    {"path": "./src/tsconfig.bundle.json"},
-    {"path": "./src/tsconfig.dev.json"}
+    {"path": "../src/tsconfig.bundle.json"},
+    {"path": "../src/tsconfig.dev.json"}
   ]
 }

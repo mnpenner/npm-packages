@@ -1,7 +1,7 @@
 {
-  "name": "v2",
+  "name": "@mpen/react-basic-inputs",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.2.0",
   "type": "module",
   "files": ["dist"],
   "main": "./dist/react-basic-inputs.umd.cjs",
@@ -14,10 +14,12 @@
     }
   },
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "dev": "bun run --bun vite",
+    "build": "bun run --bun tsc && bun run --bun vite build",
+    "lint": "bun run --bun eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "bun run --bun vite preview",
+    "prepublishOnly": "bun run --bun build",
+    "publish": "npm publish --access=public"
   },
   "dependencies": {
     "react": "^18.2.0",
@@ -32,6 +34,7 @@
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.6",
+    "npm-run-all": "^4.1.5",
     "typescript": "^5.2.2",
     "vite": "^5.2.0",
     "vite-plugin-dts": "^3.9.1"

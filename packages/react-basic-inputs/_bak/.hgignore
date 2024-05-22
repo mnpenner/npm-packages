@@ -4,7 +4,7 @@ syntax: regexp
 ^\.yarn/(?!(plugins|releases)/)
 ^\.pnp\.
 
-^dist/
+../dist/
 
 # Default ignored files
 ^\.idea/shelf/
