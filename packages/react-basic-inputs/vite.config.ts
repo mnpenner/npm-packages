@@ -6,8 +6,10 @@ import dts from "vite-plugin-dts"
 
 // https://vitejs.dev/config/
 export default defineConfig({
+    // https://github.com/qmhc/vite-plugin-dts/issues/281
     // root: 'src',
-    publicDir: 'public',
+    // publicDir: '../public',
+
     plugins: [
         react(),
         dts({
@@ -25,7 +27,7 @@ export default defineConfig({
 
     // https://vitejs.dev/guide/build#library-mode
     build: {
-        // outDir: resolve(__dirname, 'dist'),
+        // outDir: '../dist',
         // emptyOutDir: true,
         minify: false,
         lib: {
@@ -34,6 +36,9 @@ export default defineConfig({
             fileName: 'react-basic-inputs',
         },
         rollupOptions: {
+            // input: {
+                // app: 'src/index.html',
+            // },
             external: [
                 'react',
                 'react-dom',

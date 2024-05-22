@@ -19,6 +19,7 @@ import {TimeInput} from './components/TimeInput'
 import {UrlInput} from './components/UrlInput'
 import {UsernameInput} from './components/UsernameInput'
 import {WeekInput} from './components/WeekInput'
+import css from './App.module.css'
 
 
 const FRUIT_OPTIONS: SelectOption<number>[] = [
@@ -270,7 +271,7 @@ function RadioMenuFields() {
 // TODO: password + file
 export default function App() {
     return (
-        <form>
+        <form className={css.grid}>
             <SelectFieldset />
             <InputFieldset />
             <TextInputFieldset />
