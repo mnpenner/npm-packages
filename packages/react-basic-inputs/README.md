@@ -1,26 +1,27 @@
-# react-basic-inputs
+# @mpen/react-basic-inputs
 
 Thin wrappers around native input elements to make them behave better.
+
+<a href="https://pkg-size.dev/@mpen/react-basic-inputs"><img src="https://pkg-size.dev/badge/bundle/12662" title="Bundle size for @mpen/react-basic-inputs"></a>
 
 ## Installation
 
 ```sh
-yarn add @mnpenner/react-basic-inputs
+bun add --dev @mpen/react-basic-inputs
 # or
-npm install @mnpenner/react-basic-inputs
+yarn add @mpen/react-basic-inputs
+# or
+npm install @mpen/react-basic-inputs
 ```
 
 ## Links
 
-- Docs: https://mnpenner.github.io/react-basic-inputs
-- Repo: https://github.com/mnpenner/react-basic-inputs
-  - Code: https://github.com/mnpenner/react-basic-inputs/tree/default/src
-  - Issues: https://github.com/mnpenner/react-basic-inputs/issues
-- Npm: https://www.npmjs.com/package/@mnpenner/react-basic-inputs
-- Yarn: https://yarnpkg.com/package/@mnpenner/react-basic-inputs
-- Bundlephobia: https://bundlephobia.com/package/@mnpenner/react-basic-inputs
-- Unpkg: https://unpkg.com/@mnpenner/react-basic-inputs/dist/bundle.mjs
-- jsDelivr: https://cdn.jsdelivr.net/npm/@mnpenner/react-basic-inputs/dist/bundle.mjs
+- Npm: https://www.npmjs.com/package/@mpen/react-basic-inputs
+- Yarn: https://yarnpkg.com/package/@mpen/react-basic-inputs
+- pkg-size: https://pkg-size.dev/@mpen%2Freact-basic-inputs
+- Bundlephobia: https://bundlephobia.com/package/@mpen/react-basic-inputs
+- Unpkg: https://unpkg.com/@mpen/react-basic-inputs/dist/react-basic-inputs.js
+- jsDelivr: https://cdn.jsdelivr.net/npm/@mpen/react-basic-inputs/dist/react-basic-inputs.js
 
 ## Components
 
