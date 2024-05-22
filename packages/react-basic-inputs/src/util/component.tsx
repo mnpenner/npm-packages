@@ -7,7 +7,7 @@ export function withDefaultProps<P>(Component: ComponentType<P>, defaultProps: P
         const combinedProps = {...defaultProps, ...props} as P & Attributes
         return <Component {...combinedProps} />;
     };
-    if (process.env.NODE_ENV === 'development' && displayName) {
+    if (import.meta.env.NODE_ENV === 'development' && displayName) {
         c.displayName = displayName
     }
     return c

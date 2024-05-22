@@ -1,5 +1,5 @@
 export function logJson(...args: any[]) {
-    if (process.env.NODE_ENV !== 'development') return
+    if (import.meta.env.NODE_ENV !== 'development') return
     // TODO: add color: https://developer.mozilla.org/en-US/docs/Web/API/console#Usage
     console.log('%c%s'.repeat(args.length), ...args.flatMap(a => [`background-color:#1D1D26;color:${type2color(a)};border:1px dashed #eee;padding:1px 2px;`, JSON.stringify(a, null, 2)]))
 }
@@ -15,7 +15,7 @@ function type2color(x: any) {
 }
 
 export function assert(expr: any, message?: string) {
-    if (process.env.NODE_ENV !== 'development') return
+    if (import.meta.env.NODE_ENV !== 'development') return
     if (!expr) {
         throw new Error(message ?? 'unknown assertion error');
     }

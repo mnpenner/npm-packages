@@ -16,6 +16,11 @@ export default defineConfig({
         }),
     ],
     clearScreen: false,
+    css: {
+        modules: {
+            localsConvention: 'camelCaseOnly',
+        }
+    },
     // envDir: __dirname,
 
     // https://vitejs.dev/guide/build#library-mode
