@@ -20,6 +20,7 @@ import {UrlInput} from './components/UrlInput'
 import {UsernameInput} from './components/UsernameInput'
 import {WeekInput} from './components/WeekInput'
 import css from './App.module.css'
+import {BasicSelect} from './components/BasicSelect.tsx'
 
 
 const FRUIT_OPTIONS: SelectOption<number>[] = [
@@ -124,7 +125,7 @@ function Select_Example2() {
 function SelectFieldset() {
     return (
         <fieldset>
-            <legend>&lt;Select&gt;</legend>
+            <legend><code>&lt;Select&gt;</code></legend>
             <Select_Example3 />
             <Select_Example1 />
             <Select_Example2 />
@@ -133,6 +134,20 @@ function SelectFieldset() {
         </fieldset>
     )
 }
+
+function BasicSelectFieldset() {
+    return (
+        <fieldset>
+            <legend><code>&lt;BasicSelect&gt;</code></legend>
+            <BasicSelect>
+                <option>option 1</option>
+                <option>option 2</option>
+                <option>option 3</option>
+            </BasicSelect>
+        </fieldset>
+    )
+}
+
 
 function TextInput_Example1() {
     return (
@@ -158,7 +173,7 @@ function TextInput_Example2() {
 
 function TextInputFieldset() {
     return (
-        <FieldSet legend="<TextInput>">
+        <FieldSet legend={<code>&lt;TextInput&gt;</code>}>
             <TextInput_Example1 />
             <TextInput_Example2 />
         </FieldSet>
@@ -168,9 +183,9 @@ function TextInputFieldset() {
 function InputFieldset() {
     const [value, setValue] = useState("Hello")
     return (
-        <FieldSet legend="<Input>">
+        <FieldSet legend={<code>&lt;Input&gt;</code>}>
             <div>
-                <Input />
+            <Input />
             </div>
             <div>
                 <Input value={value} onChange={e => setValue(e.value)} />
@@ -182,7 +197,7 @@ function InputFieldset() {
 
 
 type FieldSetProps = {
-    legend: string
+    legend: ReactNode
     children: ReactNode
 }
 
@@ -248,7 +263,7 @@ function UserPassFields() {
 
 function TextAreaFields() {
     return (
-        <FieldSet legend="TextArea">
+        <FieldSet legend={<code>&lt;TextArea&gt;</code>}>
             <TextArea />
             <TextArea initialHeight="0" />
             <TextArea rows={3} />
@@ -258,7 +273,7 @@ function TextAreaFields() {
 
 function RadioMenuFields() {
     return (
-        <FieldSet legend="RadioMenu">
+        <FieldSet legend={<code>&lt;RadioMenu&gt;</code>}>
             <RadioMenu options={[
                 {text: "Opt1", value: 1},
                 {text: "Opt2", value: 2},
@@ -273,6 +288,7 @@ export default function App() {
     return (
         <form className={css.grid}>
             <SelectFieldset />
+            <BasicSelectFieldset />
             <InputFieldset />
             <TextInputFieldset />
             <OtherTextInputsFieldset />

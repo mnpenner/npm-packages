@@ -3,13 +3,13 @@ import useEvent from '../hooks/useEvent'
 import {Resolvable} from '../util/resolvable'
 import {useUpdateEffect} from 'react-use'
 import {EventCallback, HtmlSelectElement, NonNil, OverrideProps} from "../types/utility";
-import {KeyFixer} from '../util/key-fixer'
+import {KeyFixer, StrictKey} from '../util/key-fixer'
 
 
 export type SelectOption<T> = OverrideProps<'option', {
     value: T
     text: ReactNode
-    key?: Resolvable<Key, [SelectOption<T>, number]>
+    key?: Resolvable<StrictKey, [SelectOption<T>, number]>
 }, 'children' | 'selected'>
 
 export interface SelectChangeEvent<T> {
