@@ -92,4 +92,8 @@
     padding: .15em .6em;
     border-radius: 50% 20% / 20% 40%;
   }
+
+  output {
+    background-color: oklch(0.983 0.018 86.145);
+  }
 }

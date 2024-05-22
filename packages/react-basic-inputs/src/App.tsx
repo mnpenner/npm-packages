@@ -85,8 +85,10 @@ function Select_Example1() {
     return (
         <>
             <h3>Basic</h3>
-            <Select options={FRUIT_OPTIONS} value={value} onChange={ev => setValue(ev.value)} />
-            <output>{JSON.stringify(value)}</output>
+            <div className={css.flexRow}>
+                <Select options={FRUIT_OPTIONS} value={value} onChange={ev => setValue(ev.value)} />
+                <output>{JSON.stringify(value)}</output>
+            </div>
         </>
     )
 }
@@ -96,9 +98,11 @@ function Select_Dupe() {
     return (
         <>
             <h3>Basic</h3>
-            <Select options={DUPLICATE_OPTIONS} value={value} onChange={ev => setValue(ev.value)} />
+            <div className={css.flexRow}>
+                <Select options={DUPLICATE_OPTIONS} value={value} onChange={ev => setValue(ev.value)} />
+                <output>{JSON.stringify(value)}</output>
+            </div>
             <button type="button" onClick={() => setValue(1)}>Set Banana</button>
-            <output>{JSON.stringify(value)}</output>
         </>
     )
 }
@@ -108,16 +112,19 @@ function Select_Example2() {
     return (
         <>
             <h3>Invalid Option & External Setter</h3>
-            <Select placeholder="-- Not Selected --" options={FRUIT_OPTIONS} value={value}
-                onChange={ev => setValue(ev.value)} />
-            <div>
+            <div className={css.flexRow}>
+                <Select placeholder="-- Not Selected --" options={FRUIT_OPTIONS} value={value}
+                    onChange={ev => setValue(ev.value)} />
+                <output>{JSON.stringify(value)}</output>
+            </div>
+            <div className={css.flexRow}>
                 <button type="button" onClick={() => setValue(null as any)}>Set Null</button>
                 <button type="button" onClick={() => setValue(2)}>Set Cherry</button>
                 <button type="button" onClick={() => setValue(FRUIT_OPTIONS.length + 1)}>Set Invalid</button>
                 <button type="button" onClick={() => setValue(Math.floor(Math.random() * 20))}>Set Random</button>
                 <button type="button" onClick={() => setValue(v => v + 1)}>Next</button>
             </div>
-            <output>{JSON.stringify(value)}</output>
+
         </>
     )
 }
@@ -164,9 +171,11 @@ function TextInput_Example2() {
     return (
         <>
             <h3>Collapse Spaces</h3>
-            <TextInput value={value} onChange={ev => setValue(ev.value)} />
+            <div className={css.flexRow}>
+                <TextInput value={value} onChange={ev => setValue(ev.value)} />
+                <output>{JSON.stringify(value)}</output>
+            </div>
             <button type="button" onClick={() => setValue('\t"     "\t')}>Set Space</button>
-            <output>{JSON.stringify(value)}</output>
         </>
     )
 }
@@ -184,10 +193,10 @@ function InputFieldset() {
     const [value, setValue] = useState("Hello")
     return (
         <FieldSet legend={<code>&lt;Input&gt;</code>}>
-            <div>
-            <Input />
+            <div className={css.flexRow}>
+                <Input />
             </div>
-            <div>
+            <div className={css.flexRow}>
                 <Input value={value} onChange={e => setValue(e.value)} />
                 <output>{JSON.stringify(value)}</output>
             </div>
