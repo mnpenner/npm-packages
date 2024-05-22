@@ -10,7 +10,7 @@ import {HtmlTextAreaElement, OverrideProps, VoidFn} from '../types/utility'
 import {useEventHandler} from '../hooks/useEvent'
 
 export type TextAreaRef = {
-    element: HtmlTextAreaElement,
+    element: HtmlTextAreaElement|null,
     adjustHeight: VoidFn,
 }
 
@@ -55,7 +55,7 @@ export const TextArea = forwardRef<TextAreaRef, TextAreaProps>(function TextArea
 
         const textarea = ref.current
         if(!textarea) return
-        const resizeObserver = new ResizeObserver(entries => {
+        const resizeObserver = new ResizeObserver(_entries => {
             adjustHeight()
         })
         resizeObserver.observe(textarea)

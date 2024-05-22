@@ -1,8 +1,8 @@
-import {Key} from 'react'
 import {resolveValue} from './resolvable'
 
+type StrictKey = string|number
 
-function defaultMakeKey(opt: any, idx: number): Key {
+function defaultMakeKey(opt: any, idx: number): StrictKey {
     if(opt.key != null) {
         return resolveValue(opt.key, opt, idx)
     } else if(typeof opt.value === 'string' || typeof opt.value === 'number') {
@@ -15,9 +15,9 @@ function defaultMakeKey(opt: any, idx: number): Key {
  * Produces unique React Keys from an option.
  */
 export class KeyFixer {
-    usedKeys = new Map<Key,number>
+    usedKeys = new Map<StrictKey,number>
 
-    fix(opt: any, idx: number): Key {
+    fix(opt: any, idx: number): StrictKey {
         let fixedKey = defaultMakeKey(opt, idx)
         for(; ;) {
             let suffix = this.usedKeys.get(fixedKey)

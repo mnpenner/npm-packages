@@ -1,35 +1,285 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import {ColorInput} from './components/ColorInput'
+import {DateInput} from './components/DateInput'
+import {DatetimeLocalInput} from './components/DatetimeLocalInput'
+import {DecimalInput} from './components/DecimalInput'
+import {EmailInput} from './components/EmailInput'
+import {Input} from './components/Input'
+import {MonthInput} from './components/MonthInput'
+import {NumberInput} from './components/NumberInput'
+import {NumericInput} from './components/NumericInput'
+import {PasswordInput} from './components/PasswordInput'
+import {PhoneInput} from './components/PhoneInput'
+import {RadioMenu} from './components/RadioMenu'
+import {ReactNode, useState} from 'react'
+import {SearchInput} from './components/SearchInput'
+import {Select, SelectOption} from './components/Select'
+import {TextArea} from './components/TextArea'
+import {TextInput} from './components/TextInput'
+import {TimeInput} from './components/TimeInput'
+import {UrlInput} from './components/UrlInput'
+import {UsernameInput} from './components/UsernameInput'
+import {WeekInput} from './components/WeekInput'
 
-function App() {
-  const [count, setCount] = useState(0)
 
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+const FRUIT_OPTIONS: SelectOption<number>[] = [
+    {text: "Apple", value: 0},
+    {text: "Banana", value: 1},
+    {text: "Cherry", value: 2},
+    {text: "Date", value: 3},
+    {text: "Elderberry", value: 4},
+    {text: "Fig", value: 5},
+    {text: "Grape", value: 6},
+    {text: "Honeydew", value: 7},
+    {text: "Kiwi", value: 8},
+    {text: "Lemon", value: 9},
+    {text: "Mango", value: 10},
+    {text: "Nectarine", value: 11},
+    {text: "Orange", value: 12, style: {color: 'orange'}},
+    {text: "Peach", value: 13},
+    {text: "Pineapple", value: 14},
+    {text: "Quince", value: 15},
+    {text: "Raspberry", value: 16},
+    {text: "Strawberry", value: 17},
+    {text: "Tangerine", value: 18},
+    {text: "Ugli fruit", value: 19},
+    {text: "Vanilla bean", value: 20},
+    {text: "Watermelon", value: 21},
+    {text: "Xigua", value: 22},
+    {text: "Yellow passion fruit", value: 23},
+    {text: "Zucchini", value: 24}
+]
+
+
+const DUPLICATE_OPTIONS: SelectOption<number>[] = [
+    {text: "Apple", value: 0},
+    {text: "Banana", value: 1},
+    {text: "Cherry", value: 2},
+    {text: "Banana 2", value: 1},
+    {text: "Banana 2-2", value: 1, key: '1(2)'},  // force an adversarial collision
+    {text: "Banana 3", value: 1},
+]
+
+function Select_Example3() {
+    return (
+        <>
+            <h3>Uncontrolled</h3>
+            <Select options={FRUIT_OPTIONS} />
+        </>
+    )
 }
 
-export default App
+function Select_Example4() {
+    return (
+        <>
+            <h3>Placeholder</h3>
+            <Select options={FRUIT_OPTIONS} placeholder="-- Please Select --" />
+        </>
+    )
+}
+
+
+function Select_Example1() {
+    const [value, setValue] = useState(8)
+    return (
+        <>
+            <h3>Basic</h3>
+            <Select options={FRUIT_OPTIONS} value={value} onChange={ev => setValue(ev.value)} />
+            <output>{JSON.stringify(value)}</output>
+        </>
+    )
+}
+
+function Select_Dupe() {
+    const [value, setValue] = useState(1)
+    return (
+        <>
+            <h3>Basic</h3>
+            <Select options={DUPLICATE_OPTIONS} value={value} onChange={ev => setValue(ev.value)} />
+            <button type="button" onClick={() => setValue(1)}>Set Banana</button>
+            <output>{JSON.stringify(value)}</output>
+        </>
+    )
+}
+
+function Select_Example2() {
+    const [value, setValue] = useState(15)
+    return (
+        <>
+            <h3>Invalid Option & External Setter</h3>
+            <Select placeholder="-- Not Selected --" options={FRUIT_OPTIONS} value={value}
+                onChange={ev => setValue(ev.value)} />
+            <div>
+                <button type="button" onClick={() => setValue(null as any)}>Set Null</button>
+                <button type="button" onClick={() => setValue(2)}>Set Cherry</button>
+                <button type="button" onClick={() => setValue(FRUIT_OPTIONS.length + 1)}>Set Invalid</button>
+                <button type="button" onClick={() => setValue(Math.floor(Math.random() * 20))}>Set Random</button>
+                <button type="button" onClick={() => setValue(v => v + 1)}>Next</button>
+            </div>
+            <output>{JSON.stringify(value)}</output>
+        </>
+    )
+}
+
+function SelectFieldset() {
+    return (
+        <fieldset>
+            <legend>&lt;Select&gt;</legend>
+            <Select_Example3 />
+            <Select_Example1 />
+            <Select_Example2 />
+            <Select_Example4 />
+            <Select_Dupe />
+        </fieldset>
+    )
+}
+
+function TextInput_Example1() {
+    return (
+        <>
+            <h3>Uncontrolled Input</h3>
+            <TextInput />
+        </>
+    )
+}
+
+
+function TextInput_Example2() {
+    const [value, setValue] = useState("\tHello  \"\n\r\x0B\x0C\xA0\" world ")
+    return (
+        <>
+            <h3>Collapse Spaces</h3>
+            <TextInput value={value} onChange={ev => setValue(ev.value)} />
+            <button type="button" onClick={() => setValue('\t"     "\t')}>Set Space</button>
+            <output>{JSON.stringify(value)}</output>
+        </>
+    )
+}
+
+function TextInputFieldset() {
+    return (
+        <FieldSet legend="<TextInput>">
+            <TextInput_Example1 />
+            <TextInput_Example2 />
+        </FieldSet>
+    )
+}
+
+function InputFieldset() {
+    const [value, setValue] = useState("Hello")
+    return (
+        <FieldSet legend="<Input>">
+            <div>
+                <Input />
+            </div>
+            <div>
+                <Input value={value} onChange={e => setValue(e.value)} />
+                <output>{JSON.stringify(value)}</output>
+            </div>
+        </FieldSet>
+    )
+}
+
+
+type FieldSetProps = {
+    legend: string
+    children: ReactNode
+}
+
+function FieldSet({legend, children}: FieldSetProps) {
+    return (
+        <fieldset>
+            <legend>{legend}</legend>
+            <div>{children}</div>
+        </fieldset>
+    )
+}
+
+function OtherTextInputsFieldset() {
+    return (
+        <FieldSet legend="Other Text Inputs">
+            <EmailInput placeholder="Email" />
+            <NumberInput placeholder={123} />
+            <DecimalInput placeholder="456" />
+            <NumericInput placeholder="3.14" />
+            <PhoneInput placeholder="867-5309" />
+            <SearchInput placeholder="Google" />
+            <UrlInput placeholder="example.org" />
+        </FieldSet>
+    )
+}
+
+function ColorFieldset() {
+    const [value, setValue] = useState("#FF0000")
+    // TODO: choose font color using color-contrast: https://caniuse.com/mdn-css_types_color_color-contrast
+    return (
+        <fieldset>
+            <legend>Color</legend>
+            <ColorInput value={value} onChange={ev => setValue(ev.value)} />
+            <div style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                backgroundColor: value
+            }}>{JSON.stringify(value)}</div>
+        </fieldset>
+    )
+}
+
+function DateFieldset() {
+    return (
+        <FieldSet legend="Date Inputs">
+            <DateInput />
+            <MonthInput />
+            <WeekInput />
+            <TimeInput />
+            <DatetimeLocalInput />
+        </FieldSet>
+    )
+}
+
+function UserPassFields() {
+    return (
+        <FieldSet legend="Username & Password">
+            <UsernameInput />
+            <PasswordInput autoComplete="new-password" />
+        </FieldSet>
+    )
+}
+
+function TextAreaFields() {
+    return (
+        <FieldSet legend="TextArea">
+            <TextArea />
+            <TextArea initialHeight="0" />
+            <TextArea rows={3} />
+        </FieldSet>
+    )
+}
+
+function RadioMenuFields() {
+    return (
+        <FieldSet legend="RadioMenu">
+            <RadioMenu options={[
+                {text: "Opt1", value: 1},
+                {text: "Opt2", value: 2},
+                {text: "Opt3", value: 3},
+            ]} />
+        </FieldSet>
+    )
+}
+
+// TODO: password + file
+export default function App() {
+    return (
+        <form>
+            <SelectFieldset />
+            <InputFieldset />
+            <TextInputFieldset />
+            <OtherTextInputsFieldset />
+            <ColorFieldset />
+            <DateFieldset />
+            <UserPassFields />
+            <TextAreaFields />
+            <RadioMenuFields />
+        </form>
+    )
+}

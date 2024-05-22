@@ -3,7 +3,7 @@ import {ChangeEventHandler, Key, ReactNode, useId} from 'react'
 import {Resolvable} from '../util/resolvable'
 import {useEventHandler} from '../hooks/useEvent'
 import {KeyFixer} from '../util/key-fixer'
-import {cast} from '../util/assert'
+import {assumeType} from '../util/assert'
 import {JSX} from 'react/jsx-runtime'
 
 
@@ -70,10 +70,10 @@ export function RadioMenu<T extends NonNil>(menu: RadioMenuProps<T>) {
         <ul className={menu.className}>
             {fixedOptions.map((opt, idx) => {
                 const {value, text, key, itemClassName, labelClassName, inputClassName, textClassName, ...rest} = opt
-                cast<JSX.IntrinsicElements['input']>(rest)
+                assumeType<JSX.IntrinsicElements['input']>(rest)
                 const fixedKey = fixer.fix(opt, idx)
                 if(menu.value !== undefined) {
-                    rest.checked = eq(value, menu.value)
+                    rest.checked = eq(value, menu.value as any)
                 }
                 // const checked = value === undefined ? undefined : eq(value, menu.value)
                 return (
