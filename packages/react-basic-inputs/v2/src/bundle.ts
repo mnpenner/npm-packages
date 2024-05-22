@@ -1,5 +1,0 @@
-export * from './components/Select'
-export * from './components/TextInput'
-export * from './components/Input'
-export * from './components/TextArea'
-export * from './components/RadioMenu'

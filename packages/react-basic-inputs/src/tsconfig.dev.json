@@ -1,9 +1,0 @@
-{
-  "extends": "./tsconfig.bundle.json",
-  "compilerOptions": {
-    "jsx": "react-jsxdev"
-  },
-  "files": [
-    "./dev.tsx"
-  ]
-}
