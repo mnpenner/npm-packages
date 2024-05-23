@@ -1,6 +1,8 @@
 import {OverrideProps} from '../types/utility.ts'
-import {useEffect, useState} from 'react'
+import {useEffect, useInsertionEffect, useLayoutEffect, useRef, useState, memo} from 'react'
 import {useBox} from '../hooks/useBox.ts'
+import {useUpdateEffect} from 'react-use'
+import {usePropState} from '../hooks/usePropState.ts'
 
 export type DebouncedInputChangeEvent = {
     value: string
@@ -12,29 +14,33 @@ export type DebouncedInputProps = OverrideProps<'input', {
     debounce?: number
 }>
 
-export function DebouncedInput({
+type Timer = ReturnType<typeof setTimeout>
+
+export const DebouncedInput = memo(({
     value: initialValue,
     onChange,
     debounce = 500,
     ...props
-}: DebouncedInputProps) {
-    const [value, setValue] = useState(initialValue)
+}: DebouncedInputProps) => {
+    const timerRef = useRef<Timer | undefined>(undefined)
+    const [value, setValue] = usePropState(initialValue, () => {
+        console.log('usePropState callback')
+        // clearTimeout(timerRef.current)
+    })
     const onChangeRef = useBox(onChange)
     const debounceRef = useBox(debounce)
 
-    useEffect(() => {
-        setValue(initialValue)
-    }, [initialValue])
-
-    useEffect(() => {
-        const timeout = setTimeout(() => {
-            onChangeRef.current({value})
-        }, debounceRef.current)
-
-        return () => clearTimeout(timeout)
-    }, [debounceRef, onChangeRef, value])
 
     return (
-        <input {...props} value={value} onChange={e => setValue(e.target.value)} />
+        <input {...props} value={value} onChange={ev => {
+            const value = ev.target.value
+            clearTimeout(timerRef.current)
+            console.log('onChange setValue')
+            setValue(value)
+            timerRef.current = setTimeout(() => {
+                console.log('debounced onChange')
+                onChangeRef.current({value})
+            }, debounceRef.current)
+        }} />
     )
-}
+})

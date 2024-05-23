@@ -22,6 +22,7 @@ import {WeekInput} from './components/WeekInput'
 import css from './App.module.css'
 import {BasicSelect} from './components/BasicSelect.tsx'
 import {DebouncedInput} from './components/DebouncedInput.tsx'
+import {ActionButton} from './components/ActionButton.tsx'
 
 
 const FRUIT_OPTIONS: SelectOption<number>[] = [
@@ -212,6 +213,12 @@ function DebouncedFieldset() {
             <div className={css.flexRow}>
                 <DebouncedInput value={value} onChange={e => setValue(e.value)} />
                 <output>{JSON.stringify(value)}</output>
+            </div>
+            <div>
+                <ActionButton onClick={() => {
+                    console.log('click')
+                    setValue("Goodbye")
+                }}>Reset</ActionButton>
             </div>
         </FieldSet>
     )

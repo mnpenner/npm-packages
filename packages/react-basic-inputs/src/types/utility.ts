@@ -54,3 +54,5 @@ type _StrictUnionHelper<T, TAll> =
 
 // See also: https://github.com/ts-essentials/ts-essentials#xor
 export type XOR<T> = _StrictUnionHelper<T, T>
+
+export type RequiredKeys<Type, Key extends keyof Type> = Omit<Type, Key> & Required<Pick<Type, Key>>
