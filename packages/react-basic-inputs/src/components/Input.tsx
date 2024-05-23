@@ -21,7 +21,7 @@ export type InputProps = OverrideProps<'input', {
 }>
 
 
-export const Input = forwardRef<HtmlInputElement, InputProps>(function Input({value = '', onChange, onInput, onBlur, formatOnChange = identity, ...otherProps}, ref) {
+export const Input = forwardRef<HtmlInputElement, InputProps>(function Input({value = '', onPaste, onChange, onInput, onBlur, formatOnChange = identity, ...otherProps}, ref) {
     const [currentValue, setCurrentValue] = useState(value)
     const lastValue = useRef(value)
     const modified = useRef(false)
@@ -41,6 +41,20 @@ export const Input = forwardRef<HtmlInputElement, InputProps>(function Input({va
         },
         // TODO: fire a change event onPaste ?
         // formatOnPaste?
+        onPaste: ev => {
+            ev.preventDefault()
+
+            const clipboard = formatOnChange(ev.clipboardData.getData('text/plain'))
+            const selectionStart = ev.currentTarget.selectionStart ?? 0
+            const newText = ev.currentTarget.selectionStart == null
+                ? clipboard : ev.currentTarget.value.slice(0,ev.currentTarget.selectionStart) + clipboard + ev.currentTarget.value.slice(ev.currentTarget.selectionEnd ?? ev.currentTarget.selectionStart)
+            setCurrentValue(newText)
+            ev.currentTarget.value = newText
+            ev.currentTarget.setSelectionRange(selectionStart+clipboard.length, selectionStart+clipboard.length)
+            onPaste?.(ev)
+            // ev.preventDefault()
+            // setCurrentValue(formatOnChange(ev.clipboardData.getData('text/plain')))
+        },
         onInput: ev => {
             modified.current = true
             onInput?.(ev)
