@@ -21,6 +21,7 @@ import {UsernameInput} from './components/UsernameInput'
 import {WeekInput} from './components/WeekInput'
 import css from './App.module.css'
 import {BasicSelect} from './components/BasicSelect.tsx'
+import {DebouncedInput} from './components/DebouncedInput.tsx'
 
 
 const FRUIT_OPTIONS: SelectOption<number>[] = [
@@ -204,6 +205,18 @@ function InputFieldset() {
     )
 }
 
+function DebouncedFieldset() {
+    const [value, setValue] = useState("Hello")
+    return (
+        <FieldSet legend={<code>&lt;DebouncedInput&gt;</code>}>
+            <div className={css.flexRow}>
+                <DebouncedInput value={value} onChange={e => setValue(e.value)} />
+                <output>{JSON.stringify(value)}</output>
+            </div>
+        </FieldSet>
+    )
+}
+
 
 type FieldSetProps = {
     legend: ReactNode
@@ -299,6 +312,7 @@ export default function App() {
             <SelectFieldset />
             <BasicSelectFieldset />
             <InputFieldset />
+            <DebouncedFieldset />
             <TextInputFieldset />
             <OtherTextInputsFieldset />
             <ColorFieldset />

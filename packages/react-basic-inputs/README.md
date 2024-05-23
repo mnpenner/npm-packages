@@ -17,6 +17,7 @@ npm install @mpen/react-basic-inputs
 ## Links
 
 - Npm: https://www.npmjs.com/package/@mpen/react-basic-inputs
+  - https://www.npmjs.com/package/@mpen/react-basic-inputs?activeTab=code
 - Yarn: https://yarnpkg.com/package/@mpen/react-basic-inputs
 - pkg-size: https://pkg-size.dev/@mpen%2Freact-basic-inputs
 - Bundlephobia: https://bundlephobia.com/package/@mpen/react-basic-inputs

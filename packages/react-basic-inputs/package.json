@@ -1,7 +1,7 @@
 {
   "name": "@mpen/react-basic-inputs",
   "private": false,
-  "version": "0.2.2",
+  "version": "0.2.4",
   "type": "module",
   "files": ["dist"],
   "main": "./dist/react-basic-inputs.umd.cjs",
@@ -15,8 +15,10 @@
   },
   "scripts": {
     "dev": "bun run --bun vite",
-    "build": "bun run --bun tsc && bun run --bun vite build",
-    "lint": "bun run --bun eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "build": "bun run --bun vite build",
+    "lint": "run-s 'lint:*'",
+    "lint:ts": "bun run --bun tsc",
+    "lint:es": "bun run --bun eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "bun run --bun vite preview",
     "_prepublishOnly": "bun run --bun build",
     "_publish": "npm publish --access=public"
