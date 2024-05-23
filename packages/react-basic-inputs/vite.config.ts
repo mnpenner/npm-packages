@@ -29,7 +29,7 @@ export default defineConfig({
     build: {
         // outDir: '../dist',
         // emptyOutDir: true,
-        minify: false,
+        minify: true,
         lib: {
             entry: resolve(__dirname, 'src/bundle.ts'),
             name: '@mpen/react-basic-inputs',

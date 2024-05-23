@@ -1,7 +1,8 @@
 import {OverrideProps} from '../types/utility.ts'
-import {memo, FC, MutableRefObject} from 'react'
+import {memo, FC, MutableRefObject, FormEventHandler} from 'react'
 import {useUpdateEffect} from 'react-use'
 import {useNullRef} from '../hooks/useNullRef.ts'
+import {assumeType} from '../util/assert.ts'
 
 export type DebouncedInputChangeEvent = {
     value: string
@@ -9,9 +10,17 @@ export type DebouncedInputChangeEvent = {
 
 export type DebouncedInputProps = OverrideProps<'input', {
     value: string
+    /**
+     * Triggers after `debounce` milliseconds following an input change or immediately when the input loses focus.
+     */
     onChange: (ev: DebouncedInputChangeEvent) => void
+    /**
+     * The delay in milliseconds before the `onChange` event is triggered. This delay is reset with each new input
+     * event.
+     */
     debounce?: number
-}, 'defaultValue' | 'onInput'>
+}, 'defaultValue' | 'onInput' | 'onBlur'>
+
 
 type Timer = ReturnType<typeof setTimeout>
 
@@ -38,15 +47,19 @@ export const DebouncedInput: FC<DebouncedInputProps> = (({
         }
     }, [valueProp])
 
+    const fireChange = () => {
+        if(inputRef.current != null && inputRef.current.value !== valueProp) {
+            onChange?.({value: inputRef.current.value})
+        }
+    }
+
     return (
-        <input {...props} ref={inputRef} defaultValue={valueProp} onInput={ev => {
+        <input {...props} ref={inputRef} defaultValue={valueProp} onInput={() => {
             clearTimer(timer)
-            const newValue = ev.currentTarget.value
-            timer.current = setTimeout(() => {
-                if(newValue !== valueProp) {
-                    onChange?.({value: newValue})
-                }
-            }, debounce)
+            timer.current = setTimeout(fireChange, debounce)
+        }} onBlur={() => {
+            clearTimer(timer)
+            fireChange()
         }} />
     )
 })

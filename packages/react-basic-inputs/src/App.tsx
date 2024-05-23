@@ -211,7 +211,7 @@ function DebouncedFieldset() {
     return (
         <FieldSet legend={<code>&lt;DebouncedInput&gt;</code>}>
             <div className={css.flexRow}>
-                <DebouncedInput value={value} onChange={e => setValue(e.value)} />
+                <DebouncedInput value={value} onChange={e => setValue(e.value)} debounce={1000} />
                 <output>{JSON.stringify(value)}</output>
             </div>
             <div>
