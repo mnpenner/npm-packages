@@ -66,7 +66,7 @@ export function BasicSelect<T>({
         })
     }
 
-    useFastChangeFirst(isFirst => {
+    useFirstLayoutEffect(isFirst => {
         if(ref.current == null) return
         if(isFirst) {
             // Use `defaultValue` for first render

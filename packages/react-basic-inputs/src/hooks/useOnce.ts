@@ -62,3 +62,13 @@ export function useFastChangeFirst(callback: (isFirst: boolean) => void, deps: D
     }
     prev.current = deps
 }
+
+export function useFirstRest(callback: (isFirst: boolean) => void) {
+    const first = useRef(true)
+    if(first.current) {
+        callback(true)
+        first.current = false
+    } else {
+        callback(false)
+    }
+}
