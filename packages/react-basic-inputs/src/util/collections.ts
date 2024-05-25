@@ -21,12 +21,12 @@ function sameValueZero(x: any, y: any): boolean {
     return x === y
 }
 
-function arrEq(a: any[], b: any[]): boolean {
+export function shallowArrayEqual(a: readonly any[], b: readonly any[]): boolean {
     if(a.length !== b.length) {
         return false
     }
-    for(let i = 0; i < a.length; i++) {
-        if(!deepEqual(a[i], b[i])) {
+    for(let i = 0; i < a.length; ++i) {
+        if(!sameValueZero(a[i], b[i])) {
             return false
         }
     }

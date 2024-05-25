@@ -1,5 +1,6 @@
 import {DependencyList, useEffect, useLayoutEffect, useRef, useState} from 'react'
 import {useBox} from './useBox.ts'
+import {shallowArrayEqual} from '../util/collections.ts'
 
 
 export function useOnce(callback: () => void) {
@@ -39,4 +40,25 @@ export function useFirstLayoutEffect(callback: (isFirst: boolean) => void, deps?
         first.current = false
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, deps)
+}
+
+
+export function useFastChange(callback: () => void, deps: DependencyList) {
+    const prev = useRef(deps)
+    if(!shallowArrayEqual(prev.current, deps)) {
+        callback()
+        prev.current = deps
+    }
+}
+
+export function useFastChangeFirst(callback: (isFirst: boolean) => void, deps: DependencyList) {
+    const prev = useRef(deps)
+    const first = useRef(true)
+    if(first.current) {
+        callback(true)
+        first.current = false
+    } else if(!shallowArrayEqual(prev.current, deps)) {
+        callback(false)
+    }
+    prev.current = deps
 }

@@ -2,7 +2,7 @@ import {EventCallback, HtmlSelectElement, nil, OverrideProps} from '../types/uti
 import {ChangeEventHandler, useMemo, useRef} from 'react'
 import {iterateChildren} from '../util/react-children.ts'
 import {deepEqual, fmap} from '../util/collections.ts'
-import {useFirstLayoutEffect, useLayoutEffectCounter} from '../hooks/useOnce.ts'
+import {useFastChangeFirst, useFirstLayoutEffect, useLayoutEffectCounter} from '../hooks/useOnce.ts'
 
 
 export type BasicSelectChangeEvent<T> = {
@@ -66,7 +66,7 @@ export function BasicSelect<T>({
         })
     }
 
-    useFirstLayoutEffect(isFirst => {
+    useFastChangeFirst(isFirst => {
         if(ref.current == null) return
         if(isFirst) {
             // Use `defaultValue` for first render
