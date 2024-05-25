@@ -169,6 +169,10 @@ function BasicSelectFieldset() {
                     <BasicOption value={{eight: 9n}}>option 9n</BasicOption>
                 </optgroup>
             </BasicSelect>
+            <BasicSelect defaultValue="2">
+                <option value="1">option 1</option>
+                <option value="2">option 2</option>
+            </BasicSelect>
             <h3>Controlled Input</h3>
             <FlexRow>
                 <BasicSelect value={value} onChange={ev => setValue(ev.value)}>
@@ -190,7 +194,10 @@ function BasicSelectFieldset() {
                 </BasicSelect>
                 <output>{jsonStringify(value)}</output>
             </FlexRow>
-            <ActionButton onClick={() => setValue(5)}>Set 5</ActionButton>
+            <FlexRow>
+                <ActionButton onClick={() => setValue(5)}>Set 5</ActionButton>
+                <ActionButton onClick={() => setValue(10)}>Set 10</ActionButton>
+            </FlexRow>
         </FieldSet>
     )
 }
@@ -199,7 +206,7 @@ function BasicSelectFieldset() {
 function TextInput_Example1() {
     return (
         <>
-        <h3>Uncontrolled Input</h3>
+            <h3>Uncontrolled Input</h3>
             <TextInput />
         </>
     )

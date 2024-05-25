@@ -2,10 +2,7 @@ import {EventCallback, HtmlSelectElement, nil, OverrideProps} from '../types/uti
 import {ChangeEventHandler, useMemo, useRef} from 'react'
 import {iterateChildren} from '../util/react-children.ts'
 import {deepEqual, fmap} from '../util/collections.ts'
-import {KeyFixer} from '../util/key-fixer.ts'
-import {useLayoutEffectCounter} from '../hooks/useOnce.ts'
-import {BasicOption} from './BasicOption.tsx'
-import {BasicSelectContext} from '../contexts/BasicSelectContext.ts'
+import {useFirstLayoutEffect, useLayoutEffectCounter} from '../hooks/useOnce.ts'
 
 
 export type BasicSelectChangeEvent<T> = {
@@ -43,7 +40,7 @@ export function BasicSelect<T>({
     ...props
 }: BasicSelectProps<T>) {
     const values = useMemo(() => fmap(iterateChildren(children), child => {
-        if(child.type === 'option' || child.type === BasicOption) {
+        if(child.type === 'option' || (child.type as any).__is$option) {
             return child.props.value
         }
     }), [children])
@@ -67,9 +64,9 @@ export function BasicSelect<T>({
         })
     }
 
-    useLayoutEffectCounter(count => {
+    useFirstLayoutEffect(isFirst => {
         if(ref.current == null) return
-        if(count === 0) {
+        if(isFirst) {
             // Use `defaultValue` for first render
             const initialValue = propValue !== undefined ? propValue : defaultValue
             selectedIndex.current = initialValue === undefined

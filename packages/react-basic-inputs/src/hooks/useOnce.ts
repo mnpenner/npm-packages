@@ -31,3 +31,12 @@ export function useLayoutEffectCounter(callback: (count: number) => void, deps?:
 }
 
 
+export function useFirstLayoutEffect(callback: (isFirst: boolean) => void, deps?: DependencyList) {
+    const first = useRef(true)
+    const cb = useBox(callback)
+    useLayoutEffect(() => {
+        cb.current?.(first.current)
+        first.current = false
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, deps)
+}

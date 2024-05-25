@@ -1,11 +1,15 @@
-import {useContext} from 'react'
 import {OverrideProps} from '../types/utility.ts'
-import {BasicSelectContext} from '../contexts/BasicSelectContext.ts'
 
 export type BasicOptionProps<T> = OverrideProps<'option', {
     value: T
 }>
 
-export function BasicOption<T>({value,...props}: BasicOptionProps<T>) {
-    return <option {...props}  />
+/**
+ * Like a normal <option> but `value` can be anything and won't appear in the DOM.
+ * Use with <BasicSelect>.
+ */
+export function BasicOption<T>({value, ...props}: BasicOptionProps<T>) {
+    return <option {...props} />
 }
+
+BasicOption.__is$option = true
