@@ -87,8 +87,6 @@ export function BasicSelect<T>({
     }, [equals, propValue, values])
 
     return (
-        <BasicSelectContext.Provider value={{fixer: new KeyFixer, index: 0}}>
-            <select {...props} ref={ref} onChange={changeHandler}>{children}</select>
-        </BasicSelectContext.Provider>
+        <select {...props} ref={ref} onChange={changeHandler}>{children}</select>
     )
 }

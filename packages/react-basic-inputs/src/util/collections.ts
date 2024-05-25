@@ -13,8 +13,16 @@ export function fmap<T, R>(iter: Iterable<T>, fn: (el: T, idx: number) => R): R[
     return out
 }
 
+function sameValueZero(x: any, y: any): boolean {
+    if(typeof x === "number" && typeof y === "number") {
+        // x and y are equal (may be -0 and 0) or they are both NaN
+        return x === y || (x !== x && y !== y)
+    }
+    return x === y
+}
+
 export function deepEqual(a: any, b: any): boolean {
-    if(Object.is(a, b)) {
+    if(sameValueZero(a, b)) {
         return true
     }
 
@@ -22,7 +30,10 @@ export function deepEqual(a: any, b: any): boolean {
         return false
     }
 
-    if(Array.isArray(a) && Array.isArray(b)) {
+    if(Array.isArray(a)) {
+        if(!Array.isArray(b)) {
+            return false;
+        }
         if(a.length !== b.length) {
             return false
         }
@@ -32,10 +43,8 @@ export function deepEqual(a: any, b: any): boolean {
             }
         }
         return true
-    }
-
-    if(Array.isArray(a) !== Array.isArray(b)) {
-        return false
+    } else if(Array.isArray(b)) {
+        return false;
     }
 
     const keysA = Object.keys(a)

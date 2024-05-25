@@ -6,7 +6,6 @@ export type BasicOptionProps<T> = OverrideProps<'option', {
     value: T
 }>
 
-export function BasicOption<T>(props: BasicOptionProps<T>) {
-    const ctx = useContext(BasicSelectContext)
-    return <option {...props} value={ctx ? ctx.fixer.fix(props, ctx.index++) : String(props.value)} />
+export function BasicOption<T>({value,...props}: BasicOptionProps<T>) {
+    return <option {...props}  />
 }

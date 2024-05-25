@@ -182,7 +182,7 @@ function BasicSelectFieldset() {
                     <optgroup label="more options">
                         <BasicOption value={5}>option 5</BasicOption>
                         <BasicOption value={5}>option 5b</BasicOption>
-                        <BasicOption value={5} uniqueKey="5c">option 5c</BasicOption>
+                        <BasicOption value={5}>option 5c</BasicOption>
                         <BasicOption value={"5(2)"}>option 5(2)</BasicOption>
                         <BasicOption value={[6, 7]}>option 6,7</BasicOption>
                         <BasicOption value={{eight: 9n}}>option 9n</BasicOption>
