@@ -1,4 +1,4 @@
-import {ComponentPropsWithoutRef, forwardRef, useRef, useState} from 'react'
+import {ComponentPropsWithoutRef, ComponentPropsWithRef, forwardRef, useRef, useState} from 'react'
 import {useUpdateEffect} from 'react-use'
 import {EventCallback, HtmlInputElement, OverrideProps} from "../types/utility";
 import {identity} from "../util/constants";
@@ -21,20 +21,21 @@ export type InputProps = OverrideProps<'input', {
 }>
 
 
-export const Input = forwardRef<HtmlInputElement, InputProps>(function Input({value = '', onPaste, onChange, onInput, onBlur, formatOnChange = identity, ...otherProps}, ref) {
-    const [currentValue, setCurrentValue] = useState(value)
-    const lastValue = useRef(value)
+export const Input = forwardRef<HtmlInputElement, InputProps>(function Input({value: initialValue = '', onPaste, onChange, onInput, onBlur, formatOnChange = identity, ...otherProps}, ref) {
+    const [currentValue, setCurrentValue] = useState(initialValue)
+    const lastValue = useRef(initialValue)
     const modified = useRef(false)
 
     useUpdateEffect(() => {
-        setCurrentValue(value)
+        setCurrentValue(initialValue)
         modified.current = false
-        lastValue.current = value
-    }, [value])
+        lastValue.current = initialValue
+    }, [initialValue])
 
-    const props: ComponentPropsWithoutRef<'input'> = {
+    const props: ComponentPropsWithRef<'input'> = {
         type: 'text',
         ...otherProps,
+        ref,
         value: currentValue,
         onChange: ev => {
             setCurrentValue(ev.target.value)
@@ -79,5 +80,5 @@ export const Input = forwardRef<HtmlInputElement, InputProps>(function Input({va
         }
     }
 
-    return <input {...props} ref={ref}/>
+    return <input {...props} />
 })

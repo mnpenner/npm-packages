@@ -1,0 +1,116 @@
+@layer normalize, system-theme, user-theme, base, module;
+
+@import "normalize.css" layer(normalize);
+
+
+@layer base {
+    * {
+        box-sizing: border-box;
+        /* fix flex-box */
+        min-width: 0;
+        /* fix overflowing <select>s */
+        max-width: 100%;
+    }
+
+    #root {
+        white-space: pre-wrap;
+        position: fixed;
+        inset: 0;
+        overflow-y: scroll;
+    }
+
+    #root-loader {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: Charter, 'Bitstream Charter', 'Sitka Text', Cambria, serif;
+        font-size: 2em;
+    }
+
+    body {
+        font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+        margin: 0;
+        background-color: #f7f7f7;
+        background-image: url("data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M8 16c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8zm0-2c3.314 0 6-2.686 6-6s-2.686-6-6-6-6 2.686-6 6 2.686 6 6 6zm33.414-6l5.95-5.95L45.95.636 40 6.586 34.05.636 32.636 2.05 38.586 8l-5.95 5.95 1.414 1.414L40 9.414l5.95 5.95 1.414-1.414L41.414 8zM40 48c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8zm0-2c3.314 0 6-2.686 6-6s-2.686-6-6-6-6 2.686-6 6 2.686 6 6 6zM9.414 40l5.95-5.95-1.414-1.414L8 38.586l-5.95-5.95L.636 34.05 6.586 40l-5.95 5.95 1.414 1.414L8 41.414l5.95 5.95 1.414-1.414L9.414 40z' fill='%23ded1f4' fill-opacity='0.4' fill-rule='evenodd'/%3E%3C/svg%3E");
+    }
+
+    table {
+        border-collapse: collapse;
+        border-spacing: 0;
+    }
+
+    td, th {
+        overflow-wrap: anywhere;
+    }
+
+    del {
+        text-decoration: line-through;
+        text-decoration-thickness: .2em;
+    }
+
+    code, kbd, samp {
+        font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+    }
+
+    code, pre {
+        overflow-wrap: anywhere;
+        white-space: break-spaces;
+    }
+
+    img {
+        max-width: 100%;
+        height: auto;
+        vertical-align: middle;
+        font-style: italic;
+        background-repeat: no-repeat;
+        background-size: cover;
+        shape-margin: var(--block-margin);
+        display: inline-block;
+    }
+
+    :is(p, blockquote, pre, table, h1, h2, h3, h4, h5, h6) {
+        margin-block: 0;
+
+        &:not(:first-child) {
+            margin-top: var(--block-margin);
+        }
+
+        &:not(:last-child) {
+            margin-bottom: var(--block-margin);
+        }
+    }
+
+    svg {
+        fill: currentColor;
+    }
+
+    fieldset {
+        border-color: #9b9b9b #6C6C6C #6C6C6C #9b9b9b;
+        border-radius: 5px;
+        background-color: white;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle drop shadow */
+    }
+
+    legend {
+        //font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+        border-width: 1.5px;
+        border-style: solid;
+        border-color: #9b9b9b #6C6C6C #6C6C6C #9b9b9b;
+        padding: .15em .6em;
+        border-radius: 50% 20% / 20% 40%;
+        background-color: oklch(0.983 0 86.145);
+    }
+
+    output {
+        background-color: oklch(0.983 0.018 86.145);
+    }
+
+    //select {
+    //    hr {
+    //        padding-block: .4em;
+    //        border: 1px solid red;
+    //    }
+    //}
+}

@@ -7,6 +7,7 @@ export type VoidFn = () => void
 // Objects
 export type EmptyObject = Record<PropertyKey, never>
 export type UnknownObject = Record<PropertyKey, unknown>
+export type AnyObject = Record<PropertyKey, any>
 
 export type Override<Base, Extension, DeleteKeys extends PropertyKey = never> =
     Omit<Base, keyof Extension | DeleteKeys>

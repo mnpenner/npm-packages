@@ -14,7 +14,7 @@ function type2color(x: any) {
     return '#C8C8B7'
 }
 
-export function assert(expr: any, message?: string) {
+export function assert(expr: any, message?: string): asserts expr {
     if (import.meta.env.NODE_ENV !== 'development') return
     if (!expr) {
         throw new Error(message ?? 'unknown assertion error');

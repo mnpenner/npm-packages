@@ -10,7 +10,7 @@ import {NumericInput} from './components/NumericInput'
 import {PasswordInput} from './components/PasswordInput'
 import {PhoneInput} from './components/PhoneInput'
 import {RadioMenu} from './components/RadioMenu'
-import {ReactNode, useState} from 'react'
+import {FC, ReactNode, useState} from 'react'
 import {SearchInput} from './components/SearchInput'
 import {Select, SelectOption} from './components/Select'
 import {TextArea} from './components/TextArea'
@@ -20,9 +20,11 @@ import {UrlInput} from './components/UrlInput'
 import {UsernameInput} from './components/UsernameInput'
 import {WeekInput} from './components/WeekInput'
 import css from './App.module.css'
-import {BasicSelect} from './components/BasicSelect.tsx'
+import {BasicOption, BasicSelect} from './components/BasicSelect.tsx'
 import {DebouncedInput} from './components/DebouncedInput.tsx'
 import {ActionButton} from './components/ActionButton.tsx'
+import {logJson} from './util/debug.ts'
+import {jsonStringify} from './util/json-serialize.ts'
 
 
 const FRUIT_OPTIONS: SelectOption<number>[] = [
@@ -81,6 +83,7 @@ function Select_Example4() {
     )
 }
 
+const FlexRow: FC<{ children: ReactNode }> = ({children}) => <div className={css.flexRow}>{children}</div>
 
 function Select_Example1() {
     const [value, setValue] = useState(8)
@@ -145,15 +148,29 @@ function SelectFieldset() {
 }
 
 function BasicSelectFieldset() {
+    const [value, setValue] = useState<any>("3")
     return (
-        <fieldset>
-            <legend><code>&lt;BasicSelect&gt;</code></legend>
-            <BasicSelect>
-                <option>option 1</option>
-                <option>option 2</option>
-                <option>option 3</option>
-            </BasicSelect>
-        </fieldset>
+        <FieldSet legend="<BasicSelect>">
+            <FlexRow>
+                <BasicSelect value={value} onChange={ev => setValue(ev.value)}>
+                    <option value="1">option 1</option>
+                    {/*<hr /> https://github.com/facebook/react/issues/27572 */}
+                    <option value="2">option 2</option>
+                    <optgroup label="more options">
+                        <option value="3">option 3</option>
+                        <option value="4">option 4</option>
+                    </optgroup>
+                    <optgroup label="more options">
+                        <BasicOption value={5}>option 5</BasicOption>
+                        <BasicOption value={5}>option 5b</BasicOption>
+                        <BasicOption value={[6, 7]}>option 6,7</BasicOption>
+                        <BasicOption value={{eight: 9n}}>option 9n</BasicOption>
+                    </optgroup>
+                </BasicSelect>
+                <output>{jsonStringify(value)}</output>
+            </FlexRow>
+            <ActionButton onClick={() => setValue(5)}>Set 5</ActionButton>
+        </FieldSet>
     )
 }
 
@@ -161,7 +178,7 @@ function BasicSelectFieldset() {
 function TextInput_Example1() {
     return (
         <>
-            <h3>Uncontrolled Input</h3>
+        <h3>Uncontrolled Input</h3>
             <TextInput />
         </>
     )
