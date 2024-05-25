@@ -20,11 +20,12 @@ import {UrlInput} from './components/UrlInput'
 import {UsernameInput} from './components/UsernameInput'
 import {WeekInput} from './components/WeekInput'
 import css from './App.module.css'
-import {BasicOption, BasicSelect} from './components/BasicSelect.tsx'
+import {BasicSelect} from './components/BasicSelect.tsx'
 import {DebouncedInput} from './components/DebouncedInput.tsx'
 import {ActionButton} from './components/ActionButton.tsx'
 import {logJson} from './util/debug.ts'
 import {jsonStringify} from './util/json-serialize.ts'
+import {BasicOption} from './components/BasicOption.tsx'
 
 
 const FRUIT_OPTIONS: SelectOption<number>[] = [
@@ -151,6 +152,24 @@ function BasicSelectFieldset() {
     const [value, setValue] = useState<any>("3")
     return (
         <FieldSet legend="<BasicSelect>">
+            <h3>Uncontrolled Input</h3>
+            <BasicSelect>
+                <option value="1">option 1</option>
+                {/*<hr /> https://github.com/facebook/react/issues/27572 */}
+                <option value="2">option 2</option>
+                <optgroup label="more options">
+                    <option value="3">option 3</option>
+                    <option value="4">option 4</option>
+                </optgroup>
+                <optgroup label="more options">
+                    <BasicOption value={5}>option 5</BasicOption>
+                    <BasicOption value={5}>option 5b</BasicOption>
+                    <BasicOption value={"5(2)"}>option 5(2)</BasicOption>
+                    <BasicOption value={[6, 7]}>option 6,7</BasicOption>
+                    <BasicOption value={{eight: 9n}}>option 9n</BasicOption>
+                </optgroup>
+            </BasicSelect>
+            <h3>Controlled Input</h3>
             <FlexRow>
                 <BasicSelect value={value} onChange={ev => setValue(ev.value)}>
                     <option value="1">option 1</option>
@@ -163,6 +182,8 @@ function BasicSelectFieldset() {
                     <optgroup label="more options">
                         <BasicOption value={5}>option 5</BasicOption>
                         <BasicOption value={5}>option 5b</BasicOption>
+                        <BasicOption value={5} uniqueKey="5c">option 5c</BasicOption>
+                        <BasicOption value={"5(2)"}>option 5(2)</BasicOption>
                         <BasicOption value={[6, 7]}>option 6,7</BasicOption>
                         <BasicOption value={{eight: 9n}}>option 9n</BasicOption>
                     </optgroup>
