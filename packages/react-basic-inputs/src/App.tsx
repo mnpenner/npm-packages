@@ -182,6 +182,7 @@ function BasicSelectFieldset() {
                     <optgroup label="more options">
                         <option value="3">option 3</option>
                         <option value="4">option 4</option>
+                        <option>option text</option>
                     </optgroup>
                     <optgroup label="more options">
                         <BasicOption value={5}>option 5</BasicOption>

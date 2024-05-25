@@ -41,7 +41,9 @@ export function BasicSelect<T>({
 }: BasicSelectProps<T>) {
     const values = useMemo(() => fmap(iterateChildren(children), child => {
         if(child.type === 'option' || (child.type as any).__is$option) {
-            return child.props.value
+            return child.props.value !== undefined
+                ? child.props.value
+                : child.props.children
         }
     }), [children])
 
