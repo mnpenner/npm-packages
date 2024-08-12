@@ -28,5 +28,5 @@ export default {
             module: true,
         }),
     ],
-    external: ['chalk']
+    external: []
 };

@@ -1,6 +1,6 @@
 {
   "name": "@mpen/is-type",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "packageManager": "bun@1.1.23",
   "exports": {
     ".": {
@@ -11,7 +11,7 @@
   },
   "type": "module",
   "files": [
-    "/dist"
+    "dist"
   ],
   "scripts": {
     "build": "rollup -c",
