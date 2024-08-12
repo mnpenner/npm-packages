@@ -110,25 +110,25 @@ export function* sextets2buf(sextets: Iterable<number>) {
     for(const val of sextets) {
         switch(phase) {
             case 0:
-                carry = val
+                carry = val << 2
                 phase = 1
                 break
             case 1:
                 // 6 bits in the carry, want the first 2 bits of val
-                yield ((carry << 2) | (val >> 4))
-                carry = val & 0b0000_1111
+                yield carry | (val >> 4)
+                carry = (val & 0b0000_1111) << 4
                 phase = 2
                 break
             case 2:
                 // 4 bits in the carry, want the first 4 bits of val
                 // console.log(carry<<4,val)
-                yield ((carry << 4) | (val >> 2))
-                carry = val & 0b0000_0011
+                yield carry | (val >> 2)
+                carry = (val & 0b0000_0011) << 6
                 phase = 3
                 break
             case 3:
                 // 2 bits in the carry, want all 6 bits of val
-                yield ((carry << 6) | val)
+                yield carry | val
                 phase = 0
                 break
         }
