@@ -252,7 +252,11 @@ export function isError(obj: any): obj is Error {
     return obj instanceof Error
 }
 
-// export function isBuffer(obj: any): obj is Buffer {
-//     return Buffer.isBuffer(obj)
-// }
+export function isBuffer(obj: any): obj is Buffer {
+    return typeof globalThis.Buffer?.isBuffer === 'function' && globalThis.Buffer.isBuffer(obj)
+}
+
+export function isArrayBufferView(obj: any): obj is ArrayBufferView {
+    return typeof globalThis.ArrayBuffer?.isView === 'function' && globalThis.ArrayBuffer.isView(obj)
+}
 

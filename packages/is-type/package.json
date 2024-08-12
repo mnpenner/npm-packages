@@ -1,6 +1,6 @@
 {
   "name": "@mpen/is-type",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "packageManager": "yarn@3.3.1",
   "exports": {
     ".": {

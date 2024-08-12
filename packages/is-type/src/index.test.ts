@@ -832,3 +832,28 @@ test(lib.isBooleanLike.name, () => {
     expect(lib.isBooleanLike(new Set())).toBe(false)
     expect(lib.isBooleanLike(new Map())).toBe(false)
 })
+
+test(lib.isBuffer.name, () => {
+    expect(lib.isBuffer(Buffer.from([1,2,3]))).toBe(true)
+    expect(lib.isBuffer([1,2,3])).toBe(false)
+    expect(lib.isBuffer(new Uint8Array([1,2,3]))).toBe(false)
+})
+
+test(lib.isArrayBufferView.name, () => {
+    expect(lib.isArrayBufferView(Buffer.from([1,2,3]))).toBe(true)
+    expect(lib.isArrayBufferView([1,2,3])).toBe(false)
+
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray
+    expect(lib.isArrayBufferView(new Int8Array([1,2,3]))).toBe(true)
+    expect(lib.isArrayBufferView(new Uint8Array([1,2,3]))).toBe(true)
+    expect(lib.isArrayBufferView(new Uint8ClampedArray([1,2,3]))).toBe(true)
+    expect(lib.isArrayBufferView(new Int16Array([1,2,3]))).toBe(true)
+    expect(lib.isArrayBufferView(new Uint16Array([1,2,3]))).toBe(true)
+    expect(lib.isArrayBufferView(new Int32Array([1,2,3]))).toBe(true)
+    expect(lib.isArrayBufferView(new Uint32Array([1,2,3]))).toBe(true)
+    // expect(lib.isArrayBufferView(new Float16Array([3.14]))).toBe(true)
+    expect(lib.isArrayBufferView(new Float32Array([3.14]))).toBe(true)
+    expect(lib.isArrayBufferView(new Float64Array([3.14]))).toBe(true)
+    expect(lib.isArrayBufferView(new BigInt64Array([1n,2n]))).toBe(true)
+    expect(lib.isArrayBufferView(new BigUint64Array([1n,2n]))).toBe(true)
+})
