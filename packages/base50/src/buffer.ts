@@ -1,5 +1,4 @@
-import {divqr} from './numbers'
-import {ALPHABET, BASE, charToNum, numToChar} from './alphabet'
+import {charToNum, numToChar} from './alphabet'
 import assert from 'node:assert'
 
 type BufferType = Buffer | Uint8Array | number[]
@@ -28,46 +27,27 @@ function rightAlignedMask(N: number) {
 }
 
 export function bufToBase50(buf: Iterable<number>): string {
-    let bitAccum = 0;
-    let bits = 0;
-    let out = ''
-    let valueAccum = 0;
+    let out = '';
+    let carry = 0;
+    const divisor = 15;
 
-    for (let byte of buf) {
-        bitAccum = (bitAccum << 8) | byte;
-        bits += 8;
-
-        while (bits >= 6) {
-            // console.log(bits)
-            bits -= 6
-            const value = ((bitAccum>>bits) & last6)+valueAccum
-            bitAccum &= rightAlignedMask(bits);
-            const [q,r] = divqr(value, BASE);
-            // console.log(bits,bitAccum,value,q,r)
-            out += numToChar(r);
-            valueAccum += q * BASE;
-            // console.log('B',bitAccum)
+    for (const sex of chunk6bits(buf)) {
+        const val = sex + carry;
+        if (val < 50) {
+            out += numToChar(val);
+            carry = 0;
+        } else {
+            out += numToChar(49);
+            carry = val - 49;
         }
     }
 
-    if(bits > 0) {
-        // bits -= 6
-        // console.log(bitAccum)
-        let value = (bitAccum & rightAlignedMask(bits))+valueAccum
-        while(value > 0) {
-            const [q, r] = divqr(value, BASE);
-            out += numToChar(r);
-            value = q
-        }
+    if (carry > 0) {
+        out += numToChar(carry);
     }
 
-    // if (bits > 0) {
-    //     out += ((bitAccum << (6 - bits)) & 0x3f)
-    // }
-
-    return out
+    return out;
 }
-
 // console.log(charToNum('0'))
 
 export function base50ToBuf(base50Str: string): Uint8Array {
@@ -101,7 +81,7 @@ export function base50ToBuf(base50Str: string): Uint8Array {
 }
 
 // console.log(numToChar(0b1111))
-console.log(base50ToBuf('Zg0Zc'))  // [0b1111_1100,0b0000_1111] == [252, 15]
+// console.log(base50ToBuf('Zg0Zc'))  // [0b1111_1100,0b0000_1111] == [252, 15]
 
 export function* sextets2buf(sextets: Iterable<number>) {
     let phase = 0
