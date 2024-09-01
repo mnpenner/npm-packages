@@ -331,6 +331,7 @@ function DateFieldset() {
             <DatetimeLocalInput defaultValue="2024-09-01T18:28:29Z"  />
             <DatetimeLocalInput defaultValue="2024-09-01T18:28:29.01Z"  />
             <DatetimeLocalInput min="2024-09-08T00:00:00" max="2024-09-14T23:59:59"  />
+            <DatetimeLocalInput value={null} />
         </FieldSet>
     )
 }
