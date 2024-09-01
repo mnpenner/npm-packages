@@ -1,11 +1,9 @@
 {
   "name": "@mpen/react-basic-inputs",
   "private": false,
-  "version": "0.2.7 a",
+  "version": "0.2.8",
   "type": "module",
   "files": ["dist"],
-  "main": "./dist/react-basic-inputs.umd.cjs",
-  "module": "./dist/react-basic-inputs.js",
   "exports": {
     ".": {
       "import": "./dist/react-basic-inputs.js",
@@ -15,13 +13,15 @@
   },
   "scripts": {
     "dev": "bun run --bun vite",
-    "build": "bun run --bun vite build",
+    "build": "run-p 'build:*'",
+    "build:libs": "bun run --bun vite build",
     "lint": "run-s 'lint:*'",
     "lint:ts": "bun run --bun tsc",
     "lint:es": "bun run --bun eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "bun run --bun vite preview",
     "_prepublishOnly": "bun run --bun build",
-    "_publish": "npm publish --access=public"
+    "_publish": "npm publish --access=public",
+    "build:docs": "typedoc && hg addremove docs"
   },
   "peerDependencies": {
     "react": "^18.2.0"
@@ -42,6 +42,8 @@
     "react-dom": "^18.3.1",
     "react-use": "^17.5.0",
     "sass": "^1.77.2",
+    "typedoc": "^0.26.6",
+    "typedoc-plugin-missing-exports": "^3.0.0",
     "typescript": "^5.4.5",
     "vite": "^5.2.0",
     "vite-plugin-dts": "^3.9.1"
