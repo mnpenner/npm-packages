@@ -68,3 +68,21 @@ export function formatUsername(str: string | nil) {
     if (!str) return ''
     return String(str).replace(/\s+/gu, '').toLowerCase()
 }
+
+
+export function pad0(num: number, count=2) {
+    return String(num).padStart(count, '0')
+}
+
+export function toDateInputValue(date: number|Date|string): string {
+    // if(typeof date === 'string') return date
+    const d = new Date(date)
+    let str = `${d.getFullYear()}-${pad0(d.getMonth()+1)}-${pad0(d.getDate())}T${pad0(d.getHours())}:${pad0(d.getMinutes())}`
+    if(d.getSeconds() !== 0 || d.getMilliseconds() !== 0) {
+        str += ':'+pad0(d.getSeconds())
+        if(d.getMilliseconds() !== 0) {
+            str += '.'+pad0(d.getMilliseconds(),3)
+        }
+    }
+    return str
+}

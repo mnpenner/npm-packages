@@ -323,6 +323,14 @@ function DateFieldset() {
             <WeekInput />
             <TimeInput />
             <DatetimeLocalInput />
+            <DatetimeLocalInput value={new Date()} />
+            <DatetimeLocalInput value={Date.now()} />
+            <DatetimeLocalInput value={Date.now()}  />
+            <DatetimeLocalInput defaultValue={Date.now()}  />
+            <DatetimeLocalInput defaultValue="2024-09-01T18:28Z" />
+            <DatetimeLocalInput defaultValue="2024-09-01T18:28:29Z"  />
+            <DatetimeLocalInput defaultValue="2024-09-01T18:28:29.01Z"  />
+            <DatetimeLocalInput min="2024-09-08T00:00:00" max="2024-09-14T23:59:59"  />
         </FieldSet>
     )
 }
