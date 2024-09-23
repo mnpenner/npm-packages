@@ -316,22 +316,29 @@ function ColorFieldset() {
 }
 
 function DateFieldset() {
+    const [value, setValue] = useState<Date|number|string|null>(new Date())
     return (
         <FieldSet legend="Date Inputs">
+            <h3>Simple</h3>
             <DateInput />
             <MonthInput />
             <WeekInput />
             <TimeInput />
+            <h3>Uncontrolled</h3>
             <DatetimeLocalInput />
-            <DatetimeLocalInput value={new Date()} />
-            <DatetimeLocalInput value={Date.now()} />
-            <DatetimeLocalInput value={Date.now()}  />
-            <DatetimeLocalInput defaultValue={Date.now()}  />
+            {/*<DatetimeLocalInput value={new Date()} />*/}
+            {/*<DatetimeLocalInput value={Date.now()} />*/}
+            {/*<DatetimeLocalInput value={Date.now()} />*/}
+            <DatetimeLocalInput defaultValue={Date.now()} />
             <DatetimeLocalInput defaultValue="2024-09-01T18:28Z" />
-            <DatetimeLocalInput defaultValue="2024-09-01T18:28:29Z"  />
-            <DatetimeLocalInput defaultValue="2024-09-01T18:28:29.01Z"  />
-            <DatetimeLocalInput min="2024-09-08T00:00:00" max="2024-09-14T23:59:59"  />
-            <DatetimeLocalInput value={null} />
+            <DatetimeLocalInput defaultValue="2024-09-01T18:28:29Z" />
+            <DatetimeLocalInput defaultValue="2024-09-01T18:28:29.01Z" />
+            <DatetimeLocalInput min="2024-09-08T00:00:00" max="2024-09-14T23:59:59" />
+            <h3>Controlled</h3>
+            <DatetimeLocalInput value={value} onChange={ev => setValue(ev.value)} />
+            <DatetimeLocalInput value={value} onChange={ev => setValue(ev.date)} />
+            <DatetimeLocalInput value={value} onChange={ev => setValue(ev.isoString)} />
+            <br/><output>{JSON.stringify(value)}</output>
         </FieldSet>
     )
 }
