@@ -26,6 +26,8 @@ import {ActionButton} from './components/ActionButton.tsx'
 import {logJson} from './util/debug.ts'
 import {jsonStringify} from './util/json-serialize.ts'
 import {BasicOption} from './components/BasicOption.tsx'
+import {DatetimeOffsetInput} from './components/DatetimeOffsetInput.tsx'
+import {DateValue} from './util/time.ts'
 
 
 const FRUIT_OPTIONS: SelectOption<number>[] = [
@@ -316,7 +318,7 @@ function ColorFieldset() {
 }
 
 function DateFieldset() {
-    const [value, setValue] = useState<Date|number|string|null>(new Date())
+    const [value, setValue] = useState<Date | number | string | null>(new Date())
     return (
         <FieldSet legend="Date Inputs">
             <h3>Simple</h3>
@@ -338,7 +340,28 @@ function DateFieldset() {
             <DatetimeLocalInput value={value} onChange={ev => setValue(ev.value)} />
             <DatetimeLocalInput value={value} onChange={ev => setValue(ev.date)} />
             <DatetimeLocalInput value={value} onChange={ev => setValue(ev.isoString)} />
-            <br/><output>{JSON.stringify(value)}</output>
+            <br />
+            <output>{JSON.stringify(value)}</output>
+        </FieldSet>
+    )
+}
+
+const ControlledDatetimeOffsetInput: FC<{defaultValue:DateValue|(() => DateValue)}> = ({defaultValue}) => {
+    const [value, setValue] = useState<Date | number | string | null>(defaultValue)
+    return <FlexRow>
+        <DatetimeOffsetInput value={value} onChange={ev => setValue(ev.value)} />
+       <output>{JSON.stringify(value)}</output>
+    </FlexRow>
+}
+
+function DatetimeOffsetFieldset() {
+    return (
+        <FieldSet legend="DatetimeOffsetInput">
+            <ControlledDatetimeOffsetInput defaultValue={() => new Date()}/>
+            <ControlledDatetimeOffsetInput defaultValue="2024-11-13T05:41:49.28+08:45"/>
+            <ControlledDatetimeOffsetInput defaultValue="2024-11-13T05:41:49.28"/>
+            <ControlledDatetimeOffsetInput defaultValue="+08:45"/>
+
         </FieldSet>
     )
 }
@@ -386,6 +409,7 @@ export default function App() {
             <OtherTextInputsFieldset />
             <ColorFieldset />
             <DateFieldset />
+            <DatetimeOffsetFieldset />
             <UserPassFields />
             <TextAreaFields />
             <RadioMenuFields />

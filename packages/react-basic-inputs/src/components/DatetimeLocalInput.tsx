@@ -35,6 +35,7 @@ export function DatetimeLocalInput({value, defaultValue, min, max, onChange, ...
             if(ev.currentTarget.value.length) {
                 const date = new Date(ev.currentTarget.valueAsNumber)
                 onChange({
+                    // TODO: undo this, "date time local" should in fact be local (no time zone)
                     isoString: toIsoDateString(date,{offset:true}),
                     // isoString: date.toISOString(),
                     value: date.valueOf(),
