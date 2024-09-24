@@ -139,21 +139,20 @@ function Select_Example2() {
 
 function SelectFieldset() {
     return (
-        <fieldset>
-            <legend><code>&lt;Select&gt;</code></legend>
+        <FieldSet legend="Select">
             <Select_Example3 />
             <Select_Example1 />
             <Select_Example2 />
             <Select_Example4 />
             <Select_Dupe />
-        </fieldset>
+        </FieldSet>
     )
 }
 
 function BasicSelectFieldset() {
     const [value, setValue] = useState<any>("3")
     return (
-        <FieldSet legend="<BasicSelect>">
+        <FieldSet legend="BasicSelect">
             <h3>Uncontrolled Input</h3>
             <BasicSelect>
                 <option value="1">option 1</option>
@@ -232,7 +231,7 @@ function TextInput_Example2() {
 
 function TextInputFieldset() {
     return (
-        <FieldSet legend={<code>&lt;TextInput&gt;</code>}>
+        <FieldSet legend="TextInput">
             <TextInput_Example1 />
             <TextInput_Example2 />
         </FieldSet>
@@ -242,7 +241,7 @@ function TextInputFieldset() {
 function InputFieldset() {
     const [value, setValue] = useState("Hello")
     return (
-        <FieldSet legend={<code>&lt;Input&gt;</code>}>
+        <FieldSet legend="Input">
             <div className={css.flexRow}>
                 <Input />
             </div>
@@ -257,7 +256,7 @@ function InputFieldset() {
 function DebouncedFieldset() {
     const [value, setValue] = useState("Hello")
     return (
-        <FieldSet legend={<code>&lt;DebouncedInput&gt;</code>}>
+        <FieldSet legend="DebouncedInput">
             <div className={css.flexRow}>
                 <DebouncedInput value={value} onChange={e => setValue(e.value)} debounce={1000} />
                 <output>{JSON.stringify(value)}</output>
@@ -354,6 +353,17 @@ const ControlledDatetimeOffsetInput: FC<{defaultValue:DateValue|(() => DateValue
     </FlexRow>
 }
 
+const ControlledDatetimeOffsetInput2: FC = () => {
+    const [value, setValue] = useState<Date | number | string | null>(null)
+    return <FlexRow>
+        <DatetimeOffsetInput value={value} onChange={ev => setValue(ev.value)} />
+        <ActionButton onClick={() => setValue(Date.now)}>Now</ActionButton>
+        <ActionButton onClick={() => setValue("2000-01-01T00:00:00.00")}>Y2K</ActionButton>
+        <ActionButton onClick={() => setValue("1987-12-21T03:00-07:00")}>Birth</ActionButton>
+        <output>{JSON.stringify(value)}</output>
+    </FlexRow>
+}
+
 function DatetimeOffsetFieldset() {
     return (
         <FieldSet legend="DatetimeOffsetInput">
@@ -361,6 +371,7 @@ function DatetimeOffsetFieldset() {
             <ControlledDatetimeOffsetInput defaultValue="2024-11-13T05:41:49.28+08:45"/>
             <ControlledDatetimeOffsetInput defaultValue="2024-11-13T05:41:49.28"/>
             <ControlledDatetimeOffsetInput defaultValue="+08:45"/>
+            <ControlledDatetimeOffsetInput2 />
 
         </FieldSet>
     )
@@ -377,7 +388,7 @@ function UserPassFields() {
 
 function TextAreaFields() {
     return (
-        <FieldSet legend={<code>&lt;TextArea&gt;</code>}>
+        <FieldSet legend="TextArea">
             <TextArea />
             <TextArea initialHeight="0" />
             <TextArea rows={3} />
@@ -387,7 +398,7 @@ function TextAreaFields() {
 
 function RadioMenuFields() {
     return (
-        <FieldSet legend={<code>&lt;RadioMenu&gt;</code>}>
+        <FieldSet legend="RadioMenu">
             <RadioMenu options={[
                 {text: "Opt1", value: 1},
                 {text: "Opt2", value: 2},

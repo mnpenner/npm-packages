@@ -10,7 +10,7 @@ export type IsoDateOptions = {
 export type DateValue = number | string | Date
 
 export function toIsoDateString(date: DateValue, options?: IsoDateOptions): string {
-    const d = new Date(date)
+    const d = date instanceof Date ? date : new Date(date)
     let str = `${d.getFullYear()}-${pad0(d.getMonth() + 1)}-${pad0(d.getDate())}T${pad0(d.getHours())}:${pad0(d.getMinutes())}`
 
     const showMs = options?.milliseconds || (options?.milliseconds == null && d.getMilliseconds() !== 0)
@@ -40,7 +40,10 @@ export function minutesToOffset(offset: number | nil): string {
     return `${sign}${pad0(offsetHours)}:${pad0(offsetMinutes)}`
 }
 
-const DATE_INPUT_OPTIONS: IsoDateOptions = {offset: false}
+const INPUT_REGEX = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?)(Z|[+-]\d{2}:\d{2})?$/;
+
+
+const DATE_INPUT_OPTIONS: IsoDateOptions = {offset: false,seconds:false,milliseconds:false}
 
 export function isInvalidDateInput(date: DateValue | nil): date is nil | '' {
     return date == null || Number.isNaN(date) || date === '' || Number.isNaN(+new Date(date))
@@ -48,5 +51,9 @@ export function isInvalidDateInput(date: DateValue | nil): date is nil | '' {
 
 export function toDateInputValue(date: DateValue | nil): string {
     if(isInvalidDateInput(date)) return ''
+    if(typeof date === 'string') {
+        const m = date.match(INPUT_REGEX)
+        if(m) return m[1]
+    }
     return toIsoDateString(date, DATE_INPUT_OPTIONS)
 }

@@ -10,6 +10,7 @@ import {
 } from '../util/time.ts'
 import {Select, SelectChangeEvent, SelectOption} from './Select.tsx'
 import React, {useCallback, useState} from 'react'
+import {usePropChange} from '../hooks/usePropChange.ts'
 
 export type DatetimeOffsetInputChangeEvent = {
     value: string
@@ -29,81 +30,81 @@ export type DatetimeOffsetInputProps = {
 
 const DATETIME_OFFSETS: SelectOption<number>[] = [
     // United States Minor Outlying Islands
-    {value: -12 * 60, text: "UTC-12:00"},
+    {value: -12 * 60, text: "-12:00"},
     // New Zealand, United States
-    {value: -11 * 60, text: "UTC-11:00"},
+    {value: -11 * 60, text: "-11:00"},
     // United States, French Polynesia, New Zealand
-    {value: -10 * 60, text: "UTC-10:00"},
+    {value: -10 * 60, text: "-10:00"},
     // France (Marquesas Islands)
-    {value: -9.5 * 60, text: "UTC-09:30"},
+    {value: -9.5 * 60, text: "-09:30"},
     // United States, Canada, Mexico
-    {value: -9 * 60, text: "UTC-09:00"},
+    {value: -9 * 60, text: "-09:00"},
     // United States, Canada, Mexico, UK (Pitcairn Islands)
-    {value: -8 * 60, text: "UTC-08:00"},
+    {value: -8 * 60, text: "-08:00"},
     // United States, Canada, Mexico
-    {value: -7 * 60, text: "UTC-07:00"},
+    {value: -7 * 60, text: "-07:00"},
     // United States, Canada, Mexico, Central America
-    {value: -6 * 60, text: "UTC-06:00"},
+    {value: -6 * 60, text: "-06:00"},
     // United States, Canada, Cuba, South America
-    {value: -5 * 60, text: "UTC-05:00"},
+    {value: -5 * 60, text: "-05:00"},
     // Canada, Caribbean, South America
-    {value: -4 * 60, text: "UTC-04:00"},
+    {value: -4 * 60, text: "-04:00"},
     // Canada (Newfoundland)
-    {value: -3.5 * 60, text: "UTC-03:30"},
+    {value: -3.5 * 60, text: "-03:30"},
     // Argentina, Brazil, Chile
-    {value: -3 * 60, text: "UTC-03:00"},
+    {value: -3 * 60, text: "-03:00"},
     // Brazil (Fernando de Noronha), South Georgia
-    {value: -2 * 60, text: "UTC-02:00"},
+    {value: -2 * 60, text: "-02:00"},
     // Cape Verde
-    {value: -1 * 60, text: "UTC-01:00"},
+    {value: -1 * 60, text: "-01:00"},
     // UK, Portugal, Iceland
-    {value: 0, text: "UTC±00:00"},
+    {value: 0, text: "±00:00"},
     // Central Europe
-    {value: 1 * 60, text: "UTC+01:00"},
+    {value: 1 * 60, text: "+01:00"},
     // Eastern Europe, Egypt
-    {value: 2 * 60, text: "UTC+02:00"},
+    {value: 2 * 60, text: "+02:00"},
     // East Africa, Middle East
-    {value: 3 * 60, text: "UTC+03:00"},
+    {value: 3 * 60, text: "+03:00"},
     // Iran
-    {value: 3.5 * 60, text: "UTC+03:30"},
+    {value: 3.5 * 60, text: "+03:30"},
     // UAE, Russia (Moscow)
-    {value: 4 * 60, text: "UTC+04:00"},
+    {value: 4 * 60, text: "+04:00"},
     // Afghanistan
-    {value: 4.5 * 60, text: "UTC+04:30"},
+    {value: 4.5 * 60, text: "+04:30"},
     // Pakistan
-    {value: 5 * 60, text: "UTC+05:00"},
+    {value: 5 * 60, text: "+05:00"},
     // India, Sri Lanka
-    {value: 5.5 * 60, text: "UTC+05:30"},
+    {value: 5.5 * 60, text: "+05:30"},
     // Nepal
-    {value: 5.75 * 60, text: "UTC+05:45"},
+    {value: 5.75 * 60, text: "+05:45"},
     // Bangladesh, Bhutan
-    {value: 6 * 60, text: "UTC+06:00"},
+    {value: 6 * 60, text: "+06:00"},
     // Myanmar
-    {value: 6.5 * 60, text: "UTC+06:30"},
+    {value: 6.5 * 60, text: "+06:30"},
     // Thailand, Vietnam
-    {value: 7 * 60, text: "UTC+07:00"},
+    {value: 7 * 60, text: "+07:00"},
     // China, Singapore
-    {value: 8 * 60, text: "UTC+08:00"},
+    {value: 8 * 60, text: "+08:00"},
     // Australia (Western)
-    {value: 8.75 * 60, text: "UTC+08:45"},
+    {value: 8.75 * 60, text: "+08:45"},
     // Japan, South Korea
-    {value: 9 * 60, text: "UTC+09:00"},
+    {value: 9 * 60, text: "+09:00"},
     // Australia (Central)
-    {value: 9.5 * 60, text: "UTC+09:30"},
+    {value: 9.5 * 60, text: "+09:30"},
     // Australia (Eastern)
-    {value: 10 * 60, text: "UTC+10:00"},
+    {value: 10 * 60, text: "+10:00"},
     // Australia (Lord Howe Island)
-    {value: 10.5 * 60, text: "UTC+10:30"},
+    {value: 10.5 * 60, text: "+10:30"},
     // Solomon Islands, Vanuatu
-    {value: 11 * 60, text: "UTC+11:00"},
+    {value: 11 * 60, text: "+11:00"},
     // Fiji, New Zealand
-    {value: 12 * 60, text: "UTC+12:00"},
+    {value: 12 * 60, text: "+12:00"},
     // New Zealand (Chatham Islands)
-    {value: 12.75 * 60, text: "UTC+12:45"},
+    {value: 12.75 * 60, text: "+12:45"},
     // Tonga, Samoa
-    {value: 13 * 60, text: "UTC+13:00"},
+    {value: 13 * 60, text: "+13:00"},
     // Kiribati
-    {value: 14 * 60, text: "UTC+14:00"},
+    {value: 14 * 60, text: "+14:00"},
 ]
 
 export function extractOffset(date: DateValue | nil): number | null {
@@ -117,7 +118,7 @@ export function extractOffset(date: DateValue | nil): number | null {
     if(match[0] === 'Z') return 0
 
     // Destructure the match to get sign, hours, and minutes
-    const [_, sign, hours, minutes] = match
+    const [, sign, hours, minutes] = match
 
     // Calculate the offset in minutes, applying the correct sign
     const offsetInMinutes = Number(hours) * 60 + Number(minutes)
@@ -128,6 +129,11 @@ export function localDateToOffset(date: string): number | null {
     if(date === '') return null
     return -new Date(date).getTimezoneOffset()
 }
+
+// function computeDateValue(v: DateValue|nil): string {
+//     if(isInvalidDateInput(v)) return ''
+//     return new Date(v).toISOString().slice(0, -1)
+// }
 
 
 export function DatetimeOffsetInput({
@@ -141,11 +147,14 @@ export function DatetimeOffsetInput({
     assumeProps<'input'>(props)
     const [offsetEnabled, setOffsetEnabled] = useState<boolean>(() => extractOffset(value ?? defaultValue) !== null)
     const [offset, setOffset] = useState<number | null>(() => extractOffset(value ?? defaultValue))
-    const [dateValue, setDateValue] = useState<string>(() => {
-        const v = value ?? defaultValue
-        if(isInvalidDateInput(v)) return ''
-        return new Date(v).toISOString().slice(0, -1)
+    const [dateValue, setDateValue] = useState<string>(() => toDateInputValue(value ?? defaultValue))
+
+    usePropChange(value, () => {
+        setOffsetEnabled(extractOffset(value) !== null)
+        setOffset(extractOffset(value))
+        setDateValue(toDateInputValue(value))
     })
+
 
     if(min != null) props.min = toDateInputValue(min)
     if(max != null) props.max = toDateInputValue(max)
@@ -197,7 +206,7 @@ export function DatetimeOffsetInput({
                 });
             }
         },
-        [onChange, computedOffset, dateValue]
+        [offset, dateValue, onChange]
     );
 
 
