@@ -1,9 +1,9 @@
-import {ChangeEvent, Key, ReactNode, useCallback, useMemo, useRef} from 'react'
+import {ChangeEvent, ReactNode, useCallback, useMemo, useRef} from 'react'
 import useEvent from '../hooks/useEvent'
 import {Resolvable} from '../util/resolvable'
 import {useUpdateEffect} from 'react-use'
-import {EventCallback, HtmlSelectElement, NonNil, OverrideProps} from "../types/utility";
-import {KeyFixer} from '../util/key-fixer'
+import {EventCallback, HtmlSelectElement, NonNil, OverrideProps} from "../types/utility"
+import {AnyOption, KeyFixer} from '../util/key-fixer'
 
 
 export type SelectOption<T> = OverrideProps<'option', {
@@ -116,13 +116,13 @@ export function Select<T extends NonNil>({
         refreshSelectedIndex()
     }, [refreshSelectedIndex])
 
-    const fixer = new KeyFixer()
+    const fixer = new KeyFixer<T>()
 
     return (
         <select {...selectAttrs} onChange={handleChange} ref={setRef}>
             {fixedOptions.map((opt, idx) => {
                 const {value, text, uniqueKey, ...optAttrs} = opt
-                const fixedKey = fixer.fix(opt, idx)
+                const fixedKey = fixer.fix(opt as AnyOption, idx)
                 // React wants each option to have a value, even though we aren't using it, otherwise it warns:
                 // "Cannot infer the option value of complex children. Pass a `value` prop or use a plain string as children to <option>."
                 return <option {...optAttrs} key={fixedKey} value={fixedKey}>{opt.text}</option>

@@ -1,5 +1,4 @@
-import {useEffect, useRef} from 'react'
-import {sameValueZero} from '../util/compare.ts'
+import {useCallback, useEffect, useRef} from 'react'
 import {useLatest} from './useLatest.ts'
 
 export function usePropChange<T>(prop: T, callback: () => void) {
@@ -7,9 +6,13 @@ export function usePropChange<T>(prop: T, callback: () => void) {
     const cb = useLatest(callback)
 
     useEffect(() => {
-        if(!sameValueZero(ref.current, prop)) {
+        if(!Object.is(ref.current, prop)) {
             cb.current()
             ref.current = prop
         }
     }, [cb, prop])
+
+    return useCallback((newValue: T) => {
+        ref.current = newValue
+    }, [])
 }

@@ -1,6 +1,6 @@
 import {Resolvable, resolveValue} from './resolvable'
 
-function makeKey(opt: AnyOption, idx: number): string {
+function makeKey<T>(opt: AnyOption<T>, idx: number): string {
     if(opt.uniqueKey != null) {
         return resolveValue(opt.uniqueKey, opt, idx)
     }
@@ -19,26 +19,26 @@ function makeKey(opt: AnyOption, idx: number): string {
     return String(idx)
 }
 
-interface AnyOption {
-    uniqueKey?: Resolvable<any, [AnyOption, number]>
-    value: any
+export interface AnyOption<T=any> {
+    uniqueKey?: Resolvable<string, [AnyOption<T>, number]>
+    value: T
 }
 
 /**
  * Produces unique React Keys from an option.
  */
-export class KeyFixer {
-    usedKeys = new Map<string, number>
+export class KeyFixer<T=any> {
+    private _usedKeys = new Map<string, number>
 
-    fix(opt: AnyOption, idx: number): string {
+    fix(opt: AnyOption<T>, idx: number): string {
         let fixedKey = makeKey(opt, idx)
         for(; ;) {
-            let suffix = this.usedKeys.get(fixedKey)
+            let suffix = this._usedKeys.get(fixedKey)
             if(suffix === undefined) {
-                this.usedKeys.set(fixedKey, 1)
+                this._usedKeys.set(fixedKey, 1)
                 break
             }
-            this.usedKeys.set(fixedKey, ++suffix)
+            this._usedKeys.set(fixedKey, ++suffix)
             fixedKey = `${fixedKey}(${suffix})`
         }
         return fixedKey

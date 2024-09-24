@@ -151,25 +151,20 @@ export function DatetimeOffsetInput({
     const [offset, setOffset] = useState<number | null>(() => extractOffset(value ?? defaultValue))
     const [dateValue, setDateValue] = useState<string>(() => toDateInputValue(value ?? defaultValue))
 
-    const refValue = useRef(value)
-
-    useEffect(() => {
-        if(!sameValueZero(refValue.current, value)) {
-            refValue.current = value
-            setOffsetEnabled(extractOffset(value) !== null)
-            setOffset(extractOffset(value))
-            setDateValue(toDateInputValue(value))
-        }
-    }, [value])
+    const updateRef = usePropChange(value, () => {
+        setOffsetEnabled(extractOffset(value) !== null)
+        setOffset(extractOffset(value))
+        setDateValue(toDateInputValue(value))
+    })
 
     const triggerChange = useCallback((newValue: string) => {
-        refValue.current = newValue
+        updateRef(newValue)
         if(onChange != null) {
             onChange({
                 value: newValue,
             })
         }
-    }, [onChange])
+    }, [onChange, updateRef])
 
 
     if(min != null) props.min = toDateInputValue(min)
@@ -183,14 +178,9 @@ export function DatetimeOffsetInput({
         (ev: React.ChangeEvent<HTMLInputElement>) => {
             const newValue = ev.currentTarget.value
             setDateValue(newValue)
-            const updatedOffset = offsetEnabled
-                ? offset
-                : isInvalidDateInput(newValue)
-                    ? null
-                    : -new Date(newValue).getTimezoneOffset()
-            triggerChange(newValue + minutesToOffset(updatedOffset))
+            triggerChange(newValue + minutesToOffset(computedOffset))
         },
-        [offsetEnabled, offset, triggerChange]
+        [triggerChange, computedOffset]
     )
 
     const handleOffsetChange = useCallback(
