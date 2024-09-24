@@ -1,18 +1,13 @@
-import {HtmlSelectElement, nil, OmitProps, OverrideProps} from "../types/utility"
+import {nil} from "../types/utility"
 import {assumeProps} from '../util/assert.ts'
 import {
     DateValue,
-    isInvalidDateInput,
-    IsoDateOptions,
     minutesToOffset,
-    toDateInputValue,
-    toIsoDateString
+    toDateInputValue
 } from '../util/time.ts'
 import {Select, SelectChangeEvent, SelectOption} from './Select.tsx'
-import React, {useCallback, useEffect, useRef, useState} from 'react'
+import React, {useCallback, useState} from 'react'
 import {usePropChange} from '../hooks/usePropChange.ts'
-import {useLatest} from '../hooks/useLatest.ts'
-import {sameValueZero} from '../util/compare.ts'
 
 export type DatetimeOffsetInputChangeEvent = {
     value: string
@@ -109,7 +104,7 @@ const DATETIME_OFFSETS: SelectOption<number>[] = [
     {value: 14 * 60, text: "+14:00"},
 ]
 
-export function extractOffset(date: DateValue | nil): number | null {
+function extractOffset(date: DateValue | nil): number | null {
     if(typeof date !== 'string' || date === '') return null
 
     // Match the offset part of the ISO string and capture the sign, hours, and minutes
@@ -127,7 +122,7 @@ export function extractOffset(date: DateValue | nil): number | null {
     return sign === '+' ? offsetInMinutes : -offsetInMinutes
 }
 
-export function localDateToOffset(date: string): number | null {
+function localDateToOffset(date: string): number | null {
     if(date === '') return null
     return -new Date(date).getTimezoneOffset()
 }
@@ -159,13 +154,10 @@ export function DatetimeOffsetInput({
 
     const triggerChange = useCallback((newValue: string) => {
         updateRef(newValue)
-        if(onChange != null) {
-            onChange({
-                value: newValue,
-            })
-        }
+        onChange?.({
+            value: newValue,
+        })
     }, [onChange, updateRef])
-
 
     if(min != null) props.min = toDateInputValue(min)
     if(max != null) props.max = toDateInputValue(max)
@@ -202,7 +194,6 @@ export function DatetimeOffsetInput({
         },
         [offset, dateValue, triggerChange]
     )
-
 
     return (
         <span>

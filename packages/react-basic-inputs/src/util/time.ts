@@ -40,10 +40,9 @@ export function minutesToOffset(offset: number | nil): string {
     return `${sign}${pad0(offsetHours)}:${pad0(offsetMinutes)}`
 }
 
-const INPUT_REGEX = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?)(Z|[+-]\d{2}:\d{2})?$/;
+const INPUT_REGEX = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?)(Z|[+-]\d{2}:\d{2})?$/
 
-
-const DATE_INPUT_OPTIONS: IsoDateOptions = {offset: false,seconds:false,milliseconds:false}
+const DATE_INPUT_OPTIONS: IsoDateOptions = {offset: false, seconds: false, milliseconds: false}
 
 export function isInvalidDateInput(date: DateValue | nil): date is nil | '' {
     return date == null || Number.isNaN(date) || date === '' || Number.isNaN(+new Date(date))

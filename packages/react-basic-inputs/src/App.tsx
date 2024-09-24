@@ -369,12 +369,15 @@ const ControlledDatetimeOffsetInput2: FC = () => {
 function DatetimeOffsetFieldset() {
     return (
         <FieldSet legend="DatetimeOffsetInput">
+            <h3>Controlled</h3>
             <ControlledDatetimeOffsetInput defaultValue={() => new Date()}/>
             <ControlledDatetimeOffsetInput defaultValue="2024-11-13T05:41:49.28+08:45"/>
             <ControlledDatetimeOffsetInput defaultValue="2024-11-13T05:41:49.28"/>
             <ControlledDatetimeOffsetInput defaultValue="+08:45"/>
             <ControlledDatetimeOffsetInput2 />
-
+            <h3>Uncontrolled</h3>
+            <DatetimeOffsetInput/>
+            <DatetimeOffsetInput defaultValue={"1987-12-21T03:00-08:00"} />
         </FieldSet>
     )
 }
