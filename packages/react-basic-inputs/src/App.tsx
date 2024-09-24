@@ -358,8 +358,9 @@ const ControlledDatetimeOffsetInput2: FC = () => {
     return <FlexRow>
         <DatetimeOffsetInput value={value} onChange={ev => setValue(ev.value)} />
         <ActionButton onClick={() => setValue(Date.now)}>Now</ActionButton>
-        <ActionButton onClick={() => setValue("2000-01-01T00:00:00.00")}>Y2K</ActionButton>
+        <ActionButton onClick={() => setValue("2000-01-01T00:00")}>Y2K</ActionButton>
         <ActionButton onClick={() => setValue("1987-12-21T03:00-07:00")}>Birth</ActionButton>
+        <ActionButton onClick={() => setValue("invalid")}>Invalid</ActionButton>
         <output>{JSON.stringify(value)}</output>
     </FlexRow>
 }

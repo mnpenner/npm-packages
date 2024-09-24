@@ -9,8 +9,10 @@ import {
     toIsoDateString
 } from '../util/time.ts'
 import {Select, SelectChangeEvent, SelectOption} from './Select.tsx'
-import React, {useCallback, useState} from 'react'
+import React, {useCallback, useEffect, useRef, useState} from 'react'
 import {usePropChange} from '../hooks/usePropChange.ts'
+import {useLatest} from '../hooks/useLatest.ts'
+import {sameValueZero} from '../util/compare.ts'
 
 export type DatetimeOffsetInputChangeEvent = {
     value: string
@@ -149,11 +151,25 @@ export function DatetimeOffsetInput({
     const [offset, setOffset] = useState<number | null>(() => extractOffset(value ?? defaultValue))
     const [dateValue, setDateValue] = useState<string>(() => toDateInputValue(value ?? defaultValue))
 
-    usePropChange(value, () => {
-        setOffsetEnabled(extractOffset(value) !== null)
-        setOffset(extractOffset(value))
-        setDateValue(toDateInputValue(value))
-    })
+    const refValue = useRef(value)
+
+    useEffect(() => {
+        if(!sameValueZero(refValue.current, value)) {
+            refValue.current = value
+            setOffsetEnabled(extractOffset(value) !== null)
+            setOffset(extractOffset(value))
+            setDateValue(toDateInputValue(value))
+        }
+    }, [value])
+
+    const triggerChange = useCallback((newValue: string) => {
+        refValue.current = newValue
+        if(onChange != null) {
+            onChange({
+                value: newValue,
+            })
+        }
+    }, [onChange])
 
 
     if(min != null) props.min = toDateInputValue(min)
@@ -167,47 +183,35 @@ export function DatetimeOffsetInput({
         (ev: React.ChangeEvent<HTMLInputElement>) => {
             const newValue = ev.currentTarget.value
             setDateValue(newValue)
-            if(onChange != null) {
-                const updatedOffset = offsetEnabled
-                    ? offset
-                    : isInvalidDateInput(newValue)
-                        ? null
-                        : -new Date(newValue).getTimezoneOffset()
-                onChange({
-                    value: newValue + minutesToOffset(updatedOffset),
-                })
-            }
+            const updatedOffset = offsetEnabled
+                ? offset
+                : isInvalidDateInput(newValue)
+                    ? null
+                    : -new Date(newValue).getTimezoneOffset()
+            triggerChange(newValue + minutesToOffset(updatedOffset))
         },
-        [onChange, offset, offsetEnabled]
+        [offsetEnabled, offset, triggerChange]
     )
 
     const handleOffsetChange = useCallback(
         (ev: SelectChangeEvent<number>) => {
             setOffset(ev.value)
-            if(onChange != null) {
-                onChange({
-                    value: dateValue + minutesToOffset(ev.value),
-                })
-            }
+            triggerChange(dateValue + minutesToOffset(ev.value))
         },
-        [onChange, dateValue]
+        [triggerChange, dateValue]
     )
 
     const handleCheckboxChange = useCallback(
         (ev: React.ChangeEvent<HTMLInputElement>) => {
             const isChecked = ev.currentTarget.checked
-            setOffsetEnabled(isChecked);
+            setOffsetEnabled(isChecked)
             const computedOffset = isChecked
                 ? offset
                 : localDateToOffset(dateValue)
-            if (onChange != null) {
-                onChange({
-                    value: dateValue + minutesToOffset(computedOffset),
-                });
-            }
+            triggerChange(dateValue + minutesToOffset(computedOffset))
         },
-        [offset, dateValue, onChange]
-    );
+        [offset, dateValue, triggerChange]
+    )
 
 
     return (
@@ -215,7 +219,7 @@ export function DatetimeOffsetInput({
             <input
                 type="datetime-local"
                 {...props}
-                value={toDateInputValue(dateValue)}
+                value={dateValue}
                 onChange={handleDateChange}
             />
             <input
