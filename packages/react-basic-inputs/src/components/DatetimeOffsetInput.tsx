@@ -154,6 +154,7 @@ export function DatetimeOffsetInput({
 
     const triggerChange = useCallback((newValue: string) => {
         updateRef(newValue)
+        // TODO: include unix timestamp if it's a full ISO date w/ offset?
         onChange?.({
             value: newValue,
         })
