@@ -1,9 +1,11 @@
 {
   "name": "@mpen/react-basic-inputs",
   "private": false,
-  "version": "0.3.1",
+  "version": "0.3.2",
   "type": "module",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "import": "./dist/react-basic-inputs.js",
@@ -21,7 +23,8 @@
     "preview": "bun run --bun vite preview",
     "_prepublishOnly": "bun run --bun build",
     "_publish": "npm publish --access=public",
-    "build:docs": "typedoc && hg addremove docs"
+    "build:docs": "typedoc && hg addremove docs",
+    "bump": "npm version patch && bun.exe run build && npm publish"
   },
   "peerDependencies": {
     "react": "^18.2.0"

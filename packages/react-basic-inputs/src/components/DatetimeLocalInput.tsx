@@ -1,15 +1,14 @@
 import {HtmlSelectElement, OmitProps, OverrideProps} from "../types/utility"
 import {assumeProps} from '../util/assert.ts'
-import {IsoDateOptions, toIsoDateString} from '../util/time.ts'
+import {DateValue, IsoDateOptions, toIsoDateString} from '../util/time.ts'
 
 export type DatetimeLocalInputChangeEvent = {
     // isoStringWithOffset: string|null
-    isoString: string|null
+    // isoString: string|null
     value: number|null
     date: Date|null
 }
 
-export type DateValue = number | string | Date
 
 export type DatetimeLocalInputProps = OverrideProps<'input', {
     min?: DateValue
@@ -36,7 +35,7 @@ export function DatetimeLocalInput({value, defaultValue, min, max, onChange, ...
                 const date = new Date(ev.currentTarget.valueAsNumber)
                 onChange({
                     // TODO: undo this, "date time local" should in fact be local (no time zone)
-                    isoString: toIsoDateString(date,{offset:true}),
+                    // isoString: toIsoDateString(date,{offset:true}),
                     // isoString: date.toISOString(),
                     value: date.valueOf(),
                     date,
@@ -44,7 +43,7 @@ export function DatetimeLocalInput({value, defaultValue, min, max, onChange, ...
             } else {
                 onChange({
                     // isoStringWithOffset: null,
-                    isoString: null,
+                    // isoString: null,
                     value: null,
                     date: null,
                 })
