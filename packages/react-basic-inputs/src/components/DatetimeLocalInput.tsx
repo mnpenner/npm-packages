@@ -3,10 +3,7 @@ import {assumeProps} from '../util/assert.ts'
 import {DateValue, IsoDateOptions, toIsoDateString} from '../util/time.ts'
 
 export type DatetimeLocalInputChangeEvent = {
-    // isoStringWithOffset: string|null
-    // isoString: string|null
-    value: number|null
-    date: Date|null
+    value: string
 }
 
 
@@ -31,23 +28,9 @@ export function DatetimeLocalInput({value, defaultValue, min, max, onChange, ...
     if(max != null) props.max = toIsoDateString(max, DATE_INPUT_OPTIONS)
     if(onChange != null) {
         props.onChange = ev => {
-            if(ev.currentTarget.value.length) {
-                const date = new Date(ev.currentTarget.valueAsNumber)
-                onChange({
-                    // TODO: undo this, "date time local" should in fact be local (no time zone)
-                    // isoString: toIsoDateString(date,{offset:true}),
-                    // isoString: date.toISOString(),
-                    value: date.valueOf(),
-                    date,
-                })
-            } else {
-                onChange({
-                    // isoStringWithOffset: null,
-                    // isoString: null,
-                    value: null,
-                    date: null,
-                })
-            }
+            onChange({
+                value: ev.currentTarget.value
+            })
         }
     }
     return <input type="datetime-local" {...props} />
