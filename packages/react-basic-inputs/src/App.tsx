@@ -376,8 +376,8 @@ function DatetimeOffsetFieldset() {
             <ControlledDatetimeOffsetInput defaultValue="+08:45"/>
             <ControlledDatetimeOffsetInput2 />
             <h3>Uncontrolled</h3>
-            <DatetimeOffsetInput/>
-            <DatetimeOffsetInput defaultValue={"1987-12-21T03:00-08:00"} />
+            <FlexRow><DatetimeOffsetInput/></FlexRow>
+            <FlexRow><DatetimeOffsetInput defaultValue={"1987-12-21T03:00-08:00"} /></FlexRow>
         </FieldSet>
     )
 }

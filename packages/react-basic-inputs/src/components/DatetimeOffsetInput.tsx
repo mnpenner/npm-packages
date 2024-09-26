@@ -8,6 +8,7 @@ import {
 import {Select, SelectChangeEvent, SelectOption} from './Select.tsx'
 import React, {useCallback, useState} from 'react'
 import {usePropChange} from '../hooks/usePropChange.ts'
+import {off} from 'react-use/lib/misc/util'
 
 export type DatetimeOffsetInputChangeEvent = {
     value: string
@@ -188,9 +189,17 @@ export function DatetimeOffsetInput({
         (ev: React.ChangeEvent<HTMLInputElement>) => {
             const isChecked = ev.currentTarget.checked
             setOffsetEnabled(isChecked)
-            const computedOffset = isChecked
-                ? offset
-                : localDateToOffset(dateValue)
+            let computedOffset: number|nil
+            if(isChecked) {
+                if(dateValue && offset === null) {
+                    computedOffset = localDateToOffset(dateValue)
+                    setOffset(computedOffset)
+                } else {
+                    computedOffset = offset
+                }
+            } else {
+                computedOffset = localDateToOffset(dateValue)
+            }
             triggerChange(dateValue + minutesToOffset(computedOffset))
         },
         [offset, dateValue, triggerChange]
@@ -206,6 +215,7 @@ export function DatetimeOffsetInput({
             />
             <input
                 type="checkbox"
+                title={offsetEnabled ? "Use UTC offset from this device" : "Enable UTC offset selection"}
                 checked={offsetEnabled}
                 onChange={handleCheckboxChange}
             />
