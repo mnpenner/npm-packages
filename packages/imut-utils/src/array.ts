@@ -248,3 +248,29 @@ export function arrayFindAndReplace<T>(array: T[], predicate: ArrayPredicate<T>,
 export function fpArrayFindAndReplace<T>(predicate: ArrayPredicate<T>, replaceWith: ArrayElementResolvable<T>) {
     return (a: T[]|nil) => arrayFindAndReplace(a ?? [], predicate, replaceWith)
 }
+
+/**
+ * Swap 2 elements of an array.
+ *
+ * @param array Array to update
+ * @param indexA Index of first element
+ * @param indexB Index of second element
+ */
+export function arraySwap<T>(array: T[], indexA: number, indexB: number): T[] {
+    if (indexA === indexB) return array; // No swap needed
+    const copy = [...array]; // Create a shallow copy
+    [copy[indexA], copy[indexB]] = [copy[indexB], copy[indexA]]; // Swap elements
+    return copy;
+}
+
+/**
+ * Replace an element at the given index.
+ * Same as {@link arraySplice} but with `count=1`
+ *
+ * @param array
+ * @param index
+ * @param replaceWith
+ */
+export function arrayReplace<T>(array: T[], index: number, ...replaceWith: T[]): T[] {
+    return arraySplice(array, index, 1, ...replaceWith)
+}
