@@ -5,9 +5,11 @@ Immutability helper for React.
 ## Installation
 
 ```sh
-yarn add @mnpenner/imut-utils
+yarn add @mpen/imut-utils
 # or
-npm install @mnpenner/imut-utils
+npm install @mpen/imut-utils
+# or
+bun add @mpen/imut-utils
 ```
 
 ## Links
@@ -27,7 +29,7 @@ npm install @mnpenner/imut-utils
 This library is designed to be paired with React, but has no such dependency. Here's an example lightly modified from a project I'm working on:
 
 ```ts
-import {fpShallowMerge, fpMapSet} from '@mnpenner/imut-utils'
+import {fpShallowMerge, fpMapSet} from '@mpen/imut-utils'
 
 function App(props: AppProps) {
     const [state, setState] = useState<Map<string, SomeState>>(() => new Map)
