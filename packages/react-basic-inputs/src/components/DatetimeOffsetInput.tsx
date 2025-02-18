@@ -133,6 +133,16 @@ function localDateToOffset(date: string): number | null {
 //     return new Date(v).toISOString().slice(0, -1)
 // }
 
+function computeOffsetMinutes(offsetEnabled:boolean,offset:number|null,dateValue:string) {
+    return offsetEnabled
+        ? offset
+        : localDateToOffset(dateValue)
+}
+
+function computeOffsetString(offsetEnabled:boolean,offset:number|null,dateValue:string) {
+    return minutesToOffset(computeOffsetMinutes(offsetEnabled,offset,dateValue))
+}
+
 
 export function DatetimeOffsetInput({
     value,
@@ -171,10 +181,11 @@ export function DatetimeOffsetInput({
     const handleDateChange = useCallback(
         (ev: React.ChangeEvent<HTMLInputElement>) => {
             const newValue = ev.currentTarget.value
+            // console.log(newValue,computedOffset,minutesToOffset(computedOffset))
             setDateValue(newValue)
-            triggerChange(newValue + minutesToOffset(computedOffset))
+            triggerChange(newValue + computeOffsetString(offsetEnabled,offset,newValue))
         },
-        [triggerChange, computedOffset]
+        [triggerChange, offsetEnabled, offset]
     )
 
     const handleOffsetChange = useCallback(
