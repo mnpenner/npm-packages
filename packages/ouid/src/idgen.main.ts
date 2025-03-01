@@ -1,14 +1,9 @@
 #!bun
 import {randomBytes} from 'node:crypto'
-import assert from 'node:assert/strict'
-import {TypedIdGenerator} from './idgen'
-import {IdFormatter} from './idfmt'
-
-function toHex(array: Uint8Array): string {
-    return Array.from(array)
-        .map(byte => byte.toString(16).padStart(2, '0'))
-        .join('')
-}
+import {OrderedTypedIdGenerator} from './OrderedTypedIdGenerator'
+import {ObfusicatedIdEncoder} from './ObfusicatedIdEncoder'
+import {ReadableIdEncoder} from './ReadableIdEncoder'
+import {toHex} from './buffer'
 
 const enum IdType {
     USER,
@@ -39,8 +34,9 @@ console.log(`secretKey: ${toHex(secretKey)}`)
 console.log(`alphabet: ${alphabet}`)
 console.log()
 
-const idgen = new TypedIdGenerator<IdType>
-const idfmt = new IdFormatter(secretKey, alphabet)
+const ouidGenerator = new OrderedTypedIdGenerator<IdType>
+const obsEncoder = new ObfusicatedIdEncoder(secretKey, alphabet)
+const readableEncoder = new ReadableIdEncoder()
 
 // const id = idgen.generate(IdType.POST)
 //
@@ -59,5 +55,6 @@ const idfmt = new IdFormatter(secretKey, alphabet)
 // assert.deepEqual(parsed,id)
 
 for(let i = 0; i < 100; ++i) {
-    console.log(idfmt.format(idgen.generate(IdType.COMMENT)))
+    const id = ouidGenerator.generate(IdType.COMMENT)
+    console.log(obsEncoder.encode(id), readableEncoder.encode(id))
 }

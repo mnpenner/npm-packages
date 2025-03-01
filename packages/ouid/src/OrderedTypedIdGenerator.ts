@@ -20,32 +20,34 @@ const performanceNow = ((): HrTimeFn => {
 
 // console.log(performanceNow() - performanceNow())
 
-export class TypedIdGenerator<IdType> {
-    private startTime!: bigint
+/**
+ * A 16-byte ID generator that uses time to guarantee the IDs are monotonically increasing (56 bits),
+ * a type tag (12 bits) for validation purposes, and 60 bits random to ensure the ID is unique even when IDs
+ * are generated in parallel.
+ */
+export class OrderedTypedIdGenerator<IdType> {
+    private readonly startTime: bigint
     private lastTime: bigint | undefined
 
     constructor(private readonly epoch = DEFAULT_EPOCH, private readonly scaleFactor = DEFAULT_SCALE_FACTOR) {
-        this._init()
-    }
-
-    private _init() {
         const [dateNow, perfNow] = [Date.now(), performanceNow()]
         this.startTime = BigInt(dateNow) * 1_000_000n - this.epoch - perfNow
     }
 
     generate(type: IdType): Uint8Array {
         const typeNum = Number(type)
-        assert(typeNum >= 0 && typeNum <= 0xFFF)
+        assert(typeNum >= 0 && typeNum <= 0xFFF, `type must be in [0, ${0xFFF}], got ${typeNum}`)
         // console.log(typeNum)
 
         let time = (this.startTime + performanceNow()) / this.scaleFactor
         // https://www.wolframalpha.com/input?i=+2025-01-01+00%3A00%3A00+UTC+%2B+51059181371154+*+100ns
-        if(this.lastTime != null && time < this.lastTime) {
-            // assert(false, "This wasn't supposed to happen")
-            // This should never happen, but this will force monotonicity regardless.
-            time = this.lastTime + 1n
-            this._init()
-        }
+        assert(this.lastTime == null || time > this.lastTime, `Current time was not greater than last time. Possible degradation in performance counter or insufficient scale factor.`)
+        // if(this.lastTime != null && time < this.lastTime) {
+        //     // assert(false, "This wasn't supposed to happen")
+        //     // This should never happen, but this will force monotonicity regardless.
+        //     time = this.lastTime + 1n
+        //     this._init()
+        // }
         this.lastTime = time
         // 56 bits of time buys us 228 years; https://www.wolframalpha.com/input?i=2%5E56*100ns
 

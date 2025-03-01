@@ -2,7 +2,12 @@ import assert from 'node:assert/strict'
 
 const DEFAULT_ALPHABET = '0123456789bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ'
 
-export class IdFormatter {
+/**
+ * Encodes a 16-byte Uint8Array into a string.
+ * The bytes are scrambled to make it harder (but not impossible) to extract information from the ID, such as the
+ * time or type.
+ */
+export class ObfusicatedIdEncoder {
     private readonly alphabet: string;
     private readonly base: bigint;
     private readonly reverse: Map<string, bigint>;
@@ -10,7 +15,7 @@ export class IdFormatter {
 
     constructor(private readonly secretKey: Uint8Array, alphabet: string = DEFAULT_ALPHABET) {
         assert(secretKey.length === 16, 'Secret key must be exactly 16 bytes');
-        assert(alphabet.length > 1, 'Alphabet must contain at least 2 characters');
+        assert(alphabet.length >= 2, 'Alphabet must contain at least 2 characters');
         assert(new Set(alphabet).size === alphabet.length, 'Alphabet must contain unique characters');
 
         this.alphabet = alphabet;
@@ -22,7 +27,7 @@ export class IdFormatter {
         this.maxLength = Math.ceil(128 / log2Base);
     }
 
-    format(id: Uint8Array): string {
+    encode(id: Uint8Array): string {
         assert(id.length === 16, 'ID must be 16 bytes long');
 
         const scrambled = new Uint8Array(16);
@@ -52,11 +57,11 @@ export class IdFormatter {
         return result.padStart(this.maxLength, this.alphabet[0]);
     }
 
-    get idLength(): number {
+    get encodedLength(): number {
         return this.maxLength;
     }
 
-    parse(formattedId: string): Uint8Array {
+    decode(formattedId: string): Uint8Array {
         assert(formattedId.length <= this.maxLength, `Formatted ID must be ${this.maxLength} characters or less`);
 
         let value = 0n;
