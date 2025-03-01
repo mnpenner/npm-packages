@@ -1,7 +1,7 @@
 {
   "name": "ouid",
   "version": "0.8.0",
-  "description": "Ordered UUIDs for Node",
+  "description": "Ordered UUIDs for Node & Bun",
   "exports": {
     ".": {
       "import": "./dist/index.mjs",

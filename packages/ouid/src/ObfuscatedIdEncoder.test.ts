@@ -1,9 +1,8 @@
 #!bun test
-import {test, expect, describe, it} from 'bun:test'
+import {expect, describe, it} from 'bun:test'
 import {randomBytes} from 'node:crypto'
 import {OrderedTypedIdGenerator} from './OrderedTypedIdGenerator'
 import {ObfuscatedIdEncoder} from './ObfuscatedIdEncoder'
-import {ReadableIdEncoder} from './ReadableIdEncoder'
 import {shuffleString} from './util'
 
 const enum IdType {
