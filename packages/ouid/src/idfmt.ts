@@ -26,7 +26,7 @@ export class IdFormatter {
         assert(id.length === 16, 'ID must be 16 bytes long');
 
         const scrambled = new Uint8Array(16);
-        for (let i = 0; i < 16; i++) {
+        for (let i = 0; i < 16; ++i) {
             scrambled[i] = id[i] ^ this.secretKey[i];
         }
 
@@ -38,7 +38,7 @@ export class IdFormatter {
         mixed[15] = scrambled[14] ^ scrambled[13];
 
         let value = 0n;
-        for (let i = 0; i < 16; i++) {
+        for (let i = 0; i < 16; ++i) {
             value = (value << 8n) | BigInt(mixed[i]);
         }
 
@@ -67,7 +67,7 @@ export class IdFormatter {
         }
 
         const mixed = new Uint8Array(16);
-        for (let i = 15; i >= 0; i--) {
+        for (let i = 15; i >= 0; --i) {
             mixed[i] = Number(value & 0xFFn);
             value >>= 8n;
         }

@@ -41,7 +41,7 @@ export class TypedIdGenerator<IdType> {
         let time = (this.startTime + performanceNow()) / this.scaleFactor
         // https://www.wolframalpha.com/input?i=+2025-01-01+00%3A00%3A00+UTC+%2B+51059181371154+*+100ns
         if(this.lastTime != null && time < this.lastTime) {
-            assert(false, "This wasn't supposed to happen")
+            // assert(false, "This wasn't supposed to happen")
             // This should never happen, but this will force monotonicity regardless.
             time = this.lastTime + 1n
             this._init()
