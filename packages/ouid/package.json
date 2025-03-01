@@ -1,28 +1,36 @@
 {
   "name": "ouid",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Ordered UUIDs for Node",
-  "main": "index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "type": "module",
+  "files": [
+    "dist"
+  ],
   "author": "Mark Penner <npm@mpen.ca>",
   "license": "MIT",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
   },
   "devDependencies": {
-    "@babel/cli": "^7.7.4",
-    "@babel/core": "^7.7.4",
-    "@babel/node": "^7.7.4",
-    "@babel/plugin-syntax-bigint": "^7.7.4",
-    "@babel/preset-env": "^7.7.4",
-    "@babel/preset-typescript": "^7.7.4",
-    "@types/node": "^12.12.14",
-    "typescript": "^3.7.2"
+    "@types/bun": "^1.2.4",
+    "typescript": "^5.8.2"
   },
   "repository": {
-    "type": "hg",
-    "url": "https://bitbucket.org/mnpenner/ouid"
+    "type": "git",
+    "url": "https://github.com/mnpenner/ouid"
   },
   "engines": {
-    "node": ">=10.7.0"
+    "node": ">=10.7.0",
+    "bun": ">=1.0"
+  },
+  "dependencies": {
+    "mitata": "^1.0.34"
   }
 }

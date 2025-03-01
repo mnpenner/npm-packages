@@ -1,35 +1,24 @@
 {
+    /* Visit https://aka.ms/tsconfig to read more about this file */
     "compilerOptions": {
-        "strict": true,
-        "importHelpers": false,
-        "inlineSources": true,
-        "noEmitOnError": true,
-        "pretty": true,
-        "module": "commonjs",
-        "noImplicitAny": true,
-        "suppressImplicitAnyIndexErrors": false,
-        "removeComments": false,
-        "preserveConstEnums": false,
-        "sourceMap": true,
-        "lib": ["esnext"],
-        "skipLibCheck": false,
-        "outDir": "dist",
-        "target": "esnext",
+        /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
+        "target": "ES2022",
+        /* Specify what module code is generated. */
+        "module": "ESNext",
+        /* Specify how TypeScript looks up a file from a given module specifier. */
+        "moduleResolution": "bundler",
+        /* Generate .d.ts files from TypeScript and JavaScript files in your project. */
         "declaration": true,
-        "resolveJsonModule": true,
+        /* Specify an output folder for all emitted files. */
+        "outDir": "./dist",
+        /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */
         "esModuleInterop": true,
-        "moduleResolution": "node",
-        "allowSyntheticDefaultImports": true,
-        "baseUrl": ".",
-        "paths": {
-            "*": ["src/*"]
-        },
-        "noEmit": false
+        /* Ensure that casing is correct in imports. */
+        "forceConsistentCasingInFileNames": true,
+        /* Enable all strict type-checking options. */
+        "strict": true
     },
-    "files": [
-        "src/index"
-    ],
     "include": [
-        "src/**/*.d.ts"
+        "src/**.ts"
     ]
 }
