@@ -3,27 +3,12 @@ import {randomBytes} from 'node:crypto'
 import {OrderedTypedIdGenerator} from './OrderedTypedIdGenerator'
 import {ObfusicatedIdEncoder} from './ObfusicatedIdEncoder'
 import {ReadableIdEncoder} from './ReadableIdEncoder'
-import {toHex} from './buffer'
+import {shuffleString, toHex} from './util'
 
 const enum IdType {
     USER,
     COMMENT,
     POST,
-}
-
-function shuffleArray<T>(a: T[]) {
-    var x, t, r = new Uint32Array(1)
-    for(var i = 0, c = a.length - 1, m = a.length; i < c; i++, m--) {
-        crypto.getRandomValues(r)
-        x = Math.floor(r / 65536 / 65536 * m) + i
-        t = a [i], a [i] = a [x], a [x] = t
-    }
-
-    return a
-}
-
-function shuffleString(s: string) {
-    return shuffleArray(Array.from(s)).join('')
 }
 
 const secretKey = randomBytes(16)

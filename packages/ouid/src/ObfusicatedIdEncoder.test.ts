@@ -3,6 +3,7 @@ import { test, expect, describe, it } from 'bun:test';
 import { randomBytes } from 'node:crypto';
 import { OrderedTypedIdGenerator } from './OrderedTypedIdGenerator';
 import { ObfusicatedIdEncoder } from './ObfusicatedIdEncoder';
+import {ReadableIdEncoder} from './ReadableIdEncoder'
 
 const enum IdType {
     USER,
@@ -10,15 +11,15 @@ const enum IdType {
     POST,
 }
 
-describe('TypedIdGenerator and IdFormatter', () => {
+describe('TypedIdGenerator and ObfusicatedIdEncoder', () => {
     const secretKey = randomBytes(16);
     const alphabet = Array.from('0123456789bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ').sort(()=>Math.random()-.5).join('');
     const generator = new OrderedTypedIdGenerator<IdType>();
-    const formatter = new ObfusicatedIdEncoder(secretKey, alphabet);
+    const encoder = new ObfusicatedIdEncoder(secretKey, alphabet);
 
     describe('Basic Functionality', () => {
         it('should have correct max length for base-50', () => {
-            expect(formatter['maxLength']).toBe(23);
+            expect(encoder.encodedLength).toBe(23);
         });
 
         it('should generate 16-byte IDs', () => {
@@ -29,26 +30,35 @@ describe('TypedIdGenerator and IdFormatter', () => {
 
         it('should format IDs to correct length', () => {
             const id = generator.generate(IdType.POST);
-            const formatted = formatter.encode(id);
+            const formatted = encoder.encode(id);
             expect(typeof formatted).toBe('string');
             expect(formatted.length).toBe(23);
         });
 
         it('should round-trip IDs correctly', () => {
             const id = generator.generate(IdType.POST);
-            const formatted = formatter.encode(id);
-            const parsed = formatter.decode(formatted);
+            const formatted = encoder.encode(id);
+            const parsed = encoder.decode(formatted);
             expect(parsed).toEqual(id);
         });
 
         it('should preserve type across all enum values', () => {
             for (const type of [IdType.USER, IdType.COMMENT, IdType.POST]) {
                 const id = generator.generate(type);
-                const formatted = formatter.encode(id);
-                const parsed = formatter.decode(formatted);
+                const formatted = encoder.encode(id);
+                const parsed = encoder.decode(formatted);
                 expect(generator.extractType(parsed)).toBe(type);
             }
         });
+
+        it('should round-trip random bytes correctly', () => {
+            for(let i=0; i<10_000; ++i) {
+                const id = new Uint8Array(randomBytes(16))
+                const encoded = encoder.encode(id);
+                const decoded = encoder.decode(encoded);
+                expect(decoded).toEqual(id)
+            }
+        })
     });
 
     describe('Uniqueness and Monotonicity', () => {
@@ -57,7 +67,7 @@ describe('TypedIdGenerator and IdFormatter', () => {
             const iterations = 10_000;
             for (let i = 0; i < iterations; i++) {
                 const id = generator.generate(IdType.POST);
-                const formatted = formatter.encode(id);
+                const formatted = encoder.encode(id);
                 expect(ids.has(formatted)).toBeFalse();
                 ids.add(formatted);
             }
@@ -79,15 +89,15 @@ describe('TypedIdGenerator and IdFormatter', () => {
         it('should handle max type value', () => {
             const id = generator.generate(0xFFF as IdType);
             expect(generator.extractType(id)).toBe(0xFFF as IdType);
-            const formatted = formatter.encode(id);
-            const parsed = formatter.decode(formatted);
+            const formatted = encoder.encode(id);
+            const parsed = encoder.decode(formatted);
             expect(generator.extractType(parsed)).toBe(0xFFF as IdType);
         });
 
         it('should throw on invalid formatted ID', () => {
-            expect(() => formatter.decode('abc')).toThrow();
-            expect(() => formatter.decode('x'.repeat(24))).toThrow();
-            expect(() => formatter.decode('invalid_chars_here!!!!!!')).toThrow();
+            expect(() => encoder.decode('abc')).toThrow();
+            expect(() => encoder.decode('x'.repeat(24))).toThrow();
+            expect(() => encoder.decode('invalid_chars_here!!!!!!')).toThrow();
         });
     });
 
