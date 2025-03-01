@@ -1,14 +1,8 @@
-#!bun
-import {randomBytes} from 'node:crypto'
-import assert from 'node:assert/strict'
+#!bun test
+import {test, expect, describe, it} from 'bun:test'
+import {randomBytes, randomInt} from 'node:crypto'
 import {TypedIdGenerator} from './idgen'
 import {IdFormatter} from './idfmt'
-
-function toHex(array: Uint8Array): string {
-    return Array.from(array)
-        .map(byte => byte.toString(16).padStart(2, '0'))
-        .join('')
-}
 
 const enum IdType {
     USER,
@@ -16,22 +10,24 @@ const enum IdType {
     POST,
 }
 
+test('idgen', () => {
+    const secretKey = randomBytes(16)
+    const alphabet = 'pZ3VlgXskW2fLQSxCR5Mbm7cNdqGBrh8FD94TKzHJjv6w10tPn'
 
-const idgen = new TypedIdGenerator<IdType>
-const idfmt = new IdFormatter(randomBytes(16))
+    const generator = new TypedIdGenerator<IdType>
+    const formatter = new IdFormatter(secretKey,alphabet)
 
-const id = idgen.generate(IdType.POST)
+    const ids = new Set()
+    expect(formatter.idLength).toBe(23)
 
-console.log(id,toHex(id))
-
-console.log(idgen.extractType(id))
-console.log(idgen.extractTimeNs(id))
-console.log(idgen.extractDate(id))
-
-const formatted = idfmt.format(id)
-console.log(formatted)
-const parsed = idfmt.parse(formatted)
-console.log(parsed)
-
-assert.deepEqual(parsed,id)
-
+    for(let i=0; i<10_000; ++i){
+        const id = generator.generate(IdType.POST)
+        expect(id.length).toBe(16)
+        const formatted = formatter.format(id)
+        expect(formatted.length).toBe(23)
+        const back = formatter.parse(formatted)
+        expect(back).toEqual(id)
+        expect(ids.has(formatter)).toBeFalse()
+        ids.add(formatted)
+    }
+})
