@@ -1,13 +1,13 @@
 #!bun
 import {randomBytes} from 'node:crypto'
 import {OrderedTypedIdGenerator} from './OrderedTypedIdGenerator'
-import {ObfusicatedIdEncoder} from './ObfusicatedIdEncoder'
+import {ObfuscatedIdEncoder} from './ObfuscatedIdEncoder'
 import {ReadableIdEncoder} from './ReadableIdEncoder'
 import {shuffleString, toHex} from './util'
 
 const enum IdType {
     USER,
-    COMMENT,
+    COMMENT=0xABC,
     POST,
 }
 
@@ -20,7 +20,7 @@ console.log(`alphabet: ${alphabet}`)
 console.log()
 
 const ouidGenerator = new OrderedTypedIdGenerator<IdType>
-const obsEncoder = new ObfusicatedIdEncoder(secretKey, alphabet)
+const obsEncoder = new ObfuscatedIdEncoder(secretKey, alphabet)
 const readableEncoder = new ReadableIdEncoder()
 
 // const id = idgen.generate(IdType.POST)

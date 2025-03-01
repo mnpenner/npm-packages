@@ -29,7 +29,7 @@ export class ReadableIdEncoder {
         randomBytes[7] = id[14] & 0xF0
 
         const randomBase64 = toBase64Url(randomBytes)
-        return `${typeTag.toString(16)}.${time.toString(36)}.${randomBase64}`
+        return `${typeTag.toString(16).toUpperCase()}.${time.toString(36)}.${randomBase64}`
     }
 
     decode(encoded: string): Uint8Array {
