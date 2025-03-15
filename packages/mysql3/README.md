@@ -11,6 +11,8 @@ yarn add mysql3
 npm i mysql3
 # or
 pnpm add mysql3
+# or
+bun add mysql3
 ```
 
 ## Usage
@@ -28,13 +30,13 @@ createPool({
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-}).then(pool => main(pool).finally(pool.close)).catch(err => {
+}).then(pool => main(pool).finally(() => pool.close())).catch(err => {
     console.error(err)
     process.exit(1)
 })
 ```
 
-See `tests/test.ts` for more.
+See `src/sql.test.ts` for more.
 
 ## API
 
