@@ -1,7 +1,8 @@
 {
     "name": "mysql3",
-    "version": "0.7.0",
+    "version": "0.7.2",
     "license": "LGPL-3.0-or-later",
+    "packageManager": "bun@1.1.25",
     "exports": {
         ".": {
             "import": "./dist/index.mjs",
@@ -10,6 +11,9 @@
         }
     },
     "type": "module",
+    "files": [
+        "dist"
+    ],
     "dependencies": {
         "geojson": "^0.5.0",
         "mariadb": "^3.4.0"
@@ -44,7 +48,7 @@
     },
     "scripts": {
         "dev": "rollup -cw",
-        "build": "rollup -c && cp README.md dist/",
+        "build": "rm -r dist && rollup -c",
         "lint": "eslint . --quiet --fix"
     },
     "repository": {

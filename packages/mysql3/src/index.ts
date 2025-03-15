@@ -1,4 +1,3 @@
-export {createPool} from './connection'
 export {
     sql,
     DuplicateKey,
@@ -6,7 +5,8 @@ export {
     _escapeIdLoose as escapeIdLoose,
     _escapeIdStrict as escapeIdStrict
 } from './sql'
-export type {ConnectionPool} from './connection'
 export type {PoolConfig} from 'mariadb'
+export {createPool} from './ConnectionPool'
+export {ConnectionPool} from './ConnectionPool'
 
 
