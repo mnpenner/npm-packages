@@ -4,7 +4,7 @@ import {sql, SqlFrag} from './sql'
 // type AsyncFunction = (...args: any[]) => Promise<any>
 import type * as geojson from 'geojson'
 
-export class ConnectionPool<TDefaultValue> {
+export class ConnectionPool<TDefaultValue=DefaultValueType> {
 
     constructor(private readonly pool: mariadb.Pool) {
     }
@@ -125,7 +125,7 @@ export type DefaultValueType = string | number | /*FIXME might be coming out wro
 export type DefaultRecordType = Record<string, DefaultValueType>
 export type QueryResult<T> = T[] & { [META]: mariadb.FieldInfo[] }
 
-export class PoolConnection<TDefaultValue> {
+export class PoolConnection<TDefaultValue=DefaultValueType> {
 
     constructor(private readonly conn: mariadb.PoolConnection) {
     }
@@ -226,7 +226,7 @@ export class PoolConnection<TDefaultValue> {
 
 export async function createPool<T=DefaultValueType>(config: mariadb.PoolConfig) {
     return new ConnectionPool<T>(await mariadb.createPool({
-        supportBigInt: true,
+        // bigIntAsNumber: true,
         dateStrings: true,
         ...config,
     }))
