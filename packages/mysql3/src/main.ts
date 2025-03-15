@@ -1,6 +1,7 @@
 #!bun
-import {ConnectionPool, createPool} from './connection'
-import {sql, DuplicateKey} from './sql'
+import type {ConnectionPool} from './connection';
+import { createPool} from './connection'
+import {sql} from './sql'
 
 async function main(pool: ConnectionPool) {
     // const result = await pool.transaction([

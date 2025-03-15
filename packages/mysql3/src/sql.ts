@@ -193,8 +193,8 @@ function getFields<T extends TableSchema<T>>(o: T) {
 //     keys<T extends object>(o: T): Array<keyof T & string>
 // }
 
-const TRUE_SQL = sql`1`
-const FALSE_SQL = sql`0`
+// const TRUE_SQL = sql`1`
+// const FALSE_SQL = sql`0`
 
 export namespace sql {
     export function set<T extends TableSchema<T>>(fields: InsertData<T>): SqlFrag {

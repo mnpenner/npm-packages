@@ -19,16 +19,16 @@ export default {
     ],
     plugins: [
         typescript({}),
-        terser({
-            format: {
-                comments: 'some',
-                beautify: true,
-                ecma: '2022',
-            },
-            compress: false,
-            mangle: false,
-            module: true,
-        }),
+        // terser({
+        //     format: {
+        //         comments: 'some',
+        //         beautify: true,
+        //         ecma: '2022',
+        //     },
+        //     compress: false,
+        //     mangle: false,
+        //     module: true,
+        // }),
     ],
     external: ['mariadb']
 };

@@ -59,5 +59,6 @@ module.exports = {
             'error',
             {checkLoops: false},
         ],
+        '@typescript-eslint/no-namespace': "off"
     },
 }

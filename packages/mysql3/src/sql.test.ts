@@ -1,4 +1,5 @@
-import {DuplicateKey, sql, SqlFrag} from './sql'
+import type { SqlFrag} from './sql';
+import {DuplicateKey, sql} from './sql'
 
 function normalizeSql(sql: string): string {
     return sql
