@@ -1,4 +1,4 @@
-import mariadb from 'mariadb'
+import type mariadb from 'mariadb'
 import {SqlFrag} from './sql'
 import type * as geojson from 'geojson'
 

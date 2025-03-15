@@ -1,6 +1,8 @@
-import {DefaultValueType, makeOptions, QueryParam, QueryResult} from './util'
-import mariadb from 'mariadb'
-import {sql, SqlFrag} from './sql'
+import type {DefaultValueType, QueryParam, QueryResult} from './util';
+import { makeOptions} from './util'
+import type mariadb from 'mariadb'
+import type { SqlFrag} from './sql';
+import {sql} from './sql'
 
 export class PoolConnection<TDefaultValue = DefaultValueType> {
 

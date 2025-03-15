@@ -1,6 +1,7 @@
-import {DefaultValueType, QueryResult, zip} from './util'
+import type {DefaultValueType, QueryResult} from './util';
+import { zip} from './util'
 import mariadb from 'mariadb'
-import {SqlFrag} from './sql'
+import type {SqlFrag} from './sql'
 import {PoolConnection} from './PoolConnection'
 
 export class ConnectionPool<TDefaultValue = DefaultValueType> {

@@ -1,5 +1,6 @@
 type PrimitiveValue = string | number | Buffer | bigint | boolean | null | Date;
 type SingleValue = PrimitiveValue | SqlFrag
+type InsertValue = SingleValue | undefined
 type Value = SingleValue | SingleValue[];
 type OptionalValue = Value|undefined
 
@@ -178,14 +179,16 @@ export enum DuplicateKey {
 // https://stackoverflow.com/questions/65976300/how-to-properly-extend-a-record
 type Columns<T> = keyof T & string
 type TableSchema<T> = Record<Columns<T>, Value>
+type InsertTableSchema<T> = Record<Columns<T>, InsertValue>
 // type TableSchema<T> = {[P in keyof T]?: Value}
 type AnySchema = Record<string, Value>
 type ColumnValueTuple<T> = [column: Columns<T>|ColumnId, value: Value]
-type InsertData<T extends TableSchema<T>> =  T|ColumnValueTuple<T>[]
+type InsertColumnValueTuple<T> = [column: Columns<T>|ColumnId, value: InsertValue]
+type InsertData<T extends InsertTableSchema<T>> =  T|InsertColumnValueTuple<T>[]
 
 
-function getFields<T extends TableSchema<T>>(o: T) {
-    return Object.keys(o).filter(k => (o as any)[k] !== undefined) as Array<keyof T & string>
+function getFields<T extends Record<string,any>>(o: T) {
+    return Object.keys(o).filter(k => o[k] !== undefined) as Array<keyof T & string>
 }
 
 
@@ -197,7 +200,7 @@ function getFields<T extends TableSchema<T>>(o: T) {
 // const FALSE_SQL = sql`0`
 
 export namespace sql {
-    export function set<T extends TableSchema<T>>(fields: InsertData<T>): SqlFrag {
+    export function set<T extends InsertTableSchema<T>>(fields: InsertData<T>): SqlFrag {
         if(Array.isArray(fields)) {
             const filteredFields = fields.filter(p => p[1] !== undefined)
             if(!filteredFields.length) throw new Error("No fields defined")
@@ -215,7 +218,7 @@ export namespace sql {
                 .join(', ')
         );
     }
-    export function insert<T extends TableSchema<T>>(table: TableId, data: InsertData<T>, options: InsertOptions=EMPTY_OBJECT): SqlFrag {
+    export function insert<T extends InsertTableSchema<T>>(table: TableId, data: InsertData<T>, options: InsertOptions=EMPTY_OBJECT): SqlFrag {
         let q = sql`INSERT ${frag(options.ignore ? 'IGNORE ' : '')}INTO ${escapeIdStrictFrag(table)} SET ${sql.set(data)}`;
 
         if (options.onDuplicateKey === DuplicateKey.IGNORE) {

@@ -95,6 +95,8 @@ describe('sql', () => {
             name: 'mpen',
             data: Buffer.from('deadbeef','hex'),
         }), "INSERT INTO `users` SET `id`=1, `name`='mpen', `data`=x'deadbeef'")
+
+        expectSql(sql.insert('t',{a:1,b:undefined}), "INSERT INTO `t` SET `a`=1")
     })
 })
 
