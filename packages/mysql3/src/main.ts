@@ -1,7 +1,5 @@
 #!bun
-import {sql} from './sql'
-import type {ConnectionPool} from './ConnectionPool';
-import { createPool} from './ConnectionPool'
+import {sql, createPool, type ConnectionPool} from '.'
 
 async function main(pool: ConnectionPool) {
     // const result = await pool.transaction([
@@ -20,7 +18,8 @@ async function main(pool: ConnectionPool) {
     // console.log(res)
 
     console.log('querying...')
-    const simple = await pool.query(sql`select 42 from dual`)
+    const simple = await pool.query(sql`select 42
+                                        from dual`)
     console.log(simple)
 
     const imgQuery = sql`select *
@@ -31,15 +30,26 @@ async function main(pool: ConnectionPool) {
     for await(const img of pool.stream<{ starred: boolean | null, date_taken_local: Date | null }>(imgQuery)) {
         console.log(`${++i}/${count}`, img.date_taken_local)
     }
+
+    console.log('transaction...')
+
+    await pool.transaction(async conn => {
+        const ans = await conn.query(sql`select 69
+                                         from dual`)
+        console.log(ans)
+    })
 }
 
 
-createPool({
+const pool = createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-}).then(pool => main(pool).finally(() => pool.close())).catch(err => {
+    connectionLimit: 5,
+})
+
+main(pool).finally(() => pool.close()).catch(err => {
     console.error(err)
     process.exit(1)
 })

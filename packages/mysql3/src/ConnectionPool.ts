@@ -100,7 +100,7 @@ export class ConnectionPool<TDefaultValue = DefaultValueType> {
     }
 }
 
-export async function createPool<T = DefaultValueType>(config: mariadb.PoolConfig) {
+export function createPool<T = DefaultValueType>(config: mariadb.PoolConfig) {
     return new ConnectionPool<T>(mariadb.createPool({
         // bigIntAsNumber: true,
         dateStrings: true,

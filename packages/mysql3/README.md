@@ -18,19 +18,22 @@ bun add mysql3
 ## Usage
 
 ```js
-import {createPool, sql} from 'mysql3';
+import {createPool, sql, type ConnectionPool} from 'mysql3';
 
 async function main(pool: ConnectionPool) {
     const result = await pool.value(sql`select now()`)
     console.log(result)
 }
 
-createPool({
+const pool = createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-}).then(pool => main(pool).finally(() => pool.close())).catch(err => {
+    connectionLimit: 5,
+})
+
+main(pool).finally(() => pool.close()).catch(err => {
     console.error(err)
     process.exit(1)
 })
