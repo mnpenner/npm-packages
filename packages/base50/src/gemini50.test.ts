@@ -9,10 +9,15 @@ import crypto from 'node:crypto'; // Import crypto for random bytes
 
 // Helper to compare Uint8Arrays
 function expectArraysEqual(arr1: Uint8Array, arr2: Uint8Array) {
-    expect(arr1.length).toBe(arr2.length);
-    expect(Buffer.from(arr1).equals(Buffer.from(arr2))).toBe(true);
-    // Or loop comparison if Buffer is not desired:
-    // expect(Array.from(arr1)).toEqual(Array.from(arr2));
+    expect(arr1).toEqual(arr2)
+    // expect(arr1.length).toBe(arr2.length);
+    // // Using Buffer.equals is efficient for comparison in Node/Bun contexts
+    // // If running in a pure browser context without Buffer, use array comparison
+    // if (typeof Buffer !== 'undefined' && Buffer.from) {
+    //     expect(Buffer.from(arr1).equals(Buffer.from(arr2))).toBe(true);
+    // } else {
+    //     expect(Array.from(arr1)).toEqual(Array.from(arr2)); // Fallback comparison
+    // }
 }
 
 describe('Base50 Streaming Conversion', () => {
@@ -186,21 +191,30 @@ describe('Base50 Streaming Conversion', () => {
             expectArraysEqual(decoded, largeData);
         });
 
-        it('should correctly encode and decode 10,000 random arrays of varying sizes', () => {
-            const numTests = 10000;
-            // Define a reasonable max size to avoid excessively long tests
-            // but still cover a good range. Adjust if needed.
+        it('should correctly encode and decode 10,000 random arrays of varying sizes using crypto.getRandomValues', () => {
+            const numTests = 10_000;
             const maxSize = 512; // Max buffer size in bytes (0 to 512 inclusive)
 
-            console.log(`\nRunning ${numTests} randomized round-trip tests (max size: ${maxSize} bytes)...`);
+            console.log(`\nRunning ${numTests} randomized round-trip tests using crypto.getRandomValues (max size: ${maxSize} bytes)...`);
+
+            if (typeof crypto === 'undefined' || typeof crypto.getRandomValues !== 'function') {
+                console.warn("Web Crypto API (crypto.getRandomValues) not available in this environment. Skipping randomized test.");
+                // Optionally make the test pass trivially or throw an error if crypto is required
+                expect(true).toBe(true); // Mark test as passing if crypto is unavailable
+                return; // Exit the test
+            }
 
             for (let i = 0; i < numTests; i++) {
                 // Generate a random size between 0 and maxSize (inclusive)
                 const randomSize = Math.floor(Math.random() * (maxSize + 1));
 
-                // Generate random bytes using crypto
-                const randomBuffer = crypto.randomBytes(randomSize);
-                const originalData = new Uint8Array(randomBuffer); // Convert Buffer to Uint8Array
+                // Create a Uint8Array of the desired size
+                const originalData = new Uint8Array(randomSize);
+
+                // Fill the array with cryptographically secure random values
+                if (randomSize > 0) { // getRandomValues doesn't work on 0-length arrays
+                    crypto.getRandomValues(originalData);
+                }
 
                 let encoded: string;
                 let decoded: Uint8Array;
@@ -232,7 +246,7 @@ describe('Base50 Streaming Conversion', () => {
             }
             console.log(`Successfully completed ${numTests} randomized tests.`);
         }, {
-            timeout: 30_000 // Increase timeout if needed for 10k iterations (30 seconds)
-        }); // Add a timeout modifier if the tests might take longer
+            timeout: 30_000 // Increase timeout if needed (30 seconds)
+        }); // Add timeout modifier
     });
 });
