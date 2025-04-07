@@ -1,7 +1,7 @@
 // --- Base50 Configuration ---
-const BASE50_ALPHABET = '0123456789bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ'
+export const BASE50_ALPHABET = '0123456789bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ'
 const BASE = 50 // Target base
-const LEADER = BASE50_ALPHABET.charAt(0) // Character representing zero
+export const LEADER = BASE50_ALPHABET.charAt(0) // Character representing zero
 
 // Create reverse lookup map
 const BASE50_MAP: { [char: string]: number } = {}
@@ -147,52 +147,4 @@ export function base50ToUint8ArrayStreaming(str: string): Uint8Array {
     }
 
     return result
-}
-
-
-// --- Example Usage (Same as before, just using the streaming functions) ---
-console.log("--- Streaming Method ---")
-const originalData = new Uint8Array([0, 0, 10, 20, 30, 255, 128])
-console.log("Original Uint8Array:", originalData)
-
-const encodedStringStream = uint8ArrayToBase50Streaming(originalData)
-console.log("Base50 Encoded (Streaming):", encodedStringStream)
-
-try {
-    const decodedDataStream = base50ToUint8ArrayStreaming(encodedStringStream)
-    console.log("Decoded Uint8Array (Streaming):", decodedDataStream)
-
-    // Verification
-    const isEqualStream = originalData.length === decodedDataStream.length &&
-        originalData.every((val, index) => val === decodedDataStream[index])
-    console.log("Streaming Verification Successful:", isEqualStream) // Should be true
-
-    // Test edge cases
-    console.log("\n--- Streaming Edge Cases ---")
-    const empty = new Uint8Array([])
-    console.log("Empty:", uint8ArrayToBase50Streaming(empty), base50ToUint8ArrayStreaming(""))
-    const zeros = new Uint8Array([0, 0, 0])
-    const encodedZeros = uint8ArrayToBase50Streaming(zeros)
-    console.log("Zeros:", encodedZeros, base50ToUint8ArrayStreaming(encodedZeros))
-    const singleByte = new Uint8Array([42])
-    const encodedSingle = uint8ArrayToBase50Streaming(singleByte)
-    console.log("Single Byte:", encodedSingle, base50ToUint8ArrayStreaming(encodedSingle))
-    const largeNum = new Uint8Array(Array.from({length: 50}, (_, i) => (i * 17 + 9) % 256)) // Larger buffer
-    console.log("Large Num (start):", largeNum.slice(0, 5), "...")
-    const largeEncodedStream = uint8ArrayToBase50Streaming(largeNum)
-    console.log("Large Encoded (start):", largeEncodedStream.substring(0, 10), "...")
-    const largeDecodedStream = base50ToUint8ArrayStreaming(largeEncodedStream)
-    console.log("Large Decoded Matches:", largeNum.every((v, i) => v === largeDecodedStream[i]))
-
-
-    // Test invalid character
-    console.log("\n--- Streaming Error Handling ---")
-    try {
-        base50ToUint8ArrayStreaming("InvalidChar0")
-    } catch(e: any) {
-        console.log("Caught expected error:", e.message)
-    }
-
-} catch(error) {
-    console.error("An error occurred during streaming decoding:", error)
 }
