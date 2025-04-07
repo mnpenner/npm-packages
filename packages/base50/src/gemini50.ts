@@ -148,3 +148,16 @@ export function base50ToUint8ArrayStreaming(str: string): Uint8Array {
 
     return result
 }
+
+
+if (import.meta.main) {
+    // This file is being run directly
+    // $ bun --watch --no-clear-screen src/gemini50.ts
+    console.log('---')
+    console.log(uint8ArrayToBase50Streaming(new Uint8Array([0])))
+    console.log(uint8ArrayToBase50Streaming(new Uint8Array([49])))
+    console.log(uint8ArrayToBase50Streaming(new Uint8Array([50])))
+    console.log(uint8ArrayToBase50Streaming(new Uint8Array([255])))
+    console.log(uint8ArrayToBase50Streaming(new Uint8Array([1,2,3,4,5,6])))
+    console.log(base50ToUint8ArrayStreaming('vnrgr23'))
+}

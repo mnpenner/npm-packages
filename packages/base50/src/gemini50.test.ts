@@ -5,6 +5,7 @@ import {
     LEADER, // Import the leader character for zero checks
     BASE50_ALPHABET
 } from './gemini50'; // Adjust the path to your implementation file
+import crypto from 'node:crypto'; // Import crypto for random bytes
 
 // Helper to compare Uint8Arrays
 function expectArraysEqual(arr1: Uint8Array, arr2: Uint8Array) {
@@ -184,5 +185,54 @@ describe('Base50 Streaming Conversion', () => {
             expect(encoded.length).toBeGreaterThan(0); // Basic check it produced output
             expectArraysEqual(decoded, largeData);
         });
+
+        it('should correctly encode and decode 10,000 random arrays of varying sizes', () => {
+            const numTests = 10000;
+            // Define a reasonable max size to avoid excessively long tests
+            // but still cover a good range. Adjust if needed.
+            const maxSize = 512; // Max buffer size in bytes (0 to 512 inclusive)
+
+            console.log(`\nRunning ${numTests} randomized round-trip tests (max size: ${maxSize} bytes)...`);
+
+            for (let i = 0; i < numTests; i++) {
+                // Generate a random size between 0 and maxSize (inclusive)
+                const randomSize = Math.floor(Math.random() * (maxSize + 1));
+
+                // Generate random bytes using crypto
+                const randomBuffer = crypto.randomBytes(randomSize);
+                const originalData = new Uint8Array(randomBuffer); // Convert Buffer to Uint8Array
+
+                let encoded: string;
+                let decoded: Uint8Array;
+
+                try {
+                    // Encode
+                    encoded = uint8ArrayToBase50Streaming(originalData);
+
+                    // Decode
+                    decoded = base50ToUint8ArrayStreaming(encoded);
+
+                    // Assert
+                    expectArraysEqual(decoded, originalData);
+
+                } catch (error: any) {
+                    // If any step fails, report the error clearly along with the input size
+                    console.error(`Random test failed at iteration ${i} with size ${randomSize}`);
+                    console.error("Original Data (first 20 bytes):", originalData.slice(0, 20));
+                    if (typeof encoded! !== 'undefined') {
+                        console.error("Encoded String (first 30 chars):", encoded.substring(0, 30));
+                    }
+                    // Re-throw the error to make the test fail
+                    throw new Error(`Test failed for size ${randomSize}: ${error.message}`);
+                }
+                // Optional: Add progress indication for long runs
+                if ((i + 1) % 1000 === 0) {
+                   console.log(`  ...completed ${i + 1} tests`);
+                }
+            }
+            console.log(`Successfully completed ${numTests} randomized tests.`);
+        }, {
+            timeout: 30_000 // Increase timeout if needed for 10k iterations (30 seconds)
+        }); // Add a timeout modifier if the tests might take longer
     });
 });
