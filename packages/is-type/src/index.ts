@@ -1,4 +1,14 @@
-export type Falsy = false|0|-0|0n|''|null|undefined|HTMLAllCollection  // NaN is not a type
+/**
+ * Represents the union of all JavaScript falsy values.
+ *
+ * Note: NaN is also falsy, but it doesn't have a distinct literal type
+ *       and is covered by the `number` type (which includes truthy numbers).
+ *       Including `number` would make this type less useful, so we only
+ *       include the specific numeric falsy value `0`.
+ *       Similarly, -0 is falsy but its type is typically inferred as `0`.
+ *       HTMLAllCollection (document.all) is also falsy, but no one wants this.
+ */
+type Falsy = false|0|0n|""|null|undefined
 export type Primitive = string|number|bigint|boolean|undefined|symbol|null
 export type UnknownFunction = (...args: unknown[]) => unknown
 export type UnknownGeneratorFunction = (...args: unknown[]) => Generator<unknown, unknown, unknown>
