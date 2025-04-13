@@ -7,7 +7,7 @@ export function elysiaJsx() {
             if(isJsxNode(response)) {
                 return new Response(String(response), {
                     headers: {
-                        'content-type': 'text/html; charset=utf8'
+                        'content-type': 'text/html; charset=utf-8'
                     }
                 })
             }
