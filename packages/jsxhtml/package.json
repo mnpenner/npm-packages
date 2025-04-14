@@ -48,7 +48,7 @@
     "bundle": "run-s bundle:clean bundle:build",
     "commit": "VER=$(jq -r '.version' package.json) && hg ci -m \"Commit v$VER\" && hg tag \"v$VER\"",
     "bumpver": "npm version patch",
-    "release": "run-s test bundle bumpver commit && (cd dist && npm publish --access=public) && hg pushall",
+    "release": "run-s test bundle bumpver commit && npm publish --access=public && hg pushall",
     "lint": "sh -c 'eslint --quiet --fix --fix-type problem,suggestion,layout,directive -- \"${@:-.}\"' --"
   },
   "devDependencies": {
