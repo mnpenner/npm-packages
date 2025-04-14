@@ -17,3 +17,5 @@ export function jsxDEV(tag: string | JsxComponent, props: AnyAttributes, key: un
 
     return node
 }
+
+export {JSX} from './jsx'

@@ -1,4 +1,3 @@
-/// <reference path="./jsx.ts" />
 import {expect, it} from 'bun:test'
 import {C, DocType} from './custom-components'
 import {InputMode} from './htmlspec/GlobalAttributes'

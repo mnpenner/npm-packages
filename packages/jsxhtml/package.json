@@ -1,6 +1,6 @@
 {
   "name": "@mpen/jsxhtml",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "packageManager": "bun@1.2.9",
   "exports": {
     ".": {
@@ -42,7 +42,7 @@
     "_dev:serve": "serve -l tcp://0.0.0.0:8080",
     "dev": "run-p \"dev:**\"",
     "dev:serve": "bun run --hot src/dev.tsx",
-    "test": "bun test",
+    "test": "NODE_ENV=production bun test --jsx-import-source=@mpen/jsxhtml",
     "bundle:clean": "rm -rf dist/",
     "bundle:build": "NODE_ENV=production rollup -c",
     "bundle": "run-s bundle:clean bundle:build",

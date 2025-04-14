@@ -5,3 +5,4 @@ export abstract class JsxNode {
 export function isJsxNode(x: any): x is JsxNode {
     return x instanceof JsxNode
 }
+

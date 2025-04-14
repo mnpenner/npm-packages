@@ -19,7 +19,6 @@
         "outDir": "./dist"
     },
     "files": [
-
         "./src/jsx.ts",
         "./src/index.ts",
         "./src/jsx-runtime.ts",
