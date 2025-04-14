@@ -19,9 +19,12 @@ export class NumberEncoder {
      * @param {ArrayLike<number>} buffer - The input sequence of numbers to be encoded. Each element represents a byte.
      * @return {bigint} The resulting integer encoded in big-endian format.
      */
-    static encodeIntBE(buffer: ArrayLike<number>): bigint {
-        if(buffer.length === 0) {
-            return 0n
+    static beBufToBigInt(buffer: ArrayLike<number>): bigint {
+        if(buffer.length <= 1) {
+            if(buffer.length === 0) {
+                return 0n
+            }
+            return BigInt(buffer[0])
         }
         if(buffer.length <= 8) {
             // TODO: pre-check the support and modify the function itself (pull out of class)
@@ -32,10 +35,15 @@ export class NumberEncoder {
                 if(buffer.length <= 6) {
                     return BigInt(buffer.readUIntBE(0, buffer.length))
                 }
+                const high = BigInt(buffer.readUIntBE(0, 6)) << 8n
+                const low = BigInt(buffer[6])
+                return high | low
             }
             if(SUPPORTS_DATAVIEW && (buffer as Uint8Array).buffer instanceof ArrayBuffer) {
-                // TODO
+                // TODO: support ArrayBuffer directly
+                // TODO: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getBigUint64 defaults to BE
             }
+            // TODO: is it worth converting integer array to UInt8Array so we can use the methods?
         }
         let result = 0n
         for(let i = 0; i < buffer.length; ++i) {
@@ -48,12 +56,11 @@ export class NumberEncoder {
      * Encodes an array-like sequence of numbers into a single big-endian integer.
      *
      * The input buffer can be any number of bytes. It assumed to be unsigned.
-     * This is more common than little-endian in modern computing systems.
      *
      * @param {ArrayLike<number>} buffer - The input sequence of numbers to be encoded. Each element represents a byte.
      * @return {bigint} The resulting integer encoded in big-endian format.
      */
-    static encodeIntLE(buffer: ArrayLike<number>): bigint {
+    static leBufToInt(buffer: ArrayLike<number>): bigint {
         if(SUPPORTS_BUFFER && Buffer.isBuffer(buffer) && buffer.length <= 6) {
             return BigInt(buffer.readUIntLE(0, buffer.length))
         }
@@ -65,11 +72,15 @@ export class NumberEncoder {
     }
 
     decodeToIntBE(str: string): bigint {
-
+        // TODO
     }
 
     decodeToIntLE(str: string): bigint {
+        // TODO
+    }
 
+    encodeInt(num: number|bigint): string {
+        // TODO
     }
 
     encodeBigEndian(buffer: ArrayLike<number>): string {
@@ -131,9 +142,13 @@ export class NumberEncoder {
         return result
     }
 
-    decodeBigEndian(str: string): Uint8Array {
+    decodeBigEndian(str: ArrayLike<string>): Uint8Array {
         if(str.length === 0) {
             return new Uint8Array()
+        }
+
+        if(!Array.isArray(str)) {
+            str = Array.from(str)
         }
 
         // 1. Count leading 'leader' characters (representing zero bytes)

@@ -13,25 +13,44 @@ describe(NumberEncoder, () => {
     const MAX_BYTES = 256
 
     const base2encoder = new NumberEncoder('01')
+    const emojiEncoder = new NumberEncoder('🍓🐋🍃')
     const base50encoder = new NumberEncoder('0123456789bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ')
     const hexEncoder = new NumberEncoder('0123456789ABCDEF')
     const base64Encoder = new NumberEncoder('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/')
 
+    const BASE36_ALPHA = '0123456789abcdefghijklmnopqrstuvwxyz'
+
     test('encodeIntBE', () => {
         // Compare with https://nodejs.org/api/buffer.html#bufreadbiguint64beoffset
-        expect(NumberEncoder.encodeIntBE([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff])).toBe(4294967295n)
-        expect(NumberEncoder.encodeIntBE(Buffer.from([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff]))).toBe(4294967295n)
-        expect(NumberEncoder.encodeIntBE(new Uint8Array([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff]))).toBe(4294967295n)
+        expect(NumberEncoder.beBufToBigInt([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff])).toBe(4294967295n)
+        expect(NumberEncoder.beBufToBigInt(Buffer.from([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff]))).toBe(4294967295n)
+        expect(NumberEncoder.beBufToBigInt(new Uint8Array([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff]))).toBe(4294967295n)
 
-        expect(NumberEncoder.encodeIntBE(Buffer.from([0x00, 0x00, 0x00, 0xff, 0xff, 0xff]))).toBe(16777215n)
+        expect(NumberEncoder.beBufToBigInt(Buffer.from([0x00, 0x00, 0x00, 0xff, 0xff, 0xff]))).toBe(16777215n)  // 1-6 bytes
+        expect(NumberEncoder.beBufToBigInt(Buffer.from([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff]))).toBe(16777215n)  // 7 bytes
     })
 
     test('encodeIntLE', () => {
-        expect(NumberEncoder.encodeIntLE([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff])).toBe(18446744069414584320n)
-        expect(NumberEncoder.encodeIntLE(Buffer.from([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff]))).toBe(18446744069414584320n)
-        expect(NumberEncoder.encodeIntLE(new Uint8Array([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff]))).toBe(18446744069414584320n)
+        expect(NumberEncoder.leBufToInt([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff])).toBe(18446744069414584320n)
+        expect(NumberEncoder.leBufToInt(Buffer.from([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff]))).toBe(18446744069414584320n)
+        expect(NumberEncoder.leBufToInt(new Uint8Array([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff]))).toBe(18446744069414584320n)
 
-        expect(NumberEncoder.encodeIntLE(Buffer.from([0x00, 0x00, 0x00, 0xff, 0xff, 0xff]))).toBe(281474959933440n)
+        expect(NumberEncoder.leBufToInt(Buffer.from([0x00, 0x00, 0x00, 0xff, 0xff, 0xff]))).toBe(281474959933440n)
+    })
+
+    describe('encodeInt', () => {
+        it('matches native impl', () => {
+            for(let b=2; b<=36; ++b) {
+                const encoder = new NumberEncoder(BASE36_ALPHA.slice(0, b))
+                for(let i=0; i<100; ++i) {
+                    expect(encoder.encodeInt(i)).toBe(i.toString(b))
+                }
+                for(let i=0n; i<BigInt(Number.MAX_SAFE_INTEGER)*10n; i=i*2n+1n) {
+                    expect(encoder.encodeInt(i)).toBe(i.toString(b))
+                }
+            }
+        })
+
     })
 
     describe('encode', () => {
@@ -45,6 +64,13 @@ describe(NumberEncoder, () => {
             expect(base2encoder.encodeBigEndian([1])).toBe('1')
             expect(base2encoder.encodeBigEndian([2])).toBe('10')
             expect(base2encoder.encodeBigEndian([3])).toBe('11')
+        })
+
+        test('encodes multibyte chars', () => {
+            expect(emojiEncoder.encodeBigEndian([0])).toBe('🍓')
+            expect(emojiEncoder.encodeBigEndian([1])).toBe('🐋')
+            expect(emojiEncoder.encodeBigEndian([2])).toBe('🍃')
+            expect(emojiEncoder.encodeBigEndian([3])).toBe('🐋🍓')
         })
 
         test('empty buffer', () => {
@@ -82,6 +108,13 @@ describe(NumberEncoder, () => {
             expect(hexEncoder.decodeBigEndian('B16B00B5')).toEqual(u8([177, 107, 0, 181]))
 
             expect(base64Encoder.decodeBigEndian("TWFueSBoYW5kcyBtYWtlIGxpZ2h0IHdvcmsu")).toEqual(new TextEncoder().encode("Many hands make light work."))
+        })
+
+        test('decodes multibyte chars', () => {
+            expect(emojiEncoder.decodeBigEndian('🍓')).toEqual(u8(0))
+            expect(emojiEncoder.decodeBigEndian('🐋')).toEqual(u8(1))
+            expect(emojiEncoder.decodeBigEndian('🍃')).toEqual(u8(2))
+            expect(emojiEncoder.decodeBigEndian('🐋🍓')).toEqual(u8(3))
         })
     })
 
