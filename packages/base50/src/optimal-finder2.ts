@@ -21,8 +21,8 @@ function sortByKey<T>(arr: T[], key: keyof T, ascending = true): T[] {
     })
 }
 
-const MAX_CHAR_LEN = 32
-const MAX_BYTE_LEN = 8
+const MAX_CHAR_LEN = 64
+const MAX_BYTE_LEN = 16
 
 function findOptimal(alphaSize: number): Record<string, number> {
     let bytes = 0
