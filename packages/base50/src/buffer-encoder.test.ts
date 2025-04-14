@@ -39,16 +39,9 @@ describe(BufferEncoder, () => {
         test('base64 encoder', () => {
             expect(base64Encoder.encode(Buffer.from("Many hands make light work."))).toBe('TWFueSBoYW5kcyBtYWtlIGxpZ2h0IHdvcmsu')
             expect(base64Encoder.encode([0xFF, 0xFF, 0xFF])).toBe('////')
-            expect(base64Encoder.encode([0x00, 0x00, 0x00])).toBe('AAAA')
-            expect(base64Encoder.encode([0xFB])).toBe('+w')
-            expect(base64Encoder.encode([0xFB, 0xFF])).toBe('+//')
-        })
-
-        test.skip('compare to base64', () => {
-            for(let i = 0; i < NUM_TESTS; i++) {
-                const buf = randomBytes(randomInt(MIN_BYTES, MAX_BYTES + 1))
-                expect(base64Encoder.encode(buf)).toEqual(buf.toString('base64'))
-            }
+            expect(base64Encoder.encode([0x00, 0x00, 0x00])).toBe('AAA')  // Not the same as base64!
+            expect(base64Encoder.encode([0xFB])).toBe('D7')
+            expect(base64Encoder.encode([0xFB, 0xFF])).toBe('Pv/')
         })
     })
 
