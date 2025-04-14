@@ -11,9 +11,9 @@ function sortByKey<T>(arr: T[], key: keyof T, ascending = true): T[] {
         const aVal = a[key]
         const bVal = b[key]
 
-        if (aVal === bVal) return 0
-        if (aVal == null) return 1
-        if (bVal == null) return -1
+        if(aVal === bVal) return 0
+        if(aVal == null) return 1
+        if(bVal == null) return -1
 
         return ascending
             ? (aVal > bVal ? 1 : -1)
@@ -21,25 +21,26 @@ function sortByKey<T>(arr: T[], key: keyof T, ascending = true): T[] {
     })
 }
 
-function findOptimal(alphaSize: number): Record<string,number> {
+const MAX_CHAR_LEN = 32
+const MAX_BYTE_LEN = 8
 
-
+function findOptimal(alphaSize: number): Record<string, number> {
     let bytes = 0
     // let i = 1
     let minWasted = Infinity
     let best
-    for(let i=1;i<=32;++i) {
-        const maxVal = alphaSize ** i
+    for(let c = 1; c <= MAX_CHAR_LEN; ++c) {
+        const maxVal = alphaSize ** c
         const bits = log2(maxVal)
         const rounded = roundDown(bits)
-         bytes = rounded / 8
-        if(bytes >= 8) break
-        const wasted =  bits-rounded
+        bytes = rounded / 8
+        if(bytes >= MAX_BYTE_LEN) break
+        const wasted = bits - rounded
         // console.log(alphaSize, i, bits, rounded, bytes, wasted)
 
         let ret = {
             base: alphaSize,
-            chars: i,
+            chars: c,
             maxVal,
             bytes,
             wasted,
@@ -61,21 +62,20 @@ function findOptimal(alphaSize: number): Record<string,number> {
 }
 
 
-
 async function main(argv: string[]): Promise<number | void> {
-    const formatter = Intl.NumberFormat(undefined,{maximumFractionDigits: 2})
+    const formatter = Intl.NumberFormat(undefined, {maximumFractionDigits: 2})
 
     let results = []
 
-    for(let i = 2; i <= 256; ++i) {
+    for(let i = 2; i <= 2048; ++i) {
         results.push(findOptimal(i))
         // console.log(i, findOptimal(i))
     }
 
     sortByKey(results, 'wasted')
 
-    for(const [i,r] of results.entries()) {
-        console.log(`${String(i+1).padStart(3,' ')}. Base ${String(r.base).padEnd(3,' ')} : ${r.bytes} bytes <-> ${r.chars} chars; MaxVal=${formatter.format(r.maxVal)}, WastedBits=${formatter.format(r.wasted)}`)
+    for(const [i, r] of results.entries()) {
+        console.log(`${String(i + 1).padStart(3, ' ')}. Base ${String(r.base).padEnd(3, ' ')} : ${r.bytes} bytes <-> ${r.chars} chars; MaxVal=${formatter.format(r.maxVal)}, WastedBits=${formatter.format(r.wasted)}`)
     }
 }
 

@@ -1,3 +1,4 @@
+#!bun
 import {describe, expect, it, test} from 'bun:test'
 import {NumberEncoder} from './number-encoder'
 import {randomBytes, randomInt, getRandomValues} from 'crypto'
@@ -16,6 +17,22 @@ describe(NumberEncoder, () => {
     const hexEncoder = new NumberEncoder('0123456789ABCDEF')
     const base64Encoder = new NumberEncoder('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/')
 
+    test('encodeIntBE', () => {
+        // Compare with https://nodejs.org/api/buffer.html#bufreadbiguint64beoffset
+        expect(NumberEncoder.encodeIntBE([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff])).toBe(4294967295n)
+        expect(NumberEncoder.encodeIntBE(Buffer.from([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff]))).toBe(4294967295n)
+        expect(NumberEncoder.encodeIntBE(new Uint8Array([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff]))).toBe(4294967295n)
+
+        expect(NumberEncoder.encodeIntBE(Buffer.from([0x00, 0x00, 0x00, 0xff, 0xff, 0xff]))).toBe(16777215n)
+    })
+
+    test('encodeIntLE', () => {
+        expect(NumberEncoder.encodeIntLE([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff])).toBe(18446744069414584320n)
+        expect(NumberEncoder.encodeIntLE(Buffer.from([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff]))).toBe(18446744069414584320n)
+        expect(NumberEncoder.encodeIntLE(new Uint8Array([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff]))).toBe(18446744069414584320n)
+
+        expect(NumberEncoder.encodeIntLE(Buffer.from([0x00, 0x00, 0x00, 0xff, 0xff, 0xff]))).toBe(281474959933440n)
+    })
 
     describe('encode', () => {
         test('single byte', () => {
