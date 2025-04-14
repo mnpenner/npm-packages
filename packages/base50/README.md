@@ -30,3 +30,5 @@ Update BufferEncoder to have 2 encode and 3 decode methods.
 1. Decode to bigint
 2. Encode/decode the mathematical way (using carry) -- bigint seems faster than "streaming"
 3. Encode/decode using the closest power of 2 (like base64)
+
+Probably (3) should be a separate class. (1) and (2) are the same algo.
