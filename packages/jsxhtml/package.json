@@ -1,6 +1,6 @@
 {
   "name": "@mpen/jsxhtml",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "packageManager": "bun@1.2.9",
   "exports": {
     ".": {
@@ -44,7 +44,7 @@
     "dev:serve": "bun run --hot src/dev.tsx",
     "test": "bun test",
     "bundle:clean": "rm -rf dist/",
-    "bundle:build": "rollup -c",
+    "bundle:build": "NODE_ENV=production rollup -c",
     "bundle": "run-s bundle:clean bundle:build",
     "commit": "VER=$(jq -r '.version' package.json) && hg ci -m \"Commit v$VER\" && hg tag \"v$VER\"",
     "bumpver": "npm version patch",
