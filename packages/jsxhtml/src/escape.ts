@@ -1,9 +1,9 @@
 import entityMap from './entityMap'
 import classcat from 'classcat'
-import * as util from '@mnpenner/is-type'
+import * as util from '@mpen/is-type'
 import styleObjectToString from './styleObjectToString'
-import {AttrArr, Attributes, AttributeValue, Stringable} from './jsx-types'
-import {isFunction} from '@mnpenner/is-type'
+import type {AttrArr, Attributes, AttributeValue, Stringable} from './jsx-types'
+import {isFunction} from '@mpen/is-type'
 
 function entity(ch: string) {
     return Object.hasOwn(entityMap, ch) ? `&${entityMap[ch]};` : `&#x${ch.codePointAt(0)!.toString(16)};`;
@@ -78,6 +78,10 @@ export function htmlComment(string: Stringable) {
 
 export function escapeScript(string: Stringable) {
     return String(string).replace(/<\/(script)/igu, '<\\/$1')
+}
+
+export function escapeStyle(string: Stringable) {
+    return String(string).replace(/<\/(style)/igu, '<\\/$1')
 }
 
 /**

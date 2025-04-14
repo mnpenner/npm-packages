@@ -1,5 +1,6 @@
-import {isFunction, isIterable} from '@mnpenner/is-type'
-import {FlatString, JsxChildren, JsxComponent} from './jsx-types'
+import {isFunction, isIterable} from '@mpen/is-type'
+import type {FlatString, JsxChildren, JsxComponent} from './jsx-types'
+import {isJsxNode} from './jsx-node'
 
 
 export function mapIter<In, Out>(iterable: Iterable<In>, cb: (el: In, i: number) => Out): Out[] {
@@ -24,7 +25,7 @@ export function isEmptyChildren(children: JsxChildren): boolean {
 }
 
 export function isEmptyRender(el: any): boolean {
-    return el === null || el === undefined || el === false
+    return el == null || el === false
 }
 
 export function fullWide(n: number): string {
@@ -38,6 +39,42 @@ export function fullWide(n: number): string {
 
 export function flattenString(content: FlatString, sep = '') {
     return isIterable(content) ? Array.from(content).join(sep) : String(content)
+}
+
+export function scriptChild(el: any): string {
+    if(typeof el === 'string') {
+        return el
+    }
+    if(isEmptyRender(el)) {
+        return ''
+    }
+    if(isJsxNode(el)) {
+        throw new Error(`<script> cannot contain JSX nodes.`)
+        // return el.toString()
+    }
+    // if(isHtmlSafe(el)) {
+    //     return el.__html  // TODO: do we still need this now that we have <RawHtml> ?
+    // }
+    return JSON.stringify(el)
+}
+
+export function styleChild(el: any): string {
+    if(typeof el === 'string') {
+        return el
+    }
+    if(isEmptyRender(el)) {
+        return ''
+    }
+    if(isJsxNode(el)) {
+        throw new Error(`<sty;e> cannot contain JSX nodes.`)
+        // return el.toString()
+    }
+    return CSS.escape(String(el))
+}
+
+
+export function flattenChildren(children: any|any[], callback: (el:any)=>string): string {
+    return Array.isArray(children) ? children.map(callback).join('') : callback(children)
 }
 
 export const isJsxComponent = isFunction as ((x: any) => x is JsxComponent)

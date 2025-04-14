@@ -1,16 +1,29 @@
 {
   "name": "@mpen/jsxhtml",
-  "version": "0.1.24",
-  "packageManager": "bun@1.0.7",
-  "main": "./index.cjs",
-  "module": "./index.mjs",
-  "types": "./index.d.ts",
+  "version": "0.2.0",
+  "packageManager": "bun@1.2.9",
   "exports": {
-    ".": "./index.mjs",
-    "./jsx-runtime": "./jsx-runtime.mjs",
-    "./jsx-dev-runtime": "./jsx-dev-runtime.mjs"
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./jsx-runtime": {
+      "import": "./dist/jsx-runtime.mjs",
+      "require": "./dist/jsx-runtime.cjs",
+      "types": "./dist/jsx-runtime.d.ts"
+    },
+    "./jsx-dev-runtime": {
+      "import": "./dist/jsx-dev-runtime.mjs",
+      "require": "./dist/jsx-dev-runtime.cjs",
+      "types": "./dist/jsx-dev-runtime.d.ts"
+    }
   },
-  "private": true,
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "private": false,
   "sideEffects": false,
   "author": {
     "name": "Mark Penner",
@@ -26,44 +39,48 @@
   ],
   "scripts": {
     "dev:build": "rollup -cw",
-    "dev:serve": "serve -l tcp://0.0.0.0:8080",
+    "_dev:serve": "serve -l tcp://0.0.0.0:8080",
     "dev": "run-p \"dev:**\"",
-    "serve": "bun run --hot dev/serve.ts",
+    "dev:serve": "bun run --hot src/dev.tsx",
     "test": "bun test",
-    "bundle:clean": "rimraf -g \"dist/*\"",
+    "bundle:clean": "rm -rf dist/",
     "bundle:build": "rollup -c",
     "bundle": "run-s bundle:clean bundle:build",
-    "copy:pkg": "jq 'del(.scripts,.devDependencies,.private)' package.json > ./dist/package.json",
-    "copy:readme": "cp README.md ./dist/",
     "commit": "VER=$(jq -r '.version' package.json) && hg ci -m \"Commit v$VER\" && hg tag \"v$VER\"",
     "bumpver": "npm version patch",
-    "release": "run-s test bundle bumpver 'copy:**' commit && (cd dist && npm publish --access=public) && hg pushall"
+    "release": "run-s test bundle bumpver commit && (cd dist && npm publish --access=public) && hg pushall",
+    "lint": "sh -c 'eslint --quiet --fix --fix-type problem,suggestion,layout,directive -- \"${@:-.}\"' --"
   },
   "devDependencies": {
-    "@mnpenner/is-type": "^0.1.6",
-    "@rollup/plugin-commonjs": "^25.0.7",
-    "@rollup/plugin-node-resolve": "^15.2.3",
-    "@rollup/plugin-replace": "^5.0.5",
+    "@mpen/is-type": "^0.1.15",
+    "@rollup/plugin-commonjs": "^28.0.3",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-replace": "^5.0.7",
     "@rollup/plugin-terser": "^0.4.4",
-    "@rollup/plugin-typescript": "^11.1.5",
-    "@types/eslint": "^8.44.6",
-    "@typescript-eslint/eslint-plugin": "^6.9.1",
-    "@typescript-eslint/parser": "^6.9.1",
-    "bun-types": "^1.0.8",
-    "classnames": "^2.3.2",
-    "csstype": "^3.1.2",
-    "elysia": ">=0.7.22",
-    "eslint": "^8.52.0",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@types/eslint": "^8.56.12",
+    "@typescript-eslint/eslint-plugin": "^8.29.1",
+    "@typescript-eslint/parser": "^8.29.1",
+    "bun-types": "^1.2.9",
+    "classnames": "^2.5.1",
+    "csstype": "^3.1.3",
+    "elysia": ">=1.2.25",
+    "eslint": "^8.57.1",
+    "eslint-plugin-react-compiler": "^19.0.0-beta-e993439-20250405",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "eslint-plugin-unused-imports": "^4.1.4",
     "npm-run-all": "^4.1.5",
-    "rimraf": "^5.0.5",
-    "rollup": "^4.2.0",
-    "tslib": "^2.6.2",
-    "typescript": "^5.2.2"
+    "rimraf": "^5.0.10",
+    "rollup": "^4.40.0",
+    "serve": "^14.2.4",
+    "tslib": "^2.8.1",
+    "typescript": "^5.8.3"
   },
   "optionalDependencies": {
-    "elysia": ">=0.7.22"
+    "elysia": ">=1.2.25"
   },
   "dependencies": {
-    "classcat": "^5.0.4"
+    "classcat": "^5.0.5"
   }
 }

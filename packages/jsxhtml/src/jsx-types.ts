@@ -1,6 +1,6 @@
-import {JsxNode} from './jsx-node'
-import {AllGlobalAttributes} from './htmlspec/GlobalAttributes'
-import {Override} from './util-types'
+import type {JsxNode} from './jsx-node'
+import type {AllGlobalAttributes} from './htmlspec/GlobalAttributes'
+import type {Override} from './util-types'
 
 export interface Stringable {
     toString(): string

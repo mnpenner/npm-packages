@@ -1,8 +1,8 @@
 import * as esc from './escape'
-import {attrs, escapeScript, htmlComment} from './escape'
+import {attrs, escapeScript, escapeStyle, htmlComment} from './escape'
 import {render} from './render'
-import {AnyAttributes, JsxChildren} from './jsx-types'
-import {flattenString, isEmptyChildren} from './util'
+import type {AnyAttributes, JsxChildren} from './jsx-types'
+import {flattenChildren, isEmptyChildren, scriptChild, styleChild} from './util'
 import {JsxNode} from './jsx-node'
 
 // https://www.w3.org/TR/html-markup/syntax.html#syntax-elements
@@ -35,9 +35,16 @@ export class JsxElement extends JsxNode {
             return `<${tag}${attrs}></${tag}>`
         }
         if(normalizedTagName === 'script') {
-            return `<${tag}${attrs}>${escapeScript(flattenString(children))}</${tag}>`
+            // We can't tell string literals apart from vars :-(
+            // https://www.typescriptlang.org/play/?jsx=4#code/FAYw9gdgzgLgBADzgXjgHgCYEsBuA+YNABzwAkBTAG0rDQHoTCSBvAcgurFYF97H7s+IA
+            // logFull(children)
+            return `<${tag}${attrs}>${escapeScript(flattenChildren(children,scriptChild))}</${tag}>`
         }
-        return `<${tag}${attrs}>${render(children)}</${tag}>`
+        if(normalizedTagName === 'style') {
+            // logFull(children)
+            return `<${tag}${attrs}>${escapeStyle(flattenChildren(children,styleChild))}</${tag}>`
+        }
+        return `<${tag}${attrs}>${flattenChildren(children,render)}</${tag}>`
     }
 }
 

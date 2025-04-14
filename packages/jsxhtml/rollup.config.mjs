@@ -8,7 +8,7 @@ const production = !process.env.ROLLUP_WATCH;
 
 /** @type {import('rollup').RollupOptions} */
 const config = {
-    input: ['./src/index.ts', './src/jsx-runtime.ts', './src/jsx-dev-runtime.ts', './src/jsx.ts'],
+    input: ['./src/index.ts', './src/jsx-runtime.ts', './src/jsx-dev-runtime.ts'],
     output: [
         {
             dir: 'dist',
@@ -19,7 +19,9 @@ const config = {
     plugins: [
         nodeResolve(),
         commonjs(),
-        typescript(),
+        typescript({
+            tsconfig: './tsconfig.json'
+        }),
         replace({
             preventAssignment: true,
             values: {
@@ -28,6 +30,9 @@ const config = {
         }),
     ],
     context: 'globalThis',
+    watch: {
+        clearScreen: false
+    },
 }
 
 if(production) {

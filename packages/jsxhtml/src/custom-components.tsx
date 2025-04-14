@@ -1,6 +1,7 @@
-import {DocTypeProps, EMPTY, JsxComment, JsxDocType, JsxRawHtml} from './jsx-elements'
+import type {DocTypeProps} from './jsx-elements';
+import { EMPTY, JsxComment, JsxDocType, JsxRawHtml} from './jsx-elements'
 import {flattenString} from './util'
-import {AnyAttributes, StringChildren} from './jsx-types'
+import type {AnyAttributes, StringChildren} from './jsx-types'
 
 
 /**

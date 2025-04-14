@@ -1,8 +1,8 @@
-import {Attributes, JsxComponent, JsxChildren, AnyAttributes, ChildrenOnly} from './jsx-types'
+import type { JsxComponent, AnyAttributes, ChildrenOnly} from './jsx-types';
 import {EMPTY, JsxElement, JsxFragment, JsxRawHtml} from './jsx-elements'
-import * as util from '@mnpenner/is-type'
 import {isEmptyRender, isJsxComponent} from './util'
-import {isJsxNode, JsxNode} from './jsx-node'
+import type { JsxNode} from './jsx-node';
+import {isJsxNode} from './jsx-node'
 
 
 // https://github.com/facebook/react/blob/ce2bc58a9f6f3b0bfc8c738a0d8e2a5f3a332ff5/packages/react/src/jsx/ReactJSXElementValidator.js#L305

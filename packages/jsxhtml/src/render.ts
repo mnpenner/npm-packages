@@ -1,12 +1,12 @@
-import * as util from '@mnpenner/is-type'
+import * as util from '@mpen/is-type'
 import * as esc from './escape'
-import {AnyFn, HtmlSafe, JsxRenderable} from './jsx-types'
-import {isIterable} from '@mnpenner/is-type'
+import type {AnyFn, HtmlSafe, JsxRenderable} from './jsx-types'
+import {isIterable} from '@mpen/is-type'
 import {fullWide, getStringTag, isEmptyRender, mapIter} from './util'
 import {isJsxNode} from './jsx-node'
 
 
-function isHtmlSafe(x: any): x is HtmlSafe {
+export function isHtmlSafe(x: any): x is HtmlSafe {
     return util.isPlainObject(x) && util.isString(x.__html)
 }
 

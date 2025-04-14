@@ -1,5 +1,5 @@
-import {AnyAttributes, CommonProps} from '../jsx-types'
-import {AnchorElement} from './AnchorElement'
+import type {AnyAttributes, CommonProps} from '../jsx-types'
+import type {AnchorElement} from './AnchorElement'
 
 
 export type IntrinsicElements = {

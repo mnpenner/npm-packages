@@ -1,5 +1,8 @@
 /// <reference lib="dom" />
-import {AnyAttributes} from './jsx-types'
+import type {AnyAttributes} from './jsx-types'
+import {Elysia} from 'elysia'
+import {C, HtmlDocument, RawHtml} from './custom-components'
+import {isJsxNode} from './jsx-node'
 
 function BlueBox(props: AnyAttributes) {
     return (
@@ -10,14 +13,20 @@ function BlueBox(props: AnyAttributes) {
 }
 
 
-import {Elysia} from 'elysia'
-import {elysiaJsx} from './elysia-plugin'
-import {C, HtmlDocument, RawHtml} from './custom-components'
-
 const PORT = 3000
 
 new Elysia()
-    .use(elysiaJsx())
+    .onAfterHandle(({response, set}) => {
+        if(isJsxNode(response)) {
+            // logFull(response)
+
+            return new Response(String(response), {
+                headers: {
+                    'content-type': 'text/html; charset=utf-8'
+                }
+            })
+        }
+    })
     .get('/', () => {
         let inject = '<b>  i\'nj\ne"ct   </b>'
         let obj = {bar: 'baz', quux: [1, 2]}
@@ -31,6 +40,7 @@ new Elysia()
             <head>
                 <title>Hello JsxHtml</title>
             </head>
+            {/*<style> {'a'}</style>*/}
             <style>
                 .cr-blue-box {'{'}
                 border: 5px solid blue;
@@ -92,6 +102,15 @@ new Elysia()
                     console.log('{'<'}/script{'>'}');
                     console.log(document.getElementById('fooput').dataset.foo)
                 </script>
+                <script>{/* not supported */}
+                    {/*<div>Div inside script.</div>*/}
+                    const serverData = "{'server string'}";
+                    const serverData2 = {{server:'object'}};
+                </script>
+                <script>"one"</script>
+                <script children={String.raw`
+                    console.log("this should work")
+                `}/>
             </body>
         </HtmlDocument>
     })

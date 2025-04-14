@@ -3,7 +3,7 @@
     "compilerOptions": {
         "target": "ES2022",
         "module": "ESNext",
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
         "declaration": true,
         "declarationDir": "./dist",
         "emitDeclarationOnly": true,
@@ -13,23 +13,18 @@
         "exactOptionalPropertyTypes": true,
         "skipLibCheck": true,
         "resolveJsonModule": true,
-        "lib": [
-            "ESNext",
-            "dom"
-        ],
+        "lib": ["ES2022", "DOM"],
         "jsx": "react-jsx",
         "jsxImportSource": ".",
-        "outDir": "./dist",
-        "types": ["bun-types","./src/jsx.ts"]
+        "outDir": "./dist"
     },
     "files": [
-        "./src/dev.tsx",
-        "./src/jsx.tsx",
+
+        "./src/jsx.ts",
         "./src/index.ts",
         "./src/jsx-runtime.ts",
         "./src/jsx-dev-runtime.ts"
     ],
     "include": [
-        "./src/jsx.ts"
     ]
 }
