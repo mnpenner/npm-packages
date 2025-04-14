@@ -1,5 +1,5 @@
 
-export class BufferEncoder {
+export class NumberEncoder {
     private readonly alphabet: string[]
     private readonly reverse: Map<string, number>
 
@@ -8,7 +8,15 @@ export class BufferEncoder {
         this.reverse = new Map(this.alphabet.map((ch, i) => [ch, i]))
     }
 
-    encode(buffer: ArrayLike<number>): string {
+    static encodeBigEndianInt(buffer: ArrayLike<number>): bigint {
+        // TODO
+    }
+
+    decodeBigEndianInt(str: string): bigint {
+
+    }
+
+    encodeBigEndian(buffer: ArrayLike<number>): string {
         if(buffer.length === 0) {
             return ""
         }
@@ -67,7 +75,7 @@ export class BufferEncoder {
         return result
     }
 
-    decode(str: string): Uint8Array {
+    decodeBigEndian(str: string): Uint8Array {
         if(str.length === 0) {
             return new Uint8Array()
         }
