@@ -11,7 +11,10 @@ export class NumberEncoder {
         this.base = BigInt(this.alphabet.length)
     }
 
-    decodeToIntBE(str: ArrayLike<string>): bigint {
+    /**
+     * Parse a string encoded in base N, converting to base 10.
+     */
+    strToInt(str: ArrayLike<string>): bigint {
         let num = 0n
         for(const ch of Array.from(str)) {
             num = num * this.base + this.reverse.get(ch)!
@@ -19,7 +22,7 @@ export class NumberEncoder {
         return num
     }
 
-    decodeToIntLE(str: ArrayLike<string>): bigint {
+    leStrToInt(str: ArrayLike<string>): bigint {
         let num = 0n
         let mul = 1n
         for (const ch of Array.from(str)) {
@@ -29,7 +32,7 @@ export class NumberEncoder {
         return num
     }
 
-    encodeInt(num: number | bigint): string {
+    intToString(num: number | bigint): string {
         let n = BigInt(num)
         if(n === 0n) return this.alphabet[0]
         let result = ''
@@ -41,43 +44,78 @@ export class NumberEncoder {
         return result
     }
 
-    decodeBE(str: ArrayLike<string>): Uint8Array {
-        if(!str?.length) {
-            return new Uint8Array()
-        }
-
-        let num = this.decodeToIntBE(str)
-
-        const bytes: number[] = []
-        do {
-            const byte = Number(num & 0xFFn)
-            bytes.unshift(byte)
-            num >>= 8n
-        }while(num > 0n)
-
-        return new Uint8Array(bytes)
-    }
-
-    decodeLE(str: ArrayLike<string>): Uint8Array {
+    strToBuf(str: ArrayLike<string>): Uint8Array {
         if (!str?.length) {
             return new Uint8Array()
         }
 
-        let num = this.decodeToIntLE(str)
+        const arr = Array.from(str)
+        let leadingZeros = 0
+        while (leadingZeros < arr.length && this.reverse.get(arr[leadingZeros]) === 0n) {
+            ++leadingZeros
+        }
+
+        const payload = arr.slice(leadingZeros)
+        if (payload.length === 0) {
+            return new Uint8Array(leadingZeros || 1)  // special case for '0'
+        }
+
+        let n = this.strToInt(payload)
 
         const bytes: number[] = []
-        do {
-            const byte = Number(num & 0xFFn)
-            bytes.push(byte)
-            num >>= 8n
-        } while (num > 0n)
+        while (n > 0n) {
+            bytes.unshift(Number(n & 0xFFn))
+            n >>= 8n
+        }
+
+        while (leadingZeros-- > 0) {
+            bytes.unshift(0)
+        }
+
+        return new Uint8Array(bytes)
+    }
+
+    /**
+     * @deprecated Not sure this one makes sense anymore...
+     */
+    leStrToBuf(str: ArrayLike<string>): Uint8Array {
+        if (!str?.length) {
+            return new Uint8Array()
+        }
+
+        const arr = Array.from(str)
+        let trailingZeros = 0
+        while (
+            trailingZeros < arr.length &&
+            this.reverse.get(arr[arr.length - 1 - trailingZeros]) === 0n
+            ) {
+            ++trailingZeros
+        }
+
+        const payload = arr.slice(0, arr.length - trailingZeros)
+        if (payload.length === 0) {
+            return new Uint8Array(trailingZeros || 1)
+        }
+
+        let n = this.leStrToInt(payload)
+
+        const bytes: number[] = []
+        while (n > 0n) {
+            bytes.push(Number(n & 0xFFn))
+            n >>= 8n
+        }
+
+        // trailing zeros go at the end in little-endian
+        while (trailingZeros-- > 0) {
+            bytes.push(0)
+        }
 
         return new Uint8Array(bytes)
     }
 
 
-    // TODO: rename to just "encode". This matches the buffer order
-    encodeBE(arr: ArrayLike<number>): string {
+
+    bufToStr(arr: ArrayLike<number>): string {
         if(!arr?.length) {
             return ""
         }
@@ -96,12 +134,15 @@ export class NumberEncoder {
         const remainingBuffer = Uint8Array.from(arr).slice(leadingZeros)
         const num = beBufToBigInt(remainingBuffer)
 
-        const encodedPart = this.encodeInt(num)
+        const encodedPart = this.intToString(num)
 
         return prefix + encodedPart
     }
 
-    encodeLE(arr: ArrayLike<number>): string {
+    /**
+     * @deprecated Not sure this one makes sense anymore...
+     */
+    leBufToStr(arr: ArrayLike<number>): string {
         if (!arr?.length) {
             return ""
         }
@@ -120,7 +161,7 @@ export class NumberEncoder {
         const remainingBuffer = Uint8Array.from(arr).slice(0, arr.length - trailingZeros)
         const num = leBufToBigInt(remainingBuffer)
 
-        const encodedPart = this.encodeInt(num)
+        const encodedPart = this.intToString(num)
 
         return prefix + encodedPart
     }
