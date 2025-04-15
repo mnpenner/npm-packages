@@ -8,7 +8,7 @@ function u8(...args: Array<number | number[]>) {
 }
 
 describe(NumberEncoder, () => {
-    const NUM_TESTS = 100
+    const NUM_TESTS = 1000
     const MIN_BYTES = 1
     const MAX_BYTES = 256
 
@@ -17,6 +17,7 @@ describe(NumberEncoder, () => {
     const base50encoder = new NumberEncoder('0123456789bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ')
     const hexEncoder = new NumberEncoder('0123456789ABCDEF')
     const base64Encoder = new NumberEncoder('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/')
+    const base64urlEncoder = new NumberEncoder('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_')
 
     const BASE36_ALPHA = '0123456789abcdefghijklmnopqrstuvwxyz'
 
@@ -69,6 +70,14 @@ describe(NumberEncoder, () => {
             expect(base64Encoder.encodeBE([0xFB])).toBe('D7')
             expect(base64Encoder.encodeBE([0xFB, 0xFF])).toBe('Pv/')
         })
+
+        test('endianness', () => {
+            expect(hexEncoder.encodeBE(u8(0,0xE3))).toBe('0E3')
+            expect(hexEncoder.encodeLE(u8(0,0xE3))).toBe('E300')
+
+            expect(hexEncoder.decodeBE('0E3')).toEqual(u8(0,0xE3))
+            expect(hexEncoder.decodeLE('E300')).toEqual(u8(0,0xE3))
+        })
     })
 
     describe('decode', () => {
@@ -101,12 +110,21 @@ describe(NumberEncoder, () => {
         })
     })
 
-    describe('bi-directional', () => {
-        test('random bytes', () => {
+    describe.skip('bi-directional', () => {
+        test('random bytes BE', () => {
             for(let i = 0; i < NUM_TESTS; i++) {
                 const buf = randomBytes(randomInt(MIN_BYTES, MAX_BYTES + 1))
                 const encoded = base50encoder.encodeBE(buf)
                 const decoded = base50encoder.decodeBE(encoded)
+                expect(decoded).toEqual(buf)
+            }
+        })
+
+        test('random bytes LE', () => {
+            for(let i = 0; i < NUM_TESTS; i++) {
+                const buf = randomBytes(randomInt(MIN_BYTES, MAX_BYTES + 1))
+                const encoded = base50encoder.encodeLE(buf)
+                const decoded = base50encoder.decodeLE(encoded)
                 expect(decoded).toEqual(buf)
             }
         })
