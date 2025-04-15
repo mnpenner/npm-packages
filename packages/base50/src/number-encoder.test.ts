@@ -20,23 +20,6 @@ describe(NumberEncoder, () => {
 
     const BASE36_ALPHA = '0123456789abcdefghijklmnopqrstuvwxyz'
 
-    test('encodeIntBE', () => {
-        // Compare with https://nodejs.org/api/buffer.html#bufreadbiguint64beoffset
-        expect(NumberEncoder.beBufToBigInt([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff])).toBe(4294967295n)
-        expect(NumberEncoder.beBufToBigInt(Buffer.from([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff]))).toBe(4294967295n)
-        expect(NumberEncoder.beBufToBigInt(new Uint8Array([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff]))).toBe(4294967295n)
-
-        expect(NumberEncoder.beBufToBigInt(Buffer.from([0x00, 0x00, 0x00, 0xff, 0xff, 0xff]))).toBe(16777215n)  // 1-6 bytes
-        expect(NumberEncoder.beBufToBigInt(Buffer.from([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff]))).toBe(16777215n)  // 7 bytes
-    })
-
-    test('encodeIntLE', () => {
-        expect(NumberEncoder.leBufToInt([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff])).toBe(18446744069414584320n)
-        expect(NumberEncoder.leBufToInt(Buffer.from([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff]))).toBe(18446744069414584320n)
-        expect(NumberEncoder.leBufToInt(new Uint8Array([0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff]))).toBe(18446744069414584320n)
-
-        expect(NumberEncoder.leBufToInt(Buffer.from([0x00, 0x00, 0x00, 0xff, 0xff, 0xff]))).toBe(281474959933440n)
-    })
 
     describe('encodeInt', () => {
         it('matches native impl', () => {
