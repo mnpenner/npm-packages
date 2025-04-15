@@ -12,7 +12,7 @@ const SUPPORTS_DATAVIEW = typeof DataView !== 'undefined' && typeof ArrayBuffer 
  * @param {ArrayLike<number>} buffer Input bytes. Each element must be in the range [0-255].
  * @return {bigint}
  */
-export function beBufToBigInt(buffer: ArrayLike<number>): bigint {
+export function bufToInt(buffer: ArrayLike<number>): bigint {
     if(buffer.length <= 1) {
         if(buffer.length === 0) {
             return 0n

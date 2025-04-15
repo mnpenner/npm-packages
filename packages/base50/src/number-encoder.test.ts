@@ -22,15 +22,15 @@ describe(NumberEncoder, () => {
     const BASE36_ALPHA = '0123456789abcdefghijklmnopqrstuvwxyz'
 
 
-    describe(NumberEncoder.prototype.intToString, () => {
+    describe(NumberEncoder.prototype.intToStr, () => {
         it('matches native impl', () => {
             for(let b=2; b<=36; ++b) {
                 const encoder = new NumberEncoder(BASE36_ALPHA.slice(0, b))
                 for(let i=0; i<100; ++i) {
-                    expect(encoder.intToString(i)).toBe(i.toString(b))
+                    expect(encoder.intToStr(i)).toBe(i.toString(b))
                 }
                 for(let i=0n; i<BigInt(Number.MAX_SAFE_INTEGER)*10n; i=i*2n+1n) {
-                    expect(encoder.intToString(i)).toBe(i.toString(b))
+                    expect(encoder.intToStr(i)).toBe(i.toString(b))
                 }
             }
         })
@@ -41,12 +41,10 @@ describe(NumberEncoder, () => {
             for(let b=2; b<=36; ++b) {
                 const encoder = new NumberEncoder(BASE36_ALPHA.slice(0, b))
                 for(let i=0; i<100; ++i) {
-                    const base36 = i.toString(b)
-                    expect(Number(encoder.strToInt(base36))).toBe(i)
+                    expect(Number(encoder.strToInt(i.toString(b)))).toBe(i)
                 }
                 for(let i=0n; i<BigInt(Number.MAX_SAFE_INTEGER)*10n; i=i*2n+1n) {
-                    const base36 = i.toString(b)
-                    expect(encoder.strToInt(base36)).toBe(i)
+                    expect(encoder.strToInt(i.toString(b))).toBe(i)
                 }
             }
         })

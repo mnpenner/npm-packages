@@ -1,4 +1,4 @@
-import {beBufToBigInt, leBufToBigInt} from './buffer-to-bigint'
+import {bufToInt, leBufToBigInt} from './buffer-to-bigint'
 
 export class NumberEncoder {
     private readonly alphabet: string[]
@@ -22,6 +22,9 @@ export class NumberEncoder {
         return num
     }
 
+    /**
+     * @deprecated Not needed.
+     */
     leStrToInt(str: ArrayLike<string>): bigint {
         let num = 0n
         let mul = 1n
@@ -32,7 +35,7 @@ export class NumberEncoder {
         return num
     }
 
-    intToString(num: number | bigint): string {
+    intToStr(num: number | bigint): string {
         let n = BigInt(num)
         if(n === 0n) return this.alphabet[0]
         let result = ''
@@ -51,16 +54,11 @@ export class NumberEncoder {
 
         const arr = Array.from(str)
         let leadingZeros = 0
-        while (leadingZeros < arr.length && this.reverse.get(arr[leadingZeros]) === 0n) {
+        while (leadingZeros < arr.length && arr[leadingZeros] === this.alphabet[0]) {
             ++leadingZeros
         }
 
-        const payload = arr.slice(leadingZeros)
-        if (payload.length === 0) {
-            return new Uint8Array(leadingZeros || 1)  // special case for '0'
-        }
-
-        let n = this.strToInt(payload)
+        let n = this.strToInt(arr)
 
         const bytes: number[] = []
         while (n > 0n) {
@@ -68,11 +66,9 @@ export class NumberEncoder {
             n >>= 8n
         }
 
-        while (leadingZeros-- > 0) {
-            bytes.unshift(0)
-        }
-
-        return new Uint8Array(bytes)
+        const result = new Uint8Array(leadingZeros + bytes.length)
+        result.set(bytes, leadingZeros)
+        return result
     }
 
     /**
@@ -114,7 +110,6 @@ export class NumberEncoder {
     }
 
 
-
     bufToStr(arr: ArrayLike<number>): string {
         if(!arr?.length) {
             return ""
@@ -132,9 +127,9 @@ export class NumberEncoder {
         }
 
         const remainingBuffer = Uint8Array.from(arr).slice(leadingZeros)
-        const num = beBufToBigInt(remainingBuffer)
+        const num = bufToInt(remainingBuffer)
 
-        const encodedPart = this.intToString(num)
+        const encodedPart = this.intToStr(num)
 
         return prefix + encodedPart
     }
@@ -161,7 +156,7 @@ export class NumberEncoder {
         const remainingBuffer = Uint8Array.from(arr).slice(0, arr.length - trailingZeros)
         const num = leBufToBigInt(remainingBuffer)
 
-        const encodedPart = this.intToString(num)
+        const encodedPart = this.intToStr(num)
 
         return prefix + encodedPart
     }

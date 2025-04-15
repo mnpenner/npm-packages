@@ -1,5 +1,5 @@
 import {bench, run, group, summary, barplot, boxplot, lineplot} from 'mitata'
-import {beBufToBigInt} from './buffer-to-bigint'
+import {bufToInt} from './buffer-to-bigint'
 import {randomBytes, randomInt, getRandomValues} from 'crypto'
 
 
@@ -24,19 +24,19 @@ group('beBufToBigInt', () => {
         summary(() => {
             bench('Array', () => {
                 for(const arr of arrays) {
-                    beBufToBigInt(arr)
+                    bufToInt(arr)
                 }
             })
 
             bench('Buffer', () => {
                 for(const arr of buffers) {
-                    beBufToBigInt(arr)
+                    bufToInt(arr)
                 }
             })
 
             bench('Uint8Array', () => {
                 for(const arr of typedArrays) {
-                    beBufToBigInt(arr)
+                    bufToInt(arr)
                 }
             })
         })
