@@ -16,9 +16,10 @@ describe(ChunkedBufferEncoder, () => {
         it('encodes', () => {
             expect(base64Encoder.encode(Buffer.from("Many hands make light work."))).toBe('TWFueSBoYW5kcyBtYWtlIGxpZ2h0IHdvcmsu')
             expect(base64Encoder.encode([0xFF, 0xFF, 0xFF])).toBe('////')
-            expect(base64Encoder.encode([0xFB])).toBe('D7')
+            expect(base64Encoder.encode([0xFB])).toBe('AAD7')
             expect(base64Encoder.encode(u8(0, 0, 0xFB))).toBe('AAD7')
-            expect(base64Encoder.encode([0xFB, 0xFF])).toBe('Pv/')
+            expect(base64Encoder.encode([0xFB, 0xFF])).toBe('APv/')
+            expect(base64Encoder.encode([0,0xFB, 0xFF])).toBe('APv/')
         })
 
         it('decodes', () => {

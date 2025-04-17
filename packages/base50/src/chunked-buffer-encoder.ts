@@ -37,27 +37,18 @@ export class ChunkedBufferEncoder {
             return ""
         }
 
-        let leadingZeros = 0
-        while(leadingZeros < arr.length && arr[leadingZeros] === 0) {
-            ++leadingZeros
-        }
-
-        let prefix = this.alphabet[0].repeat(leadingZeros)
-
-        if(leadingZeros === arr.length) {
-            return prefix
-        }
-
         const buf = Uint8Array.from(arr)
-        let i = leadingZeros
+        let i = 0
 
         let result = ''
         do {
-            const val = bufToInt(buf.slice(i, i + this.bytesPerChunk))
-            result += this.intToStr(val)//.padStart(this.charsPerChunk, this.alphabet[0])
+            const chunkBytes = buf.slice(i, i + this.bytesPerChunk)
+            const val = bufToInt(chunkBytes)
+            result += this.intToStr(val)
             i += this.bytesPerChunk
         } while(i < buf.length)
-        return prefix+result
+
+        return result
     }
 
     decode(str: string): Uint8Array {
@@ -120,15 +111,20 @@ export class ChunkedBufferEncoder {
 
 
     private intToStr(num: number | bigint): string {
+        if(!num) {
+            // Handle the case of 0 explicitly, padding to the full chunk length
+            return this.alphabet[0].repeat(this.charsPerChunk)
+        }
         let n = BigInt(num)
-        if(n === 0n) return this.alphabet[0]
+
         let result = ''
-        while(n > 0n) {
+        do {
             const rem = n % this.base
             result = this.alphabet[Number(rem)] + result
             n /= this.base
-        }
-        return result
+        } while(n > 0n)
+
+        return result.padStart(this.charsPerChunk, this.alphabet[0])
     }
 
 }
