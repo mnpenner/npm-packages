@@ -1,5 +1,6 @@
 import {BASE64URL, MPEN50} from './alphabets'
 import {bufToInt} from './buffer-to-bigint'
+import assert from 'assert'
 
 function findHighestPowerOf2LessThanOrEqual(num: bigint | number): bigint {
     if(typeof num === 'number') {
@@ -33,6 +34,8 @@ export class ChunkedBufferEncoder {
     private readonly charsPerChunk: number
 
     constructor(alphabet: ArrayLike<string>, bytesPerChunk: number, charsPerChunk: number) {
+        assert(alphabet.length >= 2)
+        assert(alphabet.length**charsPerChunk >= 2**(8*bytesPerChunk))
         this.alphabet = Array.from(alphabet)
         this.reverse = new Map(this.alphabet.map((ch, i) => [ch, BigInt(i)]))
         this.base = BigInt(this.alphabet.length)

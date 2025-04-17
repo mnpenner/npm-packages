@@ -5,7 +5,7 @@ export function uint8ArrayToBase64(arr: Uint8Array): string {
 }
 
 export function uint8ArrayToHex(arr: Uint8Array): string {
-    return [...arr].map(b => b.toString(16).padStart(2, '0')).join('')
+    return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('')
 }
 
 export function randomUint8Array(minLen: number, maxLen: number): Uint8Array {
