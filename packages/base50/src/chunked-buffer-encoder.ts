@@ -57,7 +57,7 @@ export class ChunkedBufferEncoder {
             result += this.intToStr(val)//.padStart(this.charsPerChunk, this.alphabet[0])
             i += this.bytesPerChunk
         } while(i < buf.length)
-        return result
+        return prefix+result
     }
 
     decode(str: string): Uint8Array {
