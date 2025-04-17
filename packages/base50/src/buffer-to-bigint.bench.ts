@@ -9,8 +9,8 @@ const arrays: number[][] = []
 const buffers: Buffer[] = []
 const typedArrays: Uint8Array[] = []
 
-for(let i = 0; i < 10000; ++i) {
-    const len = randomInt(1, 9)
+for(let i = 0; i < 1000; ++i) {
+    const len = randomInt(1, 4096)
     const buf = randomBytes(len)
     buffers.push(buf)
     arrays.push(Array.from(buf))

@@ -2,6 +2,16 @@ const SUPPORTS_BUFFER = typeof Buffer !== 'undefined' && typeof Buffer.isBuffer 
 const SUPPORTS_DATAVIEW = typeof DataView !== 'undefined' && typeof ArrayBuffer !== 'undefined'
 
 
+function getView(buffer: ArrayLike<number>): DataView {
+    if(ArrayBuffer.isView(buffer)) {  // UInt8Array or Node Buffer
+        return new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength)
+    }
+    if(buffer instanceof ArrayBuffer) {
+        return new DataView(buffer, buffer.byteLength, buffer.byteLength)
+    }
+    return new DataView(Uint8Array.from(buffer).buffer)
+}
+
 /**
  * Reads an unsigned big-endian encoded buffer into a bigint.
  *
@@ -19,46 +29,23 @@ export function bufToInt(buffer: ArrayLike<number>): bigint {
         }
         return BigInt(buffer[0])
     }
-    if(buffer.length <= 8) {
-        if(SUPPORTS_BUFFER && Buffer.isBuffer(buffer)) {
-            if(buffer.length === 8) {
-                return buffer.readBigUInt64BE()
+    if(buffer.length >= 8) {
+        let i = 0
+        let result = 0n
+        const view = getView(buffer)
+        const end = buffer.length - 8
+        for(; ;) {
+            result |= BigInt(view.getBigUint64(i, false))
+            i += 8
+            if(i >= end) {
+                break
             }
-            if(buffer.length <= 6) {
-                return BigInt(buffer.readUIntBE(0, buffer.length))
-            }
-            // 7 bytes
-            return (BigInt(buffer[0]) << 48n) | BigInt(buffer.readUIntBE(1, 6))
+            result <<= 64n
         }
-        if(ArrayBuffer.isView(buffer)) {
-            const dv = new DataView(buffer.buffer)
-            if(buffer.length === 8) {
-                return dv.getBigUint64(0, false)
-            }
-            if(buffer.length === 4) {
-                return BigInt(dv.getUint32(0, false))
-            }
-            if(buffer.length === 2) {
-                return BigInt(dv.getUint16(0, false))
-            }
-            if(buffer.length === 6) {
-                return (BigInt(dv.getUint16(0, false)) << 32n) | BigInt(dv.getUint32(2, false))
-            }
-            const firstByte = BigInt(buffer[0])
-            if(buffer.length === 7) {
-                return (firstByte << 48n)
-                    | (BigInt(dv.getUint16(1, false)) << 32n)
-                    | BigInt(dv.getUint32(3, false))
-            }
-            if(buffer.length === 5) {
-                return (firstByte << 32n)
-                    | BigInt(dv.getUint32(1, false))
-            }
-            if(buffer.length === 3) {
-                return (firstByte << 16n)
-                    | BigInt(dv.getUint16(1, false))
-            }
+        for(; i < buffer.length; ++i) {
+            result = (result << 8n) | BigInt(buffer[i])
         }
+        return result
     }
     let result = BigInt(buffer[0])
     for(let i = 1; i < buffer.length; ++i) {
