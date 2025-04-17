@@ -16,6 +16,14 @@ function findHighestPowerOf2LessThanOrEqual(num: bigint | number): bigint {
     return result
 }
 
+function slice(buf: Uint8Array, start:number, length: number): Uint8Array {
+    // return buf.slice(start, start + length)
+    const chunk = buf.slice(start, start + length)
+    if (chunk.length >= length) return chunk
+    const padded = new Uint8Array(length)
+    padded.set(chunk, 0)
+    return padded
+}
 
 export class ChunkedBufferEncoder {
     private readonly alphabet: string[]
@@ -42,7 +50,7 @@ export class ChunkedBufferEncoder {
 
         let result = ''
         do {
-            const chunkBytes = buf.slice(i, i + this.bytesPerChunk)
+            const chunkBytes = slice(buf, i, this.bytesPerChunk)
             const val = bufToInt(chunkBytes)
             result += this.intToStr(val)
             i += this.bytesPerChunk
