@@ -17,6 +17,30 @@ function findHighestPowerOf2LessThanOrEqual(num: bigint | number): bigint {
     return result
 }
 
+function calcCharsPerChunk(bytesPerChunk: number, base: bigint): number {
+    const min = 2n**BigInt(8*bytesPerChunk)
+    let c = 1
+    let val = base
+    for(;;) {
+        if(val >= min) return c
+        val *= base
+        ++c
+    }
+}
+
+/**
+ * Pad a Uint8Array with zeros up to the given length.
+ * @param buf
+ * @param length
+ */
+function padRight(buf: Uint8Array,  length: number): Uint8Array {
+    // return buf.slice(start, start + length)
+    if(buf.length >= length) return buf
+    const padded = new Uint8Array(length)
+    padded.set(buf, 0)
+    return padded
+}
+
 function slice(buf: Uint8Array, start:number, length: number): Uint8Array {
     // return buf.slice(start, start + length)
     const chunk = buf.slice(start, start + length)
@@ -33,14 +57,18 @@ export class ChunkedBufferEncoder {
     private readonly bytesPerChunk: number
     private readonly charsPerChunk: number
 
-    constructor(alphabet: ArrayLike<string>, bytesPerChunk: number, charsPerChunk: number) {
-        assert(alphabet.length >= 2)
-        assert(alphabet.length**charsPerChunk >= 2**(8*bytesPerChunk))
+    constructor(alphabet: ArrayLike<string>, bytesPerChunk: number, charsPerChunk?: number) {
         this.alphabet = Array.from(alphabet)
+        assert(this.alphabet.length >= 2)
         this.reverse = new Map(this.alphabet.map((ch, i) => [ch, BigInt(i)]))
         this.base = BigInt(this.alphabet.length)
         this.bytesPerChunk = bytesPerChunk
-        this.charsPerChunk = charsPerChunk
+        if(charsPerChunk == null) {
+            this.charsPerChunk = calcCharsPerChunk(bytesPerChunk, this.base)
+        } else {
+            this.charsPerChunk = charsPerChunk
+            assert(this.alphabet.length**this.charsPerChunk >= 2**(8*bytesPerChunk))
+        }
     }
 
     encode(arr: ArrayLike<number>): string {
@@ -53,8 +81,14 @@ export class ChunkedBufferEncoder {
 
         let result = ''
         do {
-            const chunkBytes = slice(buf, i, this.bytesPerChunk)
-            const val = bufToInt(chunkBytes)
+            const chunkBytes = buf.slice(i, i + this.bytesPerChunk)
+            let val = bufToInt(chunkBytes)
+            if(chunkBytes.length < this.bytesPerChunk) {
+                const missingBytes = this.bytesPerChunk - chunkBytes.length
+                val <<= 8n * BigInt(missingBytes)
+                result += this.intToStr(val).slice(0,-missingBytes)
+                return result
+            }
             result += this.intToStr(val)
             i += this.bytesPerChunk
         } while(i < buf.length)
@@ -68,28 +102,24 @@ export class ChunkedBufferEncoder {
         }
 
         const arr = Array.from(str)
-        let leadingZeros = 0
 
-        // Count leading zeros based on the alphabet's first character
-        while(leadingZeros < arr.length && arr[leadingZeros] === this.alphabet[0]) {
-            ++leadingZeros
-        }
 
-        // If the entire string is composed of the first character, return an array of zeros
-        if(leadingZeros === arr.length) {
-            return new Uint8Array(leadingZeros)
-        }
-
-        let i = leadingZeros
+        let i = 0
         const resultBytes: number[] = []
 
         do {
             // Parse a chunk of the encoded string into a bigint
-            const chunk = this.strToInt(arr.slice(i, i + this.charsPerChunk))
+            const chunk = arr.slice(i, i + this.charsPerChunk)
+            let val = this.strToInt(chunk)
+
+            if(chunk.length < this.charsPerChunk) {
+                const missingChars = this.charsPerChunk - chunk.length
+                val *= this.base**BigInt(missingChars)
+            }
 
             // Convert the bigint to a big-endian byte array
             const chunkBytes = []
-            let temp = chunk
+            let temp = val
 
             while(temp > 0n) {
                 chunkBytes.unshift(Number(temp & 0xFFn)) // Get the least significant byte
@@ -105,11 +135,9 @@ export class ChunkedBufferEncoder {
             i += this.charsPerChunk
         } while(i < arr.length)
 
-        // Prepend leading zero bytes to the final result
-        const result = new Uint8Array(leadingZeros + resultBytes.length)
-        result.set(resultBytes, leadingZeros)
 
-        return result
+
+        return new Uint8Array(resultBytes)
     }
 
     private strToInt(str: ArrayLike<string>): bigint {

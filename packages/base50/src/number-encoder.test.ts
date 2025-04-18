@@ -162,4 +162,9 @@ describe(NumberEncoder, () => {
             }
         })
     })
+
+
+    describe(NumberEncoder.prototype.maxLength, () => {
+        expect(base50encoder.maxLength(16)).toBe(23)
+    })
 })

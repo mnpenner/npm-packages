@@ -109,6 +109,17 @@ export class NumberEncoder {
         return new Uint8Array(bytes)
     }
 
+    /**
+     * Calculate the maximum length of a string encoded in base N, given the
+     * number of bytes it will take up.
+     *
+     * @param byteLength
+     */
+    maxLength(byteLength: number): number {
+        const val = (1n<<BigInt(8*byteLength))-1n
+        return Array.from(this.intToStr(val)).length
+    }
+
 
     bufToStr(arr: ArrayLike<number>): string {
         if(!arr?.length) {
