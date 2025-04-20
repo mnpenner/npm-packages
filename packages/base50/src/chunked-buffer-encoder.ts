@@ -96,48 +96,33 @@ export class ChunkedBufferEncoder {
         return result
     }
 
-    decode(str: string): Uint8Array {
-        if(!str?.length) {
-            return new Uint8Array()
+    decode(str: ArrayLike<string>): Uint8Array {
+        if(!str?.length) return new Uint8Array()
+        const out: number[] = []
+        let i = 0
+        const arr = Array.from(str)
+        while (i < arr.length) {
+            const chunkLen = Math.min(this.charsPerChunk, arr.length - i)
+            const chunk = arr.slice(i, i + chunkLen).join('')
+            i += chunkLen
+
+            if (chunkLen === this.charsPerChunk) {
+                const num = this.strToInt(chunk)
+                for (let j = this.bytesPerChunk - 1; j >= 0; j--) {
+                    out.push(Number((num >> BigInt(8 * j)) & 0xFFn))
+                }
+            } else {
+                const missing = this.charsPerChunk - chunkLen
+                let num = this.strToInt(chunk + this.alphabet[0].repeat(missing))
+                num >>= BigInt(8 * missing)
+                const byteCount = this.bytesPerChunk - missing
+                for (let j = byteCount - 1; j >= 0; --j) {
+                    out.push(Number((num >> BigInt(8 * j)) & 0xFFn))
+                }
+            }
         }
 
-        const arr = Array.from(str)
-
-
-        let i = 0
-        const resultBytes: number[] = []
-
-        do {
-            // Parse a chunk of the encoded string into a bigint
-            const chunk = arr.slice(i, i + this.charsPerChunk)
-            let val = this.strToInt(chunk)
-
-            if(chunk.length < this.charsPerChunk) {
-                const missingChars = this.charsPerChunk - chunk.length
-                val *= this.base**BigInt(missingChars)
-            }
-
-            // Convert the bigint to a big-endian byte array
-            const chunkBytes = []
-            let temp = val
-
-            while(temp > 0n) {
-                chunkBytes.unshift(Number(temp & 0xFFn)) // Get the least significant byte
-                temp >>= 8n // Shift right to process the next byte
-            }
-
-            // Ensure the chunkBytes array fills the required `bytesPerChunk` length
-            while(chunkBytes.length < this.bytesPerChunk) {
-                chunkBytes.unshift(0) // Prepend leading zeros if necessary
-            }
-
-            resultBytes.push(...chunkBytes)
-            i += this.charsPerChunk
-        } while(i < arr.length)
-
-
-
-        return new Uint8Array(resultBytes)
+        return new Uint8Array(out)
     }
 
     private strToInt(str: ArrayLike<string>): bigint {
