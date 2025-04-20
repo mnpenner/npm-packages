@@ -13,7 +13,7 @@ describe(ChunkedBufferEncoder, () => {
     const MAX_BYTES = 17
 
     const base64Encoder = new ChunkedBufferEncoder(BASE64STD, 3)
-    const emojiEncoder = new ChunkedBufferEncoder('🍓🐋🍃', 12)
+    const emojiEncoder = new ChunkedBufferEncoder('🍓🐋🍃', 12, 61)
 
     describe(ChunkedBufferEncoder.prototype.encode, () => {
         it('encodes', () => {
@@ -23,8 +23,10 @@ describe(ChunkedBufferEncoder, () => {
             expect(base64Encoder.encode(u8(0, 0, 0xFB))).toBe('AAD7')
             expect(base64Encoder.encode([0xFB, 0xFF])).toBe('+/8')
             expect(base64Encoder.encode([0, 0xFB, 0xFF])).toBe('APv/')
-
-
+            expect(base64Encoder.encode([0])).toBe('AA')
+            expect(base64Encoder.encode([0,0,0])).toBe('AAAA')
+            expect(base64Encoder.encode([0,0,0,0])).toBe('AAAAAA')
+            expect(base64Encoder.encode([])).toBe('')
         })
 
         it('matches native impl', () => {
@@ -35,6 +37,11 @@ describe(ChunkedBufferEncoder, () => {
                 expect(base64Encoder.encode(buf), uint8ArrayToHex(buf)).toEqual(expected)
             }
         })
+
+        it('works with multi-byte chars', () => {
+            // How many strawberries should this be?!
+            expect(emojiEncoder.encode([0])).toBe("🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓")
+        })
     })
 
     describe(ChunkedBufferEncoder.prototype.decode, () => {
@@ -43,10 +50,11 @@ describe(ChunkedBufferEncoder, () => {
             expect(base64Encoder.decode('////')).toEqual(u8(0xFF, 0xFF, 0xFF))
             expect(base64Encoder.decode('D7')).toEqual(u8(0x0F))
             expect(base64Encoder.decode('Pv/')).toEqual(u8(62,255))
-        })
-
-        it('works', () => {
             expect(base64Encoder.decode('X2ipInk')).toEqual(u8(95, 104, 169, 34, 121))
+
+            expect(base64Encoder.decode('AA')).toEqual(u8([0]))
+            expect(base64Encoder.decode('AAAA')).toEqual(u8([0,0,0]))
+            expect(base64Encoder.decode('AAAAAA')).toEqual(u8([0,0,0,0]))
         })
 
         it('matches native impl', () => {

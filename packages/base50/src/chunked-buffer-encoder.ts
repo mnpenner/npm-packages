@@ -69,6 +69,7 @@ export class ChunkedBufferEncoder {
             this.charsPerChunk = charsPerChunk
             assert(this.alphabet.length**this.charsPerChunk >= 2**(8*bytesPerChunk))
         }
+        // console.log(this.alphabet,this.bytesPerChunk, this.charsPerChunk)
     }
 
     encode(arr: ArrayLike<number>): string {
@@ -86,7 +87,7 @@ export class ChunkedBufferEncoder {
             if(chunkBytes.length < this.bytesPerChunk) {
                 const missingBytes = this.bytesPerChunk - chunkBytes.length
                 val <<= 8n * BigInt(missingBytes)
-                result += this.intToStr(val).slice(0,-missingBytes)
+                result += this.intToArr(val).slice(0,-missingBytes).join('')
                 return result
             }
             result += this.intToStr(val)
@@ -151,6 +152,25 @@ export class ChunkedBufferEncoder {
         return result.padStart(this.charsPerChunk, this.alphabet[0])
     }
 
+    private intToArr(num: number | bigint): string[] {
+        if(!num) {
+            // Handle the case of 0 explicitly, padding to the full chunk length
+            return Array(this.charsPerChunk).fill(this.alphabet[0])
+        }
+        let n = BigInt(num)
+
+        let result: string[] = []
+        do {
+            const rem = n % this.base
+            result.unshift(this.alphabet[Number(rem)])
+            n /= this.base
+        } while(n > 0n)
+
+        while (result.length < this.charsPerChunk) {
+            result.unshift(this.alphabet[0])
+        }
+        return result
+    }
 }
 
 
