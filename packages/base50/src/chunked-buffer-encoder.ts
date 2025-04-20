@@ -82,10 +82,10 @@ export class ChunkedBufferEncoder {
 
         let result = ''
         do {
-            const chunkBytes = buf.slice(i, i + this.bytesPerChunk)
-            let val = bufToInt(chunkBytes)
-            if(chunkBytes.length < this.bytesPerChunk) {
-                const missingBytes = this.bytesPerChunk - chunkBytes.length
+            const chunk = buf.slice(i, i + this.bytesPerChunk)
+            let val = bufToInt(chunk)
+            if(chunk.length < this.bytesPerChunk) {
+                const missingBytes = this.bytesPerChunk - chunk.length
                 val <<= 8n * BigInt(missingBytes)
                 result += this.intToArr(val).slice(0,-missingBytes).join('')
                 return result
@@ -97,41 +97,54 @@ export class ChunkedBufferEncoder {
         return result
     }
 
+    private padEnd(chunk: string[]): string[] {
+        if(chunk.length >= this.charsPerChunk) return chunk
+        return chunk.concat(Array(this.charsPerChunk - chunk.length).fill(this.alphabet[0]))
+    }
+
     decode(str: ArrayLike<string>): Uint8Array {
         if(!str?.length) return new Uint8Array()
         const out: number[] = []
         let i = 0
         const arr = Array.from(str)
         while (i < arr.length) {
-            const chunkLen = Math.min(this.charsPerChunk, arr.length - i)
-            const chunk = arr.slice(i, i + chunkLen).join('')
-            i += chunkLen
+            // const chunkLen = Math.min(this.charsPerChunk, arr.length - i)
+            // const chunk = arr.slice(i, i + chunkLen).join('')
+            const chunk = arr.slice(i, i+this.charsPerChunk)
 
-            if (chunkLen === this.charsPerChunk) {
-                const num = this.strToInt(chunk)
+
+            if (chunk.length === this.charsPerChunk) {
+                const num = this.arrToInt(chunk)
                 for (let j = this.bytesPerChunk - 1; j >= 0; j--) {
                     out.push(Number((num >> BigInt(8 * j)) & 0xFFn))
                 }
             } else {
-                const missing = this.charsPerChunk - chunkLen
-                let num = this.strToInt(chunk + this.alphabet[0].repeat(missing))
+                const missing = this.charsPerChunk - chunk.length
+                let num = this.arrToInt(this.padEnd(chunk))
                 num >>= BigInt(8 * missing)
                 const byteCount = this.bytesPerChunk - missing
                 for (let j = byteCount - 1; j >= 0; --j) {
                     out.push(Number((num >> BigInt(8 * j)) & 0xFFn))
                 }
+                break
             }
+
+            i += chunk.length
         }
 
         return new Uint8Array(out)
     }
 
-    private strToInt(str: ArrayLike<string>): bigint {
+    private arrToInt(arr: string[]): bigint {
         let num = 0n
-        for(const ch of Array.from(str)) {
+        for(const ch of arr) {
             num = num * this.base + this.reverse.get(ch)!
         }
         return num
+    }
+
+    private strToInt(str: ArrayLike<string>): bigint {
+        return this.arrToInt(Array.from(str))
     }
 
 
