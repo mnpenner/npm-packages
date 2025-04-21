@@ -28,6 +28,10 @@ function calcCharsPerChunk(bytesPerChunk: number, base: bigint): number {
     }
 }
 
+function toArray<T>(arr: ArrayLike<T>): T[] {
+    return Array.isArray(arr) ? arr : Array.from(arr)
+}
+
 /**
  * Pad a Uint8Array with zeros up to the given length.
  * @param buf
@@ -58,7 +62,7 @@ export class ChunkedBufferEncoder {
     private readonly charsPerChunk: number
 
     constructor(alphabet: ArrayLike<string>, bytesPerChunk: number, charsPerChunk?: number) {
-        this.alphabet = Array.from(alphabet)
+        this.alphabet = toArray(alphabet)
         assert(this.alphabet.length >= 2)
         this.reverse = new Map(this.alphabet.map((ch, i) => [ch, BigInt(i)]))
         this.base = BigInt(this.alphabet.length)
@@ -106,7 +110,7 @@ export class ChunkedBufferEncoder {
         if(!str?.length) return new Uint8Array()
         const out: number[] = []
         let i = 0
-        const arr = Array.from(str)
+        const arr = toArray(str)
         while (i < arr.length) {
             // const chunkLen = Math.min(this.charsPerChunk, arr.length - i)
             // const chunk = arr.slice(i, i + chunkLen).join('')
@@ -144,7 +148,7 @@ export class ChunkedBufferEncoder {
     }
 
     private strToInt(str: ArrayLike<string>): bigint {
-        return this.arrToInt(Array.from(str))
+        return this.arrToInt(toArray(str))
     }
 
 
