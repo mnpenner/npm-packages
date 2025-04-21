@@ -54,6 +54,11 @@ function slice(buf: Uint8Array, start:number, length: number): Uint8Array {
     return padded
 }
 
+function padArray<T>(chunk: T[], maxLength: number, fill: T): T[] {
+    if(chunk.length >= maxLength) return chunk
+    return chunk.concat(Array(maxLength - chunk.length).fill(fill))
+}
+
 export class ChunkedBufferEncoder {
     private readonly alphabet: string[]
     private readonly reverse: Map<string, bigint>
@@ -74,9 +79,18 @@ export class ChunkedBufferEncoder {
             this.charsPerChunk = charsPerChunk
             assert(this.alphabet.length**this.charsPerChunk >= 2**(8*bytesPerChunk))
         }
+        // this.minValue = (1n<<(8n*BigInt(this.bytesPerChunk-1)))
+
+        this.minValue = 0n
+        // this.minValue = (1n<<(8n*BigInt(this.bytesPerChunk-1)))
+        // const tmp = Array(this.charsPerChunk).fill(this.alphabet[0])
+        // tmp[0] = this.alphabet[1]
+        // this.minValue = this.arrToInt(tmp)
         this.minValue = this.base**BigInt(this.charsPerChunk) - (1n<<(8n*BigInt(this.bytesPerChunk)))
+        // IDEA: We can encode the offset in these wasted bits! The `minValue` just needs to be >= bytesPerChunk. Maybe encode it until the last chunk iff the # of bytes is not a multiple of bytesPerChunk? For base 64, it could be [0,-1,-2] bytes.
+
         // console.log(this.base,this.minValue)
-        // console.log(this.alphabet,this.bytesPerChunk, this.charsPerChunk)
+        console.log(this.alphabet,this.bytesPerChunk, this.charsPerChunk,this.minValue)
     }
 
     encode(arr: ArrayLike<number>): string {

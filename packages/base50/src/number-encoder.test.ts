@@ -24,12 +24,12 @@ describe(NumberEncoder, () => {
 
     describe(NumberEncoder.prototype.intToStr, () => {
         it('matches native impl', () => {
-            for(let b=2; b<=36; ++b) {
+            for(let b = 2; b <= 36; ++b) {
                 const encoder = new NumberEncoder(BASE36_ALPHA.slice(0, b))
-                for(let i=0; i<100; ++i) {
+                for(let i = 0; i < 100; ++i) {
                     expect(encoder.intToStr(i)).toBe(i.toString(b))
                 }
-                for(let i=0n; i<BigInt(Number.MAX_SAFE_INTEGER)*10n; i=i*2n+1n) {
+                for(let i = 0n; i < BigInt(Number.MAX_SAFE_INTEGER) * 10n; i = i * 2n + 1n) {
                     expect(encoder.intToStr(i)).toBe(i.toString(b))
                 }
             }
@@ -38,12 +38,12 @@ describe(NumberEncoder, () => {
 
     describe(NumberEncoder.prototype.strToInt, () => {
         it('matches native impl', () => {
-            for(let b=2; b<=36; ++b) {
+            for(let b = 2; b <= 36; ++b) {
                 const encoder = new NumberEncoder(BASE36_ALPHA.slice(0, b))
-                for(let i=0; i<100; ++i) {
+                for(let i = 0; i < 100; ++i) {
                     expect(Number(encoder.strToInt(i.toString(b)))).toBe(i)
                 }
-                for(let i=0n; i<BigInt(Number.MAX_SAFE_INTEGER)*10n; i=i*2n+1n) {
+                for(let i = 0n; i < BigInt(Number.MAX_SAFE_INTEGER) * 10n; i = i * 2n + 1n) {
                     expect(encoder.strToInt(i.toString(b))).toBe(i)
                 }
             }
@@ -85,24 +85,24 @@ describe(NumberEncoder, () => {
         })
 
         test('big-endian', () => {
-            expect(hexEncoder.bufToStr(u8(0,0xE3))).toBe('0E3')
+            expect(hexEncoder.bufToStr(u8(0, 0xE3))).toBe('0E3')
 
-            expect(hexEncoder.bufToStr(u8(0,0,0))).toBe('000')
+            expect(hexEncoder.bufToStr(u8(0, 0, 0))).toBe('000')
 
-            expect(hexEncoder.bufToStr(u8(0,0xF0,0))).toBe('0F000')
-            expect(hexEncoder.strToBuf('0F000')).toEqual(u8(0,0xF0,0))
+            expect(hexEncoder.bufToStr(u8(0, 0xF0, 0))).toBe('0F000')
+            expect(hexEncoder.strToBuf('0F000')).toEqual(u8(0, 0xF0, 0))
 
-            expect(hexEncoder.bufToStr(u8(0,0x0F,0))).toBe('0F00')
-            expect(hexEncoder.strToBuf('0F00')).toEqual(u8(0,0x0F,0))
+            expect(hexEncoder.bufToStr(u8(0, 0x0F, 0))).toBe('0F00')
+            expect(hexEncoder.strToBuf('0F00')).toEqual(u8(0, 0x0F, 0))
 
-            expect(hexEncoder.strToBuf('0E3')).toEqual(u8(0,0xE3))
-            expect(hexEncoder.strToBuf('00E3')).toEqual(u8(0,0,0xE3))
-            expect(hexEncoder.strToBuf('000E3')).toEqual(u8(0,0,0,0xE3))
-            expect(hexEncoder.strToBuf('010002')).toEqual(u8(0,1,0,2))
-            expect(hexEncoder.bufToStr(u8(0,1,0,2))).toEqual('010002')
-            expect(hexEncoder.strToBuf('0003')).toEqual(u8(0,0,0,0x03))
-            expect(hexEncoder.strToBuf('0003')).toEqual(u8(0,0,0,3))
-            expect(hexEncoder.bufToStr(u8(0,0,0,3))).toEqual('0003')
+            expect(hexEncoder.strToBuf('0E3')).toEqual(u8(0, 0xE3))
+            expect(hexEncoder.strToBuf('00E3')).toEqual(u8(0, 0, 0xE3))
+            expect(hexEncoder.strToBuf('000E3')).toEqual(u8(0, 0, 0, 0xE3))
+            expect(hexEncoder.strToBuf('010002')).toEqual(u8(0, 1, 0, 2))
+            expect(hexEncoder.bufToStr(u8(0, 1, 0, 2))).toEqual('010002')
+            expect(hexEncoder.strToBuf('0003')).toEqual(u8(0, 0, 0, 0x03))
+            expect(hexEncoder.strToBuf('0003')).toEqual(u8(0, 0, 0, 3))
+            expect(hexEncoder.bufToStr(u8(0, 0, 0, 3))).toEqual('0003')
         })
     })
 
@@ -145,13 +145,16 @@ describe(NumberEncoder, () => {
 
     describe('round trips', () => {
         test('random bytes BE', () => {
-            for(let i = 0; i < NUM_TESTS; i++) {
-                const buf = randomBytes(randomInt(MIN_BYTES, MAX_BYTES + 1))
-                const encoded = base50encoder.bufToStr(buf)
-                const decoded = base50encoder.strToBuf(encoded)
-                expect(decoded).toEqual(buf)
+            for(const encoder of [base50encoder, base2encoder, emojiEncoder, hexEncoder, base64Encoder, base64urlEncoder]) {
+                for(let i = 0; i < NUM_TESTS; i++) {
+                    const buf = randomBytes(randomInt(MIN_BYTES, MAX_BYTES + 1))
+                    const encoded = encoder.bufToStr(buf)
+                    const decoded = encoder.strToBuf(encoded)
+                    expect(decoded).toEqual(buf)
+                }
             }
         })
+
 
         test.skip('random bytes LE', () => {
             for(let i = 0; i < NUM_TESTS; i++) {

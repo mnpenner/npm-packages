@@ -31,6 +31,10 @@ export const BLURHASH83 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopq
  * All characters that can be encoded into JSON without escaping excluding multibyte chars.
  */
 export const JSON94 = " !#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+/**
+ * Letters, numbers, and symbols, but no quotes or spaces.
+ */
+export const PASSWORD = "!#$%&()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_abcdefghijklmnopqrstuvwxyz{|}~"
 
 export const BASE62 = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
