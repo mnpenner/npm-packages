@@ -60,6 +60,7 @@ export class ChunkedBufferEncoder {
     private readonly base: bigint
     private readonly bytesPerChunk: number
     private readonly charsPerChunk: number
+    private readonly minValue: bigint
 
     constructor(alphabet: ArrayLike<string>, bytesPerChunk: number, charsPerChunk?: number) {
         this.alphabet = toArray(alphabet)
@@ -73,6 +74,8 @@ export class ChunkedBufferEncoder {
             this.charsPerChunk = charsPerChunk
             assert(this.alphabet.length**this.charsPerChunk >= 2**(8*bytesPerChunk))
         }
+        this.minValue = this.base**BigInt(this.charsPerChunk) - (1n<<(8n*BigInt(this.bytesPerChunk)))
+        // console.log(this.base,this.minValue)
         // console.log(this.alphabet,this.bytesPerChunk, this.charsPerChunk)
     }
 
@@ -87,23 +90,34 @@ export class ChunkedBufferEncoder {
         let result = ''
         do {
             const chunk = buf.slice(i, i + this.bytesPerChunk)
-            let val = bufToInt(chunk)
+            let val = bufToInt(this.padBuffer(chunk))+this.minValue
+            // console.log(chunk, val)
             if(chunk.length < this.bytesPerChunk) {
                 const missingBytes = this.bytesPerChunk - chunk.length
-                val <<= 8n * BigInt(missingBytes)
+                // val <<= 8n * BigInt(missingBytes)
+                // FIXME: the final bytes are not necessarily 0. it works for base64 because everything aligns, but not for base 3.
+                // What if we 'shift' the value first to pack the left bits instead of right?
                 result += this.intToArr(val).slice(0,-missingBytes).join('')
                 return result
             }
             result += this.intToStr(val)
+            // console.log(result)
             i += this.bytesPerChunk
         } while(i < buf.length)
 
         return result
     }
 
-    private padEnd(chunk: string[]): string[] {
+    private padStr(chunk: string[]): string[] {
         if(chunk.length >= this.charsPerChunk) return chunk
         return chunk.concat(Array(this.charsPerChunk - chunk.length).fill(this.alphabet[0]))
+    }
+
+    private padBuffer(buf: Uint8Array): Uint8Array {
+        if(buf.length >= this.bytesPerChunk) return buf
+        const padded = new Uint8Array(this.bytesPerChunk)
+        padded.set(buf, 0)
+        return padded
     }
 
     decode(str: ArrayLike<string>): Uint8Array {
@@ -118,13 +132,13 @@ export class ChunkedBufferEncoder {
 
 
             if (chunk.length === this.charsPerChunk) {
-                const num = this.arrToInt(chunk)
+                const num = this.arrToInt(chunk)-this.minValue
                 for (let j = this.bytesPerChunk - 1; j >= 0; j--) {
                     out.push(Number((num >> BigInt(8 * j)) & 0xFFn))
                 }
             } else {
                 const missing = this.charsPerChunk - chunk.length
-                let num = this.arrToInt(this.padEnd(chunk))
+                let num = this.arrToInt(this.padStr(chunk))-this.minValue
                 num >>= BigInt(8 * missing)
                 const byteCount = this.bytesPerChunk - missing
                 for (let j = byteCount - 1; j >= 0; --j) {
