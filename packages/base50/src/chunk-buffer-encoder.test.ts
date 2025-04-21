@@ -89,8 +89,18 @@ describe(ChunkedBufferEncoder, () => {
         })
     })
 
-    describe('fuzz test', () => {
-        it('random bytes round trip', () => {
+    describe('round trip', () => {
+        it('basic', () => {
+            for(const buf of [u8(1),u8(0,1),u8(1,0)]) {
+                for(const encoder of [base64Encoder, base3encoder, base7encoder, emojiEncoder]) {
+                    const encoded = encoder.encode(buf)
+                    const decoded = encoder.decode(encoded)
+                    expect(decoded, `Buf: ${uint8ArrayToHex(buf)} Encoded: ${encoded}`).toEqual(buf)
+                }
+            }
+        })
+
+        it('random bytes', () => {
             for(const encoder of [base64Encoder,base3encoder,base7encoder, emojiEncoder]) {
                 for(let i = 0; i < NUM_TESTS; i++) {
                     const buf = randomUint8Array(MIN_BYTES, MAX_BYTES)
