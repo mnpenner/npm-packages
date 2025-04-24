@@ -54,6 +54,26 @@ export function bufToInt(buffer: ArrayLike<number>): bigint {
     return result
 }
 
+export function u8ToInt(buffer: Uint8Array): bigint {
+    let result = 0n;
+    const len = buffer.length;
+    const view = new DataView(buffer.buffer, buffer.byteOffset, len);
+    const full = len >>> 3;       // number of 8-byte words
+    let off = 0;
+
+    // process all 64-bit words
+    for (let i = 0; i < full; ++i, off += 8) {
+        result = (result << 64n) | view.getBigUint64(off, false);
+    }
+    // process remaining bytes
+    for (; off < len; ++off) {
+        result = (result << 8n) | BigInt(buffer[off]);
+    }
+
+    return result;
+}
+
+
 /**
  * Reads an unsigned little-endian encoded buffer into a bigint.
  *

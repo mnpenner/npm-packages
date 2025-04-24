@@ -75,80 +75,80 @@ export class ChunkedBufferEncoder {
         return this._charsPerChunk
     }
 
-    encode(arr: string | ArrayLike<number>): string {
-        if(!arr?.length) {
-            return ""
-        }
+    encode(input: string | ArrayLike<number>): string {
+        const buf = typeof input === 'string'
+            ? new TextEncoder().encode(input)
+            : Uint8Array.from(input)
+        const { _bytesPerChunk: B, _charsPerChunk: C, _alphabet: A, _base: BASE } = this
+        if (buf.length === 0) return ''
 
-        const buf = typeof arr === 'string' ? new TextEncoder().encode(arr) : Uint8Array.from(arr)
-        let i = 0
+        const numChunks = Math.ceil(buf.length / B)
+        const out: string[] = new Array(numChunks * C)
+        let outPos = 0
 
-        let result: string[] = []
-
-        do {
-            const chunk = buf.slice(i, i + this._bytesPerChunk)
-            let val = bufToInt(padUint8ArrayRight(chunk, this._bytesPerChunk))
-            result.push(...this.intToStrPadded(val))
-            if(chunk.length < this._bytesPerChunk) {
-                const missingBytes = this._bytesPerChunk - chunk.length
-                // console.log(this._charsPerChunk,this._bytesPerChunk,missingBytes,result)
-                return result.slice(0, -missingBytes).join('')
-            }
-            i += this._bytesPerChunk
-        } while(i < buf.length)
-
-        return result.join('')
-    }
-
-
-    decode(str: ArrayLike<string>): Uint8Array {
-        if(!str?.length) return new Uint8Array()
-        const out: number[] = []
-        let i = 0
-        const arr = toArray(str)
-        while(i < arr.length) {
-            const chunk = arr.slice(i, i + this._charsPerChunk)
-
-            if(chunk.length === this._charsPerChunk) {
-                const num = this.arrToInt(chunk)
-                for(let j = this._bytesPerChunk - 1; j >= 0; j--) {
-                    out.push(Number((num >> BigInt(8 * j)) & 0xFFn))
-                }
-            } else {
-                const missing = this._charsPerChunk - chunk.length
-                let num = this.arrToInt(padArrayRight(chunk, this._charsPerChunk, this._alphabet[this._alphabet.length - 1]))
-                num >>= BigInt(8 * missing)
-                const byteCount = this._bytesPerChunk - missing
-                for(let j = byteCount - 1; j >= 0; --j) {
-                    out.push(Number((num >> BigInt(8 * j)) & 0xFFn))
-                }
-                break
+        for (let i = 0; i < buf.length; i += B) {
+            // assemble big-endian BigInt
+            let val = 0n
+            for (let j = 0; j < B; j++) {
+                val = (val << 8n) + BigInt(buf[i + j] || 0)
             }
 
-            i += chunk.length
+            // extract C digits (lsb→msb into temp slots)
+            let slotBase = outPos + C
+            for (let k = C - 1; k >= 0; --k) {
+                const idx = Number(val % BASE)
+                out[--slotBase] = A[idx]
+                val /= BASE
+            }
+
+            // handle last, trim padding
+            if (i + B > buf.length) {
+                const over = i + B - buf.length
+                return out.slice(0, outPos + C - over).join('')
+            }
+
+            outPos += C
         }
 
-        return new Uint8Array(out)
+        return out.join('')
     }
 
-    private arrToInt(arr: string[]): bigint {
-        let num = 0n
-        for(const ch of arr) {
-            const val = this._reverse.get(ch)
-            assert(val !== undefined, `reverse "${ch}"`)
-            num = num * this._base + val
-        }
-        return num
-    }
 
-    private intToStrPadded(val: bigint): string[] {
-        const { _alphabet, _base, _charsPerChunk } = this
-        const base = BigInt(_base)
-        const out = new Array<string>(_charsPerChunk)
+    decode(input: string | ArrayLike<string>): Uint8Array {
+        const arr = Array.from(input as any) as string[]
+        const len = arr.length
+        if (len === 0) return new Uint8Array()
 
-        for (let i = _charsPerChunk - 1; i >= 0; i--) {
-            out[i] = _alphabet[Number(val % base)]
-            val /= base
+        const B = this._bytesPerChunk
+        const C = this._charsPerChunk
+        const BASE = this._base
+        const REV = this._reverse
+        const LAST = this._alphabet[this._alphabet.length - 1]
+
+        const full  = Math.floor(len / C)
+        const rem   = len - full * C
+        const miss  = rem ? C - rem : 0
+        const outLen = full * B + (rem ? B - miss : 0)
+        const out = new Uint8Array(outLen)
+
+        let pos = 0
+        for (let i = 0; i < len; i += C) {
+            let num = 0n
+            const isLast = i + C > len
+
+            // build BigInt (pad with LAST on final chunk)
+            for (let j = 0; j < C; ++j) {
+                const ch = i + j < len ? arr[i + j] : LAST
+                const v = REV.get(ch)!
+                num = num * BASE + v
+            }
+
+            if (isLast) num >>= 8n * BigInt(miss)
+
+            const count = isLast ? B - miss : B
+            for (let b = count - 1; b >= 0; --b) {
+                out[pos++] = Number((num >> (8n * BigInt(b))) & 0xFFn)
+            }
         }
 
         return out

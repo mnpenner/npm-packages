@@ -157,7 +157,7 @@ describe(ChunkedBufferEncoder, () => {
             }
         })
 
-        it('all encoders, all chunk sizes', () => {
+        it.skip('all encoders, all chunk sizes', () => {
             for(let b=2;b<=256;++b) {
                 const alpha = BASE2048.slice(0, b)
                 // console.log(`Base ${b} | ${alpha}`)

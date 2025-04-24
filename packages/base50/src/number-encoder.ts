@@ -1,113 +1,108 @@
-import {bufToInt, leBufToBigInt} from './buffer-to-bigint'
+import {bufToInt, leBufToBigInt, u8ToInt} from './buffer-to-bigint'
 
 export class NumberEncoder {
-    private readonly alphabet: string[]
-    private readonly reverse: Map<string, bigint>
-    private readonly base: bigint
+    private readonly _alphabet: string[]
+    private readonly _reverse: Map<string, bigint>
+    private readonly _base: bigint
+    private readonly _log2Base: number
 
     constructor(alphabet: ArrayLike<string>) {
-        this.alphabet = Array.from(alphabet)
-        this.reverse = new Map(this.alphabet.map((ch, i) => [ch, BigInt(i)]))
-        this.base = BigInt(this.alphabet.length)
+        this._alphabet = Array.from(alphabet)
+        this._reverse = new Map(this._alphabet.map((ch, i) => [ch, BigInt(i)]))
+        this._base = BigInt(this._alphabet.length)
+        this._log2Base = Math.log2(alphabet.length)
     }
 
-    /**
-     * Parse a string encoded in base N, converting to base 10.
-     */
-    strToInt(str: ArrayLike<string>): bigint {
-        let num = 0n
-        for(const ch of Array.from(str)) {
-            num = num * this.base + this.reverse.get(ch)!
+    decodeInt(str: ArrayLike<string>): bigint {
+        // split into symbols (handles surrogate pairs)
+        const arr = typeof str === "string"
+            ? Array.from(str)
+            : Array.isArray(str)
+                ? str
+                : Array.from(str);
+
+        const base = this._base;
+        const rev  = this._reverse;
+        let num    = 0n;
+        let i      = 0;
+        let neg    = false;
+
+        // negative?
+        if (arr[0] === "-") {
+            neg = true;
+            i   = 1;
         }
-        return num
+
+        for (const len = arr.length; i < len; ++i) {
+            num = num * base + rev.get(arr[i])!;
+        }
+
+        return neg ? -num : num;
     }
 
-    /**
-     * @deprecated Not needed.
-     */
-    leStrToInt(str: ArrayLike<string>): bigint {
-        let num = 0n
-        let mul = 1n
-        for (const ch of Array.from(str)) {
-            num += this.reverse.get(ch)! * mul
-            mul *= this.base
-        }
-        return num
-    }
+    encodeInt(input: number | bigint): string {
+        let n = BigInt(input);
+        const A    = this._alphabet;
+        const base = this._base;
+        if (n === 0n) return A[0];
 
-    intToStr(num: number | bigint): string {
-        let n = BigInt(num)
-        if(n === 0n) return this.alphabet[0]
-        let result = ''
-        while(n > 0n) {
-            const rem = n % this.base
-            result = this.alphabet[Number(rem)] + result
-            n /= this.base
-        }
-        return result
-    }
-
-    strToBuf(str: ArrayLike<string>): Uint8Array {
-        if (!str?.length) {
-            return new Uint8Array()
+        let neg = false;
+        if (n < 0n) {
+            neg = true;
+            n   = -n;
         }
 
-        const arr = Array.from(str)
-        let leadingZeros = 0
-        while (leadingZeros < arr.length && arr[leadingZeros] === this.alphabet[0]) {
-            ++leadingZeros
-        }
-
-        let n = this.strToInt(arr)
-
-        const bytes: number[] = []
+        const digits: string[] = [];
         while (n > 0n) {
-            bytes.unshift(Number(n & 0xFFn))
-            n >>= 8n
+            digits.push(A[Number(n % base)]);
+            n /= base;
         }
+        digits.reverse();
 
-        const result = new Uint8Array(leadingZeros + bytes.length)
-        result.set(bytes, leadingZeros)
-        return result
+        const s = digits.join("");
+        return neg ? "-" + s : s;
     }
 
-    /**
-     * @deprecated Not sure this one makes sense anymore...
-     */
-    leStrToBuf(str: ArrayLike<string>): Uint8Array {
-        if (!str?.length) {
-            return new Uint8Array()
-        }
+    decodeBuf(str: ArrayLike<string>): Uint8Array {
+        if(!str?.length) return new Uint8Array()
 
+        // split into real characters (handles emojis, etc.)
         const arr = Array.from(str)
-        let trailingZeros = 0
-        while (
-            trailingZeros < arr.length &&
-            this.reverse.get(arr[arr.length - 1 - trailingZeros]) === 0n
-            ) {
-            ++trailingZeros
+        const len = arr.length
+        const zeroChar = this._alphabet[0]
+
+        // count leading-zero “digits”
+        let lz = 0
+        while(lz < len && arr[lz] === zeroChar) ++lz
+        if(lz === len) return new Uint8Array(lz)
+
+        // 1) build BigInt from base-N digits
+        let num = 0n
+        const base = this._base
+        const rev = this._reverse
+        for(let i = lz; i < len; ++i) {
+            num = num * base + rev.get(arr[i])!
         }
 
-        const payload = arr.slice(0, arr.length - trailingZeros)
-        if (payload.length === 0) {
-            return new Uint8Array(trailingZeros || 1)
+        // 2) determine byte count
+        let tmp = num
+        let bc = 0
+        while(tmp > 0n) {
+            tmp >>= 8n
+            ++bc
         }
 
-        let n = this.leStrToInt(payload)
-
-        const bytes: number[] = []
-        while (n > 0n) {
-            bytes.push(Number(n & 0xFFn))
-            n >>= 8n
+        // 3) allocate & fill (leading zeros auto-zero)
+        const out = new Uint8Array(lz + bc)
+        let idx = out.length - 1
+        while(num > 0n) {
+            out[idx--] = Number(num & 0xFFn)
+            num >>= 8n
         }
 
-        // trailing zeros go at the end in little-endian
-        while (trailingZeros-- > 0) {
-            bytes.push(0)
-        }
-
-        return new Uint8Array(bytes)
+        return out
     }
+
 
     /**
      * Calculate the maximum length of a string encoded in base N, given the
@@ -116,60 +111,53 @@ export class NumberEncoder {
      * @param byteLength
      */
     maxLength(byteLength: number): number {
-        const val = (1n<<BigInt(8*byteLength))-1n
-        return Array.from(this.intToStr(val)).length
+        // original would produce 1 for 0 bytes
+        if(byteLength === 0) return 1
+        return Math.ceil((8 * byteLength) / this._log2Base)
     }
 
 
-    bufToStr(arr: ArrayLike<number>): string {
-        if(!arr?.length) {
-            return ""
+    encodeBuf(arr: ArrayLike<number>): string {
+        const len = arr.length
+        if(len === 0) return ""
+
+        const A = this._alphabet
+        const BASE = this._base
+        const zero = A[0]
+
+        // ensure Uint8Array view
+        const u8 = arr instanceof Uint8Array
+            ? arr
+            : Uint8Array.from(arr as number[])
+
+        // count leading zero bytes
+        let lz = 0
+        while(lz < u8.length && u8[lz] === 0) ++lz
+        if(lz === u8.length) {
+            // all zeros
+            return zero.repeat(lz)
         }
 
-        let leadingZeros = 0
-        while(leadingZeros < arr.length && arr[leadingZeros] === 0) {
-            ++leadingZeros
+        // let bufToInt handle the rest
+        const rem = u8.subarray(lz)
+        let val = u8ToInt(rem)
+
+        // extract base-N digits LSB→MSB
+        const digits: string[] = []
+        while(val > 0n) {
+            const idx = Number(val % BASE)
+            digits.push(A[idx])
+            val /= BASE
         }
 
-        let prefix = this.alphabet[0].repeat(leadingZeros)
-
-        if(leadingZeros === arr.length) {
-            return prefix
+        // assemble output in one array
+        const outLen = lz + digits.length
+        const out = new Array<string>(outLen)
+        for(let i = 0; i < lz; ++i) out[i] = zero
+        for(let i = 0, d = digits.length; i < d; ++i) {
+            out[lz + i] = digits[d - 1 - i]
         }
 
-        const remainingBuffer = Uint8Array.from(arr).slice(leadingZeros)
-        const num = bufToInt(remainingBuffer)
-
-        const encodedPart = this.intToStr(num)
-
-        return prefix + encodedPart
+        return out.join("")
     }
-
-    /**
-     * @deprecated Not sure this one makes sense anymore...
-     */
-    leBufToStr(arr: ArrayLike<number>): string {
-        if (!arr?.length) {
-            return ""
-        }
-
-        let trailingZeros = 0
-        while (trailingZeros < arr.length && arr[arr.length - 1 - trailingZeros] === 0) {
-            ++trailingZeros
-        }
-
-        let prefix = this.alphabet[0].repeat(trailingZeros)
-
-        if (trailingZeros === arr.length) {
-            return prefix
-        }
-
-        const remainingBuffer = Uint8Array.from(arr).slice(0, arr.length - trailingZeros)
-        const num = leBufToBigInt(remainingBuffer)
-
-        const encodedPart = this.intToStr(num)
-
-        return prefix + encodedPart
-    }
-
 }

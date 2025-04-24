@@ -14,7 +14,7 @@ summary(() => {
         const buf = randomBytes(len)
 
         group(`len=${len}`, () => {
-            bench('numeric', () => numeric.bufToStr(buf))
+            bench('numeric', () => numeric.encodeBuf(buf))
             bench('chunked', () => chunked.encode(buf))
         })
     }
