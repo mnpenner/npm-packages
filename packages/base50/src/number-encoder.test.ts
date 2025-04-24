@@ -2,9 +2,29 @@
 import {describe, expect, it, test} from 'bun:test'
 import {NumberEncoder} from './number-encoder'
 import {randomBytes, randomInt, getRandomValues} from 'crypto'
+import {u8} from './uint8_util'
 
-function u8(...args: Array<number | number[]>) {
-    return new Uint8Array(args.flat(1))
+
+
+function getRandomFloat() {
+    const randomBytes = crypto.getRandomValues(new Uint32Array(1));
+    return randomBytes[0] / (Math.pow(2, 32));
+}
+
+function randomBigIntBetween(min: bigint, max: bigint): bigint {
+    if (min > max) throw new RangeError("min > max");
+    const range = max - min + 1n;
+    const bits  = range.toString(2).length;
+    const bytes = Math.ceil(bits / 8);
+    const mask  = (1n << BigInt(bytes * 8)) - 1n;
+
+    let rnd: bigint;
+    do {
+        const buf = randomBytes(bytes);
+        rnd = BigInt("0x" + buf.toString("hex")) & mask;
+    } while (rnd >= range);
+
+    return rnd + min;
 }
 
 describe(NumberEncoder, () => {
@@ -17,7 +37,7 @@ describe(NumberEncoder, () => {
     const base50encoder = new NumberEncoder('0123456789bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ')
     const hexEncoder = new NumberEncoder('0123456789ABCDEF')
     const base64Encoder = new NumberEncoder('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/')
-    const base64urlEncoder = new NumberEncoder('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_')
+    const base64urlEncoder = new NumberEncoder('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_','~',':')
 
     const BASE36_ALPHA = '0123456789abcdefghijklmnopqrstuvwxyz'
 
@@ -47,6 +67,19 @@ describe(NumberEncoder, () => {
                     expect(encoder.decodeInt(i.toString(b))).toBe(i)
                 }
             }
+        })
+    })
+
+    describe('floats', () => {
+        it('encodes', () => {
+            expect(base2encoder.encodeFloat(0.5)).toBe('0.1')
+            expect(base2encoder.encodeFloat(-2.5)).toBe('-10.1')
+            expect(base64urlEncoder.encodeFloat(-2.5)).toBe("~C:g")
+        })
+        it('decodes', () => {
+            expect(base2encoder.decodeFloat('0.1')).toBe(0.5)
+            expect(base2encoder.decodeFloat('-10.1')).toBe(-2.5)
+            expect(base64urlEncoder.decodeFloat("~C:g")).toBe(-2.5)
         })
     })
 
@@ -151,10 +184,21 @@ describe(NumberEncoder, () => {
         test('random ints', () => {
             for(const encoder of [base50encoder, base2encoder, emojiEncoder, hexEncoder, base64Encoder, base64urlEncoder]) {
                 for(let i = 0; i < NUM_TESTS; i++) {
-                    const num = BigInt(randomInt(-140737488355327, 140737488355328))
+                    const num = randomBigIntBetween(BigInt(Number.MIN_SAFE_INTEGER) * 2n,BigInt(Number.MAX_SAFE_INTEGER) * 2n)
                     const encoded = encoder.encodeInt(num)
                     const decoded = encoder.decodeInt(encoded)
-                    expect(decoded).toEqual(num)
+                    expect(decoded,`${num}`).toEqual(num)
+                }
+            }
+        })
+
+        test('random floats', () => {
+            for(const encoder of [base50encoder, base2encoder, emojiEncoder, hexEncoder, base64Encoder, base64urlEncoder]) {
+                for(let i = 0; i < NUM_TESTS; i++) {
+                    const num = getRandomFloat()
+                    const encoded = encoder.encodeFloat(num)
+                    const decoded = encoder.decodeFloat(encoded)
+                    expect(decoded).toBeCloseTo(num, 9)
                 }
             }
         })

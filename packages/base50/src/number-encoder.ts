@@ -1,16 +1,24 @@
-import {bufToInt, leBufToBigInt, u8ToInt} from './buffer-to-bigint'
+import {u8ToInt} from './buffer-to-bigint'
 
 export class NumberEncoder {
     private readonly _alphabet: string[]
     private readonly _reverse: Map<string, bigint>
     private readonly _base: bigint
     private readonly _log2Base: number
+    private readonly _floatPrecision: number
+    private readonly _negSign: string
+    private readonly _decSep: string
 
-    constructor(alphabet: ArrayLike<string>) {
+
+
+    constructor(alphabet: ArrayLike<string>, negativeSign='-', decimalSeparator='.') {
         this._alphabet = Array.from(alphabet)
         this._reverse = new Map(this._alphabet.map((ch, i) => [ch, BigInt(i)]))
         this._base = BigInt(this._alphabet.length)
         this._log2Base = Math.log2(alphabet.length)
+        this._floatPrecision = Math.ceil(53 / this._log2Base)
+        this._negSign = negativeSign
+        this._decSep = decimalSeparator
     }
 
     decodeInt(str: ArrayLike<string>): bigint {
@@ -28,7 +36,7 @@ export class NumberEncoder {
         let neg    = false;
 
         // negative?
-        if (arr[0] === "-") {
+        if (arr[0] === this._negSign) {
             neg = true;
             i   = 1;
         }
@@ -60,8 +68,64 @@ export class NumberEncoder {
         digits.reverse();
 
         const s = digits.join("");
-        return neg ? "-" + s : s;
+        return neg ? this._negSign + s : s;
     }
+
+    /**
+     * Encode a JS number (float) into your base-N alphabet.
+     * @param x any finite number
+     */
+    encodeFloat(x: number): string {
+        if (!Number.isFinite(x)) throw new Error("Non-finite")
+        const sign = x < 0 ? this._negSign : ""
+        x = Math.abs(x)
+        const i     = Math.trunc(x)
+        const f     = x - i
+        const intStr = this.encodeInt(i)
+        if (f === 0) return sign + intStr
+
+        const A     = this._alphabet
+        const baseN = Number(this._base)
+        let rem     = f
+        const digs: string[] = []
+        for (let k = 0; k < this._floatPrecision; ++k) {
+            rem *= baseN
+            const d = Math.floor(rem)
+            digs.push(A[d])
+            rem -= d
+            if (rem === 0) break
+        }
+
+        return sign + intStr + this._decSep + digs.join("")
+    }
+
+
+    /**
+     * Decode a base-N float string back to JS number.
+     */
+    decodeFloat(s: string): number {
+        const arr = Array.from(s)              // preserves emojis/etc.
+        let sign = 1
+        if (arr[0] === this._negSign /*|| arr[0] === "+"*/) {
+            sign = arr.shift() === this._negSign ? -1 : 1
+        }
+
+        const dot = arr.indexOf(this._decSep)
+        const intArr  = dot >= 0 ? arr.slice(0, dot)       : arr
+        const fracArr = dot >= 0 ? arr.slice(dot + 1)      : []
+
+        const iBig = this.decodeInt(intArr)  // your optimized decodeInt
+        let fracN = 0
+        let denom = 1
+        const baseNum = Number(this._base)
+        for (const ch of fracArr) {
+            fracN = fracN * baseNum + Number(this._reverse.get(ch)!)
+            denom *= baseNum
+        }
+
+        return sign * (Number(iBig) + (denom > 1 ? fracN / denom : 0))
+    }
+
 
     decodeBuf(str: ArrayLike<string>): Uint8Array {
         if(!str?.length) return new Uint8Array()
