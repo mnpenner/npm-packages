@@ -1,10 +1,22 @@
 #!bun test
 import {describe, expect, it} from 'bun:test'
 import {ChunkedBufferEncoder} from './chunked-buffer-encoder'
-import {ASCII85_RFC1924, BASE64STD} from './alphabets'
+import {ASCII85, ASCII85_RFC1924, BASE64STD} from './alphabets'
 import {randomBytes, randomInt} from 'crypto'
 import {randomUint8Array, u8, uint8ArrayToBase64, uint8ArrayToHex} from './uint8_util'
 import {NumberEncoder} from './number-encoder'
+
+const BASE2048 = (() => {
+    const tmp: string[] = []
+    let cp = 0
+    do {
+        const ch = String.fromCodePoint(cp++)
+        if(!/\p{C}|\p{Z}/u.test(ch)) {
+            tmp.push(ch)
+        }
+    } while(tmp.length < 2048)
+    return tmp.join('')
+})()
 
 
 describe(ChunkedBufferEncoder, () => {
@@ -13,13 +25,14 @@ describe(ChunkedBufferEncoder, () => {
     const MAX_BYTES = 17
 
     const base64Encoder = new ChunkedBufferEncoder(BASE64STD, 3)
-    const ascii85Encoder = new ChunkedBufferEncoder(ASCII85_RFC1924, 4, 5)
+    const ascii85Encoder = new ChunkedBufferEncoder(ASCII85, 4, 5)
     const base3encoder = new ChunkedBufferEncoder('012', 12, 61)
     const base7encoder = new ChunkedBufferEncoder('0123456', 7, 20)
     const emojiEncoder = new ChunkedBufferEncoder('🍓🐋🍃', 12, 61)
+    const base2048hard = new ChunkedBufferEncoder(BASE2048, 11)
 
     describe(ChunkedBufferEncoder.prototype.encode, () => {
-        it('encodes', () => {
+        it('encodes base64', () => {
             expect(base64Encoder.encode(Buffer.from("Many hands make light work."))).toBe('TWFueSBoYW5kcyBtYWtlIGxpZ2h0IHdvcmsu')
             expect(base64Encoder.encode([0xFF, 0xFF, 0xFF])).toBe('////')
             expect(base64Encoder.encode([0xFB])).toBe('+w')  // Buffer.from([0xFB]).toString('base64')
@@ -32,7 +45,7 @@ describe(ChunkedBufferEncoder, () => {
             expect(base64Encoder.encode([])).toBe('')
         })
 
-        it('matches native impl', () => {
+        it('base64 matches native impl', () => {
             for(let i = 0; i < NUM_TESTS; i++) {
                 const buf = randomUint8Array(MIN_BYTES, MAX_BYTES)
                 // const expected = buf.toString('base64').replace(/={1,2}$/,'')
@@ -41,37 +54,41 @@ describe(ChunkedBufferEncoder, () => {
             }
         })
 
-        it.skip('works for base 3', () => {
-            // expect(base3encoder.encode([1,0,0,0,0,0,0,0,0,0,0,0])).toBe("1010201211121002122102111212120000120002122210020100100202220")
-            expect(base3encoder.encode(Array(12).fill(0xFF))).toBe('2'.repeat(61))
-            expect(base3encoder.encode([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0])).toBe("1010112111220012121202100101002120210211100210211220000122010")
-            expect(base3encoder.encode([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1])).toBe("101011211122001212120210010100212021021110021021122000012201")
-            expect(base3encoder.encode([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])).toBe("101020121112100212210211121212000012000212221002010010020222")
-            // FIXME: how can we know how many trailing 0s there's supposed to be?
-            expect(base3encoder.encode([1, 0, 0, 0, 0, 0, 0, 0, 0, 0])).toBe("10102012111210021221021112121200001200021222100201001002022")
-            // expect(base3encoder.encode(Array(12).fill(0))).toBe('0'.repeat(61))
-            // expect(base3encoder.encode([0,0,0,0,0,0,0,0,0,0,0,1])).toBe('0000000000000000000000000000000000000000000000000000000000001')
-            // expect(base3encoder.encode([0,0,0,0,0,0,0,0,0,0,0,2])).toBe('0000000000000000000000000000000000000000000000000000000000002')
-            // expect(base3encoder.encode([0,0,0,0,0,0,0,0,0,0,0,3])).toBe('0000000000000000000000000000000000000000000000000000000000010')
-            // expect(base3encoder.encode([0,0,0,0,0,0,0,0,0,0,0,0xFF]),"256 = 1*3**5 + 1*3**2 + 1*3**1 +
-            // 0*3**0").toBe('0000000000000000000000000000000000000000000000000000000100110')
-            // expect(base3encoder.encode([0,0,0,0,0,0,0,0,0,0,1,0]),"256 = 1*3**5 + 1*3**2 + 1*3**1 +
-            // 1*3**0").toBe('0000000000000000000000000000000000000000000000000000000100111')
-            // expect(base3encoder.encode([0,0,0,0,0,0,0,0,0,0,1,1]),"256 = 1*3**5 + 1*3**2 + 1*3**1 +
-            // 1*3**0").toBe('0000000000000000000000000000000000000000000000000000000100112')
-            // expect(base3encoder.encode([0,0,0,0,0,0,0,0,0,0,1])).toBe('0000000000000000000000000000000000000000000000000000000100111')
-            // expect(base3encoder.decode('1111111111111111111111111111111111111111111111111111111111111')).toEqual(u8(Array(12).fill(0xFF))) expect(base3encoder.encode([0,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF])).toBe('1111111111111111111111111111111111111111111111111111111111111')
+        it('encodes base 3', () => {
+            expect(base3encoder.encode(Array(12).fill(0))).toBe('0'.repeat(61))
+
+            expect(base3encoder.encode([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1])).toBe("0000000000000000000000000000000000000000000000000000000000001")
+            expect(base3encoder.encode([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2])).toBe("0000000000000000000000000000000000000000000000000000000000002")
+            expect(base3encoder.encode([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3])).toBe("0000000000000000000000000000000000000000000000000000000000010")
+            expect(base3encoder.encode([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0])).toBe("0000000000000000000000000000000000000000000000000000000100111")
+            expect(base3encoder.encode([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1])).toBe("000000000000000000000000000000000000000000000000000000010011")
+
+            expect(base3encoder.encode(Array(12).fill(0xFF))).toBe("1212110111002210101020122121220102012011122012011002222201100")
+            expect(base3encoder.encode([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])).toBe("000001202220022000020001111111010220202102122210111010011102")
+            expect(base3encoder.encode([1, 0, 0, 0, 0, 0, 0, 0, 0, 0])).toBe("00000120222002200002000111111101022020210212221011101001110")
+
+            expect(base3encoder.encode([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF]), "256 = 1*3**5 + 1*3**2 + 1*3**1 + 0*3**0").toBe('0000000000000000000000000000000000000000000000000000000100110')
+            expect(base3encoder.encode([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0]), "256 = 1*3**5 + 1*3**2 + 1*3**1 + 1*3**0").toBe('0000000000000000000000000000000000000000000000000000000100111')
+            expect(base3encoder.encode([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1]), "256 = 1*3**5 + 1*3**2 + 1*3**1 + 1*3**0").toBe('0000000000000000000000000000000000000000000000000000000100112')
         })
 
-        it.skip('works with multi-byte chars', () => {
-            // How many strawberries should this be?!
+        it('works with multi-byte chars', () => {
             expect(emojiEncoder.encode([0])).toBe("🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓")
-            expect(emojiEncoder.encode([1])).toBe("🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓")
+            expect(emojiEncoder.encode([1])).toBe("🍓🍓🍓🍓🍓🐋🍃🍓🍃🍃🍃🍓🍓🍃🍃🍓🍓🍓🍓🍃🍓🍓🍓🐋🐋🐋🐋🐋🐋🐋🍓🐋🍓🍃🍃🍓🍃🍓🍃🐋🍓🍃🐋🍃🍃🍃🐋🍓🐋🐋")
+        })
+
+        it('encodes ascii85', () => {
+            // https://en.wikipedia.org/wiki/Ascii85#Example_for_Ascii85
+            expect(ascii85Encoder.encode(Buffer.from("Man is distinguished, not only by his reason, but by this singular passion from other animals, which is a lust of the mind, that by a perseverance of delight in the continued and indefatigable generation of knowledge, exceeds the short vehemence of any carnal pleasure."))).toBe('9jqo^BlbD-BleB1DJ+*+F(f,q/0JhKF<GL>Cj@.4Gp$d7F!,L7@<6@)/0JDEF<G%<+EV:2F!,O<' +
+                'DJ+*.@<*K0@<6L(Df-\\0Ec5e;DffZ(EZee.Bl.9pF"AGXBPCsi+DGm>@3BB/F*&OCAfu2/AKYi(' +
+                'DIb:@FD,*)+C]U=@3BN#EcYf8ATD3s@q?d$AftVqCh[NqF<G:8+EV:.+Cf>-FD5W8ARlolDIal(' +
+                'DId<j@<?3r@:F%a+D58\'ATD4$Bl@l3De:,-DJs`8ARoFb/0JMK@qB4^F!,R<AKZ&-DfTqBG%G>u' +
+                'D.RTpAKYo\'+CT/5+Cei#DII?(E,9)oF*2M7/c')
         })
     })
 
     describe(ChunkedBufferEncoder.prototype.decode, () => {
-        it('decodes', () => {
+        it('decodes base64', () => {
             expect(base64Encoder.decode('TWFueSBoYW5kcyBtYWtlIGxpZ2h0IHdvcmsu')).toEqual(Buffer.from("Many hands make light work."))
             expect(base64Encoder.decode('////')).toEqual(u8(0xFF, 0xFF, 0xFF))
             expect(base64Encoder.decode('D7')).toEqual(u8(0x0F))
@@ -83,6 +100,18 @@ describe(ChunkedBufferEncoder, () => {
             expect(base64Encoder.decode('AAAAAA')).toEqual(u8([0, 0, 0, 0]))
         })
 
+        it('decodes base 3', () => {
+            expect(base3encoder.decode('0'.repeat(61))).toEqual(u8(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+            expect(base3encoder.decode('0000000000000000000000000000000000000000000000000000000000001')).toEqual(u8(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1))
+            expect(base3encoder.decode('0000000000000000000000000000000000000000000000000000000000010')).toEqual(u8(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3))
+            expect(base3encoder.decode('1'.repeat(61))).toEqual(u8(205, 117, 183, 102, 54, 100, 123, 253, 220, 82, 240, 137))
+        })
+
+        it('works with multi-byte chars', () => {
+            expect(emojiEncoder.decode("🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓")).toEqual(u8(0))
+            expect(emojiEncoder.decode("🍓🍓🍓🍓🍓🐋🍃🍓🍃🍃🍃🍓🍓🍃🍃🍓🍓🍓🍓🍃🍓🍓🍓🐋🐋🐋🐋🐋🐋🐋🍓🐋🍓🍃🍃🍓🍃🍓🍃🐋🍓🍃🐋🍃🍃🍃🐋🍓🐋🐋")).toEqual(u8(1))
+        })
+
         it('matches native impl', () => {
             for(let i = 0; i < NUM_TESTS; i++) {
                 const buf = randomUint8Array(MIN_BYTES, MAX_BYTES)
@@ -90,26 +119,33 @@ describe(ChunkedBufferEncoder, () => {
                 expect(base64Encoder.decode(encoded), `Uint8Array(${buf.length}){${uint8ArrayToHex(buf)}}  Encoded: ${encoded}`).toEqual(buf)
             }
         })
+
+        it('decodes ascii85', () => {
+            // https://en.wikipedia.org/wiki/Ascii85#Example_for_Ascii85
+            expect(ascii85Encoder.decode('9jqo^BlbD-BleB1DJ+*+F(f,q/0JhKF<GL>Cj@.4Gp$d7F!,L7@<6@)/0JDEF<G%<+EV:2F!,O<' +
+                'DJ+*.@<*K0@<6L(Df-\\0Ec5e;DffZ(EZee.Bl.9pF"AGXBPCsi+DGm>@3BB/F*&OCAfu2/AKYi(' +
+                'DIb:@FD,*)+C]U=@3BN#EcYf8ATD3s@q?d$AftVqCh[NqF<G:8+EV:.+Cf>-FD5W8ARlolDIal(' +
+                'DId<j@<?3r@:F%a+D58\'ATD4$Bl@l3De:,-DJs`8ARoFb/0JMK@qB4^F!,R<AKZ&-DfTqBG%G>u' +
+                'D.RTpAKYo\'+CT/5+Cei#DII?(E,9)oF*2M7/c')).toEqual(Buffer.from("Man is distinguished, not only by his reason, but by this singular passion from other animals, which is a lust of the mind, that by a perseverance of delight in the continued and indefatigable generation of knowledge, exceeds the short vehemence of any carnal pleasure."))
+        })
     })
 
     describe('round trip', () => {
-        it('basic', () => {
-            for(const encoder of [base64Encoder, base3encoder, base7encoder, emojiEncoder]) {
-                // console.log(`Testing base ${encoder.base} (${encoder.alphabet.join('')}) ...`)
+        it.only('basic', () => {
+            // for(const encoder of [base64Encoder, base3encoder, base7encoder, emojiEncoder, ascii85Encoder, base2048hard]) {
+            for(const encoder of [ base2048hard]) {
                 for(const buf of [u8(1), u8(0, 1), u8(1, 0)]) {
-                    // console.log(`Buf: ${uint8ArrayToHex(buf)}`)
                     const encoded = encoder.encode(buf)
-                    // console.log(`Encoded: ${encoded}`)
+                    console.log('encoded', buf, uint8ArrayToHex(buf), '>', encoded, '<')
                     const decoded = encoder.decode(encoded)
-                    // console.log(`Decoded: ${uint8ArrayToHex(decoded)}`)
-                    expect(decoded, `Buf: ${uint8ArrayToHex(buf)} Encoded: ${encoded}`).toEqual(buf)
+                    console.log('decoded', decoded)
+                    expect(decoded, `Base ${encoder.base} Buf: ${uint8ArrayToHex(buf)} Encoded: ${encoded}`).toEqual(buf)
                 }
             }
         })
 
         it('random bytes', () => {
-            for(const encoder of [base64Encoder, base3encoder, base7encoder, emojiEncoder]) {
-                // console.log(`Testing base ${encoder.base} (${encoder.alphabet.join('')}) ...`)
+            for(const encoder of [base64Encoder, base3encoder, base7encoder, emojiEncoder, ascii85Encoder, base2048hard]) {
                 for(let i = 0; i < NUM_TESTS; i++) {
                     const buf = randomUint8Array(MIN_BYTES, MAX_BYTES)
                     const encoded = encoder.encode(buf)

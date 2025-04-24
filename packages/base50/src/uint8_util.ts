@@ -12,6 +12,17 @@ export function randomUint8Array(minLen: number, maxLen: number): Uint8Array {
     return getRandomValues(new Uint8Array(randomInt(minLen, maxLen + 1)))
 }
 
-export function u8(...args: Array<number | number[]>): Uint8Array {
-    return new Uint8Array(args.flat(1))
+export function u8(str: string): Uint8Array
+export function u8(arr: number[]): Uint8Array
+export function u8(...values: number[]): Uint8Array
+export function u8(...args: any[]): Uint8Array {
+    if(args.length === 1) {
+        if(typeof args[0] === 'string') {
+            return new TextEncoder().encode(args[0])
+        }
+        if(Array.isArray(args[0])) {
+            return new Uint8Array(args[0])
+        }
+    }
+    return new Uint8Array(args as number[])
 }
