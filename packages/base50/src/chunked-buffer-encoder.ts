@@ -132,7 +132,7 @@ export class ChunkedBufferEncoder {
         const buf = Uint8Array.from(arr)
         let i = 0
 
-        let result = ''
+        let result: string[] = []
 
 
 
@@ -140,16 +140,16 @@ export class ChunkedBufferEncoder {
             const chunk = buf.slice(i, i + this._bytesPerChunk)
             let val = bufToInt(padUint8ArrayRight(chunk, this._bytesPerChunk))
 
-            result += this.intToStrPadded2(val)
+            result.push(...this.intToStrPadded2(val))
             // console.log(chunk,val,result,padUint8ArrayRight(chunk, this.bytesPerChunk))
             if(chunk.length < this._bytesPerChunk) {
                 const missingBytes = this._bytesPerChunk - chunk.length
-                return result.slice(0, -missingBytes)
+                return result.slice(0, -missingBytes).join('')
             }
             i += this._bytesPerChunk
         } while(i < buf.length)
 
-        return result
+        return result.join('')
     }
 
     private padStr(chunk: string[]): string[] {
@@ -169,6 +169,7 @@ export class ChunkedBufferEncoder {
         const out: number[] = []
         let i = 0
         const arr = toArray(str)
+        // console.log('got arr',arr)
         while (i < arr.length) {
             // const chunkLen = Math.min(this.charsPerChunk, arr.length - i)
             // const chunk = arr.slice(i, i + chunkLen).join('')
@@ -236,7 +237,7 @@ export class ChunkedBufferEncoder {
         return padArrayRight(this.intToArrUnpadded(num), this._charsPerChunk, this._alphabet[0]).join('')
     }
 
-    private intToStrPadded2(val: bigint): string {
+    private intToStrPadded2(val: bigint): string[] {
         const digits: string[] = []
         // 1) get LSB-first digits
         do {
@@ -249,7 +250,7 @@ export class ChunkedBufferEncoder {
         }
         // 3) reverse into MSB-first
         digits.reverse()
-        return digits.join('')
+        return digits
     }
 
 
