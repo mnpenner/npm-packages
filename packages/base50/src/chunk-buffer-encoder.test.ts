@@ -20,7 +20,7 @@ const BASE2048 = (() => {
 
 
 describe(ChunkedBufferEncoder, () => {
-    const NUM_TESTS = 10000
+    const NUM_TESTS = 10_000
     const MIN_BYTES = 1
     const MAX_BYTES = 17
 
@@ -29,7 +29,7 @@ describe(ChunkedBufferEncoder, () => {
     const base3encoder = new ChunkedBufferEncoder('012', 12, 61)
     const base7encoder = new ChunkedBufferEncoder('0123456', 7, 20)
     const emojiEncoder = new ChunkedBufferEncoder('🍓🐋🍃', 12, 61)
-    const base2048hard = new ChunkedBufferEncoder(BASE2048, 11)
+    // const base2048hard = new ChunkedBufferEncoder(BASE2048, 11)
 
     describe(ChunkedBufferEncoder.prototype.encode, () => {
         it('encodes base64', () => {
@@ -131,26 +131,46 @@ describe(ChunkedBufferEncoder, () => {
     })
 
     describe('round trip', () => {
-        it.only('basic', () => {
-            // for(const encoder of [base64Encoder, base3encoder, base7encoder, emojiEncoder, ascii85Encoder, base2048hard]) {
-            for(const encoder of [ base2048hard]) {
-                for(const buf of [u8(1), u8(0, 1), u8(1, 0)]) {
-                    const encoded = encoder.encode(buf)
-                    console.log('encoded', buf, uint8ArrayToHex(buf), '>', encoded, '<')
-                    const decoded = encoder.decode(encoded)
-                    console.log('decoded', decoded)
-                    expect(decoded, `Base ${encoder.base} Buf: ${uint8ArrayToHex(buf)} Encoded: ${encoded}`).toEqual(buf)
+        it('basic', () => {
+                for(const encoder of [base64Encoder, base3encoder, base7encoder, emojiEncoder, ascii85Encoder]) {
+                    // console.log('encoder', encoder.base)
+                    for(const buf of [u8(1), u8(0, 1), u8(1, 0)]) {
+                        const encoded = encoder.encode(buf)
+                        // console.log('encoded', buf, uint8ArrayToHex(buf), `"${encoded}"
+                        // (${Array.from(encoded).length} chars)`)
+                        const decoded = encoder.decode(encoded)
+                        // console.log('decoded', decoded)
+                        expect(decoded, `Base ${encoder.base} Buf: ${uint8ArrayToHex(buf)} Encoded: "${encoded}"`).toEqual(buf)
+                    }
                 }
             }
-        })
+        )
 
         it('random bytes', () => {
-            for(const encoder of [base64Encoder, base3encoder, base7encoder, emojiEncoder, ascii85Encoder, base2048hard]) {
+            for(const encoder of [base64Encoder, base3encoder, base7encoder, emojiEncoder, ascii85Encoder]) {
                 for(let i = 0; i < NUM_TESTS; i++) {
                     const buf = randomUint8Array(MIN_BYTES, MAX_BYTES)
                     const encoded = encoder.encode(buf)
                     const decoded = encoder.decode(encoded)
                     expect(decoded, `Base ${encoder.base} Buf: ${uint8ArrayToHex(buf)} Encoded: ${encoded}`).toEqual(buf)
+                }
+            }
+        })
+
+        it('all encoders, all chunk sizes', () => {
+            for(let b=2;b<=256;++b) {
+                const alpha = BASE2048.slice(0, b)
+                // console.log(`Base ${b} | ${alpha}`)
+                for(let c=2;c<=16;++c) {
+                    const encoder = new ChunkedBufferEncoder(alpha, c)
+                    // console.log(`  ${encoder.bytesPerChunk} bytes <=> ${encoder.charsPerChunk} chars`)
+
+                    for(let i = 0; i < 100; i++) {
+                        const buf = randomUint8Array(1, 17)
+                        const encoded = encoder.encode(buf)
+                        const decoded = encoder.decode(encoded)
+                        expect(decoded, `Base ${encoder.base} Buf: ${uint8ArrayToHex(buf)} Encoded: ${encoded}`).toEqual(buf)
+                    }
                 }
             }
         })

@@ -56,6 +56,7 @@ export class ChunkedBufferEncoder {
             this._charsPerChunk = charsPerChunk
             assert(this._alphabet.length ** this._charsPerChunk >= 2 ** (8 * bytesPerChunk))
         }
+        assert(this._charsPerChunk >= this._bytesPerChunk, `Compression is currently not supported. bytesPerChunk=${bytesPerChunk}, charsPerChunk=${this._charsPerChunk}`)
     }
 
     get base() {
@@ -64,6 +65,14 @@ export class ChunkedBufferEncoder {
 
     get alphabet() {
         return this._alphabet
+    }
+
+    get bytesPerChunk() {
+        return this._bytesPerChunk
+    }
+
+    get charsPerChunk() {
+        return this._charsPerChunk
     }
 
     encode(arr: string | ArrayLike<number>): string {
@@ -79,9 +88,10 @@ export class ChunkedBufferEncoder {
         do {
             const chunk = buf.slice(i, i + this._bytesPerChunk)
             let val = bufToInt(padUint8ArrayRight(chunk, this._bytesPerChunk))
-            result.push(...this.intToStrPadded2(val))
+            result.push(...this.intToStrPadded(val))
             if(chunk.length < this._bytesPerChunk) {
                 const missingBytes = this._bytesPerChunk - chunk.length
+                // console.log(this._charsPerChunk,this._bytesPerChunk,missingBytes,result)
                 return result.slice(0, -missingBytes).join('')
             }
             i += this._bytesPerChunk
@@ -131,20 +141,17 @@ export class ChunkedBufferEncoder {
         return num
     }
 
-    private intToStrPadded2(val: bigint): string[] {
-        const digits: string[] = []
-        // 1) get LSB-first digits
-        do {
-            digits.push(this._alphabet[Number(val % BigInt(this._base))])
-            val /= BigInt(this._base)
-        } while(val > 0n)
-        // 2) pad in LSB-first order
-        while(digits.length < this._charsPerChunk) {
-            digits.push(this._alphabet[0])
+    private intToStrPadded(val: bigint): string[] {
+        const { _alphabet, _base, _charsPerChunk } = this
+        const base = BigInt(_base)
+        const out = new Array<string>(_charsPerChunk)
+
+        for (let i = _charsPerChunk - 1; i >= 0; i--) {
+            out[i] = _alphabet[Number(val % base)]
+            val /= base
         }
-        // 3) reverse into MSB-first
-        digits.reverse()
-        return digits
+
+        return out
     }
 }
 
