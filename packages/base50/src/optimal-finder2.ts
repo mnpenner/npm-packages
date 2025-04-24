@@ -38,12 +38,15 @@ function findOptimal(alphaSize: number): Record<string, number> {
         const wasted = bits - rounded
         // console.log(alphaSize, i, bits, rounded, bytes, wasted)
 
+        const overhead = (c/bytes-1)*100
+
         let ret = {
             base: alphaSize,
             chars: c,
             maxVal,
             bytes,
             wasted,
+            overhead,
         }
 
         if(wasted === 0) {
@@ -67,7 +70,7 @@ async function main(argv: string[]): Promise<number | void> {
 
     let results = []
 
-    for(let i = 2; i <= 2048; ++i) {
+    for(let i = 2; i <= 256; ++i) {
         results.push(findOptimal(i))
         // console.log(i, findOptimal(i))
     }
@@ -76,7 +79,7 @@ async function main(argv: string[]): Promise<number | void> {
 
     for(const [i, r] of results.entries()) {
         let maxVal = r.maxVal > 999_999_999 ? '2^'+formatter.format(log2(r.maxVal)) : formatter.format(r.maxVal)
-        console.log(`${String(i + 1).padStart(3, ' ')}. Base ${String(r.base).padEnd(3, ' ')} : ${r.bytes} bytes <-> ${r.chars} chars; MaxVal=${maxVal}, WastedBits=${formatter.format(r.wasted)}`)
+        console.log(`${String(i + 1).padStart(3, ' ')}. Base ${String(r.base).padEnd(3, ' ')} : ${r.bytes} bytes <-> ${r.chars} chars; MaxVal=${maxVal}, WastedBits=${formatter.format(r.wasted)}, Overhead=${formatter.format(r.overhead)}%`)
     }
 }
 

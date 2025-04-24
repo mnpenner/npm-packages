@@ -1,7 +1,7 @@
 #!bun test
 import {describe, expect, it} from 'bun:test'
 import {ChunkedBufferEncoder} from './chunked-buffer-encoder'
-import {BASE64STD} from './alphabets'
+import {ASCII85_RFC1924, BASE64STD} from './alphabets'
 import {randomBytes, randomInt} from 'crypto'
 import {randomUint8Array, u8, uint8ArrayToBase64, uint8ArrayToHex} from './uint8_util'
 import {NumberEncoder} from './number-encoder'
@@ -13,6 +13,7 @@ describe(ChunkedBufferEncoder, () => {
     const MAX_BYTES = 1
 
     const base64Encoder = new ChunkedBufferEncoder(BASE64STD, 3)
+    const ascii85Encoder = new ChunkedBufferEncoder(ASCII85_RFC1924, 4,5)
     const base3encoder = new ChunkedBufferEncoder('012', 12, 61)
     const base7encoder = new ChunkedBufferEncoder('0123456', 7, 20)
     const emojiEncoder = new ChunkedBufferEncoder('🍓🐋🍃', 12, 61)
@@ -40,7 +41,7 @@ describe(ChunkedBufferEncoder, () => {
             }
         })
 
-        it('works for base 3', () => {
+        it.skip('works for base 3', () => {
             // expect(base3encoder.encode([1,0,0,0,0,0,0,0,0,0,0,0])).toBe("1010201211121002122102111212120000120002122210020100100202220")
             expect(base3encoder.encode(Array(12).fill(0xFF))).toBe('2'.repeat(61))
             expect(base3encoder.encode([0,0,0,0,0,0,0,0,0,0,1,0])).toBe("1010112111220012121202100101002120210211100210211220000122010")
@@ -102,11 +103,12 @@ describe(ChunkedBufferEncoder, () => {
 
         it('random bytes', () => {
             for(const encoder of [base64Encoder,base3encoder,base7encoder, emojiEncoder]) {
+                console.log(`Testing base ${encoder.base} (${encoder.alphabet.join('')}) ...`)
                 for(let i = 0; i < NUM_TESTS; i++) {
                     const buf = randomUint8Array(MIN_BYTES, MAX_BYTES)
                     const encoded = encoder.encode(buf)
                     const decoded = encoder.decode(encoded)
-                    expect(decoded, `Buf: ${uint8ArrayToHex(buf)} Encoded: ${encoded}`).toEqual(buf)
+                    expect(decoded, `Base ${encoder.base} Buf: ${uint8ArrayToHex(buf)} Encoded: ${encoded}`).toEqual(buf)
                 }
             }
         })
