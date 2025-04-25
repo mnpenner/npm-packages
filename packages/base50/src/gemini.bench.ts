@@ -1,6 +1,6 @@
 #!bun
-import { run, bench, group, do_not_optimize } from 'mitata';
-import {randomBytes, randomInt, getRandomValues} from 'crypto'
+import { run, bench } from 'mitata';
+import {randomBytes} from 'crypto'
 import {uint8ArrayToBase50} from './gamini-original'
 import {uint8ArrayToBase50Streaming} from './gemini50'
 

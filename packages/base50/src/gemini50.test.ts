@@ -1,4 +1,4 @@
-import { describe, expect, it, test } from 'bun:test';
+import { describe, expect, it } from 'bun:test';
 import {
     uint8ArrayToBase50Streaming,
     base50ToUint8ArrayStreaming,

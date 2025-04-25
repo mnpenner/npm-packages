@@ -1,10 +1,8 @@
 #!bun test
 import {describe, expect, it} from 'bun:test'
 import {ChunkedBufferEncoder} from './chunked-buffer-encoder'
-import {ASCII85, ASCII85_RFC1924, BASE64STD} from './alphabets'
-import {randomBytes, randomInt} from 'crypto'
+import {ASCII85, BASE64STD} from './alphabets'
 import {randomUint8Array, u8, uint8ArrayToBase64, uint8ArrayToHex} from './uint8_util'
-import {NumberEncoder} from './number-encoder'
 
 const BASE2048 = (() => {
     const tmp: string[] = []

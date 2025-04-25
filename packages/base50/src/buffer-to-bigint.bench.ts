@@ -1,6 +1,6 @@
-import {bench, run, group, summary, barplot, boxplot, lineplot} from 'mitata'
+import {bench, run, group, summary, barplot} from 'mitata'
 import {bufToInt} from './buffer-to-bigint'
-import {randomBytes, randomInt, getRandomValues} from 'crypto'
+import {randomBytes, randomInt} from 'crypto'
 
 
 console.log("Starting benchmarks...\n")

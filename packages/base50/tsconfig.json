@@ -17,6 +17,7 @@
         "exactOptionalPropertyTypes": true,
         "outDir": "dist",
         "declaration": true,
+        "emitDeclarationOnly": true,
         "resolveJsonModule": true,
         "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
@@ -26,7 +27,6 @@
         "types": ["bun-types"]
     },
     "files": [
-        "src/dev.ts",
         "src/bundle.ts",
     ],
 }

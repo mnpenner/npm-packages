@@ -1,6 +1,6 @@
 import {NumberEncoder} from './number-encoder'
 import {BASE64URL, PASSWORD} from './alphabets'
-import {randomBytes, randomInt} from 'crypto'
+import {randomBytes} from 'crypto'
 import {ChunkedBufferEncoder} from './chunked-buffer-encoder'
 
 const pwEncoder = new NumberEncoder(PASSWORD);

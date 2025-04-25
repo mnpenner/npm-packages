@@ -1,7 +1,7 @@
 #!bun
 import {describe, expect, it, test} from 'bun:test'
 import {NumberEncoder} from './number-encoder'
-import {randomBytes, randomInt, getRandomValues} from 'crypto'
+import {randomBytes, randomInt} from 'crypto'
 import {u8} from './uint8_util'
 
 

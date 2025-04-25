@@ -1,7 +1,5 @@
 #!bun
-import {describe, expect, it, test} from 'bun:test'
-import {NumberEncoder} from './number-encoder'
-import {randomBytes, randomInt, getRandomValues} from 'crypto'
+import {describe, expect, test} from 'bun:test'
 import {bufToInt, leBufToBigInt} from './buffer-to-bigint'
 
 function u8(...args: Array<number | number[]>) {

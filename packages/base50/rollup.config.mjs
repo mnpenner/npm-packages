@@ -21,7 +21,7 @@ const config = {
         nodeResolve(),
         commonjs(),
         typescript({
-            tsconfig: `./tsconfig.json`,
+            exclude: './src/dev.ts'
         }),
         replace({
             preventAssignment: true,

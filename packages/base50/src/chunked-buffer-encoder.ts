@@ -1,4 +1,3 @@
-import {bufToInt} from './buffer-to-bigint'
 import assert from 'assert'
 
 
