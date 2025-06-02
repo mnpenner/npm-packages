@@ -266,7 +266,7 @@ function serializeNonNativeFunction(obj: Function, ctx: Context) {
 }
 
 function serializeAnyFunction(obj: Function, ctx: Context) {
-    if(obj.toString().endsWith('{ [native code] }')) {
+    if(/\{\s*\[native code]\s*}$/.test(obj.toString())) {
         return serializeNativeFunction(obj, ctx)
     }
     return serializeNonNativeFunction(obj, ctx)
@@ -535,4 +535,4 @@ function serializePropertyName(name: PropertyKey, ctx: Context) {
     throw new Error(`Cannot make property name`)
 }
 
-export = jsSerialize
+export default jsSerialize

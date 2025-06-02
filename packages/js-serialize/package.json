@@ -1,27 +1,37 @@
 {
   "name": "js-serialize",
-  "version": "0.5.3",
+  "version": "0.6.0",
   "description": "",
-  "private": true,
+  "private": false,
   "engines": {
+    "bun": ">= 1.2",
     "node": ">= 14"
   },
+  "packageManager": "bun@1.2",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
   "scripts": {
-    "test": "ts-mocha __tests__/**.ts",
+    "test": "bun test src",
     "build": "esbuild --bundle src/index.ts --outdir=dist --sourcemap --platform=node --target=node14"
   },
   "author": "Mark Penner <npm@mpen.ca>",
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {
-    "@types/chai": "^4.1.7",
-    "@types/mocha": "^9.0.0",
-    "@types/node": "^17.0.10",
-    "chai": "^4.2.0",
+    "bun-types": "^1.2.15",
     "esbuild": "^0.14.12",
     "mocha": "^6.0.2",
-    "ts-mocha": "^9.0.2",
-    "typescript": "^4.5.4",
+    "typescript": "^5",
     "xregexp": "^3.1.1"
   }
 }
