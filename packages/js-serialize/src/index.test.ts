@@ -84,6 +84,7 @@ describe('numbers', () => {
         expect(jsSerialize(36893488147419103232n)).toEqual('36893488147419103232n')
         expect(jsSerialize(-1n)).toEqual('-1n')
         expect(jsSerialize(0n)).toEqual('0n')
+        expect(jsSerialize(1000000000000n,{compact:true})).toEqual('0xe8d4a51000n')
     })
 })
 

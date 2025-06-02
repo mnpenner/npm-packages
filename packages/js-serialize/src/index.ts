@@ -132,7 +132,7 @@ function serializeArray(obj: any[], ctx: Context) {
     if(obj.length === 0) {
         return `${assign}[]`
     }
-    let sb = []
+    let sb: string[] = []
     let hasProp = false
     let isSparse = false
     for(let i = 0; i < obj.length; ++i) {
@@ -270,10 +270,6 @@ function serializeAnyFunction(obj: Function, ctx: Context) {
         return serializeNativeFunction(obj, ctx)
     }
     return serializeNonNativeFunction(obj, ctx)
-}
-
-function serializeBigInt(obj: bigint, ctx: Context) {
-    return `${obj}n`
 }
 
 function serializeBoolean(obj: boolean, ctx: Context) {
@@ -417,6 +413,13 @@ function serializeNumber(obj: number, ctx: Context) {
     return String(obj)
 }
 
+function serializeBigInt(obj: bigint, ctx: Context) {
+    if(ctx.opts.compact && obj >= 1000000000000n) {
+        return '0x' + obj.toString(16) + 'n'
+    }
+    return `${obj}n`
+}
+
 function serializeStringLike(obj: string | String, ctx: Context) {
     const js = doSerializeStringLike(obj, ctx)
     if(obj.length >= STRING_REF_MIN_LENGTH) {
@@ -486,7 +489,7 @@ function serializeObject(obj: any, ctx: Context) {
 }
 
 function serializePlainObject(obj: any,  ctx: Context) {
-    let tmp = []
+    let tmp: string[] = []
     for(let key of Reflect.ownKeys(obj)) {
         tmp.push(serializePropertyName(key, ctx) + ':' + serializeAny(obj[key], ctx))
     }
