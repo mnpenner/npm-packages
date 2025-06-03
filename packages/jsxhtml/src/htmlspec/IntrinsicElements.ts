@@ -1,6 +1,7 @@
 import type {AnyAttributes, CommonProps} from '../jsx-types'
 import type {AnchorElement} from './AnchorElement'
 import {ScriptElementAttributes} from './ScriptElement'
+import {ButtonAttributes} from './ButtonElement'
 
 
 export type IntrinsicElements = {
@@ -26,7 +27,7 @@ export type IntrinsicElements = {
     blockquote: AnyAttributes,
     body: AnyAttributes,
     br: AnyAttributes,
-    button: AnyAttributes,
+    button: ButtonAttributes  & CommonProps,
     canvas: AnyAttributes,
     caption: AnyAttributes,
     center: AnyAttributes,

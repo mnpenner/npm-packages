@@ -39,7 +39,7 @@ export class JsxElement extends JsxNode {
             // We can't tell string literals apart from vars :-(
             // https://www.typescriptlang.org/play/?jsx=4#code/FAYw9gdgzgLgBADzgXjgHgCYEsBuA+YNABzwAkBTAG0rDQHoTCSBvAcgurFYF97H7s+IA
             // logFull(children)
-            return `<${tag}${attrs}>${children instanceof JsFrag ? children.toString() : escapeScript(flattenChildren(children,scriptChild))}</${tag}>`
+            return `<${tag}${attrs}>${escapeScript(children instanceof JsFrag ? children.toString() : flattenChildren(children,scriptChild))}</${tag}>`
         }
         if(normalizedTagName === 'style') {
             // logFull(children)

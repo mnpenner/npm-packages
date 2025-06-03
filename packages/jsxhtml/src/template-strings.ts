@@ -24,6 +24,6 @@ function escapeJs(obj: any) {
 }
 
 export function js(strings: TemplateStringsArray, ...values: any[]) {
-    return new JsFrag(escapeScript(strings.reduce((out, str, i) =>
-        out + str + (i < values.length ? escapeJs(values[i]) : ''), '')))
+    return new JsFrag(strings.reduce((out, str, i) =>
+        out + str + (i < values.length ? escapeJs(values[i]) : ''), ''))
 }

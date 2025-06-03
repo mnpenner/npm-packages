@@ -287,80 +287,83 @@ export type XmlAttributes = {
     'xml:base': string
 }
 
-export type GlobalEventHandlers = {
-    [evt in EventHandlerNames]?: string|((this:HTMLElement)=>void)
+export type EventHandlerMap = {
+    onauxclick: MouseEvent
+    onbeforeinput: InputEvent
+    onbeforematch: Event
+    onbeforetoggle: Event
+    onblur: FocusEvent
+    oncancel: Event
+    oncanplay: Event
+    oncanplaythrough: Event
+    onchange: Event
+    onclick: MouseEvent
+    onclose: Event
+    oncontextlost: Event
+    oncontextmenu: MouseEvent
+    oncontextrestored: Event
+    oncopy: ClipboardEvent
+    oncuechange: Event
+    oncut: ClipboardEvent
+    ondblclick: MouseEvent
+    ondrag: DragEvent
+    ondragend: DragEvent
+    ondragenter: DragEvent
+    ondragleave: DragEvent
+    ondragover: DragEvent
+    ondragstart: DragEvent
+    ondrop: DragEvent
+    ondurationchange: Event
+    onemptied: Event
+    onended: Event
+    onerror: ErrorEvent
+    onfocus: FocusEvent
+    onformdata: FormDataEvent
+    oninput: InputEvent
+    oninvalid: Event
+    onkeydown: KeyboardEvent
+    onkeypress: KeyboardEvent
+    onkeyup: KeyboardEvent
+    onload: Event
+    onloadeddata: Event
+    onloadedmetadata: Event
+    onloadstart: ProgressEvent
+    onmousedown: MouseEvent
+    onmouseenter: MouseEvent
+    onmouseleave: MouseEvent
+    onmousemove: MouseEvent
+    onmouseout: MouseEvent
+    onmouseover: MouseEvent
+    onmouseup: MouseEvent
+    onpaste: ClipboardEvent
+    onpause: Event
+    onplay: Event
+    onplaying: Event
+    onprogress: ProgressEvent
+    onratechange: Event
+    onreset: Event
+    onresize: UIEvent
+    onscroll: Event
+    onscrollend: Event
+    onsecuritypolicyviolation: SecurityPolicyViolationEvent
+    onseeked: Event
+    onseeking: Event
+    onselect: Event
+    onslotchange: Event
+    onstalled: Event
+    onsubmit: SubmitEvent
+    onsuspend: Event
+    ontimeupdate: Event
+    ontoggle: Event
+    onvolumechange: Event
+    onwaiting: Event
+    onwheel: WheelEvent
 }
 
-export type AllGlobalAttributes = StandardGlobalAttributes|AriaAttributes|GlobalEventHandlers
+// TODO: HTMLElement should be more specific, like HTMLButtonElement
+export type GlobalEventHandlers = {
+    [K in keyof EventHandlerMap]?: string | ((this: HTMLElement, ev: EventHandlerMap[K]) => any)
+}
 
-type EventHandlerNames =
-    | 'onauxclick'
-    | 'onbeforeinput'
-    | 'onbeforematch'
-    | 'onbeforetoggle'
-    | 'onblur'
-    | 'oncancel'
-    | 'oncanplay'
-    | 'oncanplaythrough'
-    | 'onchange'
-    | 'onclick'
-    | 'onclose'
-    | 'oncontextlost'
-    | 'oncontextmenu'
-    | 'oncontextrestored'
-    | 'oncopy'
-    | 'oncuechange'
-    | 'oncut'
-    | 'ondblclick'
-    | 'ondrag'
-    | 'ondragend'
-    | 'ondragenter'
-    | 'ondragleave'
-    | 'ondragover'
-    | 'ondragstart'
-    | 'ondrop'
-    | 'ondurationchange'
-    | 'onemptied'
-    | 'onended'
-    | 'onerror'
-    | 'onfocus'
-    | 'onformdata'
-    | 'oninput'
-    | 'oninvalid'
-    | 'onkeydown'
-    | 'onkeypress'
-    | 'onkeyup'
-    | 'onload'
-    | 'onloadeddata'
-    | 'onloadedmetadata'
-    | 'onloadstart'
-    | 'onmousedown'
-    | 'onmouseenter'
-    | 'onmouseleave'
-    | 'onmousemove'
-    | 'onmouseout'
-    | 'onmouseover'
-    | 'onmouseup'
-    | 'onpaste'
-    | 'onpause'
-    | 'onplay'
-    | 'onplaying'
-    | 'onprogress'
-    | 'onratechange'
-    | 'onreset'
-    | 'onresize'
-    | 'onscroll'
-    | 'onscrollend'
-    | 'onsecuritypolicyviolation'
-    | 'onseeked'
-    | 'onseeking'
-    | 'onselect'
-    | 'onslotchange'
-    | 'onstalled'
-    | 'onsubmit'
-    | 'onsuspend'
-    | 'ontimeupdate'
-    | 'ontoggle'
-    | 'onvolumechange'
-    | 'onwaiting'
-    | 'onwheel'
+export type AllGlobalAttributes = StandardGlobalAttributes&AriaAttributes&GlobalEventHandlers
+

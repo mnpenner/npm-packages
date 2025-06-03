@@ -86,14 +86,14 @@ const jsxNode = <HtmlDocument lang="en">
         </div>
         <RawHtml children="Hello <b>bold</b> world" />
         <div>
-            <button onClick={(ev: MouseEvent) => console.log(`You clicked ${ev.offsetX}, ${ev.offsetY}`)}>Event XY
+            <button onclick={(ev: MouseEvent) => console.log(`You clicked ${ev.offsetX}, ${ev.offsetY}`)}>Event XY
             </button>
             {/* @ts-expect-error TS18048: event is possibly undefined */}
-            <button onClick={() => console.log(`You clicked ${event.offsetX}, ${event.offsetY}`)}>Global Event
+            <button onclick={() => console.log(`You clicked ${event.offsetX}, ${event.offsetY}`)}>Global Event
             </button>
-            <button onClick={externalFunc}>External1</button>
-            <button onClick={externalFunc}>External2</button>
-            <button onClick={() => console.log("hello")}>Hello quotes</button>
+            <button onclick={externalFunc}>External1</button>
+            <button onclick={externalFunc}>External2</button>
+            <button onclick={() => console.log("hello")}>Hello quotes</button>
         </div>
         <script>{js`
                     console.log('</script>');
