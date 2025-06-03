@@ -2,6 +2,7 @@ export * from './jsx-elements'
 export * from './custom-components'
 export * from './elysia-plugin'
 export * from './jsx-node'
+export {js} from './template-strings'
 
 // For compat with {"jsx": "react"}
 import type {AnyAttributes, JsxComponent, JsxRenderable} from './jsx-types'

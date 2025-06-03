@@ -6,8 +6,23 @@ import jsSerialize from 'js-serialize'
 // html``
 // url`` escapeUriComponent
 
+export class JsFrag {
+    constructor(private readonly str: string) {
+    }
+
+    toString() {
+        return this.str
+    }
+}
+
+function escapeJs(obj: any) {
+    if(obj instanceof JsFrag) {
+        return obj
+    }
+    return jsSerialize(obj)
+}
+
 export function js(strings: TemplateStringsArray, ...values: any[]) {
-    // TODO: wrap this in some kind of marker so we know when it's already been escaped
-    return strings.reduce((out, str, i) =>
-        out + str + (i < values.length ? jsSerialize(values[i]) : ''), '')
+    return new JsFrag(strings.reduce((out, str, i) =>
+        out + str + (i < values.length ? escapeJs(values[i]) : ''), ''))
 }

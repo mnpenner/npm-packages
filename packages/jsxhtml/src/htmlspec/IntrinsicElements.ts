@@ -1,5 +1,6 @@
 import type {AnyAttributes, CommonProps} from '../jsx-types'
 import type {AnchorElement} from './AnchorElement'
+import {ScriptElementAttributes} from './ScriptElement'
 
 
 export type IntrinsicElements = {
@@ -117,7 +118,7 @@ export type IntrinsicElements = {
     ruby: AnyAttributes,
     s: AnyAttributes,
     samp: AnyAttributes,
-    script: AnyAttributes,
+    script: ScriptElementAttributes,
     search: AnyAttributes,
     section: AnyAttributes,
     select: AnyAttributes,

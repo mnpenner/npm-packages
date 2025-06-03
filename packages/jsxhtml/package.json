@@ -1,6 +1,6 @@
 {
   "name": "@mpen/jsxhtml",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "packageManager": "bun@1.2.9",
   "exports": {
     ".": {
@@ -32,16 +32,18 @@
   },
   "keywords": [
     "jsx",
+    "tsx",
     "html",
     "render",
-    "server-side",
-    "elysia"
+    "server",
+    "ssr"
   ],
   "scripts": {
-    "dev:build": "rollup -cw",
+    "_dev:build": "rollup -cw",
     "_dev:serve": "serve -l tcp://0.0.0.0:8080",
     "dev": "run-p \"dev:**\"",
-    "dev:serve": "bun run --hot src/dev.tsx",
+    "dev:run": "NODE_ENV=production bun run src/dev.tsx --jsx-import-source=@mpen/jsxhtml",
+    "dev:build": "NODE_ENV=production bun build src/dev.tsx --outdir=dist --packages=external -e '*'",
     "test": "NODE_ENV=production bun test --jsx-import-source=@mpen/jsxhtml",
     "bundle:clean": "rm -rf dist/",
     "bundle:build": "NODE_ENV=production rollup -c",

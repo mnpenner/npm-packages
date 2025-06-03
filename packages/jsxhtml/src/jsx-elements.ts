@@ -4,6 +4,7 @@ import {render} from './render'
 import type {AnyAttributes, JsxChildren} from './jsx-types'
 import {flattenChildren, isEmptyChildren, scriptChild, styleChild} from './util'
 import {JsxNode} from './jsx-node'
+import {JsFrag} from './template-strings'
 
 // https://www.w3.org/TR/html-markup/syntax.html#syntax-elements
 // https://www.w3.org/TR/2011/WD-html-markup-20110113/syntax.html#syntax-elements
@@ -38,7 +39,7 @@ export class JsxElement extends JsxNode {
             // We can't tell string literals apart from vars :-(
             // https://www.typescriptlang.org/play/?jsx=4#code/FAYw9gdgzgLgBADzgXjgHgCYEsBuA+YNABzwAkBTAG0rDQHoTCSBvAcgurFYF97H7s+IA
             // logFull(children)
-            return `<${tag}${attrs}>${escapeScript(flattenChildren(children,scriptChild))}</${tag}>`
+            return `<${tag}${attrs}>${children instanceof JsFrag ? children.toString() : escapeScript(flattenChildren(children,scriptChild))}</${tag}>`
         }
         if(normalizedTagName === 'style') {
             // logFull(children)
