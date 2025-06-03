@@ -4,6 +4,8 @@ import {C, HtmlDocument, RawHtml} from './custom-components'
 import {js} from './template-strings'
 
 let inject = '<b>  i\'nj\ne"ct   </b>'
+let hack = '</script>'
+let safe = js`"not escaped"`
 let obj = {bar: 'baz', quux: [1, 2]}
 
 let list = ['foo', 'bar', 'baz']
@@ -92,8 +94,11 @@ console.log((<HtmlDocument lang="en">
                 `}</script>
 
         <script>{js`
-                    const serverData = ${'server string'}";
-                    const serverData2 = ${{server:'object'}};
+                    const inject = ${inject};
+                    const hack = ${hack};
+                    const safe = ${safe};
+                    const list = ${list};
+                    const obj = ${obj};
                 `}</script>
 
 

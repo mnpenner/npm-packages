@@ -59,3 +59,6 @@ export declare namespace JSX {
      */
     interface IntrinsicElements extends instrinsic.IntrinsicElements {}
 }
+
+// Create a concrete object to export
+// export const JSX = {}
