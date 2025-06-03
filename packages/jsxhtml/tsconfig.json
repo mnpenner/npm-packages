@@ -1,7 +1,7 @@
 {
     // Visit https://aka.ms/tsconfig to read more about this file
     "compilerOptions": {
-        "target": "ES2022",
+        "target": "ESNext",
         "module": "ESNext",
         "moduleResolution": "bundler",
         "declaration": true,
@@ -13,18 +13,10 @@
         "exactOptionalPropertyTypes": true,
         "skipLibCheck": true,
         "resolveJsonModule": true,
-        "lib": ["ES2022", "DOM"],
+        "lib": ["ESNext", "DOM"],
         "types": ["bun-types"],
         "jsx": "react-jsx",
         "jsxImportSource": ".",
         "outDir": "./dist"
-    },
-    "files": [
-        "./src/jsx.ts",
-        "./src/index.ts",
-        "./src/jsx-runtime.ts",
-        "./src/jsx-dev-runtime.ts"
-    ],
-    "include": [
-    ]
+    }
 }

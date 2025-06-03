@@ -1,4 +1,5 @@
 import jsSerialize from 'js-serialize'
+import {escapeScript} from './escape'
 
 // TODO: write css`` or style`` string that escapes with CSS.escape
 // js`` or script`` that escapes with JSON.stringify
@@ -23,6 +24,6 @@ function escapeJs(obj: any) {
 }
 
 export function js(strings: TemplateStringsArray, ...values: any[]) {
-    return new JsFrag(strings.reduce((out, str, i) =>
-        out + str + (i < values.length ? escapeJs(values[i]) : ''), ''))
+    return new JsFrag(escapeScript(strings.reduce((out, str, i) =>
+        out + str + (i < values.length ? escapeJs(values[i]) : ''), '')))
 }

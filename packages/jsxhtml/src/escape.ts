@@ -6,7 +6,7 @@ import type {AttrArr, Attributes, AttributeValue, Stringable} from './jsx-types'
 import {isFunction} from '@mpen/is-type'
 
 function entity(ch: string) {
-    return Object.hasOwn(entityMap, ch) ? `&${entityMap[ch]};` : `&#x${ch.codePointAt(0)!.toString(16)};`;
+    return Object.prototype.hasOwnProperty.call(entityMap, ch) ? `&${entityMap[ch]};` : `&#x${ch.codePointAt(0)!.toString(16)};`;
 }
 
 // https://www.w3.org/TR/html-markup/syntax.html#tag-name
@@ -27,7 +27,8 @@ export function attrValue(value: Stringable) {
     // }
     if(isFunction(value)) {
         // "onclick" attributes are invoked immediately
-        value = `(${value}).call(this)`
+        // window.event: https://developer.mozilla.org/en-US/docs/Web/API/Window/event
+        value = `(${value}).call(this,event)`
     }
     return `"${String(value).replace(/"/gu, entity)}"`;
 }

@@ -60,5 +60,4 @@ export declare namespace JSX {
     interface IntrinsicElements extends instrinsic.IntrinsicElements {}
 }
 
-// Create a concrete object to export
-// export const JSX = {}
+export const JSX = {}  // Bun tries to import this for some reason

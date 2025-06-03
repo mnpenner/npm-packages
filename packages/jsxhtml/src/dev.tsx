@@ -2,6 +2,8 @@
 import type {AnyAttributes} from './jsx-types'
 import {C, HtmlDocument, RawHtml} from './custom-components'
 import {js} from './template-strings'
+import Path from 'path'
+
 
 let inject = '<b>  i\'nj\ne"ct   </b>'
 let hack = '</script>'
@@ -26,7 +28,9 @@ function externalFunc(this: HTMLButtonElement) {
 }
 
 
-console.log((<HtmlDocument lang="en">
+// @ts-ignore
+// @ts-ignore
+const jsxNode = <HtmlDocument lang="en">
     <head>
         <title>Hello JsxHtml</title>
     </head>
@@ -82,14 +86,17 @@ console.log((<HtmlDocument lang="en">
         </div>
         <RawHtml children="Hello <b>bold</b> world" />
         <div>
-            <button onClick={() => console.log(`You clicked ${event.offsetX}, ${event.offsetY}`)}>Event XY
+            <button onClick={(ev: MouseEvent) => console.log(`You clicked ${ev.offsetX}, ${ev.offsetY}`)}>Event XY
+            </button>
+            {/* @ts-expect-error TS18048: event is possibly undefined */}
+            <button onClick={() => console.log(`You clicked ${event.offsetX}, ${event.offsetY}`)}>Global Event
             </button>
             <button onClick={externalFunc}>External1</button>
             <button onClick={externalFunc}>External2</button>
             <button onClick={() => console.log("hello")}>Hello quotes</button>
         </div>
         <script>{js`
-                    console.log('</script>'}');
+                    console.log('</script>');
                     console.log(document.getElementById('fooput').dataset.foo)
                 `}</script>
 
@@ -106,4 +113,12 @@ console.log((<HtmlDocument lang="en">
                     console.log("this should work")
                 `}/>
     </body>
-</HtmlDocument>).toString())
+</HtmlDocument>
+
+const html = jsxNode.toString()
+
+console.log(`================\n${html}\n================\n`)
+
+const outputFile = Path.normalize(`${__dirname}/../dist/dev.html`)
+await Bun.write(outputFile, html)
+console.log(`Wrote ${outputFile}`)
