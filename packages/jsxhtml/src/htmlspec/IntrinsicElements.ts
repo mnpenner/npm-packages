@@ -4,7 +4,6 @@ import type {ScriptElementAttributes} from './ScriptElement'
 import type {ButtonAttributes} from './ButtonElement'
 import type {StyleHTMLAttributes} from './StyleAttributes'
 
-
 export type IntrinsicElements = {
     /**
      * The <a> HTML element (or anchor element), with its href attribute, creates a hyperlink to web pages, files,
@@ -14,6 +13,9 @@ export type IntrinsicElements = {
      */
     a: AnchorElement & CommonProps<HTMLAnchorElement>,
     abbr: AnyAttributes,
+    /**
+     * @deprecated Use the `<abbr>` element instead.
+     */
     acronym: AnyAttributes,
     address: AnyAttributes,
     area: AnyAttributes<HTMLAreaElement>,
@@ -24,6 +26,9 @@ export type IntrinsicElements = {
     base: AnyAttributes<HTMLBaseElement>,
     bdi: AnyAttributes,
     bdo: AnyAttributes,
+    /**
+     * @deprecated
+     */
     big: AnyAttributes,
     blockquote: AnyAttributes<HTMLQuoteElement>,
     body: AnyAttributes<HTMLBodyElement>,
@@ -31,6 +36,9 @@ export type IntrinsicElements = {
     button: ButtonAttributes  & CommonProps<HTMLButtonElement>,
     canvas: AnyAttributes<HTMLCanvasElement>,
     caption: AnyAttributes<HTMLTableCaptionElement>,
+    /**
+     * @deprecated
+     */
     center: AnyAttributes,
     cite: AnyAttributes,
     code: AnyAttributes,
@@ -44,7 +52,12 @@ export type IntrinsicElements = {
     details: AnyAttributes<HTMLDetailsElement>,
     dfn: AnyAttributes,
     dialog: AnyAttributes<HTMLDialogElement>,
-    dir: AnyAttributes,
+    /**
+     * The `<dir>` HTML element is used as a container for a directory of files and/or folders.
+     * @deprecated Use the `<ul>` element instead.
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dir
+     */
+    dir: AnyAttributes<HTMLDirectoryElement>,
     div: AnyAttributes<HTMLDivElement>,
     dl: AnyAttributes<HTMLDListElement>,
     dt: AnyAttributes,
@@ -53,11 +66,25 @@ export type IntrinsicElements = {
     fieldset: AnyAttributes<HTMLFieldSetElement>,
     figcaption: AnyAttributes,
     figure: AnyAttributes,
-    font: AnyAttributes,
+    /**
+     * @deprecated
+     */
+    font: AnyAttributes<HTMLFontElement>,
     footer: AnyAttributes,
     form: AnyAttributes<HTMLFormElement>,
-    frame: AnyAttributes,
-    frameset: AnyAttributes,
+    /**
+     * The `<frame>` HTML element defines a particular area in which another HTML document can be displayed.
+     * A frame should be used within a `<frameset>`.
+     * @deprecated Use `<iframe>` instead.
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/frame
+     */
+    frame: AnyAttributes<HTMLFrameElement>,
+    /**
+     * The `<frameset>` HTML element is used to contain `<frame>` elements.
+     * @deprecated Use `<iframe>` instead.
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/frameset
+     */
+    frameset: AnyAttributes<HTMLFrameSetElement>,
     h1: AnyAttributes<HTMLHeadingElement>,
     h2: AnyAttributes<HTMLHeadingElement>,
     h3: AnyAttributes<HTMLHeadingElement>,
@@ -82,6 +109,9 @@ export type IntrinsicElements = {
     input: AnyAttributes<HTMLInputElement>,
     ins: AnyAttributes<HTMLModElement>,
     kbd: AnyAttributes,
+    /**
+     * @deprecated
+     */
     keygen: AnyAttributes,
     label: AnyAttributes<HTMLLabelElement>,
     legend: AnyAttributes<HTMLLegendElement>,
@@ -90,14 +120,37 @@ export type IntrinsicElements = {
     main: AnyAttributes,
     map: AnyAttributes<HTMLMapElement>,
     mark: AnyAttributes,
-    marquee: AnyAttributes,
+    /**
+     * The `<marquee>` HTML element is used to insert a scrolling area of text.
+     * @deprecated Use CSS animations instead.
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/marquee
+     */
+    marquee: AnyAttributes<HTMLMarqueeElement>,
     menu: AnyAttributes<HTMLMenuElement>,
+    /**
+     * The `<menuitem>` HTML element defines a command/menu item that the user can invoke from a popup menu.
+     * @deprecated
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/menuitem
+     */
     menuitem: AnyAttributes,
     meta: AnyAttributes<HTMLMetaElement>,
     meter: AnyAttributes<HTMLMeterElement>,
     nav: AnyAttributes,
+    /**
+     * @deprecated
+     */
     nobr: AnyAttributes,
+    /**
+     * The `<noembed>` HTML element is an obsolete, non-standard way to provide alternative, or "fallback", content for browsers that do not support the `<embed>` element.
+     * @deprecated Use the `<object>` element instead.
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/noembed
+     */
     noembed: AnyAttributes,
+    /**
+     * The `<noframes>` element provides content to be displayed in browsers that do not support, or are configured not to support, the `<frame>` element.
+     * @deprecated
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/noframes
+     */
     noframes: AnyAttributes,
     noscript: AnyAttributes,
     object: AnyAttributes<HTMLObjectElement>,
@@ -106,16 +159,34 @@ export type IntrinsicElements = {
     option: AnyAttributes<HTMLOptionElement>,
     output: AnyAttributes<HTMLOutputElement>,
     p: AnyAttributes<HTMLParagraphElement>,
+    /**
+     * The `<param>` HTML element defines parameters for an `<object>` element.
+     * @deprecated
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/param
+     */
     param: AnyAttributes<HTMLParamElement>,
     picture: AnyAttributes<HTMLPictureElement>,
+    /**
+     * The `<plaintext>` HTML element renders everything following the start tag as raw text, ignoring any following HTML.
+     * @deprecated Use the `<pre>` or `<code>` element instead, or serve a text file with the `text/plain` MIME type.
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/plaintext
+     */
     plaintext: AnyAttributes,
     portal: AnyAttributes,
     pre: AnyAttributes<HTMLPreElement>,
     progress: AnyAttributes<HTMLProgressElement>,
     q: AnyAttributes<HTMLQuoteElement>,
+    /**
+     * The `<rb>` HTML element is used to delimit the base text component of a `<ruby>` annotation.
+     * @deprecated
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/rb
+     */
     rb: AnyAttributes,
     rp: AnyAttributes,
     rt: AnyAttributes,
+    /**
+     * @deprecated
+     */
     rtc: AnyAttributes,
     ruby: AnyAttributes,
     s: AnyAttributes,
@@ -129,6 +200,9 @@ export type IntrinsicElements = {
     small: AnyAttributes,
     source: AnyAttributes<HTMLSourceElement>,
     span: AnyAttributes<HTMLSpanElement>,
+    /**
+     * @deprecated Use the `<del>` or `<s>` element instead.
+     */
     strike: AnyAttributes,
     strong: AnyAttributes,
     style: StyleHTMLAttributes,
@@ -147,11 +221,19 @@ export type IntrinsicElements = {
     title: AnyAttributes<HTMLTitleElement>,
     tr: AnyAttributes<HTMLTableRowElement>,
     track: AnyAttributes<HTMLTrackElement>,
+    /**
+     * @deprecated Use the `<code>` element or CSS for monospaced text instead.
+     */
     tt: AnyAttributes,
     u: AnyAttributes,
     ul: AnyAttributes<HTMLUListElement>,
     var: AnyAttributes,
     video: AnyAttributes<HTMLVideoElement>,
     wbr: AnyAttributes,
-    xmp: AnyAttributes,
+    /**
+     * The `<xmp>` HTML element renders text between the start and end tags without interpreting the HTML in between and using a monospaced font.
+     * @deprecated Use the `<pre>` or `<code>` element instead.
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/xmp
+     */
+    xmp: AnyAttributes<HTMLPreElement>,
 }

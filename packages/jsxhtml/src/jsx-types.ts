@@ -1,14 +1,16 @@
 import type {JsxNode} from './jsx-node'
 import type {AllGlobalAttributes} from './htmlspec/GlobalAttributes'
 import type {Override} from './util-types'
+import type {Class} from 'classcat'
+import type {Properties,PropertiesHyphen} from 'csstype'
 
 export interface Stringable {
     toString(): string
 }
 
 export type PlainObject = Record<PropertyKey, unknown>
-export type ClassNames = import('classcat').Class
-export type StyleObject = import('csstype').Properties | import('csstype').PropertiesHyphen
+export type ClassNames = Class
+export type StyleObject = Properties | PropertiesHyphen
 export type AttributeValue = Stringable | StyleObject | ClassNames
 export type AttrKvPair = [name: string, value: AttributeValue]
 export type AttrArr = AttrKvPair[]
