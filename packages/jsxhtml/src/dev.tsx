@@ -65,6 +65,7 @@ const jsxNode = <HtmlDocument lang="en">
                 <li>{inject}</li>
             </ol>
             <input disabled={true} value="Disabled input" style={"foo"} class="whatever" />
+            {/* @ts-expect-error Unrecognized attr */}
             <input id="fooput" type="text" data-foo={obj} bar={obj} />
             <input type="checkbox" checked data-target={true} />
             <p style={{

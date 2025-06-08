@@ -3,6 +3,7 @@ import type {AnchorElement} from './AnchorElement'
 import type {ScriptElementAttributes} from './ScriptElement'
 import type {ButtonAttributes} from './ButtonElement'
 import type {StyleHTMLAttributes} from './StyleAttributes'
+import {InputAttributes} from './InputAttributes'
 
 export type IntrinsicElements = {
     /**
@@ -322,7 +323,7 @@ export type IntrinsicElements = {
      * and user agent. The `<input>` element is one of the most powerful and complex in all of HTML due to the sheer
      * number of combinations of input types and attributes.
      */
-    input: AnyAttributes<HTMLInputElement>,
+    input: InputAttributes & CommonProps<HTMLInputElement>,
     /**
      * The <ins> HTML element represents a range of text that has been added to a document. [2]
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/ins
