@@ -1,7 +1,7 @@
 /// <reference lib="dom" />
 import type {AnyAttributes} from './jsx-types'
 import {C, HtmlDocument, RawHtml} from './custom-components'
-import {js} from './template-strings'
+import {css, js} from './template-strings'
 import Path from 'path'
 
 
@@ -35,17 +35,22 @@ const jsxNode = <HtmlDocument lang="en">
         <title>Hello JsxHtml</title>
     </head>
     {/*<style> {'a'}</style>*/}
-    <style>
-        .cr-blue-box {'{'}
-        border: 5px solid blue;
-        border-radius: 5px;
-        {'}'}
-    </style>
-    <style children={String.raw`
-                .numbers {
-                    color: blue;
-                }
-            `} />
+    <style>{css`
+        .cr-blue-box {
+            border: 5px solid blue;
+            border-radius: 5px;
+        }
+    `}</style>
+    <style children={css`
+        .numbers {
+            color: blue;
+        }
+
+        #${inject} {
+            background-color: yellow;
+            color: brown;
+        }
+    `}/>
     <body >
         <C children="hello comment" />
         <C>
@@ -56,7 +61,7 @@ const jsxNode = <HtmlDocument lang="en">
             <ol class={[{foo: true}, 'bar']}>
                 <li>{one}</li>
                 <li>{two}</li>
-                <li id={inject}>{three}</li>
+                <li>{three}</li>
                 <li>{inject}</li>
             </ol>
             <input disabled={true} value="Disabled input" style={"foo"} class="whatever" />
@@ -85,6 +90,7 @@ const jsxNode = <HtmlDocument lang="en">
             {3e50}<br />
         </div>
         <RawHtml children="Hello <b>bold</b> world" />
+        <div id={inject}>I should be styled</div>
         <div>
             <button onclick={(ev: MouseEvent) => console.log(`You clicked ${ev.offsetX}, ${ev.offsetY}`)}>Event XY
             </button>

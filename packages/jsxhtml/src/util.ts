@@ -1,6 +1,8 @@
 import {isFunction, isIterable} from '@mpen/is-type'
 import type {FlatString, JsxChildren, JsxComponent} from './jsx-types'
 import {isJsxNode} from './jsx-node'
+import cssEscape from './css-escape'
+import jsSerialize from 'js-serialize'
 
 
 export function mapIter<In, Out>(iterable: Iterable<In>, cb: (el: In, i: number) => Out): Out[] {
@@ -55,7 +57,7 @@ export function scriptChild(el: any): string {
     // if(isHtmlSafe(el)) {
     //     return el.__html  // TODO: do we still need this now that we have <RawHtml> ?
     // }
-    return JSON.stringify(el)
+    return jsSerialize(el)
 }
 
 export function styleChild(el: any): string {
@@ -66,10 +68,10 @@ export function styleChild(el: any): string {
         return ''
     }
     if(isJsxNode(el)) {
-        throw new Error(`<sty;e> cannot contain JSX nodes.`)
+        throw new Error(`<style> cannot contain JSX nodes.`)
         // return el.toString()
     }
-    return CSS.escape(String(el))
+    return cssEscape(String(el))
 }
 
 

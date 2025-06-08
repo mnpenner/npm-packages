@@ -1,4 +1,4 @@
-import {JsFrag} from '../template-strings'
+import type {JsFrag} from '../template-strings'
 
 /**
  * All valid properties for a <script> HTML element.

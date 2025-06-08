@@ -1,36 +1,46 @@
-import {expect, it, test} from 'bun:test'
-import {js, JsFrag} from './template-strings'
+import {expect, test} from 'bun:test'
+import {css, js} from './template-strings'
 
 expect.extend({
-    toEqJs(received: unknown, expected: string) {
-        if(!(received instanceof JsFrag)) {
+    toStrEq(received: unknown, expected: string) {
+        if(typeof received?.toString !== 'function') {
             return {
                 pass: false,
-                message: () => `expected a JsFrag but got ${this.utils.printReceived(typeof received)}`,
+                message: () => `expected a frag but got ${this.utils.printReceived(typeof received)}`,
             }
         }
 
         const normalizedReceived = received.toString().trim().replace(/\s+/g, ' ')
-        const normalizedExpected = received.toString().trim().replace(/\s+/g, ' ')
+        const normalizedExpected = expected.toString().trim().replace(/\s+/g, ' ')
 
         const pass = normalizedReceived === normalizedExpected
         return {
             pass,
-            message: () => `expected string ${pass ? 'not ' : ''}to be whitespace-normalized equal to\n${this.utils.printReceived(expected)}\n${this.utils.printExpected(received.toString())}`
+            message: () => `expected string ${pass ? 'not ' : ''}to be whitespace-normalized equal to\n${this.utils.printExpected(expected)}\nreceived:\n${this.utils.printReceived(received.toString())}`
         }
     },
 })
 
 declare module 'bun:test' {
     interface Matchers<T = unknown> {
-        toEqJs(expected: string): void;
+        toStrEq(expected: string): void;
     }
 }
 
 test('js', () => {
-    expect(js`hello`).toEqJs('hello')
-    expect(js`hello ${"world"}`).toEqJs('hello "world"')
-    expect(js`hello ${42}`).toEqJs('hello 42')
-    expect(js`hello ${"</script>"}`).toEqJs('hello "<\\/script>"')
-    expect(js`const obj=${{foo: 'bar'}};\nconst arr=${['baz', null, Math.PI]};`).toEqJs("const obj={foo:\"bar\"};\nconst arr=[\"baz\",null,Math.PI];")
+    expect(js`hello`).toStrEq('hello')
+    expect(js`hello ${"world"}`).toStrEq('hello "world"')
+    expect(js`hello ${42}`).toStrEq('hello 42')
+    expect(js`hello ${"</script>"}`).toStrEq('hello "<\\/script>"')
+    expect(js`const obj=${{foo: 'bar'}};\nconst arr=${['baz', null, Math.PI]};`).toStrEq("const obj={foo:\"bar\"};\nconst arr=[\"baz\",null,Math.PI];")
 })
+
+test('css', () => {
+    // https://developer.mozilla.org/en-US/docs/Web/API/CSS/escape_static#basic_results
+    expect(css`[data-foo=${'.foo#bar'}]`).toStrEq("[data-foo=\\.foo\\#bar]")
+    expect(css`.${'()[]{}'}`).toStrEq(".\\(\\)\\[\\]\\{\\}")
+    expect(css`${'--a'}-prop`).toStrEq("--a-prop")
+    expect(css`${0}`).toStrEq("\\30 ")
+    expect(css`${'\0'}`).toStrEq("\ufffd")
+})
+

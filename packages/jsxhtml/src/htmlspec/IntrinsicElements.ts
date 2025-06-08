@@ -1,7 +1,8 @@
 import type {AnyAttributes, CommonProps} from '../jsx-types'
 import type {AnchorElement} from './AnchorElement'
-import {ScriptElementAttributes} from './ScriptElement'
-import {ButtonAttributes} from './ButtonElement'
+import type {ScriptElementAttributes} from './ScriptElement'
+import type {ButtonAttributes} from './ButtonElement'
+import type {StyleHTMLAttributes} from './StyleAttributes'
 
 
 export type IntrinsicElements = {
@@ -130,7 +131,7 @@ export type IntrinsicElements = {
     span: AnyAttributes,
     strike: AnyAttributes,
     strong: AnyAttributes,
-    style: AnyAttributes,
+    style: StyleHTMLAttributes,
     sub: AnyAttributes,
     summary: AnyAttributes,
     sup: AnyAttributes,

@@ -15,8 +15,8 @@
 //     }
 // }
 
-import {JsxNode} from './jsx-node'
-import * as instrinsic from './htmlspec/IntrinsicElements'
+import type {JsxNode} from './jsx-node'
+import type * as instrinsic from './htmlspec/IntrinsicElements'
 
 
 export type ComponentType<P = {}> = FunctionComponent<P>;
