@@ -33,9 +33,9 @@ export type SpecialProps = {
     class?: ClassNames
 }
 
-export type CommonProps = Override<AllGlobalAttributes, SpecialProps>
+export type CommonProps<E=HTMLElement> = Override<AllGlobalAttributes<E>, SpecialProps>
 
-export type AnyAttributes = Override<AttrObj, CommonProps>
+export type AnyAttributes<E=HTMLElement> = Override<AttrObj, CommonProps<E>>
 
 // export type JsxFn = (tag: string, props: AttrObj, children:undefined|JsxhtmlChildren) => JsxhtmlElement
 export type JsxComponent<P=AnyAttributes> = ((props: P) => JsxNode) & {displayName?: string, name?: string}

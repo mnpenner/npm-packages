@@ -361,9 +361,9 @@ export type EventHandlerMap = {
 }
 
 // TODO: HTMLElement should be more specific, like HTMLButtonElement
-export type GlobalEventHandlers = {
-    [K in keyof EventHandlerMap]?: string | ((this: HTMLElement, ev: EventHandlerMap[K]) => any)
+export type GlobalEventHandlers<E=HTMLElement> = {
+    [K in keyof EventHandlerMap]?: string | ((this: E, ev: EventHandlerMap[K]) => any)
 }
 
-export type AllGlobalAttributes = StandardGlobalAttributes&AriaAttributes&GlobalEventHandlers
+export type AllGlobalAttributes<E=HTMLElement> = StandardGlobalAttributes&AriaAttributes&GlobalEventHandlers<E>
 
