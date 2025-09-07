@@ -1,170 +1,113 @@
-import assert from 'node:assert/strict';
+import assert from "node:assert/strict"
+import {createCipheriv, createDecipheriv} from "node:crypto"
 
-const DEFAULT_ALPHABET = '0123456789bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ';
+const TWO_128 = 1n << 128n
+
+function bytes16ToBigInt(b: Uint8Array): bigint {
+    assert(b.length === 16, "need 16 bytes")
+    let x = 0n
+    for(let i = 0; i < 16; i++) x = (x << 8n) | BigInt(b[i])
+    return x
+}
+
+function bigIntToBytes16(x: bigint): Uint8Array {
+    assert(x >= 0n && x < TWO_128, "value must be < 2^128")
+    const out = new Uint8Array(16)
+    for(let i = 15; i >= 0; i--) {
+        out[i] = Number(x & 0xffn)
+        x >>= 8n
+    }
+    return out
+}
+
+function aesEcbEncrypt16(key16: Uint8Array, plain16: Uint8Array): Uint8Array {
+    assert(key16.length === 16, "Secret key must be exactly 16 bytes")
+    assert(plain16.length === 16, "ID must be 16 bytes long")
+    const cipher = createCipheriv("aes-128-ecb", Buffer.from(key16), null)
+    cipher.setAutoPadding(false)
+    const out = Buffer.concat([cipher.update(Buffer.from(plain16)), cipher.final()])
+    return new Uint8Array(out)
+}
+
+function aesEcbDecrypt16(key16: Uint8Array, ct16: Uint8Array): Uint8Array {
+    assert(key16.length === 16, "Secret key must be exactly 16 bytes")
+    assert(ct16.length === 16, "encoded value must decode to 16 bytes")
+    const decipher = createDecipheriv("aes-128-ecb", Buffer.from(key16), null)
+    decipher.setAutoPadding(false)
+    const out = Buffer.concat([decipher.update(Buffer.from(ct16)), decipher.final()])
+    return new Uint8Array(out)
+}
+
+export const DEFAULT_ALPHABET =
+    "0123456789bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ" // 50 chars
 
 /**
- * Encodes a 16-byte Uint8Array into a string and decodes it back.
- * The bytes are scrambled using a secret key, S-box, and permutation to obfuscate the ID.
+ * AES-ECB based obfuscator for 16-byte IDs with base-N encoding.
+ * - Deterministic 16->16 mask (confidentiality only; no integrity).
+ * - Encodes to fixed length: ceil(128 / log2(base)).
  */
 export class ObfuscatedIdEncoder {
-    private readonly secretKey: Uint8Array;
-    private readonly alphabet: string;
-    private readonly base: bigint;
-    private readonly reverse: Map<string, bigint>;
-    private readonly maxLength: number;
-    private readonly sbox: Uint8Array;
-    private readonly invSbox: Uint8Array;
-    private readonly permutation: Uint8Array;
-    private readonly invPermutation: Uint8Array;
+    private readonly secretKey: Uint8Array
+    private readonly alphabet: string
+    private readonly base: bigint
+    private readonly reverse: Map<string, bigint>
+    private readonly maxLength: number
 
-    /**
-     * Constructs an encoder with a secret key and an optional alphabet.
-     * @param secretKey - A 16-byte key for obfuscation.
-     * @param alphabet - Characters to use for encoding (defaults to DEFAULT_ALPHABET).
-     */
     constructor(secretKey: Uint8Array, alphabet: string = DEFAULT_ALPHABET) {
-        // Validate inputs
-        assert(secretKey.length === 16, 'Secret key must be exactly 16 bytes');
-        assert(alphabet.length >= 2, 'Alphabet must contain at least 2 characters');
-        assert(new Set(alphabet).size === alphabet.length, 'Alphabet must contain unique characters');
+        assert(secretKey.length === 16, "Secret key must be exactly 16 bytes")
+        assert(alphabet.length >= 2, "Alphabet must contain at least 2 characters")
+        assert(new Set(alphabet).size === alphabet.length, "Alphabet must contain unique characters")
 
-        this.secretKey = secretKey;
-        this.alphabet = alphabet;
-        this.base = BigInt(alphabet.length);
-        this.reverse = new Map(Array.from(alphabet, (v, i) => [v, BigInt(i)]));
-        const log2Base = Math.log2(Number(this.base));
-        this.maxLength = Math.ceil(128 / log2Base);
+        // With base >= 2, a fixed length exists for representing 128-bit values.
+        const log2Base = Math.log2(alphabet.length)
 
-        // Generate S-box and its inverse
-        this.sbox = this.generateSbox();
-        this.invSbox = new Uint8Array(256);
-        for (let i = 0; i < 256; i++) {
-            this.invSbox[this.sbox[i]] = i;
-        }
-
-        // Generate permutation and its inverse
-        this.permutation = this.generatePermutation();
-        this.invPermutation = new Uint8Array(16);
-        for (let i = 0; i < 16; i++) {
-            this.invPermutation[this.permutation[i]] = i;
-        }
+        this.secretKey = secretKey
+        this.alphabet = alphabet
+        this.base = BigInt(alphabet.length)
+        this.reverse = new Map(Array.from(alphabet, (ch, i) => [ch, BigInt(i)]))
+        this.maxLength = Math.ceil(128 / log2Base)
     }
 
-    private generateSbox(): Uint8Array {
-        const sbox = new Uint8Array(256);
-        for (let i = 0; i < 256; i++) {
-            sbox[i] = i;
-        }
-        let j = 0;
-        for (let i = 0; i < 256; i++) {
-            j = (j + sbox[i] + this.secretKey[i % 16]) % 256;
-            const temp = sbox[i];
-            sbox[i] = sbox[j];
-            sbox[j] = temp;
-        }
-        return sbox;
-    }
-
-    private generatePermutation(): Uint8Array {
-        const permutation = new Uint8Array(16);
-        for (let i = 0; i < 16; i++) {
-            permutation[i] = i;
-        }
-        for (let i = 15; i > 0; i--) {
-            const keyByte = this.secretKey[i % 16];
-            const j = keyByte % (i + 1);
-            const temp = permutation[i];
-            permutation[i] = permutation[j];
-            permutation[j] = temp;
-        }
-        return permutation;
-    }
-
-    /**
-     * Encodes a 16-byte ID into an obfuscated string.
-     * @param id - The 16-byte ID to encode.
-     * @returns An encoded string of length maxLength.
-     */
+    /** Encodes a 16-byte ID to a fixed-length string. */
     encode(id: Uint8Array): string {
-        assert(id.length === 16, 'ID must be 16 bytes long');
+        assert(id.length === 16, "ID must be 16 bytes long")
 
-        // Step 1: XOR with secret key
-        const scrambled = new Uint8Array(16);
-        for (let i = 0; i < 16; i++) {
-            scrambled[i] = id[i] ^ this.secretKey[i];
+        // 1) AES-ECB mask (16 -> 16)
+        const masked = aesEcbEncrypt16(this.secretKey, id)
+
+        // 2) Convert 128-bit to base-N string
+        let x = bytes16ToBigInt(masked)
+        let s = ""
+        for(let i = 0; i < this.maxLength; i++) {
+            const d = x % this.base
+            s = this.alphabet[Number(d)] + s
+            x /= this.base
         }
-
-        // Step 2: Apply S-box
-        const sboxed = new Uint8Array(16);
-        for (let i = 0; i < 16; i++) {
-            sboxed[i] = this.sbox[scrambled[i]];
-        }
-
-        // Step 3: Apply permutation
-        const mixed = new Uint8Array(16);
-        for (let i = 0; i < 16; i++) {
-            mixed[i] = sboxed[this.permutation[i]];
-        }
-
-        // Step 4: Convert to big integer (big-endian)
-        let value = 0n;
-        for (let i = 0; i < 16; i++) {
-            value = (value << 8n) | BigInt(mixed[i]);
-        }
-
-        // Step 5: Convert to string using alphabet
-        let result = '';
-        do {
-            const digit = value % this.base;
-            result = this.alphabet[Number(digit)] + result;
-            value = value / this.base;
-        } while (value > 0n);
-
-        // Pad to maxLength with the first character
-        return result.padStart(this.maxLength, this.alphabet[0]);
+        // If x != 0 here, overflow (base too small or bug)
+        assert(x === 0n, "overflow > 128 bits")
+        return s // fixed length
     }
 
-    /**
-     * Decodes an obfuscated string back to the original 16-byte ID.
-     * @param formattedId - The encoded string to decode.
-     * @returns The original 16-byte ID.
-     */
+    /** Decodes a string (length <= maxLength) back to the original 16-byte ID. */
     decode(formattedId: string): Uint8Array {
-        assert(formattedId.length <= this.maxLength, `Formatted ID must be ${this.maxLength} characters or less`);
+        assert(
+            formattedId.length <= this.maxLength,
+            `Formatted ID must be ${this.maxLength} characters or less`
+        )
 
-        // Step 1: Convert string to big integer
-        let value = 0n;
-        for (const char of formattedId) {
-            const digit = this.reverse.get(char);
-            assert(digit !== undefined, `Invalid character in ID: ${char}`);
-            value = value * this.base + digit;
+        // 1) Base-N to bigint
+        let x = 0n
+        for(const ch of formattedId) {
+            const v = this.reverse.get(ch)
+            assert(v !== undefined, `Invalid character in ID: ${ch}`)
+            x = x * this.base + v
+            assert(x < TWO_128, "value exceeds 128 bits")
         }
 
-        // Step 2: Convert big integer to bytes (big-endian)
-        const mixed = new Uint8Array(16);
-        for (let i = 15; i >= 0; i--) {
-            mixed[i] = Number(value & 0xFFn);
-            value >>= 8n;
-        }
+        // Left-pad semantics: shorter strings are valid (they represent smaller x).
+        const masked = bigIntToBytes16(x)
 
-        // Step 3: Apply inverse permutation
-        const sboxed = new Uint8Array(16);
-        for (let i = 0; i < 16; i++) {
-            sboxed[i] = mixed[this.invPermutation[i]];
-        }
-
-        // Step 4: Apply inverse S-box
-        const scrambled = new Uint8Array(16);
-        for (let i = 0; i < 16; i++) {
-            scrambled[i] = this.invSbox[sboxed[i]];
-        }
-
-        // Step 5: XOR with secret key to recover ID
-        const id = new Uint8Array(16);
-        for (let i = 0; i < 16; i++) {
-            id[i] = scrambled[i] ^ this.secretKey[i];
-        }
-
-        return id;
+        // 2) AES-ECB unmask
+        return aesEcbDecrypt16(this.secretKey, masked)
     }
 }

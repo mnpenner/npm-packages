@@ -94,11 +94,15 @@ export class OrderedTypedIdGenerator<IdType extends number> {
             `type must be in [0, ${0xFFF}], got ${typeNum}`
         )
 
-        let time = (this.startTime + performanceNow()) / this.scaleFactor
-        assert(
-            this.lastTime == null || time > this.lastTime,
-            'Current time was not greater than last time. Possible degradation in performance counter or insufficient scale factor.'
-        )
+        let time = (this.startTime + performanceNow()) / this.scaleFactor  // bigint will floor
+        if (this.lastTime != null && time <= this.lastTime) {
+            console.error('Current time was not greater than last time. Possible degradation in performance counter or insufficient scale factor.')
+            time = this.lastTime + 1n;     // bump by one time unit
+        }
+        // assert(
+        //     this.lastTime == null || time > this.lastTime,
+        //     'Current time was not greater than last time. Possible degradation in performance counter or insufficient scale factor.'
+        // )
         this.lastTime = time
 
         // Generate 60 bits (7.5 bytes) of randomness
