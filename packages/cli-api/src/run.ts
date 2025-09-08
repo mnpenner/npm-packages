@@ -1,4 +1,4 @@
-import {App} from './interfaces'
+import type {App} from './interfaces'
 import {helpCommand} from './commands/command-help'
 import {versionCommand} from './commands/version'
 import {printHelp} from './app-help'

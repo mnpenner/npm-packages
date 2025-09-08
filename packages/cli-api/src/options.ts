@@ -1,5 +1,7 @@
-import {AnyOptType, App, Command, Option, OptType} from './interfaces'
-import {abort, includes, NullableObj, resolve, statSync, toArray, toBool} from './utils'
+import type {AnyOptType, App, Command, Option} from './interfaces';
+import { OptType} from './interfaces'
+import type { NullableObj} from './utils';
+import {abort, includes, resolve, statSync, toArray, toBool} from './utils'
 import Chalk from 'chalk'
 import Path from 'path'
 import FileSys from 'fs'
@@ -204,10 +206,11 @@ function coerceType(value: string, type: AnyOptType) {
             }
             return file
         }
-        case OptType.INPUT_DIRECTORY:
+        case OptType.INPUT_DIRECTORY: {
             const dir = Path.normalize(value)
             FileSys.accessSync(dir, FileSys.constants.X_OK)
             return dir
+        }
         case OptType.OUTPUT_FILE: {
             if (value === '-') return '/dev/stdout'  // TODO: support windows
             const file = Path.normalize(value)

@@ -1,4 +1,4 @@
-import {App} from './interfaces'
+import type {App} from './interfaces'
 import Path from 'path'
 import stringWidth from 'string-width'
 import Chalk from 'chalk'

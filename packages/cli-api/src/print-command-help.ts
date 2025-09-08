@@ -1,4 +1,5 @@
-import {App, Command, OptType} from './interfaces'
+import type {App, Command} from './interfaces';
+import { OptType} from './interfaces'
 import {getProcName, print, printLn, space, toArray} from './utils'
 import Chalk from 'chalk'
 import {formatOption, getOptions, getOptName, getValuePlaceholder} from './options'

@@ -1,4 +1,4 @@
-import {App} from './interfaces'
+import type {App} from './interfaces'
 import {getProcName, print, printLn, space} from './utils'
 import Chalk from 'chalk'
 import stringWidth from 'string-width'

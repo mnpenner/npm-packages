@@ -1,4 +1,4 @@
-import {App, Command} from '../interfaces'
+import type {App, Command} from '../interfaces'
 import {getCommand} from '../options'
 import {printCommandHelp} from '../print-command-help'
 import {printAvailableCommands} from '../app-help'

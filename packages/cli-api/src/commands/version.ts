@@ -1,4 +1,4 @@
-import {Command} from '../interfaces'
+import type {Command} from '../interfaces'
 import {printLn} from '../utils'
 
 export const versionCommand: Command = {
