@@ -1,5 +1,5 @@
 import {AnyOptType, App, Command, Option, OptType} from './interfaces'
-import {abort, includes, resolve, statSync, toArray, toBool} from './utils'
+import {abort, includes, NullableObj, resolve, statSync, toArray, toBool} from './utils'
 import Chalk from 'chalk'
 import Path from 'path'
 import FileSys from 'fs'
@@ -235,7 +235,7 @@ function coerceType(value: string, type: AnyOptType) {
             try {
                 files = FileSys.readdirSync(dir)
             } catch (err) {
-                if (err.code === 'ENOENT') {
+                if ((err as NullableObj)?.code === 'ENOENT') {
                     FileSys.accessSync(Path.dirname(dir), FileSys.constants.W_OK)
                 } else {
                     throw err

@@ -27,8 +27,7 @@ export default function run(app: App) {
     try {
         [args, opts] = parseArgs(cmd, rawArgs)
     } catch (err) {
-        abort(String(err.message))
-        process.exit(2)
+        abort(err instanceof Error ? err.message : String(err))
     }
     Promise.resolve(cmd.execute(opts, args, app))
         .then(code => {

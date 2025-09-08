@@ -8,11 +8,14 @@ import FileSys from 'fs'
 export const print = process.stdout.write.bind(process.stdout)
 export const printLn = console.log.bind(console)
 
+export type nil = null | undefined
+export type NullableObj = Record<string, any> | nil
+
 function blockError(str: string) {
     const lines = str.split('\n')
     const width = Math.max(...lines.map(l => stringWidth(l))) + 4
     printLn(Chalk.bgRed(space(width)))
-    for (const line of lines) {
+    for(const line of lines) {
         const txt = `  ${line}`
         printLn(Chalk.bgRed(txt + space(width, txt)))
     }
@@ -25,7 +28,7 @@ export function abort(message: string, code: number = 1): never {
 }
 
 export function toArray<T>(x: T | T[]): readonly T[] {
-    if (!x) return EMPTY_ARRAY
+    if(!x) return EMPTY_ARRAY
     return Array.isArray(x) ? x : [x]
 }
 
@@ -34,19 +37,19 @@ export function resolve<T>(x: any): T {
 }
 
 export function toBool(str: string | boolean): boolean {
-    if (typeof str === 'boolean') return str
+    if(typeof str === 'boolean') return str
     str = String(str).trim().toLowerCase()
-    if (TRUE_VALUES.has(str)) {
+    if(TRUE_VALUES.has(str)) {
         return true
     }
-    if (FALSE_VALUES.has(str)) {
+    if(FALSE_VALUES.has(str)) {
         return false
     }
     throw new Error(`Could not cast "${str}" to boolean`)
 }
 
 export function space(len: number, str?: string) {
-    if (str) {
+    if(str) {
         len -= stringWidth(str)
     }
 
@@ -54,7 +57,7 @@ export function space(len: number, str?: string) {
 }
 
 export function getProcName(app: App) {
-    if (app.argv0 != null) {
+    if(app.argv0 != null) {
         return app.argv0
     }
     const relPath = Path.relative(process.cwd(), process.argv[1])
@@ -64,8 +67,8 @@ export function getProcName(app: App) {
 }
 
 export function includes(needle: string, haystack: string | string[] | undefined) {
-    if (!haystack) return false
-    if (Array.isArray(haystack)) return haystack.includes(needle)
+    if(!haystack) return false
+    if(Array.isArray(haystack)) return haystack.includes(needle)
     return needle === haystack
 }
 
