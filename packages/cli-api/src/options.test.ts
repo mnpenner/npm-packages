@@ -1,6 +1,6 @@
 import { describe, it, expect } from "bun:test"
 import { parseArgs } from "./options"
-import {Argument, Command, Option, OptType} from './interfaces'
+import {Argument, Command, defineCommand, Flag, Option, OptType} from './interfaces'
 
 // Helper: make a command with options/args.
 // Assumes your getOptions(cmd) returns cmd.options || [].
@@ -14,6 +14,26 @@ function makeCmd(
         arguments: args,
         execute: async () => {}
     }
+}
+
+export function testCmd<
+    Opts  extends readonly Option[] | undefined,
+    Flags extends readonly Flag[]   | undefined,
+    Args  extends readonly Argument[] | undefined
+>(
+    definition: Omit<Command<Opts, Flags, Args>, "name" | "execute"> & {
+        name?: string
+        execute?: Command<Opts, Flags, Args>["execute"]
+    }
+): Command<Opts, Flags, Args> {
+    const defaultExecute: Command<Opts, Flags, Args>["execute"] = async () => {}
+
+    // Spread first (allow caller overrides), then ensure required fields
+    return defineCommand({
+        ...definition,
+        name: definition.name ?? "test",
+        execute: definition.execute ?? defaultExecute,
+    })
 }
 
 describe("parseArgs", () => {
@@ -52,6 +72,22 @@ describe("parseArgs", () => {
         expect(opts.a).toBe(true)
         expect(opts.b).toBe(true)
         expect(opts.c).toBe(true)
+    })
+
+    it("clusters short flags: -abc", () => {
+        const cmd = testCmd({
+            flags: [
+                { name: "a", },
+                { name: "b", },
+                { name: "c", },
+                { name: "d", },
+            ] as const
+        })
+        const [, opts] = parseArgs(cmd, ["-abc"])
+        expect(opts.a).toBe(true)
+        expect(opts.b).toBe(true)
+        expect(opts.c).toBe(true)
+        expect(opts.d).toBe(false)
     })
 
     it("short option with inline value: -nfoo", () => {

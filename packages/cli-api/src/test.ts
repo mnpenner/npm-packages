@@ -27,7 +27,6 @@ const worldCmd = defineCommand({
         }
     ] as const,
     async execute(opts, args, app) {
-        opts.
         console.log(`Hello ${opts.name}`)
     },
 })

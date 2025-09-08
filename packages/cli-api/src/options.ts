@@ -1,4 +1,4 @@
-import type {AnyOptType, App, Command, Option} from './interfaces'
+import type {AnyCmd, AnyOptType, App, Command, Option} from './interfaces'
 import {OptType} from './interfaces'
 import type {NullableObj} from './utils'
 import {abort, includes, resolve, statSync, toArray, toBool} from './utils'
@@ -51,7 +51,7 @@ export function getValuePlaceholder(opt: Option): string {
     }
 }
 
-export function getOptions(cmd: Command): Option[] {
+export function getOptions(cmd: AnyCmd): Option[] {
     return [
         ...toArray(cmd.options),
         ...toArray(cmd.flags).map(f => ({
@@ -68,7 +68,7 @@ export function getOptions(cmd: Command): Option[] {
     ] as Option[]
 }
 
-export function parseArgs(cmd: Command, argv: string[]): [any[], Record<string, any>] {
+export function parseArgs(cmd: AnyCmd, argv: string[]): [any[], Record<string, any>] {
     const args: any[] = []
     const opts: Record<string, any> = Object.create(null)
     let parseFlags = true

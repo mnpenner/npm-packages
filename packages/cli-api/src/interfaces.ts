@@ -1,3 +1,6 @@
+// union → intersection
+type U2I<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never
+
 type PrimitiveOfOptType<T extends AnyOptType | undefined> =
     T extends undefined ? string :
         T extends OptType.STRING ? string :
@@ -8,49 +11,48 @@ type PrimitiveOfOptType<T extends AnyOptType | undefined> =
                         T extends readonly (infer L)[] ? (L extends string ? L : string) :
                             string
 
-type KeyOf<I extends ArgumentOrOptionOrFlag> =
-    I['key'] extends string ? I['key'] : I['name'] extends string ? I['name'] : never
+// literal property key: prefer `key`, else `name`
+type KeyOfItem<I> =
+    I extends { key: infer K extends string } ? K :
+        I extends { name: infer N extends string } ? N :
+            never
 
-// --- options/flags mapper (unchanged)
+// ----- options & flags -----
 type ValueOfOption<O extends Option> =
     O['repeatable'] extends true
         ? PrimitiveOfOptType<O['type']>[]
         : PrimitiveOfOptType<O['type']>
 
-type ValueOfItem<I extends Option | Flag> =
-    I extends Flag ? boolean :
-        I extends Option ? ValueOfOption<I> :
-            never
+type OptionPropMap<I extends Option> = { [K in KeyOfItem<I>]: ValueOfOption<I> }
+type FlagPropMap<F extends Flag>     = { [K in KeyOfItem<F>]: boolean }
 
-// --- NEW: arguments mapper (do NOT map to boolean)
+type MergeOptionProps<IU extends Option> = U2I<IU extends any ? OptionPropMap<IU> : never>
+type MergeFlagProps<FU extends Flag>     = U2I<FU extends any ? FlagPropMap<FU>   : never>
+
+// only Options can be "required"
+type RequiredOptions<I extends Option> = Extract<I, { required: true }>
+type OptionalOptions<I extends Option> = Exclude<I, RequiredOptions<I>>
+
+export type OptionsOf<
+    Opts  extends readonly Option[] | undefined,
+    Flags extends readonly Flag[]   | undefined
+> =
+    (Opts  extends readonly any[] ? (
+        MergeOptionProps<RequiredOptions<Opts[number]>> &
+        Partial<MergeOptionProps<OptionalOptions<Opts[number]>>>
+        ) : {}) &
+    (Flags extends readonly any[] ? Partial<MergeFlagProps<Flags[number]>> : {})
+
+// ----- arguments (never boolean) -----
 type ValueOfArg<A extends Argument> =
     A['repeatable'] extends true
         ? PrimitiveOfOptType<A['type']>[]
         : PrimitiveOfOptType<A['type']>
 
-// union→intersection util
-type U2I<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never
-
-type PropMap<I extends Option | Flag> = { [K in KeyOf<I>]: ValueOfItem<I> }
-type MergeProps<IU extends Option | Flag> = U2I<IU extends any ? PropMap<IU> : never>
-
-// OptionsOf (required Options only)
-type RequiredOptions<I extends Option | Flag> = Extract<I, Option & { required: true }>
-type OptionalRest<I extends Option | Flag>   = Exclude<I, RequiredOptions<I>>
-
-export type OptionsOf<Opts extends readonly (Option | Flag)[] | undefined> =
-    Opts extends readonly (infer I)[]
-        ? I extends Option | Flag
-            ? MergeProps<RequiredOptions<I>> & Partial<MergeProps<OptionalRest<I>>>
-            : {}
-        : {}
-
-// --- ArgsOf rebuilt to use ValueOfArg ---
 type _ArgsFixed<As extends readonly Argument[], Acc extends unknown[] = []> =
     As extends readonly [infer A, ...infer R]
         ? A extends Argument
-            ? A['repeatable'] extends true
-                ? Acc
+            ? A['repeatable'] extends true ? Acc
                 : _ArgsFixed<R & readonly Argument[], [...Acc, ValueOfArg<A>]>
             : Acc
         : Acc
@@ -69,23 +71,27 @@ export type ArgsOf<As extends readonly Argument[] | undefined> =
 
 // ---------- Generic Command with inferred execute ----------
 export type Command<
-    Opts extends readonly (Option | Flag)[] | undefined = undefined,
-    As   extends readonly Argument[] | undefined        = undefined
+    Opts  extends readonly Option[] | undefined  = undefined,
+    Flags extends readonly Flag[]   | undefined  = undefined,
+    As    extends readonly Argument[] | undefined = undefined
 > = {
     name: string
     alias?: string | string[]
     description?: string
     longDescription?: string
-    flags?: Flag[]
     options?: Opts
+    flags?: Flags
     arguments?: As
-    execute(options: OptionsOf<Opts>, args: ArgsOf<As>, app: App<any>): Promise<number | void>
+    execute(options: OptionsOf<Opts, Flags>, args: ArgsOf<As>, app: App<any>): MaybePromise<number | void>
 }
 
+export type MaybePromise<V> = V | PromiseLike<V>
+
 export function defineCommand<
-    Opts extends readonly (Option | Flag)[] | undefined,
+    Opts extends readonly Option[] | undefined,
+    Flags extends readonly Flag[] | undefined,
     As extends readonly Argument[] | undefined
->(c: Command<Opts, As>): Command<Opts, As> { return c }
+>(c: Command<Opts, Flags, As>): Command<Opts, Flags, As> { return c }
 
 export enum OptType {
     STRING,
@@ -112,8 +118,6 @@ interface ArgumentOrOptionOrFlag {
     alias?: string | string[]
     /** Description of the option. */
     description?: string
-    /** Default value if not provided. */
-    defaultValue?: any | ((value: string) => any)
     /** Default value to display in help. */
     defaultValueText?: string
     /** Property name to use in `execute()` options. */
@@ -129,11 +133,15 @@ export interface ArgumentOrOption extends ArgumentOrOptionOrFlag {
     repeatable?: boolean
     /** Option is required. */
     required?: boolean
+    /** Default value if not provided. */
+    defaultValue?: any | (() => any)
 }
 
 /** Boolean flag. */
 export interface Flag extends ArgumentOrOptionOrFlag, OptionOrFlag {
     valueNotRequired?: true
+    /** Default value if not provided. */
+    defaultValue?: boolean | (() => boolean)
 }
 
 /** Positional argument. */
@@ -153,7 +161,7 @@ export interface Option extends ArgumentOrOption, OptionOrFlag {
     valueNotRequired?: boolean
 }
 
-export interface App<Cs extends readonly Command<any, any>[] = readonly Command<any, any>[]> {
+export interface App<Cs extends readonly Command<any, any, any>[] = readonly Command<any, any, any>[]> {
     name: string
     argv0?: string
     version?: string
@@ -161,5 +169,5 @@ export interface App<Cs extends readonly Command<any, any>[] = readonly Command<
     globalOptions?: Option[]
 }
 
-export type AnyCmd = Command<any, any>
+export type AnyCmd = Command<any, any, any>
 export type AnyApp = App<readonly AnyCmd[]>
