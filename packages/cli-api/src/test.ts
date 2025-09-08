@@ -1,4 +1,4 @@
-import run from ".";
+import run, {OptType} from "."
 import * as pkg from '../package.json'
 
 run({
