@@ -1,4 +1,4 @@
-import type {App, Command} from './interfaces';
+import type {AnyCmd, App, Command} from './interfaces'
 import { OptType} from './interfaces'
 import {getProcName, print, printLn, space, toArray} from './utils'
 import Chalk from 'chalk'
@@ -6,7 +6,7 @@ import {formatOption, getOptions, getOptName, getValuePlaceholder} from './optio
 import stringWidth from 'string-width'
 
 
-export function printCommandHelp(app: App, cmd: Command) {
+export function printCommandHelp(app: App, cmd: AnyCmd) {
     if (cmd.description) {
         printLn(cmd.description)
         printLn()
@@ -58,7 +58,7 @@ export function printCommandHelp(app: App, cmd: Command) {
 
     if (cmd.arguments?.length) {
         printLn(Chalk.yellow("\nArguments:"))
-        const width = Math.max(...cmd.arguments.map(a => stringWidth(a.name)))
+        const width = Math.max(...cmd.arguments.map((a:AnyCmd) => stringWidth(a.name)))
         for (const arg of cmd.arguments) {
             print('  ' + Chalk.green(arg.name))
             if (arg.description) {

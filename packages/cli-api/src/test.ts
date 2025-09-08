@@ -1,26 +1,40 @@
 import run, {OptType} from "."
 import * as pkg from '../package.json'
+import {defineCommand} from './interfaces'
+
+const worldCmd = defineCommand({
+    name: "world",
+    alias: 'w',
+    description: 'Prints "Hello World".',
+    options: [
+        {
+            name: 'name',
+            alias: 'n',
+            description: "Person you want to greet",
+            required: true,
+        },
+    ] as const,
+    flags: [
+        {
+            name: 'verbose',
+            alias: 'v',
+            description: "Prints more info",
+        },
+        {
+            name: 'quiet',
+            alias: 'q',
+            description: "Prints less info",
+        }
+    ] as const,
+    async execute(opts, args, app) {
+        opts.
+        console.log(`Hello ${opts.name}`)
+    },
+})
 
 run({
     name: "hello",
     version: pkg.version,
     argv0: pkg.name,
-    commands: [
-        {
-            name: "world",
-            alias: 'w',
-            description: 'Prints "Hello World".',
-            async execute(opts, args) {
-                console.log(`Hello ${opts.name}`)
-            },
-            options: [
-                {
-                    name: 'name',
-                    alias: 'n',
-                    description: "Person you want to greet",
-                    required: true,
-                },
-            ]
-        }
-    ]
+    commands: [worldCmd] as const,
 })

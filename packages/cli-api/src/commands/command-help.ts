@@ -1,10 +1,10 @@
-import type {App, Command} from '../interfaces'
+import {App, Command, defineCommand} from '../interfaces'
 import {getCommand} from '../options'
 import {printCommandHelp} from '../print-command-help'
 import {printAvailableCommands} from '../app-help'
 import {printLn} from '../utils'
 
-export const helpCommand: Command = {
+export const helpCommand = defineCommand({
     name: 'help',
     // alias: '--help',
     description: "Displays help for a command",
@@ -14,8 +14,8 @@ export const helpCommand: Command = {
             description: "The command name.",
             required: false,
         }
-    ],
-    async execute(options: Record<string, string>, [commandName]: string[], app: App) {
+    ] as const,
+    async execute(options, [commandName], app) {
         if(commandName) {
             printCommandHelp(app, getCommand(commandName, app))
         } else {
@@ -24,5 +24,5 @@ export const helpCommand: Command = {
             printAvailableCommands(app)
         }
     }
-}
+})
 
