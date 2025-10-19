@@ -1,36 +1,35 @@
 {
-  "name": "ouid",
-  "version": "0.8.0",
-  "description": "Ordered UUIDs for Node & Bun",
-  "exports": {
-    ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+    "name": "ouid",
+    "version": "0.8.0",
+    "description": "Ordered UUIDs for Node & Bun",
+    "exports": {
+        ".": {
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.cjs",
+            "types": "./dist/index.d.ts"
+        }
+    },
+    "type": "module",
+    "files": [
+        "dist"
+    ],
+    "author": "Mark Penner <npm@mpen.ca>",
+    "license": "MIT",
+    "publishConfig": {
+        "registry": "https://registry.npmjs.org"
+    },
+    "devDependencies": {
+        "@types/bun": "^1.2.4",
+        "typescript": "^5.8.2",
+        "mitata": "^1.0.34",
+        "tsdown": "^0.15.8"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/mnpenner/ouid"
+    },
+    "engines": {
+        "node": ">=10.7.0",
+        "bun": ">=1.0"
     }
-  },
-  "type": "module",
-  "files": [
-    "dist"
-  ],
-  "author": "Mark Penner <npm@mpen.ca>",
-  "license": "MIT",
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org"
-  },
-  "devDependencies": {
-    "@types/bun": "^1.2.4",
-    "typescript": "^5.8.2"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/mnpenner/ouid"
-  },
-  "engines": {
-    "node": ">=10.7.0",
-    "bun": ">=1.0"
-  },
-  "dependencies": {
-    "mitata": "^1.0.34"
-  }
 }
