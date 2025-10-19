@@ -2,7 +2,7 @@
 import { test, expect, describe, it } from 'bun:test';
 import { randomBytes } from 'node:crypto';
 import { OrderedTypedIdGenerator } from './OrderedTypedIdGenerator';
-import { ObfuscatedIdEncoder } from './ObfuscatedIdEncoder';
+import { EncryptedIdEncoder } from './EncryptedIdEncoder';
 import {ReadableIdEncoder} from './ReadableIdEncoder'
 
 describe('ReadableIdEncoder', () => {

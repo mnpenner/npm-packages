@@ -46,7 +46,7 @@ export const DEFAULT_ALPHABET =
  * - Deterministic 16->16 mask (confidentiality only; no integrity).
  * - Encodes to fixed length: ceil(128 / log2(base)).
  */
-export class ObfuscatedIdEncoder {
+export class EncryptedIdEncoder {
     private readonly secretKey: Uint8Array
     private readonly alphabet: string
     private readonly base: bigint

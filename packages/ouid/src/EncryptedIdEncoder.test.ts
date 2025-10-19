@@ -2,7 +2,7 @@
 import {expect, describe, it} from 'bun:test'
 import {randomBytes} from 'node:crypto'
 import {OrderedTypedIdGenerator} from './OrderedTypedIdGenerator'
-import {ObfuscatedIdEncoder} from './ObfuscatedIdEncoder'
+import {EncryptedIdEncoder} from './EncryptedIdEncoder'
 import {shuffleString} from './util'
 
 const enum IdType {
@@ -15,7 +15,7 @@ describe('TypedIdGenerator and ObfusicatedIdEncoder', () => {
     const secretKey = randomBytes(16)
     const alphabet = shuffleString('0123456789bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ')
     const generator = new OrderedTypedIdGenerator<IdType>()
-    const encoder = new ObfuscatedIdEncoder(secretKey, alphabet)
+    const encoder = new EncryptedIdEncoder(secretKey, alphabet)
 
     describe('Basic Functionality', () => {
         it('should round-trip random bytes correctly', () => {
@@ -104,7 +104,7 @@ describe('TypedIdGenerator and ObfusicatedIdEncoder', () => {
     describe('Alphabet Variations', () => {
         it('should work with base-36', () => {
             const base36 = '0123456789abcdefghijklmnopqrstuvwxyz'
-            const fmt = new ObfuscatedIdEncoder(secretKey, base36)
+            const fmt = new EncryptedIdEncoder(secretKey, base36)
             const id = generator.generate(IdType.USER)
             const formatted = fmt.encode(id)
             expect(formatted.length).toBe(25)
@@ -113,7 +113,7 @@ describe('TypedIdGenerator and ObfusicatedIdEncoder', () => {
 
         it('should work with base-57', () => {
             const base57 = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTU'
-            const fmt = new ObfuscatedIdEncoder(secretKey, base57)
+            const fmt = new EncryptedIdEncoder(secretKey, base57)
             const id = generator.generate(IdType.USER)
             const formatted = fmt.encode(id)
             expect(formatted.length).toBe(22)
@@ -122,7 +122,7 @@ describe('TypedIdGenerator and ObfusicatedIdEncoder', () => {
 
         it('should work with base-62', () => {
             const base62 = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-            const fmt = new ObfuscatedIdEncoder(secretKey, base62)
+            const fmt = new EncryptedIdEncoder(secretKey, base62)
             const id = generator.generate(IdType.USER)
             const formatted = fmt.encode(id)
             expect(formatted.length).toBe(22)
@@ -134,8 +134,8 @@ describe('TypedIdGenerator and ObfusicatedIdEncoder', () => {
         it('should depend on secret key', () => {
             const key1 = randomBytes(16)
             const key2 = randomBytes(16)
-            const fmt1 = new ObfuscatedIdEncoder(key1, alphabet)
-            const fmt2 = new ObfuscatedIdEncoder(key2, alphabet)
+            const fmt1 = new EncryptedIdEncoder(key1, alphabet)
+            const fmt2 = new EncryptedIdEncoder(key2, alphabet)
 
             const id = generator.generate(IdType.POST)
             const formatted1 = fmt1.encode(id)

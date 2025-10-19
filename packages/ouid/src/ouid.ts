@@ -8,7 +8,7 @@ const start = BigInt(now) * 1000000n - hrt;
  *
  * @return {Buffer}
  */
-export default function ouid() {
+export function ouid() {
     const time = start + process.hrtime.bigint();
     let buf = Buffer.allocUnsafe(16);
     buf.writeBigUInt64BE(time, 0);
