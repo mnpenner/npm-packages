@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 /** Default epoch set to 2025-01-01T00:00:00Z in nanoseconds since Unix epoch. */
 const DEFAULT_EPOCH = 1735689600_000_000_000n
 /** Default scale factor, where each time unit in the ID represents 50 nanoseconds. */
-const DEFAULT_SCALE_FACTOR = 50n
+const DEFAULT_SCALE_FACTOR = 50n  // 2^56*50ns = 114 years
 
 /** Type definition for a high-resolution time function returning nanoseconds as a bigint. */
 type HrTimeFn = () => bigint;

@@ -3,7 +3,7 @@ import {randomBytes} from 'node:crypto'
 import {OrderedTypedIdGenerator} from './OrderedTypedIdGenerator'
 import {EncryptedIdEncoder} from './EncryptedIdEncoder'
 import {ReadableIdEncoder} from './ReadableIdEncoder'
-import {shuffleString, toHex} from './util'
+import {shuffleString, toBase64Url, toHex} from './util'
 
 const enum IdType {
     USER,
@@ -16,6 +16,7 @@ const alphabet = shuffleString('0123456789bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVW
 // const alphabet = shuffleString('123456789bcdfghijklmnopqrstuvwxyzBCDFGHIJKLMNOPQRSTUVWXYZ')
 
 console.log(`secretKey: ${toHex(secretKey)}`)
+console.log(`secretKey: ${toBase64Url(secretKey)}`)
 console.log(`alphabet: ${alphabet}`)
 console.log()
 
