@@ -11,7 +11,7 @@ const enum IdType {
     POST,
 }
 
-describe('TypedIdGenerator and ObfusicatedIdEncoder', () => {
+describe('OrderedTypedIdGenerator and EncryptedIdEncoder', () => {
     const secretKey = randomBytes(16)
     const alphabet = shuffleString('0123456789bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ')
     const generator = new OrderedTypedIdGenerator<IdType>()
@@ -20,7 +20,7 @@ describe('TypedIdGenerator and ObfusicatedIdEncoder', () => {
     describe('Basic Functionality', () => {
         it('should round-trip random bytes correctly', () => {
             for(let i = 0; i < 10_000; ++i) {
-                const id = new Uint8Array(randomBytes(16))
+                const id = randomBytes(16)
                 const encoded = encoder.encode(id)
                 const decoded = encoder.decode(encoded)
                 expect(decoded).toEqual(id)
@@ -33,7 +33,7 @@ describe('TypedIdGenerator and ObfusicatedIdEncoder', () => {
 
         it('should generate 16-byte IDs', () => {
             const id = generator.generate(IdType.POST)
-            expect(id).toBeInstanceOf(Uint8Array)
+            expect(id).toBeInstanceOf(Buffer)
             expect(id.length).toBe(16)
         })
 

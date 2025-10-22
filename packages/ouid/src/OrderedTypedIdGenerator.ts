@@ -45,7 +45,7 @@ const performanceNow: HrTimeFn = (() => {
  * }
  * const generator = new OrderedTypedIdGenerator<MyType>();
  * const id = generator.generate(MyType.TypeA);
- * console.log(id); // 16-byte Uint8Array
+ * console.log(id); // 16-byte Buffer
  * const type = generator.extractType(id);
  * console.log(type === MyType.TypeA); // true
  * const date = generator.extractDate(id);
@@ -84,10 +84,10 @@ export class OrderedTypedIdGenerator<IdType extends number> {
      * The ID is composed of 56 bits of time, 60 bits of randomness, and a 12-bit type tag.
      * @param type - The type tag, an integer between 0 and 4095 (12 bits). Can be a number
      *               or enum value convertible to such an integer.
-     * @returns A 16-byte Uint8Array representing the ID.
+     * @returns A 16-byte Buffer representing the ID.
      * @throws {AssertionError} If `type` is not in [0, 4095] or if time does not increase.
      */
-    generate(type: IdType): Uint8Array {
+    generate(type: IdType): Buffer {
         const typeNum = Number(type)
         assert(
             typeNum >= 0 && typeNum <= 0xFFF,
@@ -109,7 +109,7 @@ export class OrderedTypedIdGenerator<IdType extends number> {
         const random = randomBytes(8) // 8 bytes, using 60 bits
 
         // Create 16-byte buffer (128 bits)
-        const buffer = new Uint8Array(16)
+        const buffer = Buffer.alloc(16)
 
         // 56 bits of time (bytes 0-6)
         buffer[0] = Number((time >> 48n) & 0xFFn)
@@ -142,7 +142,7 @@ export class OrderedTypedIdGenerator<IdType extends number> {
      * @returns The type tag as an `IdType` value (integer 0-4095).
      * @throws {AssertionError} If `id` is not exactly 16 bytes.
      */
-    extractType(id: Uint8Array): IdType {
+    extractType(id: Buffer): IdType {
         assert(id.length === 16, 'ID must be 16 bytes long')
 
         const typeHigh = id[14] & 0x0F // Bottom 4 bits of byte 14
@@ -158,7 +158,7 @@ export class OrderedTypedIdGenerator<IdType extends number> {
      * @returns Nanoseconds since 1970-01-01T00:00:00Z as a bigint.
      * @throws {AssertionError} If `id` is not exactly 16 bytes.
      */
-    extractTimeNs(id: Uint8Array): bigint {
+    extractTimeNs(id: Buffer): bigint {
         assert(id.length === 16, 'ID must be 16 bytes long')
 
         // Reconstruct 56-bit time from bytes 0-6
@@ -181,7 +181,7 @@ export class OrderedTypedIdGenerator<IdType extends number> {
      * @returns Milliseconds since 1970-01-01T00:00:00Z as a number.
      * @throws {AssertionError} If `id` is not exactly 16 bytes.
      */
-    extractTimeMs(id: Uint8Array): number {
+    extractTimeMs(id: Buffer): number {
         return Number(this.extractTimeNs(id) / 1_000_000n)
     }
 
@@ -192,7 +192,7 @@ export class OrderedTypedIdGenerator<IdType extends number> {
      * @returns A Date object representing the time the ID was generated.
      * @throws {AssertionError} If `id` is not exactly 16 bytes.
      */
-    extractDate(id: Uint8Array): Date {
+    extractDate(id: Buffer): Date {
         return new Date(this.extractTimeMs(id))
     }
 }

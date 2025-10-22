@@ -19,7 +19,7 @@ Browser support has been dropped.
 
 ```js
 import ouid from 'ouid';
-console.log(new Uint8Array(ouid())); // Uint8Array(16) [20, 251, 185, 165, 210, 140, 210, 64, 118, 227, 170, 82, 137, 17, 231, 166]
+console.log(ouid()); // <Buffer 14 fb b9 a5 d2 8c d2 40 76 e3 aa 52 89 11 e7 a6>
 ```
 
 ### node
