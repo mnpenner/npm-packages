@@ -15,8 +15,8 @@ const secretKey = randomBytes(16)
 const alphabet = shuffleString('0123456789bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ')
 // const alphabet = shuffleString('123456789bcdfghijklmnopqrstuvwxyzBCDFGHIJKLMNOPQRSTUVWXYZ')
 
-console.log(`secretKey: ${toHex(secretKey)}`)
-console.log(`secretKey: ${toBase64Url(secretKey)}`)
+console.log(`secretKey(hex): ${secretKey.toString('hex')}`)
+console.log(`secretKey(base64url): ${secretKey.toString('base64url')}`)
 console.log(`alphabet: ${alphabet}`)
 console.log()
 

@@ -22,7 +22,7 @@ const performanceNow: HrTimeFn = (() => {
         // Note: Precision may degrade after 14.8 weeks of uptime in Bun.
         return () => BigInt(Bun.nanoseconds())
     }
-    return () => BigInt(Math.round(performance.now() * 1e6))
+    return () => BigInt(Math.floor(performance.now() * 1e6))
 })()
 
 /**
