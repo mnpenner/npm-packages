@@ -1,6 +1,12 @@
 {
   "name": "bun-plugin-react-compiler",
-  "version": "0.1.1",
+  "version": "0.1.2",
+  "description": "Bun plugin for React Compiler.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mnpenner/bun-plugin-react-compiler.git"
+  },
+  "author": "Mark Penner <git@mpen.ca>",
   "module": "./dist/react-compiler.js",
   "type": "module",
   "files": [
