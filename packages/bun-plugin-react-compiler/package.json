@@ -1,6 +1,6 @@
 {
   "name": "bun-plugin-react-compiler",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Bun plugin for React Compiler.",
   "repository": {
     "type": "git",
@@ -15,9 +15,6 @@
   "devDependencies": {
     "@types/babel__core": "^7.20.5",
     "@types/bun": "latest",
-    "tsdown": "^0.15.12"
-  },
-  "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
@@ -25,7 +22,7 @@
     "babel-plugin-react-compiler": "^1.0.0"
   },
   "scripts": {
-    "build": "bun run --bun tsdown"
+    "build": "bun run build.ts && tsc -p tsconfig.build.json"
   },
   "main": "./dist/react-compiler.js",
   "exports": {
