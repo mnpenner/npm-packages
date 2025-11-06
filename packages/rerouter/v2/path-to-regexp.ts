@@ -10,20 +10,21 @@ function compile(
 ): string {
     const {tokens} = parse(pattern)
 
-    const baseProps: string[] = []    // required, non-group props
-    const groupTypes: string[] = []   // each: "{...}|{}"
+    type Prop = { name: string; type: string }
+
+    const baseProps: Prop[] = []     // required, non-group props
+    const groupTypes: string[] = []  // each: "{...} | {...?: never}"
 
     const typeOfParam = (t: any) =>
-        t.type === 'wildcard' ? '(string|number)[]' : 'string|number'
+        t.type === 'wildcard' ? 'Iterable<string|number>' : 'string|number'
 
-    const propStr = (name: string, t: any) =>
-        `${jsSerialize(name)}: ${typeOfParam(t)}`
+    const makeProp = (name: string, t: any): Prop => ({name, type: typeOfParam(t)})
 
     // gather ALL props under a group (including nested groups)
-    function collectGroupProps(ts: any[]): string[] {
-        const props: string[] = []
+    function collectGroupProps(ts: any[]): Prop[] {
+        const props: Prop[] = []
         for(const t of ts) {
-            if(t.type === 'param' || t.type === 'wildcard') props.push(propStr(t.name, t))
+            if(t.type === 'param' || t.type === 'wildcard') props.push(makeProp(t.name, t))
             else if(t.type === 'group') props.push(...collectGroupProps(t.tokens))
         }
         return props
@@ -33,18 +34,13 @@ function compile(
     function collectTypes(ts: any[], intoBase = true) {
         for(const t of ts) {
             if((t.type === 'param' || t.type === 'wildcard') && intoBase) {
-                baseProps.push(propStr(t.name, t))
+                baseProps.push(makeProp(t.name, t))
             } else if(t.type === 'group') {
                 const groupProps = collectGroupProps(t.tokens)
                 if(groupProps.length) {
-                    const noneSide = '{' + groupProps
-                        .map(p => {
-                            const [name] = p.split(':')
-                            return `${name}?: never`
-                        })
-                        .join(',') + '}'
-
-                    groupTypes.push(`{${groupProps.join(',')}}|${noneSide}`)
+                    const some = '{' + groupProps.map(p => `${jsSerialize(p.name)}: ${p.type}`).join(',') + '}'
+                    const none = '{' + groupProps.map(p => `${jsSerialize(p.name)}?: never`).join(',') + '}'
+                    groupTypes.push(`${some}|${none}`)
                 }
                 // also recurse to find nested groups' own unions
                 collectTypes(t.tokens, false)
@@ -54,13 +50,11 @@ function compile(
 
     collectTypes(tokens)
 
-    // build the `params` type: {base} & (({g1}|{}) & ({g2}|{}) & ...)
-    let paramsType = `{${baseProps.join(',')}}`
-    if(groupTypes.length) {
-        paramsType += ' & (' + groupTypes.map(g => `(${g})`).join(' & ') + ')'
-    }
+    // build the `params` type: {base} & (({g1}|{g1?:never}) & ({g2}|{g2?:never}) & ...)
+    let paramsType = '{' + baseProps.map(p => `${jsSerialize(p.name)}: ${p.type}`).join(',') + '}'
+    if(groupTypes.length) paramsType += ' & (' + groupTypes.map(g => `(${g})`).join(' & ') + ')'
 
-    // --- runtime codegen (your original, with group check kept) ---
+    // --- runtime codegen ---
     let ts = `function generate(params:${paramsType}):string {\n`
     ts += 'let sb=""\n'
 
@@ -115,9 +109,9 @@ function compile(
 }
 
 
-console.log(compile(`/hello/:foo/bar/:baz/*splat/xxx{/:optional/lol/:two}`))
+console.log(compile(`/hello/:foo/bar/:baz/*splat/xxx{/:optional/lol/:two}`, {delimiter: ','}))
 
-function generate(params: { "foo": string | number, "baz": string | number, "splat": (string | number)[] } & (({
+function generate(params: { "foo": string | number, "baz": string | number, "splat": Iterable<string | number> } & (({
     "optional": string | number,
     "two": string | number
 } | { "optional"?: never, "two"?: never }))): string {
@@ -130,7 +124,7 @@ function generate(params: { "foo": string | number, "baz": string | number, "spl
     sb += "/bar/"
     sb += encodeURIComponent(params["baz"])
     sb += "/"
-    sb += Array.from(params["splat"], encodeURIComponent).join("/")
+    sb += Array.from(params["splat"], encodeURIComponent).join(",")
     sb += "/xxx"
     if(params["optional"] != null && params["two"] != null) {
         sb += "/"
@@ -143,4 +137,5 @@ function generate(params: { "foo": string | number, "baz": string | number, "spl
     return sb
 }
 
-console.log(generate({foo: 'bar', baz: 'qux', splat: ['a', 'b', 'c'], optional: 'd', two: 'sox'}))
+console.log(generate({foo: 'bar', baz: 2, splat: new Set(['a', 'b', 3]), optional: 'd', two: 'sox'}))
+)
