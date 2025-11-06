@@ -3,6 +3,15 @@ import jsSerialize from 'js-serialize'
 
 // console.dir(parse(`/hello/:foo/bar/:baz/*splat/xxx{/:optional}`),{depth:null})
 
+/**
+ * Either all keys of T are present (and required), or none are present.
+ */
+type AllOrNone<T> =
+    | Required<T>
+    | { [K in keyof T]?: never };
+
+type ParamType = string | number | boolean
+type WilcardType = Iterable<ParamType>
 
 function compile(
     pattern: string,
@@ -12,15 +21,14 @@ function compile(
 
     type Prop = { name: string; type: string }
 
-    const baseProps: Prop[] = []     // required, non-group props
-    const groupTypes: string[] = []  // each: "{...} | {...?: never}"
+    const baseProps: Prop[] = []
+    const groupTypes: string[] = [] // each: AllOrNone<{...}>
 
     const typeOfParam = (t: any) =>
-        t.type === 'wildcard' ? 'Iterable<string|number>' : 'string|number'
+        t.type === 'wildcard' ? 'WilcardType' : 'ParamType'
 
     const makeProp = (name: string, t: any): Prop => ({name, type: typeOfParam(t)})
 
-    // gather ALL props under a group (including nested groups)
     function collectGroupProps(ts: any[]): Prop[] {
         const props: Prop[] = []
         for(const t of ts) {
@@ -30,7 +38,6 @@ function compile(
         return props
     }
 
-    // collect base required props, and build per-group union types
     function collectTypes(ts: any[], intoBase = true) {
         for(const t of ts) {
             if((t.type === 'param' || t.type === 'wildcard') && intoBase) {
@@ -39,10 +46,8 @@ function compile(
                 const groupProps = collectGroupProps(t.tokens)
                 if(groupProps.length) {
                     const some = '{' + groupProps.map(p => `${jsSerialize(p.name)}: ${p.type}`).join(',') + '}'
-                    const none = '{' + groupProps.map(p => `${jsSerialize(p.name)}?: never`).join(',') + '}'
-                    groupTypes.push(`${some}|${none}`)
+                    groupTypes.push(`AllOrNone<${some}>`)
                 }
-                // also recurse to find nested groups' own unions
                 collectTypes(t.tokens, false)
             }
         }
@@ -50,11 +55,11 @@ function compile(
 
     collectTypes(tokens)
 
-    // build the `params` type: {base} & (({g1}|{g1?:never}) & ({g2}|{g2?:never}) & ...)
+    // {base} & (AllOrNone<G1> & AllOrNone<G2> & ...)
     let paramsType = '{' + baseProps.map(p => `${jsSerialize(p.name)}: ${p.type}`).join(',') + '}'
-    if(groupTypes.length) paramsType += ' & (' + groupTypes.map(g => `(${g})`).join(' & ') + ')'
+    if(groupTypes.length) paramsType += ' & ' + groupTypes.join(' & ')
 
-    // --- runtime codegen ---
+    // --- runtime codegen (unchanged) ---
     let ts = `function generate(params:${paramsType}):string {\n`
     ts += 'let sb=""\n'
 
@@ -108,13 +113,12 @@ function compile(
     return ts
 }
 
-
 console.log(compile(`/hello/:foo/bar/:baz/*splat/xxx{/:optional/lol/:two}`, {delimiter: ','}))
 
-function generate(params: { "foo": string | number, "baz": string | number, "splat": Iterable<string | number> } & (({
-    "optional": string | number,
-    "two": string | number
-} | { "optional"?: never, "two"?: never }))): string {
+function generate(params: { "foo": ParamType, "baz": ParamType, "splat": WilcardType } & AllOrNone<{
+    "optional": ParamType,
+    "two": ParamType
+}>): string {
     let sb = ""
     if(params["foo"] == null) throw new Error("Missing param: foo")
     if(params["baz"] == null) throw new Error("Missing param: baz")
@@ -137,5 +141,6 @@ function generate(params: { "foo": string | number, "baz": string | number, "spl
     return sb
 }
 
-console.log(generate({foo: 'bar', baz: 2, splat: new Set(['a', 'b', 3]), optional: 'd', two: 'sox'}))
-)
+
+console.log(generate({foo: 'bar', baz: 2, splat: new Set(['a', 'b', 3]), optional: 'd', two: false}))
+
