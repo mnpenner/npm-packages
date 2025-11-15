@@ -17,7 +17,7 @@ export class ConnectionPool<TDefaultValue = DefaultValueType> {
         return (async (...args: any[]) => {
             const conn = await this.getConnection()
             try {
-                return await (conn[method] as any)(...args)
+                return (conn[method] as any)(...args)
             } finally {
                 conn.release()  // TODO: what if release fails? should we at least log something?
             }

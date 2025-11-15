@@ -2,6 +2,14 @@
 
 A small OOP wrapper around [`mariadb`](https://github.com/mariadb-corporation/mariadb-connector-nodejs).
 
+## Not Maintained
+
+This project is no longer maintained. We suggest using one of the following alternatives:
+
+- [mysql2](https://www.npmjs.com/package/mysql2)
+- [mariadb](https://github.com/mariadb-corporation/mariadb-connector-nodejs?tab=readme-ov-file#quick-start)
+- [kysley](https://kysely.dev)
+
 
 ## Installation
 

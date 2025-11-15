@@ -1,6 +1,6 @@
 {
     "name": "mysql3",
-    "version": "0.7.4",
+    "version": "0.7.5",
     "license": "LGPL-3.0-or-later",
     "packageManager": "bun@1.2.5",
     "exports": {
