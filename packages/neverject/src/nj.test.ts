@@ -18,6 +18,18 @@ describe('nj overloads', () => {
         }
     })
 
+    it('wraps a rejected promise', async () => {
+        const asyncResult = nj(Promise.reject(1))
+
+        expectType<TypeEqual<typeof asyncResult, AsyncResult<never, unknown>>>(true)
+
+        const result = await asyncResult
+        expect(result.ok).toBe(true)
+        if(result.ok) {
+            expect(result.value).toBe(1)
+        }
+    })
+
     it('wraps an error', async () => {
         const input = new Error('boom')
         const asyncResult = nj(input)
@@ -32,8 +44,8 @@ describe('nj overloads', () => {
     })
 
     it('wraps a sync result', async () => {
-        const syncResult: SyncResult<number, never> = ok(2)
-        const asyncResult: AsyncResult<number, never> = nj(syncResult)
+        const syncResult = ok(2)
+        const asyncResult = nj(syncResult)
 
         expectType<TypeEqual<typeof asyncResult, AsyncResult<number, never>>>(true)
 

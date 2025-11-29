@@ -16,14 +16,14 @@ export function toError<T>(x: T): DetailedError<T>;
 export function toError(x: unknown): DetailedError {
     if(x instanceof Error) return x
 
-    let message = 'Unknown error'
+    let message = 'Rejected Promise'
 
     if(x !== null && x !== undefined) {
         try {
             const stringified = String(x)
 
             if(stringified !== '[object Object]') {
-                message = stringified
+                message += `: ${stringified}`
             }
         } catch {
             // Handles rare edge cases like Object.create(null) where String(x) might throw
