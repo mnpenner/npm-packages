@@ -1,2 +1,98 @@
-import {describe, expect, it, mock} from "bun:test"
-import { expectType, type TypeEqual} from './type-assert.ts'
+#!/usr/bin/env -S bun test
+import {describe, expect, it} from "bun:test"
+import {nj} from './nj.ts'
+import {AsyncResult} from './async-result.ts'
+import {err, ok, type SyncResult} from './sync-result.ts'
+import {expectType, type TypeEqual} from './type-assert.ts'
+
+describe('nj overloads', () => {
+    it('wraps a promise', async () => {
+        const asyncResult = nj(Promise.resolve(1))
+
+        expectType<TypeEqual<typeof asyncResult, AsyncResult<number, unknown>>>(true)
+
+        const result = await asyncResult
+        expect(result.ok).toBe(true)
+        if(result.ok) {
+            expect(result.value).toBe(1)
+        }
+    })
+
+    it('wraps an error', async () => {
+        const input = new Error('boom')
+        const asyncResult = nj(input)
+
+        expectType<TypeEqual<typeof asyncResult, AsyncResult<never, Error>>>(true)
+
+        const result = await asyncResult
+        expect(result.ok).toBe(false)
+        if(!result.ok) {
+            expect(result.error).toBe(input)
+        }
+    })
+
+    it('wraps a sync result', async () => {
+        const syncResult: SyncResult<number, never> = ok(2)
+        const asyncResult: AsyncResult<number, never> = nj(syncResult)
+
+        expectType<TypeEqual<typeof asyncResult, AsyncResult<number, never>>>(true)
+
+        const result = await asyncResult
+        expect(result.ok).toBe(true)
+        if(result.ok) {
+            expect(result.value).toBe(2)
+        }
+    })
+
+    it('wraps a value', async () => {
+        const asyncResult = nj({value: 'abc'})
+
+        expectType<TypeEqual<typeof asyncResult, AsyncResult<{ value: string }, never>>>(true)
+
+        const result = await asyncResult
+        expect(result.ok).toBe(true)
+        if(result.ok) {
+            expect(result.value).toEqual({value: 'abc'})
+        }
+    })
+
+    it('maps a promise rejection with an error function', async () => {
+        const asyncResult = nj(
+            new Promise<number>((_, reject) => reject(2)),
+            (reason) => (reason as number) * 2,
+        )
+
+        expectType<TypeEqual<typeof asyncResult, AsyncResult<number, number>>>(true)
+
+        const result = await asyncResult
+        expect(result.ok).toBe(false)
+        if(!result.ok) {
+            expect(result.error).toBe(4)
+        }
+    })
+
+    it('maps a sync result error', async () => {
+        const syncResult: SyncResult<number, string> = err('fail')
+        const asyncResult = nj<number, string, number>(syncResult, (error) => error.length)
+
+        expectType<TypeEqual<typeof asyncResult, AsyncResult<number, number>>>(true)
+
+        const result = await asyncResult
+        expect(result.ok).toBe(false)
+        if(!result.ok) {
+            expect(result.error).toBe(4)
+        }
+    })
+
+    it('preserves a value while changing the error type', async () => {
+        const asyncResult = nj(5, (reason) => String(reason))
+
+        expectType<TypeEqual<typeof asyncResult, AsyncResult<number, string>>>(true)
+
+        const result = await asyncResult
+        expect(result.ok).toBe(true)
+        if(result.ok) {
+            expect(result.value).toBe(5)
+        }
+    })
+})

@@ -34,9 +34,3 @@ export function toError(x: unknown): DetailedError {
     e.details = x
     return e
 }
-
-console.log(toError('foo'))
-console.log(toError(new Error('bar')))
-console.log(toError(new NeverjectError('bar')))
-console.log(toError({bar: 5}))
-//          ^?

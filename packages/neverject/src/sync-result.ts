@@ -1,4 +1,4 @@
-interface IResult<T, _E> {
+interface IResult<T, __E> {
     readonly ok: boolean
 
     valueOr<U>(defaultValue: U): T | U
@@ -25,7 +25,7 @@ export class Ok<T> implements IResult<T, never> {
     readonly ok = true
     readonly [RESULT_MARKER] = true
 
-    valueOr<U>(_unused: U): T {
+    valueOr<U>(__unused: U): T {
         return this.value
     }
 }

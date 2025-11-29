@@ -1,8 +1,8 @@
 import { AsyncResult, INTERNAL_CONSTRUCT} from './async-result.ts'
-import {Err, err, isSyncResult, ok, type SyncResult} from './sync-result.ts'
+import { err, isSyncResult, ok, type SyncResult} from './sync-result.ts'
 
 export function nj<P>(promise: PromiseLike<P>): AsyncResult<Awaited<P>, unknown>;
-export function nj<E extends Error>(error: E): AsyncResult<never, Err<E>>;
+export function nj<E extends Error>(error: E): AsyncResult<never, E>;
 export function nj<V,E>(result: SyncResult<V,E>): AsyncResult<V,E>;
 export function nj<V>(value: V): AsyncResult<V,never>;
 
