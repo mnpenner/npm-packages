@@ -1,1 +1,1 @@
-export {ok,err} from './result'
+export {ok,err} from './sync-result.ts'

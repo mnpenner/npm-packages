@@ -38,9 +38,9 @@ export function err<E>(error: E): Err<E> {
     return new Err(error)
 }
 
-export type Result<T, E> = Ok<T> | Err<E>;
+export type SyncResult<T, E> = Ok<T> | Err<E>;
 
-export function isResult(x: unknown): x is Result<unknown, unknown> {
+export function isSyncResult(x: unknown): x is SyncResult<unknown, unknown> {
     return (
         typeof x === 'object' &&
         x !== null &&
