@@ -47,7 +47,7 @@ describe('call', () => {
         const throwingFn = () => { throw reason }
         const result = call(throwingFn)
 
-        expectType<TypeEqual<typeof result, SyncResult<unknown, unknown>>>(true)
+        expectType<TypeEqual<typeof result, SyncResult<never, unknown>>>(true)
         expect(result.ok).toBe(false)
         if(result.ok) return
 

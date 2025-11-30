@@ -11,7 +11,7 @@ import {rejectWithError} from './reject.ts'
  * @example
  * const errResult = call(() => { throw 'boom' }) // Err<DetailedError<string>>
  */
-export function call<A extends any[] = []>(fn: (...args: A) => never, ...args: A): SyncResult<unknown, unknown>;
+export function call<A extends any[] = []>(fn: (...args: A) => never, ...args: A): SyncResult<never, unknown>;
 export function call<V, A extends any[] = []>(fn: (...args: A) => Ok<V>, ...args: A): SyncResult<V, never>;
 export function call<E, A extends any[] = []>(fn: (...args: A) => Err<E>, ...args: A): SyncResult<never, E>;
 export function call<V, E, A extends any[] = []>(fn: (...args: A) => SyncResult<V,E>, ...args: A): SyncResult<V, E>;
