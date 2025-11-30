@@ -13,11 +13,11 @@ type ToSyncResult<T> =
                             SyncResult<Awaited<P>, DetailedError<unknown>> :
                         SyncResult<T, never>
 
-type AllResults<T extends Record<string, unknown>> = {
+export type AllResults<T extends Record<string, unknown>> = {
     [K in keyof T]: ToSyncResult<T[K]>
 }
 
-export function all<T extends Record<string, unknown>>(inputs: T): AsyncResult<AllResults<T>, never> {
+export function all<T extends Record<string, AsyncResult<any, any> | PromiseLike<any>>>(inputs: T): AsyncResult<AllResults<T>, never> {
     const promise = Promise.all(
         Object.entries(inputs).map(async ([key, value]) => {
             const settled = await nj(value as unknown)

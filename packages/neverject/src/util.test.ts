@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bun test
 import {describe, expect, it} from 'bun:test'
-import {all} from './util.ts'
+import {all, type AllResults} from './util.ts'
 import {nj} from './nj.ts'
-import {err, ok, type SyncResult} from './sync-result.ts'
+import {Err, err, Ok, ok, type SyncResult} from './sync-result.ts'
 import {expectType, type TypeEqual} from './type-assert.ts'
 import type {AsyncResult} from './async-result.ts'
 import type {DetailedError} from './detailed-error.ts'
@@ -11,10 +11,10 @@ describe('all', () => {
     it('wraps a record of values/promises/results into an AsyncResult of SyncResults', async () => {
         const failingPromise: Promise<number> = new Promise((_, reject) => reject('bad'))
         const asyncResult = all({
-            value: 1,
+            value: nj(1),
             promise: Promise.resolve(2),
-            ok: ok(3),
-            err: err('boom'),
+            ok: nj(ok(3)),
+            err: nj(err('boom')),
             njPromise: nj(failingPromise),
         })
 
@@ -30,6 +30,13 @@ describe('all', () => {
         expectType<TypeEqual<typeof asyncResult, Expected>>(true)
 
         const settled = await asyncResult
+        expectType<TypeEqual<typeof settled, SyncResult<{
+            value: SyncResult<number, never>;
+            promise: SyncResult<number, DetailedError<unknown>>;
+            ok: SyncResult<number, never>;
+            err: SyncResult<never, string>;
+            njPromise: SyncResult<number, DetailedError<unknown>>;
+        }, never>>>(true)
         expect(settled.ok).toBe(true)
         if(!settled.ok) return
 
@@ -56,7 +63,7 @@ describe('all', () => {
     })
 
     it('preserves keys without index juggling', async () => {
-        const settled = await all({a: ok(1), b: err('x')})
+        const settled = await all({a: nj(1), b: nj(err('x'))})
 
         expect(settled.ok).toBe(true)
         if(!settled.ok) return
