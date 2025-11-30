@@ -90,7 +90,7 @@ describe('Utilities', () => {
         type ParseError = {message: string}
         const toParseError = (): ParseError => ({message: 'Parse Error'})
 
-        const safeJsonParse = nju.wrapFn((input: string) => JSON.parse(input) as {id: number}, toParseError)
+        const safeJsonParse = nju.wrapFn(JSON.parse, toParseError)
 
         const res = safeJsonParse('{')
 

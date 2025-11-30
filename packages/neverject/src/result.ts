@@ -1,11 +1,43 @@
 import {_INTERNAL_RESULT_MARKER} from './util/type-check.ts'
 
+function stringifyPayload(payload: unknown): string {
+    if(payload instanceof Error) return payload.toString()
+
+    if(typeof payload === 'string') {
+        return `"${payload}"`
+    }
+
+    if(typeof payload === 'object' && payload !== null) {
+        try {
+            const json = JSON.stringify(payload)
+            if(json !== undefined) return json
+        } catch {
+            // Ignore JSON stringify failures and fall back to a simple string conversion.
+        }
+    }
+
+    try {
+        return String(payload)
+    } catch {
+        return '[unstringifiable]'
+    }
+}
+
 interface ResultInterface<T, __E> {
     readonly ok: boolean
 
     valueOr<U>(defaultValue: U): T | U
 }
 
+/**
+ * Represents a failure result. Prefer the {@link err} helper to construct instances.
+ *
+ * @typeParam E - Error payload type.
+ * @param error - The error payload to wrap.
+ * @example
+ * const failed = err('boom')
+ * console.log(failed.toString()) // Err("boom")
+ */
 export class Err<E> implements ResultInterface<never, E> {
     constructor(readonly error: E) {
     }
@@ -16,8 +48,26 @@ export class Err<E> implements ResultInterface<never, E> {
     valueOr<U>(defaultValue: U): U {
         return defaultValue
     }
+
+    /**
+     * Format the wrapped error for logging/debugging.
+     *
+     * @returns A human-readable string like `Err("boom")`.
+     */
+    toString(): string {
+        return `Err(${stringifyPayload(this.error)})`
+    }
 }
 
+/**
+ * Represents a successful result. Prefer the {@link ok} helper to construct instances.
+ *
+ * @typeParam T - Value payload type.
+ * @param value - The value to wrap.
+ * @example
+ * const success = ok(123)
+ * console.log(success.toString()) // Ok(123)
+ */
 export class Ok<T> implements ResultInterface<T, never> {
     constructor(readonly value: T) {
     }
@@ -28,14 +78,43 @@ export class Ok<T> implements ResultInterface<T, never> {
     valueOr<U>(_unused: U): T {
         return this.value
     }
+
+    /**
+     * Format the wrapped value for logging/debugging.
+     *
+     * @returns A human-readable string like `Ok(123)`.
+     */
+    toString(): string {
+        return `Ok(${stringifyPayload(this.value)})`
+    }
 }
 
 export type Result<T, E> = Ok<T> | Err<E>;
 
+/**
+ * Wrap a value in an {@link Ok} result.
+ *
+ * @typeParam T - Value payload type.
+ * @param value - The value to wrap.
+ * @returns An {@link Ok} containing the provided value.
+ * @example
+ * const user = ok({id: 1})
+ * console.log(user.ok) // true
+ */
 export function ok<T>(value: T): Ok<T> {
     return new Ok(value)
 }
 
+/**
+ * Wrap an error payload in an {@link Err} result.
+ *
+ * @typeParam E - Error payload type.
+ * @param error - The error payload to wrap.
+ * @returns An {@link Err} containing the provided error.
+ * @example
+ * const failure = err(new Error('boom'))
+ * console.log(failure.ok) // false
+ */
 export function err<E>(error: E): Err<E> {
     return new Err(error)
 }
