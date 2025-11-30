@@ -18,17 +18,17 @@ export type AllSettledObject<T extends Record<string, unknown>> = {
     [K in keyof T]: ToSyncResult<T[K]>
 }
 
-type AllSettledArray<T extends readonly unknown[]> = {
+export type AllSettledArray<T extends readonly unknown[]> = {
     [K in keyof T]: ToSyncResult<T[K]>
 }
 
-type AllOkArray<T extends readonly unknown[]> = {
+export type AllOkValues<T extends readonly unknown[]> = {
     [K in keyof T]: ToSyncResult<T[K]> extends SyncResult<infer V, any> ? V : never
 }
 
-type AllOkErrors<T extends readonly unknown[]> = ToSyncResult<T[number]> extends SyncResult<any, infer E> ? E : never
+export type AllOkErrors<T extends readonly unknown[]> = ToSyncResult<T[number]> extends SyncResult<any, infer E> ? E : never
 
-type AllOkObject<T extends Record<string, unknown>> = {
+export type AllOkObject<T extends Record<string, unknown>> = {
     [K in keyof T]: ToSyncResult<T[K]> extends SyncResult<infer V, any> ? V : never
 }
 
@@ -69,8 +69,8 @@ export function allSettledObj<T extends Record<string, AsyncResult<any, any> | P
 /**
  * Aggregate into AsyncResult of Ok values, short-circuiting on the first Err.
  */
-export function allOk<T extends readonly (AsyncResult<any, any> | PromiseLike<any> | unknown)[]>(inputs: T): AsyncResult<AllOkArray<T>, AllOkErrors<T>> {
-    const promise: Promise<SyncResult<AllOkArray<T>, AllOkErrors<T>>> = (async () => {
+export function allOk<T extends readonly (AsyncResult<any, any> | PromiseLike<any> | unknown)[]>(inputs: T): AsyncResult<AllOkValues<T>, AllOkErrors<T>> {
+    const promise: Promise<SyncResult<AllOkValues<T>, AllOkErrors<T>>> = (async () => {
         const values: unknown[] = []
         for(const value of inputs) {
             const settled = await nj(value as unknown)
@@ -79,7 +79,7 @@ export function allOk<T extends readonly (AsyncResult<any, any> | PromiseLike<an
             }
             values.push(settled.value)
         }
-        return ok(values as AllOkArray<T>)
+        return ok(values as AllOkValues<T>)
     })()
 
     return AsyncResult[INTERNAL_CONSTRUCT](promise)

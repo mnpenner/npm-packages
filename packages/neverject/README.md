@@ -95,10 +95,10 @@ union). The lists below describe the instance surface you probably want to expos
 | `err(…)`                                                 | `err(…)`                            | Create an Err result                                          |
 | `okAsync(…)`                                             | `nj(…)`                             | Create an Ok async result                                     |
 | `errAsync(…)`                                            | `nj(…)`                             | Create an Err async result                                    |
-| `ResultAsync.fromPromise(…)` / `fromPromise(…)`          | `nj(…)`                             | Wrap a promise into AsyncResult                               |
-| `ResultAsync.fromSafePromise(…)` / `fromSafePromise(…)`  | `nj(…)`                             | Wrap a promise into AsyncResult (safe)                        |
-| `Result.fromThrowable(…)` / `fromThrowable(…)`           | `wrapFn(…)`                         | Wrap a sync function so it returns a SyncResult               |
-| `ResultAsync.fromThrowable(…)` / `fromAsyncThrowable(…)` | `wrapAsyncFn(…)`                    | Wrap an async function so it returns an AsyncResult           |
+| `ResultAsync.fromPromise(…)` / `fromPromise(…)`          | `nj(…)`                             | Wrap a promise into `AsyncResult`                             |
+| `ResultAsync.fromSafePromise(…)` / `fromSafePromise(…)`  | `nj(…)`                             | Wrap a promise into `AsyncResult` (safe)                      |
+| `Result.fromThrowable(…)` / `fromThrowable(…)`           | `wrapFn(…)`                         | Wrap a sync function so it returns a `SyncResult`             |
+| `ResultAsync.fromThrowable(…)` / `fromAsyncThrowable(…)` | `wrapAsyncFn(…)`                    | Wrap an async function so it returns an `AsyncResult`         |
 | `Result.combine(…)`                                      | ❌                                   | Aggregate values, short-circuit on Err                        |
 | `Result.combineWithAllErrors(…)`                         | ❌                                   | Aggregate results, collecting both Ok/Err                     |
 | `ResultAsync.combine(…)`                                 | `allOk(…)`,  `allOkObj(…)`          | Aggregate async values, short-circuit on Err                  |

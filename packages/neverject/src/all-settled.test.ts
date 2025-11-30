@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bun test
 import {describe, expect, it} from 'bun:test'
-import {allOk, allOkObj, allSettled, allSettledObj} from './all-settled.ts'
+import {allOk, allOkObj, type AllOkObject, allSettled, allSettledObj} from './all-settled.ts'
 import {nj} from './nj.ts'
 import {err, ok, type SyncResult} from './sync-result.ts'
 import {expectType, type TypeEqual} from './type-assert.ts'
@@ -89,19 +89,42 @@ describe('allSettledOb', () => {
 
 describe('allSettled', () => {
     it('returns an array of SyncResults and never Errs', async () => {
-        const settled = await allSettled([nj(1), nj(err('boom')), Promise.resolve(3)] as const)
+        const settled = await allSettled([
+            nj(1),
+            nj(err('boom')),
+            Promise.resolve('ok'),
+        ] as const)
+
+        expectType<TypeEqual<typeof settled, SyncResult<readonly [
+            SyncResult<number, never>,
+            SyncResult<never, string>,
+            SyncResult<string, DetailedError<unknown>>
+        ], never>>>(true)
+
         expect(settled.ok).toBe(true)
         if(!settled.ok) return
 
         expect(settled.value[0].ok).toBe(true)
         expect(settled.value[1].ok).toBe(false)
         expect(settled.value[2].ok).toBe(true)
+
+        if(settled.value[0].ok) expect(settled.value[0].value).toBe(1)
+        if(!settled.value[1].ok) expect(settled.value[1].error).toBe('boom')
+        if(settled.value[2].ok) expect(settled.value[2].value).toBe('ok')
     })
 })
 
 describe('allOkObj', () => {
     it('returns Ok when all entries are Ok', async () => {
-        const combined = await allOkObj({a: nj(1), b: nj(Promise.resolve(2))})
+        const combined = await allOkObj({
+            a: nj(1),
+            b: nj(Promise.resolve(2)),
+        })
+
+        expectType<TypeEqual<typeof combined, SyncResult<AllOkObject<{
+            a: AsyncResult<number, never>
+            b: AsyncResult<number, DetailedError<unknown>>
+        }>, DetailedError<unknown>>>>(true)
 
         expect(combined.ok).toBe(true)
         if(!combined.ok) return
@@ -121,12 +144,15 @@ describe('allOkObj', () => {
 
 describe('allOk', () => {
     it('returns Ok with array of values when all succeed', async () => {
-        const combined = await allOk([nj(1), nj(Promise.resolve(2))] as const)
+        const combined = await allOk([nj(1), nj(Promise.resolve('ok'))] as const)
+
+        expectType<TypeEqual<typeof combined, SyncResult<readonly [number, string], DetailedError<unknown>>>>(true)
+
 
         expect(combined.ok).toBe(true)
         if(!combined.ok) return
 
-        expect(combined.value).toEqual([1, 2])
+        expect(combined.value).toEqual([1, 'ok'])
     })
 
     it('returns Err on the first failure', async () => {
