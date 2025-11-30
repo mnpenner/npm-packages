@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bun test
 import {describe, expect, it} from 'bun:test'
 import {reject, rejectWithError} from './reject.ts'
-import {err, ok, type Err, type SyncResult} from '../sync-result.ts'
+import {err, ok, type Err, type Result} from '../result.ts'
 import {expectType, type TypeEqual} from '../internal/type-assert.ts'
 import type {DetailedError} from '../detailed-error.ts'
 
@@ -36,8 +36,8 @@ describe('rejectWithError', () => {
         const okPassed = rejectWithError(okResult)
         const errPassed = rejectWithError(errResult)
 
-        const okAssignable: SyncResult<number, never> = okPassed
-        const errAssignable: SyncResult<never, string> = errPassed
+        const okAssignable: Result<number, never> = okPassed
+        const errAssignable: Result<never, string> = errPassed
         expectType<typeof okAssignable>(okAssignable)
         expectType<typeof errAssignable>(errAssignable)
 
@@ -65,8 +65,8 @@ describe('reject', () => {
         const okPassed = reject(okResult)
         const errPassed = reject(errResult)
 
-        const okAssignable: SyncResult<number, never> = okPassed
-        const errAssignable: SyncResult<never, string> = errPassed
+        const okAssignable: Result<number, never> = okPassed
+        const errAssignable: Result<never, string> = errPassed
         expectType<typeof okAssignable>(okAssignable)
         expectType<typeof errAssignable>(errAssignable)
 

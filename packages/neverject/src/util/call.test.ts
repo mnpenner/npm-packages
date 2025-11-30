@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bun test
 import {describe, expect, it} from 'bun:test'
 import {call} from './call.ts'
-import {err, ok, type SyncResult} from '../sync-result.ts'
+import {err, ok, type Result} from '../result.ts'
 import {expectType, type TypeEqual} from '../internal/type-assert.ts'
 import type {DetailedError} from '../detailed-error.ts'
 import {mayFail1} from '../internal/test-functions.ts'
@@ -10,7 +10,7 @@ describe('call', () => {
     it('wraps returned values in Ok', () => {
         const result = call(() => 42)
 
-        expectType<TypeEqual<typeof result, SyncResult<number, DetailedError<unknown>>>>(true)
+        expectType<TypeEqual<typeof result, Result<number, DetailedError<unknown>>>>(true)
         expect(result.ok).toBe(true)
         if(!result.ok) return
 
@@ -19,7 +19,7 @@ describe('call', () => {
 
     it('passes through returned SyncResults unchanged', () => {
         const result = call(mayFail1)
-        expectType<TypeEqual<typeof result, SyncResult<number, string>>>(true)
+        expectType<TypeEqual<typeof result, Result<number, string>>>(true)
     })
 
     it('handles Ok', () => {
@@ -27,7 +27,7 @@ describe('call', () => {
 
         const okPassed = call(() => okResult)
 
-        expectType<TypeEqual<typeof okPassed, SyncResult<string, never>>>(true)
+        expectType<TypeEqual<typeof okPassed, Result<string, never>>>(true)
 
         expect(okPassed).toBe(okResult)
     })
@@ -37,7 +37,7 @@ describe('call', () => {
 
         const errPassed = call(() => errResult)
 
-        expectType<TypeEqual<typeof errPassed, SyncResult<never, string>>>(true)
+        expectType<TypeEqual<typeof errPassed, Result<never, string>>>(true)
 
         expect(errPassed).toBe(errResult)
     })
@@ -47,7 +47,7 @@ describe('call', () => {
         const throwingFn = () => { throw reason }
         const result = call(throwingFn)
 
-        expectType<TypeEqual<typeof result, SyncResult<never, unknown>>>(true)
+        expectType<TypeEqual<typeof result, Result<never, unknown>>>(true)
         expect(result.ok).toBe(false)
         if(result.ok) return
 

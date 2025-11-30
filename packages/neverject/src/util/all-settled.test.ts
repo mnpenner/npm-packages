@@ -2,9 +2,9 @@
 import {describe, expect, it} from 'bun:test'
 import {allOk, allOkObj, type AllOkObject, allSettled, allSettledObj} from './all-settled.ts'
 import {nj} from '../nj.ts'
-import {err, ok, type SyncResult} from '../sync-result.ts'
+import {err, ok, type Result} from '../result.ts'
 import {expectType, type TypeEqual} from '../internal/type-assert.ts'
-import type {AsyncResult} from '../async-result.ts'
+import type {NeverjectPromise} from '../neverject-promise.ts'
 import type {DetailedError} from '../detailed-error.ts'
 
 describe('allSettledOb', () => {
@@ -18,35 +18,35 @@ describe('allSettledOb', () => {
             njPromise: nj(failingPromise),
         })
 
-        type Expected = AsyncResult<{
-            value: SyncResult<number, never>;
-            promise: SyncResult<number, DetailedError<unknown>>;
-            ok: SyncResult<number, never>;
-            err: SyncResult<never, string>;
-            njPromise: SyncResult<number, DetailedError<unknown>>;
+        type Expected = NeverjectPromise<{
+            value: Result<number, never>;
+            promise: Result<number, DetailedError<unknown>>;
+            ok: Result<number, never>;
+            err: Result<never, string>;
+            njPromise: Result<number, DetailedError<unknown>>;
         }, never>
         const assertAssignable: Expected = asyncResult
         const assertInverse: typeof asyncResult = assertAssignable
         expectType<TypeEqual<typeof asyncResult, Expected>>(true)
 
         const settledResult = await asyncResult
-        expectType<TypeEqual<typeof settledResult, SyncResult<{
-            value: SyncResult<number, never>;
-            promise: SyncResult<number, DetailedError<unknown>>;
-            ok: SyncResult<number, never>;
-            err: SyncResult<never, string>;
-            njPromise: SyncResult<number, DetailedError<unknown>>;
+        expectType<TypeEqual<typeof settledResult, Result<{
+            value: Result<number, never>;
+            promise: Result<number, DetailedError<unknown>>;
+            ok: Result<number, never>;
+            err: Result<never, string>;
+            njPromise: Result<number, DetailedError<unknown>>;
         }, never>>>(true)
         expect(settledResult.ok).toBe(true)
         if(!settledResult.ok) return
 
         const settledValue = settledResult.value
         expectType<TypeEqual<typeof settledValue, {
-            value: SyncResult<number, never>;
-            promise: SyncResult<number, DetailedError<unknown>>;
-            ok: SyncResult<number, never>;
-            err: SyncResult<never, string>;
-            njPromise: SyncResult<number, DetailedError<unknown>>;
+            value: Result<number, never>;
+            promise: Result<number, DetailedError<unknown>>;
+            ok: Result<number, never>;
+            err: Result<never, string>;
+            njPromise: Result<number, DetailedError<unknown>>;
         }>>(true)
 
         expect(settledValue.value.ok).toBe(true)
@@ -95,10 +95,10 @@ describe('allSettled', () => {
             Promise.resolve('ok'),
         ] as const)
 
-        expectType<TypeEqual<typeof settled, SyncResult<readonly [
-            SyncResult<number, never>,
-            SyncResult<never, string>,
-            SyncResult<string, DetailedError<unknown>>
+        expectType<TypeEqual<typeof settled, Result<readonly [
+            Result<number, never>,
+            Result<never, string>,
+            Result<string, DetailedError<unknown>>
         ], never>>>(true)
 
         expect(settled.ok).toBe(true)
@@ -121,9 +121,9 @@ describe('allOkObj', () => {
             b: nj(Promise.resolve(2)),
         })
 
-        expectType<TypeEqual<typeof combined, SyncResult<AllOkObject<{
-            a: AsyncResult<number, never>
-            b: AsyncResult<number, DetailedError<unknown>>
+        expectType<TypeEqual<typeof combined, Result<AllOkObject<{
+            a: NeverjectPromise<number, never>
+            b: NeverjectPromise<number, DetailedError<unknown>>
         }>, DetailedError<unknown>>>>(true)
 
         expect(combined.ok).toBe(true)
@@ -146,7 +146,7 @@ describe('allOk', () => {
     it('returns Ok with array of values when all succeed', async () => {
         const combined = await allOk([nj(1), nj(Promise.resolve('ok'))] as const)
 
-        expectType<TypeEqual<typeof combined, SyncResult<readonly [number, string], DetailedError<unknown>>>>(true)
+        expectType<TypeEqual<typeof combined, Result<readonly [number, string], DetailedError<unknown>>>>(true)
 
 
         expect(combined.ok).toBe(true)

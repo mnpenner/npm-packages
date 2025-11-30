@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bun test
 import {describe, expect, it} from 'bun:test'
 import {resolve} from './resolve.ts'
-import {err, ok, type Ok, type SyncResult} from '../sync-result.ts'
+import {err, ok, type Ok, type Result} from '../result.ts'
 import {expectType, type TypeEqual} from '../internal/type-assert.ts'
 
 describe('resolve', () => {
@@ -22,8 +22,8 @@ describe('resolve', () => {
         const okPassed = resolve(okResult)
         const errPassed = resolve(errResult)
 
-        const okAssignable: SyncResult<string, never> = okPassed
-        const errAssignable: SyncResult<never, string> = errPassed
+        const okAssignable: Result<string, never> = okPassed
+        const errAssignable: Result<never, string> = errPassed
         expectType<typeof okAssignable>(okAssignable)
         expectType<typeof errAssignable>(errAssignable)
 

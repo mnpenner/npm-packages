@@ -1,7 +1,8 @@
-import {type Err, type Ok, type SyncResult} from '../sync-result.ts'
+import {type Err, type Ok, type Result} from '../result.ts'
 import {type DetailedError} from '../detailed-error.ts'
 import {rejectWithError} from './reject.ts'
 import {resolve} from './resolve.ts'
+import {nj} from '../nj.ts'
 
 /**
  * Invoke a sync function and normalize its return into a `SyncResult`, capturing thrown errors as `Err<DetailedError>`.
@@ -12,15 +13,20 @@ import {resolve} from './resolve.ts'
  * @example
  * const errResult = call(() => { throw 'boom' }) // Err<DetailedError<string>>
  */
-export function call<A extends any[] = []>(fn: (...args: A) => never, ...args: A): SyncResult<never, unknown>;
-export function call<V, A extends any[] = []>(fn: (...args: A) => Ok<V>, ...args: A): SyncResult<V, never>;
-export function call<E, A extends any[] = []>(fn: (...args: A) => Err<E>, ...args: A): SyncResult<never, E>;
-export function call<V, E, A extends any[] = []>(fn: (...args: A) => SyncResult<V, E>, ...args: A): SyncResult<V, E>;
-export function call<V, A extends any[] = []>(fn: (...args: A) => V, ...args: A): SyncResult<V, DetailedError<unknown>>;
-export function call<V, E = DetailedError<unknown>, A extends any[] = []>(fn: (...args: A) => SyncResult<V, E> | V, ...args: A): SyncResult<V, E | DetailedError<unknown>> {
+export function call<A extends any[] = []>(fn: (...args: A) => never, ...args: A): Result<never, unknown>;
+export function call<V, A extends any[] = []>(fn: (...args: A) => Ok<V>, ...args: A): Result<V, never>;
+export function call<E, A extends any[] = []>(fn: (...args: A) => Err<E>, ...args: A): Result<never, E>;
+export function call<V, E, A extends any[] = []>(fn: (...args: A) => Result<V, E>, ...args: A): Result<V, E>;
+export function call<V, A extends any[] = []>(fn: (...args: A) => V, ...args: A): Result<V, DetailedError<unknown>>;
+export function call<V, E = DetailedError<unknown>, A extends any[] = []>(fn: (...args: A) => Result<V, E> | V, ...args: A): Result<V, E | DetailedError<unknown>> {
     try {
-        return resolve(fn(...args)) as SyncResult<V, E>
+        return resolve(fn(...args)) as Result<V, E>
     } catch(e) {
-        return rejectWithError(e) as SyncResult<V, E | DetailedError<unknown>>
+        return rejectWithError(e) as Result<V, E | DetailedError<unknown>>
     }
+}
+
+
+export function callAsync(fn, ...args) {
+    return nj(Promise.try(fn, ...args))
 }

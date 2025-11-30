@@ -1,5 +1,5 @@
 #!/usr/bin/env -S bun
-import {err, nj, ok, type SyncResult} from '../index.ts'
+import {err, nj, ok, type Result} from '../index.ts'
 import * as nju from '../util'
 import {describe, example, log, runExamples} from './example-runner.ts'
 import {mayFail1, mayFail2} from './test-functions.ts'
@@ -57,7 +57,7 @@ describe('Utilities', () => {
     })
 
     example('SafeTry style propagation', () => { // https://github.com/supermacro/neverthrow?tab=readme-ov-file#safetry
-        function myFunc1(): SyncResult<number, string> {
+        function myFunc1(): Result<number, string> {
             const result1 = mayFail1()
             if(!result1.ok) return result1
 

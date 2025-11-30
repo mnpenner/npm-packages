@@ -1,9 +1,9 @@
-import {err, ok, type SyncResult} from '../sync-result.ts'
+import {err, ok, type Result} from '../result.ts'
 import {expectType, type TypeEqual} from './type-assert.ts'
 
 const pFail = 1/Math.sqrt(2)
 
-export function mayFail1(): SyncResult<number,string> { return Math.random() < pFail ? ok(1) : err('oh no')}
+export function mayFail1(): Result<number,string> { return Math.random() < pFail ? ok(1) : err('oh no')}
 export function mayFail2() { return Math.random() < pFail ? ok(2) : err('err0r')}
 
 expectType<TypeEqual<typeof mayFail1, typeof mayFail2>>(true)

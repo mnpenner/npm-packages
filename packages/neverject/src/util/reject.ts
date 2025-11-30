@@ -1,5 +1,6 @@
-import {err, isSyncResult, type Err, type SyncResult, type Ok} from '../sync-result.ts'
+import {err, type Err, type Result, type Ok} from '../result.ts'
 import {toDetailedError, type DetailedError} from '../detailed-error.ts'
+import {isResult} from './type-check.ts'
 
 /**
  * Normalize an error-like input into an `Err` while preserving existing `SyncResult`s, converting unknown reasons to `DetailedError`.
@@ -12,11 +13,11 @@ import {toDetailedError, type DetailedError} from '../detailed-error.ts'
  */
 export function rejectWithError<V>(result: Ok<V>): Ok<V>;
 export function rejectWithError<E>(result: Err<E>): Err<E>;
-export function rejectWithError<V, E>(result: SyncResult<V, E>): SyncResult<V, E>;
+export function rejectWithError<V, E>(result: Result<V, E>): Result<V, E>;
 export function rejectWithError<E extends Error>(reason: E): Err<E>;
 export function rejectWithError<T>(reason: T): Err<DetailedError<T>>;
-export function rejectWithError(reason: unknown): SyncResult<unknown, unknown> {
-    return isSyncResult(reason) ? reason : err(toDetailedError(reason))
+export function rejectWithError(reason: unknown): Result<unknown, unknown> {
+    return isResult(reason) ? reason : err(toDetailedError(reason))
 }
 
 /**
@@ -30,8 +31,8 @@ export function rejectWithError(reason: unknown): SyncResult<unknown, unknown> {
  */
 export function reject<V>(result: Ok<V>): Ok<V>;
 export function reject<E>(result: Err<E>): Err<E>;
-export function reject<V, E>(result: SyncResult<V, E>): SyncResult<V, E>;
+export function reject<V, E>(result: Result<V, E>): Result<V, E>;
 export function reject<E>(reason: E): Err<E>;
-export function reject(reason: unknown): SyncResult<unknown, unknown> {
-    return isSyncResult(reason) ? reason : err(reason)
+export function reject(reason: unknown): Result<unknown, unknown> {
+    return isResult(reason) ? reason : err(reason)
 }

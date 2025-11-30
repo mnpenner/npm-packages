@@ -1,4 +1,5 @@
-import {isSyncResult, ok, type Err, type Ok, type SyncResult} from '../sync-result.ts'
+import {ok, type Err, type Ok, type Result} from '../result.ts'
+import {isResult} from './type-check.ts'
 
 /**
  * Normalize a value into an `Ok` while preserving existing `SyncResult`s.
@@ -11,8 +12,8 @@ import {isSyncResult, ok, type Err, type Ok, type SyncResult} from '../sync-resu
  */
 export function resolve<V>(result: Ok<V>): Ok<V>;
 export function resolve<E>(result: Err<E>): Err<E>;
-export function resolve<V, E>(result: SyncResult<V, E>): SyncResult<V, E>;
+export function resolve<V, E>(result: Result<V, E>): Result<V, E>;
 export function resolve<V>(value: V): Ok<V>;
-export function resolve<V, E>(value: SyncResult<V, E> | V): SyncResult<V, E> {
-    return isSyncResult(value) ? value : ok(value)
+export function resolve<V, E>(value: Result<V, E> | V): Result<V, E> {
+    return isResult(value) ? value : ok(value)
 }
