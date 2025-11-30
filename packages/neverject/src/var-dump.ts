@@ -22,6 +22,14 @@ function isBigIntTypedArray(view: ArrayBufferView): view is BigIntTypedArray {
     return view instanceof BigInt64Array || view instanceof BigUint64Array
 }
 
+function hasCustomToString(value: object): value is { toString(): string } {
+    const toString = (value as { toString?: unknown }).toString
+    if (typeof toString !== 'function') return false
+
+    return toString !== Object.prototype.toString &&
+        toString !== Array.prototype.toString
+}
+
 export function varDump(payload: unknown): string {
     // Error
     if (payload instanceof Error) return payload.toString()
@@ -79,6 +87,25 @@ export function varDump(payload: unknown): string {
 
     // JSON-able objects
     if (typeof payload === 'object' && payload !== null) {
+        if (hasCustomToString(payload)) {
+            try {
+                return payload.toString()
+            } catch { /* ignore */ }
+        }
+
+        if (Array.isArray(payload)) {
+            const values = payload.map(varDump)
+            return `[${values.join(',')}]`
+        }
+
+        const proto = Object.getPrototypeOf(payload)
+        if (proto === Object.prototype || proto === null) {
+            const entries = Object.entries(payload).map(
+                ([key, value]) => `${JSON.stringify(key)}:${varDump(value)}`
+            )
+            return `{${entries.join(',')}}`
+        }
+
         try {
             const json = JSON.stringify(payload)
             if (json !== undefined) return json
