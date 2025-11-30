@@ -1,4 +1,5 @@
 ^\.idea/
+^ai/
 ^dist/
 ^node_modules/
 \.log$
