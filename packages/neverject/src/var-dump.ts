@@ -22,7 +22,7 @@ function isBigIntTypedArray(view: ArrayBufferView): view is BigIntTypedArray {
     return view instanceof BigInt64Array || view instanceof BigUint64Array
 }
 
-export function stringifyPayload(payload: unknown): string {
+export function varDump(payload: unknown): string {
     // Error
     if (payload instanceof Error) return payload.toString()
 
@@ -44,14 +44,14 @@ export function stringifyPayload(payload: unknown): string {
     // Map
     if (payload instanceof Map) {
         const entries = Array.from(payload.entries()).map(
-            ([k, v]) => `${stringifyPayload(k)}=>${stringifyPayload(v)}`
+            ([k, v]) => `${varDump(k)}=>${varDump(v)}`
         )
         return `Map{${entries.join(',')}}`
     }
 
     // Set
     if (payload instanceof Set) {
-        return `Set{${Array.from(payload, stringifyPayload).join(',')}}`
+        return `Set{${Array.from(payload, varDump).join(',')}}`
     }
 
     // WeakMap / WeakSet => not serializable

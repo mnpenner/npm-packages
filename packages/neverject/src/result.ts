@@ -1,5 +1,5 @@
 import {_INTERNAL_RESULT_MARKER} from './util/type-check.ts'
-import {stringifyPayload} from './var-dump.ts'
+import {varDump} from './var-dump.ts'
 
 interface ResultInterface<T, __E> {
     readonly ok: boolean
@@ -33,7 +33,7 @@ export class Err<E> implements ResultInterface<never, E> {
      * @returns A human-readable string like `Err("boom")`.
      */
     toString(): string {
-        return `Err(${stringifyPayload(this.error)})`
+        return `Err(${varDump(this.error)})`
     }
 }
 
@@ -63,7 +63,7 @@ export class Ok<T> implements ResultInterface<T, never> {
      * @returns A human-readable string like `Ok(123)`.
      */
     toString(): string {
-        return `Ok(${stringifyPayload(this.value)})`
+        return `Ok(${varDump(this.value)})`
     }
 }
 
