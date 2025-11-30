@@ -8,15 +8,13 @@ describe('Sync results', () => {
     example('Ok result', () => {
         const myResult = ok({myData: 'test'})
 
-        log('ok', myResult.ok)
-        log('value', myResult.value)
+        log('myResult', myResult)
     })
 
     example('Err result', () => {
         const myResult = err('Oh noooo')
 
-        log('ok', myResult.ok)
-        log('error', myResult.error)
+        log('myResult', myResult)
     })
 })
 
@@ -26,8 +24,7 @@ describe('Async results', () => {
         const myAsyncResult = nj({myData: 'test'})
         const myResult = await myAsyncResult
 
-        log('ok', myResult.ok)
-        log('result', myResult)
+        log('myResult', myResult)
     })
 
     example('Async Err via nj', async () => {

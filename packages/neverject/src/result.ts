@@ -1,27 +1,5 @@
 import {_INTERNAL_RESULT_MARKER} from './util/type-check.ts'
-
-function stringifyPayload(payload: unknown): string {
-    if(payload instanceof Error) return payload.toString()
-
-    if(typeof payload === 'string') {
-        return `"${payload}"`
-    }
-
-    if(typeof payload === 'object' && payload !== null) {
-        try {
-            const json = JSON.stringify(payload)
-            if(json !== undefined) return json
-        } catch {
-            // Ignore JSON stringify failures and fall back to a simple string conversion.
-        }
-    }
-
-    try {
-        return String(payload)
-    } catch {
-        return '[unstringifiable]'
-    }
-}
+import {stringifyPayload} from './var-dump.ts'
 
 interface ResultInterface<T, __E> {
     readonly ok: boolean

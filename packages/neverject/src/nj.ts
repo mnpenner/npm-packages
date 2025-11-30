@@ -5,6 +5,22 @@ import {toDetailedError, type DetailedError} from './detailed-error.ts'
 import {reject, rejectWithError, resolve} from './util'
 import {isResult} from './util/type-check.ts'
 
+/**
+ * Normalize values, errors, `Result`s, or promises into a {@link NeverjectPromise} so callers can await an `Ok`/`Err` outcome without try/catch.
+ *
+ * @typeParam V - Value type when wrapping plain values or successful promises.
+ * @typeParam E - Error type when mapping rejection reasons.
+ * @param value - A value, `Result`, `Error`, or promise-like to normalize.
+ * @param errorFn - Optional mapper applied to rejection reasons or `Err` payloads.
+ * @returns A {@link NeverjectPromise} that resolves to an `Ok` on success or an `Err` on failure.
+ * @example
+ * const result = await nj(fetchUser(1))
+ * if (result.ok) renderUser(result.value)
+ *
+ * @example
+ * const mapped = await nj(Promise.reject('boom'), (reason) => new Error(String(reason)))
+ * if (!mapped.ok) console.error(mapped.error.message)
+ */
 export function nj<P>(promise: PromiseLike<P>): NeverjectPromise<
     Awaited<P> extends Result<infer V, any> ? V : Awaited<P>,
     Awaited<P> extends Result<any, infer E> ? E : DetailedError<unknown>
