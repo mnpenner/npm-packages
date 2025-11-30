@@ -1,5 +1,6 @@
 import { AsyncResult, INTERNAL_CONSTRUCT} from './async-result.ts'
-import {Err, Ok, err, isSyncResult, ok, type SyncResult} from './sync-result.ts'
+import type {Err, Ok} from './sync-result.ts';
+import { err, isSyncResult, ok, type SyncResult} from './sync-result.ts'
 import {toDetailedError, type DetailedError} from './detailed-error.ts'
 
 export function nj<P>(promise: PromiseLike<P>): AsyncResult<

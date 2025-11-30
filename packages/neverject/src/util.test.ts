@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bun test
 import {describe, expect, it} from 'bun:test'
-import {all, type AllResults} from './util.ts'
+import {all} from './util.ts'
 import {nj} from './nj.ts'
-import {Err, err, Ok, ok, type SyncResult} from './sync-result.ts'
+import { err, ok, type SyncResult} from './sync-result.ts'
 import {expectType, type TypeEqual} from './type-assert.ts'
 import type {AsyncResult} from './async-result.ts'
 import type {DetailedError} from './detailed-error.ts'
@@ -25,40 +25,49 @@ describe('all', () => {
             err: SyncResult<never, string>;
             njPromise: SyncResult<number, DetailedError<unknown>>;
         }, never>
-        const _assertAssignable: Expected = asyncResult
-        const _assertInverse: typeof asyncResult = _assertAssignable
+        const assertAssignable: Expected = asyncResult
+        const assertInverse: typeof asyncResult = assertAssignable
         expectType<TypeEqual<typeof asyncResult, Expected>>(true)
 
-        const settled = await asyncResult
-        expectType<TypeEqual<typeof settled, SyncResult<{
+        const settledResult = await asyncResult
+        expectType<TypeEqual<typeof settledResult, SyncResult<{
             value: SyncResult<number, never>;
             promise: SyncResult<number, DetailedError<unknown>>;
             ok: SyncResult<number, never>;
             err: SyncResult<never, string>;
             njPromise: SyncResult<number, DetailedError<unknown>>;
         }, never>>>(true)
-        expect(settled.ok).toBe(true)
-        if(!settled.ok) return
+        expect(settledResult.ok).toBe(true)
+        if(!settledResult.ok) return
 
-        expect(settled.value.value.ok).toBe(true)
-        if(settled.value.value.ok) {
-            expect(settled.value.value.value).toBe(1)
+        const settledValue = settledResult.value
+        expectType<TypeEqual<typeof settledValue, {
+            value: SyncResult<number, never>;
+            promise: SyncResult<number, DetailedError<unknown>>;
+            ok: SyncResult<number, never>;
+            err: SyncResult<never, string>;
+            njPromise: SyncResult<number, DetailedError<unknown>>;
+        }>>(true)
+
+        expect(settledValue.value.ok).toBe(true)
+        if(settledValue.value.ok) {
+            expect(settledValue.value.value).toBe(1)
         }
 
-        expect(settled.value.promise.ok).toBe(true)
-        if(settled.value.promise.ok) {
-            expect(settled.value.promise.value).toBe(2)
+        expect(settledValue.promise.ok).toBe(true)
+        if(settledValue.promise.ok) {
+            expect(settledValue.promise.value).toBe(2)
         }
 
-        expect(settled.value.ok.ok).toBe(true)
-        expect(settled.value.err.ok).toBe(false)
-        if(!settled.value.err.ok) {
-            expect(settled.value.err.error).toBe('boom')
+        expect(settledValue.ok.ok).toBe(true)
+        expect(settledValue.err.ok).toBe(false)
+        if(!settledValue.err.ok) {
+            expect(settledValue.err.error).toBe('boom')
         }
 
-        expect(settled.value.njPromise.ok).toBe(false)
-        if(!settled.value.njPromise.ok) {
-            expect(settled.value.njPromise.error).toBeInstanceOf(Error)
+        expect(settledValue.njPromise.ok).toBe(false)
+        if(!settledValue.njPromise.ok) {
+            expect(settledValue.njPromise.error).toBeInstanceOf(Error)
         }
     })
 

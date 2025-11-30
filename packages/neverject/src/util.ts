@@ -1,9 +1,10 @@
 import {AsyncResult, INTERNAL_CONSTRUCT} from './async-result.ts'
-import {Err, Ok, ok, type SyncResult} from './sync-result.ts'
+import type {Err, Ok} from './sync-result.ts'
+import {ok, type SyncResult} from './sync-result.ts'
 import {type DetailedError} from './detailed-error.ts'
 import {nj} from './nj.ts'
 
-type ToSyncResult<T> =
+export type ToSyncResult<T> =
     T extends AsyncResult<infer V, infer E> ? SyncResult<V, E> :
         T extends Ok<infer V2> ? SyncResult<V2, never> :
             T extends Err<infer E2> ? SyncResult<never, E2> :
