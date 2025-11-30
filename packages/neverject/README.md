@@ -106,6 +106,8 @@ union). The lists below describe the instance surface you probably want to expos
 | ❌                                                        | `anyOk(…)`                          | Like `Promise.any`                                            |                          
 | ❌                                                        | `race(…)`                           | Like `Promise.race`                                           |                          
 | `safeTry(…)`                                             | ❌                                   | Generator helper for early-returning on Err                   |
+| ❌                                                        | `resolve(fn, …)`                    | Try calling fn, resolve to `Ok` or `Err`                      |                          
+| ❌                                                        | `resolveAsync(fn, …)`               | Like `Promise.try`                                            |                          
 | Sync methods                                             |                                     |
 | `result.isOk()`                                          | `syncResult.ok`                     | Ok check (property vs method)                                 |
 | `result.isErr()`                                         | `!syncResult.ok`                    | Err check (property vs method)                                |
@@ -133,5 +135,5 @@ union). The lists below describe the instance surface you probably want to expos
 | `resultAsync.andThrough(…)`                              | ❌                                   | No direct async pass-through equivalent                       |
 
 - `safeTry`
-  - [docs](https://github.com/supermacro/neverthrow?tab=readme-ov-file#safetry) 
-  - [impl](https://github.com/supermacro/neverthrow/blob/de73e225d76bddadec1f2e1c86ec91996f8087a9/src/result.ts#L77-L121)
+    - [docs](https://github.com/supermacro/neverthrow?tab=readme-ov-file#safetry)
+    - [impl](https://github.com/supermacro/neverthrow/blob/de73e225d76bddadec1f2e1c86ec91996f8087a9/src/result.ts#L77-L121)

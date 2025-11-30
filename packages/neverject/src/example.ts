@@ -42,10 +42,10 @@ import * as nju from './util'
     const combinedTuple = await nju.allOk(tuple(nj('a'), nj(2)))
 }
 {  // https://github.com/supermacro/neverthrow?tab=readme-ov-file#safetry
-    function mayFail1(): SyncResult<number,string> { return Math.random() < 0.5 ? ok(1) : err('oh no')}
-    function mayFail2(): SyncResult<number,string> { return Math.random() < 0.5 ? ok(2) : err('err0r')}
+    function mayFail1(): SyncResult<number,string> { return Math.random() < 1/Math.sqrt(2) ? ok(1) : err('oh no')}
+    function mayFail2(): SyncResult<number,string> { return Math.random() < 1/Math.sqrt(2) ? ok(2) : err('err0r')}
 
-    function myFunc(): SyncResult<number, string> {
+    function myFunc1(): SyncResult<number, string> {
         const result1 = mayFail1()
         if(!result1.ok) return result1
 
@@ -55,7 +55,21 @@ import * as nju from './util'
         return ok(result1.value + result2.value)
     }
 
-    console.log(myFunc())
+    console.log(myFunc1())
+
+    function myFunc2() {
+        return nju.resolve(() => {
+            const result1 = mayFail1()
+            if(!result1.ok) throw result1.error
+
+            const result2 = mayFail2()
+            if(!result2.ok) throw result2.error
+
+            return result1.value + result2.value
+        })
+    }
+
+    console.log(myFunc2())
 }
 
 
