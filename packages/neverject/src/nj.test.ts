@@ -3,7 +3,7 @@ import {describe, expect, it} from "bun:test"
 import {nj} from './nj.ts'
 import type {AsyncResult} from './async-result.ts'
 import {err, ok, type SyncResult} from './sync-result.ts'
-import {expectType, type TypeEqual} from './type-assert.ts'
+import {expectType, type TypeEqual} from './internal/type-assert.ts'
 import type {DetailedError} from './detailed-error.ts'
 
 describe('nj overloads', () => {

@@ -2,7 +2,7 @@
 import {describe, expect, it} from 'bun:test'
 import {reject, rejectWithError} from './reject.ts'
 import {err, ok, type Err, type SyncResult} from '../sync-result.ts'
-import {expectType, type TypeEqual} from '../type-assert.ts'
+import {expectType, type TypeEqual} from '../internal/type-assert.ts'
 import type {DetailedError} from '../detailed-error.ts'
 
 describe('rejectWithError', () => {

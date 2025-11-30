@@ -2,7 +2,7 @@
 import {describe, expect, it} from 'bun:test'
 import {resolve} from './resolve.ts'
 import {err, ok, type Ok, type SyncResult} from '../sync-result.ts'
-import {expectType, type TypeEqual} from '../type-assert.ts'
+import {expectType, type TypeEqual} from '../internal/type-assert.ts'
 
 describe('resolve', () => {
     it('wraps plain values in Ok', () => {
