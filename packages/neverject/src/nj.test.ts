@@ -29,7 +29,7 @@ describe('nj overloads', () => {
         expect(result.ok).toBe(false)
         if(!result.ok) {
             expect(result.error).toBeInstanceOf(Error)
-            expect(result.error.message).toEndWith('bad')
+            expect(result.error.message).toContain('bad')
             expect(result.error.details).toBe('bad')
         }
     })

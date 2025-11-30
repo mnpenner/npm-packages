@@ -12,7 +12,11 @@ export function toDetailedError(x: unknown): DetailedError {
             const stringified = String(x)
 
             if(stringified !== '[object Object]') {
-                message += `: ${stringified}`
+                const firstLine = stringified.split(/\r?\n/, 1)[0]!
+                message += `: ${firstLine}`
+                if(message.length > 200) {
+                    message = message.slice(0, 197) + '...'
+                }
             }
         } catch {
             // Handles rare edge cases like Object.create(null) where String(x) might throw
