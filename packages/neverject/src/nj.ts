@@ -2,6 +2,7 @@ import { AsyncResult, INTERNAL_CONSTRUCT} from './async-result.ts'
 import type {Err, Ok} from './sync-result.ts';
 import { err, isSyncResult, ok, type SyncResult} from './sync-result.ts'
 import {toDetailedError, type DetailedError} from './detailed-error.ts'
+import {reject, rejectWithError, resolve} from './util'
 
 export function nj<P>(promise: PromiseLike<P>): AsyncResult<
     Awaited<P> extends SyncResult<infer V, any> ? V : Awaited<P>,
@@ -30,14 +31,12 @@ export function nj(value: unknown, errorFn?: (e: unknown) => unknown): AsyncResu
     }
 
     return AsyncResult[INTERNAL_CONSTRUCT](Promise.resolve(value).then(
-            (value) => isSyncResult(value) ? value : ok(value),
+            (value) => resolve(value),
             (reason) => {
                 if (errorFn) {
-                    reason = errorFn(reason)
-                } else if(!isSyncResult(reason)) {
-                    return err(toDetailedError(reason))
+                    return reject(errorFn(reason))
                 }
-                return isSyncResult(reason) ? reason : err(reason)
+                return rejectWithError(reason)
             }
         )
     )
