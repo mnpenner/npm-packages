@@ -103,7 +103,7 @@ union). The lists below describe the instance surface you probably want to expos
 | `Result.combineWithAllErrors(…)`                         | ❌                                   | Aggregate results, collecting both Ok/Err                     |
 | `ResultAsync.combine(…)`                                 | `allOk(…)`,  `allOkObj(…)`          | Aggregate async values, short-circuit on Err                  |
 | `ResultAsync.combineWithAllErrors(…)`                    | `allSettled(…)`, `allSettledObj(…)` | Aggregate async results into Ok list of SyncResults           |
-| `safeTry(…)`                                             | ❌                                   | Generator helper for early-returning on Err                   |
+| `safeTry(…)`                                             | TODO                                | Generator helper for early-returning on Err                   |
 | Sync methods                                             |                                     |
 | `result.isOk()`                                          | `syncResult.ok`                     | Ok check (property vs method)                                 |
 | `result.isErr()`                                         | `!syncResult.ok`                    | Err check (property vs method)                                |

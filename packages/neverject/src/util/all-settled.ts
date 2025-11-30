@@ -1,8 +1,8 @@
-import {AsyncResult, INTERNAL_CONSTRUCT} from './async-result.ts'
-import type {Err, Ok} from './sync-result.ts'
-import {err, ok, type SyncResult} from './sync-result.ts'
-import {type DetailedError} from './detailed-error.ts'
-import {nj} from './nj.ts'
+import {AsyncResult, INTERNAL_CONSTRUCT} from '../async-result.ts'
+import type {Err, Ok} from '../sync-result.ts'
+import {err, ok, type SyncResult} from '../sync-result.ts'
+import {type DetailedError} from '../detailed-error.ts'
+import {nj} from '../nj.ts'
 
 export type ToSyncResult<T> =
     T extends AsyncResult<infer V, infer E> ? SyncResult<V, E> :

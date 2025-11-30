@@ -1,11 +1,11 @@
 #!/usr/bin/env -S bun test
 import {describe, expect, it} from 'bun:test'
 import {allOk, allOkObj, type AllOkObject, allSettled, allSettledObj} from './all-settled.ts'
-import {nj} from './nj.ts'
-import {err, ok, type SyncResult} from './sync-result.ts'
-import {expectType, type TypeEqual} from './type-assert.ts'
-import type {AsyncResult} from './async-result.ts'
-import type {DetailedError} from './detailed-error.ts'
+import {nj} from '../nj.ts'
+import {err, ok, type SyncResult} from '../sync-result.ts'
+import {expectType, type TypeEqual} from '../type-assert.ts'
+import type {AsyncResult} from '../async-result.ts'
+import type {DetailedError} from '../detailed-error.ts'
 
 describe('allSettledOb', () => {
     it('wraps a record of values/promises/results into an AsyncResult of SyncResults', async () => {
