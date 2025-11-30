@@ -27,6 +27,16 @@ all({
 ```
 
 Takes a record of `AsyncResult`/Promise/value inputs, normalizes each via `nj`, waits for all, and returns a never-rejecting `AsyncResult` whose value is a record of per-key `SyncResult`.
+Example:
+
+```ts
+const settled = await all({ user: nj(fetchUser()), posts: nj(fetchPosts()) })
+// settled.ok is always true here; inspect each entry:
+const user = settled.value.user
+if(user.ok) {
+  renderUser(user.value)
+}
+```
 
 ### Instance methods (target API)
 
