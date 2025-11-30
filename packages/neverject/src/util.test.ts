@@ -1,16 +1,16 @@
 #!/usr/bin/env -S bun test
 import {describe, expect, it} from 'bun:test'
-import {all} from './util.ts'
+import {allOk, allOkObj, allSettled, allSettledObj} from './util.ts'
 import {nj} from './nj.ts'
-import { err, ok, type SyncResult} from './sync-result.ts'
+import {err, ok, type SyncResult} from './sync-result.ts'
 import {expectType, type TypeEqual} from './type-assert.ts'
 import type {AsyncResult} from './async-result.ts'
 import type {DetailedError} from './detailed-error.ts'
 
-describe('all', () => {
+describe('allSettledOb', () => {
     it('wraps a record of values/promises/results into an AsyncResult of SyncResults', async () => {
         const failingPromise: Promise<number> = new Promise((_, reject) => reject('bad'))
-        const asyncResult = all({
+        const asyncResult = allSettledObj({
             value: nj(1),
             promise: Promise.resolve(2),
             ok: nj(ok(3)),
@@ -72,7 +72,7 @@ describe('all', () => {
     })
 
     it('preserves keys without index juggling', async () => {
-        const settled = await all({a: nj(1), b: nj(err('x'))})
+        const settled = await allSettledObj({a: nj(1), b: nj(err('x'))})
 
         expect(settled.ok).toBe(true)
         if(!settled.ok) return
@@ -84,5 +84,57 @@ describe('all', () => {
         if(!settled.value.b.ok) {
             expect(settled.value.b.error).toBe('x')
         }
+    })
+})
+
+describe('allSettled', () => {
+    it('returns an array of SyncResults and never Errs', async () => {
+        const settled = await allSettled([nj(1), nj(err('boom')), Promise.resolve(3)] as const)
+        expect(settled.ok).toBe(true)
+        if(!settled.ok) return
+
+        expect(settled.value[0].ok).toBe(true)
+        expect(settled.value[1].ok).toBe(false)
+        expect(settled.value[2].ok).toBe(true)
+    })
+})
+
+describe('allOkObj', () => {
+    it('returns Ok when all entries are Ok', async () => {
+        const combined = await allOkObj({a: nj(1), b: nj(Promise.resolve(2))})
+
+        expect(combined.ok).toBe(true)
+        if(!combined.ok) return
+
+        expect(combined.value).toEqual({a: 1, b: 2})
+    })
+
+    it('short-circuits on the first Err', async () => {
+        const combined = await allOkObj({a: nj(1), b: nj(err('x')), c: nj(3)})
+
+        expect(combined.ok).toBe(false)
+        if(combined.ok) return
+
+        expect(combined.error).toBe('x')
+    })
+})
+
+describe('allOk', () => {
+    it('returns Ok with array of values when all succeed', async () => {
+        const combined = await allOk([nj(1), nj(Promise.resolve(2))] as const)
+
+        expect(combined.ok).toBe(true)
+        if(!combined.ok) return
+
+        expect(combined.value).toEqual([1, 2])
+    })
+
+    it('returns Err on the first failure', async () => {
+        const combined = await allOk([nj(1), nj(err('x')), nj(3)] as const)
+
+        expect(combined.ok).toBe(false)
+        if(combined.ok) return
+
+        expect(combined.error).toBe('x')
     })
 })

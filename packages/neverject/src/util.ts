@@ -1,6 +1,6 @@
 import {AsyncResult, INTERNAL_CONSTRUCT} from './async-result.ts'
 import type {Err, Ok} from './sync-result.ts'
-import {ok, type SyncResult} from './sync-result.ts'
+import {err, ok, type SyncResult} from './sync-result.ts'
 import {type DetailedError} from './detailed-error.ts'
 import {nj} from './nj.ts'
 
@@ -14,19 +14,92 @@ export type ToSyncResult<T> =
                             SyncResult<Awaited<P>, DetailedError<unknown>> :
                         SyncResult<T, never>
 
-export type AllResults<T extends Record<string, unknown>> = {
+export type AllSettledObject<T extends Record<string, unknown>> = {
     [K in keyof T]: ToSyncResult<T[K]>
 }
 
-export function all<T extends Record<string, AsyncResult<any, any> | PromiseLike<any>>>(inputs: T): AsyncResult<AllResults<T>, never> {
-    const promise = Promise.all(
-        Object.entries(inputs).map(async ([key, value]) => {
+type AllSettledArray<T extends readonly unknown[]> = {
+    [K in keyof T]: ToSyncResult<T[K]>
+}
+
+type AllOkArray<T extends readonly unknown[]> = {
+    [K in keyof T]: ToSyncResult<T[K]> extends SyncResult<infer V, any> ? V : never
+}
+
+type AllOkErrors<T extends readonly unknown[]> = ToSyncResult<T[number]> extends SyncResult<any, infer E> ? E : never
+
+type AllOkObject<T extends Record<string, unknown>> = {
+    [K in keyof T]: ToSyncResult<T[K]> extends SyncResult<infer V, any> ? V : never
+}
+
+type AllOkObjectErrors<T extends Record<string, unknown>> = ToSyncResult<T[keyof T]> extends SyncResult<any, infer E> ? E : never
+
+/**
+ * Aggregate any values/promises/AsyncResults into a single AsyncResult of per-entry SyncResults. Never returns Err.
+ */
+export function allSettled<T extends readonly (AsyncResult<any, any> | PromiseLike<any> | unknown)[]>(inputs: T): AsyncResult<AllSettledArray<T>, never> {
+    const promise: Promise<SyncResult<AllSettledArray<T>, never>> = Promise.all(
+        inputs.map(async (value) => nj(value as unknown))
+    ).then((settled) => ok(settled as AllSettledArray<T>))
+
+    return AsyncResult[INTERNAL_CONSTRUCT](promise)
+}
+
+/**
+ *  Aggregate any values/promises/AsyncResults into a single AsyncResult of per-key SyncResults. Never returns Err.
+ */
+export function allSettledObj<T extends Record<string, AsyncResult<any, any> | PromiseLike<any> | unknown>>(inputs: T): AsyncResult<AllSettledObject<T>, never> {
+    const entries = Object.entries(inputs)
+    const promise: Promise<SyncResult<AllSettledObject<T>, never>> = Promise.resolve(
+        allSettled(entries.map(([, value]) => value))
+    ).then((settled) => {
+        // allSettled never Errs, but keep a narrow check for type safety
+        if(!settled.ok) {
+            return settled
+        }
+        const rebuilt = Object.fromEntries(
+            settled.value.map((result, index) => [entries[index]![0], result])
+        ) as AllSettledObject<T>
+        return ok(rebuilt)
+    })
+
+    return AsyncResult[INTERNAL_CONSTRUCT](promise)
+}
+
+/**
+ * Aggregate into AsyncResult of Ok values, short-circuiting on the first Err.
+ */
+export function allOk<T extends readonly (AsyncResult<any, any> | PromiseLike<any> | unknown)[]>(inputs: T): AsyncResult<AllOkArray<T>, AllOkErrors<T>> {
+    const promise: Promise<SyncResult<AllOkArray<T>, AllOkErrors<T>>> = (async () => {
+        const values: unknown[] = []
+        for(const value of inputs) {
             const settled = await nj(value as unknown)
-            return [key, settled] as const
-        })
-    ).then((entries) => {
-        const settledRecord = Object.fromEntries(entries) as AllResults<T>
-        return ok(settledRecord)
+            if(!settled.ok) {
+                return err(settled.error as AllOkErrors<T>)
+            }
+            values.push(settled.value)
+        }
+        return ok(values as AllOkArray<T>)
+    })()
+
+    return AsyncResult[INTERNAL_CONSTRUCT](promise)
+}
+
+/**
+ * Aggregate into AsyncResult of Ok values keyed by input object, short-circuiting on the first Err.
+ */
+export function allOkObj<T extends Record<string, AsyncResult<any, any> | PromiseLike<any> | unknown>>(inputs: T): AsyncResult<AllOkObject<T>, AllOkObjectErrors<T>> {
+    const entries = Object.entries(inputs)
+    const promise: Promise<SyncResult<AllOkObject<T>, AllOkObjectErrors<T>>> = Promise.resolve(
+        allOk(entries.map(([, value]) => value))
+    ).then((settled) => {
+        if(!settled.ok) {
+            return err(settled.error as AllOkObjectErrors<T>)
+        }
+        const rebuilt = Object.fromEntries(
+            settled.value.map((value, index) => [entries[index]![0], value])
+        ) as AllOkObject<T>
+        return ok(rebuilt)
     })
 
     return AsyncResult[INTERNAL_CONSTRUCT](promise)
