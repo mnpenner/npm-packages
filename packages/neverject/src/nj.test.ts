@@ -4,12 +4,13 @@ import {nj} from './nj.ts'
 import {AsyncResult} from './async-result.ts'
 import {err, ok, type SyncResult} from './sync-result.ts'
 import {expectType, type TypeEqual} from './type-assert.ts'
+import type {DetailedError} from './detailed-error.ts'
 
 describe('nj overloads', () => {
     it('wraps a promise', async () => {
         const asyncResult = nj(Promise.resolve(1))
 
-        expectType<TypeEqual<typeof asyncResult, AsyncResult<number, unknown>>>(true)
+        expectType<TypeEqual<typeof asyncResult, AsyncResult<number, DetailedError<unknown>>>>(true)
 
         const result = await asyncResult
         expect(result.ok).toBe(true)
@@ -18,15 +19,18 @@ describe('nj overloads', () => {
         }
     })
 
-    it('wraps a rejected promise', async () => {
-        const asyncResult = nj(Promise.reject(1))
+    it('converts rejected promise reasons to Error', async () => {
+        const rejectedPromise: Promise<string> = Promise.reject('bad')
+        const asyncResult = nj(rejectedPromise)
 
-        expectType<TypeEqual<typeof asyncResult, AsyncResult<never, unknown>>>(true)
+        expectType<TypeEqual<typeof asyncResult, AsyncResult<string, DetailedError<unknown>>>>(true)
 
         const result = await asyncResult
-        expect(result.ok).toBe(true)
-        if(result.ok) {
-            expect(result.value).toBe(1)
+        expect(result.ok).toBe(false)
+        if(!result.ok) {
+            expect(result.error).toBeInstanceOf(Error)
+            expect(result.error.message).toEndWith('bad')
+            expect(result.error.details).toBe('bad')
         }
     })
 

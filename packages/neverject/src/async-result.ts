@@ -1,5 +1,6 @@
 import type {SyncResult} from './sync-result.ts'
-import {NeverjectError} from './error.ts'
+
+import {NeverjectError} from './neverject-error.ts'
 
 export const INTERNAL_CONSTRUCT = Symbol('AsyncResultCtor')
 
