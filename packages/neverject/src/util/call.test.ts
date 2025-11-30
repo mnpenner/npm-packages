@@ -32,10 +32,10 @@ describe('call', () => {
         expect(okPassed).toBe(okResult)
     })
 
-    it('handles  Err', () => {
+    it('handles Err', () => {
         const errResult = err('boom')
 
-        const errPassed = call(() => err('boom'))
+        const errPassed = call(() => errResult)
 
         expectType<TypeEqual<typeof errPassed, SyncResult<never, string>>>(true)
 
