@@ -21,7 +21,8 @@ describe('Sync results', () => {
 })
 
 describe('Async results', () => {
-    example('Async Ok via nj', async () => { // https://github.com/supermacro/neverthrow?tab=readme-ov-file#okasync
+    example('Async Ok via nj', async () => {
+        // https://github.com/supermacro/neverthrow?tab=readme-ov-file#okasync
         const myAsyncResult = nj({myData: 'test'})
         const myResult = await myAsyncResult
 
@@ -29,7 +30,8 @@ describe('Async results', () => {
         log('result', myResult)
     })
 
-    example('Async Err via nj', async () => { // https://github.com/supermacro/neverthrow?tab=readme-ov-file#errasync
+    example('Async Err via nj', async () => {
+        // https://github.com/supermacro/neverthrow?tab=readme-ov-file#errasync
         const myAsyncResult1 = nj(err('Oh nooo'))
         const myResult1 = await myAsyncResult1
 
@@ -56,7 +58,8 @@ describe('Utilities', () => {
         log('combined tuple', combinedTuple)
     })
 
-    example('SafeTry style propagation', () => { // https://github.com/supermacro/neverthrow?tab=readme-ov-file#safetry
+    example('SafeTry style propagation', () => {
+        // https://github.com/supermacro/neverthrow?tab=readme-ov-file#safetry
         function myFunc1(): Result<number, string> {
             const result1 = mayFail1()
             if(!result1.ok) return result1
@@ -81,6 +84,20 @@ describe('Utilities', () => {
 
         log('manual propagation', myFunc1())
         log('call helper', myFunc2())
+    })
+
+    example('Safe JSON parsing with wrapFn', () => {
+        type ParseError = {message: string}
+        const toParseError = (): ParseError => ({message: 'Parse Error'})
+
+        const safeJsonParse = nju.wrapFn((input: string) => JSON.parse(input) as {id: number}, toParseError)
+
+        const res = safeJsonParse('{')
+
+        log('ok', res.ok)
+        if(!res.ok) {
+            log('parse failure message', res.error.message)
+        }
     })
 })
 

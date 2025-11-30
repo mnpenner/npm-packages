@@ -1,4 +1,4 @@
 - Run `bun run test` after making changes and fix any errors.
 - Use `expectType<TypeEqual<typeof VALUE, EXPECTED_TYPE>>(true)` to assert exact types in tests.
-- Add detailed JSDoc comments including @example blocks to public APIs
+- Add detailed JSDoc comments including @example blocks, @param and @returns to all public APIs
   - The public API is the `entry` point shown in `tsdown.config.ts` 

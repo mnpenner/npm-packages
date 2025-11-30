@@ -6,6 +6,7 @@ export const _INTERNAL_CTOR = Symbol('AsyncResultCtor')
 
 
 export class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
+    // Constructor is private. Use `nj`.
     private constructor(private readonly promise: Promise<Result<V, E>>) {}
     static [_INTERNAL_CTOR]<V, E>(promise: Promise<Result<V, E>>) {
         return new NeverjectPromise<V, E>(promise)
