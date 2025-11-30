@@ -94,8 +94,8 @@ union). The lists below describe the instance surface you probably want to expos
 | `result.andThrough(…)`                            | ❌                                            | No direct pass-through that can change error type                                               |
 | `result.asyncAndThrough(…)`                       | ❌                                            | No direct async pass-through equivalent                                                         |
 | `Result.fromThrowable(…)`                         | `wrapFn(…)`                                 | Wrap a sync function so it returns a SyncResult                                                 |
-| `Result.combine(…)`                               | `all(…)`                                    | Aggregate many results                                                                          |
-| `Result.combineWithAllErrors(…)`                  | `all(…)`                                    | Aggregate many results without short-circuiting                                                 |
+| `Result.combine(…)`                               | ❌                                            | No sync aggregator; neverject aggregates async inputs into per-key SyncResults via `all(…)`      |
+| `Result.combineWithAllErrors(…)`                  | ❌                                            | No sync aggregator; neverject aggregates async inputs into per-key SyncResults via `all(…)`      |
 | ~~`Result.safeUnwrap()`~~                         | —                                            | Deprecated safe unwrap helper                                                                   |
 | `okAsync(…)`                                      | `nj(…)`                                     | Create an Ok async result                                                                       |
 | `errAsync(…)`                                     | `nj(…)`                                     | Create an Err async result                                                                      |
@@ -111,8 +111,8 @@ union). The lists below describe the instance surface you probably want to expos
 | `resultAsync.andTee(…)`                           | `asyncResult.tap(…)`                        | Side effects on success without changing the result                                             |
 | `resultAsync.orTee(…)`                            | `asyncResult.tapErr(…)`                     | Side effects on failure without changing the result                                             |
 | `resultAsync.andThrough(…)`                       | ❌                                            | No direct async pass-through equivalent                                                         |
-| `ResultAsync.combine(…)`                          | `all(…)`                                    | Aggregate many async results                                                                    |
-| `ResultAsync.combineWithAllErrors(…)`             | `all(…)`                                    | Aggregate many async results without short-circuiting                                           |
+| `ResultAsync.combine(…)`                          | ❌                                    | Aggregate async inputs into per-key SyncResults; neverject never Errs and preserves keys         |
+| `ResultAsync.combineWithAllErrors(…)`             | `all(…)`                                    | Aggregate async inputs into per-key SyncResults; neverject never Errs and preserves keys         |
 | ~~`ResultAsync.safeUnwrap()`~~                      | —                                            | Deprecated safe unwrap helper                                                                   |
 | `fromThrowable(…)`                                | `wrapFn(…)`                                 | Top-level helper covered by `wrapFn`                                                            |
 | `fromAsyncThrowable(…)`                           | `wrapAsyncFn(…)`                            | Top-level helper covered by `wrapAsyncFn`                                                       |
