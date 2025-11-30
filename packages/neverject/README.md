@@ -18,8 +18,15 @@ nj(err(5))  // AsyncResult<never, number>
 ### Util
 
 ```ts
-allSettled(results: Record<string, AsyncResult>) => AsyncResult<Record<string, SyncResult>, never>  // Or is Promise<Record<string, SyncResult>> better? Or maybe a special OkAsyncResult?
+all({
+  user: nj(fetchUser()),
+  posts: nj(fetchPosts()),
+})
+// => AsyncResult<{ user: SyncResult<User, E1>; posts: SyncResult<Post[], E2> }, never>
+// avoids array index juggling; each property stays keyed
 ```
+
+Takes a record of `AsyncResult`/Promise/value inputs, normalizes each via `nj`, waits for all, and returns a never-rejecting `AsyncResult` whose value is a record of per-key `SyncResult`.
 
 ### Instance methods (target API)
 
