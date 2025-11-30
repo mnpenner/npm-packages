@@ -18,16 +18,11 @@
     "test": "bun test && echo '---' && tsc --noEmit --pretty false",
     "lint": "bun run --bun eslint --fix --"
   },
-  "main": "./dist/index.cjs",
+  "main": "./dist/index.js",
   "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    },
-      "./util": {
-          "import": "./dist/util/index.js",
-          "require": "./dist/util/index.cjs"
-      },
+    ".": "./dist/index.js",
+    "./util": "./dist/util.js",
     "./package.json": "./package.json"
-  }
+  },
+  "types": "./dist/index.d.ts"
 }

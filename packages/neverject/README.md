@@ -103,7 +103,9 @@ union). The lists below describe the instance surface you probably want to expos
 | `Result.combineWithAllErrors(…)`                         | ❌                                   | Aggregate results, collecting both Ok/Err                     |
 | `ResultAsync.combine(…)`                                 | `allOk(…)`,  `allOkObj(…)`          | Aggregate async values, short-circuit on Err                  |
 | `ResultAsync.combineWithAllErrors(…)`                    | `allSettled(…)`, `allSettledObj(…)` | Aggregate async results into Ok list of SyncResults           |
-| `safeTry(…)`                                             | TODO                                | Generator helper for early-returning on Err                   |
+| ❌                                                        | `anyOk(…)`                          | Like `Promise.any`                                            |                          
+| ❌                                                        | `race(…)`                           | Like `Promise.race`                                           |                          
+| `safeTry(…)`                                             | ❌                                   | Generator helper for early-returning on Err                   |
 | Sync methods                                             |                                     |
 | `result.isOk()`                                          | `syncResult.ok`                     | Ok check (property vs method)                                 |
 | `result.isErr()`                                         | `!syncResult.ok`                    | Err check (property vs method)                                |
@@ -129,3 +131,7 @@ union). The lists below describe the instance surface you probably want to expos
 | `resultAsync.andTee(…)`                                  | `asyncResult.tap(…)`                | Side effects on success without changing the result           |
 | `resultAsync.orTee(…)`                                   | `asyncResult.tapErr(…)`             | Side effects on failure without changing the result           |
 | `resultAsync.andThrough(…)`                              | ❌                                   | No direct async pass-through equivalent                       |
+
+- `safeTry`
+  - [docs](https://github.com/supermacro/neverthrow?tab=readme-ov-file#safetry) 
+  - [impl](https://github.com/supermacro/neverthrow/blob/de73e225d76bddadec1f2e1c86ec91996f8087a9/src/result.ts#L77-L121)
