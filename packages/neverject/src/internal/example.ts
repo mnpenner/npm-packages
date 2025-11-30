@@ -3,47 +3,81 @@ import {err, nj, ok, type SyncResult} from '../index.ts'
 import * as nju from '../util'
 import {mayFail1, mayFail2} from './test-functions.ts'
 
-{
-    const myResult = ok({myData: 'test'}) // instance of `Ok`
+type ExampleFn = () => void | Promise<void>
+type ExampleSpec = {title: string; run: ExampleFn}
 
-    console.log(myResult.ok)  // true
-    console.log(myResult.value)  // { myData: 'test' }
-}
-{
-    const myResult = err('Oh noooo') // instance of `Err`
+const examples: ExampleSpec[] = []
 
-    console.log(myResult.ok)  // false
-    console.log(myResult.error)  // 'Oh noooo'
+function example(title: string, run: ExampleFn) {
+    examples.push({title, run})
 }
-{  // https://github.com/supermacro/neverthrow?tab=readme-ov-file#okasync
-    const myAsyncResult = nj({myData: 'test'}) // instance of `AsyncResult`
+
+function log(label: string, value: unknown) {
+    console.log(`${label}:`, value)
+}
+
+function divider(title: string) {
+    const edge = '='.repeat(18)
+    console.log(`\n${edge} ${title} ${edge}`)
+}
+
+async function runExamples(list: ExampleSpec[]) {
+    for(const {title, run} of list) {
+        divider(title)
+        await run()
+    }
+
+    divider('Done')
+}
+
+example('Ok result', () => {
+    const myResult = ok({myData: 'test'})
+
+    log('ok', myResult.ok)
+    log('value', myResult.value)
+})
+
+example('Err result', () => {
+    const myResult = err('Oh noooo')
+
+    log('ok', myResult.ok)
+    log('error', myResult.error)
+})
+
+example('Async Ok via nj', async () => { // https://github.com/supermacro/neverthrow?tab=readme-ov-file#okasync
+    const myAsyncResult = nj({myData: 'test'})
     const myResult = await myAsyncResult
 
-    myResult.ok  // true
-    console.log(myResult)
-}
-{  // https://github.com/supermacro/neverthrow?tab=readme-ov-file#errasync
-    const myAsyncResult1 = nj(err('Oh nooo')) // instance of `AsyncResult`
+    log('ok', myResult.ok)
+    log('result', myResult)
+})
+
+example('Async Err via nj', async () => { // https://github.com/supermacro/neverthrow?tab=readme-ov-file#errasync
+    const myAsyncResult1 = nj(err('Oh nooo'))
     const myResult1 = await myAsyncResult1
 
-    myResult1.ok  // false
-    console.log(myResult1)
+    log('ok', myResult1.ok)
+    log('result', myResult1)
 
-    const myAsyncResult2 = nj(new Error('err0r')) // instance of `AsyncResult`
+    const myAsyncResult2 = nj(new Error('err0r'))
     const myResult2 = await myAsyncResult2
 
     if(!myResult2.ok) {
-        console.log(myResult2.error.message)
+        log('error message', myResult2.error.message)
     }
-}
-{
+})
+
+example('Combining values with allOk', async () => {
     const tuple = <T extends any[]>(...args: T): T => args
 
     const combinedArray = await nju.allOk([nj('a'), nj(2)] as const)
     const combinedTuple = await nju.allOk(tuple(nj('a'), nj(2)))
-}
-{  // https://github.com/supermacro/neverthrow?tab=readme-ov-file#safetry
 
+    log('combined array', combinedArray)
+    log('combined tuple', combinedTuple)
+})
+
+example('SafeTry style propagation', () => { // https://github.com/supermacro/neverthrow?tab=readme-ov-file#safetry
     function myFunc1(): SyncResult<number, string> {
         const result1 = mayFail1()
         if(!result1.ok) return result1
@@ -53,8 +87,6 @@ import {mayFail1, mayFail2} from './test-functions.ts'
 
         return ok(result1.value + result2.value)
     }
-
-    console.log(myFunc1())
 
     function myFunc2() {
         return nju.call(() => {
@@ -68,9 +100,11 @@ import {mayFail1, mayFail2} from './test-functions.ts'
         })
     }
 
-    console.log(myFunc2())
-}
+    log('manual propagation', myFunc1())
+    log('call helper', myFunc2())
+})
 
+await runExamples(examples)
 
-// TODO:c opy the JSON.parse example from
+// TODO: copy the JSON.parse example from
 // https://github.com/supermacro/neverthrow?tab=readme-ov-file#resultfromthrowable-static-class-method
