@@ -9,7 +9,7 @@ describe('call', () => {
     it('wraps returned values in Ok', () => {
         const result = call(() => 42)
 
-        expectType<SyncResult<number, DetailedError<unknown>>>(result)
+        expectType<TypeEqual<typeof result, SyncResult<number, DetailedError<unknown>>>>(true)
         expect(result.ok).toBe(true)
         if(!result.ok) return
 
@@ -23,10 +23,8 @@ describe('call', () => {
         const okPassed = call(() => okResult)
         const errPassed = call(() => errResult)
 
-        const okAssignable: SyncResult<string, unknown> = okPassed
-        const errAssignable: SyncResult<unknown, string | DetailedError<unknown>> = errPassed
-        expectType<typeof okAssignable>(okAssignable)
-        expectType<typeof errAssignable>(errAssignable)
+        expectType<TypeEqual<typeof okPassed, SyncResult<string, unknown>>>(true)
+        expectType<TypeEqual<typeof errPassed, SyncResult<unknown, string | DetailedError>>>(true)
 
         expect(okPassed).toBe(okResult)
         expect(errPassed).toBe(errResult)
@@ -36,7 +34,7 @@ describe('call', () => {
         const reason = 'boom'
         const result = call(() => { throw reason })
 
-        expectType<SyncResult<unknown, unknown>>(result)
+        expectType<TypeEqual<typeof result, SyncResult<unknown, unknown>>>(true)
         expect(result.ok).toBe(false)
         if(result.ok) return
 

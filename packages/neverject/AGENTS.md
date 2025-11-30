@@ -1,2 +1,2 @@
 - Run `bun run test` after making changes and fix any errors.
-- Use `expectType<TypeEqual<typeof VALUE, EXPECTED_TYPE>>(true)` to assert types in tests.
+- Use `expectType<TypeEqual<typeof VALUE, EXPECTED_TYPE>>(true)` to assert exact types in tests.
