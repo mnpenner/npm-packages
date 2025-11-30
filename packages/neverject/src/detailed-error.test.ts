@@ -11,6 +11,20 @@ describe('toDetailedError stringification', () => {
         expect(error.details).toBe('simple')
     })
 
+    it('respects a custom toString implementation', () => {
+        const reason = {
+            value: 42,
+            toString() {
+                return 'custom stringify'
+            },
+        }
+
+        const error = toDetailedError(reason)
+
+        expect(error.message).toBe('Rejected Promise: custom stringify')
+        expect(error.details).toBe(reason)
+    })
+
     it('uses only the first line and appends ellipsis when truncating extra lines', () => {
         const reason = 'first line\nsecond line\nthird line'
         const error = toDetailedError(reason)
