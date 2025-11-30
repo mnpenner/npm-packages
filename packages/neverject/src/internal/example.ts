@@ -1,4 +1,5 @@
 #!/usr/bin/env -S bun
+import {stringWidth} from 'bun'
 import {err, nj, ok, type SyncResult} from '../index.ts'
 import * as nju from '../util'
 import {mayFail1, mayFail2} from './test-functions.ts'
@@ -17,8 +18,13 @@ function log(label: string, value: unknown) {
 }
 
 function divider(title: string) {
-    const edge = '='.repeat(18)
-    console.log(`\n${edge} ${title} ${edge}`)
+    const width = process.stdout?.columns ?? 80
+    const label = ` ${title} `
+    const edgeWidth = Math.max(0, width - stringWidth(label))
+    const left = '='.repeat(Math.floor(edgeWidth / 2))
+    const right = '='.repeat(edgeWidth - left.length)
+
+    console.log(`\n${left}${label}${right}`)
 }
 
 async function runExamples(list: ExampleSpec[]) {
