@@ -1,4 +1,5 @@
 import {stringWidth} from 'bun'
+import {isResult} from '../util/type-check.ts'
 
 export type ExampleFn = () => void | Promise<void>
 export type ExampleNode =
@@ -27,7 +28,7 @@ export function describe(title: string, register: () => void) {
 }
 
 export function log(label: string, value: unknown) {
-    console.log(`${label}:`, value)
+    console.log(`${label}:`, isResult(value) ? String(value) : value)
 }
 
 function renderDivider(title: string, width: number, char: string) {
