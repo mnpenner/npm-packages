@@ -13,6 +13,6 @@ export function resolve<V>(result: Ok<V>): Ok<V>;
 export function resolve<E>(result: Err<E>): Err<E>;
 export function resolve<V, E>(result: SyncResult<V, E>): SyncResult<V, E>;
 export function resolve<V>(value: V): Ok<V>;
-export function resolve(value: unknown): SyncResult<unknown, unknown> {
+export function resolve<V, E>(value: SyncResult<V, E> | V): SyncResult<V, E> {
     return isSyncResult(value) ? value : ok(value)
 }
