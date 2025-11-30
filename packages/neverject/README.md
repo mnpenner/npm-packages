@@ -29,7 +29,8 @@ allSettledObject({
 // avoids array index juggling; each property stays keyed
 ```
 
-`allSettledObject` takes a record of `AsyncResult`/Promise/value inputs, normalizes each via `nj`, waits for all, and returns a
+`allSettledObject` takes a record of `AsyncResult`/Promise/value inputs, normalizes each via `nj`, waits for all, and
+returns a
 never-rejecting `AsyncResult` whose value is a record of per-key `SyncResult`.
 Example:
 
@@ -87,47 +88,44 @@ union). The lists below describe the instance surface you probably want to expos
 
 ## Comparison with neverthrow
 
-| neverthrow                                        | neverject                                   | Notes                                                                                           |
-|---------------------------------------------------|---------------------------------------------|-------------------------------------------------------------------------------------------------|
-| `ok(…)`                                           | `ok(…)`                                     | Create an Ok result                                                                             |
-| `err(…)`                                          | `err(…)`                                    | Create an Err result                                                                            |
-| `result.isOk()`                                   | `syncResult.ok`                             | Ok check (property vs method)                                                                   |
-| `result.isErr()`                                  | `!syncResult.ok`                            | Err check (property vs method)                                                                  |
-| `result.map(…)`                                   | `syncResult.map(…)`                         | Transform Ok; second arg can transform Err                                                      |
-| `result.mapErr(…)`                                | `syncResult.mapErr(…)`                      | Transform Err                                                                                   |
-| `result.unwrapOr(…)`                              | `syncResult.valueOr(…)`                     | Provide a fallback value                                                                       |
-| `result.andThen(…)`                               | `syncResult.map(…)`                         | Neverject flattens returned Results, covering `andThen`                                         |
-| `result.asyncAndThen(…)`                          | `syncResult.toAsync().map(…)`               | Convert to async and flatten a ResultAsync-returning callback                                   |
-| `result.orElse(…)`                                | `syncResult.recover(…)`                     | Recover from an error by producing an Ok                                                        |
-| `result.match(…)`                                 | `syncResult.map(…)`                         | Handle both branches (returns SyncResult, not a raw value)                                      |
-| `result.asyncMap(…)`                              | `syncResult.toAsync().map(…)`               | Async mapping                                                                                    |
-| `result.andTee(…)`                                | `syncResult.tap(…)`                         | Side effects on success without changing the result                                             |
-| `result.orTee(…)`                                 | `syncResult.tapErr(…)`                      | Side effects on failure without changing the result                                             |
-| `result.andThrough(…)`                            | ❌                                            | No direct pass-through that can change error type                                               |
-| `result.asyncAndThrough(…)`                       | ❌                                            | No direct async pass-through equivalent                                                         |
-| `Result.fromThrowable(…)`                         | `wrapFn(…)`                                 | Wrap a sync function so it returns a SyncResult                                                 |
-| `Result.combine(…)`                               | `allOk(…)`                                   | Aggregate values, short-circuit on Err                                                          |
-| `Result.combineWithAllErrors(…)`                  | `allSettled(…)`                              | Aggregate results, collecting both Ok/Err                                                       |
-| ~~`Result.safeUnwrap()`~~                         | ❌                                            | Deprecated safe unwrap helper                                                                   |
-| `okAsync(…)`                                      | `nj(…)`                                     | Create an Ok async result                                                                       |
-| `errAsync(…)`                                     | `nj(…)`                                     | Create an Err async result                                                                      |
-| `ResultAsync.fromThrowable(…)`                    | `wrapAsyncFn(…)`                            | Wrap an async function so it returns an AsyncResult                                             |
-| `ResultAsync.fromPromise(…)`                      | `nj(…)`                                     | Wrap a promise into AsyncResult                                                                 |
-| `ResultAsync.fromSafePromise(…)`                  | `nj(…)`                                     | Wrap a promise into AsyncResult (safe)                                                          |
-| `resultAsync.map(…)`                              | `asyncResult.map(…)`                        | Transform Ok; second arg can transform Err                                                      |
-| `resultAsync.mapErr(…)`                           | `asyncResult.mapErr(…)`                     | Transform Err                                                                                   |
-| `resultAsync.unwrapOr(…)`                         | `asyncResult.valueOr(…)`                    | Provide a fallback value                                                                       |
-| `resultAsync.andThen(…)`                          | `asyncResult.map(…)`                        | Neverject flattens returned Results                                                             |
-| `resultAsync.orElse(…)`                           | `asyncResult.recover(…)`                    | Recover from an error by producing an Ok                                                        |
-| `resultAsync.match(…)`                            | `asyncResult.map(…)`                        | Handle both branches (returns AsyncResult)                                                      |
-| `resultAsync.andTee(…)`                           | `asyncResult.tap(…)`                        | Side effects on success without changing the result                                             |
-| `resultAsync.orTee(…)`                            | `asyncResult.tapErr(…)`                     | Side effects on failure without changing the result                                             |
-| `resultAsync.andThrough(…)`                       | ❌                                            | No direct async pass-through equivalent                                                         |
-| `ResultAsync.combine(…)`                          | `allOk(…)`                                   | Aggregate async values, short-circuit on Err                                                    |
-| `ResultAsync.combineWithAllErrors(…)`             | `allSettled(…)`                              | Aggregate async results into Ok list of SyncResults                                             |
-| ~~`ResultAsync.safeUnwrap()`~~                    | ❌                                            | Deprecated safe unwrap helper                                                                   |
-| `fromThrowable(…)`                                | `wrapFn(…)`                                 | Top-level helper covered by `wrapFn`                                                            |
-| `fromAsyncThrowable(…)`                           | `wrapAsyncFn(…)`                            | Top-level helper covered by `wrapAsyncFn`                                                       |
-| `fromPromise(…)`                                  | `nj(…)`                                     | Top-level helper covered by `nj`                                                                |
-| `fromSafePromise(…)`                              | `nj(…)`                                     | Top-level helper covered by `nj`                                                                |
-| `safeTry(…)`                                      | ❌                                            | Generator helper for early-returning on Err                                                     |
+| neverthrow                                               | neverject                           | Notes                                                         |
+|----------------------------------------------------------|-------------------------------------|---------------------------------------------------------------|
+| Functions / static methods                               |                                     |                                                               |
+| `ok(…)`                                                  | `ok(…)`                             | Create an Ok result                                           |
+| `err(…)`                                                 | `err(…)`                            | Create an Err result                                          |
+| `okAsync(…)`                                             | `nj(…)`                             | Create an Ok async result                                     |
+| `errAsync(…)`                                            | `nj(…)`                             | Create an Err async result                                    |
+| `ResultAsync.fromPromise(…)` / `fromPromise(…)`          | `nj(…)`                             | Wrap a promise into AsyncResult                               |
+| `ResultAsync.fromSafePromise(…)` / `fromSafePromise(…)`  | `nj(…)`                             | Wrap a promise into AsyncResult (safe)                        |
+| `Result.fromThrowable(…)` / `fromThrowable(…)`           | `wrapFn(…)`                         | Wrap a sync function so it returns a SyncResult               |
+| `ResultAsync.fromThrowable(…)` / `fromAsyncThrowable(…)` | `wrapAsyncFn(…)`                    | Wrap an async function so it returns an AsyncResult           |
+| `Result.combine(…)`                                      | ❌                                   | Aggregate values, short-circuit on Err                        |
+| `Result.combineWithAllErrors(…)`                         | ❌                                   | Aggregate results, collecting both Ok/Err                     |
+| `ResultAsync.combine(…)`                                 | `allOk(…)`,  `allOkObj(…)`          | Aggregate async values, short-circuit on Err                  |
+| `ResultAsync.combineWithAllErrors(…)`                    | `allSettled(…)`, `allSettledObj(…)` | Aggregate async results into Ok list of SyncResults           |
+| `safeTry(…)`                                             | ❌                                   | Generator helper for early-returning on Err                   |
+| Sync methods                                             |                                     |
+| `result.isOk()`                                          | `syncResult.ok`                     | Ok check (property vs method)                                 |
+| `result.isErr()`                                         | `!syncResult.ok`                    | Err check (property vs method)                                |
+| `result.map(…)`                                          | `syncResult.map(…)`                 | Transform Ok; second arg can transform Err                    |
+| `result.mapErr(…)`                                       | `syncResult.mapErr(…)`              | Transform Err                                                 |
+| `result.unwrapOr(…)`                                     | `syncResult.valueOr(…)`             | Provide a fallback value                                      |
+| `result.andThen(…)`                                      | `syncResult.map(…)`                 | Neverject flattens returned Results, covering `andThen`       |
+| `result.asyncAndThen(…)`                                 | `syncResult.toAsync().map(…)`       | Convert to async and flatten a ResultAsync-returning callback |
+| `result.orElse(…)`                                       | `syncResult.recover(…)`             | Recover from an error by producing an Ok                      |
+| `result.match(…)`                                        | `syncResult.map(…)`                 | Handle both branches (returns SyncResult, not a raw value)    |
+| `result.asyncMap(…)`                                     | `syncResult.toAsync().map(…)`       | Async mapping                                                 |
+| `result.andTee(…)`                                       | `syncResult.tap(…)`                 | Side effects on success without changing the result           |
+| `result.orTee(…)`                                        | `syncResult.tapErr(…)`              | Side effects on failure without changing the result           |
+| `result.andThrough(…)`                                   | ❌                                   | No direct pass-through that can change error type             |
+| `result.asyncAndThrough(…)`                              | ❌                                   | No direct async pass-through equivalent                       |
+| Async methods                                            |                                     |
+| `resultAsync.map(…)`                                     | `asyncResult.map(…)`                | Transform Ok; second arg can transform Err                    |
+| `resultAsync.mapErr(…)`                                  | `asyncResult.mapErr(…)`             | Transform Err                                                 |
+| `resultAsync.unwrapOr(…)`                                | `asyncResult.valueOr(…)`            | Provide a fallback value                                      |
+| `resultAsync.andThen(…)`                                 | `asyncResult.map(…)`                | Neverject flattens returned Results                           |
+| `resultAsync.orElse(…)`                                  | `asyncResult.recover(…)`            | Recover from an error by producing an Ok                      |
+| `resultAsync.match(…)`                                   | `asyncResult.map(…)`                | Handle both branches (returns AsyncResult)                    |
+| `resultAsync.andTee(…)`                                  | `asyncResult.tap(…)`                | Side effects on success without changing the result           |
+| `resultAsync.orTee(…)`                                   | `asyncResult.tapErr(…)`             | Side effects on failure without changing the result           |
+| `resultAsync.andThrough(…)`                              | ❌                                   | No direct async pass-through equivalent                       |

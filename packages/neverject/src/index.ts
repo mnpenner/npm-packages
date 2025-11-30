@@ -1,3 +1,3 @@
 export {ok, err} from './sync-result.ts'
 export {nj} from './nj.ts'
-export {allSettled, allSettledObj, allOk, allOkObj} from './util.ts'
+export {allSettled, allSettledObj, allOk, allOkObj} from './all-settled.ts'

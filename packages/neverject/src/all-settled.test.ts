@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bun test
 import {describe, expect, it} from 'bun:test'
-import {allOk, allOkObj, allSettled, allSettledObj} from './util.ts'
+import {allOk, allOkObj, allSettled, allSettledObj} from './all-settled.ts'
 import {nj} from './nj.ts'
 import {err, ok, type SyncResult} from './sync-result.ts'
 import {expectType, type TypeEqual} from './type-assert.ts'
