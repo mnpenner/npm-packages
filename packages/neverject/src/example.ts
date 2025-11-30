@@ -58,7 +58,7 @@ import * as nju from './util'
     console.log(myFunc1())
 
     function myFunc2() {
-        return nju.resolve(() => {
+        return nju.call(() => {
             const result1 = mayFail1()
             if(!result1.ok) throw result1.error
 
