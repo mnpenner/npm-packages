@@ -6,40 +6,44 @@ import {mayFail1, mayFail2} from './test-functions.ts'
 
 describe('Sync results', () => {
     example('Ok result', () => {
-        const myResult = ok({myData: 'test'})
+        const result = ok({myData: 'test'})
 
-        log('myResult', myResult)
+        log('ok', result.ok)
+        log('result', result)
     })
 
     example('Err result', () => {
-        const myResult = err('Oh noooo')
+        const result = err('Oh noooo')
 
-        log('myResult', myResult)
+        log('ok', result.ok)
+        log('result', result)
     })
 })
 
 describe('Async results', () => {
     example('Async Ok via nj', async () => {
         // https://github.com/supermacro/neverthrow?tab=readme-ov-file#okasync
-        const myAsyncResult = nj({myData: 'test'})
-        const myResult = await myAsyncResult
+        const njPromise = nj({myData: 'test'})
+        const result = await njPromise
 
-        log('myResult', myResult)
+        log('result', result)
     })
 
     example('Async Err via nj', async () => {
         // https://github.com/supermacro/neverthrow?tab=readme-ov-file#errasync
-        const myAsyncResult1 = nj(err('Oh nooo'))
-        const myResult1 = await myAsyncResult1
+        const njPromise = nj(err('Oh nooo'))
+        const result = await njPromise
 
-        log('ok', myResult1.ok)
-        log('result', myResult1)
+        log('ok', result.ok)
+        log('result', result)
+    })
 
-        const myAsyncResult2 = nj(new Error('err0r'))
-        const myResult2 = await myAsyncResult2
+    example('Async Error via nj', async () => {
+        const njPromise = nj(new Error('err0r'))
+        const result = await njPromise
 
-        if(!myResult2.ok) {
-            log('error message', myResult2.error.message)
+        if(!result.ok) {
+            log('error message', result.error.message)
         }
     })
 })
@@ -48,11 +52,42 @@ describe('Utilities', () => {
     example('Combining values with allOk', async () => {
         const tuple = <T extends any[]>(...args: T): T => args
 
-        const combinedArray = await nju.allOk([nj('a'), nj(2)] as const)
         const combinedTuple = await nju.allOk(tuple(nj('a'), nj(2)))
+        const combinedArray = await nju.allOk([nj('a'), Promise.reject(2)] as const)
 
-        log('combined array', combinedArray)
         log('combined tuple', combinedTuple)
+        log('combined array', combinedArray)
+    })
+
+    example('Combining object values with allOkObj', async () => {
+        const combined = await nju.allOkObj({
+            user: nj({id: 1, name: 'Ada'}),
+            profile: nj({bio: 'Always learning'}),
+        })
+
+        log('allOkObj result', combined)
+
+        const failed = await nju.allOkObj({
+            user: nj({id: 1}),
+            preferences: nj(err('missing preferences')),
+        })
+
+        log('allOkObj failed result', failed)
+    })
+
+    example('Settling array entries with allSettled', async () => {
+        const settled = await nju.allSettled([nj('a'), nj(err('boom'))] as const)
+
+        log('allSettled result', settled)
+    })
+
+    example('Settling object entries with allSettledObj', async () => {
+        const settled = await nju.allSettledObj({
+            user: nj({id: 1}),
+            profile: nj(err('missing profile')),
+        })
+
+        log('allSettledObj result', settled)
     })
 
     example('SafeTry style propagation', () => {

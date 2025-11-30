@@ -1,5 +1,6 @@
 {
   "name": "neverject",
+  "version": "0.1.0",
   "module": "./dist/index.js",
   "type": "module",
   "devDependencies": {
@@ -16,7 +17,8 @@
   },
   "scripts": {
     "test": "bun test && echo '---' && tsc --noEmit --pretty false",
-    "lint": "bun run --bun eslint --fix --"
+    "lint": "bun run --bun eslint --fix --",
+    "build": "tsdown"
   },
   "main": "./dist/index.js",
   "exports": {
@@ -24,5 +26,7 @@
     "./util": "./dist/util.js",
     "./package.json": "./package.json"
   },
-  "types": "./dist/index.d.ts"
+  "types": "./dist/index.d.ts",
+  "homepage": "https://www.npmjs.com/package/neverject",
+  "author": "Mark Penner <npm@mpen.ca>"
 }
