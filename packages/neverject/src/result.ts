@@ -1,5 +1,6 @@
 import {_INTERNAL_RESULT_MARKER} from './util/type-check.ts'
 import {varDump} from './var-dump.ts'
+import type {InspectOptionsStylized} from 'util'
 
 interface ResultInterface<T, __E> {
     readonly ok: boolean
@@ -97,27 +98,14 @@ export function err<E>(error: E): Err<E> {
     return new Err(error)
 }
 
-// --- Inspect Hooks Injection ---
-
-// We wrap the injection logic in a conditional block.
-// Bundlers targeting browsers will evaluate `typeof process` as 'undefined' (or false)
-// and tree-shake this entire block, including the helper functions defined inside it.
-if(
-    (typeof process !== 'undefined' && process?.versions?.node) ||
-    (typeof globalThis !== 'undefined' && 'Bun' in globalThis)
-) {
+if (typeof process !== 'undefined') {
     // Node.js and Bun look for this specific global symbol.
     // We use Symbol.for to avoid needing to `import 'util'`.
     const nodeInspectCustom = Symbol.for('nodejs.util.inspect.custom')
 
     type InspectFn = (value: unknown, options?: any) => string
-    type StylizeFn = (text: string, styleType: string) => string
 
-    interface InspectOptions {
-        stylize: StylizeFn
-
-        [key: string]: any
-    }
+    type InspectOptions = import('node:util').InspectOptionsStylized
 
     // Helper to format the label (Ok/Err) using Node's native colors/styles
     const formatLabel = (label: 'Ok' | 'Err', options: InspectOptions) => {
