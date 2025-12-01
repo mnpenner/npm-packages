@@ -98,10 +98,8 @@ export function err<E>(error: E): Err<E> {
     return new Err(error)
 }
 
-if (typeof process !== 'undefined') {
-    // Node.js and Bun look for this specific global symbol.
-    // We use Symbol.for to avoid needing to `import 'util'`.
-    const nodeInspectCustom = Symbol.for('nodejs.util.inspect.custom')
+if (typeof process !== 'undefined') {  // Allow tree-shaking for the browser
+    const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom')
 
     type InspectFn = (value: unknown, options?: any) => string
 
@@ -116,12 +114,12 @@ if (typeof process !== 'undefined') {
     }
 
     // The injector function
-    const injectHook = (
+    const installCustomInspect = (
         TargetClass: Function,
         label: 'Ok' | 'Err',
         propName: 'value' | 'error'
     ) => {
-        Object.defineProperty(TargetClass.prototype, nodeInspectCustom, {
+        Object.defineProperty(TargetClass.prototype, customInspectSymbol, {
             configurable: true,
             enumerable: false,
             writable: false,
@@ -136,6 +134,6 @@ if (typeof process !== 'undefined') {
         })
     }
 
-    injectHook(Ok, 'Ok', 'value')
-    injectHook(Err, 'Err', 'error')
+    installCustomInspect(Ok, 'Ok', 'value')
+    installCustomInspect(Err, 'Err', 'error')
 }
