@@ -136,6 +136,21 @@ union). The lists below describe the instance surface you probably want to expos
 | `resultAsync.orTee(…)`                                   | `neverjectPromise.tapErr(…)`        | Side effects on failure without changing the result           |
 | `resultAsync.andThrough(…)`                              | ❌                                   | No direct async pass-through equivalent                       |
 
-- `safeTry`
-    - [docs](https://github.com/supermacro/neverthrow?tab=readme-ov-file#safetry)
-    - [impl](https://github.com/supermacro/neverthrow/blob/de73e225d76bddadec1f2e1c86ec91996f8087a9/src/result.ts#L77-L121)
+
+## FAQ
+
+### Where's the source code?
+
+I use Mercurial, which GitHub doesn't support and Atlassian graciously dropped, so I self-host a private repo. If you want to see the code, check the [Code tab on npm](https://www.npmjs.com/package/neverject?activeTab=code), which is honestly better anyway, because what you see on GitHub isn't necessarily what you're installing anyway.
+
+### How do I file an issue?
+
+You can't.
+
+### Why should I use neverject instead of neverthrow?
+
+You really like me or you prefer the API.
+
+### Why should I use neverthrow instead of neverject?
+
+It's more popular, so it *might* already be integrated with libraries you use. It is also more battle-tested.
