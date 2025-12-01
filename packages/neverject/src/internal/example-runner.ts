@@ -28,7 +28,7 @@ export function describe(title: string, register: () => void) {
 }
 
 export function log(label: string, value: unknown) {
-    console.log(`${label}:`, isResult(value) ? String(value) : value)
+    console.log(`${label}:`, value)
 }
 
 function renderDivider(title: string, width: number, char: string) {
