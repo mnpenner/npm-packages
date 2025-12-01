@@ -97,12 +97,13 @@ export function err<E>(error: E): Err<E> {
     return new Err(error)
 }
 
+// --- Add [nodejs.util.inspect.custom] methods.
 declare global {
     interface Window {} // lets TS know Window exists
     var window: Window | undefined
 }
 
-if(typeof window === 'undefined') {  // Allow tree-shaking for the browser. Maybe.
+if(typeof window === 'undefined') {  // Allow tree-shaking for the browser. Maybe. Or at last skip execution.
     const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom')
 
     type InspectOptionsStylized = import('node:util').InspectOptionsStylized
@@ -111,9 +112,10 @@ if(typeof window === 'undefined') {  // Allow tree-shaking for the browser. Mayb
 
     let styleText: StyleTextFn = (_, text) => text
     try {
-        const util = await import('node:util')
-        if(typeof util.styleText === 'function') {
-            styleText = (colorStyle, text) => util.styleText(colorStyle, text)
+        const util = require('node:util')  // Seems to be more compatible than `await import`
+
+        if (typeof util.styleText === 'function') {
+            styleText = util.styleText
         }
     } catch {
         //
