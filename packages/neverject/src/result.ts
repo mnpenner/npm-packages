@@ -97,26 +97,32 @@ export function err<E>(error: E): Err<E> {
     return new Err(error)
 }
 
-if (typeof window === 'undefined') {
-    // No need to add these symbols for browser environments, but it won't break anything either.
+declare const window: object | undefined
+
+if(typeof window === 'undefined') {  // Allow tree-shaking for the browser
+    const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom')
+
     type InspectOptionsStylized = import('node:util').InspectOptionsStylized
-    type Style = import('node:util').Style
+    type StyleTextFn = typeof import('node:util').styleText
+    type StyleTextFormat = Parameters<StyleTextFn>[0]
     type InspectFn = typeof import('node:util').inspect
 
-    const stylizeText = (options: InspectOptionsStylized, text: string, styleType: Style) => {
-        if(typeof options.stylize !== 'function') return text
-        return options.stylize(text, styleType)
+    let stylizeText: (text: string, colorStyle: StyleTextFormat) => string = (text) => text
+    try {
+        const util = await import('node:util')
+        if(typeof util.styleText === 'function') {
+            stylizeText = (text, colorStyle) => util.styleText(colorStyle, text)
+        }
+    } catch {
+        //
     }
-
-    const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom')
 
     Object.defineProperty(Ok.prototype, customInspectSymbol, {
         configurable: true,
         enumerable: false,
         writable: false,
         value(this: Ok<unknown>, _depth: number, options: InspectOptionsStylized, inspect: InspectFn) {
-            // 'string' usually maps to Green, 'regexp' usually maps to Red in Node default themes
-            return `${stylizeText(options, 'Ok', 'string')}(${inspect(this.value, options)})`
+            return `${stylizeText('Ok', 'green')}(${inspect(this.value, options)})`
         },
     })
 
@@ -125,7 +131,7 @@ if (typeof window === 'undefined') {
         enumerable: false,
         writable: false,
         value(this: Err<unknown>, _depth: number, options: InspectOptionsStylized, inspect: InspectFn) {
-            return `${stylizeText(options, 'Err', 'regexp')}(${inspect(this.error, options)})`
+            return `${stylizeText('Err', 'red')}(${inspect(this.error, options)})`
         },
     })
 }

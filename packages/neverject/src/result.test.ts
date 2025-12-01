@@ -22,10 +22,11 @@ describe('Result toString', () => {
     })
 
     it('registers util.inspect hooks when the custom symbol is available', () => {
-        const stylize = (value: string, styleType: string) => `${styleType}:${value}`
-        const options = {stylize, customInspect: true} as unknown as util.InspectOptions
+        const options = {customInspect: true} as const
+        const okLabel = util.styleText ? util.styleText('green', 'Ok') : 'Ok'
+        const errLabel = util.styleText ? util.styleText('red', 'Err') : 'Err'
 
-        expect(util.inspect(ok('hi'), options)).toBe("string:Ok(string:'hi')")
-        expect(util.inspect(err('bad'), options)).toBe("regexp:Err(string:'bad')")
+        expect(util.inspect(ok('hi'), options)).toBe(`${okLabel}('hi')`)
+        expect(util.inspect(err('bad'), options)).toBe(`${errLabel}('bad')`)
     })
 })

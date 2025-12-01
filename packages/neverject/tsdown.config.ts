@@ -8,6 +8,7 @@ export default defineConfig({
     },
     platform: 'neutral',
     format: ['esm'],
+    external: [/^(node|bun):/],
     exports: true,
     dts: true,
 })
