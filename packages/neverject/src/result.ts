@@ -1,6 +1,6 @@
 import {_INTERNAL_RESULT_MARKER} from './util/type-check.ts'
 import {varDump} from './var-dump.ts'
-import type {InspectOptionsStylized} from 'util'
+import type {InspectOptionsStylized, Style} from 'util'
 
 interface ResultInterface<T, __E> {
     readonly ok: boolean
@@ -101,39 +101,31 @@ export function err<E>(error: E): Err<E> {
 if (typeof process !== 'undefined') {  // Allow tree-shaking for the browser
     const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom')
 
-    type InspectFn = (value: unknown, options?: any) => string
+    type InspectFn = typeof import('node:util').inspect
 
-    type InspectOptions = import('node:util').InspectOptionsStylized
-
-    // Helper to format the label (Ok/Err) using Node's native colors/styles
-    const formatLabel = (label: 'Ok' | 'Err', options: InspectOptions) => {
-        if(typeof options.stylize !== 'function') return label
-        // 'string' usually maps to Green, 'regexp' usually maps to Red in Node default themes
-        const style = label === 'Ok' ? 'string' : 'regexp'
-        return options.stylize(label, style)
+    const stylizeText = (options: InspectOptionsStylized, text: string, styleType: Style) => {
+        if(typeof options.stylize !== 'function') return text
+        return options.stylize(text, styleType)
     }
 
-    // The injector function
-    const installCustomInspect = (
-        TargetClass: Function,
-        label: 'Ok' | 'Err',
-        propName: 'value' | 'error'
-    ) => {
-        Object.defineProperty(TargetClass.prototype, customInspectSymbol, {
-            configurable: true,
-            enumerable: false,
-            writable: false,
-            // Node/Bun passes the current `inspect` function as the 3rd argument.
-            // We use that instead of the global `util.inspect` to respect current depth/options.
-            value(this: any, _depth: number, options: InspectOptions, inspect: InspectFn) {
-                const innerValue = this[propName]
-                // Recurse using the runtime-provided inspector
-                const formattedValue = inspect(innerValue, options)
-                return `${formatLabel(label, options)}(${formattedValue})`
-            },
-        })
-    }
+    Object.defineProperty(Ok.prototype, customInspectSymbol, {
+        configurable: true,
+        enumerable: false,
+        writable: false,
+        value(this: Ok<unknown>, _depth: number, options: InspectOptionsStylized, inspect: InspectFn) {
+            const formattedValue = inspect(this.value, options)
+            // 'string' usually maps to Green, 'regexp' usually maps to Red in Node default themes
+            return `${stylizeText(options, 'Ok', 'string')}(${formattedValue})`
+        },
+    })
 
-    installCustomInspect(Ok, 'Ok', 'value')
-    installCustomInspect(Err, 'Err', 'error')
+    Object.defineProperty(Err.prototype, customInspectSymbol, {
+        configurable: true,
+        enumerable: false,
+        writable: false,
+        value(this: Err<unknown>, _depth: number, options: InspectOptionsStylized, inspect: InspectFn) {
+            const formattedError = inspect(this.error, options)
+            return `${stylizeText(options, 'Err', 'regexp')}(${formattedError})`
+        },
+    })
 }
