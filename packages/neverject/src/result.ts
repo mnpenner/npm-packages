@@ -1,6 +1,5 @@
 import {_INTERNAL_RESULT_MARKER} from './util/type-check.ts'
 import {varDump} from './var-dump.ts'
-import type {InspectOptionsStylized, Style} from 'util'
 
 interface ResultInterface<T, __E> {
     readonly ok: boolean
@@ -98,9 +97,10 @@ export function err<E>(error: E): Err<E> {
     return new Err(error)
 }
 
-if (typeof process !== 'undefined') {  // Allow tree-shaking for the browser
-    const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom')
-
+if (typeof window === 'undefined') {
+    // No need to add these symbols for browser environments, but it won't break anything either.
+    type InspectOptionsStylized = import('node:util').InspectOptionsStylized
+    type Style = import('node:util').Style
     type InspectFn = typeof import('node:util').inspect
 
     const stylizeText = (options: InspectOptionsStylized, text: string, styleType: Style) => {
@@ -108,14 +108,15 @@ if (typeof process !== 'undefined') {  // Allow tree-shaking for the browser
         return options.stylize(text, styleType)
     }
 
+    const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom')
+
     Object.defineProperty(Ok.prototype, customInspectSymbol, {
         configurable: true,
         enumerable: false,
         writable: false,
         value(this: Ok<unknown>, _depth: number, options: InspectOptionsStylized, inspect: InspectFn) {
-            const formattedValue = inspect(this.value, options)
             // 'string' usually maps to Green, 'regexp' usually maps to Red in Node default themes
-            return `${stylizeText(options, 'Ok', 'string')}(${formattedValue})`
+            return `${stylizeText(options, 'Ok', 'string')}(${inspect(this.value, options)})`
         },
     })
 
@@ -124,8 +125,7 @@ if (typeof process !== 'undefined') {  // Allow tree-shaking for the browser
         enumerable: false,
         writable: false,
         value(this: Err<unknown>, _depth: number, options: InspectOptionsStylized, inspect: InspectFn) {
-            const formattedError = inspect(this.error, options)
-            return `${stylizeText(options, 'Err', 'regexp')}(${formattedError})`
+            return `${stylizeText(options, 'Err', 'regexp')}(${inspect(this.error, options)})`
         },
     })
 }
