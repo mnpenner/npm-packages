@@ -97,21 +97,23 @@ export function err<E>(error: E): Err<E> {
     return new Err(error)
 }
 
-declare const window: object | undefined
+declare global {
+    interface Window {} // lets TS know Window exists
+    var window: Window | undefined
+}
 
-if(typeof window === 'undefined') {  // Allow tree-shaking for the browser
+if(typeof window === 'undefined') {  // Allow tree-shaking for the browser. Maybe.
     const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom')
 
     type InspectOptionsStylized = import('node:util').InspectOptionsStylized
     type StyleTextFn = typeof import('node:util').styleText
-    type StyleTextFormat = Parameters<StyleTextFn>[0]
     type InspectFn = typeof import('node:util').inspect
 
-    let stylizeText: (text: string, colorStyle: StyleTextFormat) => string = (text) => text
+    let styleText: StyleTextFn = (_, text) => text
     try {
         const util = await import('node:util')
         if(typeof util.styleText === 'function') {
-            stylizeText = (text, colorStyle) => util.styleText(colorStyle, text)
+            styleText = (colorStyle, text) => util.styleText(colorStyle, text)
         }
     } catch {
         //
@@ -122,7 +124,7 @@ if(typeof window === 'undefined') {  // Allow tree-shaking for the browser
         enumerable: false,
         writable: false,
         value(this: Ok<unknown>, _depth: number, options: InspectOptionsStylized, inspect: InspectFn) {
-            return `${stylizeText('Ok', 'green')}(${inspect(this.value, options)})`
+            return `${styleText('green', 'Ok')}(${inspect(this.value, options)})`
         },
     })
 
@@ -131,7 +133,7 @@ if(typeof window === 'undefined') {  // Allow tree-shaking for the browser
         enumerable: false,
         writable: false,
         value(this: Err<unknown>, _depth: number, options: InspectOptionsStylized, inspect: InspectFn) {
-            return `${stylizeText('Err', 'red')}(${inspect(this.error, options)})`
+            return `${styleText('red', 'Err')}(${inspect(this.error, options)})`
         },
     })
 }
