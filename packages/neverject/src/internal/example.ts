@@ -4,63 +4,7 @@ import type {DetailedError} from '../detailed-error.ts'
 import * as nju from '../util'
 import {describe, example, log, runExamples} from './example-runner.ts'
 import {mayFail1, mayFail2} from './test-functions.ts'
-
-type FetchInput = Parameters<typeof fetch>[0]
-type FetchInit = Parameters<typeof fetch>[1]
-type FetchLike = (input: FetchInput, init?: FetchInit) => ReturnType<typeof fetch>
-
-type NetworkFetchError = {kind: 'network'; error: DetailedError<unknown>}
-type HttpFetchError = {
-    kind: 'http'
-    status: number
-    statusText: string
-    url: string
-    bodyText?: string
-    headers: Record<string, string>
-}
-type NjFetchError = NetworkFetchError | HttpFetchError
-
-async function readBodyText(response: Response): Promise<string | undefined> {
-    try {
-        const text = await response.clone().text()
-        const trimmed = text.trim()
-        return trimmed.length ? trimmed : undefined
-    } catch {
-        return undefined
-    }
-}
-
-function snapshotHeaders(headers: Headers): Record<string, string> {
-    const entries: Record<string, string> = {}
-    headers.forEach((value, key) => {
-        entries[key] = value
-    })
-    return entries
-}
-
-async function njFetch(input: FetchInput, init?: FetchInit, fetchImpl: FetchLike = fetch): Promise<Result<Response, NjFetchError>> {
-    const fetchResult = await nj(fetchImpl(input, init))
-    if(!fetchResult.ok) {
-        return err({
-            kind: 'network',
-            error: fetchResult.error,
-        })
-    }
-
-    const response = fetchResult.value
-    if(response.ok) {
-        return ok(response)
-    }
-
-    return err({
-        kind: 'http',
-        status: response.status,
-        statusText: response.statusText,
-        url: response.url || String(input),
-        bodyText: await readBodyText(response),
-        headers: snapshotHeaders(response.headers),
-    })
-}
+import {expect, mock} from 'bun:test'
 
 describe('Sync results', () => {
     example('Ok result', () => {
@@ -192,29 +136,94 @@ describe('Utilities', () => {
 })
 
 describe('Fetch helpers', () => {
-    example('Discriminating network vs HTTP failures', async () => {
-        const offlineFetch: FetchLike = () => Promise.reject(new Error('ECONNREFUSED'))
-        const offline = await njFetch('https://api.example.test/offline', undefined, offlineFetch)
-        log('offline.kind', offline.ok ? 'ok' : offline.error.kind)
-        if(!offline.ok && offline.error.kind === 'network') {
-            log('offline.message', offline.error.error.message)
+    const originalFetch = globalThis.fetch
+
+    type FetchInput = Parameters<typeof fetch>[0]
+    type FetchInit = Parameters<typeof fetch>[1]
+
+    type NetworkFetchError = {kind: 'network'; error: DetailedError<unknown>}
+    type HttpFetchError = {
+        kind: 'http'
+        status: number
+        statusText: string
+        url: string
+        bodyText?: string
+        headers: Record<string, string>
+    }
+    type NjFetchError = NetworkFetchError | HttpFetchError
+
+    async function readBodyText(response: Response): Promise<string | undefined> {
+        try {
+            const text = await response.clone().text()
+            const trimmed = text.trim()
+            return trimmed.length ? trimmed : undefined
+        } catch {
+            return undefined
+        }
+    }
+
+    function snapshotHeaders(headers: Headers): Record<string, string> {
+        const entries: Record<string, string> = {}
+        headers.forEach((value, key) => {
+            entries[key] = value
+        })
+        return entries
+    }
+
+    async function njFetch(input: FetchInput, init?: FetchInit): Promise<Result<Response, NjFetchError>> {
+        const fetchResult = await nj(fetch(input, init))
+        if(!fetchResult.ok) {
+            return err({
+                kind: 'network',
+                error: fetchResult.error,
+            })
         }
 
-        const missingFetch: FetchLike = async () => new Response(JSON.stringify({message: 'missing'}), {
+        const response = fetchResult.value
+        if(response.ok) {
+            return ok(response)
+        }
+
+        return err({
+            kind: 'http',
+            status: response.status,
+            statusText: response.statusText,
+            url: response.url || String(input),
+            bodyText: await readBodyText(response),
+            headers: snapshotHeaders(response.headers),
+        })
+    }
+
+    example('Discriminating network vs HTTP failures', async () => {
+        const offlineFetch = mock(() => Promise.reject(new Error('ECONNREFUSED')))
+        const missingFetch = mock(async () => new Response(JSON.stringify({message: 'missing'}), {
             status: 404,
             statusText: 'Not Found',
             headers: {'Content-Type': 'application/json'},
-        })
-        const missing = await njFetch('https://api.example.test/missing', undefined, missingFetch)
-        log('missing.kind', missing.ok ? 'ok' : missing.error.kind)
-        if(!missing.ok && missing.error.kind === 'http') {
-            log('missing.status', missing.error.status)
-            log('missing.body', missing.error.bodyText)
+        }))
+
+        try {
+            globalThis.fetch = offlineFetch as unknown as typeof fetch
+            const offline = await njFetch('https://api.example.test/offline')
+            log('offline.kind', offline.ok ? 'ok' : offline.error.kind)
+            if(!offline.ok && offline.error.kind === 'network') {
+                log('offline.message', offline.error.error.message)
+            }
+            expect(offlineFetch).toHaveBeenCalled()
+
+            globalThis.fetch = missingFetch as unknown as typeof fetch
+            const missing = await njFetch('https://api.example.test/missing')
+            log('missing.kind', missing.ok ? 'ok' : missing.error.kind)
+            if(!missing.ok && missing.error.kind === 'http') {
+                log('missing.status', missing.error.status)
+                log('missing.body', missing.error.bodyText)
+                log('missing.headers', missing.error.headers)
+            }
+            expect(missingFetch).toHaveBeenCalled()
+        } finally {
+            globalThis.fetch = originalFetch
         }
     })
 })
 
 await runExamples()
-
-// TODO: copy the JSON.parse example from
-// https://github.com/supermacro/neverthrow?tab=readme-ov-file#resultfromthrowable-static-class-method
