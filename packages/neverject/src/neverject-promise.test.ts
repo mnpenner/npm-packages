@@ -5,12 +5,11 @@ import {nj} from './nj.ts'
 import type {NeverjectPromise} from './neverject-promise.ts'
 import {err, ok, type Result} from './result.ts'
 import {expectType, type TypeEqual} from './internal/type-assert.ts'
-import type {DetailedError} from './detailed-error.ts'
 
 describe('map', () => {
     it('maps successes and flattens returned results', async () => {
         const mapped = nj(ok(2)).map((value) => ok(value * 2))
-        expectType<TypeEqual<typeof mapped, NeverjectPromise<number, DetailedError<unknown>>>>(true)
+        expectType<TypeEqual<typeof mapped, NeverjectPromise<number, never>>>(true)
 
         const result = await mapped
         expect(result.ok).toBe(true)
@@ -21,7 +20,7 @@ describe('map', () => {
 
     it('propagates mapped Err results', async () => {
         const mappedToErr = nj(ok(3)).map<number, string>(() => err('fail'))
-        expectType<TypeEqual<typeof mappedToErr, NeverjectPromise<number, string | DetailedError<unknown>>>>(true)
+        expectType<TypeEqual<typeof mappedToErr, NeverjectPromise<number, string>>>(true)
 
         const errResult = await mappedToErr
         expect(errResult.ok).toBe(false)
@@ -34,7 +33,7 @@ describe('map', () => {
 describe('mapErr', () => {
     it('maps errors without touching successful values', async () => {
         const mappedError = nj(err('oops')).mapErr((error) => error.length)
-        expectType<TypeEqual<typeof mappedError, NeverjectPromise<never, number | DetailedError<unknown>>>>(true)
+        expectType<TypeEqual<typeof mappedError, NeverjectPromise<never, number>>>(true)
 
         const result = await mappedError
         expect(result.ok).toBe(false)
@@ -42,12 +41,23 @@ describe('mapErr', () => {
             expect(result.error).toBe(4)
         }
     })
+
+    it('remaps error type while preserving Ok values', async () => {
+        const mappedError = nj(ok(5) as Result<number, string>).mapErr((error) => error.length)
+        expectType<TypeEqual<typeof mappedError, NeverjectPromise<number, number>>>(true)
+
+        const result = await mappedError
+        expect(result.ok).toBe(true)
+        if(result.ok) {
+            expect(result.value).toBe(5)
+        }
+    })
 })
 
 describe('mapResult', () => {
     it('rewrites the entire result', async () => {
         const mapped = nj(ok(1) as Result<number, string>).mapResult<string, number>((result) => result.ok ? ok('done') : err(result.error.length))
-        expectType<TypeEqual<typeof mapped, NeverjectPromise<string, number | DetailedError<unknown>>>>(true)
+        expectType<TypeEqual<typeof mapped, NeverjectPromise<string, number>>>(true)
 
         const result = await mapped
         expect(result.ok).toBe(true)
@@ -65,8 +75,19 @@ describe('mapResult', () => {
             const result = await value
             expect(result.ok).toBe(true)
             if(result.ok) {
-            expect(result.value).toBe('user')
-        }
+                expect(result.value).toBe('user')
+            }
+        })
+
+        it('returns the original err value unchanged', async () => {
+            const value = nj(err('nope')).valueOr('guest')
+            expectType<TypeEqual<typeof value, NeverjectPromise<string, never>>>(true)
+
+            const result = await value
+            expect(result.ok).toBe(true)
+            if(result.ok) {
+                expect(result.value).toBe('guest')
+            }
         })
 
         it('returns a fallback for errors', async () => {
@@ -141,7 +162,7 @@ describe('tapResult', () => {
 describe('recover', () => {
     it('recovers from errors', async () => {
         const recovered = nj(err('offline')).recover((error) => `cached:${error}`)
-        expectType<TypeEqual<typeof recovered, NeverjectPromise<string, string | DetailedError<unknown>>>>(true)
+        expectType<TypeEqual<typeof recovered, NeverjectPromise<string, string>>>(true)
 
         const result = await recovered
         expect(result.ok).toBe(true)
