@@ -69,12 +69,12 @@ union). The lists below describe the instance surface you probably want to expos
 
 - `then(onfulfilled, onrejected?)` — PromiseLike entry point that never rejects; rejections become `NeverjectError`.
 - `map(fn)` — transform the `Ok` value; keeps the same error type.
-- `mapErr(fn)` — transform the `Err` value; keeps the same ok type.
+- `mapErr(fn)` — transform the `Err` value; keeps the same ok type. Returning a bare value is treated as the new error (`Err(value)`); returning `Ok/Err/NeverjectPromise` is flattened.
 - `mapResult(fn)` — give callers access to the whole `Result` and expect a `Result` back.
-- `valueOr(fallback | (e) => fallback)` — resolve to the ok value or a fallback when err.
+- `valueOr(fallback | (e) => fallback)` — resolve to the ok value or a fallback when err, always returning `Ok` (the error type becomes `never`).
 - `tap(fn)` / `tapErr(fn)` — side effects on success/failure without changing the value.
 - `tapResult(fn)` — side-effect with the whole `Result` while returning it unchanged.
-- `recover(fn)` — handle an error and turn it into an `Ok` value (leaves existing `Ok` values untouched).
+- `recover(fn)` — handle an error; you can return a value to recover (bare values become `Ok`), or return `Err`/`Result`/`NeverjectPromise` to keep failing. `mapErr` stays on the error branch for bare values; `recover` defaults to fixing the error.
 
 #### Result
 

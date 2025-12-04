@@ -129,6 +129,37 @@ export class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
     }
 
     /**
+     * Handle an error branch by producing a recovery value or mapped [`Result`]{@link Result}, leaving successful
+     * values untouched.
+     *
+     * @typeParam RV - Recovery success type.
+     * @typeParam NE - Error type produced by the recovery handler.
+     * @param fn - Callback invoked when this settles as [`Err`]{@link Err}; may return a value, [`Result`]{@link
+     *     Result}, promise, or [`NeverjectPromise`]{@link NeverjectPromise}.
+     * @returns A [`NeverjectPromise`]{@link NeverjectPromise} that preserves successes and replaces failures with the
+     *     handler output.
+     * @example
+     * const recovered = await nj(err('offline')).recover(() => 'cached')
+     * console.assert(recovered.ok && recovered.value === 'cached')
+     */
+    recover<NE>(fn: (error: E) => Err<NE> | NeverjectPromise<never, NE> | MaybePromise<Err<NE>>): NeverjectPromise<V, NE>
+    recover<RV, NE>(fn: (error: E) => HandlerResult<RV, NE>): NeverjectPromise<V | RV, NE>
+    recover<RV>(fn: (error: E) => MaybePromise<RV>): NeverjectPromise<V | RV, never>
+    recover<RV, NE = never>(fn: (error: E) => HandlerResult<RV, NE> | MaybePromise<RV>): NeverjectPromise<V | RV, NE> {
+        const promise = this.promise.then(async (result) => {
+            if(result.ok) return result
+
+            try {
+                return await normalizeResult<RV, NE>(fn(result.error))
+            } catch(error) {
+                return reject(error as NE) as Result<RV, NE>
+            }
+        })
+
+        return new NeverjectPromise(promise as Promise<Result<V | RV, NE>>)
+    }
+
+    /**
      * Rewrite the entire [`Result`]{@link Result}, allowing simultaneous transformations of both branches.
      *
      * @typeParam NV - New success type.
@@ -260,36 +291,5 @@ export class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
         })
 
         return new NeverjectPromise(promise as Promise<Result<V, E>>)
-    }
-
-    /**
-     * Handle an error branch by producing a recovery value or mapped [`Result`]{@link Result}, leaving successful
-     * values untouched.
-     *
-     * @typeParam RV - Recovery success type.
-     * @typeParam NE - Error type produced by the recovery handler.
-     * @param fn - Callback invoked when this settles as [`Err`]{@link Err}; may return a value, [`Result`]{@link
-     *     Result}, promise, or [`NeverjectPromise`]{@link NeverjectPromise}.
-     * @returns A [`NeverjectPromise`]{@link NeverjectPromise} that preserves successes and replaces failures with the
-     *     handler output.
-     * @example
-     * const recovered = await nj(err('offline')).recover(() => 'cached')
-     * console.assert(recovered.ok && recovered.value === 'cached')
-     */
-    recover<NE>(fn: (error: E) => Err<NE> | NeverjectPromise<never, NE> | MaybePromise<Err<NE>>): NeverjectPromise<V, NE>
-    recover<RV, NE>(fn: (error: E) => HandlerResult<RV, NE>): NeverjectPromise<V | RV, NE>
-    recover<RV>(fn: (error: E) => MaybePromise<RV>): NeverjectPromise<V | RV, never>
-    recover<RV, NE = never>(fn: (error: E) => HandlerResult<RV, NE> | MaybePromise<RV>): NeverjectPromise<V | RV, NE> {
-        const promise = this.promise.then(async (result) => {
-            if(result.ok) return result
-
-            try {
-                return await normalizeResult<RV, NE>(fn(result.error))
-            } catch(error) {
-                return reject(error as NE) as Result<RV, NE>
-            }
-        })
-
-        return new NeverjectPromise(promise as Promise<Result<V | RV, NE>>)
     }
 }
