@@ -5,6 +5,7 @@ import type {DetailedError} from './detailed-error.ts'
 import type {MaybePromise} from './maybe-promise.ts'
 import {reject, rejectWithError} from './util/reject.ts'
 import {resolve} from './util/resolve.ts'
+import {ok} from './result.ts'
 
 export const _INTERNAL_CTOR = Symbol('AsyncResultCtor')
 
@@ -89,7 +90,7 @@ export class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
             }
         })
 
-        return NeverjectPromise[_INTERNAL_CTOR](promise as Promise<Result<NV, E | NE | DetailedError<unknown>>>)
+        return new NeverjectPromise(promise as Promise<Result<NV, E | NE | DetailedError<unknown>>>)
     }
 
     /**
@@ -116,7 +117,7 @@ export class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
             }
         })
 
-        return NeverjectPromise[_INTERNAL_CTOR](promise as Promise<Result<V, NE | DetailedError<unknown>>>)
+        return new NeverjectPromise(promise as Promise<Result<V, NE | DetailedError<unknown>>>)
     }
 
     /**
@@ -139,7 +140,7 @@ export class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
             }
         })
 
-        return NeverjectPromise[_INTERNAL_CTOR](promise as Promise<Result<NV, NE | DetailedError<unknown>>>)
+        return new NeverjectPromise(promise as Promise<Result<NV, NE | DetailedError<unknown>>>)
     }
 
     /**
@@ -155,41 +156,51 @@ export class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
      * const dynamic = await nj(err('missing')).valueOr((error) => `missing: ${error}`)
      * console.assert(dynamic === 'missing: missing')
      */
-    valueOr<U>(fallback: U | ((error: E) => MaybePromise<U>)): Promise<V | U> {
+    valueOr<U>(fallback: U | ((error: E) => U)): NeverjectPromise<V | U, never> {
         const fallbackFn = typeof fallback === 'function'
-            ? fallback as (error: E) => MaybePromise<U>
+            ? fallback as (error: E) => U
             : () => fallback
 
-        return this.promise.then((result) => {
-            if(result.ok) return result.value
-            return fallbackFn(result.error)
+        const promise = this.promise.then((result) => {
+            if(result.ok) return ok(result.value as V | U)
+            return ok(fallbackFn(result.error))
         })
+
+        return new NeverjectPromise(promise)
     }
 
     /**
-     * Run a side effect on a successful value without changing the outcome unless the side effect fails.
+     * Run a side effect on a successful value without changing the outcome. Provide an optional error-side handler to mirror {@link NeverjectPromise#map}.
      *
-     * @typeParam NE - Error type produced by the tap.
-     * @param fn - Callback invoked on success; may return void, [`Result`]{@link Result}, promise, or [`NeverjectPromise`]{@link NeverjectPromise}.
-     * @returns A [`NeverjectPromise`]{@link NeverjectPromise} with the original result unless the tap returns an error.
+     * @param onfulfilled - Callback invoked on success.
+     * @param onrejected - Optional callback invoked on error.
+     * @returns A [`NeverjectPromise`]{@link NeverjectPromise} with the original result.
      * @example
      * const logged = await nj(ok(3)).tap((value) => console.log('value', value))
      * console.assert(logged.ok && logged.value === 3)
      */
-    tap<NE = never>(fn: (value: V) => NormalizedValue<void, NE>): NeverjectPromise<V, E | NE | DetailedError<unknown>> {
+    tap(onfulfilled: (value: V) => MaybePromise<unknown>, onrejected?: (error: E) => MaybePromise<unknown>): NeverjectPromise<V, E> {
         const promise = this.promise.then(async (result) => {
-            if(!result.ok) return result
-
-            try {
-                const tapped = await normalizeResult<void, NE>(fn(result.value))
-                if(!tapped.ok) return tapped
+            if(result.ok) {
+                try {
+                    await onfulfilled(result.value)
+                } catch {
+                    // ignore tap errors
+                }
                 return result
-            } catch (error) {
-                return rejectWithError(error) as Result<V, DetailedError<unknown>>
             }
+
+            if(onrejected) {
+                try {
+                    await onrejected(result.error)
+                } catch {
+                    // ignore tap errors
+                }
+            }
+            return result
         })
 
-        return NeverjectPromise[_INTERNAL_CTOR](promise as Promise<Result<V, E | NE | DetailedError<unknown>>>)
+        return new NeverjectPromise(promise as Promise<Result<V, E>>)
     }
 
     /**
@@ -202,18 +213,41 @@ export class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
      * const inspected = await nj(ok(1)).tapResult((result) => console.debug(result.ok))
      * console.assert(inspected.ok && inspected.value === 1)
      */
-    tapResult<NE = never>(fn: (result: Result<V, E>) => NormalizedValue<void, NE>): NeverjectPromise<V, E | NE | DetailedError<unknown>> {
+    tapResult(fn: (result: Result<V, E>) => MaybePromise<unknown>): NeverjectPromise<V, E> {
         const promise = this.promise.then(async (result) => {
             try {
-                const tapped = await normalizeResult<void, NE>(fn(result))
-                if(!tapped.ok) return tapped
-                return result
-            } catch (error) {
-                return rejectWithError(error) as Result<V, DetailedError<unknown>>
+                await fn(result)
+            } catch {
+                // ignore tap errors
             }
+            return result
         })
 
-        return NeverjectPromise[_INTERNAL_CTOR](promise as Promise<Result<V, E | NE | DetailedError<unknown>>>)
+        return new NeverjectPromise(promise as Promise<Result<V, E>>)
+    }
+
+    /**
+     * Run a side effect only when this settles as [`Err`]{@link Err}, preserving the original outcome.
+     *
+     * @param fn - Callback invoked on error.
+     * @returns A [`NeverjectPromise`]{@link NeverjectPromise} with the original result.
+     * @example
+     * const loggedErr = await nj(err('fail')).tapErr((error) => console.error(error))
+     * console.assert(!loggedErr.ok && loggedErr.error === 'fail')
+     */
+    tapErr(fn: (error: E) => MaybePromise<unknown>): NeverjectPromise<V, E> {
+        const promise = this.promise.then(async (result) => {
+            if(!result.ok) {
+                try {
+                    await fn(result.error)
+                } catch {
+                    // ignore tap errors
+                }
+            }
+            return result
+        })
+
+        return new NeverjectPromise(promise as Promise<Result<V, E>>)
     }
 
     /**
@@ -238,6 +272,6 @@ export class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
             }
         })
 
-        return NeverjectPromise[_INTERNAL_CTOR](promise as Promise<Result<V | RV, E | NE | DetailedError<unknown>>>)
+        return new NeverjectPromise(promise as Promise<Result<V | RV, E | NE | DetailedError<unknown>>>)
     }
 }
