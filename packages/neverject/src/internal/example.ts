@@ -1,6 +1,5 @@
 #!/usr/bin/env -S bun
 import {err, nj, ok, type Result} from '../index.ts'
-import type {DetailedError} from '../detailed-error.ts'
 import * as nju from '../util'
 import {describe, example, log, runExamples} from './example-runner.ts'
 import {mayFail1, mayFail2} from './test-functions.ts'
@@ -90,6 +89,43 @@ describe('Utilities', () => {
         })
 
         log('allSettledObj result', settled)
+    })
+
+    example('Racing for the first settled entry with firstSettled', async () => {
+        const flip = () => Math.random() < 0.5
+        const slowAttempt = new Promise((resolve) =>
+            setTimeout(() => resolve(flip() ? ok('slow success') : err('slow failure')), 25)
+        )
+        const fastAttempt = new Promise((resolve) =>
+            setTimeout(() => resolve(flip() ? ok('fast success') : err('fast failure')), 5)
+        )
+
+        const settled = await nju.firstSettled([slowAttempt, fastAttempt] as const)
+
+        log('firstSettled ok?', settled.ok)
+        if(settled.ok) {
+            log('firstSettled value', settled.value)
+        } else {
+            log('firstSettled error', settled.error)
+        }
+    })
+
+    example('Grabbing earliest success with firstOk', async () => {
+        const flip = () => Math.random() < 0.5
+        const maybeWin = (label: string, delay: number) =>
+            new Promise((resolve) => setTimeout(() => resolve(flip() ? ok(label) : err(`${label} failed`)), delay))
+
+        const result = await nju.firstOk([maybeWin('fast attempt', 5), maybeWin('slow attempt', 20)] as const)
+        log('firstOk (racing attempts) ok?', result.ok)
+        if(result.ok) {
+            log('firstOk value', result.value)
+        } else {
+            log('firstOk collected errors', result.error)
+        }
+
+        const retries = await nju.firstOk([maybeWin('retry 1', 10), maybeWin('retry 2', 15)] as const)
+        log('firstOk (retries) found success?', retries.ok)
+        log('firstOk (retries) payload', retries)
     })
 
     example('SafeTry style propagation', () => {
