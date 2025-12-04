@@ -28,6 +28,17 @@ describe('map', () => {
             expect(errResult.error).toBe('fail')
         }
     })
+
+    it('flattens returned NeverjectPromise values', async () => {
+        const mapped = nj(ok(1)).map((value) => nj(ok(value + 1)))
+        expectType<TypeEqual<typeof mapped, NeverjectPromise<number, never>>>(true)
+
+        const result = await mapped
+        expect(result.ok).toBe(true)
+        if(result.ok) {
+            expect(result.value).toBe(2)
+        }
+    })
 })
 
 describe('mapErr', () => {
@@ -50,6 +61,17 @@ describe('mapErr', () => {
         expect(result.ok).toBe(true)
         if(result.ok) {
             expect(result.value).toBe(5)
+        }
+    })
+
+    it('flattens returned NeverjectPromise errors', async () => {
+        const mappedError = nj(err('oops')).mapErr((error) => nj(err(error.length)))
+        expectType<TypeEqual<typeof mappedError, NeverjectPromise<never, number>>>(true)
+
+        const result = await mappedError
+        expect(result.ok).toBe(false)
+        if(!result.ok) {
+            expect(result.error).toBe(4)
         }
     })
 })
