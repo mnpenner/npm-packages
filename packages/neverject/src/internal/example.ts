@@ -141,13 +141,21 @@ describe('Fetch helpers', () => {
     type FetchUrl = string | URL | {toString(): string}
     type NjFetchInit = RequestInit & {url: FetchUrl}
 
-    type NetworkFetchError = {kind: 'network'; url: string; error: DetailedError<unknown>}
+    type NetworkFetchReason = 'abort' | 'not-allowed' | 'type' | 'other'
+    type NetworkFetchError = {kind: 'network'; url: string; reason: NetworkFetchReason; error: Error}
     type HttpFetchError = {
         kind: 'http'
         status: number
         response: Response
     }
     type NjFetchError = NetworkFetchError | HttpFetchError
+
+    function toNetworkReason(error: Error): NetworkFetchReason {
+        if(error.name === 'AbortError') return 'abort'
+        if(error.name === 'NotAllowedError') return 'not-allowed'
+        if(error instanceof TypeError || error.name === 'TypeError') return 'type'
+        return 'other'
+    }
 
     async function njFetch(init: NjFetchInit): Promise<Result<Response, NjFetchError>> {
         const {url, ...rest} = init
@@ -157,6 +165,7 @@ describe('Fetch helpers', () => {
             return err({
                 kind: 'network',
                 url: request.url,
+                reason: toNetworkReason(fetchResult.error),
                 error: fetchResult.error,
             })
         }
@@ -187,6 +196,7 @@ describe('Fetch helpers', () => {
             log('offline.kind', offline.ok ? 'ok' : offline.error.kind)
             if(!offline.ok && offline.error.kind === 'network') {
                 log('offline.message', offline.error.error.message)
+                log('offline.reason', offline.error.reason)
                 log('offline.url', offline.error.url)
             }
             expect(offlineFetch).toHaveBeenCalled()
