@@ -138,43 +138,25 @@ describe('Utilities', () => {
 describe('Fetch helpers', () => {
     const originalFetch = globalThis.fetch
 
-    type FetchInput = Parameters<typeof fetch>[0]
-    type FetchInit = Parameters<typeof fetch>[1]
+    type FetchUrl = string | URL | {toString(): string}
+    type NjFetchInit = RequestInit & {url: FetchUrl}
 
-    type NetworkFetchError = {kind: 'network'; error: DetailedError<unknown>}
+    type NetworkFetchError = {kind: 'network'; url: string; error: DetailedError<unknown>}
     type HttpFetchError = {
         kind: 'http'
         status: number
-        statusText: string
-        url: string
-        bodyText?: string
-        headers: Record<string, string>
+        response: Response
     }
     type NjFetchError = NetworkFetchError | HttpFetchError
 
-    async function readBodyText(response: Response): Promise<string | undefined> {
-        try {
-            const text = await response.clone().text()
-            const trimmed = text.trim()
-            return trimmed.length ? trimmed : undefined
-        } catch {
-            return undefined
-        }
-    }
-
-    function snapshotHeaders(headers: Headers): Record<string, string> {
-        const entries: Record<string, string> = {}
-        headers.forEach((value, key) => {
-            entries[key] = value
-        })
-        return entries
-    }
-
-    async function njFetch(input: FetchInput, init?: FetchInit): Promise<Result<Response, NjFetchError>> {
-        const fetchResult = await nj(fetch(input, init))
+    async function njFetch(init: NjFetchInit): Promise<Result<Response, NjFetchError>> {
+        const {url, ...rest} = init
+        const request = new Request(url as any, rest as RequestInit)
+        const fetchResult = await nj(fetch(request))
         if(!fetchResult.ok) {
             return err({
                 kind: 'network',
+                url: request.url,
                 error: fetchResult.error,
             })
         }
@@ -187,16 +169,13 @@ describe('Fetch helpers', () => {
         return err({
             kind: 'http',
             status: response.status,
-            statusText: response.statusText,
-            url: response.url || String(input),
-            bodyText: await readBodyText(response),
-            headers: snapshotHeaders(response.headers),
+            response,
         })
     }
 
     example('Discriminating network vs HTTP failures', async () => {
-        const offlineFetch = mock(() => Promise.reject(new Error('ECONNREFUSED')))
-        const missingFetch = mock(async () => new Response(JSON.stringify({message: 'missing'}), {
+        const offlineFetch = mock((_req: Request) => Promise.reject(new Error('ECONNREFUSED')))
+        const missingFetch = mock(async (_req: Request) => new Response(JSON.stringify({message: 'missing'}), {
             status: 404,
             statusText: 'Not Found',
             headers: {'Content-Type': 'application/json'},
@@ -204,20 +183,21 @@ describe('Fetch helpers', () => {
 
         try {
             globalThis.fetch = offlineFetch as unknown as typeof fetch
-            const offline = await njFetch('https://api.example.test/offline')
+            const offline = await njFetch({url: new URL('/offline', 'https://api.example.test')})
             log('offline.kind', offline.ok ? 'ok' : offline.error.kind)
             if(!offline.ok && offline.error.kind === 'network') {
                 log('offline.message', offline.error.error.message)
+                log('offline.url', offline.error.url)
             }
             expect(offlineFetch).toHaveBeenCalled()
 
             globalThis.fetch = missingFetch as unknown as typeof fetch
-            const missing = await njFetch('https://api.example.test/missing')
+            const missing = await njFetch({url: 'https://api.example.test/missing'})
             log('missing.kind', missing.ok ? 'ok' : missing.error.kind)
             if(!missing.ok && missing.error.kind === 'http') {
                 log('missing.status', missing.error.status)
-                log('missing.body', missing.error.bodyText)
-                log('missing.headers', missing.error.headers)
+                const body = await missing.error.response.json()
+                log('missing.body', body)
             }
             expect(missingFetch).toHaveBeenCalled()
         } finally {
