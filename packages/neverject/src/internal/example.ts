@@ -1,8 +1,66 @@
 #!/usr/bin/env -S bun
 import {err, nj, ok, type Result} from '../index.ts'
+import type {DetailedError} from '../detailed-error.ts'
 import * as nju from '../util'
 import {describe, example, log, runExamples} from './example-runner.ts'
 import {mayFail1, mayFail2} from './test-functions.ts'
+
+type FetchInput = Parameters<typeof fetch>[0]
+type FetchInit = Parameters<typeof fetch>[1]
+type FetchLike = (input: FetchInput, init?: FetchInit) => ReturnType<typeof fetch>
+
+type NetworkFetchError = {kind: 'network'; error: DetailedError<unknown>}
+type HttpFetchError = {
+    kind: 'http'
+    status: number
+    statusText: string
+    url: string
+    bodyText?: string
+    headers: Record<string, string>
+}
+type NjFetchError = NetworkFetchError | HttpFetchError
+
+async function readBodyText(response: Response): Promise<string | undefined> {
+    try {
+        const text = await response.clone().text()
+        const trimmed = text.trim()
+        return trimmed.length ? trimmed : undefined
+    } catch {
+        return undefined
+    }
+}
+
+function snapshotHeaders(headers: Headers): Record<string, string> {
+    const entries: Record<string, string> = {}
+    headers.forEach((value, key) => {
+        entries[key] = value
+    })
+    return entries
+}
+
+async function njFetch(input: FetchInput, init?: FetchInit, fetchImpl: FetchLike = fetch): Promise<Result<Response, NjFetchError>> {
+    const fetchResult = await nj(fetchImpl(input, init))
+    if(!fetchResult.ok) {
+        return err({
+            kind: 'network',
+            error: fetchResult.error,
+        })
+    }
+
+    const response = fetchResult.value
+    if(response.ok) {
+        return ok(response)
+    }
+
+    return err({
+        kind: 'http',
+        status: response.status,
+        statusText: response.statusText,
+        url: response.url || String(input),
+        bodyText: await readBodyText(response),
+        headers: snapshotHeaders(response.headers),
+    })
+}
 
 describe('Sync results', () => {
     example('Ok result', () => {
@@ -129,6 +187,29 @@ describe('Utilities', () => {
         log('ok', res.ok)
         if(!res.ok) {
             log('parse failure message', res.error.message)
+        }
+    })
+})
+
+describe('Fetch helpers', () => {
+    example('Discriminating network vs HTTP failures', async () => {
+        const offlineFetch: FetchLike = () => Promise.reject(new Error('ECONNREFUSED'))
+        const offline = await njFetch('https://api.example.test/offline', undefined, offlineFetch)
+        log('offline.kind', offline.ok ? 'ok' : offline.error.kind)
+        if(!offline.ok && offline.error.kind === 'network') {
+            log('offline.message', offline.error.error.message)
+        }
+
+        const missingFetch: FetchLike = async () => new Response(JSON.stringify({message: 'missing'}), {
+            status: 404,
+            statusText: 'Not Found',
+            headers: {'Content-Type': 'application/json'},
+        })
+        const missing = await njFetch('https://api.example.test/missing', undefined, missingFetch)
+        log('missing.kind', missing.ok ? 'ok' : missing.error.kind)
+        if(!missing.ok && missing.error.kind === 'http') {
+            log('missing.status', missing.error.status)
+            log('missing.body', missing.error.bodyText)
         }
     })
 })
