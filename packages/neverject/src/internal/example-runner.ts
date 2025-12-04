@@ -1,5 +1,4 @@
 import {stringWidth} from 'bun'
-import {isResult} from '../util/type-check.ts'
 
 export type ExampleFn = () => void | Promise<void>
 export type ExampleNode =

@@ -10,8 +10,9 @@ export type ToSyncResult<T> =
             T extends Err<infer E2> ? Result<never, E2> :
                 T extends Result<infer V3, infer E3> ? Result<V3, E3> :
                     T extends PromiseLike<infer P> ?
-                        P extends Result<infer V4, infer E4> ? Result<V4, E4> :
-                            Result<Awaited<P>, DetailedError<unknown>> :
+                        [P] extends [never] ? Result<Awaited<P>, DetailedError<unknown>> :
+                            P extends Result<infer V4, infer E4> ? Result<V4, E4> :
+                                Result<Awaited<P>, DetailedError<unknown>> :
                         Result<T, never>
 
 export type AllSettledObject<T extends Record<string, unknown>> = {
