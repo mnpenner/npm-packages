@@ -67,36 +67,36 @@ describe('mapResult', () => {
     })
 })
 
-    describe('valueOr', () => {
-        it('returns the original ok value', async () => {
-            const value = nj(ok('user')).valueOr('guest')
-            expectType<TypeEqual<typeof value, NeverjectPromise<string, never>>>(true)
+describe('valueOr', () => {
+    it('returns the original ok value', async () => {
+        const value = nj(ok('user')).valueOr('guest')
+        expectType<TypeEqual<typeof value, NeverjectPromise<string, never>>>(true)
 
-            const result = await value
-            expect(result.ok).toBe(true)
-            if(result.ok) {
-                expect(result.value).toBe('user')
-            }
-        })
+        const result = await value
+        expect(result.ok).toBe(true)
+        if(result.ok) {
+            expect(result.value).toBe('user')
+        }
+    })
 
-        it('returns the original err value unchanged', async () => {
-            const value = nj(err('nope')).valueOr('guest')
-            expectType<TypeEqual<typeof value, NeverjectPromise<string, never>>>(true)
+    it('returns the original err value unchanged', async () => {
+        const value = nj(err('nope')).valueOr('guest')
+        expectType<TypeEqual<typeof value, NeverjectPromise<string, never>>>(true)
 
-            const result = await value
-            expect(result.ok).toBe(true)
-            if(result.ok) {
-                expect(result.value).toBe('guest')
-            }
-        })
+        const result = await value
+        expect(result.ok).toBe(true)
+        if(result.ok) {
+            expect(result.value).toBe('guest')
+        }
+    })
 
-        it('returns a fallback for errors', async () => {
-            const fallback = nj(err('missing')).valueOr((error) => `fallback:${error}`)
-            expectType<TypeEqual<typeof fallback, NeverjectPromise<string, never>>>(true)
+    it('returns a fallback for errors', async () => {
+        const fallback = nj(err('missing')).valueOr((error) => `fallback:${error}`)
+        expectType<TypeEqual<typeof fallback, NeverjectPromise<string, never>>>(true)
 
-            const result = await fallback
-            expect(result.ok).toBe(true)
-            if(result.ok) {
+        const result = await fallback
+        expect(result.ok).toBe(true)
+        if(result.ok) {
             expect(result.value).toBe('fallback:missing')
         }
     })
@@ -105,7 +105,9 @@ describe('mapResult', () => {
 describe('tap', () => {
     it('runs side effects on success', async () => {
         let tapped = 0
-        const tappedPromise = nj(ok(5)).tap((value) => { tapped = value })
+        const tappedPromise = nj(ok(5)).tap((value) => {
+            tapped = value
+        })
         expectType<TypeEqual<typeof tappedPromise, NeverjectPromise<number, never>>>(true)
 
         const success = await tappedPromise
@@ -131,7 +133,9 @@ describe('tap', () => {
 describe('tapErr', () => {
     it('runs side effects only on errors', async () => {
         let tappedErr: string | undefined
-        const tappedPromise = nj(err('boom')).tapErr((error) => { tappedErr = error })
+        const tappedPromise = nj(err('boom')).tapErr((error) => {
+            tappedErr = error
+        })
         expectType<TypeEqual<typeof tappedPromise, NeverjectPromise<never, string>>>(true)
 
         const result = await tappedPromise
@@ -162,12 +166,23 @@ describe('tapResult', () => {
 describe('recover', () => {
     it('recovers from errors', async () => {
         const recovered = nj(err('offline')).recover((error) => `cached:${error}`)
-        expectType<TypeEqual<typeof recovered, NeverjectPromise<string, string>>>(true)
+        expectType<TypeEqual<typeof recovered, NeverjectPromise<string, never>>>(true)
 
         const result = await recovered
         expect(result.ok).toBe(true)
         if(result.ok) {
             expect(result.value).toBe('cached:offline')
+        }
+    })
+
+    it('returns a new Err when recovery fails', async () => {
+        const failedRecovery = nj<never, string>(err('offline')).recover(() => err(500))
+        expectType<TypeEqual<typeof failedRecovery, NeverjectPromise<never, number>>>(true)
+
+        const result = await failedRecovery
+        expect(result.ok).toBe(false)
+        if(!result.ok) {
+            expect(result.error).toBe(500)
         }
     })
 })

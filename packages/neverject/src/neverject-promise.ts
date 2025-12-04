@@ -1,13 +1,15 @@
-import {ok, type Result} from './result.ts'
+import {ok, type Err, type Result} from './result.ts'
 
 import {UnreachableError} from './unreachable-error.ts'
 import type {MaybePromise} from './maybe-promise.ts'
-import {reject, resolve} from './util'
+import {reject} from './util/reject.ts'
+import {resolve} from './util/resolve.ts'
 
 export const _INTERNAL_CTOR = Symbol('AsyncResultCtor')
 
-type NormalizedValue<V, E> = NeverjectPromise<V, E> | MaybePromise<Result<V, E> | V>
+type NormalizedValue<V, E> = NeverjectPromise<V, E> | MaybePromise<Result<V | never, E> | V>
 type NormalizedError<V, E> = NeverjectPromise<V, E> | MaybePromise<Result<V, E> | E>
+type HandlerResult<V, E> = NeverjectPromise<V, E> | Result<V, E> | MaybePromise<Result<V, E>>
 
 function normalizeResult<V, E>(value: NormalizedValue<V, E>): Promise<Result<V, E>> {
     return Promise.resolve(value)
@@ -274,17 +276,20 @@ export class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
      * const recovered = await nj(err('offline')).recover(() => 'cached')
      * console.assert(recovered.ok && recovered.value === 'cached')
      */
-    recover<RV, NE = E>(fn: (error: E) => NormalizedValue<RV, NE>): NeverjectPromise<V | RV, E | NE> {
+    recover<NE>(fn: (error: E) => Err<NE> | NeverjectPromise<never, NE> | MaybePromise<Err<NE>>): NeverjectPromise<V, NE>
+    recover<RV, NE>(fn: (error: E) => HandlerResult<RV, NE>): NeverjectPromise<V | RV, NE>
+    recover<RV>(fn: (error: E) => MaybePromise<RV>): NeverjectPromise<V | RV, never>
+    recover<RV, NE = never>(fn: (error: E) => HandlerResult<RV, NE> | MaybePromise<RV>): NeverjectPromise<V | RV, NE> {
         const promise = this.promise.then(async (result) => {
             if(result.ok) return result
 
             try {
                 return await normalizeResult<RV, NE>(fn(result.error))
             } catch(error) {
-                return reject(error) as Result<RV, E | NE>
+                return reject(error as NE) as Result<RV, NE>
             }
         })
 
-        return new NeverjectPromise(promise as Promise<Result<V | RV, E | NE>>)
+        return new NeverjectPromise(promise as Promise<Result<V | RV, NE>>)
     }
 }
