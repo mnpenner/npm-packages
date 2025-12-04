@@ -4,8 +4,7 @@ import {rejectWithError} from './reject.ts'
 import {resolve} from './resolve.ts'
 import {nj} from '../nj.ts'
 import {type NeverjectPromise} from '../neverject-promise.ts'
-
-type Awaitable<T> = T | PromiseLike<T>
+import type {MaybePromise} from '../maybe-promise.ts'
 
 /**
  * Invoke a sync function that never returns successfully, capturing thrown errors as `Err`.
@@ -109,7 +108,7 @@ export function call<V, E = DetailedError<unknown>, A extends any[] = []>(fn: (.
  * const failed = await callAsync(() => Promise.reject('boom'))
  * console.assert(!failed.ok)
  */
-export function callAsync<A extends any[] = []>(fn: (...args: A) => Awaitable<never>, ...args: A): NeverjectPromise<never, DetailedError<unknown>>;
+export function callAsync<A extends any[] = []>(fn: (...args: A) => MaybePromise<never>, ...args: A): NeverjectPromise<never, DetailedError<unknown>>;
 
 /**
  * Invoke an async function that returns [`Ok`]{@link Ok}, forwarding the successful payload.
@@ -123,7 +122,7 @@ export function callAsync<A extends any[] = []>(fn: (...args: A) => Awaitable<ne
  * const settled = await callAsync(async () => ok({ id: 1 }))
  * console.assert(settled.ok && settled.value.id === 1)
  */
-export function callAsync<V, A extends any[] = []>(fn: (...args: A) => Awaitable<Ok<V>>, ...args: A): NeverjectPromise<V, never>;
+export function callAsync<V, A extends any[] = []>(fn: (...args: A) => MaybePromise<Ok<V>>, ...args: A): NeverjectPromise<V, never>;
 
 /**
  * Invoke an async function that returns [`Err`]{@link Err}, forwarding the error payload.
@@ -137,7 +136,7 @@ export function callAsync<V, A extends any[] = []>(fn: (...args: A) => Awaitable
  * const settled = await callAsync(async () => err('nope'))
  * console.assert(!settled.ok && settled.error === 'nope')
  */
-export function callAsync<E, A extends any[] = []>(fn: (...args: A) => Awaitable<Err<E>>, ...args: A): NeverjectPromise<never, E>;
+export function callAsync<E, A extends any[] = []>(fn: (...args: A) => MaybePromise<Err<E>>, ...args: A): NeverjectPromise<never, E>;
 
 /**
  * Invoke an async function that returns a [`Result`]{@link Result}, preserving its shape.
@@ -152,7 +151,7 @@ export function callAsync<E, A extends any[] = []>(fn: (...args: A) => Awaitable
  * const settled = await callAsync(async (id: number) => id ? ok(id) : err('missing'), 2)
  * console.assert(settled.ok && settled.value === 2)
  */
-export function callAsync<V, E, A extends any[] = []>(fn: (...args: A) => Awaitable<Result<V, E>>, ...args: A): NeverjectPromise<V, E>;
+export function callAsync<V, E, A extends any[] = []>(fn: (...args: A) => MaybePromise<Result<V, E>>, ...args: A): NeverjectPromise<V, E>;
 
 /**
  * Invoke an async function returning a plain value, capturing thrown errors and rejections as [`DetailedError`]{@link DetailedError}.
@@ -166,7 +165,7 @@ export function callAsync<V, E, A extends any[] = []>(fn: (...args: A) => Awaita
  * const settled = await callAsync(async (x: number) => x * 2, 3)
  * console.assert(settled.ok && settled.value === 6)
  */
-export function callAsync<V, A extends any[] = []>(fn: (...args: A) => Awaitable<V>, ...args: A): NeverjectPromise<V, DetailedError<unknown>>;
+export function callAsync<V, A extends any[] = []>(fn: (...args: A) => MaybePromise<V>, ...args: A): NeverjectPromise<V, DetailedError<unknown>>;
 
 /**
  * Invoke an async function that may return a plain value or a [`Result`]{@link Result}, normalizing both into [`NeverjectPromise`]{@link NeverjectPromise}.
@@ -181,7 +180,7 @@ export function callAsync<V, A extends any[] = []>(fn: (...args: A) => Awaitable
  * const settled = await callAsync(async (flag: boolean) => flag ? 1 : err('no'), false)
  * console.assert(!settled.ok && settled.error === 'no')
  */
-export function callAsync<V, E = DetailedError<unknown>, A extends any[] = []>(fn: (...args: A) => Awaitable<Result<V, E> | V>, ...args: A): NeverjectPromise<V, E | DetailedError<unknown>> {
+export function callAsync<V, E = DetailedError<unknown>, A extends any[] = []>(fn: (...args: A) => MaybePromise<Result<V, E> | V>, ...args: A): NeverjectPromise<V, E | DetailedError<unknown>> {
     const promisedResult = Promise.try(fn, ...args) as PromiseLike<Result<V, E> | V>
     return nj(promisedResult) as NeverjectPromise<V, E | DetailedError<unknown>>
 }

@@ -1,4 +1,5 @@
 import {NeverjectPromise, _INTERNAL_CTOR} from '../neverject-promise.ts'
+import type {MaybePromise} from '../maybe-promise.ts'
 import type {Err, Ok} from '../result.ts'
 import {err, ok, type Result} from '../result.ts'
 import {type DetailedError} from '../detailed-error.ts'
@@ -38,7 +39,7 @@ type AllOkObjectErrors<T extends Record<string, unknown>> = ToSyncResult<T[keyof
 /**
  * Aggregate any values/promises/AsyncResults into a single AsyncResult of per-entry SyncResults. Never returns Err.
  */
-export function allSettled<T extends readonly (NeverjectPromise<any, any> | PromiseLike<any> | unknown)[]>(inputs: T): NeverjectPromise<AllSettledArray<T>, never> {
+export function allSettled<T extends readonly (NeverjectPromise<any, any> | MaybePromise<any>)[]>(inputs: T): NeverjectPromise<AllSettledArray<T>, never> {
     const promise: Promise<Result<AllSettledArray<T>, never>> = Promise.all(
         inputs.map(async (value) => nj(value as unknown))
     ).then((settled) => ok(settled as AllSettledArray<T>))
@@ -49,7 +50,7 @@ export function allSettled<T extends readonly (NeverjectPromise<any, any> | Prom
 /**
  *  Aggregate any values/promises/AsyncResults into a single AsyncResult of per-key SyncResults. Never returns Err.
  */
-export function allSettledObj<T extends Record<string, NeverjectPromise<any, any> | PromiseLike<any> | unknown>>(inputs: T): NeverjectPromise<AllSettledObject<T>, never> {
+export function allSettledObj<T extends Record<string, NeverjectPromise<any, any> | MaybePromise<any>>>(inputs: T): NeverjectPromise<AllSettledObject<T>, never> {
     const entries = Object.entries(inputs)
     const promise: Promise<Result<AllSettledObject<T>, never>> = Promise.resolve(
         allSettled(entries.map(([, value]) => value))
@@ -70,7 +71,7 @@ export function allSettledObj<T extends Record<string, NeverjectPromise<any, any
 /**
  * Aggregate into AsyncResult of Ok values, short-circuiting on the first Err.
  */
-export function allOk<T extends readonly (NeverjectPromise<any, any> | PromiseLike<any> | unknown)[]>(inputs: T): NeverjectPromise<AllOkValues<T>, AllOkErrors<T>> {
+export function allOk<T extends readonly (NeverjectPromise<any, any> | MaybePromise<any>)[]>(inputs: T): NeverjectPromise<AllOkValues<T>, AllOkErrors<T>> {
     const promise: Promise<Result<AllOkValues<T>, AllOkErrors<T>>> = (async () => {
         const values: unknown[] = []
         for(const value of inputs) {
@@ -89,7 +90,7 @@ export function allOk<T extends readonly (NeverjectPromise<any, any> | PromiseLi
 /**
  * Aggregate into AsyncResult of Ok values keyed by input object, short-circuiting on the first Err.
  */
-export function allOkObj<T extends Record<string, NeverjectPromise<any, any> | PromiseLike<any> | unknown>>(inputs: T): NeverjectPromise<AllOkObject<T>, AllOkObjectErrors<T>> {
+export function allOkObj<T extends Record<string, NeverjectPromise<any, any> | MaybePromise<any>>>(inputs: T): NeverjectPromise<AllOkObject<T>, AllOkObjectErrors<T>> {
     const entries = Object.entries(inputs)
     const promise: Promise<Result<AllOkObject<T>, AllOkObjectErrors<T>>> = Promise.resolve(
         allOk(entries.map(([, value]) => value))

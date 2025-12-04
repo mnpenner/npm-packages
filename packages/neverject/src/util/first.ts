@@ -2,6 +2,7 @@ import {_INTERNAL_CTOR, NeverjectPromise} from '../neverject-promise.ts'
 import {err, ok, type Result} from '../result.ts'
 import {nj} from '../nj.ts'
 import type {ToSyncResult} from './all-settled.ts'
+import type {MaybePromise} from '../maybe-promise.ts'
 
 type NormalizedValue<T> = ToSyncResult<T> extends Result<infer V, any> ? V : never
 type NormalizedError<T> = ToSyncResult<T> extends Result<any, infer E> ? E : never
@@ -12,7 +13,7 @@ export type FirstSettledError<T extends readonly unknown[]> = NormalizedError<T[
 export type FirstOkValue<T extends readonly unknown[]> = NormalizedValue<T[number]>
 export type FirstOkError<T extends readonly unknown[]> = NormalizedError<T[number]>
 
-type FirstInput = NeverjectPromise<any, any> | PromiseLike<any> | unknown
+type FirstInput = NeverjectPromise<any, any> | MaybePromise<any>
 
 /**
  * Resolve to the first settled [`Result`]{@link Result} from a collection of values, promises, or [`NeverjectPromise`]{@link NeverjectPromise} instances.
