@@ -1,4 +1,4 @@
-import {_INTERNAL_CTOR, NeverjectPromise} from '../neverject-promise.ts'
+import {NeverjectPromise} from '../neverject-promise.ts'
 import {err, ok, type Result} from '../result.ts'
 import {nj} from '../nj.ts'
 import type {ToSyncResult} from './all-settled.ts'
@@ -35,7 +35,7 @@ export function firstSettled<T extends readonly [FirstInput, ...FirstInput[]]>(
         inputs.map((value) => Promise.resolve(nj(value as unknown)))
     ) as Promise<Result<FirstSettledValue<T>, FirstSettledError<T>>>
 
-    return NeverjectPromise[_INTERNAL_CTOR](promise)
+    return NeverjectPromise.fromSafePromise(promise)
 }
 
 /**
@@ -75,5 +75,5 @@ export function firstOk<T extends readonly [FirstInput, ...FirstInput[]]>(
         })
     })
 
-    return NeverjectPromise[_INTERNAL_CTOR](promise)
+    return NeverjectPromise.fromSafePromise(promise)
 }

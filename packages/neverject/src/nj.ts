@@ -1,4 +1,4 @@
-import {_INTERNAL_CTOR, NeverjectPromise} from './neverject-promise.ts'
+import {NeverjectPromise} from './neverject-promise.ts'
 import type {Err, Ok} from './result.ts'
 import {err, type Result} from './result.ts'
 import {type DetailedError} from './detailed-error.ts'
@@ -135,16 +135,16 @@ export function nj<V, E>(value: V, errorFn: (e: unknown) => E): NeverjectPromise
 export function nj(value: unknown, errorFn?: (e: unknown) => unknown): NeverjectPromise<any, any> {
     if(isResult(value)) {
         if(errorFn && !value.ok) {
-            return NeverjectPromise[_INTERNAL_CTOR](Promise.resolve(err(errorFn(value.error))))
+            return NeverjectPromise.fromSafePromise(Promise.resolve(err(errorFn(value.error))))
         }
-        return NeverjectPromise[_INTERNAL_CTOR](Promise.resolve(value))
+        return NeverjectPromise.fromSafePromise(Promise.resolve(value))
     }
 
     if(value instanceof Error) {
-        return NeverjectPromise[_INTERNAL_CTOR](Promise.resolve(err(value)))
+        return NeverjectPromise.fromSafePromise(Promise.resolve(err(value)))
     }
 
-    return NeverjectPromise[_INTERNAL_CTOR](Promise.resolve(value).then(
+    return NeverjectPromise.fromSafePromise(Promise.resolve(value).then(
             (value) => resolve(value),
             (reason) => {
                 if(errorFn) {

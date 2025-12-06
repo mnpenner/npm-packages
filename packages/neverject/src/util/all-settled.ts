@@ -1,4 +1,4 @@
-import {NeverjectPromise, _INTERNAL_CTOR} from '../neverject-promise.ts'
+import {NeverjectPromise} from '../neverject-promise.ts'
 import type {MaybePromise} from '../maybe-promise.ts'
 import type {Err, Ok} from '../result.ts'
 import {err, ok, type Result} from '../result.ts'
@@ -44,7 +44,7 @@ export function allSettled<T extends readonly (NeverjectPromise<any, any> | Mayb
         inputs.map(async (value) => nj(value as unknown))
     ).then((settled) => ok(settled as AllSettledArray<T>))
 
-    return NeverjectPromise[_INTERNAL_CTOR](promise)
+    return NeverjectPromise.fromSafePromise(promise)
 }
 
 /**
@@ -65,7 +65,7 @@ export function allSettledObj<T extends Record<string, NeverjectPromise<any, any
         return ok(rebuilt)
     })
 
-    return NeverjectPromise[_INTERNAL_CTOR](promise)
+    return NeverjectPromise.fromSafePromise(promise)
 }
 
 /**
@@ -84,7 +84,7 @@ export function allOk<T extends readonly (NeverjectPromise<any, any> | MaybeProm
         return ok(values as AllOkValues<T>)
     })()
 
-    return NeverjectPromise[_INTERNAL_CTOR](promise)
+    return NeverjectPromise.fromSafePromise(promise)
 }
 
 /**
@@ -104,5 +104,5 @@ export function allOkObj<T extends Record<string, NeverjectPromise<any, any> | M
         return ok(rebuilt)
     })
 
-    return NeverjectPromise[_INTERNAL_CTOR](promise)
+    return NeverjectPromise.fromSafePromise(promise)
 }

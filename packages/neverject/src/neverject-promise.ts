@@ -5,8 +5,6 @@ import type {MaybePromise} from './maybe-promise.ts'
 import {reject} from './util/reject.ts'
 import {resolve} from './util/resolve.ts'
 
-export const _INTERNAL_CTOR = Symbol('AsyncResultCtor')
-
 type NormalizedValue<V, E> = NeverjectPromise<V, E> | MaybePromise<Result<V | never, E> | V>
 type NormalizedError<V, E> = NeverjectPromise<V, E> | MaybePromise<Result<V, E> | E>
 type HandlerResult<V, E> = NeverjectPromise<V, E> | Result<V, E> | MaybePromise<Result<V, E>>
@@ -28,7 +26,24 @@ export class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
     private constructor(private readonly promise: Promise<Result<V, E>>) {
     }
 
-    static [_INTERNAL_CTOR]<V, E>(promise: Promise<Result<V, E>>) {
+    /**
+     * Create a [`NeverjectPromise`]{@link NeverjectPromise} from any promise that fulfills to a [`Result`]{@link Result}.
+     * The provided promise must never reject or throw; it must always fulfill with `Ok` or `Err`.
+     *
+     * @typeParam V - Success value type carried by the [`Result`]{@link Result}.
+     * @typeParam E - Error value type carried by the [`Result`]{@link Result}.
+     * @param promise - A promise that fulfills to `Result<V, E>` without rejecting.
+     * @returns A [`NeverjectPromise`]{@link NeverjectPromise} adopting the given result.
+     * @example
+     * const settled = NeverjectPromise.fromSafePromise(Promise.resolve(ok(1)))
+     * const result = await settled
+     * console.assert(result.ok && result.value === 1)
+     * @example
+     * const failed = NeverjectPromise.fromSafePromise(Promise.resolve(err('nope')))
+     * const result = await failed
+     * console.assert(!result.ok && result.error === 'nope')
+     */
+    static fromSafePromise<V, E>(promise: Promise<Result<V, E>>) {
         return new NeverjectPromise<V, E>(promise)
     }
 
