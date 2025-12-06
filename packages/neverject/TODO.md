@@ -20,4 +20,6 @@ const mySafeAsyncFunction2 = wrapAsyncFn<string, Error>(async (arg: number) => {
 })
 ```
 
-But this is doing too much work too. we need safeNj and wrapSafeAsyncFn. We don't need wrapSafeFn because safe functions can just return Ok or Err and it'll be inferred properly.
+But this is doing too much work too. we need safeNj (similar to `ok` vs `resolve`) and wrapSafeAsyncFn. We don't need wrapSafeFn because safe functions can just return Ok or Err and it'll be inferred properly.
+
+Should `nj` be the safe ver or unsafe ver? 
