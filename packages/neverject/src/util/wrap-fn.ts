@@ -216,49 +216,6 @@ export function wrapAsyncFn<V, E = DetailedError<unknown>, A extends any[] = []>
 }
 
 /**
- * Wrap a safe async function that already returns [`Ok`]{@link Ok} and never rejects, deferring invocation while preserving success.
- *
- * @typeParam V - Success value type.
- * @typeParam A - Argument tuple type.
- * @param fn - Async function returning [`Ok`]{@link Ok} without ever throwing or rejecting.
- * @returns A deferred function yielding [`NeverjectPromise`]{@link NeverjectPromise} with `Ok<V>`.
- * @example
- * const wrapped = wrapSafeAsyncFn(async (value: number) => ok(value + 1))
- * const settled = await wrapped(4)
- * console.assert(settled.ok && settled.value === 5)
- */
-export function wrapSafeAsyncFn<V, A extends any[] = []>(fn: (...args: A) => PromiseLike<Ok<V>>): (...args: A) => NeverjectPromise<V, never>;
-
-/**
- * Wrap a safe async function that already returns [`Err`]{@link Err} and never rejects, deferring invocation while preserving the error.
- *
- * @typeParam E - Error payload type.
- * @typeParam A - Argument tuple type.
- * @param fn - Async function returning [`Err`]{@link Err} without ever throwing or rejecting.
- * @returns A deferred function yielding [`NeverjectPromise`]{@link NeverjectPromise} with `Err<E>`.
- * @example
- * const wrapped = wrapSafeAsyncFn(async () => err('nope'))
- * const settled = await wrapped()
- * console.assert(!settled.ok && settled.error === 'nope')
- */
-export function wrapSafeAsyncFn<E, A extends any[] = []>(fn: (...args: A) => PromiseLike<Err<E>>): (...args: A) => NeverjectPromise<never, E>;
-
-/**
- * Wrap a safe async function that returns a [`Result`]{@link Result} without ever rejecting, deferring invocation while forwarding the outcome.
- *
- * @typeParam V - Success value type.
- * @typeParam E - Error payload type.
- * @typeParam A - Argument tuple type.
- * @param fn - Async function returning a [`Result`]{@link Result} and never rejecting.
- * @returns A deferred function yielding [`NeverjectPromise`]{@link NeverjectPromise} that mirrors the input result.
- * @example
- * const wrapped = wrapSafeAsyncFn(async (value: number) => value > 0 ? ok(value) : err('bad'))
- * const settled = await wrapped(1)
- * console.assert(settled.ok && settled.value === 1)
- */
-export function wrapSafeAsyncFn<V, E, A extends any[] = []>(fn: (...args: A) => PromiseLike<Result<V, E>>): (...args: A) => NeverjectPromise<V, E>;
-
-/**
  * Wrap a safe async function that already resolves to a [`Result`]{@link Result} without ever rejecting, producing a deferred [`NeverjectPromise`]{@link NeverjectPromise}. Any rejection is a programmer error; use [`wrapAsyncFn`]{@link wrapAsyncFn} when you need rejection mapping.
  *
  * @typeParam V - Success value type.
@@ -274,4 +231,5 @@ export function wrapSafeAsyncFn<V, E, A extends any[] = []>(fn: (...args: A) => 
 export function wrapSafeAsyncFn<V, E = never, A extends any[] = []>(fn: (...args: A) => PromiseLike<Result<V, E>>): (...args: A) => NeverjectPromise<V, E>;
 
 export function wrapSafeAsyncFn<V, E = never, A extends any[] = []>(fn: (...args: A) => PromiseLike<Result<V, E>>): (...args: A) => NeverjectPromise<V, E> {
-    return (...args: A) => NeverjectPromise.fromSafePromise(fn(...args))}
+    return (...args: A) => NeverjectPromise.fromSafePromise(fn(...args))
+}
