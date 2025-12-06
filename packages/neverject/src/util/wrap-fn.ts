@@ -2,8 +2,9 @@ import {type Err, type Ok, type Result} from '../result.ts'
 import {toDetailedError, type DetailedError} from '../detailed-error.ts'
 import {resolve} from './resolve.ts'
 import {nj} from '../nj.ts'
-import {type NeverjectPromise} from '../neverject-promise.ts'
+import { NeverjectPromise} from '../neverject-promise.ts'
 import {reject} from './reject.ts'
+import {isResult} from './type-check.ts'
 import type {MaybePromise} from '../maybe-promise.ts'
 
 type ErrorMapper<E> = (reason: unknown) => E
@@ -212,5 +213,90 @@ export function wrapAsyncFn<V, E = DetailedError<unknown>, A extends any[] = []>
             .catch((error) => reject(mapError(error)) as Result<V, E>)
 
         return nj(promise) as NeverjectPromise<V, E>
+    }
+}
+
+/**
+ * Wrap a safe async function that already returns [`Ok`]{@link Ok} and never rejects, deferring invocation while preserving success.
+ *
+ * @typeParam V - Success value type.
+ * @typeParam A - Argument tuple type.
+ * @param fn - Async function returning [`Ok`]{@link Ok} without ever throwing or rejecting.
+ * @returns A deferred function yielding [`NeverjectPromise`]{@link NeverjectPromise} with `Ok<V>`.
+ * @example
+ * const wrapped = wrapSafeAsyncFn(async (value: number) => ok(value + 1))
+ * const settled = await wrapped(4)
+ * console.assert(settled.ok && settled.value === 5)
+ */
+export function wrapSafeAsyncFn<V, A extends any[] = []>(fn: (...args: A) => MaybePromise<Ok<V>>): (...args: A) => NeverjectPromise<V, never>;
+
+/**
+ * Wrap a safe async function that already returns [`Err`]{@link Err} and never rejects, deferring invocation while preserving the error.
+ *
+ * @typeParam E - Error payload type.
+ * @typeParam A - Argument tuple type.
+ * @param fn - Async function returning [`Err`]{@link Err} without ever throwing or rejecting.
+ * @returns A deferred function yielding [`NeverjectPromise`]{@link NeverjectPromise} with `Err<E>`.
+ * @example
+ * const wrapped = wrapSafeAsyncFn(async () => err('nope'))
+ * const settled = await wrapped()
+ * console.assert(!settled.ok && settled.error === 'nope')
+ */
+export function wrapSafeAsyncFn<E, A extends any[] = []>(fn: (...args: A) => MaybePromise<Err<E>>): (...args: A) => NeverjectPromise<never, E>;
+
+/**
+ * Wrap a safe async function that returns a [`Result`]{@link Result} without ever rejecting, deferring invocation while forwarding the outcome.
+ *
+ * @typeParam V - Success value type.
+ * @typeParam E - Error payload type.
+ * @typeParam A - Argument tuple type.
+ * @param fn - Async function returning a [`Result`]{@link Result} and never rejecting.
+ * @returns A deferred function yielding [`NeverjectPromise`]{@link NeverjectPromise} that mirrors the input result.
+ * @example
+ * const wrapped = wrapSafeAsyncFn(async (value: number) => value > 0 ? ok(value) : err('bad'))
+ * const settled = await wrapped(1)
+ * console.assert(settled.ok && settled.value === 1)
+ */
+export function wrapSafeAsyncFn<V, E, A extends any[] = []>(fn: (...args: A) => MaybePromise<Result<V, E>>): (...args: A) => NeverjectPromise<V, E>;
+
+/**
+ * Wrap a safe async function that returns a raw value and never rejects, converting it into [`NeverjectPromise`]{@link NeverjectPromise}.
+ *
+ * @typeParam V - Success value type.
+ * @typeParam A - Argument tuple type.
+ * @param fn - Async function returning a plain value without throwing or rejecting.
+ * @returns A deferred function yielding [`NeverjectPromise`]{@link NeverjectPromise} with `Ok<V>`.
+ * @example
+ * const wrapped = wrapSafeAsyncFn(async (value: number) => value * 2)
+ * const settled = await wrapped(2)
+ * console.assert(settled.ok && settled.value === 4)
+ */
+export function wrapSafeAsyncFn<V, A extends any[] = []>(fn: (...args: A) => MaybePromise<V>): (...args: A) => NeverjectPromise<V, never>;
+
+/**
+ * Wrap a safe async function that returns either a raw value or [`Result`]{@link Result} while never rejecting, producing a deferred [`NeverjectPromise`]{@link NeverjectPromise}.
+ *
+ * @typeParam V - Success value type.
+ * @typeParam E - Error payload type.
+ * @typeParam A - Argument tuple type.
+ * @param fn - Async function returning `V` or [`Result`]{@link Result} without throwing or rejecting.
+ * @returns A deferred function yielding normalized [`NeverjectPromise`]{@link NeverjectPromise}.
+ * @example
+ * const wrapped = wrapSafeAsyncFn(async (flag: boolean) => flag ? ok('yay') : 'fallback')
+ * const settled = await wrapped(false)
+ * console.assert(settled.ok && settled.value === 'fallback')
+ * @example
+ * // Use this when `fn` is already safe and you do not need the rejection mapping that [`wrapAsyncFn`]{@link wrapAsyncFn} performs.
+ * const mapped = wrapSafeAsyncFn(async () => err('boom'))
+ * const settled = await mapped()
+ * console.assert(!settled.ok && settled.error === 'boom')
+ */
+export function wrapSafeAsyncFn<V, E = never, A extends any[] = []>(fn: (...args: A) => MaybePromise<Result<V, E> | V>): (...args: A) => NeverjectPromise<V, E>;
+export function wrapSafeAsyncFn<V, E = never, A extends any[] = []>(fn: (...args: A) => MaybePromise<Result<V, E> | V>): (...args: A) => NeverjectPromise<V, E> {
+    return (...args: A) => {
+        const promise: Promise<Result<V, E>> = Promise
+            .resolve(fn(...args))
+            .then((value) => isResult(value) ? value as Result<V, E> : resolve(value as V))
+        return NeverjectPromise.fromSafePromise(promise)
     }
 }

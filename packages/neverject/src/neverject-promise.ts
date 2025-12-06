@@ -23,7 +23,7 @@ function normalizeErrResult<V, E>(value: NormalizedError<V, E>): Promise<Result<
 
 export class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
     // Constructor is private. Use `nj`.
-    private constructor(private readonly promise: Promise<Result<V, E>>) {
+    private constructor(private readonly promise: PromiseLike<Result<V, E>>) {
     }
 
     /**
@@ -43,8 +43,8 @@ export class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
      * const result = await failed
      * console.assert(!result.ok && result.error === 'nope')
      */
-    static fromSafePromise<V, E>(promise: Promise<Result<V, E>>) {
-        return new NeverjectPromise<V, E>(promise)
+    static fromSafePromise<V, E>(promise: PromiseLike<Result<V, E>>): NeverjectPromise<V,E> {
+        return new NeverjectPromise(promise)
     }
 
     /**

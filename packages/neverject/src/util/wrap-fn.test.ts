@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bun test
 import {describe, expect, it} from 'bun:test'
-import {wrapAsyncFn, wrapFn} from './wrap-fn.ts'
-import {err, type Result} from '../result.ts'
+import {wrapAsyncFn, wrapFn, wrapSafeAsyncFn} from './wrap-fn.ts'
+import {err, ok, type Result} from '../result.ts'
 import {expectType, type TypeEqual} from '../internal/type-assert.ts'
 import type {DetailedError} from '../detailed-error.ts'
 import {mayFail1} from '../internal/test-functions.ts'
@@ -119,5 +119,42 @@ describe('wrapAsyncFn', () => {
         if(settled.ok) return
 
         expect(settled.error).toEqual({message: 'Parse Error'})
+    })
+})
+
+describe('wrapSafeAsyncFn', () => {
+    it('defers invocation for safe value-returning functions', async () => {
+        let calls = 0
+        const wrapped = wrapSafeAsyncFn(async (value: number) => {
+            calls += 1
+            return value * 3
+        })
+
+        expectType<TypeEqual<typeof wrapped, (value: number) => NeverjectPromise<number, never>>>(true)
+
+        expect(calls).toBe(0)
+        const settled = await wrapped(3)
+        expect(calls).toBe(1)
+
+        expect(settled.ok).toBe(true)
+        if(!settled.ok) return
+
+        expect(settled.value).toBe(9)
+    })
+
+    it('passes through safe Result-returning functions', async () => {
+        const wrapped = wrapSafeAsyncFn(async (flag: boolean) => flag ? err('boom') : ok(flag))
+
+        expectType<TypeEqual<Awaited<ReturnType<typeof wrapped>>, Result<false, string>>>(true)
+
+        const failure = await wrapped(true)
+        expect(failure.ok).toBe(false)
+        if(failure.ok) return
+        expect(failure.error).toBe('boom')
+
+        const success = await wrapped(false)
+        expect(success.ok).toBe(true)
+        if(!success.ok) return
+        expect(success.value).toBe(false)
     })
 })
