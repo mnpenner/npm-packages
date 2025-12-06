@@ -127,7 +127,7 @@ describe('wrapSafeAsyncFn', () => {
         let calls = 0
         const wrapped = wrapSafeAsyncFn(async (value: number) => {
             calls += 1
-            return value * 3
+            return ok(value * 3)
         })
 
         expectType<TypeEqual<typeof wrapped, (value: number) => NeverjectPromise<number, never>>>(true)
