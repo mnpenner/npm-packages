@@ -2,6 +2,7 @@
 import {err, nj, ok, type Result} from '../index.ts'
 import * as njAgg from '../aggregate'
 import * as njInvoke from '../invoke'
+import {isResult, reject, rejectWithError, resolve} from '../result/index.ts'
 import {describe, example, log, runExamples} from './example-runner.ts'
 import {mayFail1, mayFail2} from './test-functions.ts'
 import {expect, mock} from 'bun:test'
@@ -83,6 +84,13 @@ describe('Utilities', () => {
         log('allSettled result', settled)
     })
 
+    example('Racing entries with race', async () => {
+        const settled = await njAgg.race([nj('fast'), nj(err('too late'))] as const)
+
+        log('race ok?', settled.ok)
+        log('race payload', settled.ok ? settled.value : settled.error)
+    })
+
     example('Settling object entries with allSettledRecord', async () => {
         const settled = await njAgg.allSettledRecord({
             user: nj({id: 1}),
@@ -129,6 +137,13 @@ describe('Utilities', () => {
         log('firstOk (retries) payload', retries)
     })
 
+    example('Alias any for firstOk', async () => {
+        const attempt = await njAgg.any([nj(err('fail fast')), nj(Promise.resolve('wins'))] as const)
+
+        log('any ok?', attempt.ok)
+        log('any payload', attempt.ok ? attempt.value : attempt.error)
+    })
+
     example('SafeTry style propagation', () => {
         // https://github.com/supermacro/neverthrow?tab=readme-ov-file#safetry
         function myFunc1(): Result<number, string> {
@@ -169,6 +184,50 @@ describe('Utilities', () => {
         if(!res.ok) {
             log('parse failure message', res.error.message)
         }
+    })
+
+    example('Async invocation with tryCallAsync', async () => {
+        const settleUser = await njInvoke.tryCallAsync(async (id: number) => {
+            if(id <= 0) throw new Error('invalid id')
+            return {id, name: 'User'}
+        }, 1)
+
+        const failedLookup = await njInvoke.tryCallAsync(async () => {
+            throw 'network down'
+        })
+
+        log('tryCallAsync success', settleUser)
+        log('tryCallAsync failure ok?', failedLookup.ok)
+        if(!failedLookup.ok) {
+            log('tryCallAsync failure message', failedLookup.error.message)
+            log('tryCallAsync failure details', failedLookup.error.details)
+        }
+    })
+
+    example('Async wrapping with wrapAsyncFn', async () => {
+        const safeDivide = njInvoke.wrapAsyncFn(async (a: number, b: number) => {
+            if(b === 0) throw 'div by zero'
+            return a / b
+        })
+
+        const success = await safeDivide(10, 2)
+        const failure = await safeDivide(10, 0)
+
+        log('wrapAsyncFn success', success)
+        log('wrapAsyncFn failure ok?', failure.ok)
+        if(!failure.ok) {
+            log('wrapAsyncFn failure message', failure.error.message)
+        }
+    })
+
+    example('Handling never-rejecting functions with wrapSafeAsyncFn', async () => {
+        const getProfile = njInvoke.wrapSafeAsyncFn(async (id: number) => id ? ok({id}) : err('missing id'))
+
+        const success = await getProfile(1)
+        const failure = await getProfile(0)
+
+        log('wrapSafeAsyncFn success', success)
+        log('wrapSafeAsyncFn failure', failure)
     })
 })
 
@@ -250,6 +309,35 @@ describe('Fetch helpers', () => {
         } finally {
             globalThis.fetch = originalFetch
         }
+    })
+})
+
+describe('Result helpers', () => {
+    example('Normalizing with resolve', () => {
+        const fromValue = resolve('hi there')
+        const passthrough = resolve(ok(42))
+
+        log('resolve from value', fromValue)
+        log('resolve passthrough', passthrough)
+    })
+
+    example('Wrapping failures with reject helpers', () => {
+        const plainReject = reject('plain failure')
+        const detailedReject = rejectWithError('with details')
+
+        log('reject ok?', plainReject.ok)
+        if(!detailedReject.ok) {
+            log('rejectWithError message', detailedReject.error.message)
+            log('rejectWithError details', detailedReject.error.details)
+        }
+    })
+
+    example('Detecting Result instances with isResult', () => {
+        const maybeResult = ok('hello')
+        const notResult = {ok: true, value: 'hello'}
+
+        log('isResult for Ok', isResult(maybeResult))
+        log('isResult for plain object', isResult(notResult))
     })
 })
 
