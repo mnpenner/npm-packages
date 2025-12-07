@@ -2,146 +2,305 @@
 
 Promises that never reject.
 
-## API
+## Installation
 
-### Constructors & helpers
-
-- `ok`
-- `err`
-
-```ts
-nj(5)  // NeverjectPromise<number, never>
-nj(new Error("err"))  // NeverjectPromise<never, Error>
-nj(Promise.resolve(5))  // NeverjectPromise<number, unknown>
-nj(Promise.reject(5))  // NeverjectPromise<never, unknown>
-nj(ok(5))  // NeverjectPromise<number, never>
-nj(err(5))  // NeverjectPromise<never, number>
+```bash
+npm install neverject
+# or
+bun add neverject
 ```
 
-### Util
+## Quick start
 
 ```ts
-allSettledRecord({
-    user: nj(fetchUser()),
-    posts: nj(fetchPosts()),
+import {nj, err} from 'neverject'
+import {wrapFn} from 'neverject/invoke'
+
+// Normalize any promise so failures become Err<DetailedError>
+const user = await nj(fetch('/api/user/1')).map(async (response) => {
+    if(!response.ok) return err(new Error(`HTTP ${response.status}`))
+    return response.json() as Promise<{ id: number; name: string }>
 })
-// => NeverjectPromise<{ user: Result<User, E1>; posts: Result<Post[], E2> }, never>
-// avoids array index juggling; each property stays keyed
+if(user.ok) console.log(user.value.name)
+else console.error(user.error.message)
+
+// Guard a throwable function without try/catch noise
+const divide = wrapFn((a: number, b: number) => {
+    if(b === 0) throw new Error('divide by zero')
+    return a / b
+})
+
+const result = divide(12, 3)
+console.log(result.ok ? result.value : result.error.message)
 ```
 
-`allSettledRecord` takes a record of `NeverjectPromise`/Promise/value inputs, normalizes each via `nj`, waits for all,
-and
-returns a
-never-rejecting `NeverjectPromise` whose value is a record of per-key `Result`.
-Example:
+## Usage examples
+
+- **Normalize anything**: `nj` wraps values, promises, and existing `Result` instances without ever rejecting.
+  ```ts
+  const resolved = await nj(Promise.resolve({id: 1}))
+  const rejected = await nj(Promise.reject('offline'))
+  console.log(resolved.ok) // true
+  console.log(rejected.ok) // false; rejected.error.details === 'offline'
+  ```
+
+- **Combine in order**: stop on the first failure with `allOk` or `allOkRecord`.
+  ```ts
+  import {allOk, allOkRecord} from 'neverject/aggregate'
+
+  const tuple = await allOk([nj('a'), nj(Promise.reject(new Error('x')))] as const)
+  const record = await allOkRecord({user: nj({id: 1}), prefs: nj(err('missing'))})
+  console.log(tuple.ok)  // false
+  console.log(record.ok) // false
+  ```
+
+- **Inspect every attempt**: keep per-entry results with `allSettled` and `allSettledRecord`.
+  ```ts
+  import {allSettledRecord} from 'neverject/aggregate'
+
+  const settled = await allSettledRecord({
+      user: nj(fetch('/user')), // -> Ok(Response)
+      profile: nj(err('missing profile')), // -> Err('missing profile')
+  })
+  if(settled.ok) {
+      console.log(settled.value.profile.ok) // false
+  }
+  ```
+
+- **Race for the first success**: `firstOk` (alias `any`) races attempts and returns the earliest `Ok` or every error
+  when none succeed.
+  ```ts
+  import {any, firstOk} from 'neverject/aggregate'
+
+  const winner = await any([
+      nj(err('fail fast')),
+      nj(Promise.resolve('wins')),
+  ] as const)
+  console.log(winner.ok ? winner.value : winner.error)
+  ```
+
+- **Wrap existing functions**: convert throwable sync/async functions into results.
+  ```ts
+  import {wrapFn, wrapAsyncFn, tryCallAsync} from 'neverject/invoke'
+
+  const safeParse = wrapFn(JSON.parse, (reason) => ({message: String(reason)}))
+  const parsed = safeParse('{"id":1}')
+
+  const safeDivide = wrapAsyncFn(async (a: number, b: number) => {
+      if(b === 0) throw 'div by zero'
+      return a / b
+  })
+
+  const result = await tryCallAsync(async () => ok('works'))
+  ```
+
+## API reference
+
+Types used below:
 
 ```ts
-const settled = await allSettledRecord({user: nj(fetchUser()), posts: nj(fetchPosts())})
-// settled.ok is always true here; inspect each entry:
-const user = settled.value.user
-if(user.ok) {
-    renderUser(user.value)
+type Result<V, E> = Ok<V> | Err<E>
+type Resultish<V, E> = Result<V, E> | NeverjectPromise<V, E> | PromiseLike<Result<V, E>> | V | PromiseLike<V>
+type ResultValue<V, E> = V | Result<V, E> | NeverjectPromise<V, E> | PromiseLike<V | Result<V, E>>
+type ResultError<V, E> = E | Result<V, E> | NeverjectPromise<V, E> | PromiseLike<E | Result<V, E>>
+type MaybePromise<T> = T | PromiseLike<T>
+type DetailedError<T = unknown> = Error & { details?: T }
+```
+
+### Core (`neverject`)
+
+```ts
+class Ok<T> {
+    readonly ok: true
+
+    constructor(value: T)
+
+    readonly value: T
+
+    valueOr<U>(defaultValue: U): T
+
+    toString(): string
 }
+
+class Err<E> {
+    readonly ok: false
+
+    constructor(error: E)
+
+    readonly error: E
+
+    valueOr<U>(defaultValue: U): U
+
+    toString(): string
+}
+
+class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
+    private constructor(promise: PromiseLike<Result<V, E>>)
+
+    static fromSafePromise<V, E>(promise: PromiseLike<Result<V, E>>): NeverjectPromise<V, E>
+
+    then<TResult1 = Result<V, E>, TResult2 = never>(
+        onfulfilled?: (value: Result<V, E>) => PromiseLike<TResult1> | TResult1,
+        onrejected?: (reason: any) => PromiseLike<TResult2> | TResult2
+    ): PromiseLike<TResult1 | TResult2>
+
+    map<NV, NE = E>(
+        onfulfilled: (value: V) => ResultValue<NV, NE>,
+        onrejected?: (error: E) => ResultValue<NV, NE>
+    ): NeverjectPromise<NV, E | NE>
+
+    mapErr<NE>(fn: (error: E) => ResultError<V, NE>): NeverjectPromise<V, NE>
+
+    recover<NE>(fn: (error: E) => Err<NE> | NeverjectPromise<never, NE> | MaybePromise<Err<NE>>): NeverjectPromise<V, NE>
+    recover<RV, NE>(fn: (error: E) => ResultValue<RV, NE>): NeverjectPromise<V | RV, NE>
+    recover<RV>(fn: (error: E) => MaybePromise<RV>): NeverjectPromise<V | RV, never>
+
+    mapResult<NV, NE = E>(fn: (result: Result<V, E>) => ResultValue<NV, NE>): NeverjectPromise<NV, NE>
+
+    valueOr<U>(fallback: U | ((error: E) => U)): NeverjectPromise<V | U, never>
+
+    tap(onfulfilled: (value: V) => MaybePromise<unknown>, onrejected?: (error: E) => MaybePromise<unknown>): NeverjectPromise<V, E>
+
+    tapResult(fn: (result: Result<V, E>) => MaybePromise<unknown>): NeverjectPromise<V, E>
+
+    tapErr(fn: (error: E) => MaybePromise<unknown>): NeverjectPromise<V, E>
+}
+
+function ok<T>(value: T): Ok<T>
+
+function err<E>(error: E): Err<E>
+
+function nj<P>(value: PromiseLike<P>): NeverjectPromise<Awaited<P> extends Result<infer V, any> ? V : Awaited<P>, Awaited<P> extends Result<any, infer E> ? E : DetailedError<unknown>>
+function nj<E extends Error>(error: E): NeverjectPromise<never, E>
+function nj<V>(result: Ok<V>): NeverjectPromise<V, never>
+function nj<E>(result: Err<E>): NeverjectPromise<never, E>
+function nj<V, E>(result: Result<V, E>): NeverjectPromise<V, E>
+function nj<V>(value: V): NeverjectPromise<V, never>
+function nj<P, E>(promise: PromiseLike<P>, errorFn: (e: unknown) => E): NeverjectPromise<Awaited<P>, E>
+function nj<V, I, E>(result: Result<V, I>, errorFn: (e: I) => E): NeverjectPromise<V, E>
+function nj<V, E>(value: V, errorFn: (e: unknown) => E): NeverjectPromise<V, E>
 ```
+
+### Aggregation (`neverject/aggregate`)
 
 ```ts
-const combined = await allOkRecord({user: nj(fetchUser()), posts: nj(fetchPosts())})
-// combined.ok is false on the first failing entry
+type ToSyncResult<T> =
+    T extends NeverjectPromise<infer V, infer E> ? Result<V, E> :
+        T extends Ok<infer V2> ? Result<V2, never> :
+            T extends Err<infer E2> ? Result<never, E2> :
+                T extends Result<infer V3, infer E3> ? Result<V3, E3> :
+                    T extends PromiseLike<infer P> ? (P extends Result<infer V4, infer E4> ? Result<V4, E4> : Result<Awaited<P>, DetailedError<unknown>>) :
+                        Result<T, never>
+
+type AllSettledArray<T extends readonly unknown[]> = { [K in keyof T]: ToSyncResult<T[K]> }
+type AllSettledRecord<T extends Record<string, unknown>> = { [K in keyof T]: ToSyncResult<T[K]> }
+type AllOkValues<T extends readonly unknown[]> = { [K in keyof T]: ToSyncResult<T[K]> extends Result<infer V, any> ? V : never }
+type AllOkErrors<T extends readonly unknown[]> = ToSyncResult<T[number]> extends Result<any, infer E> ? E : never
+type AllOkRecord<T extends Record<string, unknown>> = { [K in keyof T]: ToSyncResult<T[K]> extends Result<infer V, any> ? V : never }
+type AllOkRecordErrors<T extends Record<string, unknown>> = ToSyncResult<T[keyof T]> extends Result<any, infer E> ? E : never
+
+function allSettled<T extends readonly (NeverjectPromise<any, any> | MaybePromise<any>)[]>(inputs: T): NeverjectPromise<AllSettledArray<T>, never>
+
+function allSettledRecord<T extends Record<string, NeverjectPromise<any, any> | MaybePromise<any>>>(inputs: T): NeverjectPromise<AllSettledRecord<T>, never>
+
+function allOk<T extends readonly (NeverjectPromise<any, any> | MaybePromise<any>)[]>(inputs: T): NeverjectPromise<AllOkValues<T>, AllOkErrors<T>>
+
+function allOkRecord<T extends Record<string, NeverjectPromise<any, any> | MaybePromise<any>>>(inputs: T): NeverjectPromise<AllOkRecord<T>, AllOkRecordErrors<T>>
+
+type FirstInput = NeverjectPromise<any, any> | MaybePromise<any>
+type FirstSettledValue<T extends readonly unknown[]> = ToSyncResult<T[number]> extends Result<infer V, any> ? V : never
+type FirstSettledError<T extends readonly unknown[]> = ToSyncResult<T[number]> extends Result<any, infer E> ? E : never
+type FirstOkValue<T extends readonly unknown[]> = ToSyncResult<T[number]> extends Result<infer V, any> ? V : never
+type FirstOkError<T extends readonly unknown[]> = ToSyncResult<T[number]> extends Result<any, infer E> ? E : never
+
+function firstSettled<T extends readonly [FirstInput, ...FirstInput[]]>(inputs: T): NeverjectPromise<FirstSettledValue<T>, FirstSettledError<T>>
+
+function race<T extends readonly [FirstInput, ...FirstInput[]]>(inputs: T): NeverjectPromise<FirstSettledValue<T>, FirstSettledError<T>>
+
+function firstOk<T extends readonly [FirstInput, ...FirstInput[]]>(inputs: T): NeverjectPromise<FirstOkValue<T>, FirstOkError<T>[]>
+
+function any<T extends readonly [FirstInput, ...FirstInput[]]>(inputs: T): NeverjectPromise<FirstOkValue<T>, FirstOkError<T>[]>
 ```
 
-Array variants are also available:
+### Invocation helpers (`neverject/invoke`)
 
 ```ts
-const settledArray = await allSettled([nj(fetchUser()), fetchPosts()])
-const combinedArray = await allOk([nj(fetchUser()), fetchPosts()])
+function tryCall<A extends any[] = []>(fn: (...args: A) => never, ...args: A): Result<never, unknown>
+function tryCall<V, A extends any[] = []>(fn: (...args: A) => Ok<V>, ...args: A): Result<V, never>
+function tryCall<E, A extends any[] = []>(fn: (...args: A) => Err<E>, ...args: A): Result<never, E>
+function tryCall<V, E, A extends any[] = []>(fn: (...args: A) => Result<V, E>, ...args: A): Result<V, E>
+function tryCall<V, A extends any[] = []>(fn: (...args: A) => V, ...args: A): Result<V, DetailedError<unknown>>
+function tryCall<V, E = DetailedError<unknown>, A extends any[] = []>(fn: (...args: A) => Result<V, E> | V, ...args: A): Result<V, E | DetailedError<unknown>>
+
+function tryCallAsync<A extends any[] = []>(fn: (...args: A) => MaybePromise<never>, ...args: A): NeverjectPromise<never, DetailedError<unknown>>
+function tryCallAsync<V, A extends any[] = []>(fn: (...args: A) => MaybePromise<Ok<V>>, ...args: A): NeverjectPromise<V, never>
+function tryCallAsync<E, A extends any[] = []>(fn: (...args: A) => MaybePromise<Err<E>>, ...args: A): NeverjectPromise<never, E>
+function tryCallAsync<V, E, A extends any[] = []>(fn: (...args: A) => MaybePromise<Result<V, E>>, ...args: A): NeverjectPromise<V, E>
+function tryCallAsync<V, A extends any[] = []>(fn: (...args: A) => MaybePromise<V>, ...args: A): NeverjectPromise<V, DetailedError<unknown>>
+function tryCallAsync<V, E = DetailedError<unknown>, A extends any[] = []>(fn: (...args: A) => MaybePromise<Result<V, E> | V>, ...args: A): NeverjectPromise<V, E | DetailedError<unknown>>
+
+type ErrorMapper<E> = (reason: unknown) => E
+
+function wrapFn<A extends any[] = []>(fn: (...args: A) => never, onError?: ErrorMapper<unknown>): (...args: A) => Result<never, unknown>
+function wrapFn<V, A extends any[] = []>(fn: (...args: A) => Ok<V>, onError?: ErrorMapper<unknown>): (...args: A) => Result<V, never>
+function wrapFn<E, A extends any[] = []>(fn: (...args: A) => Err<E>, onError?: ErrorMapper<unknown>): (...args: A) => Result<never, E>
+function wrapFn<V, E, A extends any[] = []>(fn: (...args: A) => Result<V, E>, onError?: ErrorMapper<E>): (...args: A) => Result<V, E>
+function wrapFn<V, A extends any[] = []>(fn: (...args: A) => V, onError?: ErrorMapper<DetailedError<unknown>>): (...args: A) => Result<V, DetailedError<unknown>>
+function wrapFn<V, E = DetailedError<unknown>, A extends any[] = []>(fn: (...args: A) => Result<V, E> | V, onError?: ErrorMapper<E>): (...args: A) => Result<V, E>
+
+function wrapAsyncFn<A extends any[] = []>(fn: (...args: A) => MaybePromise<never>, onError?: ErrorMapper<DetailedError<unknown>>): (...args: A) => NeverjectPromise<never, DetailedError<unknown>>
+function wrapAsyncFn<V, A extends any[] = []>(fn: (...args: A) => MaybePromise<Ok<V>>, onError?: ErrorMapper<never>): (...args: A) => NeverjectPromise<V, never>
+function wrapAsyncFn<E, A extends any[] = []>(fn: (...args: A) => MaybePromise<Err<E>>, onError?: ErrorMapper<unknown>): (...args: A) => NeverjectPromise<never, E>
+function wrapAsyncFn<V, E, A extends any[] = []>(fn: (...args: A) => MaybePromise<Result<V, E>>, onError?: ErrorMapper<E>): (...args: A) => NeverjectPromise<V, E>
+function wrapAsyncFn<V, A extends any[] = []>(fn: (...args: A) => MaybePromise<V>, onError?: ErrorMapper<DetailedError<unknown>>): (...args: A) => NeverjectPromise<V, DetailedError<unknown>>
+function wrapAsyncFn<V, E = DetailedError<unknown>, A extends any[] = []>(fn: (...args: A) => MaybePromise<Result<V, E> | V>, onError?: ErrorMapper<E>): (...args: A) => NeverjectPromise<V, E>
+
+function wrapSafeAsyncFn<V, E = never, A extends any[] = []>(fn: (...args: A) => PromiseLike<Result<V, E>>): (...args: A) => NeverjectPromise<V, E>
 ```
 
-- `wrapFn`
-- `wrapAsyncFn`
+### Result helpers (`neverject/result`)
 
-### Instance methods (target API)
+```ts
+function resolve<V>(result: Ok<V>): Ok<V>
+function resolve<E>(result: Err<E>): Err<E>
+function resolve<V, E>(result: Result<V, E>): Result<V, E>
+function resolve<V>(value: V): Ok<V>
 
-Two shapes are central: `NeverjectPromise<V, E>` (Promise-like, never rejects) and `Result<V, E>` (an `Ok`/`Err`
-tagged
-union). The lists below describe the instance surface you probably want to expose/implement.
+function rejectWithError<V>(result: Ok<V>): Ok<V>
+function rejectWithError<E>(result: Err<E>): Err<E>
+function rejectWithError<V, E>(result: Result<V, E>): Result<V, E>
+function rejectWithError<E extends Error>(reason: E): Err<E>
+function rejectWithError<T>(reason: T): Err<DetailedError<T>>
 
-#### NeverjectPromise
+function reject<V>(result: Ok<V>): Ok<V>
+function reject<E>(result: Err<E>): Err<E>
+function reject<V, E>(result: Result<V, E>): Result<V, E>
+function reject<E>(reason: E): Err<E>
 
-- `then(onfulfilled, onrejected?)` — PromiseLike entry point that never rejects; rejections become `NeverjectError`.
-- `map(fn)` — transform the `Ok` value; keeps the same error type.
-- `mapErr(fn)` — transform the `Err` value; keeps the same ok type. Returning a bare value is treated as the new error (`Err(value)`); returning `Ok/Err/NeverjectPromise` is flattened.
-- `mapResult(fn)` — give callers access to the whole `Result` and expect a `Result` back.
-- `valueOr(fallback | (e) => fallback)` — resolve to the ok value or a fallback when err, always returning `Ok` (the error type becomes `never`).
-- `tap(fn)` / `tapErr(fn)` — side effects on success/failure without changing the value.
-- `tapResult(fn)` — side-effect with the whole `Result` while returning it unchanged.
-- `recover(fn)` — handle an error; you can return a value to recover (bare values become `Ok`), or return `Err`/`Result`/`NeverjectPromise` to keep failing. `mapErr` stays on the error branch for bare values; `recover` defaults to fixing the error.
-
-#### Result
-
-- `ok` boolean + `value` or `error` payload.
-- `valueOr(fallback)` — return ok value or the fallback.
-- `map(fn)` — return a new `Ok` with a transformed value.
-- `mapErr(fn)` — return a new `Err` with a transformed error.
-- `mapResult(fn)` — rewrite the result in one go.
-- `tap(fn)` / `tapErr(fn)` — run side effects without altering the result.
-- `toAsync()` — wrap in `NeverjectPromise` for promise-like composition.
-- `recover(fn)` — handle an error and turn it into an `Ok` value (leaves existing `Ok` values untouched).
-- `tapResult(fn)` — side-effect with the whole `Result` while returning it unchanged.
+function isResult(x: unknown): x is Result<unknown, unknown>
+```
 
 ## Comparison with neverthrow
 
-| neverthrow                                               | neverject                           | Notes                                                         |
-|----------------------------------------------------------|-------------------------------------|---------------------------------------------------------------|
-| Functions / static methods                               |                                     |                                                               |
-| `ok(…)`                                                  | `ok(…)`                             | Create an Ok result                                           |
-| `err(…)`                                                 | `err(…)`                            | Create an Err result                                          |
-| `okAsync(…)`                                             | `nj(…)`                             | Create an Ok async result                                     |
-| `errAsync(…)`                                            | `nj(…)`                             | Create an Err async result                                    |
-| `ResultAsync.fromPromise(…)` / `fromPromise(…)`          | `nj(…)`                             | Wrap a promise into `NeverjectPromise`                        |
-| `ResultAsync.fromSafePromise(…)` / `fromSafePromise(…)`  | `nj(…)`                             | Wrap a promise into `NeverjectPromise` (safe)                 |
-| `Result.fromThrowable(…)` / `fromThrowable(…)`           | `wrapFn(…)`                         | Wrap a sync function so it returns a `Result`                 |
-| `ResultAsync.fromThrowable(…)` / `fromAsyncThrowable(…)` | `wrapAsyncFn(…)`                    | Wrap an async function so it returns an `NeverjectPromise`    |
-| `Result.combine(…)`                                      | ❌                                   | Aggregate values, short-circuit on Err                        |
-| `Result.combineWithAllErrors(…)`                         | ❌                                   | Aggregate results, collecting both Ok/Err                     |
-| `ResultAsync.combine(…)`                                 | `allOk(…)`,  `allOkRecord(…)`       | Aggregate async values, short-circuit on Err                  |
-| `ResultAsync.combineWithAllErrors(…)`                    | `allSettled(…)`, `allSettledRecord(…)` | Aggregate async results into Ok list of SyncResults           |
-| ❌                                                        | `anyOk(…)`                          | Like `Promise.any`                                            |                          
-| ❌                                                        | `race(…)`                           | Like `Promise.race`                                           |                          
-| `safeTry(…)`                                             | ❌                                   | Generator helper for early-returning on Err                   |
-| ❌                                                        | `resolve(fn, …)`                    | Try calling fn, resolve to `Ok` or `Err`                      |                          
-| ❌                                                        | `resolveAsync(fn, …)`               | Like `Promise.try`                                            |                          
-| Sync methods                                             |                                     |
-| `result.isOk()`                                          | `result.ok`                         | Ok check (property vs method)                                 |
-| `result.isErr()`                                         | `!result.ok`                        | Err check (property vs method)                                |
-| `result.map(…)`                                          | `result.map(…)`                     | Transform Ok; second arg can transform Err                    |
-| `result.mapErr(…)`                                       | `result.mapErr(…)`                  | Transform Err                                                 |
-| `result.unwrapOr(…)`                                     | `result.valueOr(…)`                 | Provide a fallback value                                      |
-| `result.andThen(…)`                                      | `result.map(…)`                     | Neverject flattens returned Results, covering `andThen`       |
-| `result.asyncAndThen(…)`                                 | `result.toAsync().map(…)`           | Convert to async and flatten a ResultAsync-returning callback |
-| `result.orElse(…)`                                       | `result.recover(…)`                 | Recover from an error by producing an Ok                      |
-| `result.match(…)`                                        | `result.map(…)`                     | Handle both branches (returns Result, not a raw value)        |
-| `result.asyncMap(…)`                                     | `result.toAsync().map(…)`           | Async mapping                                                 |
-| `result.andTee(…)`                                       | `result.tap(…)`                     | Side effects on success without changing the result           |
-| `result.orTee(…)`                                        | `result.tapErr(…)`                  | Side effects on failure without changing the result           |
-| `result.andThrough(…)`                                   | ❌                                   | No direct pass-through that can change error type             |
-| `result.asyncAndThrough(…)`                              | ❌                                   | No direct async pass-through equivalent                       |
-| Async methods                                            |                                     |
-| `resultAsync.map(…)`                                     | `neverjectPromise.map(…)`           | Transform Ok; second arg can transform Err                    |
-| `resultAsync.mapErr(…)`                                  | `neverjectPromise.mapErr(…)`        | Transform Err                                                 |
-| `resultAsync.unwrapOr(…)`                                | `neverjectPromise.valueOr(…)`       | Provide a fallback value                                      |
-| `resultAsync.andThen(…)`                                 | `neverjectPromise.map(…)`           | Neverject flattens returned Results                           |
-| `resultAsync.orElse(…)`                                  | `neverjectPromise.recover(…)`       | Recover from an error by producing an Ok                      |
-| `resultAsync.match(…)`                                   | `neverjectPromise.map(…)`           | Handle both branches (returns NeverjectPromise)               |
-| `resultAsync.andTee(…)`                                  | `neverjectPromise.tap(…)`           | Side effects on success without changing the result           |
-| `resultAsync.orTee(…)`                                   | `neverjectPromise.tapErr(…)`        | Side effects on failure without changing the result           |
-| `resultAsync.andThrough(…)`                              | ❌                                   | No direct async pass-through equivalent                       |
-
+| Capability                         | neverthrow                                                          | neverject                                  | Notes                                                                                 |
+|------------------------------------|---------------------------------------------------------------------|--------------------------------------------|---------------------------------------------------------------------------------------|
+| Create success/error               | `ok`, `err`                                                         | `ok`, `err`                                | Identical constructors                                                                |
+| Wrap promises into results         | `okAsync`, `errAsync`, `ResultAsync.fromPromise`, `fromSafePromise` | `nj`                                       | `nj` never rejects and flattens nested `Result` values                                |
+| Adopt already-safe Result promises | `ResultAsync.fromSafePromise`                                       | `NeverjectPromise.fromSafePromise`         | Use when you guarantee the promise never rejects                                      |
+| Wrap throwable sync functions      | `Result.fromThrowable`                                              | `wrapFn`, `tryCall`                        | `wrapFn` defers invocation; `tryCall` executes immediately                            |
+| Wrap throwable async functions     | `ResultAsync.fromThrowable` / `fromAsyncThrowable`                  | `wrapAsyncFn`, `tryCallAsync`              | `wrapSafeAsyncFn` covers already-safe async results                                   |
+| Aggregate until first error        | `ResultAsync.combine`                                               | `allOk`, `allOkRecord`                     | Short-circuits on the first `Err`                                                     |
+| Aggregate and keep every outcome   | `ResultAsync.combineWithAllErrors`                                  | `allSettled`, `allSettledRecord`           | Returns `Ok` of per-entry `Result` values                                             |
+| Race attempts                      | `ResultAsync.any`                                                   | `firstOk` / `any`, `firstSettled` / `race` | `firstOk` returns the first `Ok` or all errors; `firstSettled` mirrors `Promise.race` |
+| Generator helpers (`safeTry`)      | `safeTry`                                                           | not provided                               | Use `tryCall` / `tryCallAsync` instead                                                |
 
 ## FAQ
 
 ### Where's the source code?
 
-I use Mercurial, which GitHub doesn't support and Atlassian graciously dropped, so I self-host a private repo. If you want to see the code, check the [Code tab on npm](https://www.npmjs.com/package/neverject?activeTab=code), which is honestly better anyway, because what you see on GitHub isn't necessarily what you're installing anyway.
+I use Mercurial, which GitHub doesn't support and Atlassian graciously dropped, so I self-host a private repo. If you
+want to see the code, check the [Code tab on npm](https://www.npmjs.com/package/neverject?activeTab=code), which is
+honestly better anyway, because what you see on GitHub isn't necessarily what you're installing anyway.
 
 ### How do I file an issue?
 

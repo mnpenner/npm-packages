@@ -1,6 +1,6 @@
 {
   "name": "neverject",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "module": "./dist/index.js",
   "type": "module",
   "devDependencies": {
@@ -16,6 +16,9 @@
   "peerDependencies": {
     "typescript": "^5"
   },
+  "files": [
+    "/dist"
+  ],
   "scripts": {
     "test:tsc": "tsc --noEmit && echo \"tsc: no errors\"",
     "test:bun": "bun test",
