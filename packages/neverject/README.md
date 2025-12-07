@@ -167,8 +167,10 @@ class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
 }
 
 function ok<T>(value: T): Ok<T>
+function okAsync<V>(value: V): NeverjectPromise<V, never>
 
 function err<E>(error: E): Err<E>
+function errAsync<E>(error: E): NeverjectPromise<never, E>
 
 function nj<P>(value: PromiseLike<P>): NeverjectPromise<Awaited<P> extends Result<infer V, any> ? V : Awaited<P>, Awaited<P> extends Result<any, infer E> ? E : DetailedError<unknown>>
 function nj<E extends Error>(error: E): NeverjectPromise<never, E>
@@ -285,7 +287,7 @@ function isResult(x: unknown): x is Result<unknown, unknown>
 | Capability                         | neverthrow                                                          | neverject                                  | Notes                                                                                 |
 |------------------------------------|---------------------------------------------------------------------|--------------------------------------------|---------------------------------------------------------------------------------------|
 | Create success/error               | `ok`, `err`                                                         | `ok`, `err`                                | Identical constructors                                                                |
-| Wrap promises into results         | `okAsync`, `errAsync`, `ResultAsync.fromPromise`, `fromSafePromise` | `nj`                                       | `nj` never rejects and flattens nested `Result` values                                |
+| Wrap promises into results         | `okAsync`, `errAsync`, `ResultAsync.fromPromise`, `fromSafePromise` | `okAsync`, `errAsync`, `nj`                | `nj` never rejects and flattens nested `Result` values                                |
 | Adopt already-safe Result promises | `ResultAsync.fromSafePromise`                                       | `NeverjectPromise.fromSafePromise`         | Use when you guarantee the promise never rejects                                      |
 | Wrap throwable sync functions      | `Result.fromThrowable`                                              | `wrapFn`, `tryCall`                        | `wrapFn` defers invocation; `tryCall` executes immediately                            |
 | Wrap throwable async functions     | `ResultAsync.fromThrowable` / `fromAsyncThrowable`                  | `wrapAsyncFn`, `tryCallAsync`              | `wrapSafeAsyncFn` covers already-safe async results                                   |
