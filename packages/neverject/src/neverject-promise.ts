@@ -2,8 +2,8 @@ import {ok, type Err, type Result} from './result.ts'
 
 import {UnreachableError} from './unreachable-error.ts'
 import type {MaybePromise} from './maybe-promise.ts'
-import {reject} from './util/reject.ts'
-import {resolve} from './util/resolve.ts'
+import {reject} from './result/reject.ts'
+import {resolve} from './result/resolve.ts'
 
 type NormalizedValue<V, E> = NeverjectPromise<V, E> | MaybePromise<Result<V | never, E> | V>
 type NormalizedError<V, E> = NeverjectPromise<V, E> | MaybePromise<Result<V, E> | E>

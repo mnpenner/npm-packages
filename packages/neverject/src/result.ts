@@ -1,4 +1,4 @@
-import {_INTERNAL_RESULT_MARKER} from './util/type-check.ts'
+import {_INTERNAL_RESULT_MARKER} from './result/type-check.ts'
 import {varDump} from './var-dump.ts'
 
 interface ResultInterface<T, __E> {

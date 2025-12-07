@@ -1,9 +1,9 @@
 import {type Err, type Ok, type Result} from '../result.ts'
 import {toDetailedError, type DetailedError} from '../detailed-error.ts'
-import {resolve} from './resolve.ts'
+import {resolve} from '../result/resolve.ts'
 import {nj} from '../nj.ts'
 import { NeverjectPromise} from '../neverject-promise.ts'
-import {reject} from './reject.ts'
+import {reject} from '../result/reject.ts'
 import type {MaybePromise} from '../maybe-promise.ts'
 
 type ErrorMapper<E> = (reason: unknown) => E

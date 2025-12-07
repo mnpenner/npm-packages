@@ -2,8 +2,8 @@ import {NeverjectPromise} from './neverject-promise.ts'
 import type {Err, Ok} from './result.ts'
 import {err, type Result} from './result.ts'
 import {type DetailedError} from './detailed-error.ts'
-import {reject, rejectWithError, resolve} from './util'
-import {isResult} from './util/type-check.ts'
+import {reject, rejectWithError, resolve} from './result/index.ts'
+import {isResult} from './result/type-check.ts'
 
 /**
  * Normalize a promise-like value into a [`NeverjectPromise`]{@link NeverjectPromise}, flattening nested [`Result`]{@link Result} values and capturing rejections as [`DetailedError`]{@link DetailedError}.

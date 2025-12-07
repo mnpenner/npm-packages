@@ -29,7 +29,6 @@
     "./aggregate": "./dist/aggregate.js",
     "./invoke": "./dist/invoke.js",
     "./result": "./dist/result.js",
-    "./util": "./dist/util.js",
     "./package.json": "./package.json"
   },
   "types": "./dist/index.d.ts",
