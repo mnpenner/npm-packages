@@ -4,3 +4,4 @@
   - The public API is the `entry` point shown in `tsdown.config.ts` 
   - Link to other functions and classes using this syntax: [`NeverjectPromise`]{@link NeverjectPromise} 
   - Link to methods using this syntax: [`Err.valueOr`]{@link Err#valueOr} 
+- Run `bun run build` to rebuild `dist/` and refresh `exports` in `package.json`.
