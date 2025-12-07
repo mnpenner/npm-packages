@@ -16,7 +16,7 @@ export type ToSyncResult<T> =
                                 Result<Awaited<P>, DetailedError<unknown>> :
                         Result<T, never>
 
-export type AllSettledObject<T extends Record<string, unknown>> = {
+export type AllSettledRecord<T extends Record<string, unknown>> = {
     [K in keyof T]: ToSyncResult<T[K]>
 }
 
@@ -30,11 +30,11 @@ export type AllOkValues<T extends readonly unknown[]> = {
 
 export type AllOkErrors<T extends readonly unknown[]> = ToSyncResult<T[number]> extends Result<any, infer E> ? E : never
 
-export type AllOkObject<T extends Record<string, unknown>> = {
+export type AllOkRecord<T extends Record<string, unknown>> = {
     [K in keyof T]: ToSyncResult<T[K]> extends Result<infer V, any> ? V : never
 }
 
-type AllOkObjectErrors<T extends Record<string, unknown>> = ToSyncResult<T[keyof T]> extends Result<any, infer E> ? E : never
+type AllOkRecordErrors<T extends Record<string, unknown>> = ToSyncResult<T[keyof T]> extends Result<any, infer E> ? E : never
 
 /**
  * Aggregate any values/promises/AsyncResults into a single AsyncResult of per-entry SyncResults. Never returns Err.
@@ -50,9 +50,9 @@ export function allSettled<T extends readonly (NeverjectPromise<any, any> | Mayb
 /**
  *  Aggregate any values/promises/AsyncResults into a single AsyncResult of per-key SyncResults. Never returns Err.
  */
-export function allSettledObj<T extends Record<string, NeverjectPromise<any, any> | MaybePromise<any>>>(inputs: T): NeverjectPromise<AllSettledObject<T>, never> {
+export function allSettledRecord<T extends Record<string, NeverjectPromise<any, any> | MaybePromise<any>>>(inputs: T): NeverjectPromise<AllSettledRecord<T>, never> {
     const entries = Object.entries(inputs)
-    const promise: Promise<Result<AllSettledObject<T>, never>> = Promise.resolve(
+    const promise: Promise<Result<AllSettledRecord<T>, never>> = Promise.resolve(
         allSettled(entries.map(([, value]) => value))
     ).then((settled) => {
         // allSettled never Errs, but keep a narrow check for type safety
@@ -61,7 +61,7 @@ export function allSettledObj<T extends Record<string, NeverjectPromise<any, any
         }
         const rebuilt = Object.fromEntries(
             settled.value.map((result, index) => [entries[index]![0], result])
-        ) as AllSettledObject<T>
+        ) as AllSettledRecord<T>
         return ok(rebuilt)
     })
 
@@ -90,17 +90,17 @@ export function allOk<T extends readonly (NeverjectPromise<any, any> | MaybeProm
 /**
  * Aggregate into AsyncResult of Ok values keyed by input object, short-circuiting on the first Err.
  */
-export function allOkObj<T extends Record<string, NeverjectPromise<any, any> | MaybePromise<any>>>(inputs: T): NeverjectPromise<AllOkObject<T>, AllOkObjectErrors<T>> {
+export function allOkRecord<T extends Record<string, NeverjectPromise<any, any> | MaybePromise<any>>>(inputs: T): NeverjectPromise<AllOkRecord<T>, AllOkRecordErrors<T>> {
     const entries = Object.entries(inputs)
-    const promise: Promise<Result<AllOkObject<T>, AllOkObjectErrors<T>>> = Promise.resolve(
+    const promise: Promise<Result<AllOkRecord<T>, AllOkRecordErrors<T>>> = Promise.resolve(
         allOk(entries.map(([, value]) => value))
     ).then((settled) => {
         if(!settled.ok) {
-            return err(settled.error as AllOkObjectErrors<T>)
+            return err(settled.error as AllOkRecordErrors<T>)
         }
         const rebuilt = Object.fromEntries(
             settled.value.map((value, index) => [entries[index]![0], value])
-        ) as AllOkObject<T>
+        ) as AllOkRecord<T>
         return ok(rebuilt)
     })
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bun test
 import {describe, expect, it} from 'bun:test'
-import {allOk, allOkObj, type AllOkObject, allSettled, allSettledObj} from './all-settled.ts'
+import {allOk, allOkRecord, type AllOkRecord, allSettled, allSettledRecord} from './all-settled.ts'
 import {nj} from '../nj.ts'
 import {err, ok, type Result} from '../result.ts'
 import {expectType, type TypeEqual} from '../internal/type-assert.ts'
@@ -10,7 +10,7 @@ import type {DetailedError} from '../detailed-error.ts'
 describe('allSettledOb', () => {
     it('wraps a record of values/promises/results into an AsyncResult of SyncResults', async () => {
         const failingPromise: Promise<number> = new Promise((_, reject) => reject('bad'))
-        const asyncResult = allSettledObj({
+        const asyncResult = allSettledRecord({
             value: nj(1),
             promise: Promise.resolve(2),
             ok: nj(ok(3)),
@@ -72,7 +72,7 @@ describe('allSettledOb', () => {
     })
 
     it('preserves keys without index juggling', async () => {
-        const settled = await allSettledObj({a: nj(1), b: nj(err('x'))})
+        const settled = await allSettledRecord({a: nj(1), b: nj(err('x'))})
 
         expect(settled.ok).toBe(true)
         if(!settled.ok) return
@@ -114,14 +114,14 @@ describe('allSettled', () => {
     })
 })
 
-describe('allOkObj', () => {
+describe('allOkRecord', () => {
     it('returns Ok when all entries are Ok', async () => {
-        const combined = await allOkObj({
+        const combined = await allOkRecord({
             a: nj(1),
             b: nj(Promise.resolve(2)),
         })
 
-        expectType<TypeEqual<typeof combined, Result<AllOkObject<{
+        expectType<TypeEqual<typeof combined, Result<AllOkRecord<{
             a: NeverjectPromise<number, never>
             b: NeverjectPromise<number, DetailedError<unknown>>
         }>, DetailedError<unknown>>>>(true)
@@ -133,7 +133,7 @@ describe('allOkObj', () => {
     })
 
     it('short-circuits on the first Err', async () => {
-        const combined = await allOkObj({a: nj(1), b: nj(err('x')), c: nj(3)})
+        const combined = await allOkRecord({a: nj(1), b: nj(err('x')), c: nj(3)})
 
         expect(combined.ok).toBe(false)
         if(combined.ok) return

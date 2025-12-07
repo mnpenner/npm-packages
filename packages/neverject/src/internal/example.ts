@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bun
 import {err, nj, ok, type Result} from '../index.ts'
-import * as nju from '../util'
+import * as njUtil from '../util'
 import {describe, example, log, runExamples} from './example-runner.ts'
 import {mayFail1, mayFail2} from './test-functions.ts'
 import {expect, mock} from 'bun:test'
@@ -53,42 +53,42 @@ describe('Utilities', () => {
     example('Combining values with allOk', async () => {
         const tuple = <T extends any[]>(...args: T): T => args
 
-        const combinedTuple = await nju.allOk(tuple(nj('a'), nj(2)))
-        const combinedArray = await nju.allOk([nj('a'), Promise.reject(2)] as const)
+        const combinedTuple = await njUtil.allOk(tuple(nj('a'), nj(2)))
+        const combinedArray = await njUtil.allOk([nj('a'), Promise.reject(2)] as const)
 
         log('combined tuple', combinedTuple)
         log('combined array', combinedArray)
     })
 
-    example('Combining object values with allOkObj', async () => {
-        const combined = await nju.allOkObj({
+    example('Combining object values with allOkRecord', async () => {
+        const combined = await njUtil.allOkRecord({
             user: nj({id: 1, name: 'Ada'}),
             profile: nj({bio: 'Always learning'}),
         })
 
-        log('allOkObj result', combined)
+        log('allOkRecord result', combined)
 
-        const failed = await nju.allOkObj({
+        const failed = await njUtil.allOkRecord({
             user: nj({id: 1}),
             preferences: nj(err('missing preferences')),
         })
 
-        log('allOkObj failed result', failed)
+        log('allOkRecord failed result', failed)
     })
 
     example('Settling array entries with allSettled', async () => {
-        const settled = await nju.allSettled([nj('a'), nj(err('boom'))] as const)
+        const settled = await njUtil.allSettled([nj('a'), nj(err('boom'))] as const)
 
         log('allSettled result', settled)
     })
 
-    example('Settling object entries with allSettledObj', async () => {
-        const settled = await nju.allSettledObj({
+    example('Settling object entries with allSettledRecord', async () => {
+        const settled = await njUtil.allSettledRecord({
             user: nj({id: 1}),
             profile: nj(err('missing profile')),
         })
 
-        log('allSettledObj result', settled)
+        log('allSettledRecord result', settled)
     })
 
     example('Racing for the first settled entry with firstSettled', async () => {
@@ -100,7 +100,7 @@ describe('Utilities', () => {
             setTimeout(() => resolve(flip() ? ok('fast success') : err('fast failure')), 5)
         )
 
-        const settled = await nju.firstSettled([slowAttempt, fastAttempt] as const)
+        const settled = await njUtil.firstSettled([slowAttempt, fastAttempt] as const)
 
         log('firstSettled ok?', settled.ok)
         if(settled.ok) {
@@ -115,7 +115,7 @@ describe('Utilities', () => {
         const maybeWin = (label: string, delay: number) =>
             new Promise((resolve) => setTimeout(() => resolve(flip() ? ok(label) : err(`${label} failed`)), delay))
 
-        const result = await nju.firstOk([maybeWin('fast attempt', 5), maybeWin('slow attempt', 20)] as const)
+        const result = await njUtil.firstOk([maybeWin('fast attempt', 5), maybeWin('slow attempt', 20)] as const)
         log('firstOk (racing attempts) ok?', result.ok)
         if(result.ok) {
             log('firstOk value', result.value)
@@ -123,7 +123,7 @@ describe('Utilities', () => {
             log('firstOk collected errors', result.error)
         }
 
-        const retries = await nju.firstOk([maybeWin('retry 1', 10), maybeWin('retry 2', 15)] as const)
+        const retries = await njUtil.firstOk([maybeWin('retry 1', 10), maybeWin('retry 2', 15)] as const)
         log('firstOk (retries) found success?', retries.ok)
         log('firstOk (retries) payload', retries)
     })
@@ -141,7 +141,7 @@ describe('Utilities', () => {
         }
 
         function myFunc2() {
-            return nju.call(() => {
+            return njUtil.tryCall(() => {
                 const result1 = mayFail1()
                 if(!result1.ok) throw result1.error
 
@@ -153,14 +153,14 @@ describe('Utilities', () => {
         }
 
         log('manual propagation', myFunc1())
-        log('call helper', myFunc2())
+        log('tryCall helper', myFunc2())
     })
 
     example('Safe JSON parsing with wrapFn', () => {
         type ParseError = {message: string}
         const toParseError = (): ParseError => ({message: 'Parse Error'})
 
-        const safeJsonParse = nju.wrapFn(JSON.parse, toParseError)
+        const safeJsonParse = njUtil.wrapFn(JSON.parse, toParseError)
 
         const res = safeJsonParse('{')
 

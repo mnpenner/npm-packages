@@ -1,15 +1,15 @@
 #!/usr/bin/env -S bun test
 import {describe, expect, it} from 'bun:test'
-import {call, callAsync} from './call.ts'
+import {tryCall, tryCallAsync} from './call.ts'
 import {err, ok, type Result} from '../result.ts'
 import {expectType, type TypeEqual} from '../internal/type-assert.ts'
 import type {DetailedError} from '../detailed-error.ts'
 import {mayFail1} from '../internal/test-functions.ts'
 import type {NeverjectPromise} from '../neverject-promise.ts'
 
-describe('call', () => {
+describe('tryCall', () => {
     it('wraps returned values in Ok', () => {
-        const result = call(() => 42)
+        const result = tryCall(() => 42)
 
         expectType<TypeEqual<typeof result, Result<number, DetailedError<unknown>>>>(true)
         expect(result.ok).toBe(true)
@@ -19,14 +19,14 @@ describe('call', () => {
     })
 
     it('passes through returned SyncResults unchanged', () => {
-        const result = call(mayFail1)
+        const result = tryCall(mayFail1)
         expectType<TypeEqual<typeof result, Result<number, string>>>(true)
     })
 
     it('handles Ok', () => {
         const okResult = ok('hi')
 
-        const okPassed = call(() => okResult)
+        const okPassed = tryCall(() => okResult)
 
         expectType<TypeEqual<typeof okPassed, Result<string, never>>>(true)
 
@@ -36,7 +36,7 @@ describe('call', () => {
     it('handles Err', () => {
         const errResult = err('boom')
 
-        const errPassed = call(() => errResult)
+        const errPassed = tryCall(() => errResult)
 
         expectType<TypeEqual<typeof errPassed, Result<never, string>>>(true)
 
@@ -46,7 +46,7 @@ describe('call', () => {
     it('captures thrown errors as Err<DetailedError>', () => {
         const reason = 'boom'
         const throwingFn = () => { throw reason }
-        const result = call(throwingFn)
+        const result = tryCall(throwingFn)
 
         expectType<TypeEqual<typeof result, Result<never, unknown>>>(true)
         expect(result.ok).toBe(false)
@@ -58,9 +58,9 @@ describe('call', () => {
     })
 })
 
-describe('callAsync', () => {
+describe('tryCallAsync', () => {
     it('wraps resolved values in Ok', async () => {
-        const asyncResult = callAsync(async () => 42)
+        const asyncResult = tryCallAsync(async () => 42)
 
         expectType<TypeEqual<typeof asyncResult, NeverjectPromise<number, DetailedError<unknown>>>>(true)
 
@@ -72,7 +72,7 @@ describe('callAsync', () => {
     })
 
     it('passes through returned AsyncResults unchanged', async () => {
-        const asyncResult = callAsync(() => Promise.resolve(ok('hi')))
+        const asyncResult = tryCallAsync(() => Promise.resolve(ok('hi')))
 
         expectType<TypeEqual<typeof asyncResult, NeverjectPromise<string, never>>>(true)
 
@@ -84,7 +84,7 @@ describe('callAsync', () => {
     })
 
     it('handles Err results', async () => {
-        const asyncResult = callAsync(() => Promise.resolve(err('boom')))
+        const asyncResult = tryCallAsync(() => Promise.resolve(err('boom')))
 
         expectType<TypeEqual<typeof asyncResult, NeverjectPromise<never, string>>>(true)
 
@@ -97,7 +97,7 @@ describe('callAsync', () => {
 
     it('captures thrown errors as Err<DetailedError>', async () => {
         const reason = 'boom'
-        const asyncResult = callAsync(async () => { throw reason })
+        const asyncResult = tryCallAsync(async () => { throw reason })
 
         expectType<TypeEqual<typeof asyncResult, NeverjectPromise<never, DetailedError<unknown>>>>(true)
 

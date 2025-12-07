@@ -21,7 +21,7 @@ nj(err(5))  // NeverjectPromise<never, number>
 ### Util
 
 ```ts
-allSettledObject({
+allSettledRecord({
     user: nj(fetchUser()),
     posts: nj(fetchPosts()),
 })
@@ -29,14 +29,14 @@ allSettledObject({
 // avoids array index juggling; each property stays keyed
 ```
 
-`allSettledObject` takes a record of `NeverjectPromise`/Promise/value inputs, normalizes each via `nj`, waits for all,
+`allSettledRecord` takes a record of `NeverjectPromise`/Promise/value inputs, normalizes each via `nj`, waits for all,
 and
 returns a
 never-rejecting `NeverjectPromise` whose value is a record of per-key `Result`.
 Example:
 
 ```ts
-const settled = await allSettledObject({user: nj(fetchUser()), posts: nj(fetchPosts())})
+const settled = await allSettledRecord({user: nj(fetchUser()), posts: nj(fetchPosts())})
 // settled.ok is always true here; inspect each entry:
 const user = settled.value.user
 if(user.ok) {
@@ -45,7 +45,7 @@ if(user.ok) {
 ```
 
 ```ts
-const combined = await allOkObject({user: nj(fetchUser()), posts: nj(fetchPosts())})
+const combined = await allOkRecord({user: nj(fetchUser()), posts: nj(fetchPosts())})
 // combined.ok is false on the first failing entry
 ```
 
@@ -103,8 +103,8 @@ union). The lists below describe the instance surface you probably want to expos
 | `ResultAsync.fromThrowable(…)` / `fromAsyncThrowable(…)` | `wrapAsyncFn(…)`                    | Wrap an async function so it returns an `NeverjectPromise`    |
 | `Result.combine(…)`                                      | ❌                                   | Aggregate values, short-circuit on Err                        |
 | `Result.combineWithAllErrors(…)`                         | ❌                                   | Aggregate results, collecting both Ok/Err                     |
-| `ResultAsync.combine(…)`                                 | `allOk(…)`,  `allOkObj(…)`          | Aggregate async values, short-circuit on Err                  |
-| `ResultAsync.combineWithAllErrors(…)`                    | `allSettled(…)`, `allSettledObj(…)` | Aggregate async results into Ok list of SyncResults           |
+| `ResultAsync.combine(…)`                                 | `allOk(…)`,  `allOkRecord(…)`       | Aggregate async values, short-circuit on Err                  |
+| `ResultAsync.combineWithAllErrors(…)`                    | `allSettled(…)`, `allSettledRecord(…)` | Aggregate async results into Ok list of SyncResults           |
 | ❌                                                        | `anyOk(…)`                          | Like `Promise.any`                                            |                          
 | ❌                                                        | `race(…)`                           | Like `Promise.race`                                           |                          
 | `safeTry(…)`                                             | ❌                                   | Generator helper for early-returning on Err                   |
