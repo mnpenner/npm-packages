@@ -17,6 +17,7 @@ type ErrorTree = ReturnType<typeof z.treeifyError>
 const serverErrorToHttpStatus = new Map<ServerErrorCode, HttpStatus>([
     [ServerErrorCode.REQUEST_FORMAT, HttpStatus.BAD_REQUEST],
     [ServerErrorCode.VALIDATION_ERROR, HttpStatus.BAD_REQUEST],
+    [ServerErrorCode.HANDLER_RESPONSE, HttpStatus.INTERNAL_SERVER_ERROR],
 ])
 
 export type RawError =

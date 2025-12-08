@@ -3,7 +3,6 @@ import path from 'node:path'
 import fs from 'node:fs'
 import {parseArgs} from 'util'
 import {URLPattern} from 'urlpattern-polyfill'
-import {fileURLToPath} from 'node:url'
 import {pattToName} from './router'
 
 type ExtractedRouteMeta = {
@@ -131,23 +130,33 @@ function isUnknown(text: string): boolean {
     return text === 'unknown' || text === 'any'
 }
 
-function buildApiClientSource(routes: ExtractedRouteMeta[], importRawErrorFrom?: string): string {
+function buildApiClientSource(routes: ExtractedRouteMeta[]): string {
     const lines: string[] = []
     lines.push(`import type { NeverjectPromise } from 'neverject'`)
-    if (importRawErrorFrom) {
-        lines.push(`import type { RawError } from '${importRawErrorFrom}'`)
-    }
+    lines.push(``)
+    lines.push(`enum ServerErrorCode {`)
+    lines.push(`    REQUEST_FORMAT,`)
+    lines.push(`    VALIDATION_ERROR,`)
+    lines.push(`    HANDLER_RESPONSE,`)
+    lines.push(`}`)
+    lines.push(``)
+    lines.push(`enum ValidationError {`)
+    lines.push(`    BODY,`)
+    lines.push(`    PATH,`)
+    lines.push(`    QUERY,`)
+    lines.push(`}`)
+    lines.push(``)
+    lines.push(`type RawError =`)
+    lines.push(`    | { type: ServerErrorCode.REQUEST_FORMAT, error: string }`)
+    lines.push(`    | { type: ServerErrorCode.HANDLER_RESPONSE, error: string }`)
+    lines.push(`    | { type: ServerErrorCode.VALIDATION_ERROR, component: ValidationError, errorTree: unknown, message: string }`)
+    lines.push(``)
+    lines.push(`interface Fetcher {`)
+    lines.push(`    fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>`)
+    lines.push(`}`)
     lines.push(``)
     lines.push(`class ApiClient {`)
-    lines.push(`    private readonly fetcher: Fetcher`)
-    lines.push(``)
-    lines.push(`    constructor(apiEndpoint: string) {`)
-    lines.push(`        this.fetcher = new Fetcher({`)
-    lines.push(`            baseUrl: apiEndpoint,`)
-    lines.push(`            mode: 'cors',`)
-    lines.push(`            credentials: 'include',`)
-    lines.push(`        })`)
-    lines.push(`    }`)
+    lines.push(`    constructor(private readonly fetcher: Fetcher) {}`)
     lines.push(``)
 
     for (const route of routes) {
@@ -160,30 +169,18 @@ function buildApiClientSource(routes: ExtractedRouteMeta[], importRawErrorFrom?:
         const returnType = `NeverjectPromise<${route.successType}, RawError>`
 
         lines.push(`    ${route.name}(${params.join(', ')}): ${returnType} {`)
-        lines.push(`        return this.fetcher.request<${route.successType}>({`)
-        lines.push(`            url: ${urlExpr},`)
+        lines.push(`        return this.fetcher.fetch(${urlExpr}, {`)
         lines.push(`            method: "${route.method}",`)
         if (!isUnknown(route.bodyType)) {
             lines.push(`            body: JSON.stringify(body),`)
         }
-        if (!isUnknown(route.queryType)) {
-            lines.push(`            query,`)
-        }
-        lines.push(`        }) as ${returnType}`)
+        lines.push(`        }) as unknown as ${returnType}`)
         lines.push(`    }`)
         lines.push(``)
     }
 
     lines.push(`}`)
     return lines.join('\n')
-}
-
-function resolveRawErrorImport(outputPath: string | undefined): string | undefined {
-    if (!outputPath) return undefined
-    const outputDir = path.dirname(outputPath)
-    const rel = path.relative(outputDir, path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'create-zod-handler'))
-    const normalized = rel.startsWith('.') ? rel : `./${rel}`
-    return normalized.replace(/\\/g, '/')
 }
 
 async function main() {
@@ -209,8 +206,7 @@ async function main() {
     }
 
     const routes = extractRoutesFromSourceFile(sourceFile, program.getTypeChecker(), 'router')
-    const rawErrorImport = resolveRawErrorImport(outputPathArg ? path.resolve(outputPathArg) : undefined)
-    const client = buildApiClientSource(routes, rawErrorImport)
+    const client = buildApiClientSource(routes)
 
     if (outputPathArg) {
         const outputPath = path.resolve(outputPathArg)
