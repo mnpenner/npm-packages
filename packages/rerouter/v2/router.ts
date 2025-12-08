@@ -1,5 +1,6 @@
 import {URLPattern} from 'urlpattern-polyfill'
-import {Handler} from './create-zod-handler'
+import {Handler, RawError, rawErrorToResponse} from './create-zod-handler'
+import {isResult} from 'neverject/result'
 
 export interface Route {
     name?: string
@@ -53,5 +54,50 @@ export class Router {
 
     getRoutes() {
         return [...this.routes]
+    }
+
+    async fetch(req: Request): Promise<Response> {
+        const url = new URL(req.url)
+        const method = req.method.toUpperCase()
+
+        for (const route of this.routes) {
+            if (route.method.toUpperCase() !== method) continue
+            const match = route.pattern.exec(url)
+            if (!match) continue
+
+            let body: unknown = undefined
+            if (req.body) {
+                try {
+                    const contentType = req.headers.get('content-type') ?? ''
+                    if (contentType.includes('application/json')) {
+                        body = await req.json()
+                    } else {
+                        body = await req.text()
+                    }
+                } catch (e) {
+                    return new Response(JSON.stringify({ error: String(e) }), { status: 400 })
+                }
+            }
+
+            const pathParams = (match.pathname && (match as any).pathname.groups) || {}
+            const queryParams = Object.fromEntries(url.searchParams.entries())
+
+            const serverReq = {
+                url: url.toString(),
+                headers: req.headers,
+                body,
+                pathParams,
+                queryParams,
+                method,
+            }
+
+            const result = await route.handler(serverReq as any)
+            if (isResult(result)) {
+                return (result as any).ok ? (result as any).value as Response : rawErrorToResponse((result as any).error as RawError)
+            }
+            return result as Response
+        }
+
+        return new Response('Not Found', { status: 404 })
     }
 }

@@ -1,5 +1,5 @@
 import {Router} from './router'
-import {createZodHandler} from './create-zod-handler'
+import {createZodNeverjectHandler} from './create-zod-handler'
 import {okAsync} from 'neverject'
 import {z} from 'zod'
 
@@ -7,7 +7,7 @@ const router = new Router()
 
 router.add({
     pattern: '/',
-    handler: createZodHandler({
+    handler: createZodNeverjectHandler({
         handler: (req) => okAsync({
             body: { message: 'Hello World!' }
         })
@@ -17,7 +17,7 @@ router.add({
 
 router.add({
     pattern: '/books/:id',
-    handler: createZodHandler({
+    handler: createZodNeverjectHandler({
         path: z.object({ id: z.string() }),
         body: z.object({ title: z.string(), author: z.string() }),
         handler: (req) => okAsync({

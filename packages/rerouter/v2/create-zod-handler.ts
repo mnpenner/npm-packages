@@ -14,7 +14,7 @@ export const enum ServerErrorCode {
 
 type ErrorTree = ReturnType<typeof z.treeifyError>
 
-const serverErrorToHttpStatus = new Map<ServerErrorCode, HttpStatus>([
+export const serverErrorToHttpStatus = new Map<ServerErrorCode, HttpStatus>([
     [ServerErrorCode.REQUEST_FORMAT, HttpStatus.BAD_REQUEST],
     [ServerErrorCode.VALIDATION_ERROR, HttpStatus.BAD_REQUEST],
     [ServerErrorCode.HANDLER_RESPONSE, HttpStatus.INTERNAL_SERVER_ERROR],
@@ -45,6 +45,8 @@ export const enum ValidationError {
 
 export interface ServerResponse<T> {
     body: T
+    status?: number
+    headers?: HeadersInit
 }
 
 export interface ServerRequest<TBody, TPathParams, TQueryParams> {
@@ -59,9 +61,9 @@ export interface ServerRequest<TBody, TPathParams, TQueryParams> {
 export type MaybePromise<T> = T | PromiseLike<T>
 export type NormalizedResponse<V, E> = NeverjectPromise<V, E> | MaybePromise<Result<V | never, E> | V>
 
-export type Handler<TReqBody, TReqPath, TReqQuery, TOkRes> = (req: ServerRequest<TReqBody, TReqPath, TReqQuery>) => NeverjectPromise<ServerResponse<TOkRes>, RawError>
+export type Handler<TReqBody, TReqPath, TReqQuery, TOkRes> = (req: ServerRequest<TReqBody, TReqPath, TReqQuery>) => NeverjectPromise<Response, RawError>
 
-export type ZodHandler<TReqBody, TReqPath, TReqQuery, TOkRes> = (req: ServerRequest<TReqBody, TReqPath, TReqQuery>) => NeverjectPromise<ServerResponse<TOkRes>, RawError> | MaybePromise<Result<ServerResponse<TOkRes>, RawError>>
+export type ZodHandler<TReqBody, TReqPath, TReqQuery, TOkRes> = (req: ServerRequest<TReqBody, TReqPath, TReqQuery>) => NeverjectPromise<ServerResponse<TOkRes>, RawError> | MaybePromise<Result<ServerResponse<TOkRes>, RawError> | ServerResponse<TOkRes>>
 
 export type CreateZodHandlerOptions<
     QuerySchema extends ZodType | undefined,
@@ -81,7 +83,27 @@ export type CreateZodHandlerOptions<
     >;
 };
 
-export function createZodHandler<
+function toResponse<T>(res: ServerResponse<T>): Response {
+    return new Response(JSON.stringify(res.body), {
+        status: res.status ?? 200,
+        headers: {
+            'content-type': 'application/json',
+            ...(res.headers ?? {}),
+        },
+    })
+}
+
+export function rawErrorToResponse(errValue: RawError): Response {
+    const status = serverErrorToHttpStatus.get(errValue.type) ?? HttpStatus.INTERNAL_SERVER_ERROR
+    return new Response(JSON.stringify(errValue), {
+        status,
+        headers: {
+            'content-type': 'application/json',
+        },
+    })
+}
+
+export function createZodNeverjectHandler<
     QuerySchema extends ZodType | undefined,
     BodySchema extends ZodType | undefined,
     PathSchema extends ZodType | undefined,
@@ -122,9 +144,12 @@ export function createZodHandler<
             try {
                 const handlerResult = await options.handler(req as any)
                 if (isResult(handlerResult)) {
-                    return handlerResult
+                    if ((handlerResult as any).ok) {
+                        return ok(toResponse((handlerResult as any).value as ServerResponse<Success>))
+                    }
+                    return err(handlerResult.error as RawError)
                 }
-                return ok(handlerResult as ServerResponse<Success>)
+                return ok(toResponse(handlerResult as ServerResponse<Success>))
             } catch (unhandledErr) {
                 return err<RawError>({
                     type: ServerErrorCode.HANDLER_RESPONSE,
