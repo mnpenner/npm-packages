@@ -1,0 +1,3 @@
+- Change the Router API. `pattToName` should instead split on `/` such that `GET /foo/bar/baz` becomes `['foo','bar','baz']` and the `ApiClient` becomes recursive; i.e. it can be called like `apiClient.foo.bar.baz.$get()`
+  - Names can still be explicitly provided as `string|string[]`. If a string is given, split on `.` but allow escaping the `.` with a backslash. 
+- If a handler takes exactly one Path Param like `/books/:id` then the API client should allow it to be called like `.get(id)` instead of just `.get({id})`

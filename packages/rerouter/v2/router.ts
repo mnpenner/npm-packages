@@ -3,42 +3,83 @@ import {Handler, RawError, rawErrorToResponse} from './create-zod-handler'
 import {isResult} from 'neverject/result'
 
 export interface Route {
-    name?: string
+    name?: string|string[]
     pattern: string|URLPattern
     handler: Handler<any, any, any, any>
     method: string
 }
 
 export interface NormalizedRoute {
-    name: string
+    name: string[]
     pattern: URLPattern
     handler: Handler<any, any, any, any>
     method: string
 }
 
-function upperFirst(str: string): string {
-    return str.slice(0,1).toUpperCase() + str.slice(1)
+function sanitizeNamePart(part: string): string {
+    const replaced = part.replace(/:([a-zA-Z_$][a-zA-Z0-9_$]*)/g, '$$$1')
+    const cleaned = replaced.replace(/[^a-zA-Z0-9_$]/g, '')
+    if (cleaned.length === 0) return 'index'
+    if (!/^[a-zA-Z_$]/.test(cleaned)) return '_' + cleaned
+    return cleaned
 }
 
-export function pattToName(method: string, patt: URLPattern): string {
+export function sanitizeNameParts(parts: string[]): string[] {
+    return parts.map(sanitizeNamePart).filter(Boolean)
+}
+
+export function splitNameString(name: string): string[] {
+    const parts: string[] = []
+    let current = ''
+    let escaping = false
+
+    for (const char of name) {
+        if (escaping) {
+            current += char
+            escaping = false
+            continue
+        }
+        if (char === '\\') {
+            escaping = true
+            continue
+        }
+        if (char === '.') {
+            parts.push(current)
+            current = ''
+            continue
+        }
+        current += char
+    }
+    parts.push(current)
+
+    return parts.filter(p => p.length > 0)
+}
+
+export function pattToName(_method: string, patt: URLPattern): string[] {
     const pathname = patt.pathname
     const parts = pathname.split('/').filter(p => p.length > 0)
 
     if (parts.length === 0) {
-        return method.toLowerCase() + 'Index'
+        return []
     }
 
-    const cleaned = parts.map(part => {
-        return part.replace(/:([a-zA-Z_$][a-zA-Z0-9_$]*)/g, '$$$1')
-    }).map(part => part.replace(/[^a-zA-Z0-9_$]/g, ''))
-    const capitalized = cleaned.map(upperFirst)
-    return method.toLowerCase() + capitalized.join('')
+    return sanitizeNameParts(parts)
+}
+
+function normalizeRouteName(name: Route['name'], method: string, pattern: URLPattern): string[] {
+    if (!name) {
+        return pattToName(method, pattern)
+    }
+    if (typeof name === 'string') {
+        return sanitizeNameParts(splitNameString(name))
+    }
+    return sanitizeNameParts(name)
 }
 
 export function normalizeRoute(route: Route): NormalizedRoute {
     const pattern = typeof route.pattern === 'string' ? new URLPattern({ pathname: route.pattern }) : route.pattern
     return {
-        name: route.name ?? pattToName(route.method, pattern),
+        name: normalizeRouteName(route.name, route.method, pattern),
         pattern: pattern,
         handler: route.handler,
         method: route.method

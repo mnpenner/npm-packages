@@ -16,6 +16,40 @@ router.add({
 })
 
 router.add({
+    name: 'namedRoute',
+    pattern: '/name/bar',
+    handler: createZodNeverjectHandler({
+        handler: (req) => okAsync({
+            body: { message: 'Hello World!' }
+        })
+    }),
+    method: 'GET'
+})
+
+router.add({
+    name: 'namedRoute',
+    pattern: '/name/bar',
+    handler: createZodNeverjectHandler({
+        handler: (req) => okAsync({
+            body: { message: 'Hello World!' }
+        })
+    }),
+    method: 'POST'
+})
+
+router.add({
+    name: 'foo.bar',
+    pattern: '/foo/bar',
+    handler: createZodNeverjectHandler({
+        handler: (req) => okAsync({
+            body: { message: 'Hello World!' }
+        })
+    }),
+    method: 'POST'
+})
+
+
+router.add({
     pattern: '/books/:id',
     handler: createZodNeverjectHandler({
         path: z.object({ id: z.string() }),

@@ -3,10 +3,10 @@ import path from 'node:path'
 import fs from 'node:fs'
 import {parseArgs} from 'util'
 import {URLPattern} from 'urlpattern-polyfill'
-import {pattToName} from './router'
+import {pattToName, sanitizeNameParts, splitNameString} from './router'
 
 type ExtractedRouteMeta = {
-    name: string
+    name: string[]
     method: string
     pattern: string
     bodyType: string
@@ -14,6 +14,16 @@ type ExtractedRouteMeta = {
     queryType: string
     successType: string
     errorType: string
+}
+
+type ProcessedRouteMeta = ExtractedRouteMeta & {
+    typeBase: string
+    pathParams: string[]
+}
+
+type RouteNode = {
+    routes: ProcessedRouteMeta[]
+    children: Map<string, RouteNode>
 }
 
 function getProgramFromTsConfig(tsconfigPath: string, extraRoot?: string): ts.Program {
@@ -30,12 +40,12 @@ function getProgramFromTsConfig(tsconfigPath: string, extraRoot?: string): ts.Pr
     return ts.createProgram(rootNames, parsed.options)
 }
 
-function getHandlerTypeArguments(type: ts.Type): ts.Type[] | undefined {
+function getHandlerTypeArguments(type: ts.Type): readonly ts.Type[] | undefined {
     const ref = type as ts.TypeReference
     if (ref.typeArguments && ref.typeArguments.length === 4) {
         return ref.typeArguments
     }
-    const aliasArgs = (type as any).aliasTypeArguments as ts.Type[] | undefined
+    const aliasArgs = (type as any).aliasTypeArguments as readonly ts.Type[] | undefined
     if (aliasArgs && aliasArgs.length === 4) {
         return aliasArgs
     }
@@ -93,6 +103,29 @@ function getProp(node: ts.ObjectLiteralExpression, propName: string): ts.Express
     return undefined
 }
 
+function getPathParamNames(pattern: string): string[] {
+    const matches = pattern.match(/:([a-zA-Z0-9_]+)/g) ?? []
+    return matches.map(m => m.slice(1))
+}
+
+function parseNameNode(nameNode: ts.Expression): string[] | undefined {
+    if (ts.isStringLiteralLike(nameNode)) {
+        return splitNameString(nameNode.text)
+    }
+    if (ts.isArrayLiteralExpression(nameNode)) {
+        const parts: string[] = []
+        for (const element of nameNode.elements) {
+            if (ts.isStringLiteralLike(element)) {
+                parts.push(element.text)
+            } else {
+                return undefined
+            }
+        }
+        return parts
+    }
+    return undefined
+}
+
 function extractRoutesFromSourceFile(sourceFile: ts.SourceFile, checker: ts.TypeChecker, routerName: string): ExtractedRouteMeta[] {
     const routes: ExtractedRouteMeta[] = []
 
@@ -115,8 +148,9 @@ function extractRoutesFromSourceFile(sourceFile: ts.SourceFile, checker: ts.Type
                         const errorType = handlerType ? getHandlerErrorType(handlerType, checker) : undefined
                         const [bodyType, pathType, queryType, successType] = typeArgs ?? []
 
-                        const name = nameNode && ts.isStringLiteralLike(nameNode)
-                            ? nameNode.text
+                        const explicitName = nameNode ? parseNameNode(nameNode) : undefined
+                        const name = explicitName
+                            ? sanitizeNameParts(explicitName)
                             : pattToName(method, new URLPattern({ pathname: pattern }))
 
                         routes.push({
@@ -140,8 +174,8 @@ function extractRoutesFromSourceFile(sourceFile: ts.SourceFile, checker: ts.Type
     return routes
 }
 
-function patternToUrlTemplate(pattern: string): string {
-    const templated = pattern.replace(/:([a-zA-Z0-9_]+)/g, '${path.$1}')
+function patternToUrlTemplate(pattern: string, pathVar = 'path'): string {
+    const templated = pattern.replace(/:([a-zA-Z0-9_]+)/g, `\${${pathVar}.$1}`)
     if (templated.includes('${')) {
         return '`' + templated + '`'
     }
@@ -156,51 +190,132 @@ function upperFirst(str: string): string {
     return str.slice(0,1).toUpperCase() + str.slice(1)
 }
 
+function routeTypeBaseName(route: ExtractedRouteMeta): string {
+    const parts = route.name.length > 0 ? route.name : ['index']
+    return upperFirst(route.method.toLowerCase()) + parts.map(upperFirst).join('')
+}
+
+function buildRouteTree(routes: ProcessedRouteMeta[]): RouteNode {
+    const root: RouteNode = { routes: [], children: new Map() }
+    for (const route of routes) {
+        let node = root
+        for (const segment of route.name) {
+            if (!node.children.has(segment)) {
+                node.children.set(segment, { routes: [], children: new Map() })
+            }
+            node = node.children.get(segment)!
+        }
+        node.routes.push(route)
+    }
+    return root
+}
+
+function classNameForParts(parts: string[]): string {
+    if (parts.length === 0) return 'ApiClient'
+    return 'ApiClient' + parts.map(upperFirst).join('')
+}
+
 type BuildOptions = {
     neverject: boolean
 }
 
+function buildMethodLines(route: ProcessedRouteMeta, options: BuildOptions, indent: string): string[] {
+    const lines: string[] = []
+    const methodName = `$${route.method.toLowerCase()}`
+    const pathType = !isUnknown(route.pathType) ? `${route.typeBase}PathParams` : undefined
+    const bodyType = !isUnknown(route.bodyType) ? `${route.typeBase}Request` : undefined
+    const queryType = !isUnknown(route.queryType) ? route.queryType : undefined
+    const hasPathParams = route.pathParams.length > 0
+    const hasSinglePathParam = route.pathParams.length === 1
+    let pathVar = 'path'
+
+    const params: string[] = []
+    if (hasPathParams) {
+        let pathParamType = pathType ?? 'any'
+        if (hasSinglePathParam) {
+            const singleParamType = pathType ? `SinglePathParam<${pathType}, "${route.pathParams[0]}">` : 'any'
+            pathParamType = `${pathParamType} | ${singleParamType}`
+            pathVar = '_path'
+        }
+        params.push(`path: ${pathParamType}`)
+    }
+    if (queryType) params.push(`query: ${queryType}`)
+    if (bodyType) params.push(`body: ${bodyType}`)
+
+    const returnType = options.neverject
+        ? `NeverjectPromise<${route.typeBase}Response, TErr>`
+        : `PromisedResponse<${route.typeBase}Response>`
+
+    lines.push(`${indent}${methodName}(${params.join(', ')}): ${returnType} {`)
+    if (hasSinglePathParam) {
+        lines.push(`${indent}    const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { ${route.pathParams[0]}: path } as any`)
+    }
+    const urlExpr = patternToUrlTemplate(route.pattern, pathVar)
+    const fetchCall = options.neverject ? `this.fetcher.fetch<${route.typeBase}Response>` : 'this.fetcher.fetch'
+    lines.push(`${indent}    return ${fetchCall}(${urlExpr}, {`)
+    lines.push(`${indent}        method: "${route.method}",`)
+    if (bodyType) {
+        lines.push(`${indent}        body: JSON.stringify(body),`)
+    }
+    lines.push(`${indent}    })${options.neverject ? '' : ` as ${returnType}`}`)
+    lines.push(`${indent}}`)
+
+    return lines
+}
+
+function emitClass(node: RouteNode, parts: string[], options: BuildOptions, lines: string[]): void {
+    const className = classNameForParts(parts)
+    const generic = options.neverject ? '<TErr>' : ''
+    const fetcherType = options.neverject ? 'Fetcher<TErr>' : 'Fetcher'
+    const exportKeyword = parts.length === 0 ? 'export ' : ''
+
+    lines.push(`${exportKeyword}class ${className}${generic} {`)
+    lines.push(`    constructor(private readonly fetcher: ${fetcherType}) {}`)
+
+    if (node.children.size > 0) {
+        lines.push(``)
+        const childNames = Array.from(node.children.keys())
+        childNames.forEach((childName, idx) => {
+            const childClass = classNameForParts([...parts, childName])
+            lines.push(`    get ${childName}(): ${childClass}${generic} {`)
+            lines.push(`        return new ${childClass}${generic}(this.fetcher)`)
+            lines.push(`    }`)
+            if (idx !== childNames.length - 1 || node.routes.length > 0) {
+                lines.push(``)
+            }
+        })
+    }
+
+    if (node.routes.length > 0) {
+        node.routes.forEach((route, idx) => {
+            const methodLines = buildMethodLines(route, options, '    ')
+            for (const line of methodLines) lines.push(line)
+            if (idx !== node.routes.length - 1) lines.push(``)
+        })
+    }
+
+    lines.push(`}`)
+    lines.push(``)
+
+    for (const [childName, childNode] of node.children) {
+        emitClass(childNode, [...parts, childName], options, lines)
+    }
+}
+
 function buildApiClientSource(routes: ExtractedRouteMeta[], options: BuildOptions): string {
+    const processedRoutes: ProcessedRouteMeta[] = routes.map(route => ({
+        ...route,
+        typeBase: routeTypeBaseName(route),
+        pathParams: getPathParamNames(route.pattern),
+    }))
+    const needsSinglePathHelper = processedRoutes.some(route => route.pathParams.length === 1)
+
     const lines: string[] = []
     if (options.neverject) {
         lines.push(`import type { NeverjectPromise } from 'neverject'`)
         lines.push(``)
         lines.push(`export interface Fetcher<TErr> {`)
         lines.push(`    fetch<TOk>(url: string, init: RequestInit): NeverjectPromise<TOk, TErr>`)
-        lines.push(`}`)
-        lines.push(``)
-        for (const route of routes) {
-            const baseName = upperFirst(route.name)
-            if (!isUnknown(route.pathType)) lines.push(`export type ${baseName}PathParams = ${route.pathType}`)
-            if (!isUnknown(route.bodyType)) lines.push(`export type ${baseName}Request = ${route.bodyType}`)
-            lines.push(`export type ${baseName}Response = ${route.successType}`)
-            lines.push(``)
-        }
-        lines.push(`export class ApiClient<TErr> {`)
-        lines.push(`    constructor(private readonly fetcher: Fetcher<TErr>) {}`)
-        lines.push(``)
-        for (const route of routes) {
-            const baseName = upperFirst(route.name)
-            const params: string[] = []
-            const pathType = !isUnknown(route.pathType) ? `${baseName}PathParams` : undefined
-            const bodyType = !isUnknown(route.bodyType) ? `${baseName}Request` : undefined
-            if (pathType || /:[a-zA-Z0-9_]+/.test(route.pattern)) params.push(`path: ${pathType ?? 'any'}`)
-            if (!isUnknown(route.queryType)) params.push(`query: ${route.queryType}`)
-            if (bodyType) params.push(`body: ${bodyType}`)
-
-            const urlExpr = patternToUrlTemplate(route.pattern)
-            const returnType = `NeverjectPromise<${baseName}Response, TErr>`
-
-            lines.push(`    ${route.name}(${params.join(', ')}): ${returnType} {`)
-            lines.push(`        return this.fetcher.fetch<${baseName}Response>(${urlExpr}, {`)
-            lines.push(`            method: "${route.method}",`)
-            if (bodyType) {
-                lines.push(`            body: JSON.stringify(body),`)
-            }
-            lines.push(`        })`)
-            lines.push(`    }`)
-            lines.push(``)
-        }
         lines.push(`}`)
     } else {
         lines.push(`export interface Fetcher {`)
@@ -209,69 +324,24 @@ function buildApiClientSource(routes: ExtractedRouteMeta[], options: BuildOption
         lines.push(``)
         lines.push(`export type TypedResponse<T> = Response & { json(): Promise<T> }`)
         lines.push(`export type PromisedResponse<T> = Promise<TypedResponse<T>>`)
-        lines.push(``)
-        for (const route of routes) {
-            const baseName = upperFirst(route.name)
-            if (!isUnknown(route.pathType)) lines.push(`export type ${baseName}PathParams = ${route.pathType}`)
-            if (!isUnknown(route.bodyType)) lines.push(`export type ${baseName}Request = ${route.bodyType}`)
-            lines.push(`export type ${baseName}Response = ${route.successType}`)
-            lines.push(``)
-        }
-        lines.push(`export class ApiClient {`)
-        lines.push(`    constructor(private readonly fetcher: Fetcher) {}`)
-        lines.push(``)
-        for (const route of routes) {
-            const baseName = upperFirst(route.name)
-            const params: string[] = []
-            const pathType = !isUnknown(route.pathType) ? `${baseName}PathParams` : undefined
-            const bodyType = !isUnknown(route.bodyType) ? `${baseName}Request` : undefined
-            if (pathType || /:[a-zA-Z0-9_]+/.test(route.pattern)) params.push(`path: ${pathType ?? 'any'}`)
-            if (!isUnknown(route.queryType)) params.push(`query: ${route.queryType}`)
-            if (bodyType) params.push(`body: ${bodyType}`)
-
-            const urlExpr = patternToUrlTemplate(route.pattern)
-            const returnType = `PromisedResponse<${baseName}Response>`
-
-            lines.push(`    ${route.name}(${params.join(', ')}): ${returnType} {`)
-            lines.push(`        return this.fetcher.fetch(${urlExpr}, {`)
-            lines.push(`            method: "${route.method}",`)
-            if (bodyType) {
-                lines.push(`            body: JSON.stringify(body),`)
-            }
-            lines.push(`        }) as ${returnType}`)
-            lines.push(`    }`)
-            lines.push(``)
-        }
-        lines.push(`}`)
     }
-    return lines.join('\n')
-    lines.push(`class ApiClient {`)
-    lines.push(`    constructor(private readonly fetcher: Fetcher) {}`)
+
+    if (needsSinglePathHelper) {
+        lines.push(``)
+        lines.push(`type SinglePathParam<TParams, TKey extends string> = TParams extends { [K in TKey]: infer V } ? V : unknown`)
+    }
+
     lines.push(``)
-
-    for (const route of routes) {
-        const params: string[] = []
-        if (!isUnknown(route.pathType)) params.push(`path: ${route.pathType}`)
-        if (!isUnknown(route.queryType)) params.push(`query: ${route.queryType}`)
-        if (!isUnknown(route.bodyType)) params.push(`body: ${route.bodyType}`)
-
-        const urlExpr = patternToUrlTemplate(route.pattern)
-        const returnType = options.neverject
-            ? `NeverjectPromise<OkResponse<${route.successType}>, ErrResponse>`
-            : `Promise<Response>`
-
-        lines.push(`    ${route.name}(${params.join(', ')}): ${returnType} {`)
-        lines.push(`        return this.fetcher.fetch(${urlExpr}, {`)
-        lines.push(`            method: "${route.method}",`)
-        if (!isUnknown(route.bodyType)) {
-            lines.push(`            body: JSON.stringify(body),`)
-        }
-        lines.push(`        }) as unknown as ${returnType}`)
-        lines.push(`    }`)
+    for (const route of processedRoutes) {
+        if (!isUnknown(route.pathType)) lines.push(`export type ${route.typeBase}PathParams = ${route.pathType}`)
+        if (!isUnknown(route.bodyType)) lines.push(`export type ${route.typeBase}Request = ${route.bodyType}`)
+        lines.push(`export type ${route.typeBase}Response = ${route.successType}`)
         lines.push(``)
     }
 
-    lines.push(`}`)
+    const tree = buildRouteTree(processedRoutes)
+    emitClass(tree, [], options, lines)
+
     return lines.join('\n')
 }
 
@@ -303,14 +373,7 @@ async function main() {
     }
 
     const routes = extractRoutesFromSourceFile(sourceFile, program.getTypeChecker(), 'router')
-    let errorType = routes.find(r => !isUnknown(r.errorType))?.errorType ?? 'unknown'
-    if (errorType === 'RawError') {
-        const baseDir = outputPathArg ? path.dirname(path.resolve(outputPathArg)) : path.dirname(routerPath)
-        const rel = path.relative(baseDir, path.resolve(path.dirname(routerPath), 'create-zod-handler')).replace(/\\/g, '/')
-        const normalized = rel.startsWith('.') ? rel : `./${rel}`
-        errorType = `import("${normalized}").RawError`
-    }
-    const client = buildApiClientSource(routes, { neverject: useNeverject, errorType })
+    const client = buildApiClientSource(routes, { neverject: useNeverject })
 
     if (outputPathArg) {
         const outputPath = path.resolve(outputPathArg)

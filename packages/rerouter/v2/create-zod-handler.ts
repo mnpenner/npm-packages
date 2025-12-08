@@ -2,6 +2,7 @@ import {NeverjectPromise, ok, err, errAsync, nj, Result} from 'neverject'
 import {isResult} from 'neverject/result'
 import {ZodType, z} from 'zod'
 import {HttpStatus} from './http-enums'
+import {HeadersInit} from 'bun'
 
 /**
  * Should roughly map to HTTP status codes but with more granularity.
@@ -84,12 +85,12 @@ export type CreateZodHandlerOptions<
 };
 
 function toResponse<T>(res: ServerResponse<T>): Response {
+    const headers = new Headers(res.headers ?? {})
+    headers.set('content-type', 'application/json')
+
     return new Response(JSON.stringify(res.body), {
         status: res.status ?? 200,
-        headers: {
-            'content-type': 'application/json',
-            ...(res.headers ?? {}),
-        },
+        headers,
     })
 }
 
@@ -144,10 +145,11 @@ export function createZodNeverjectHandler<
             try {
                 const handlerResult = await options.handler(req as any)
                 if (isResult(handlerResult)) {
-                    if ((handlerResult as any).ok) {
-                        return ok(toResponse((handlerResult as any).value as ServerResponse<Success>))
+                    const result = handlerResult as any
+                    if (result.ok) {
+                        return ok(toResponse(result.value as ServerResponse<Success>))
                     }
-                    return err(handlerResult.error as RawError)
+                    return err(result.error as RawError)
                 }
                 return ok(toResponse(handlerResult as ServerResponse<Success>))
             } catch (unhandledErr) {
