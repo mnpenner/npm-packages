@@ -59,6 +59,10 @@ function upperFirst(str: string): string {
     return str.slice(0, 1).toUpperCase() + str.slice(1)
 }
 
+function lowerFirst(str: string): string {
+    return str.slice(0, 1).toLowerCase() + str.slice(1)
+}
+
 function segmentToDefaultName(segment: string): string {
     const paramMatch = segment.match(/^:([a-zA-Z0-9_]+)(?:\(.+)?$/)
     if (paramMatch) {
@@ -79,7 +83,7 @@ export function pattToName(_method: string, patt: URLPattern): string[] {
     }
 
     const combined = parts.map(segmentToDefaultName).join('')
-    return sanitizeNameParts([combined])
+    return sanitizeNameParts([lowerFirst(combined)])
 }
 
 function normalizeRouteName(name: Route['name'], method: string, pattern: URLPattern): string[] {
@@ -113,7 +117,7 @@ export class Router {
         return [...this.routes]
     }
 
-    async fetch(req: Request): Promise<Response> {
+    fetch = async (req: Request): Promise<Response> => {
         const url = new URL(req.url)
         const method = req.method.toUpperCase()
 
