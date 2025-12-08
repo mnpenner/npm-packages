@@ -1,5 +1,5 @@
 import {URLPattern} from 'urlpattern-polyfill'
-import {Result,NeverjectPromise,ok,okAsync,err,errAsync} from 'neverject'
+import {NeverjectPromise, okAsync, errAsync, nj, err, Result} from 'neverject'
 import {ZodType, z} from 'zod'
 import {HttpStatus} from './http-enums'
 
@@ -8,19 +8,30 @@ import {HttpStatus} from './http-enums'
  */
 export const enum ServerErrorCode {
     REQUEST_FORMAT,
-    VALIDATION,
+    VALIDATION_ERROR,
+    HANDLER_RESPONSE,
 }
 
 type ErrorTree = ReturnType<typeof z.treeifyError>
 
 const serverErrorToHttpStatus = new Map<ServerErrorCode, HttpStatus>([
     [ServerErrorCode.REQUEST_FORMAT, HttpStatus.BAD_REQUEST],
-    [ServerErrorCode.VALIDATION, HttpStatus.BAD_REQUEST],
+    [ServerErrorCode.VALIDATION_ERROR, HttpStatus.BAD_REQUEST],
 ])
 
-type ServerError =
+type RawError =
     | { type: ServerErrorCode.REQUEST_FORMAT, error: string }
-    | { type: ServerErrorCode.VALIDATION, component: ValidationError, errorTree: ErrorTree, message: string }
+    | { type: ServerErrorCode.HANDLER_RESPONSE, error: string }
+    | { type: ServerErrorCode.VALIDATION_ERROR, component: ValidationError, errorTree: ErrorTree, message: string }  // TODO: maybe don't bake the Zod Error tree format into this...?
+
+function zodValidationError(component: ValidationError, error: z.ZodError) {
+    return errAsync({
+        type: ServerErrorCode.VALIDATION_ERROR,
+        component,
+        errorTree: z.treeifyError(error),
+        message: z.prettifyError(error),
+    })
+}
 
 /**
  * Specific component that failed validation.
@@ -47,12 +58,16 @@ interface ServerRequest<TBody,TPathParams,TQueryParams> {
 
 // TODO: allow for streaming responses
 
-function serverError(e: ServerError) {
+function serverError(e: RawError) {
     return errAsync(e)
 }
 
+export type MaybePromise<T> = T | PromiseLike<T>
+type NormalizedResponse<V, E> = NeverjectPromise<V, E> | MaybePromise<Result<V | never, E> | V>
 
-type Handler<TReqBody, TReqPath, TReqQuery, TOkRes> = (req: ServerRequest<TReqBody, TReqPath, TReqQuery>) => NeverjectPromise<ServerResponse<TOkRes>,ServerError>
+type Handler<TReqBody, TReqPath, TReqQuery, TOkRes> = (req: ServerRequest<TReqBody, TReqPath, TReqQuery>) => NeverjectPromise<ServerResponse<TOkRes>,RawError>
+
+type ZodHandler<TReqBody, TReqPath, TReqQuery, TOkRes> = (req: ServerRequest<TReqBody, TReqPath, TReqQuery>) => NeverjectPromise<ServerResponse<TOkRes>,RawError> | MaybePromise<Result<ServerResponse<TOkRes>, RawError>>
 
 type CreateZodHandlerOptions<
     QuerySchema extends ZodType | undefined,
@@ -64,7 +79,7 @@ type CreateZodHandlerOptions<
     query?: QuerySchema;
     body?: BodySchema;
     path?: PathSchema;
-    handler: Handler<
+    handler: ZodHandler<
         BodySchema extends ZodType ? z.infer<BodySchema> : unknown,
         PathSchema extends ZodType ? z.infer<PathSchema> : unknown,
         QuerySchema extends ZodType ? z.infer<QuerySchema> : unknown,
@@ -89,45 +104,35 @@ function createZodHandler<
         if (options.query) {
             const queryResult = options.query.safeParse(req.queryParams)
             if (!queryResult.success) {
-                return serverError({
-                    type: ServerErrorCode.VALIDATION,
-                    component: ValidationError.QUERY,
-                    errorTree: z.treeifyError(queryResult.error),
-                    message: z.prettifyError(queryResult.error),
-                })
+                return zodValidationError(ValidationError.QUERY, queryResult.error)
             }
-            req.queryParams = queryResult.data
+            (req.queryParams as any) = queryResult.data
         }
 
         // Validate body
         if (options.body) {
             const bodyResult = options.body.safeParse(req.body)
             if (!bodyResult.success) {
-                return serverError({
-                    type: ServerErrorCode.VALIDATION,
-                    component: ValidationError.BODY,
-                    errorTree: z.treeifyError(bodyResult.error),
-                    message: z.prettifyError(bodyResult.error),
-                })
+                return zodValidationError(ValidationError.BODY, bodyResult.error)
             }
-            req.body = bodyResult.data
+            (req.body as any) = bodyResult.data
         }
 
         // Validate path params
         if (options.path) {
             const pathResult = options.path.safeParse(req.pathParams)
             if (!pathResult.success) {
-                return serverError({
-                    type: ServerErrorCode.VALIDATION,
-                    component: ValidationError.PATH,
-                    errorTree: z.treeifyError(pathResult.error),
-                    message: z.prettifyError(pathResult.error),
-                })
+                return zodValidationError(ValidationError.PATH, pathResult.error)
             }
-            req.pathParams = pathResult.data
+            (req.pathParams as any) = pathResult.data
         }
 
-        return options.handler(req)
+        return nj(Promise.try(options.handler, req), unhandledErr => {
+            return err({
+                type: ServerErrorCode.HANDLER_RESPONSE,
+                error: String(unhandledErr),  // TODO: include more detail
+            })
+        })
     }
 }
 
@@ -135,14 +140,14 @@ function createZodHandler<
 interface Route {
     name?: string
     pattern: string|URLPattern
-    handler: Handler
+    handler: Handler<any, any, any, any>
     method: string
 }
 
 interface NormalizedRoute {
     name: string
     pattern: URLPattern
-    handler: Handler
+    handler: Handler<any, any, any, any>
     method: string
 }
 
@@ -193,8 +198,7 @@ if(import.meta.main) {
     router.add({
         pattern: '/',
         handler: createZodHandler({
-            handler: async (req) => Result.ok({
-                status: 200,
+            handler: (req) => okAsync({
                 body: { message: 'Hello World!' }
             })
         }),
@@ -206,8 +210,7 @@ if(import.meta.main) {
         handler: createZodHandler({
             path: z.object({ id: z.string() }),
             body: z.object({ title: z.string(), author: z.string() }),
-            handler: async (req) => Result.ok({
-                status: 201,
+            handler: (req) => okAsync({
                 body: { 
                     id: req.pathParams.id,
                     title: req.body.title,
