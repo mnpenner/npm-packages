@@ -28,7 +28,9 @@
   },
   "license": "MIT",
   "scripts": {
-    "test": "bun test --watch src",
+      "test:tsc": "tsc --noEmit && echo \"tsc: no errors\"",
+      "test:bun": "bun test",
+      "test": "run-p 'test:*'",
     "dev": "bun run --hot src/dev.ts",
     "bundle:clean": "rimraf -g \"dist/*\"",
     "bundle:build": "rollup -c",

@@ -20,7 +20,7 @@
         "resolveJsonModule": true,
         "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
         "isolatedModules": true,
         "allowSyntheticDefaultImports": true,
         "baseUrl": ".",
@@ -29,8 +29,8 @@
         },
         "types": ["bun-types"],
     },
-    "files": [
-        "src/dev.ts",
-        "src/bundle.ts",
+    "include": [
+        "src/**/*",
+        "v2/**/*",
     ]
 }

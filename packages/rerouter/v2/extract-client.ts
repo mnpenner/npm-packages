@@ -1,5 +1,6 @@
 import {URLPattern} from 'urlpattern-polyfill'
-import {NeverjectPromise, okAsync, errAsync, nj, err, Result} from 'neverject'
+import {NeverjectPromise, okAsync, errAsync, nj, err, Result, ok} from 'neverject'
+import {isResult} from 'neverject/result'
 import {ZodType, z} from 'zod'
 import {HttpStatus} from './http-enums'
 
@@ -24,13 +25,13 @@ type RawError =
     | { type: ServerErrorCode.HANDLER_RESPONSE, error: string }
     | { type: ServerErrorCode.VALIDATION_ERROR, component: ValidationError, errorTree: ErrorTree, message: string }  // TODO: maybe don't bake the Zod Error tree format into this...?
 
-function zodValidationError(component: ValidationError, error: z.ZodError) {
+function zodValidationError<T>(component: ValidationError, error: z.ZodError): NeverjectPromise<T, RawError> {
     return errAsync({
         type: ServerErrorCode.VALIDATION_ERROR,
         component,
         errorTree: z.treeifyError(error),
         message: z.prettifyError(error),
-    })
+    } as const) as NeverjectPromise<T, RawError>
 }
 
 /**
@@ -127,12 +128,21 @@ function createZodHandler<
             (req.pathParams as any) = pathResult.data
         }
 
-        return nj(Promise.try(options.handler, req), unhandledErr => {
-            return err({
-                type: ServerErrorCode.HANDLER_RESPONSE,
-                error: String(unhandledErr),  // TODO: include more detail
-            })
-        })
+        // FIXME: this is messier than it should be
+        return nj((async () => {
+            try {
+                const handlerResult = await options.handler(req as any)
+                if (isResult(handlerResult)) {
+                    return handlerResult
+                }
+                return ok(handlerResult as ServerResponse<Success>)
+            } catch (unhandledErr) {
+                return err<RawError>({
+                    type: ServerErrorCode.HANDLER_RESPONSE,
+                    error: String(unhandledErr),  // TODO: include more detail
+                })
+            }
+        })())
     }
 }
 
