@@ -1,0 +1,3 @@
+- `gen-api-client.ts` assumes payloads should be encoded with `JSON.stringify` --- should we instead sniff out the `Accept` header and serialize accordingly?
+- The server/router should support `HEAD` requests but that means handlers need to split that out to avoid doing extra work.
+- The server/router should handle aborted requests gracefully too. We can probably do this by checking if the request was aborted after each `await` or maybe automatically if we use `yield`

@@ -282,6 +282,7 @@ function buildMethodLines(route: ProcessedRouteMeta, options: BuildOptions, inde
     lines.push(`${indent}    return this.fetcher.fetch(${urlExpr}, {`)
     lines.push(`${indent}        method: "${route.method}",`)
     if (bodyType) {
+        lines.push(`${indent}        headers: { "content-type": "application/json" },`)
         lines.push(`${indent}        body: JSON.stringify(body),`)
     }
     lines.push(`${indent}    }) as ${returnType}`)

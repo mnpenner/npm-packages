@@ -82,6 +82,7 @@ class ApiClient_BooksById {
         const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { id: path } as any
         return this.fetcher.fetch(`/books/${_path.id}`, {
             method: "POST",
+            headers: { "content-type": "application/json" },
             body: JSON.stringify(body),
         }) as PromisedResponse<PostBooksByIdResponse>
     }
