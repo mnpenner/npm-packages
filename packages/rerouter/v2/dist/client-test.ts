@@ -6,9 +6,9 @@ class BasicFetcher implements Fetcher {
     }
 
     fetch(url: string, init: RequestInit) {
-        const req = new Request(new URL(url, this.baseUrl).href, init)
-        console.log(req)
-        return fetch(req)
+        const resolvedUrl = new URL(url, this.baseUrl).href
+        console.log('Request',resolvedUrl,init)
+        return fetch(resolvedUrl, init)
     }
 }
 
