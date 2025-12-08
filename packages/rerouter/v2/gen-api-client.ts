@@ -133,9 +133,11 @@ function isUnknown(text: string): boolean {
 
 function buildApiClientSource(routes: ExtractedRouteMeta[], importRawErrorFrom?: string): string {
     const lines: string[] = []
+    lines.push(`import type { NeverjectPromise } from 'neverject'`)
     if (importRawErrorFrom) {
         lines.push(`import type { RawError } from '${importRawErrorFrom}'`)
     }
+    lines.push(``)
     lines.push(`class ApiClient {`)
     lines.push(`    private readonly fetcher: Fetcher`)
     lines.push(``)
@@ -213,6 +215,7 @@ async function main() {
     if (outputPathArg) {
         const outputPath = path.resolve(outputPathArg)
         fs.writeFileSync(outputPath, client, 'utf8')
+        console.log(`Wrote API client to ${outputPath}`)
     } else {
         console.log(client)
     }
