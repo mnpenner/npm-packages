@@ -1,3 +1,4 @@
+#!/usr/bin/env -S bun
 import router from './router-instance'
 import {FetchHandler} from './fetch-handler'
 

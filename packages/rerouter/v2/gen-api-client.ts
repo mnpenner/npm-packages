@@ -1,8 +1,10 @@
+#!/usr/bin/env -S bun
 import * as ts from 'typescript'
 import path from 'node:path'
 import fs from 'node:fs'
 import {parseArgs} from 'util'
 import {URLPattern} from 'urlpattern-polyfill'
+import {$} from 'bun'
 import {pattToName, sanitizeNameParts, splitNameString} from './router'
 
 type ExtractedRouteMeta = {
@@ -224,6 +226,7 @@ type BuildOptions = {
     clientName: string
     responseType: string
     importTypes: ImportType[]
+    commandText: string
 }
 
 function parseImportTypeOption(value: string): ImportType {
@@ -333,6 +336,10 @@ function buildApiClientSource(routes: ExtractedRouteMeta[], options: BuildOption
     const needsSinglePathHelper = processedRoutes.some(route => route.pathParams.length === 1)
 
     const lines: string[] = []
+    lines.push(`// Do not modify this file. It was auto-generated with the following command:`)
+    lines.push(`// $ ${options.commandText}`)
+    lines.push(``)
+
     for (const importType of options.importTypes) {
         lines.push(`import type { ${importType.names.join(', ')} } from '${importType.module}'`)
     }
@@ -409,10 +416,16 @@ async function main() {
     }
 
     const routes = extractRoutesFromSourceFile(sourceFile, program.getTypeChecker(), 'router')
+    const rawArgs = Bun.argv.slice(1)
+    if (rawArgs[0] && path.isAbsolute(rawArgs[0])) {
+        rawArgs[0] = path.relative(process.cwd(), rawArgs[0]).replace(/\\/g, '/')
+    }
+    const commandText = ['bun', ...rawArgs.map(arg => $.escape(arg))].join(' ')
     const client = buildApiClientSource(routes, {
         clientName,
         responseType,
         importTypes,
+        commandText,
     })
 
     if (outputPathArg) {

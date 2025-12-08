@@ -1,9 +1,11 @@
+// Do not modify this file. It was auto-generated with the following command:
+// $ bun "v2/gen-api-client.ts" "v2/router-instance.ts" "v2/dist/api-client.gen.ts" --client-name CustomApiClient --import-type CustomPromise:./api.ts --response-type CustomPromise
+
+import type { CustomPromise } from './api.ts'
+
 export interface Fetcher {
     fetch(url: string, init: RequestInit): unknown
 }
-
-export type TypedResponse<T> = Response & { json(): Promise<T> }
-export type PromisedResponse<T> = Promise<TypedResponse<T>>
 
 type SinglePathParam<TParams, TKey extends string> = TParams extends { [K in TKey]: infer V } ? V : unknown
 
@@ -19,67 +21,67 @@ export type PostBooksByIdPathParams = { id: string; }
 export type PostBooksByIdRequest = { title: string; author: string; }
 export type PostBooksByIdResponse = { id: string; title: string; author: string; }
 
-export class ApiClient {
+export class CustomApiClient {
     constructor(private readonly fetcher: Fetcher) {}
 
-    get namedRoute(): ApiClient_NamedRoute {
-        return new ApiClient_NamedRoute(this.fetcher)
+    get namedRoute(): CustomApiClient_NamedRoute {
+        return new CustomApiClient_NamedRoute(this.fetcher)
     }
 
-    get foo(): ApiClient_Foo {
-        return new ApiClient_Foo(this.fetcher)
+    get foo(): CustomApiClient_Foo {
+        return new CustomApiClient_Foo(this.fetcher)
     }
 
-    get BooksById(): ApiClient_BooksById {
-        return new ApiClient_BooksById(this.fetcher)
+    get BooksById(): CustomApiClient_BooksById {
+        return new CustomApiClient_BooksById(this.fetcher)
     }
 
     get() {
         return this.fetcher.fetch("/", {
             method: "GET",
-        }) as PromisedResponse<GetIndexResponse>
+        }) as CustomPromise<GetIndexResponse>
     }
 }
 
-class ApiClient_NamedRoute {
+class CustomApiClient_NamedRoute {
     constructor(private readonly fetcher: Fetcher) {}
     get() {
         return this.fetcher.fetch("/name/bar", {
             method: "GET",
-        }) as PromisedResponse<GetNamedRouteResponse>
+        }) as CustomPromise<GetNamedRouteResponse>
     }
 
     post() {
         return this.fetcher.fetch("/name/bar", {
             method: "POST",
-        }) as PromisedResponse<PostNamedRouteResponse>
+        }) as CustomPromise<PostNamedRouteResponse>
     }
 }
 
-class ApiClient_Foo {
+class CustomApiClient_Foo {
     constructor(private readonly fetcher: Fetcher) {}
 
-    get bar(): ApiClient_Foo_Bar {
-        return new ApiClient_Foo_Bar(this.fetcher)
+    get bar(): CustomApiClient_Foo_Bar {
+        return new CustomApiClient_Foo_Bar(this.fetcher)
     }
 }
 
-class ApiClient_Foo_Bar {
+class CustomApiClient_Foo_Bar {
     constructor(private readonly fetcher: Fetcher) {}
     post() {
         return this.fetcher.fetch("/foo/bar", {
             method: "POST",
-        }) as PromisedResponse<PostFooBarResponse>
+        }) as CustomPromise<PostFooBarResponse>
     }
 }
 
-class ApiClient_BooksById {
+class CustomApiClient_BooksById {
     constructor(private readonly fetcher: Fetcher) {}
     post(path: PostBooksByIdPathParams | SinglePathParam<PostBooksByIdPathParams, "id">, body: PostBooksByIdRequest) {
         const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { id: path } as any
         return this.fetcher.fetch(`/books/${_path.id}`, {
             method: "POST",
             body: JSON.stringify(body),
-        }) as PromisedResponse<PostBooksByIdResponse>
+        }) as CustomPromise<PostBooksByIdResponse>
     }
 }
