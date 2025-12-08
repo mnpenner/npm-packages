@@ -12,5 +12,5 @@ export default defineConfig({
     format: ['esm'],
     external: [/^(node|bun):/],
     exports: true,
-    dts: true,
+    dts: true,  // The client must use "moduleResolution": "bundler", "node16" or "nodenext". "node" will not resolve the types properly.
 })
