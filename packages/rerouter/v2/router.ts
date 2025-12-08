@@ -55,6 +55,21 @@ export function splitNameString(name: string): string[] {
     return parts.filter(p => p.length > 0)
 }
 
+function upperFirst(str: string): string {
+    return str.slice(0, 1).toUpperCase() + str.slice(1)
+}
+
+function segmentToDefaultName(segment: string): string {
+    const paramMatch = segment.match(/^:([a-zA-Z0-9_]+)(?:\(.+)?$/)
+    if (paramMatch) {
+        return 'By' + upperFirst(paramMatch[1])
+    }
+
+    const cleaned = segment.split(/[^a-zA-Z0-9]+/).filter(Boolean)
+    if (cleaned.length === 0) return 'Index'
+    return cleaned.map(upperFirst).join('')
+}
+
 export function pattToName(_method: string, patt: URLPattern): string[] {
     const pathname = patt.pathname
     const parts = pathname.split('/').filter(p => p.length > 0)
@@ -63,7 +78,8 @@ export function pattToName(_method: string, patt: URLPattern): string[] {
         return []
     }
 
-    return sanitizeNameParts(parts)
+    const combined = parts.map(segmentToDefaultName).join('')
+    return sanitizeNameParts([combined])
 }
 
 function normalizeRouteName(name: Route['name'], method: string, pattern: URLPattern): string[] {

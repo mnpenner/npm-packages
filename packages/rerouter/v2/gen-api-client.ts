@@ -210,18 +210,45 @@ function buildRouteTree(routes: ProcessedRouteMeta[]): RouteNode {
     return root
 }
 
-function classNameForParts(parts: string[]): string {
-    if (parts.length === 0) return 'ApiClient'
-    return 'ApiClient' + parts.map(upperFirst).join('')
+function classNameForParts(parts: string[], baseName: string): string {
+    if (parts.length === 0) return baseName
+    return `${baseName}_${parts.map(upperFirst).join('_')}`
+}
+
+type ImportType = {
+    names: string[]
+    module: string
 }
 
 type BuildOptions = {
-    neverject: boolean
+    clientName: string
+    responseType: string
+    importTypes: ImportType[]
+}
+
+function parseImportTypeOption(value: string): ImportType {
+    const colonIdx = value.indexOf(':')
+    if (colonIdx === -1) {
+        throw new Error(`Invalid --import-type value: "${value}"`)
+    }
+    const names = value.slice(0, colonIdx)
+    const module = value.slice(colonIdx + 1).trim()
+    const parsedNames = names.split(',').map(n => n.trim()).filter(Boolean)
+    if (parsedNames.length === 0 || module.length === 0) {
+        throw new Error(`Invalid --import-type value: "${value}"`)
+    }
+    return { names: parsedNames, module }
+}
+
+function normalizeClientName(name: string | undefined): string {
+    if (!name) return 'ApiClient'
+    const [cleaned] = sanitizeNameParts([name])
+    return cleaned ?? 'ApiClient'
 }
 
 function buildMethodLines(route: ProcessedRouteMeta, options: BuildOptions, indent: string): string[] {
     const lines: string[] = []
-    const methodName = `$${route.method.toLowerCase()}`
+    const methodName = route.method.toLowerCase()
     const pathType = !isUnknown(route.pathType) ? `${route.typeBase}PathParams` : undefined
     const bodyType = !isUnknown(route.bodyType) ? `${route.typeBase}Request` : undefined
     const queryType = !isUnknown(route.queryType) ? route.queryType : undefined
@@ -242,43 +269,38 @@ function buildMethodLines(route: ProcessedRouteMeta, options: BuildOptions, inde
     if (queryType) params.push(`query: ${queryType}`)
     if (bodyType) params.push(`body: ${bodyType}`)
 
-    const returnType = options.neverject
-        ? `NeverjectPromise<${route.typeBase}Response, TErr>`
-        : `PromisedResponse<${route.typeBase}Response>`
+    const returnType = `${options.responseType}<${route.typeBase}Response>`
 
-    lines.push(`${indent}${methodName}(${params.join(', ')}): ${returnType} {`)
+    lines.push(`${indent}${methodName}(${params.join(', ')}) {`)
     if (hasSinglePathParam) {
         lines.push(`${indent}    const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { ${route.pathParams[0]}: path } as any`)
     }
     const urlExpr = patternToUrlTemplate(route.pattern, pathVar)
-    const fetchCall = options.neverject ? `this.fetcher.fetch<${route.typeBase}Response>` : 'this.fetcher.fetch'
-    lines.push(`${indent}    return ${fetchCall}(${urlExpr}, {`)
+    lines.push(`${indent}    return this.fetcher.fetch(${urlExpr}, {`)
     lines.push(`${indent}        method: "${route.method}",`)
     if (bodyType) {
         lines.push(`${indent}        body: JSON.stringify(body),`)
     }
-    lines.push(`${indent}    })${options.neverject ? '' : ` as ${returnType}`}`)
+    lines.push(`${indent}    }) as ${returnType}`)
     lines.push(`${indent}}`)
 
     return lines
 }
 
 function emitClass(node: RouteNode, parts: string[], options: BuildOptions, lines: string[]): void {
-    const className = classNameForParts(parts)
-    const generic = options.neverject ? '<TErr>' : ''
-    const fetcherType = options.neverject ? 'Fetcher<TErr>' : 'Fetcher'
+    const className = classNameForParts(parts, options.clientName)
     const exportKeyword = parts.length === 0 ? 'export ' : ''
 
-    lines.push(`${exportKeyword}class ${className}${generic} {`)
-    lines.push(`    constructor(private readonly fetcher: ${fetcherType}) {}`)
+    lines.push(`${exportKeyword}class ${className} {`)
+    lines.push(`    constructor(private readonly fetcher: Fetcher) {}`)
 
     if (node.children.size > 0) {
         lines.push(``)
         const childNames = Array.from(node.children.keys())
         childNames.forEach((childName, idx) => {
-            const childClass = classNameForParts([...parts, childName])
-            lines.push(`    get ${childName}(): ${childClass}${generic} {`)
-            lines.push(`        return new ${childClass}${generic}(this.fetcher)`)
+            const childClass = classNameForParts([...parts, childName], options.clientName)
+            lines.push(`    get ${childName}(): ${childClass} {`)
+            lines.push(`        return new ${childClass}(this.fetcher)`)
             lines.push(`    }`)
             if (idx !== childNames.length - 1 || node.routes.length > 0) {
                 lines.push(``)
@@ -311,16 +333,20 @@ function buildApiClientSource(routes: ExtractedRouteMeta[], options: BuildOption
     const needsSinglePathHelper = processedRoutes.some(route => route.pathParams.length === 1)
 
     const lines: string[] = []
-    if (options.neverject) {
-        lines.push(`import type { NeverjectPromise } from 'neverject'`)
+    for (const importType of options.importTypes) {
+        lines.push(`import type { ${importType.names.join(', ')} } from '${importType.module}'`)
+    }
+
+    if (options.importTypes.length > 0) {
         lines.push(``)
-        lines.push(`export interface Fetcher<TErr> {`)
-        lines.push(`    fetch<TOk>(url: string, init: RequestInit): NeverjectPromise<TOk, TErr>`)
-        lines.push(`}`)
-    } else {
-        lines.push(`export interface Fetcher {`)
-        lines.push(`    fetch(input: string, init: RequestInit): Promise<Response>`)
-        lines.push(`}`)
+    }
+
+    lines.push(`export interface Fetcher {`)
+    lines.push(`    fetch(url: string, init: RequestInit): unknown`)
+    lines.push(`}`)
+
+    const usesDefaultResponseType = options.responseType === 'PromisedResponse'
+    if (usesDefaultResponseType) {
         lines.push(``)
         lines.push(`export type TypedResponse<T> = Response & { json(): Promise<T> }`)
         lines.push(`export type PromisedResponse<T> = Promise<TypedResponse<T>>`)
@@ -351,18 +377,28 @@ async function main() {
         allowPositionals: true,
         strict: true,
         options: {
-            neverject: {
-                type: 'boolean',
+            'client-name': {
+                type: 'string',
+            },
+            'import-type': {
+                type: 'string',
+                multiple: true,
+            },
+            'response-type': {
+                type: 'string',
             },
         },
     })
 
     const [, , routerPathArg, outputPathArg] = positionals
-    const useNeverject = Boolean((values as any).neverject)
     if (!routerPathArg) {
-        console.error('Usage: bun run v2/gen-api-client.ts <router-file> [output-file] [--neverject]')
+        console.error('Usage: bun run v2/gen-api-client.ts <router-file> [output-file] [--client-name <Name>] [--import-type "Type:module"] [--response-type <Type>]')
         process.exit(1)
     }
+
+    const clientName = normalizeClientName((values as any)['client-name'])
+    const responseType = ((values as any)['response-type'] as string | undefined)?.trim() || 'PromisedResponse'
+    const importTypes = ((values as any)['import-type'] as string[] | undefined)?.map(parseImportTypeOption) ?? []
 
     const routerPath = path.resolve(routerPathArg)
     const tsconfigPath = path.resolve('tsconfig.json')
@@ -373,7 +409,11 @@ async function main() {
     }
 
     const routes = extractRoutesFromSourceFile(sourceFile, program.getTypeChecker(), 'router')
-    const client = buildApiClientSource(routes, { neverject: useNeverject })
+    const client = buildApiClientSource(routes, {
+        clientName,
+        responseType,
+        importTypes,
+    })
 
     if (outputPathArg) {
         const outputPath = path.resolve(outputPathArg)

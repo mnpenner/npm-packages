@@ -1,8 +1,9 @@
-import type { NeverjectPromise } from 'neverject'
-
-export interface Fetcher<TErr> {
-    fetch<TOk>(url: string, init: RequestInit): NeverjectPromise<OkRes<TOk>, TErr>
+export interface Fetcher {
+    fetch(url: string, init: RequestInit): unknown
 }
+
+export type TypedResponse<T> = Response & { json(): Promise<T> }
+export type PromisedResponse<T> = Promise<TypedResponse<T>>
 
 type SinglePathParam<TParams, TKey extends string> = TParams extends { [K in TKey]: infer V } ? V : unknown
 
@@ -14,81 +15,71 @@ export type PostNamedRouteResponse = { message: string; }
 
 export type PostFooBarResponse = { message: string; }
 
-export type PostBooks$idPathParams = { id: string; }
-export type PostBooks$idRequest = { title: string; author: string; }
-export type PostBooks$idResponse = { id: string; title: string; author: string; }
+export type PostBooksByIdPathParams = { id: string; }
+export type PostBooksByIdRequest = { title: string; author: string; }
+export type PostBooksByIdResponse = { id: string; title: string; author: string; }
 
+export class ApiClient {
+    constructor(private readonly fetcher: Fetcher) {}
 
-
-export class ApiClient<TErr> {
-    constructor(private readonly fetcher: Fetcher<TErr>) {}
-
-    get namedRoute(): ApiClientNamedRoute<TErr> {
-        return new ApiClientNamedRoute<TErr>(this.fetcher)
+    get namedRoute(): ApiClient_NamedRoute {
+        return new ApiClient_NamedRoute(this.fetcher)
     }
 
-    get foo(): ApiClientFoo<TErr> {
-        return new ApiClientFoo<TErr>(this.fetcher)
+    get foo(): ApiClient_Foo {
+        return new ApiClient_Foo(this.fetcher)
     }
 
-    get books(): ApiClientBooks<TErr> {
-        return new ApiClientBooks<TErr>(this.fetcher)
+    get BooksById(): ApiClient_BooksById {
+        return new ApiClient_BooksById(this.fetcher)
     }
 
-    $get(): NeverjectPromise<GetIndexResponse, TErr> {
-        return this.fetcher.fetch<GetIndexResponse>("/", {
+    get() {
+        return this.fetcher.fetch("/", {
             method: "GET",
-        })
+        }) as PromisedResponse<GetIndexResponse>
     }
 }
 
-class ApiClientNamedRoute<TErr> {
-    constructor(private readonly fetcher: Fetcher<TErr>) {}
-    $get(): NeverjectPromise<GetNamedRouteResponse, TErr> {
-        return this.fetcher.fetch<GetNamedRouteResponse>("/name/bar", {
+class ApiClient_NamedRoute {
+    constructor(private readonly fetcher: Fetcher) {}
+    get() {
+        return this.fetcher.fetch("/name/bar", {
             method: "GET",
-        })
+        }) as PromisedResponse<GetNamedRouteResponse>
     }
 
-    $post(): NeverjectPromise<PostNamedRouteResponse, TErr> {
-        return this.fetcher.fetch<PostNamedRouteResponse>("/name/bar", {
+    post() {
+        return this.fetcher.fetch("/name/bar", {
             method: "POST",
-        })
+        }) as PromisedResponse<PostNamedRouteResponse>
     }
 }
 
-class ApiClientFoo<TErr> {
-    constructor(private readonly fetcher: Fetcher<TErr>) {}
+class ApiClient_Foo {
+    constructor(private readonly fetcher: Fetcher) {}
 
-    get bar(): ApiClientFooBar<TErr> {
-        return new ApiClientFooBar<TErr>(this.fetcher)
+    get bar(): ApiClient_Foo_Bar {
+        return new ApiClient_Foo_Bar(this.fetcher)
     }
 }
 
-class ApiClientFooBar<TErr> {
-    constructor(private readonly fetcher: Fetcher<TErr>) {}
-    $post(): NeverjectPromise<PostFooBarResponse, TErr> {
-        return this.fetcher.fetch<PostFooBarResponse>("/foo/bar", {
+class ApiClient_Foo_Bar {
+    constructor(private readonly fetcher: Fetcher) {}
+    post() {
+        return this.fetcher.fetch("/foo/bar", {
             method: "POST",
-        })
+        }) as PromisedResponse<PostFooBarResponse>
     }
 }
 
-class ApiClientBooks<TErr> {
-    constructor(private readonly fetcher: Fetcher<TErr>) {}
-
-    get $id(): ApiClientBooks$id<TErr> {
-        return new ApiClientBooks$id<TErr>(this.fetcher)
-    }
-}
-
-class ApiClientBooks$id<TErr> {
-    constructor(private readonly fetcher: Fetcher<TErr>) {}
-    $post(path: PostBooks$idPathParams | SinglePathParam<PostBooks$idPathParams, "id">, body: PostBooks$idRequest): NeverjectPromise<PostBooks$idResponse, TErr> {
+class ApiClient_BooksById {
+    constructor(private readonly fetcher: Fetcher) {}
+    post(path: PostBooksByIdPathParams | SinglePathParam<PostBooksByIdPathParams, "id">, body: PostBooksByIdRequest) {
         const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { id: path } as any
-        return this.fetcher.fetch<PostBooks$idResponse>(`/books/${_path.id}`, {
+        return this.fetcher.fetch(`/books/${_path.id}`, {
             method: "POST",
             body: JSON.stringify(body),
-        })
+        }) as PromisedResponse<PostBooksByIdResponse>
     }
 }
