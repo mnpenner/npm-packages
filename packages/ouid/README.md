@@ -30,3 +30,10 @@ console.log(ouid()); // <Buffer 14 fb b9 bd 9e eb 7c ec 00 b8 a4 23 79 ee e4 74>
 ```
 
 There are no options. Just the one function.
+
+## Comparison with other ID formats
+
+- https://soc.me/standards/base-uid
+- https://old.reddit.com/r/programming/comments/1pbobio/ulid_universally_unique_lexicographically/
+- https://news.ycombinator.com/item?id=46112965
+- https://sqids.org/
