@@ -8,7 +8,7 @@ const router = new Router()
 router.add({
     pattern: '/',
     handler: createZodNeverjectHandler({
-        handler: (req) => okAsync({
+        exec: (req) => okAsync({
             body: { message: 'Hello World!' }
         })
     }),
@@ -19,7 +19,7 @@ router.add({
     name: 'namedRoute',
     pattern: '/name/bar',
     handler: createZodNeverjectHandler({
-        handler: (req) => okAsync({
+        exec: (req) => okAsync({
             body: { message: 'Hello World!' }
         })
     }),
@@ -30,7 +30,7 @@ router.add({
     name: 'namedRoute',
     pattern: '/name/bar',
     handler: createZodNeverjectHandler({
-        handler: (req) => okAsync({
+        exec: (req) => okAsync({
             body: { message: 'Hello World!' }
         })
     }),
@@ -41,7 +41,7 @@ router.add({
     name: 'foo.bar',
     pattern: '/foo/bar',
     handler: createZodNeverjectHandler({
-        handler: (req) => okAsync({
+        exec: (req) => okAsync({
             body: { message: 'Hello World!' }
         })
     }),
@@ -54,7 +54,7 @@ router.add({
     handler: createZodNeverjectHandler({
         path: z.object({ id: z.string() }),
         body: z.object({ title: z.string(), author: z.string() }),
-        handler: (req) => okAsync({
+        exec: (req) => okAsync({
             body: {
                 id: req.pathParams.id,
                 title: req.body.title,

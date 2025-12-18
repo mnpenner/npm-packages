@@ -76,7 +76,7 @@ export type CreateZodHandlerOptions<
     query?: QuerySchema;
     body?: BodySchema;
     path?: PathSchema;
-    handler: ZodHandler<
+    exec: ZodHandler<
         BodySchema extends ZodType ? z.infer<BodySchema> : unknown,
         PathSchema extends ZodType ? z.infer<PathSchema> : unknown,
         QuerySchema extends ZodType ? z.infer<QuerySchema> : unknown,
@@ -143,7 +143,7 @@ export function createZodNeverjectHandler<
 
         return nj((async () => {
             try {
-                const handlerResult = await options.handler(req as any)
+                const handlerResult = await options.exec(req as any)
                 if (isResult(handlerResult)) {
                     const result = handlerResult as any
                     if (result.ok) {
