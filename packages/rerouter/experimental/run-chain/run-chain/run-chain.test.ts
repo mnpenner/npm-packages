@@ -1,3 +1,4 @@
+#!/usr/bin/env -S bun test
 import {describe, expect, test} from 'bun:test'
 import {runChain} from './run-chain'
 import type {

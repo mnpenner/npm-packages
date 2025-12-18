@@ -1,7 +1,6 @@
 - Current code lives in `packages/`. Legacy/older versions live in `experimental/`.
 - `bun run build` builds publishable packages (currently `server-router` + `react-router`).
-- `bun run gen` runs the package generators (things under `src/bin/*`) so you can inspect the output.
-- `bun run ex:gen` regenerates all example outputs (e.g. generated clients/helpers in `packages/*/examples`).
+- `bun run gen` runs the package generators (things under `src/bin/*`) and regenerates example outputs (e.g. `packages/*/examples/*.gen.ts`).
 - `bun run test:types` checks TypeScript types across the workspace.
 - `bun run test:impl` runs implementation tests (examples), placeholder for now.
 - `bun run test:gen` runs generators and then tests generated code, placeholder for now.

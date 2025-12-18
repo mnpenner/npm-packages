@@ -18,6 +18,7 @@ function NotFound() {
 
 const ROUTES: readonly RouteObject[] = [
     {name: 'home', pattern: '/', component: Home},
+    {name: 'kitchenSink', pattern: '/hello/:foo/bar/:baz/*splat/xxx{/:optional/lol/:two}', component: Home},
     {name: 'login', pattern: '/login', component: Login},
     {name: 'match', pattern: '/matches/:id', component: Match},
     {name: 'notFound', pattern: '*', component: NotFound},

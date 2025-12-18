@@ -77,11 +77,22 @@ function compilePathGenerator(
     const paramsType = groupTypes.length ? `${baseParamsType} & ${groupTypes.join(' & ')}` : baseParamsType
 
     const lines: string[] = []
-    lines.push(`export function ${functionName}(`)
-    lines.push(`    params: ${paramsType}`)
-    lines.push(`): string {`)
-    lines.push(`    let sb = ""`)
-    lines.push(``)
+    const indentUnit = '    '
+    const line = (indentLevel: number, text = ''): void => {
+        if (text === '') lines.push('')
+        else lines.push(indentUnit.repeat(indentLevel) + text)
+    }
+    const hasAnyParams = baseProps.length > 0 || groupTypes.length > 0
+
+    if (hasAnyParams) {
+        lines.push(`export function ${functionName}(`)
+        lines.push(`    params: ${paramsType}`)
+        lines.push(`): string {`)
+    } else {
+        lines.push(`export function ${functionName}(): string {`)
+    }
+    line(1, `let sb = ""`)
+    line(0)
 
     const delim = escapeString(delimiter)
 
@@ -94,12 +105,13 @@ function compilePathGenerator(
         return names
     }
 
-    function emitTokens(ts2: any[], optional = false): void {
-        if (!optional) {
+    function emitTokens(ts2: any[], indentLevel: number, optional = false): void {
+        if (!optional && hasAnyParams) {
             for (const t of ts2) {
                 if (t.type === 'param' || t.type === 'wildcard') {
-                    lines.push(
-                        `    if (params[${escapeString(t.name)}] == null) throw new Error(${escapeString(`Missing param: ${t.name}`)})`,
+                    line(
+                        indentLevel,
+                        `if (params[${escapeString(t.name)}] == null) throw new Error(${escapeString(`Missing param: ${t.name}`)})`,
                     )
                 }
             }
@@ -107,11 +119,11 @@ function compilePathGenerator(
 
         for (const t of ts2) {
             if (t.type === 'text') {
-                lines.push(`    sb += ${escapeString(t.value)}`)
+                line(indentLevel, `sb += ${escapeString(t.value)}`)
             } else if (t.type === 'param') {
-                lines.push(`    sb += ${encode}(params[${escapeString(t.name)}])`)
+                line(indentLevel, `sb += ${encode}(params[${escapeString(t.name)}])`)
             } else if (t.type === 'wildcard') {
-                lines.push(`    sb += Array.from(params[${escapeString(t.name)}], ${encode}).join(${delim})`)
+                line(indentLevel, `sb += Array.from(params[${escapeString(t.name)}], ${encode}).join(${delim})`)
             } else if (t.type === 'group') {
                 const names = collectNames(t.tokens).map(name => escapeString(name))
                 if (!names.length) continue
@@ -119,18 +131,18 @@ function compilePathGenerator(
                 const none = names.map(n => `params[${n}] == null`).join(' && ')
                 const list = names.join(', ')
 
-                lines.push(`    if (${all}) {`)
-                emitTokens(t.tokens, true)
-                lines.push(`    } else if (!(${none})) {`)
-                lines.push(`        throw new Error(${escapeString(`Group requires all-or-none: ${list}`)})`)
-                lines.push(`    }`)
+                line(indentLevel, `if (${all}) {`)
+                emitTokens(t.tokens, indentLevel + 1, true)
+                line(indentLevel, `} else if (!(${none})) {`)
+                line(indentLevel + 1, `throw new Error(${escapeString(`Group requires all-or-none: ${list}`)})`)
+                line(indentLevel, `}`)
             }
         }
     }
 
-    emitTokens(tokens)
-    lines.push(``)
-    lines.push(`    return sb`)
+    emitTokens(tokens, 1)
+    line(0)
+    line(1, `return sb`)
     lines.push(`}`)
     return lines.join('\n')
 }

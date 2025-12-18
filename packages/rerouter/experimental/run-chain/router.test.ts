@@ -1,3 +1,4 @@
+#!/usr/bin/env -S bun test
 import {describe, it, expect} from "bun:test"
 // Use updated Handlers type
 // Use RequestParams from router

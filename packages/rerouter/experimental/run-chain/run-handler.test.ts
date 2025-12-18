@@ -1,3 +1,4 @@
+#!/usr/bin/env -S bun test
 import {describe, expect, it} from 'bun:test'
 import {runHandler} from './run-handler'
 import type { AnyContext,
