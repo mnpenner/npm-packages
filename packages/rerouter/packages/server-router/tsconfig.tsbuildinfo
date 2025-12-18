@@ -1,1 +1,0 @@
-{"root":["./src/UniversalServerInterface.ts","./src/index.ts","./src/pathname.ts","./src/route-names.ts","./src/route-normalize.ts","./src/router.ts","./src/types.ts","./src/bin/gen-api-client.ts","./examples/api-client.gen.ts","./examples/router-instance.ts","./examples/serve.ts","./gen-api-client.ts"],"version":"5.8.3"}

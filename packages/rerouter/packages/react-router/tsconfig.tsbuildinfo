@@ -1,1 +1,0 @@
-{"root":["./src/Link.tsx","./src/Router.tsx","./src/index.ts","./src/path-to-regexp.gen.ts","./src/url.ts","./src/useUrl.ts","./src/bin/gen-path-to-regexp.ts","./src/bin/gen-routes.ts"],"version":"5.8.3"}
