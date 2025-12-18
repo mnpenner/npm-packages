@@ -1,5 +1,5 @@
 import {Router} from './router'
-import {createZodNeverjectHandler} from './create-zod-handler'
+import {createZodNeverjectHandler} from './zod-neverject/create-zod-neverject-handler'
 import {okAsync} from 'neverject'
 import {z} from 'zod'
 

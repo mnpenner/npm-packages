@@ -44,11 +44,11 @@ function getProgramFromTsConfig(tsconfigPath: string, extraRoot?: string): ts.Pr
 
 function getHandlerTypeArguments(type: ts.Type): readonly ts.Type[] | undefined {
     const ref = type as ts.TypeReference
-    if (ref.typeArguments && ref.typeArguments.length === 4) {
+    if (ref.typeArguments && ref.typeArguments.length >= 4) {
         return ref.typeArguments
     }
     const aliasArgs = (type as any).aliasTypeArguments as readonly ts.Type[] | undefined
-    if (aliasArgs && aliasArgs.length === 4) {
+    if (aliasArgs && aliasArgs.length >= 4) {
         return aliasArgs
     }
     if (type.isUnion()) {
@@ -128,52 +128,133 @@ function parseNameNode(nameNode: ts.Expression): string[] | undefined {
     return undefined
 }
 
-function extractRoutesFromSourceFile(sourceFile: ts.SourceFile, checker: ts.TypeChecker, routerName: string): ExtractedRouteMeta[] {
+function joinPrefixPathname(prefix: string, pathname: string): string {
+    if (!prefix) return pathname
+    if (!prefix.startsWith('/')) prefix = '/' + prefix
+    if (prefix.endsWith('/')) prefix = prefix.slice(0, -1)
+    if (pathname === '/') return prefix || '/'
+    if (!pathname.startsWith('/')) pathname = '/' + pathname
+    return (prefix + pathname) || '/'
+}
+
+function canonicalSymbol(symbol: ts.Symbol, checker: ts.TypeChecker): ts.Symbol {
+    return (symbol.flags & ts.SymbolFlags.Alias) !== 0 ? checker.getAliasedSymbol(symbol) : symbol
+}
+
+function getSymbolFromExpression(expr: ts.Expression, checker: ts.TypeChecker): ts.Symbol | undefined {
+    const sym = checker.getSymbolAtLocation(expr)
+    return sym ? canonicalSymbol(sym, checker) : undefined
+}
+
+function extractRoutesFromRouterSymbol(
+    routerSymbol: ts.Symbol,
+    checker: ts.TypeChecker,
+    prefix: string,
+    visited: Map<ts.Symbol, Set<string>>,
+): ExtractedRouteMeta[] {
     const routes: ExtractedRouteMeta[] = []
 
-    const visit = (node: ts.Node) => {
-        if (ts.isCallExpression(node)) {
-            if (ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === 'add') {
-                if (ts.isIdentifier(node.expression.expression) && node.expression.expression.text === routerName) {
-                    const [arg] = node.arguments
-                    if (arg && ts.isObjectLiteralExpression(arg)) {
-                        const methodNode = getProp(arg, 'method')
-                        const patternNode = getProp(arg, 'pattern')
-                        const nameNode = getProp(arg, 'name')
-                        const handlerNode = getProp(arg, 'handler')
+    const already = visited.get(routerSymbol)
+    if (already?.has(prefix)) return routes
+    if (already) already.add(prefix)
+    else visited.set(routerSymbol, new Set([prefix]))
 
-                        const method = methodNode && ts.isStringLiteralLike(methodNode) ? methodNode.text : 'GET'
-                        const pattern = patternNode && ts.isStringLiteralLike(patternNode) ? patternNode.text : '/'
+    const declarations = routerSymbol.declarations ?? []
+    const sourceFiles = new Set<ts.SourceFile>()
+    for (const decl of declarations) {
+        sourceFiles.add(decl.getSourceFile())
+    }
 
-                        const handlerType = handlerNode ? checker.getTypeAtLocation(handlerNode) : undefined
-                        const typeArgs = handlerType ? getHandlerTypeArguments(handlerType) : undefined
-                        const errorType = handlerType ? getHandlerErrorType(handlerType, checker) : undefined
-                        const [bodyType, pathType, queryType, successType] = typeArgs ?? []
+    const visit = (node: ts.Node, sourceFile: ts.SourceFile): void => {
+        if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression)) {
+            const methodName = node.expression.name.text
+            const receiverSym = getSymbolFromExpression(node.expression.expression, checker)
+            if (!receiverSym || receiverSym !== routerSymbol) {
+                ts.forEachChild(node, child => visit(child, sourceFile))
+                return
+            }
 
-                        const explicitName = nameNode ? parseNameNode(nameNode) : undefined
-                        const name = explicitName
-                            ? sanitizeNameParts(explicitName)
-                            : pattToName(method, new URLPattern({ pathname: pattern }))
+            if (methodName === 'add') {
+                const [arg] = node.arguments
+                if (arg && ts.isObjectLiteralExpression(arg)) {
+                    const methodNode = getProp(arg, 'method')
+                    const patternNode = getProp(arg, 'pattern')
+                    const nameNode = getProp(arg, 'name')
+                    const handlerNode = getProp(arg, 'handler')
 
-                        routes.push({
-                            name,
-                            method,
-                            pattern,
-                            bodyType: bodyType ? typeText(bodyType, checker, handlerNode) : 'unknown',
-                            pathType: pathType ? typeText(pathType, checker, handlerNode) : 'unknown',
-                            queryType: queryType ? typeText(queryType, checker, handlerNode) : 'unknown',
-                            successType: successType ? typeText(successType, checker, handlerNode) : 'unknown',
-                            errorType: errorType ? typeText(errorType, checker, handlerNode) : 'unknown',
-                        })
+                    const method = methodNode && ts.isStringLiteralLike(methodNode) ? methodNode.text : 'GET'
+                    const localPattern = patternNode && ts.isStringLiteralLike(patternNode) ? patternNode.text : '/'
+                    const pattern = joinPrefixPathname(prefix, localPattern)
+
+                    const handlerType = handlerNode ? checker.getTypeAtLocation(handlerNode) : undefined
+                    const typeArgs = handlerType ? getHandlerTypeArguments(handlerType) : undefined
+                    const [bodyType, pathType, queryType, successType, errorTypeArg] = typeArgs ?? []
+                    const errorType = errorTypeArg ?? (handlerType ? getHandlerErrorType(handlerType, checker) : undefined)
+
+                    const explicitName = nameNode ? parseNameNode(nameNode) : undefined
+                    const name = explicitName
+                        ? sanitizeNameParts(explicitName)
+                        : pattToName(method, new URLPattern({ pathname: pattern }))
+
+                    routes.push({
+                        name,
+                        method,
+                        pattern,
+                        bodyType: bodyType ? typeText(bodyType, checker, handlerNode) : 'unknown',
+                        pathType: pathType ? typeText(pathType, checker, handlerNode) : 'unknown',
+                        queryType: queryType ? typeText(queryType, checker, handlerNode) : 'unknown',
+                        successType: successType ? typeText(successType, checker, handlerNode) : 'unknown',
+                        errorType: errorType ? typeText(errorType, checker, handlerNode) : 'unknown',
+                    })
+                }
+            } else if (methodName === 'mount' || methodName === 'use') {
+                const args = node.arguments
+                const hasPrefix = methodName === 'mount' && args.length === 2 && ts.isStringLiteralLike(args[0])
+                const childPrefix = hasPrefix ? (args[0] as ts.StringLiteralLike).text : ''
+                const routerArg = methodName === 'mount'
+                    ? (hasPrefix ? args[1] : args[0])
+                    : (args.length >= 2 ? args[1] : undefined)
+
+                if (routerArg) {
+                    const childSym = getSymbolFromExpression(routerArg, checker)
+                    if (childSym) {
+                        routes.push(...extractRoutesFromRouterSymbol(
+                            childSym,
+                            checker,
+                            joinPrefixPathname(prefix, childPrefix),
+                            visited
+                        ))
                     }
                 }
             }
         }
-        ts.forEachChild(node, visit)
+
+        ts.forEachChild(node, child => visit(child, sourceFile))
     }
 
-    visit(sourceFile)
+    for (const sf of sourceFiles) {
+        visit(sf, sf)
+    }
+
     return routes
+}
+
+function extractRoutesFromEntryFile(sourceFile: ts.SourceFile, checker: ts.TypeChecker, rootRouterName: string): ExtractedRouteMeta[] {
+    let rootSymbol: ts.Symbol | undefined
+    const findRoot = (node: ts.Node) => {
+        if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === rootRouterName) {
+            const sym = checker.getSymbolAtLocation(node.name)
+            if (sym) rootSymbol = canonicalSymbol(sym, checker)
+        }
+        if (!rootSymbol) ts.forEachChild(node, findRoot)
+    }
+    findRoot(sourceFile)
+
+    if (!rootSymbol) {
+        throw new Error(`Unable to find router symbol for "${rootRouterName}" in ${sourceFile.fileName}`)
+    }
+
+    return extractRoutesFromRouterSymbol(rootSymbol, checker, '', new Map())
 }
 
 function patternToUrlTemplate(pattern: string, pathVar = 'path'): string {
@@ -416,7 +497,7 @@ async function main() {
         throw new Error(`Unable to load source file: ${routerPath}`)
     }
 
-    const routes = extractRoutesFromSourceFile(sourceFile, program.getTypeChecker(), 'router')
+    const routes = extractRoutesFromEntryFile(sourceFile, program.getTypeChecker(), 'router')
     const rawArgs = Bun.argv.slice(1)
     if (rawArgs[0] && path.isAbsolute(rawArgs[0])) {
         rawArgs[0] = path.relative(process.cwd(), rawArgs[0]).replace(/\\/g, '/')

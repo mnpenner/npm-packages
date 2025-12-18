@@ -1,3 +1,3 @@
 - `v2/` is the current version. Ignore `src/`
-- Run `bun v2/gen-api-client.ts v2/router-instance.ts [--neverject]` to regenerate the ApiClient
+- Run `bun v2/gen-api-client.ts v2/router-instance.ts` to regenerate the ApiClient
 - Run `bun run test:tsc` to check TypeScript types
