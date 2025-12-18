@@ -12,15 +12,18 @@
         "typescript": "^5.2.2"
     },
     "scripts": {
-        "test:tsc": "tsc -b tsconfig.json",
-        "test:bun": "bun test",
-        "test": "run-p 'test:*'"
-    },
-    "dependencies": {
-        "js-serialize": "^0.7.0",
-        "neverject": "^0.2.3",
-        "path-to-regexp": "^8.3.0",
-        "urlpattern-polyfill": "^10.1.0",
-        "zod": "^4.1.13"
+        "build:react-router": "bun run --filter @mpen/react-router build",
+        "build:server-router": "bun run --filter @mpen/server-router build",
+        "build": "run-s build:react-router build:server-router",
+        "gen:react-router": "bun run --filter @mpen/react-router gen",
+        "gen:server-router": "bun run --filter @mpen/server-router gen",
+        "gen": "run-s gen:react-router gen:server-router",
+        "ex:gen:react-router": "bun run --filter @mpen/react-router ex:gen",
+        "ex:gen:server-router": "bun run --filter @mpen/server-router ex:gen",
+        "ex:gen": "run-s ex:gen:react-router ex:gen:server-router",
+        "test:types": "tsc -b tsconfig.json",
+        "test:impl": "bun test",
+        "test:gen": "run-s gen test:impl",
+        "test": "run-s test:types test:gen"
     }
 }
