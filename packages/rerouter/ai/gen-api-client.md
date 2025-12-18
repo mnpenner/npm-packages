@@ -24,7 +24,7 @@
 All together:
 
 ```sh
-bun v2/gen-api-client.ts v2/router-instance.ts v2/dist/api-client.gen.ts \
+bun packages/server-router/gen-api-client.ts packages/server-router/src/examples/router-instance.ts v2/dist/api-client.gen.ts \
   --client-name "CustomApiClient" \
   --import-type "CustomPromise:./api.ts" \
   --response-type "CustomPromise"

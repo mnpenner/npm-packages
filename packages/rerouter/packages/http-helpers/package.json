@@ -1,8 +1,9 @@
 {
-  "name": "@mpen/react-router",
-  "module": "src/index.ts",
+  "name": "@mpen/http-helpers",
   "type": "module",
+  "module": "src/index.ts",
   "peerDependencies": {
     "typescript": "^5"
   }
 }
+

@@ -2,8 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "types": ["bun-types"]
+    "types": []
   },
-  "include": ["src/**/*.ts", "gen-api-client.ts"],
-  "exclude": ["src/examples/**/*"]
+  "include": ["src/**/*"]
 }

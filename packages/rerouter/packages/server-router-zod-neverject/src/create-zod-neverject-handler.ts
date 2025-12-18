@@ -1,9 +1,8 @@
 import type {Result} from 'neverject'
 import {isResult} from 'neverject/result'
 import {ZodType, z} from 'zod'
-import type {HeadersInit} from 'bun'
-import {HttpStatus} from '../http-enums'
-import type {Handler, RequestContext} from '../router'
+import {HttpStatus} from '@mpen/http-helpers'
+import type {Handler, RequestContext} from '@mpen/server-router'
 
 /**
  * Should roughly map to HTTP status codes but with more granularity.

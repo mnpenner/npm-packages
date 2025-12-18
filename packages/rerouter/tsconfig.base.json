@@ -1,0 +1,27 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "verbatimModuleSyntax": true,
+        "skipLibCheck": true,
+        "noEmit": true,
+        "isolatedModules": true,
+        "preserveConstEnums": true,
+        "exactOptionalPropertyTypes": true,
+        "noUncheckedIndexedAccess": true,
+        "forceConsistentCasingInFileNames": true,
+        "baseUrl": ".",
+        "paths": {
+            "@mpen/http-helpers": ["packages/http-helpers/src/index.ts"],
+            "@mpen/http-helpers/*": ["packages/http-helpers/src/*"],
+            "@mpen/server-router": ["packages/server-router/src/index.ts"],
+            "@mpen/server-router/*": ["packages/server-router/src/*"],
+            "@mpen/server-router-zod-neverject": ["packages/server-router-zod-neverject/src/index.ts"],
+            "@mpen/server-router-zod-neverject/*": ["packages/server-router-zod-neverject/src/*"],
+            "@mpen/react-router": ["packages/react-router/src/index.ts"],
+            "@mpen/react-router/*": ["packages/react-router/src/*"]
+        }
+    }
+}

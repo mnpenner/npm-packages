@@ -5,7 +5,7 @@ import fs from 'node:fs'
 import {parseArgs} from 'util'
 import {URLPattern} from 'urlpattern-polyfill'
 import {$} from 'bun'
-import {pattToName, sanitizeNameParts, splitNameString} from './router'
+import {pattToName, sanitizeNameParts, splitNameString} from './src/route-names'
 
 type ExtractedRouteMeta = {
     name: string[]
@@ -87,13 +87,13 @@ function getHandlerErrorType(type: ts.Type, checker: ts.TypeChecker): ts.Type | 
 }
 
 function typeText(type: ts.Type, checker: ts.TypeChecker, node?: ts.Node): string {
-    return checker.typeToString(
-        type,
-        node,
+    const flags =
         ts.TypeFormatFlags.NoTruncation
         | ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope
         | ts.TypeFormatFlags.UseFullyQualifiedType
-    )
+    return node
+        ? checker.typeToString(type, node, flags)
+        : checker.typeToString(type, undefined as any, flags)
 }
 
 function getProp(node: ts.ObjectLiteralExpression, propName: string): ts.Expression | undefined {
@@ -209,7 +209,7 @@ function extractRoutesFromRouterSymbol(
                 }
             } else if (methodName === 'mount' || methodName === 'use') {
                 const args = node.arguments
-                const hasPrefix = methodName === 'mount' && args.length === 2 && ts.isStringLiteralLike(args[0])
+                const hasPrefix = methodName === 'mount' && args.length === 2 && ts.isStringLiteralLike(args[0]!)
                 const childPrefix = hasPrefix ? (args[0] as ts.StringLiteralLike).text : ''
                 const routerArg = methodName === 'mount'
                     ? (hasPrefix ? args[1] : args[0])
@@ -481,7 +481,7 @@ async function main() {
 
     const [, , routerPathArg, outputPathArg] = positionals
     if (!routerPathArg) {
-        console.error('Usage: bun run v2/gen-api-client.ts <router-file> [output-file] [--client-name <Name>] [--import-type "Type:module"] [--response-type <Type>]')
+        console.error('Usage: bun run packages/server-router/gen-api-client.ts <router-file> [output-file] [--client-name <Name>] [--import-type "Type:module"] [--response-type <Type>]')
         process.exit(1)
     }
 
@@ -490,7 +490,7 @@ async function main() {
     const importTypes = ((values as any)['import-type'] as string[] | undefined)?.map(parseImportTypeOption) ?? []
 
     const routerPath = path.resolve(routerPathArg)
-    const tsconfigPath = path.resolve('tsconfig.json')
+    const tsconfigPath = path.resolve(import.meta.dir, 'tsconfig.json')
     const program = getProgramFromTsConfig(tsconfigPath, routerPath)
     const sourceFile = program.getSourceFile(routerPath)
     if (!sourceFile) {

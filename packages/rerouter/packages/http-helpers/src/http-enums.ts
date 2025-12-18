@@ -261,12 +261,11 @@ export const enum HttpStatus {
      */
     INTERNAL_SERVER_ERROR = 500,
     /**
-     * 501 Not Implemented - The server does not recognize the request method or lacks the ability to fulfill it.
+     * 501 Not Implemented - The server does not support the functionality required to fulfill the request.
      */
     NOT_IMPLEMENTED = 501,
     /**
-     * 502 Bad Gateway - The server was acting as a gateway or proxy and received an invalid response from the upstream
-     * server.
+     * 502 Bad Gateway - The server, while acting as a gateway or proxy, received an invalid response.
      */
     BAD_GATEWAY = 502,
     /**
@@ -274,24 +273,24 @@ export const enum HttpStatus {
      */
     SERVICE_UNAVAILABLE = 503,
     /**
-     * 504 Gateway Timeout - The server did not receive a timely response from the upstream server.
+     * 504 Gateway Timeout - The server is acting as a gateway or proxy and did not receive a timely response.
      */
     GATEWAY_TIMEOUT = 504,
     /**
-     * 505 HTTP Version Not Supported - The HTTP version used in the request is not supported by the server.
+     * 505 HTTP Version Not Supported - The server does not support the HTTP protocol version used in the request.
      */
     HTTP_VERSION_NOT_SUPPORTED = 505,
     /**
-     * 506 Variant Also Negotiates - The server has an internal configuration error with transparent content
-     * negotiation.
+     * 506 Variant Also Negotiates - Transparent content negotiation for the request results in a circular reference.
      */
     VARIANT_ALSO_NEGOTIATES = 506,
     /**
-     * 507 Insufficient Storage - The server is unable to store the representation needed to complete the request.
+     * 507 Insufficient Storage - The server is unable to store the representation needed to complete the request
+     * (WebDAV).
      */
     INSUFFICIENT_STORAGE = 507,
     /**
-     * 508 Loop Detected - The server detected an infinite loop while processing the request.
+     * 508 Loop Detected - The server detected an infinite loop while processing a request (WebDAV).
      */
     LOOP_DETECTED = 508,
     /**
@@ -302,75 +301,5 @@ export const enum HttpStatus {
      * 511 Network Authentication Required - The client needs to authenticate to gain network access.
      */
     NETWORK_AUTHENTICATION_REQUIRED = 511,
-}
-
-export const HttpStatusText: Record<HttpStatus|number, string> = {
-    [HttpStatus.CONTINUE]: 'Continue',
-    [HttpStatus.SWITCHING_PROTOCOLS]: 'Switching Protocols',
-    [HttpStatus.PROCESSING]: 'Processing',
-    [HttpStatus.EARLY_HINTS]: 'Early Hints',
-
-    [HttpStatus.OK]: 'OK',
-    [HttpStatus.CREATED]: 'Created',
-    [HttpStatus.ACCEPTED]: 'Accepted',
-    [HttpStatus.NON_AUTHORITATIVE_INFORMATION]: 'Non-Authoritative Information',
-    [HttpStatus.NO_CONTENT]: 'No Content',
-    [HttpStatus.RESET_CONTENT]: 'Reset Content',
-    [HttpStatus.PARTIAL_CONTENT]: 'Partial Content',
-    [HttpStatus.MULTI_STATUS]: 'Multi-Status',
-    [HttpStatus.ALREADY_REPORTED]: 'Already Reported',
-    [HttpStatus.IM_USED]: 'IM Used',
-
-    [HttpStatus.MULTIPLE_CHOICES]: 'Multiple Choices',
-    [HttpStatus.MOVED_PERMANENTLY]: 'Moved Permanently',
-    [HttpStatus.FOUND]: 'Found',
-    [HttpStatus.SEE_OTHER]: 'See Other',
-    [HttpStatus.NOT_MODIFIED]: 'Not Modified',
-    [HttpStatus.USE_PROXY]: 'Use Proxy',
-    [HttpStatus.SWITCH_PROXY]: 'Switch Proxy',
-    [HttpStatus.TEMPORARY_REDIRECT]: 'Temporary Redirect',
-    [HttpStatus.PERMANENT_REDIRECT]: 'Permanent Redirect',
-
-    [HttpStatus.BAD_REQUEST]: 'Bad Request',
-    [HttpStatus.UNAUTHORIZED]: 'Unauthorized',
-    [HttpStatus.PAYMENT_REQUIRED]: 'Payment Required',
-    [HttpStatus.FORBIDDEN]: 'Forbidden',
-    [HttpStatus.NOT_FOUND]: 'Not Found',
-    [HttpStatus.METHOD_NOT_ALLOWED]: 'Method Not Allowed',
-    [HttpStatus.NOT_ACCEPTABLE]: 'Not Acceptable',
-    [HttpStatus.PROXY_AUTHENTICATION_REQUIRED]: 'Proxy Authentication Required',
-    [HttpStatus.REQUEST_TIMEOUT]: 'Request Timeout',
-    [HttpStatus.CONFLICT]: 'Conflict',
-    [HttpStatus.GONE]: 'Gone',
-    [HttpStatus.LENGTH_REQUIRED]: 'Length Required',
-    [HttpStatus.PRECONDITION_FAILED]: 'Precondition Failed',
-    [HttpStatus.PAYLOAD_TOO_LARGE]: 'Payload Too Large',
-    [HttpStatus.URI_TOO_LONG]: 'URI Too Long',
-    [HttpStatus.UNSUPPORTED_MEDIA_TYPE]: 'Unsupported Media Type',
-    [HttpStatus.RANGE_NOT_SATISFIABLE]: 'Range Not Satisfiable',
-    [HttpStatus.EXPECTATION_FAILED]: 'Expectation Failed',
-    [HttpStatus.IM_A_TEAPOT]: "I'm a teapot",
-    [HttpStatus.MISDIRECTED_REQUEST]: 'Misdirected Request',
-    [HttpStatus.UNPROCESSABLE_ENTITY]: 'Unprocessable Entity',
-    [HttpStatus.LOCKED]: 'Locked',
-    [HttpStatus.FAILED_DEPENDENCY]: 'Failed Dependency',
-    [HttpStatus.TOO_EARLY]: 'Too Early',
-    [HttpStatus.UPGRADE_REQUIRED]: 'Upgrade Required',
-    [HttpStatus.PRECONDITION_REQUIRED]: 'Precondition Required',
-    [HttpStatus.TOO_MANY_REQUESTS]: 'Too Many Requests',
-    [HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE]: 'Request Header Fields Too Large',
-    [HttpStatus.UNAVAILABLE_FOR_LEGAL_REASONS]: 'Unavailable For Legal Reasons',
-
-    [HttpStatus.INTERNAL_SERVER_ERROR]: 'Internal Server Error',
-    [HttpStatus.NOT_IMPLEMENTED]: 'Not Implemented',
-    [HttpStatus.BAD_GATEWAY]: 'Bad Gateway',
-    [HttpStatus.SERVICE_UNAVAILABLE]: 'Service Unavailable',
-    [HttpStatus.GATEWAY_TIMEOUT]: 'Gateway Timeout',
-    [HttpStatus.HTTP_VERSION_NOT_SUPPORTED]: 'HTTP Version Not Supported',
-    [HttpStatus.VARIANT_ALSO_NEGOTIATES]: 'Variant Also Negotiates',
-    [HttpStatus.INSUFFICIENT_STORAGE]: 'Insufficient Storage',
-    [HttpStatus.LOOP_DETECTED]: 'Loop Detected',
-    [HttpStatus.NOT_EXTENDED]: 'Not Extended',
-    [HttpStatus.NETWORK_AUTHENTICATION_REQUIRED]: 'Network Authentication Required',
 }
 

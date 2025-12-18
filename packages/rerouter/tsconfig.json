@@ -1,36 +1,9 @@
 {
-    "compilerOptions": {
-        "strict": true,
-        "importHelpers": false,
-        "inlineSources": false,
-        "noEmitOnError": true,
-        "pretty": true,
-        "module": "ESNext",
-        "target": "ESNext",
-        "lib": ["ESNext"],
-        "noImplicitAny": true,
-        "suppressImplicitAnyIndexErrors": false,
-        "removeComments": false,
-        "preserveConstEnums": true,
-        "sourceMap": false,
-        "skipLibCheck": true,
-        "exactOptionalPropertyTypes": true,
-        "outDir": "dist",
-        "declaration": true,
-        "resolveJsonModule": true,
-        "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true,
-        "moduleResolution": "bundler",
-        "isolatedModules": true,
-        "allowSyntheticDefaultImports": true,
-        "baseUrl": ".",
-        "paths": {
-            "*": ["src/*"]
-        },
-        "types": ["bun-types"],
-    },
-    "include": [
-        "src/**/*",
-        "v2/**/*",
+    "files": [],
+    "references": [
+        { "path": "./packages/http-helpers" },
+        { "path": "./packages/server-router" },
+        { "path": "./packages/server-router-zod-neverject" },
+        { "path": "./packages/react-router" }
     ]
 }

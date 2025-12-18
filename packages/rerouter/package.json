@@ -2,6 +2,9 @@
     "name": "@mpen/rerouter",
     "version": "0.1.9",
     "packageManager": "bun",
+    "workspaces": [
+        "packages/*"
+    ],
     "exports": "./dist/bundle.cjs",
     "module": "./dist/bundle.mjs",
     "types": "./dist/bundle.d.ts",
@@ -28,7 +31,7 @@
     },
     "license": "MIT",
     "scripts": {
-        "test:tsc": "tsc --noEmit && echo \"tsc: no errors\"",
+        "test:tsc": "tsc --noEmit -p packages/http-helpers/tsconfig.json && tsc --noEmit -p packages/server-router/tsconfig.json && tsc --noEmit -p packages/server-router-zod-neverject/tsconfig.json && tsc --noEmit -p packages/react-router/tsconfig.json && echo \"tsc: no errors\"",
         "test:bun": "bun test",
         "test": "run-p 'test:*'",
         "dev": "bun run --hot src/dev.ts",
