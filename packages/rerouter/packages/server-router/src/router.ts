@@ -1,5 +1,5 @@
 import type {Server} from 'bun'
-import type {UniversalExecutionContext, UniversalServerInterface} from './UniversalServerInterface'
+import type {UniversalExecutionContext} from './UniversalServerInterface'
 import {joinPrefixPathname, stripPrefixPathname} from './pathname'
 import {normalizeRoute} from './route-normalize'
 import type {AnyContext, Middleware, NormalizedRoute, RequestContext, Route} from './types'
@@ -14,7 +14,7 @@ type MatchResult<Ctx extends object> = {
     middleware: Middleware<Ctx>[]
 }
 
-export class Router<Ctx extends object = AnyContext> implements UniversalServerInterface<Record<string, unknown>, UniversalExecutionContext> {
+export class Router<Ctx extends object = AnyContext> {
     private entries: RouteEntry<Ctx>[] = []
     private _middleware: Middleware<Ctx>[] = []
 

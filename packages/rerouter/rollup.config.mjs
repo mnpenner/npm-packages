@@ -34,7 +34,7 @@ const config = {
 }
 
 if (production) {
-    config.input = 'src/bundle.ts'
+    config.input = 'packages/uri-template/src/bundle.ts'
     config.output.push({
         dir: 'dist',
         format: 'cjs',
@@ -57,7 +57,8 @@ if (production) {
         }),
     )
 } else {
-    config.input = 'src/dev.tsx'
+    config.input = 'packages/uri-template/src/dev.ts'
 }
 
 export default config
+

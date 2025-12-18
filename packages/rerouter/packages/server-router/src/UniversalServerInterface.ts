@@ -5,15 +5,24 @@ export interface UniversalExecutionContext {
     passThroughOnException?(): void
 }
 
-type BunServer = import('bun').Server<unknown>
+type BunRuntimeServer = import('bun').Server<unknown>
 
-export interface UniversalServerInterface<Env = unknown, Ctx = unknown> {
-    // Deno default export shape
+export type DenoServer = {
     fetch(request: Request): UniversalFetchResult
+}
 
-    // Bun default export shape (2nd arg is Bun.Server)
-    fetch(request: Request, server: BunServer): UniversalFetchResult
+export type BunServer = {
+    fetch(request: Request, server: BunRuntimeServer): UniversalFetchResult
+}
 
-    // Cloudflare Workers module shape
+export type CloudflareWorkerServer<Env = unknown, Ctx = UniversalExecutionContext> = {
     fetch(request: Request, env: Env, ctx: Ctx): UniversalFetchResult
 }
+
+export type ValTownRequestHandler = (request: Request) => UniversalFetchResult
+
+export type UniversalServerInterface<Env = unknown, Ctx = UniversalExecutionContext> =
+    | DenoServer
+    | BunServer
+    | CloudflareWorkerServer<Env, Ctx>
+    | ValTownRequestHandler

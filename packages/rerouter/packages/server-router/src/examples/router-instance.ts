@@ -1,4 +1,4 @@
-import {Router} from '../src'
+import {Router} from '../index'
 import {createZodNeverjectHandler} from '@mpen/server-router-zod-neverject'
 import {okAsync} from 'neverject'
 import {z} from 'zod'

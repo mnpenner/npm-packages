@@ -1,37 +1,3 @@
-/**
- * Response Content-Types, including typical charset if applicable.
- */
-export const enum ContentTypes  {
-    JSON = 'application/json',
-    YAML = 'application/x-yaml',
-    HTML = 'text/html;charset=utf-8',
-    PLAIN_TEXT = 'text/plain;charset=utf-8',
-    OCTET_STREAM = 'application/octet-stream',
-    EVENT_STREAM = 'text/event-stream',
-}
-
-/**
- * Media type without charset/params.
- */
-export const enum MediaType  {
-    JSON = 'application/json',
-    HTML = 'text/html',
-    PLAIN_TEXT = 'text/plain',
-    OCTET_STREAM = 'application/octet-stream',
-    EVENT_STREAM = 'text/event-stream',
-    FORM_DATA = 'multipart/form-data',
-}
-
-export const enum CommonHeaders  {
-    CONTENT_TYPE = 'Content-Type',
-    CONTENT_LENGTH = 'Content-Length',
-    ACCEPT = 'Accept',
-    CACHE_CONTROL = 'Cache-Control',
-    CONNECTION = 'Connection',
-    AUTHORIZATION = 'Authorization',
-    SET_COOKIE = 'Set-Cookie',
-}
-
 export const enum HttpStatus {
     // --- 1xx Informational ---
     /**
@@ -210,7 +176,7 @@ export const enum HttpStatus {
      */
     EXPECTATION_FAILED = 417,
     /**
-     * 418 I'm a teapot - An April Fools' joke defined in RFC 2324.
+     * 418 I'm a teapot - This code was defined in 1998 as one of the traditional IETF April Fools' jokes.
      */
     IM_A_TEAPOT = 418,
     /**
@@ -222,7 +188,7 @@ export const enum HttpStatus {
      */
     UNPROCESSABLE_ENTITY = 422,
     /**
-     * 423 Locked - The resource is locked.
+     * 423 Locked - The resource that is being accessed is locked.
      */
     LOCKED = 423,
     /**
@@ -234,46 +200,51 @@ export const enum HttpStatus {
      */
     TOO_EARLY = 425,
     /**
-     * 426 Upgrade Required - The client should switch to a different protocol.
+     * 426 Upgrade Required - The client should switch to a different protocol such as TLS/1.0.
      */
     UPGRADE_REQUIRED = 426,
     /**
-     * 428 Precondition Required - The server requires the request to be conditional.
+     * 428 Precondition Required - The origin server requires the request to be conditional.
      */
     PRECONDITION_REQUIRED = 428,
     /**
-     * 429 Too Many Requests - The client has sent too many requests in a given period.
+     * 429 Too Many Requests - The user has sent too many requests in a given amount of time.
      */
     TOO_MANY_REQUESTS = 429,
     /**
-     * 431 Request Header Fields Too Large - The server is unwilling to process the request because its header fields
-     * are too large.
+     * 431 Request Header Fields Too Large - The server is unwilling to process the request because either an
+     * individual header field, or all the header fields collectively, are too large.
      */
     REQUEST_HEADER_FIELDS_TOO_LARGE = 431,
     /**
-     * 451 Unavailable For Legal Reasons - The server is denying access to the resource due to legal reasons.
+     * 451 Unavailable For Legal Reasons - The user requests an illegal resource, such as a web page censored by a
+     * government.
      */
     UNAVAILABLE_FOR_LEGAL_REASONS = 451,
 
     // --- 5xx Server Errors ---
     /**
-     * 500 Internal Server Error - A generic error message for unexpected server conditions.
+     * 500 Internal Server Error - A generic error message, given when an unexpected condition was encountered.
      */
     INTERNAL_SERVER_ERROR = 500,
     /**
-     * 501 Not Implemented - The server does not support the functionality required to fulfill the request.
+     * 501 Not Implemented - The server either does not recognize the request method, or it lacks the ability to
+     * fulfil the request.
      */
     NOT_IMPLEMENTED = 501,
     /**
-     * 502 Bad Gateway - The server, while acting as a gateway or proxy, received an invalid response.
+     * 502 Bad Gateway - The server was acting as a gateway or proxy and received an invalid response from the
+     * upstream server.
      */
     BAD_GATEWAY = 502,
     /**
-     * 503 Service Unavailable - The server is not ready to handle the request.
+     * 503 Service Unavailable - The server is currently unavailable (because it is overloaded or down for
+     * maintenance).
      */
     SERVICE_UNAVAILABLE = 503,
     /**
-     * 504 Gateway Timeout - The server is acting as a gateway or proxy and did not receive a timely response.
+     * 504 Gateway Timeout - The server was acting as a gateway or proxy and did not receive a timely response from
+     * the upstream server.
      */
     GATEWAY_TIMEOUT = 504,
     /**
@@ -285,16 +256,15 @@ export const enum HttpStatus {
      */
     VARIANT_ALSO_NEGOTIATES = 506,
     /**
-     * 507 Insufficient Storage - The server is unable to store the representation needed to complete the request
-     * (WebDAV).
+     * 507 Insufficient Storage - The server is unable to store the representation needed to complete the request.
      */
     INSUFFICIENT_STORAGE = 507,
     /**
-     * 508 Loop Detected - The server detected an infinite loop while processing a request (WebDAV).
+     * 508 Loop Detected - The server detected an infinite loop while processing the request.
      */
     LOOP_DETECTED = 508,
     /**
-     * 510 Not Extended - Further extensions to the request are required for the server to fulfill it.
+     * 510 Not Extended - Further extensions to the request are required for the server to fulfil it.
      */
     NOT_EXTENDED = 510,
     /**
@@ -302,4 +272,3 @@ export const enum HttpStatus {
      */
     NETWORK_AUTHENTICATION_REQUIRED = 511,
 }
-

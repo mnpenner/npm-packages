@@ -4,6 +4,9 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "bin": {
+    "react-router-gen-path-to-regexp": "./src/bin/gen-path-to-regexp.ts"
+  },
   "type": "module",
   "peerDependencies": {
     "typescript": "^5"

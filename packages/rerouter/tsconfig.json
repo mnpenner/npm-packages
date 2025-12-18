@@ -1,16 +1,11 @@
 {
     "extends": "./tsconfig.base.json",
-    "compilerOptions": {
-        "lib": ["DOM", "DOM.Iterable", "ESNext"],
-        "types": ["bun-types"]
-    },
-    "include": [
-        "packages/**/*.ts"
-    ],
-    "exclude": [
-        "**/node_modules/**",
-        "dist/**",
-        "experimental/**",
-        "packages/**/dist/**"
+    "files": [],
+    "references": [
+        { "path": "./packages/http-helpers" },
+        { "path": "./packages/react-router" },
+        { "path": "./packages/server-router" },
+        { "path": "./packages/server-router-zod-neverject" },
+        { "path": "./packages/uri-template" }
     ]
 }

@@ -1,4 +1,5 @@
 - Split packages/http-helpers/src/http-enums.ts into separate files. one enum per file.
+- Add "bin" (https://docs.npmjs.com/cli/v7/configuring-npm/package-json#bin) for server-router and react-router (points to the generators)
 - packages/react-router/src/draft is what I had in mind for a react/client-side router. Polish that up and move it out of the draft/ dir
 - I wanted to do something like experimental/url-pattern/path-to-regexp.ts (which outputs experimental/url-pattern/dist/path-to-regexp.gen.ts) which is similar to packages/server-router/gen-api-client.ts but for packages/react-router. Get that working. Indent the output properly. Add a similar "Do not modify this file. ..." header
 - Update the package.json for client-router and server-router to link the "bin". put the bin files under src/

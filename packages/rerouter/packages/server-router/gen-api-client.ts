@@ -459,9 +459,9 @@ function buildApiClientSource(routes: ExtractedRouteMeta[], options: BuildOption
     return lines.join('\n')
 }
 
-async function main() {
+export async function main(argv: string[] = Bun.argv) {
     const { positionals, values } = parseArgs({
-        args: Bun.argv,
+        args: argv,
         allowPositionals: true,
         strict: true,
         options: {
@@ -499,7 +499,7 @@ async function main() {
     }
 
     const routes = extractRoutesFromEntryFile(sourceFile, program.getTypeChecker(), 'router')
-    const rawArgs = Bun.argv.slice(1)
+    const rawArgs = argv.slice(1)
     if (rawArgs[0] && path.isAbsolute(rawArgs[0])) {
         rawArgs[0] = path.relative(process.cwd(), rawArgs[0]).replace(/\\/g, '/')
     }
@@ -520,7 +520,9 @@ async function main() {
     }
 }
 
-main().catch(err => {
-    console.error(err)
-    process.exit(1)
-})
+if (import.meta.main) {
+    main().catch(err => {
+        console.error(err)
+        process.exit(1)
+    })
+}

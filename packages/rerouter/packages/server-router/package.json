@@ -3,6 +3,9 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "bin": {
+    "server-router-gen-api-client": "./src/bin/gen-api-client.ts"
+  },
   "module": "src/index.ts",
   "type": "module",
   "devDependencies": {
