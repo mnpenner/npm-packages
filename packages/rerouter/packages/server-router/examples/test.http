@@ -1,0 +1,13 @@
+GET http://localhost:5180/
+
+
+
+
+###
+POST http://localhost:5180/books/123
+Content-Type: application/json
+
+{
+    "title": "Some book",
+    "author": "Some author"
+}

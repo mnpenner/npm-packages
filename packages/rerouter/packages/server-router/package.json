@@ -1,7 +1,8 @@
 {
   "name": "@mpen/server-router",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
   },
   "bin": {
     "server-router-gen-api-client": "./src/bin/gen-api-client.ts"
@@ -10,12 +11,20 @@
     "src",
     "gen-api-client.ts"
   ],
-  "module": "src/index.ts",
+  "module": "./dist/index.mjs",
   "type": "module",
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "tsdown": "^0.18.1"
   },
   "peerDependencies": {
     "typescript": "^5"
-  }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "gen": "bun ./src/bin/gen-api-client.ts ./examples/router-instance.ts ./examples/api-client.gen.ts",
+    "ex:gen": "bun ./src/bin/gen-api-client.ts ./examples/router-instance.ts ./examples/api-client.gen.ts"
+  },
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts"
 }

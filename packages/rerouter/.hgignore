@@ -12,6 +12,7 @@ syntax: regexp
 # Suffixes
 ~$
 \.log$
+\.tsbuildinfo$
 
 # All dotfiles except *ignore and *rc files
 (^|/)\.(?![^/]+(ignore|rc)$)

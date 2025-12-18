@@ -1,3 +1,8 @@
 - Current code lives in `packages/`. Legacy/older versions live in `experimental/`.
-- Run `bun packages/server-router/gen-api-client.ts packages/server-router/examples/router-instance.ts` to regenerate the ApiClient
-- Run `bun run test:tsc` to check TypeScript types
+- `bun run build` builds publishable packages (currently `server-router` + `react-router`).
+- `bun run gen` runs the package generators (things under `src/bin/*`) so you can inspect the output.
+- `bun run ex:gen` regenerates all example outputs (e.g. generated clients/helpers in `packages/*/examples`).
+- `bun run test:types` checks TypeScript types across the workspace.
+- `bun run test:impl` runs implementation tests (examples), placeholder for now.
+- `bun run test:gen` runs generators and then tests generated code, placeholder for now.
+- `bun run test` runs all tests.
