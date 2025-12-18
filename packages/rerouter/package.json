@@ -1,5 +1,4 @@
 {
-    "name": "@mpen/rerouter",
     "private": true,
     "packageManager": "bun",
     "workspaces": [

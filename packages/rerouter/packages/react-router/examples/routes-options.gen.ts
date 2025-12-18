@@ -1,5 +1,5 @@
 // Do not modify this file. It was auto-generated with the following command:
-// $ bun src/bin/gen-routes.ts ./examples/routes.tsx -o ./examples/routes.gen.ts
+// $ bun src/bin/gen-routes.ts ./examples/routes.tsx -o ./examples/routes-options.gen.ts --wildcard-delimiter "," --encode-function encodeURI
 
 type __AllOrNone<T> =
     | Required<T>
@@ -32,17 +32,17 @@ export function kitchenSink(
     if (params["baz"] == null) throw new Error("Missing param: baz")
     if (params["splat"] == null) throw new Error("Missing param: splat")
     sb += "/hello/"
-    sb += (encodeURIComponent)(String(params["foo"]))
+    sb += (encodeURI)(String(params["foo"]))
     sb += "/bar/"
-    sb += (encodeURIComponent)(String(params["baz"]))
+    sb += (encodeURI)(String(params["baz"]))
     sb += "/"
-    sb += Array.from(params["splat"], v => (encodeURIComponent)(String(v))).join("/")
+    sb += Array.from(params["splat"], v => (encodeURI)(String(v))).join(",")
     sb += "/xxx"
     if (params["optional"] != null && params["two"] != null) {
         sb += "/"
-        sb += (encodeURIComponent)(String(params["optional"]))
+        sb += (encodeURI)(String(params["optional"]))
         sb += "/lol/"
-        sb += (encodeURIComponent)(String(params["two"]))
+        sb += (encodeURI)(String(params["two"]))
     } else if (!(params["optional"] == null && params["two"] == null)) {
         throw new Error("Group requires all-or-none: \"optional\", \"two\"")
     }
@@ -67,7 +67,7 @@ export function match(
 
     if (params["id"] == null) throw new Error("Missing param: id")
     sb += "/matches/"
-    sb += (encodeURIComponent)(String(params["id"]))
+    sb += (encodeURI)(String(params["id"]))
 
     return sb
 }

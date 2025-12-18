@@ -121,9 +121,12 @@ function compilePathGenerator(
             if (t.type === 'text') {
                 line(indentLevel, `sb += ${escapeString(t.value)}`)
             } else if (t.type === 'param') {
-                line(indentLevel, `sb += ${encode}(params[${escapeString(t.name)}])`)
+                line(indentLevel, `sb += (${encode})(String(params[${escapeString(t.name)}]))`)
             } else if (t.type === 'wildcard') {
-                line(indentLevel, `sb += Array.from(params[${escapeString(t.name)}], ${encode}).join(${delim})`)
+                line(
+                    indentLevel,
+                    `sb += Array.from(params[${escapeString(t.name)}], v => (${encode})(String(v))).join(${delim})`,
+                )
             } else if (t.type === 'group') {
                 const names = collectNames(t.tokens).map(name => escapeString(name))
                 if (!names.length) continue
@@ -227,12 +230,16 @@ async function main(argv: string[] = Bun.argv): Promise<void> {
         strict: true,
         options: {
             output: {type: 'string', short: 'o'},
+            'wildcard-delimiter': {type: 'string'},
+            'encode-function': {type: 'string'},
         },
     })
 
     const [, , routesPathArg] = positionals
     if (!routesPathArg) {
-        console.error('Usage: bun src/bin/gen-routes.ts <routes-file> [-o <output-file>]')
+        console.error(
+            'Usage: bun src/bin/gen-routes.ts <routes-file> [-o <output-file>] [--wildcard-delimiter <string>] [--encode-function <identifier>]',
+        )
         process.exit(1)
     }
 
@@ -248,6 +255,9 @@ async function main(argv: string[] = Bun.argv): Promise<void> {
     const routes = extractRoutesFromDefaultExport(sourceFile)
         .map(r => ({...r, pattern: r.pattern.trim()}))
         .filter(r => r.pattern.startsWith('/') && r.pattern !== '*')
+
+    const wildcardDelimiter = (values['wildcard-delimiter'] as string | undefined) ?? '/'
+    const encodeFunction = (values['encode-function'] as string | undefined) ?? 'encodeURIComponent'
 
     const rawArgs = argv.slice(1)
     if (rawArgs[0] && path.isAbsolute(rawArgs[0])) {
@@ -281,7 +291,7 @@ async function main(argv: string[] = Bun.argv): Promise<void> {
             }
             usedNames.add(name)
 
-            out.push(compilePathGenerator(route.pattern, {functionName: name}))
+            out.push(compilePathGenerator(route.pattern, {functionName: name, delimiter: wildcardDelimiter, encode: encodeFunction}))
             out.push(``)
         }
     }

@@ -22,7 +22,7 @@
   },
   "scripts": {
     "build": "tsdown",
-    "gen": "bun ./src/bin/gen-routes.ts ./examples/routes.tsx -o ./examples/routes.gen.ts"
+    "gen": "bun ./src/bin/gen-routes.ts ./examples/routes.tsx -o ./examples/routes.gen.ts && bun ./src/bin/gen-routes.ts ./examples/routes.tsx -o ./examples/routes-options.gen.ts --wildcard-delimiter \",\" --encode-function encodeURI"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts"
