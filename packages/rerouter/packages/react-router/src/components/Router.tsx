@@ -1,5 +1,5 @@
 import {useMemo} from 'react'
-import {useUrlPath} from './hooks'
+import {useUrlPath} from '../hooks'
 import {match as pathMatch} from 'path-to-regexp'
 
 export type RouteParams = Record<string, string | undefined>
@@ -81,3 +81,4 @@ export function Router({routes}: RouterProps) {
 
     return null
 }
+

@@ -1,8 +1,8 @@
-export {Link} from './Link'
-export type {LinkProps, SearchParamsInit} from './Link'
+export {Link} from './components/Link'
+export type {LinkProps, SearchParamsInit} from './components/Link'
 
-export {Router} from './Router'
-export type {Route, RouteComponent, RouteObject, RouteParams, RouterProps, RouteTuple} from './Router'
+export {Router} from './components/Router'
+export type {Route, RouteComponent, RouteObject, RouteParams, RouterProps, RouteTuple} from './components/Router'
 
-export {pushUrl, replaceUrl} from './url'
+export {pushUrl, replaceUrl} from './lib/url'
 export {useAbsoluteUrl, useUrl, useUrlPath, useUrlSearchParams} from './hooks'

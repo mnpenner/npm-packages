@@ -6,7 +6,6 @@
   },
   "include": [
     "src/**/*.ts",
-    "examples/**/*.ts",
-    "gen-api-client.ts"
+    "examples/**/*.ts"
   ]
 }

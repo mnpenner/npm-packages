@@ -8,8 +8,7 @@
     "server-router-gen-api-client": "./src/bin/gen-api-client.ts"
   },
   "files": [
-    "src",
-    "gen-api-client.ts"
+    "src"
   ],
   "module": "./dist/index.mjs",
   "type": "module",
