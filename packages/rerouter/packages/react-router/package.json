@@ -22,8 +22,7 @@
   },
   "scripts": {
     "build": "tsdown",
-    "gen": "bun ./src/bin/gen-routes.ts ./examples/routes.tsx -o ./examples/routes.gen.ts",
-    "ex:gen": "bun ./src/bin/gen-routes.ts ./examples/routes.tsx -o ./examples/routes.gen.ts"
+    "gen": "bun ./src/bin/gen-routes.ts ./examples/routes.tsx -o ./examples/routes.gen.ts"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts"
