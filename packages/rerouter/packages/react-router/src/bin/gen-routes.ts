@@ -3,17 +3,17 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import {parseArgs} from 'node:util'
 import * as ts from 'typescript'
-import {createRequire} from 'node:module'
 import {$} from 'bun'
+import {parse} from 'path-to-regexp'
 
 type Token = any
 
-type AllOrNone<T> =
+type __AllOrNone<T> =
     | Required<T>
     | { [K in keyof T]?: never }
 
-type ParamType = string | number | boolean
-type WildcardType = Iterable<ParamType>
+type __ParamType = string | number | boolean
+type __WildcardType = Iterable<__ParamType>
 
 type CompileOptions = {
     delimiter?: string
@@ -25,22 +25,10 @@ function escapeString(value: string): string {
     return JSON.stringify(value)
 }
 
-function loadPathToRegexpParse(): (pattern: string) => { tokens: Token[] } {
-    const localRequire = createRequire(import.meta.url)
-    try {
-        return localRequire('path-to-regexp').parse
-    } catch {
-        const repoRoot = path.resolve(import.meta.dir, '../../../..')
-        const tmpRequire = createRequire(path.join(repoRoot, '.tmp', 'dist', 'bundle.cjs'))
-        return tmpRequire('path-to-regexp').parse
-    }
-}
-
 function compilePathGenerator(
     pattern: string,
     {delimiter = '/', encode = 'encodeURIComponent', functionName = 'generate'}: CompileOptions = {},
 ): string {
-    const parse = loadPathToRegexpParse()
     const {tokens} = parse(pattern)
 
     type Prop = { name: string; type: string }
@@ -48,7 +36,7 @@ function compilePathGenerator(
     const baseProps: Prop[] = []
     const groupTypes: string[] = []
 
-    const typeOfParam = (t: any) => (t.type === 'wildcard' ? 'WildcardType' : 'ParamType')
+    const typeOfParam = (t: any) => (t.type === 'wildcard' ? '__WildcardType' : '__ParamType')
     const makeProp = (name: string, t: any): Prop => ({name, type: typeOfParam(t)})
 
     function collectGroupProps(ts2: any[]): Prop[] {
@@ -72,7 +60,7 @@ function compilePathGenerator(
                         ...groupProps.map(p => `    ${escapeString(p.name)}: ${p.type}`),
                         '}',
                     ].join('\n')
-                    groupTypes.push(`AllOrNone<${some}>`)
+                    groupTypes.push(`__AllOrNone<${some}>`)
                 }
                 collectTypes(t.tokens, false)
             }
@@ -151,52 +139,73 @@ function isStringLike(expr: ts.Expression): expr is ts.StringLiteralLike | ts.No
     return ts.isStringLiteralLike(expr) || ts.isNoSubstitutionTemplateLiteral(expr)
 }
 
-function toRouteFunctionName(pattern: string): string {
-    if (pattern === '/') return 'route_root'
-    const cleaned = pattern
-        .replace(/^\//, '')
-        .replace(/[?#].*$/, '')
-        .replace(/\/+$/, '')
-
-    const parts = cleaned.split('/').filter(Boolean)
-    const words: string[] = []
-    for (const part of parts) {
-        if (part === '*') continue
-        if (part.startsWith(':')) words.push(part.slice(1))
-        else words.push(part)
-    }
-    const raw = words.join('_') || 'route'
-    const ident = raw.replace(/[^a-zA-Z0-9_]/g, '_').replace(/^[^a-zA-Z_]+/, '')
-    return `route_${ident || 'route'}`
+function toRouteFunctionName(routeName: string): string {
+    const ident = routeName
+        .trim()
+        .replace(/[^a-zA-Z0-9_]/g, '_')
+        .replace(/^[^a-zA-Z_]+/, '')
+    return ident || 'route'
 }
 
-function extractRoutesPatterns(sourceFile: ts.SourceFile): string[] {
-    const patterns: string[] = []
+type ExtractedRoute = { name: string; pattern: string }
 
-    const visit = (node: ts.Node): void => {
-        if (ts.isVariableStatement(node)) {
-            const isExported = node.modifiers?.some(m => m.kind === ts.SyntaxKind.ExportKeyword) ?? false
-            if (!isExported) return
-
-            for (const decl of node.declarationList.declarations) {
-                if (!ts.isIdentifier(decl.name) || decl.name.text !== 'ROUTES') continue
-                const init = decl.initializer
-                if (!init || !ts.isArrayLiteralExpression(init)) continue
-
-                for (const element of init.elements) {
-                    if (!ts.isArrayLiteralExpression(element) || element.elements.length < 1) continue
-                    const pattExpr = element.elements[0]
-                    if (!pattExpr || !isStringLike(pattExpr)) continue
-                    patterns.push(pattExpr.text)
-                }
-            }
+function getProp(object: ts.ObjectLiteralExpression, propName: string): ts.Expression | undefined {
+    for (const prop of object.properties) {
+        if (ts.isPropertyAssignment(prop) && ts.isIdentifier(prop.name) && prop.name.text === propName) {
+            return prop.initializer
         }
+    }
+    return undefined
+}
 
-        ts.forEachChild(node, visit)
+function resolveDefaultExportExpression(sourceFile: ts.SourceFile): ts.Expression | undefined {
+    for (const stmt of sourceFile.statements) {
+        if (!ts.isExportAssignment(stmt)) continue
+        if (stmt.isExportEquals) continue
+        return stmt.expression
+    }
+    return undefined
+}
+
+function findVariableInitializer(sourceFile: ts.SourceFile, name: string): ts.Expression | undefined {
+    for (const stmt of sourceFile.statements) {
+        if (!ts.isVariableStatement(stmt)) continue
+        for (const decl of stmt.declarationList.declarations) {
+            if (!ts.isIdentifier(decl.name) || decl.name.text !== name) continue
+            return decl.initializer
+        }
+    }
+    return undefined
+}
+
+function extractRoutesFromDefaultExport(sourceFile: ts.SourceFile): ExtractedRoute[] {
+    const defaultExpr = resolveDefaultExportExpression(sourceFile)
+    if (!defaultExpr) return []
+
+    const rootExpr = ts.isIdentifier(defaultExpr)
+        ? findVariableInitializer(sourceFile, defaultExpr.text) ?? defaultExpr
+        : defaultExpr
+
+    if (!ts.isArrayLiteralExpression(rootExpr)) return []
+
+    const routes: ExtractedRoute[] = []
+
+    for (const element of rootExpr.elements) {
+        if (ts.isObjectLiteralExpression(element)) {
+            const nameExpr = getProp(element, 'name')
+            const patternExpr = getProp(element, 'pattern')
+            if (!nameExpr || !patternExpr) continue
+            if (!isStringLike(nameExpr) || !isStringLike(patternExpr)) continue
+            routes.push({name: nameExpr.text, pattern: patternExpr.text})
+        } else if (ts.isArrayLiteralExpression(element)) {
+            const [nameExpr, patternExpr] = element.elements
+            if (!nameExpr || !patternExpr) continue
+            if (!isStringLike(nameExpr) || !isStringLike(patternExpr)) continue
+            routes.push({name: nameExpr.text, pattern: patternExpr.text})
+        }
     }
 
-    visit(sourceFile)
-    return patterns
+    return routes
 }
 
 async function main(argv: string[] = Bun.argv): Promise<void> {
@@ -224,31 +233,43 @@ async function main(argv: string[] = Bun.argv): Promise<void> {
     const codeText = await fs.readFile(routesPath, 'utf8')
     const sourceFile = ts.createSourceFile(routesPath, codeText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
 
-    const patterns = extractRoutesPatterns(sourceFile)
-        .map(p => p.trim())
-        .filter(p => p.startsWith('/') && p !== '*')
+    const routes = extractRoutesFromDefaultExport(sourceFile)
+        .map(r => ({...r, pattern: r.pattern.trim()}))
+        .filter(r => r.pattern.startsWith('/') && r.pattern !== '*')
 
-    const commandText = ['bun', ...argv.slice(1).map(arg => $.escape(arg))].join(' ')
+    const rawArgs = argv.slice(1)
+    if (rawArgs[0] && path.isAbsolute(rawArgs[0])) {
+        rawArgs[0] = path.relative(process.cwd(), rawArgs[0]).replace(/\\/g, '/')
+    }
+    const commandText = ['bun', ...rawArgs.map(arg => $.escape(arg))].join(' ')
 
     const out: string[] = []
     out.push(`// Do not modify this file. It was auto-generated with the following command:`)
     out.push(`// $ ${commandText}`)
     out.push(``)
-    out.push(`type AllOrNone<T> =`)
+    out.push(`type __AllOrNone<T> =`)
     out.push(`    | Required<T>`)
     out.push(`    | { [K in keyof T]?: never }`)
     out.push(``)
-    out.push(`type ParamType = string | number | boolean`)
-    out.push(`type WildcardType = Iterable<ParamType>`)
+    out.push(`type __ParamType = string | number | boolean`)
+    out.push(`type __WildcardType = Iterable<__ParamType>`)
     out.push(``)
 
-    if (!patterns.length) {
-        out.push(`// No string route patterns found.`)
+    if (!routes.length) {
+        out.push(`// No string route patterns found in the default export.`)
         out.push(``)
     } else {
-        for (const pattern of patterns) {
-            const fn = toRouteFunctionName(pattern)
-            out.push(compilePathGenerator(pattern, {functionName: fn}))
+        const usedNames = new Set<string>()
+        for (const route of routes) {
+            const base = toRouteFunctionName(route.name)
+            let name = base
+            let i = 2
+            while (usedNames.has(name)) {
+                name = `${base}_${i++}`
+            }
+            usedNames.add(name)
+
+            out.push(compilePathGenerator(route.pattern, {functionName: name}))
             out.push(``)
         }
     }
@@ -261,4 +282,3 @@ main().catch(err => {
     console.error(err)
     process.exit(1)
 })
-

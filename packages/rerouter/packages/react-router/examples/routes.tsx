@@ -1,4 +1,4 @@
-import {Router, type Route, type RouteParams} from '../src'
+import type {RouteObject, RouteParams} from '../src'
 
 function Home() {
     return <div>Home</div>
@@ -16,19 +16,11 @@ function NotFound() {
     return <div>Not found</div>
 }
 
-export const ROUTES: readonly Route[] = [
-    ['/', Home],
-    ['/login', Login],
-    ['/matches/:id', Match],
-    ['*', NotFound],
+const ROUTES: readonly RouteObject[] = [
+    {name: 'home', pattern: '/', component: Home},
+    {name: 'login', pattern: '/login', component: Login},
+    {name: 'match', pattern: '/matches/:id', component: Match},
+    {name: 'notFound', pattern: '*', component: NotFound},
 ]
 
-export function Layout() {
-    return (
-        <div>
-            <h1>My App</h1>
-            <Router routes={ROUTES} />
-        </div>
-    )
-}
-
+export default ROUTES

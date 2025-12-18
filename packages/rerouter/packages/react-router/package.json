@@ -6,7 +6,6 @@
     "./package.json": "./package.json"
   },
   "bin": {
-    "react-router-gen-path-to-regexp": "./src/bin/gen-path-to-regexp.ts",
     "react-router-gen-routes": "./src/bin/gen-routes.ts"
   },
   "type": "module",
@@ -23,7 +22,7 @@
   },
   "scripts": {
     "build": "tsdown",
-    "gen": "bun ./src/bin/gen-path-to-regexp.ts",
+    "gen": "bun ./src/bin/gen-routes.ts ./examples/routes.tsx -o ./examples/routes.gen.ts",
     "ex:gen": "bun ./src/bin/gen-routes.ts ./examples/routes.tsx -o ./examples/routes.gen.ts"
   },
   "main": "./dist/index.js",

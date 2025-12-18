@@ -5,10 +5,22 @@ export type RouteParams = Record<string, string | undefined>
 
 export type RouteComponent = React.ComponentType<RouteParams>
 
-export type Route = readonly [pattern: string | URLPattern, component: RouteComponent]
+export type RouteObject = {
+    name: string
+    pattern: string | URLPattern
+    component: RouteComponent
+}
+
+export type RouteTuple = readonly [name: string, pattern: string | URLPattern, component: RouteComponent]
+
+export type Route = RouteObject | RouteTuple
 
 export interface RouterProps {
     routes: readonly Route[]
+}
+
+function isRouteTuple(route: Route): route is RouteTuple {
+    return Array.isArray(route)
 }
 
 function toUrlPattern(pattern: string | URLPattern): URLPattern {
@@ -20,7 +32,12 @@ export function Router({routes}: RouterProps) {
     const url = useUrl()
 
     const normalizedRoutes = useMemo(
-        () => routes.map(([pattern, component]) => [toUrlPattern(pattern), component] as const),
+        () =>
+            routes.map(route => {
+                const pattern = isRouteTuple(route) ? route[1] : route.pattern
+                const component = isRouteTuple(route) ? route[2] : route.component
+                return [toUrlPattern(pattern), component] as const
+            }),
         [routes],
     )
 
@@ -33,4 +50,3 @@ export function Router({routes}: RouterProps) {
 
     return null
 }
-

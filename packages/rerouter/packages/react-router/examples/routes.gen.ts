@@ -1,14 +1,14 @@
 // Do not modify this file. It was auto-generated with the following command:
-// $ bun /mnt/c/Users/Mark/PhpstormProjects/rerouter/packages/react-router/src/bin/gen-routes.ts ./examples/routes.tsx -o ./examples/routes.gen.ts
+// $ bun src/bin/gen-routes.ts ./examples/routes.tsx -o ./examples/routes.gen.ts
 
-type AllOrNone<T> =
+type __AllOrNone<T> =
     | Required<T>
     | { [K in keyof T]?: never }
 
-type ParamType = string | number | boolean
-type WildcardType = Iterable<ParamType>
+type __ParamType = string | number | boolean
+type __WildcardType = Iterable<__ParamType>
 
-export function route_root(
+export function home(
     params: {
 }
 ): string {
@@ -19,7 +19,7 @@ export function route_root(
     return sb
 }
 
-export function route_login(
+export function login(
     params: {
 }
 ): string {
@@ -30,9 +30,9 @@ export function route_login(
     return sb
 }
 
-export function route_matches_id(
+export function match(
     params: {
-    "id": ParamType
+    "id": __ParamType
 }
 ): string {
     let sb = ""
