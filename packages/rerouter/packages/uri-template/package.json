@@ -1,0 +1,9 @@
+{
+  "name": "@mpen/uri-template",
+  "type": "module",
+  "module": "src/index.ts",
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
+

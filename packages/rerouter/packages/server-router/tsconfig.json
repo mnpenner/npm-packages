@@ -4,6 +4,9 @@
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "types": ["bun-types"]
   },
-  "include": ["src/**/*.ts", "gen-api-client.ts"],
-  "exclude": ["src/examples/**/*"]
+  "include": [
+    "src/**/*.ts",
+    "examples/**/*.ts",
+    "gen-api-client.ts"
+  ]
 }

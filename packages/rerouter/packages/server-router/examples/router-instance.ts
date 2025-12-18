@@ -1,9 +1,9 @@
-import {Router} from '../router'
+import {Router} from '../src'
 import {createZodNeverjectHandler} from '@mpen/server-router-zod-neverject'
 import {okAsync} from 'neverject'
 import {z} from 'zod'
 
-const router = new Router()
+export const router = new Router()
 
 router.add({
     pattern: '/',
@@ -65,7 +65,6 @@ router.add({
     method: 'POST'
 })
 
-export default router
 
 if(import.meta.main) {
     console.log(router)

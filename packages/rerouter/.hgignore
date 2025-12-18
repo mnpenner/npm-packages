@@ -1,9 +1,9 @@
 syntax: regexp
 
-(^|.*/)node_modules(/|$)
-^mochawesome-report/
-^\.idea/
-^dist/
+(^|/)node_modules$
+(^|/)\.idea$
+(^|/)dist$
+(^|/)\.te?mp$
 \.log$
 ~$
 (?<![^/])Thumbs\.db$

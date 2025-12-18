@@ -5,8 +5,9 @@
         "types": ["bun-types"]
     },
     "include": [
-        "v2/**/*.ts",
-        "packages/**/*.ts"
+        "packages/http-helpers/**/*.ts",
+        "packages/server-router/**/*.ts",
+        "packages/server-router-zod-neverject/**/*.ts"
     ],
     "exclude": [
         "**/node_modules/**",
@@ -15,3 +16,4 @@
         "packages/**/dist/**"
     ]
 }
+
