@@ -228,11 +228,13 @@ async function main(argv: string[] = Bun.argv): Promise<void> {
     lines.push(`type WildcardType = Iterable<ParamType>`)
     lines.push(``)
 
-    const code = compile(pattern, {
-        delimiter: values.delimiter as string | undefined,
-        encode: values.encode as string | undefined,
+    const compileOptions: CompileOptions = {
         functionName: (values['function-name'] as string | undefined) ?? 'generate',
-    })
+    }
+    if (values.delimiter != null) compileOptions.delimiter = values.delimiter as string
+    if (values.encode != null) compileOptions.encode = values.encode as string
+
+    const code = compile(pattern, compileOptions)
 
     lines.push(code)
     lines.push(``)

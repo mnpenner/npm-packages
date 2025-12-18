@@ -57,7 +57,7 @@ if (production) {
         }),
     )
 } else {
-    config.input = 'src/dev.tsx'
+    config.input = 'src/dev.ts'
 }
 
 export default config

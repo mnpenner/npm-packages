@@ -39,7 +39,7 @@ import Chalk from 'chalk'
 
 
 import {UriTemplate} from "./uri-template"
-import log from 'log'
+import log from './log'
 
 // const templ = new UriTemplate('/schedule/{year:int:4}-{month:int:2}-{day:int:2}{?foo,q*}');
 // log(templ);
@@ -74,4 +74,3 @@ import log from 'log'
     // console.log(templ);
     console.log(templ.match('weather/Washington/Redmond?forecast=today'))
 }
-

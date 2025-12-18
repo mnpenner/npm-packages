@@ -1,3 +1,3 @@
 - Current code lives in `packages/`. Legacy/older versions live in `experimental/`.
-- Run `bun packages/server-router/gen-api-client.ts packages/server-router/src/examples/router-instance.ts` to regenerate the ApiClient
+- Run `bun packages/server-router/gen-api-client.ts packages/server-router/examples/router-instance.ts` to regenerate the ApiClient
 - Run `bun run test:tsc` to check TypeScript types

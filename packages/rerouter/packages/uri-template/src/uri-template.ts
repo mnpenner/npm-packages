@@ -146,6 +146,7 @@ export class UriTemplate<P extends UriParams> {
                 vars: [],
             }
             this.expandParts.push(ph)
+            if (m[1] == null) throw new Error('Invalid UriTemplate placeholder')
             let varStr = m[1]
             const prefix = varStr.match(PREFIX_RE)
             if(prefix) {
@@ -159,7 +160,7 @@ export class UriTemplate<P extends UriParams> {
             let isFirst = true
 
             if(!isNamed) {
-                re.push(escapeRegExp(FirstMap[ph.prefix]))
+                re.push(escapeRegExp(FirstMap[ph.prefix]!))
             }
 
             for(const v of vars) {
@@ -188,7 +189,7 @@ export class UriTemplate<P extends UriParams> {
 
                 if(!isNamed) {
                     if(!isFirst) {
-                        re.push(escapeRegExp(SeparatorMap[ph.prefix]))
+                        re.push(escapeRegExp(SeparatorMap[ph.prefix]!))
                     }
 
                     let groupName = item.name
@@ -236,7 +237,7 @@ export class UriTemplate<P extends UriParams> {
             }
 
             if(isNamed) {
-                re.push('(?:', escapeRegExp(FirstMap[ph.prefix]))
+                re.push('(?:', escapeRegExp(FirstMap[ph.prefix]!))
                 const groupName = `kwargs${matchCounter++}`
                 re.push(`(?<${groupName}>[^/?#]*)`)
                 re.push(')?')
@@ -270,11 +271,11 @@ export class UriTemplate<P extends UriParams> {
                 case VAR:
                     const vs: string[] = []
                     for(const v of p.vars) {
-                        if(Object.hasOwn(variables, v.name)) {
-                            const x = variables[v.name]
-                            if(x == null) continue
-                            const sep = v.repeat ? SeparatorMap[p.prefix] : ','
-                            const esc = (x: Primitive|PrimitivePair) => percentEncodeRegExp(x, ReservedExpansion[p.prefix], v.length, v.repeat ? '=' : ',')
+                            if(Object.hasOwn(variables, v.name)) {
+                                const x = variables[v.name]
+                                if(x == null) continue
+                            const sep = v.repeat ? SeparatorMap[p.prefix]! : ','
+                            const esc = (x: Primitive|PrimitivePair) => percentEncodeRegExp(x, ReservedExpansion[p.prefix]!, v.length, v.repeat ? '=' : ',')
                             let pre = ''
                             if(Named[p.prefix]) {
                                 pre = v.name + (isEmpty(x) ? IfEmp[p.prefix] : '=')
@@ -295,7 +296,7 @@ export class UriTemplate<P extends UriParams> {
                         }
                     }
                     if(vs.length) {
-                        out.push(FirstMap[p.prefix], vs.join(SeparatorMap[p.prefix]))
+                        out.push(FirstMap[p.prefix]!, vs.join(SeparatorMap[p.prefix]!))
                     }
                     break
                 case STR:
@@ -323,7 +324,7 @@ export class UriTemplate<P extends UriParams> {
 
                     switch(itemSpec.type) {
                         case VarType.NAMED: {
-                            const parsed = v == null ? Object.create(null) : parseParams(v, SeparatorMap[itemSpec.prefix])
+                            const parsed = v == null ? Object.create(null) : parseParams(v, SeparatorMap[itemSpec.prefix]!)
                             // console.log('parseParams',v, SeparatorMap[itemSpec.prefix],parsed);
 
                             for(const vs of itemSpec.vars) {
@@ -362,7 +363,7 @@ export class UriTemplate<P extends UriParams> {
                             } else {
                                 value = v
                                 if(itemSpec.var.repeat) {
-                                    value = value.split(SeparatorMap[itemSpec.prefix]).map(x => formatElement(x, itemSpec.var)) as string[] | number[]
+                                    value = value.split(SeparatorMap[itemSpec.prefix]!).map(x => formatElement(x, itemSpec.var)) as string[] | number[]
                                 } else {
                                     value = formatElement(value, itemSpec.var)
                                 }
@@ -476,7 +477,7 @@ function percentEncodeRegExp(value: Primitive|PrimitivePair, reserved: boolean, 
 const UTF8_ENCODER = new TextEncoder()
 
 function percentEncode(str: string) {
-    return Array.from(UTF8_ENCODER.encode(str)).map(i => '%' + i.toString(16).toUpperCase().padStart(2, '0')).join('')
+    return Array.from(UTF8_ENCODER.encode(str)).map((i: number) => '%' + i.toString(16).toUpperCase().padStart(2, '0')).join('')
 }
 
 export type UriParams = Record<string, UrlParamValue>

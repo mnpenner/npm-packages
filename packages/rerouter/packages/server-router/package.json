@@ -6,6 +6,10 @@
   "bin": {
     "server-router-gen-api-client": "./src/bin/gen-api-client.ts"
   },
+  "files": [
+    "src",
+    "gen-api-client.ts"
+  ],
   "module": "src/index.ts",
   "type": "module",
   "devDependencies": {

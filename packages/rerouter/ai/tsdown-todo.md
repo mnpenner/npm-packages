@@ -61,8 +61,9 @@ likewise, add "ex:gen" for server-router. and then an "ex:gen" in the root packa
 
 Update AGENTS.md as needed. We basically want...
 
-- "build:pkg" everything which builds the projects for publishing to npm
-- "build:ex" which runs the 'bin' generators so we can manually inspect the output and make sure it makes sense.
+- "build" everything which builds the projects for publishing to npm
+- "gen" which runs the 'bin' generators so we can manually inspect the output and make sure it makes sense.
 - "test:types" which checks for typescript errors (renamed from build:tsc)
 - "test:impl" which runs the tests in the examples (we will need to add some bun .test.ts files but not just yet)
-- "test:gen" which runs "build:pkg" and then *tests* the generated code
+- "test:gen" which runs "gen" and then *tests* the generated code (we'll eventually have a .test.ts which imports the generated code)
+- "test" runs all tests.

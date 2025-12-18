@@ -1,4 +1,5 @@
-import {UriParams, UriTemplate, UrlParamValue} from "./uri-template"
+import type {UriParams, UrlParamValue} from "./uri-template"
+import {UriTemplate} from "./uri-template"
 import specExamples from './testcases/spec-examples.json' assert {type: "json"}
 import extendedTests from './testcases/extended-tests.json' assert {type: "json"}
 import matchCases from './testcases/match-cases.json' assert {type: "json"}
