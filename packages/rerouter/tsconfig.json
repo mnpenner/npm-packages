@@ -5,13 +5,12 @@
         "types": ["bun-types"]
     },
     "include": [
-        "v2/**/*.ts",
         "packages/**/*.ts"
     ],
     "exclude": [
         "**/node_modules/**",
         "dist/**",
-        "v2/dist/**",
+        "experimental/**",
         "packages/**/dist/**"
     ]
 }

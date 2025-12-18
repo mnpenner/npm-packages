@@ -1,6 +1,9 @@
 {
   "name": "@mpen/react-router",
   "module": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "type": "module",
   "peerDependencies": {
     "typescript": "^5"

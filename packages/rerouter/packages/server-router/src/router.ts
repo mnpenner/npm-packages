@@ -1,4 +1,3 @@
-import {URLPattern} from 'urlpattern-polyfill'
 import type {Server} from 'bun'
 import type {UniversalExecutionContext, UniversalServerInterface} from './UniversalServerInterface'
 import {joinPrefixPathname, stripPrefixPathname} from './pathname'

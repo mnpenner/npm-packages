@@ -1,4 +1,3 @@
-import {URLPattern} from 'urlpattern-polyfill'
 import type {NormalizedRoute, Route} from './types'
 import {pattToName, sanitizeNameParts, splitNameString} from './route-names'
 
@@ -23,4 +22,3 @@ export function normalizeRoute(route: Route): NormalizedRoute {
         method: route.method,
     }
 }
-

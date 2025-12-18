@@ -1,5 +1,3 @@
-import type {URLPattern} from 'urlpattern-polyfill'
-
 function sanitizeNamePart(part: string): string {
     const replaced = part.replace(/:([a-zA-Z_$][a-zA-Z0-9_$]*)/g, '$$$1')
     const cleaned = replaced.replace(/[^a-zA-Z0-9_$]/g, '')

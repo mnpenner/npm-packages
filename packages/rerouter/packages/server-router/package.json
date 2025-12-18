@@ -1,5 +1,8 @@
 {
   "name": "@mpen/server-router",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "module": "src/index.ts",
   "type": "module",
   "devDependencies": {
@@ -7,8 +10,5 @@
   },
   "peerDependencies": {
     "typescript": "^5"
-  },
-  "dependencies": {
-    "urlpattern-polyfill": "^10.1.0"
   }
 }

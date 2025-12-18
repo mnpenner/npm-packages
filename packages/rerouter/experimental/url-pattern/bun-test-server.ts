@@ -18,7 +18,7 @@ export default {
 
 
 /*
-$ PORT=3002 bun v2/bun-test-server.ts
+$ PORT=3002 bun experimental/url-pattern/bun-test-server.ts
 Started development server: http://localhost:3002
 
 $ curl -v http://localhost:3002/

@@ -1,4 +1,3 @@
-import type {URLPattern} from 'urlpattern-polyfill'
 import type {UniversalExecutionContext} from './UniversalServerInterface'
 
 export interface Route {

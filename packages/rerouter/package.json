@@ -31,10 +31,10 @@
     },
     "license": "MIT",
     "scripts": {
-        "test:tsc": "tsc --noEmit -p tsconfig.test.json && echo \"tsc: no errors\"",
+        "test:tsc": "tsc --noEmit -p packages/server-router/tsconfig.json",
         "test:bun": "bun test",
         "test": "run-p 'test:*'",
-        "dev": "bun run --hot src/dev.ts",
+        "dev": "bun run --hot packages/uri-template/src/dev.ts",
         "bundle:clean": "rimraf -g \"dist/*\"",
         "bundle:build": "rollup -c",
         "bundle": "run-s bundle:clean bundle:build",

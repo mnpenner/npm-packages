@@ -3,7 +3,6 @@ import * as ts from 'typescript'
 import path from 'node:path'
 import fs from 'node:fs'
 import {parseArgs} from 'util'
-import {URLPattern} from 'urlpattern-polyfill'
 import {$} from 'bun'
 import {pattToName, sanitizeNameParts, splitNameString} from './src/route-names'
 
@@ -194,7 +193,7 @@ function extractRoutesFromRouterSymbol(
                     const explicitName = nameNode ? parseNameNode(nameNode) : undefined
                     const name = explicitName
                         ? sanitizeNameParts(explicitName)
-                        : pattToName(method, new URLPattern({ pathname: pattern }))
+                        : pattToName(method, { pathname: pattern } as any)
 
                     routes.push({
                         name,
@@ -492,7 +491,9 @@ async function main() {
     const routerPath = path.resolve(routerPathArg)
     const tsconfigPath = path.resolve(import.meta.dir, 'tsconfig.json')
     const program = getProgramFromTsConfig(tsconfigPath, routerPath)
-    const sourceFile = program.getSourceFile(routerPath)
+    const sourceFile =
+        program.getSourceFile(routerPath)
+        ?? program.getSourceFiles().find(sf => path.resolve(sf.fileName) === routerPath)
     if (!sourceFile) {
         throw new Error(`Unable to load source file: ${routerPath}`)
     }

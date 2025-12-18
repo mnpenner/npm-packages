@@ -21,7 +21,9 @@
             "@mpen/server-router-zod-neverject": ["packages/server-router-zod-neverject/src/index.ts"],
             "@mpen/server-router-zod-neverject/*": ["packages/server-router-zod-neverject/src/*"],
             "@mpen/react-router": ["packages/react-router/src/index.ts"],
-            "@mpen/react-router/*": ["packages/react-router/src/*"]
+            "@mpen/react-router/*": ["packages/react-router/src/*"],
+            "@mpen/uri-template": ["packages/uri-template/src/index.ts"],
+            "@mpen/uri-template/*": ["packages/uri-template/src/*"]
         }
     }
 }

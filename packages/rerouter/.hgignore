@@ -1,13 +1,17 @@
 syntax: regexp
 
+# Dirs and filenames
 (^|/)node_modules$
 (^|/)\.idea$
 (^|/)dist$
 (^|/)\.te?mp$
-\.log$
+(^|/)Thumbs\.db$
+(^|/)\.git(attributes|ignore)$
+(^|/)\.env$
+
+# Suffixes
 ~$
-(?<![^/])Thumbs\.db$
-(?<![^/])\.gitattributes$
-(?<![^/])\.gitignore$
-(?<![^/])\.env$
-(?<![^/])\.(?![^/]+(ignore|rc)$) # all dotfiles except *ignore and *rc files
+\.log$
+
+# All dotfiles except *ignore and *rc files
+(^|/)\.(?![^/]+(ignore|rc)$)
