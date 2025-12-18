@@ -4,6 +4,7 @@ import {defineConfig} from 'tsdown'
 export default defineConfig({
     entry: {
         index: 'src/index.ts',
+        hooks: 'src/hooks/index.ts',
     },
     platform: 'browser',
     format: ['esm'],
@@ -11,4 +12,3 @@ export default defineConfig({
     exports: true,
     dts: true, // The client must use "moduleResolution": "bundler", "node16" or "nodenext". "node" will not resolve the types properly.
 })
-

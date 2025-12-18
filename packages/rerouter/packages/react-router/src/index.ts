@@ -5,4 +5,4 @@ export {Router} from './Router'
 export type {Route, RouteComponent, RouteObject, RouteParams, RouterProps, RouteTuple} from './Router'
 
 export {pushUrl, replaceUrl} from './url'
-export {useAbsoluteUrl, useUrl, useUrlPath, useUrlSearchParams} from './useUrl'
+export {useAbsoluteUrl, useUrl, useUrlPath, useUrlSearchParams} from './hooks'

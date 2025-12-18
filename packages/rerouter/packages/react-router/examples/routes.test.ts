@@ -15,6 +15,10 @@ describe('routes.gen', () => {
         expect(match({id: '123'})).toBe('/matches/123')
     })
 
+    it('match() uses encodeURIComponent', () => {
+        expect(match({id: 'a/b'})).toBe('/matches/a%2Fb')
+    })
+
     it('kitchenSink() without optional group', () => {
         expect(kitchenSink({foo: 'a', baz: 'b', splat: ['x', 'y']})).toBe('/hello/a/bar/b/x/y/xxx')
     })
