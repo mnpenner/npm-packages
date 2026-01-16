@@ -19,7 +19,7 @@ export interface Route {
     name?: string | string[]
     pattern: string | URLPattern
     handler: Handler<any, any, any, any, any>
-    method: string
+    method?: string
 }
 
 /**
@@ -39,7 +39,7 @@ export interface NormalizedRoute {
     name: string[]
     pattern: URLPattern
     handler: Handler<any, any, any, any, any>
-    method: string
+    method?: string
 }
 
 /**
@@ -83,7 +83,7 @@ export type RequestContext<Ctx extends object = AnyContext> = {
  * }
  * ```
  */
-export type HandlerYield = number | HttpStatus | Headers
+export type HandlerYield = number | HttpStatus | Headers | undefined
 
 /**
  * Final body value returned from streaming handlers.

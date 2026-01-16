@@ -71,7 +71,7 @@ const sleep = (ms: number): Promise<void> =>
 
 router.add({
     pattern: '/gen',
-    method: 'GET',
+    // method: 'GET',
     handler: async function* ({req}) {
         console.log('start')
         yield HttpStatus.OK
@@ -82,10 +82,9 @@ router.add({
             [CommonHeaders.CONTENT_TYPE]: ContentTypes.PLAIN_TEXT,
         })
         console.log('headers yielded')
-        await sleep(1000)
-        yield
+        yield await sleep(1000)
         console.log('sleep done')
-        return new TextEncoder().encode("herrro")
+        return "herro"
     }
 })
 

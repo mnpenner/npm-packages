@@ -5,7 +5,8 @@
 - `bun run test:impl` runs implementation tests (examples), placeholder for now.
 - `bun run test:gen` runs generators and then tests generated code, placeholder for now.
 - `bun run test` runs all tests.
-- Add detailed JSDoc comments including @example blocks, @param and @returns to all public APIs, including all function overloads
+- Add detailed JSDoc comments @param and @returns to all public APIs, including all function overloads
     - The public API is the `entry` point(s) listed in `tsdown.config.ts`
     - Link to other functions and classes using this syntax: [`NeverjectPromise`]{@link NeverjectPromise}
     - Link to methods using this syntax: [`Err.valueOr`]{@link Err#valueOr} 
+    - Include @example blocks when the usage is not obvious

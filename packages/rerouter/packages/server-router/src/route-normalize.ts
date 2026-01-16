@@ -1,9 +1,9 @@
 import type {NormalizedRoute, Route} from './types'
 import {pattToName, sanitizeNameParts, splitNameString} from './route-names'
 
-function normalizeRouteName(name: Route['name'], method: string, pattern: URLPattern): string[] {
+function normalizeRouteName(name: Route['name'], method: string | undefined, pattern: URLPattern): string[] {
     if (!name) {
-        return pattToName(method, pattern)
+        return pattToName(method ?? 'ANY', pattern)
     }
     if (typeof name === 'string') {
         return sanitizeNameParts(splitNameString(name))

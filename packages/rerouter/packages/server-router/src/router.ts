@@ -182,10 +182,23 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
     }
 
     private match(method: string, url: URL): MatchResult<Ctx> | null {
+        const isHead = method === 'HEAD'
+        if (isHead) {
+            const headOnly = this.matchWithMethodCheck(url, routeMethod => routeMethod?.toUpperCase() === 'HEAD')
+            if (headOnly) return headOnly
+            return this.matchWithMethodCheck(url, () => true)
+        }
+        return this.matchWithMethodCheck(url, routeMethod => !routeMethod || routeMethod.toUpperCase() === method)
+    }
+
+    private matchWithMethodCheck(
+        url: URL,
+        methodCheck: (routeMethod?: string) => boolean
+    ): MatchResult<Ctx> | null {
         for (const entry of this.entries) {
             if (entry.kind === 'route') {
                 const route = entry.route
-                if (route.method.toUpperCase() !== method) continue
+                if (!methodCheck(route.method)) continue
                 const match = route.pattern.exec(url)
                 if (!match) continue
                 return { route, match, middleware: [...this._middleware] }
@@ -196,14 +209,14 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
                 if (subPathname == null) continue
                 const subUrl = new URL(url.toString())
                 subUrl.pathname = subPathname
-                const subMatch = entry.router.match(method, subUrl)
+                const subMatch = entry.router.matchWithMethodCheck(subUrl, methodCheck)
                 if (!subMatch) continue
                 return {
                     ...subMatch,
                     middleware: [...this._middleware, ...subMatch.middleware],
                 }
             } else {
-                const subMatch = entry.router.match(method, url)
+                const subMatch = entry.router.matchWithMethodCheck(url, methodCheck)
                 if (!subMatch) continue
                 return {
                     ...subMatch,
