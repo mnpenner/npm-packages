@@ -1,5 +1,5 @@
 #!/usr/bin/env -S bun test
-import {describe, expect, it} from 'bun:test'
+import {describe, expect, it, mock} from 'bun:test'
 import {Router} from './router'
 import type {Handler, Middleware} from './types'
 
@@ -33,9 +33,13 @@ describe('Router', () => {
     })
 
     it('handles HEAD requests for streaming handlers', async () => {
+        const beforeHeader = mock()
+        const afterHeader = mock()
         const handler: Handler<unknown, unknown, unknown, unknown> = async function* () {
             yield 201
+            beforeHeader()
             yield new Headers({'x-stream': 'true'})
+            afterHeader()
             return new TextEncoder().encode('hello')
         }
         const router = new Router()
@@ -50,15 +54,16 @@ describe('Router', () => {
         expect(headResponse.status).toBe(201)
         expect(headResponse.headers.get('x-stream')).toBe('true')
         expect(await headResponse.text()).toBe('')
+
+        expect(beforeHeader).toHaveBeenCalledTimes(2)
+        expect(afterHeader).toHaveBeenCalledTimes(1)
     })
 
     it('defaults to 200 when headers are yielded before status', async () => {
-        let resume: (() => void) | undefined
-        const deferred = new Promise<void>(resolve => {
-            resume = resolve
-        })
+        const {resolve: resume, promise: deferred} = Promise.withResolvers()
         const handler: Handler<unknown, unknown, unknown, unknown> = async function* () {
             yield new Headers({'x-stream': 'true'})
+            yield 499  // ignored
             await deferred
             return new TextEncoder().encode('hello')
         }
@@ -76,7 +81,7 @@ describe('Router', () => {
         expect(response.status).toBe(200)
         expect(response.headers.get('x-stream')).toBe('true')
         expect(await response.text()).toBe('')
-        resume?.()
+        resume()
     })
 })
 
