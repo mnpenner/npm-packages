@@ -51,6 +51,33 @@ describe('Router', () => {
         expect(headResponse.headers.get('x-stream')).toBe('true')
         expect(await headResponse.text()).toBe('')
     })
+
+    it('defaults to 200 when headers are yielded before status', async () => {
+        let resume: (() => void) | undefined
+        const deferred = new Promise<void>(resolve => {
+            resume = resolve
+        })
+        const handler: Handler<unknown, unknown, unknown, unknown> = async function* () {
+            yield new Headers({'x-stream': 'true'})
+            await deferred
+            return new TextEncoder().encode('hello')
+        }
+        const router = new Router()
+        router.add({method: 'GET', pattern: '/', handler})
+
+        const responsePromise = router.fetch(makeRequest('/', 'HEAD'))
+        const response = await Promise.race([
+            responsePromise,
+            new Promise<Response>((_, reject) =>
+                setTimeout(() => reject(new Error('response did not resolve')), 50)
+            ),
+        ])
+
+        expect(response.status).toBe(200)
+        expect(response.headers.get('x-stream')).toBe('true')
+        expect(await response.text()).toBe('')
+        resume?.()
+    })
 })
 
 describe.skip('Router middleware', () => {

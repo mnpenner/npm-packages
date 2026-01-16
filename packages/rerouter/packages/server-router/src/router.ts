@@ -315,6 +315,9 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
                     status = yielded
                 } else if (yielded instanceof Headers) {
                     headers = yielded
+                    if (status === undefined) {
+                        status = 200
+                    }
                 }
 
                 if (isHead && status !== undefined && headers) {

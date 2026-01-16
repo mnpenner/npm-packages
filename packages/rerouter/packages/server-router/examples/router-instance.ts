@@ -82,9 +82,10 @@ router.add({
             [CommonHeaders.CONTENT_TYPE]: ContentTypes.PLAIN_TEXT,
         })
         console.log('headers yielded')
-        yield await sleep(1000)
+        await sleep(1000)
+        yield
         console.log('sleep done')
-        return "herro"
+        return new TextEncoder().encode('herro')
     }
 })
 
