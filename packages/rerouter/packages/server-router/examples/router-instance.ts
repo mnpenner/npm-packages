@@ -66,6 +66,7 @@ router.add({
 })
 
 
+
 if(import.meta.main) {
     console.log(router)
 }

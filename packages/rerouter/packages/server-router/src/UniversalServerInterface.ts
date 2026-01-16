@@ -26,3 +26,7 @@ export type UniversalServerInterface<Env = unknown, Ctx = UniversalExecutionCont
     | BunServer
     | CloudflareWorkerServer<Env, Ctx>
     | ValTownRequestHandler
+
+export interface SimpleServerInterface {
+    fetch(request: Request): Promise<Response>
+}

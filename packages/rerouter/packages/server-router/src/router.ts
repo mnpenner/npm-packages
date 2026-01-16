@@ -1,5 +1,9 @@
 import type {Server} from 'bun'
-import type {UniversalExecutionContext} from './UniversalServerInterface'
+import type {
+    SimpleServerInterface,
+    UniversalExecutionContext,
+    UniversalServerInterface
+} from './UniversalServerInterface'
 import {joinPrefixPathname, stripPrefixPathname} from './pathname'
 import {normalizeRoute} from './route-normalize'
 import type {AnyContext, Middleware, NormalizedRoute, RequestContext, Route} from './types'
@@ -14,7 +18,7 @@ type MatchResult<Ctx extends object> = {
     middleware: Middleware<Ctx>[]
 }
 
-export class Router<Ctx extends object = AnyContext> {
+export class Router<Ctx extends object = AnyContext> implements SimpleServerInterface {
     private entries: RouteEntry<Ctx>[] = []
     private _middleware: Middleware<Ctx>[] = []
 
@@ -133,10 +137,8 @@ export class Router<Ctx extends object = AnyContext> {
         return dispatch(0)
     }
 
-    fetch(request: Request): Promise<Response>
-    fetch(request: Request, server: Server<any>): Promise<Response>
-    fetch(request: Request, env: Record<string, unknown>, ctx: UniversalExecutionContext): Promise<Response>
-    async fetch(request: Request, a?: Record<string, unknown> | Server<any>, b?: UniversalExecutionContext): Promise<Response> {
+
+    async fetch(request: Request): Promise<Response> {
         const env = (arguments.length >= 3 ? (a as Record<string, unknown>) : {}) ?? {}
         const executionCtx = arguments.length >= 3 ? b : undefined
         const url = new URL(request.url)
