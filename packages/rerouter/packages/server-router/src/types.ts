@@ -19,7 +19,7 @@ export interface Route {
     name?: string | string[]
     pattern: string | URLPattern
     handler: Handler<any, any, any, any, any>
-    method?: string
+    method?: string | string[]
 }
 
 /**
@@ -39,7 +39,7 @@ export interface NormalizedRoute {
     name: string[]
     pattern: URLPattern
     handler: Handler<any, any, any, any, any>
-    method?: string
+    method?: string | string[]
 }
 
 /**
@@ -79,11 +79,22 @@ export type RequestContext<Ctx extends object = AnyContext> = {
  * async function* handler() {
  *   yield 201
  *   yield new Headers({'content-type': 'application/octet-stream'})
+ *   yield {status: 202, headers: {'x-stream': 'true'}}
+ *   yield 'chunk-1'
+ *   yield new Uint8Array([1, 2, 3])
  *   return new Uint8Array([1, 2, 3])
  * }
  * ```
  */
-export type HandlerYield = number | HttpStatus | Headers | undefined
+export type HandlerYield =
+    | number
+    | HttpStatus
+    | Headers
+    | {status?: number | HttpStatus; headers?: HeadersInit}
+    | Buffer
+    | Uint8Array
+    | string
+    | undefined
 
 /**
  * Final body value returned from streaming handlers.
@@ -91,9 +102,10 @@ export type HandlerYield = number | HttpStatus | Headers | undefined
  * @example
  * ```ts
  * const body: HandlerBody = new Uint8Array([1, 2, 3])
+ * const textBody: HandlerBody = 'ok'
  * ```
  */
-export type HandlerBody = Buffer | Uint8Array | ReadableStream
+export type HandlerBody = Buffer | Uint8Array | ReadableStream | string
 
 /**
  * Allowed handler return values.
@@ -103,7 +115,11 @@ export type HandlerBody = Buffer | Uint8Array | ReadableStream
  * const handler: Handler = async ({req}) => new Response(await req.text())
  * ```
  */
-export type HandlerResult = Response | Promise<Response> | AsyncGenerator<HandlerYield, HandlerBody>
+export type HandlerResult =
+    | Response
+    | HandlerBody
+    | Promise<Response | HandlerBody>
+    | AsyncGenerator<HandlerYield, HandlerBody>
 
 /**
  * Route handler signature that preserves generic type parameters for API generation.

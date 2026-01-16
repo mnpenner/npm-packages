@@ -181,27 +181,42 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         return routes
     }
 
-    private match(method: string, url: URL): MatchResult<Ctx> | null {
+    private match(method: string, url: URL): MatchResult<Ctx> | 'not_allowed' | null {
         const isHead = method === 'HEAD'
         if (isHead) {
-            const headOnly = this.matchWithMethodCheck(url, routeMethod => routeMethod?.toUpperCase() === 'HEAD')
-            if (headOnly) return headOnly
-            return this.matchWithMethodCheck(url, () => true)
+            const headOnly = this.matchWithMethodCheck(url, routeMethod => this.methodMatches(routeMethod, 'HEAD'))
+            if (headOnly.match) return headOnly.match
+            const getOnly = this.matchWithMethodCheck(url, routeMethod => this.methodMatches(routeMethod, 'GET'))
+            if (getOnly.match) return getOnly.match
+            if (headOnly.methodNotAllowed || getOnly.methodNotAllowed) return 'not_allowed'
+            return null
         }
-        return this.matchWithMethodCheck(url, routeMethod => !routeMethod || routeMethod.toUpperCase() === method)
+        const match = this.matchWithMethodCheck(url, routeMethod => this.methodMatches(routeMethod, method))
+        if (match.match) return match.match
+        return match.methodNotAllowed ? 'not_allowed' : null
+    }
+
+    private methodMatches(routeMethod: string | string[] | undefined, method: string): boolean {
+        if (!routeMethod) return true
+        const normalized = Array.isArray(routeMethod) ? routeMethod : [routeMethod]
+        return normalized.some(routeValue => routeValue.toUpperCase() === method)
     }
 
     private matchWithMethodCheck(
         url: URL,
-        methodCheck: (routeMethod?: string) => boolean
-    ): MatchResult<Ctx> | null {
+        methodCheck: (routeMethod?: string | string[]) => boolean
+    ): {match: MatchResult<Ctx> | null; methodNotAllowed: boolean} {
+        let methodNotAllowed = false
         for (const entry of this.entries) {
             if (entry.kind === 'route') {
                 const route = entry.route
-                if (!methodCheck(route.method)) continue
                 const match = route.pattern.exec(url)
                 if (!match) continue
-                return { route, match, middleware: [...this._middleware] }
+                if (!methodCheck(route.method)) {
+                    methodNotAllowed = true
+                    continue
+                }
+                return { match: { route, match, middleware: [...this._middleware] }, methodNotAllowed }
             }
 
             if (entry.prefix) {
@@ -210,21 +225,31 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
                 const subUrl = new URL(url.toString())
                 subUrl.pathname = subPathname
                 const subMatch = entry.router.matchWithMethodCheck(subUrl, methodCheck)
-                if (!subMatch) continue
-                return {
-                    ...subMatch,
-                    middleware: [...this._middleware, ...subMatch.middleware],
+                if (subMatch.match) {
+                    return {
+                        match: {
+                            ...subMatch.match,
+                            middleware: [...this._middleware, ...subMatch.match.middleware],
+                        },
+                        methodNotAllowed,
+                    }
                 }
+                if (subMatch.methodNotAllowed) methodNotAllowed = true
             } else {
                 const subMatch = entry.router.matchWithMethodCheck(url, methodCheck)
-                if (!subMatch) continue
-                return {
-                    ...subMatch,
-                    middleware: [...this._middleware, ...subMatch.middleware],
+                if (subMatch.match) {
+                    return {
+                        match: {
+                            ...subMatch.match,
+                            middleware: [...this._middleware, ...subMatch.match.middleware],
+                        },
+                        methodNotAllowed,
+                    }
                 }
+                if (subMatch.methodNotAllowed) methodNotAllowed = true
             }
         }
-        return null
+        return { match: null, methodNotAllowed }
     }
 
     private async run(
@@ -264,7 +289,24 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
     private toResponseBody(body: HandlerBody | null): BodyInit | null {
         if (body == null) return null
         if (body instanceof ReadableStream) return body
-        return new Uint8Array(body)
+        if (typeof body === 'string') return body
+        if (body instanceof Uint8Array) {
+            const copy = new Uint8Array(body.byteLength)
+            copy.set(body)
+            return copy.buffer
+        }
+        return new Uint8Array(body).buffer
+    }
+
+    private isBodyChunk(value: unknown): value is Uint8Array | string {
+        return typeof value === 'string' || value instanceof Uint8Array
+    }
+
+    private toBodyChunk(value: Uint8Array | string): Uint8Array {
+        if (typeof value === 'string') {
+            return new TextEncoder().encode(value)
+        }
+        return value
     }
 
     private async responseFromGenerator(
@@ -274,6 +316,13 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         const isHead = request.method.toUpperCase() === 'HEAD'
         let status: number | undefined
         let headers: Headers | undefined
+        let bodyStream: ReadableStream<Uint8Array> | undefined
+        let bodyController: ReadableStreamDefaultController<Uint8Array> | undefined
+        let responseResolved = false
+        let resolveResponse: ((value: Response | null) => void) | undefined
+        const responsePromise = new Promise<Response | null>(resolve => {
+            resolveResponse = resolve
+        })
         let abortListener: (() => void) | undefined
         const abortSignal = request.signal
         const abortPromise = abortSignal
@@ -292,39 +341,128 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
             return null
         }
 
+        const resolveResponseOnce = (response: Response | null) => {
+            if (responseResolved) return
+            responseResolved = true
+            resolveResponse?.(response)
+        }
+
+        const buildResponseInit = (): ResponseInit => {
+            const responseInit: ResponseInit = {}
+            if (status !== undefined) responseInit.status = status
+            if (headers) responseInit.headers = headers
+            return responseInit
+        }
+
+        const ensureStreamResponse = () => {
+            if (responseResolved) return
+            if (!bodyStream) {
+                bodyStream = new ReadableStream<Uint8Array>({
+                    start(controller) {
+                        bodyController = controller
+                    },
+                })
+            }
+            if (status === undefined) status = 200
+            resolveResponseOnce(new Response(bodyStream, buildResponseInit()))
+        }
+
         try {
-            while (true) {
-                const next = abortPromise
-                    ? await Promise.race([generator.next(), abortPromise])
-                    : await generator.next()
-                if (next === 'aborted') {
-                    await this.closeGenerator(generator)
-                    return null
-                }
+            const pump = async () => {
+                try {
+                    while (true) {
+                        const next = abortPromise
+                            ? await Promise.race([generator.next(), abortPromise])
+                            : await generator.next()
+                        if (next === 'aborted') {
+                            await this.closeGenerator(generator)
+                            bodyController?.error?.(new Error('Request aborted'))
+                            resolveResponseOnce(null)
+                            return
+                        }
 
-                if (next.done) {
-                    const responseInit: ResponseInit = {}
-                    if (status !== undefined) responseInit.status = status
-                    if (headers) responseInit.headers = headers
-                    const body = isHead ? null : (next.value ?? null)
-                    return new Response(this.toResponseBody(body), responseInit)
-                }
+                        if (next.done) {
+                            if (bodyStream) {
+                                if (!isHead && next.value != null) {
+                                    if (this.isBodyChunk(next.value)) {
+                                        bodyController?.enqueue(this.toBodyChunk(next.value))
+                                    }
+                                }
+                                bodyController?.close()
+                                if (!responseResolved) {
+                                    resolveResponseOnce(new Response(bodyStream, buildResponseInit()))
+                                }
+                                return
+                            }
 
-                const yielded = next.value
-                if (typeof yielded === 'number') {
-                    status = yielded
-                } else if (yielded instanceof Headers) {
-                    headers = yielded
-                    if (status === undefined) {
-                        status = 200
+                            const body = isHead ? null : (next.value ?? null)
+                            resolveResponseOnce(new Response(this.toResponseBody(body), buildResponseInit()))
+                            return
+                        }
+
+                        const yielded = next.value
+                        if (typeof yielded === 'number') {
+                            status = yielded
+                            continue
+                        }
+
+                        if (yielded instanceof Headers) {
+                            headers = yielded
+                            if (status === undefined) {
+                                status = 200
+                            }
+                            if (isHead && status !== undefined && headers) {
+                                await this.closeGenerator(generator)
+                                resolveResponseOnce(new Response(null, { status, headers }))
+                                return
+                            }
+                            if (!isHead) {
+                                ensureStreamResponse()
+                            }
+                            continue
+                        }
+
+                        if (this.isBodyChunk(yielded)) {
+                            if (isHead) {
+                                continue
+                            }
+                            ensureStreamResponse()
+                            bodyController?.enqueue(this.toBodyChunk(yielded))
+                            continue
+                        }
+
+                        if (yielded && typeof yielded === 'object') {
+                            const yieldedStatus =
+                                'status' in yielded ? (yielded as {status?: number | undefined}).status : undefined
+                            const yieldedHeaders =
+                                'headers' in yielded ? (yielded as {headers?: HeadersInit | undefined}).headers : undefined
+                            if (yieldedStatus !== undefined) {
+                                status = yieldedStatus
+                            }
+                            if (yieldedHeaders !== undefined) {
+                                headers = new Headers(yieldedHeaders)
+                                if (status === undefined) {
+                                    status = 200
+                                }
+                                if (isHead && status !== undefined && headers) {
+                                    await this.closeGenerator(generator)
+                                    resolveResponseOnce(new Response(null, { status, headers }))
+                                    return
+                                }
+                                if (!isHead) {
+                                    ensureStreamResponse()
+                                }
+                            }
+                        }
                     }
-                }
-
-                if (isHead && status !== undefined && headers) {
-                    await this.closeGenerator(generator)
-                    return new Response(null, { status, headers })
+                } catch (err) {
+                    bodyController?.error?.(err)
+                    resolveResponseOnce(null)
                 }
             }
+
+            void pump()
+            return await responsePromise
         } finally {
             if (abortSignal && abortListener) {
                 abortSignal.removeEventListener('abort', abortListener)
@@ -351,6 +489,9 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         if (!found) {
             return new Response('Not Found', { status: 404 })
         }
+        if (found === 'not_allowed') {
+            return new Response('Method Not Allowed', { status: 405 })
+        }
 
         const serverReq: RequestContext<Ctx> = {
             req: request,
@@ -365,6 +506,9 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
                 const response = await this.responseFromGenerator(result, request)
                 if (response) return response
                 return new Response(null, { status: 499 })
+            }
+            if (this.isBodyChunk(result) || result instanceof ReadableStream) {
+                return new Response(this.toResponseBody(result))
             }
             return await Promise.resolve(result)
         } catch (_err) {

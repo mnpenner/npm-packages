@@ -83,6 +83,177 @@ describe('Router', () => {
         expect(await response.text()).toBe('')
         resume()
     })
+
+    it('accepts metadata objects from streaming handlers', async () => {
+        const router = new Router()
+        router.add({
+            method: 'GET',
+            pattern: '/status',
+            handler: async function* () {
+                yield {status: 202}
+                return new TextEncoder().encode('ok')
+            },
+        })
+        router.add({
+            method: 'GET',
+            pattern: '/headers',
+            handler: async function* () {
+                yield {headers: {'x-meta': 'yes'}}
+                return new TextEncoder().encode('ok')
+            },
+        })
+        router.add({
+            method: 'GET',
+            pattern: '/both',
+            handler: async function* () {
+                yield {status: 201, headers: {'x-both': 'true'}}
+                return new TextEncoder().encode('ok')
+            },
+        })
+
+        const statusResponse = await router.fetch(makeRequest('/status'))
+        expect(statusResponse.status).toBe(202)
+        expect(await statusResponse.text()).toBe('ok')
+
+        const headersResponse = await router.fetch(makeRequest('/headers'))
+        expect(headersResponse.status).toBe(200)
+        expect(headersResponse.headers.get('x-meta')).toBe('yes')
+        expect(await headersResponse.text()).toBe('ok')
+
+        const bothResponse = await router.fetch(makeRequest('/both'))
+        expect(bothResponse.status).toBe(201)
+        expect(bothResponse.headers.get('x-both')).toBe('true')
+        expect(await bothResponse.text()).toBe('ok')
+    })
+
+    it('streams yielded body chunks and appends the returned body', async () => {
+        const router = new Router()
+        router.add({
+            method: 'GET',
+            pattern: '/stream',
+            handler: async function* () {
+                yield 'hello '
+                yield new TextEncoder().encode('world')
+                yield Buffer.from('!')
+                return ' done'
+            },
+        })
+
+        const response = await router.fetch(makeRequest('/stream'))
+        expect(response.status).toBe(200)
+        expect(await response.text()).toBe('hello world! done')
+    })
+
+    it('returns string or bytes as response bodies', async () => {
+        const router = new Router()
+        router.add({
+            method: 'GET',
+            pattern: '/text',
+            handler: () => 'ok',
+        })
+        router.add({
+            method: 'GET',
+            pattern: '/bytes',
+            handler: () => new Uint8Array([111, 107]),
+        })
+
+        const textResponse = await router.fetch(makeRequest('/text'))
+        expect(textResponse.status).toBe(200)
+        expect(await textResponse.text()).toBe('ok')
+
+        const bytesResponse = await router.fetch(makeRequest('/bytes'))
+        expect(bytesResponse.status).toBe(200)
+        expect(await bytesResponse.text()).toBe('ok')
+    })
+
+    it('prefers explicit HEAD handlers and falls back to GET handlers', async () => {
+        const router = new Router()
+        let getCalls = 0
+        let headCalls = 0
+        router.add({
+            method: 'GET',
+            pattern: '/resource',
+            handler: () => {
+                getCalls += 1
+                return new Response('get')
+            },
+        })
+        router.add({
+            method: 'HEAD',
+            pattern: '/resource',
+            handler: () => {
+                headCalls += 1
+                return new Response('head')
+            },
+        })
+        router.add({
+            method: 'GET',
+            pattern: '/fallback',
+            handler: () => {
+                getCalls += 1
+                return new Response('get')
+            },
+        })
+
+        const headResponse = await router.fetch(makeRequest('/resource', 'HEAD'))
+        expect(headResponse.status).toBe(200)
+        expect(headCalls).toBe(1)
+        expect(getCalls).toBe(0)
+
+        const fallbackResponse = await router.fetch(makeRequest('/fallback', 'HEAD'))
+        expect(fallbackResponse.status).toBe(200)
+        expect(getCalls).toBe(1)
+    })
+
+    it('returns 405 when the route exists but the method is not allowed', async () => {
+        const router = new Router()
+        let postCalls = 0
+        router.add({
+            method: 'POST',
+            pattern: '/mutate',
+            handler: () => {
+                postCalls += 1
+                return new Response('ok')
+            },
+        })
+
+        const headResponse = await router.fetch(makeRequest('/mutate', 'HEAD'))
+        expect(headResponse.status).toBe(405)
+        expect(postCalls).toBe(0)
+
+        const getResponse = await router.fetch(makeRequest('/mutate', 'GET'))
+        expect(getResponse.status).toBe(405)
+        expect(postCalls).toBe(0)
+
+        const postResponse = await router.fetch(makeRequest('/mutate', 'POST'))
+        expect(postResponse.status).toBe(200)
+        expect(postCalls).toBe(1)
+    })
+
+    it('supports method arrays including HEAD', async () => {
+        const router = new Router()
+        let calls = 0
+        router.add({
+            method: ['POST', 'HEAD'],
+            pattern: '/combo',
+            handler: () => {
+                calls += 1
+                return new Response('ok')
+            },
+        })
+
+        const headResponse = await router.fetch(makeRequest('/combo', 'HEAD'))
+        expect(headResponse.status).toBe(200)
+        expect(calls).toBe(1)
+
+        const postResponse = await router.fetch(makeRequest('/combo', 'POST'))
+        expect(postResponse.status).toBe(200)
+        expect(calls).toBe(2)
+
+        const getResponse = await router.fetch(makeRequest('/combo', 'GET'))
+        expect(getResponse.status).toBe(405)
+        expect(calls).toBe(2)
+    })
 })
 
 describe.skip('Router middleware', () => {

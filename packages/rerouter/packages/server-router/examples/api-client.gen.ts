@@ -22,6 +22,8 @@ export type PostBooksByIdPathParams = { id: string; }
 export type PostBooksByIdRequest = { title: string; author: string; }
 export type PostBooksByIdResponse = { id: string; title: string; author: string; }
 
+export type GetGenResponse = unknown
+
 export class ApiClient {
     constructor(private readonly fetcher: Fetcher) {}
 
@@ -35,6 +37,10 @@ export class ApiClient {
 
     get booksById(): ApiClient_BooksById {
         return new ApiClient_BooksById(this.fetcher)
+    }
+
+    get gen(): ApiClient_Gen {
+        return new ApiClient_Gen(this.fetcher)
     }
 
     get() {
@@ -85,5 +91,14 @@ class ApiClient_BooksById {
             headers: { "content-type": "application/json" },
             body: JSON.stringify(body),
         }) as PromisedResponse<PostBooksByIdResponse>
+    }
+}
+
+class ApiClient_Gen {
+    constructor(private readonly fetcher: Fetcher) {}
+    get() {
+        return this.fetcher.fetch("/gen", {
+            method: "GET",
+        }) as PromisedResponse<GetGenResponse>
     }
 }
