@@ -255,7 +255,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
 
     private async closeGenerator(generator: AsyncGenerator<HandlerYield, HandlerBody>): Promise<void> {
         try {
-            await generator.return?.()
+            await generator.return?.(undefined as unknown as HandlerBody)
         } catch {
             // Ignore generator errors during teardown.
         }
