@@ -66,16 +66,25 @@ router.add({
     method: 'POST'
 })
 
+const sleep = (ms: number): Promise<void> =>
+    new Promise<void>(resolve => setTimeout(resolve, ms))
+
 router.add({
     pattern: '/gen',
     method: 'GET',
     handler: async function* ({req}) {
+        console.log('start')
         yield HttpStatus.OK
+        console.log('ok yielded')
         yield new Headers({
             'x-foo': 'bar',
             'x-bar': 'baz',
             [CommonHeaders.CONTENT_TYPE]: ContentTypes.PLAIN_TEXT,
         })
+        console.log('headers yielded')
+        await sleep(1000)
+        yield
+        console.log('sleep done')
         return new TextEncoder().encode("herrro")
     }
 })
