@@ -11,3 +11,9 @@ Content-Type: application/json
     "title": "Some book",
     "author": "Some author"
 }
+
+
+###
+GET http://localhost:5180/gen
+Content-Type: application/json
+

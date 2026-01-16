@@ -19,6 +19,9 @@
   "peerDependencies": {
     "typescript": "^5"
   },
+  "dependencies": {
+    "@mpen/http-helpers": "*"
+  },
   "scripts": {
     "build": "tsdown",
     "gen": "bun ./src/bin/gen-api-client.ts ./examples/router-instance.ts ./examples/api-client.gen.ts"

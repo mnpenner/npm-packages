@@ -2,6 +2,7 @@ import {Router} from '../src/index'
 import {createZodNeverjectHandler} from '@mpen/server-router-zod-neverject'
 import {okAsync} from 'neverject'
 import {z} from 'zod'
+import {CommonHeaders, ContentTypes, HttpStatus} from '@mpen/http-helpers'
 
 export const router = new Router()
 
@@ -65,6 +66,19 @@ router.add({
     method: 'POST'
 })
 
+router.add({
+    pattern: '/gen',
+    method: 'GET',
+    handler: async function* ({req}) {
+        yield HttpStatus.OK
+        yield new Headers({
+            'x-foo': 'bar',
+            'x-bar': 'baz',
+            [CommonHeaders.CONTENT_TYPE]: ContentTypes.PLAIN_TEXT,
+        })
+        return new TextEncoder().encode("herrro")
+    }
+})
 
 
 if(import.meta.main) {

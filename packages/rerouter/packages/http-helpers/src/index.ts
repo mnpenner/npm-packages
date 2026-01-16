@@ -1,4 +1,5 @@
 export * from './CommonHeaders'
 export * from './ContentTypes'
+export * from './HttpMethod'
 export * from './HttpStatus'
 export * from './MediaType'
