@@ -134,7 +134,7 @@ export type Handler<TReqBody, TReqPath, TReqQuery, TOkRes, TErr = unknown> =
  *
  * @param ctx - Request context for the current request.
  * @param next - Invokes the next middleware or route handler.
- * @returns The response or handler result.
+ * @returns The response or handler result, optionally wrapped in a Promise.
  */
 export type Middleware<Ctx extends object = AnyContext> =
-    (ctx: RequestContext<Ctx>, next: () => Promise<HandlerResult>) => HandlerResult
+    (ctx: RequestContext<Ctx>, next: () => Promise<HandlerResult>) => HandlerResult | Promise<HandlerResult>

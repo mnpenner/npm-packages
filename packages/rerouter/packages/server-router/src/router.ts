@@ -255,10 +255,16 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
 
     private async closeGenerator(generator: AsyncGenerator<HandlerYield, HandlerBody>): Promise<void> {
         try {
-            await generator.return?.(undefined as HandlerBody)
+            await generator.return?.()
         } catch {
             // Ignore generator errors during teardown.
         }
+    }
+
+    private toResponseBody(body: HandlerBody | null): BodyInit | null {
+        if (body == null) return null
+        if (body instanceof ReadableStream) return body
+        return new Uint8Array(body)
     }
 
     private async responseFromGenerator(
@@ -300,7 +306,8 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
                     const responseInit: ResponseInit = {}
                     if (status !== undefined) responseInit.status = status
                     if (headers) responseInit.headers = headers
-                    return new Response(isHead ? null : (next.value ?? null), responseInit)
+                    const body = isHead ? null : (next.value ?? null)
+                    return new Response(this.toResponseBody(body), responseInit)
                 }
 
                 const yielded = next.value
