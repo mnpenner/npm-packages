@@ -7,6 +7,7 @@ export type {
     NormalizedRoute,
     RequestContext,
     Route,
+    RouteMeta,
 } from './types'
 export type {UniversalFetchResult, UniversalServerInterface} from './UniversalServerInterface'
 export type {UniversalExecutionContext} from './UniversalServerInterface'

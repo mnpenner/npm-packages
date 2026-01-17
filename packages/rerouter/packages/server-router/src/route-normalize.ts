@@ -45,6 +45,7 @@ export function normalizeRoute(route: Route): NormalizedRoute {
         name: normalizeRouteName(route.name, route.method, pattern),
         pattern,
         handler: route.handler,
+        ...(route.meta === undefined ? {} : {meta: route.meta}),
         ...(method === undefined ? {} : {method}),
         ...(normalizedAccept === undefined ? {} : {accept: normalizedAccept}),
     }

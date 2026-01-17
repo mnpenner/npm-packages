@@ -5,6 +5,7 @@ import {normalizeRoute} from './route-normalize'
 import {mediaTypeMatches, parseMediaType} from './lib/media-type'
 import type {
     AnyContext,
+    Handler,
     HandlerBody,
     HandlerResult,
     HandlerYield,
@@ -22,6 +23,7 @@ type MatchResult<Ctx extends object> = {
     route: NormalizedRoute
     match: URLPatternResult
     middleware: Middleware<Ctx>[]
+    router: Router<Ctx>
 }
 
 /**
@@ -262,7 +264,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         } as any
 
         try {
-            const result = await this.run(found.route.handler as any, found.middleware, serverReq)
+            const result = await this.run(found.route.handler, found.middleware, serverReq, found.router)
             if (result instanceof Response) {
                 return result
             }
@@ -300,7 +302,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
                     methodNotAllowed = true
                     continue
                 }
-                return { match: { route, match, middleware: [...this._middleware] }, methodNotAllowed }
+                return { match: { route, match, middleware: [...this._middleware], router: this }, methodNotAllowed }
             }
 
             if (entry.prefix) {
@@ -337,9 +339,10 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
     }
 
     private async run(
-        handler: (ctx: { req: Request }) => HandlerResult,
+        handler: Handler<any, any, any, any, any>,
         middleware: Middleware<Ctx>[],
-        ctx: RequestContext<Ctx>
+        ctx: RequestContext<Ctx>,
+        router: Router<Ctx>
     ): Promise<HandlerResult> {
         let idx = -1
         const dispatch = async (i: number): Promise<HandlerResult> => {
@@ -347,7 +350,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
             idx = i
 
             if (i === middleware.length) {
-                return await Promise.resolve().then(() => handler({ req: ctx.req }))
+                return await Promise.resolve().then(() => handler.call(router, { req: ctx.req }))
             }
 
             const mw = middleware[i]

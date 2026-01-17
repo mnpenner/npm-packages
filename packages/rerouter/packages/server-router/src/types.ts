@@ -1,7 +1,18 @@
 import type {HttpMethod, HttpStatus} from '@mpen/http-helpers'
+import type {Router} from './router'
 
 export type OneOrMany<T> = T | T[]
 
+/**
+ * Route metadata used by tooling like OpenAPI generation.
+ */
+export interface RouteMeta {
+    /**
+     * OpenAPI operation metadata for this route.
+     */
+    openapi?: Record<string, unknown>
+    [key: string]: unknown
+}
 
 /**
  * Declarative route definition that the router can normalize and register.
@@ -21,6 +32,27 @@ export interface Route {
     pattern: string | URLPattern
     handler: Handler<any, any, any, any, any>
     method?: OneOrMany<HttpMethod>
+    /**
+     * Arbitrary metadata attached to the route.
+     *
+     * @example
+     * ```ts
+     * const route: Route = {
+     *   pattern: '/pets',
+     *   method: HttpMethod.GET,
+     *   meta: {
+     *     openapi: {
+     *       description: 'Returns all pets from the system that the user has access to',
+     *       responses: {
+     *         200: {description: 'A list of pets'},
+     *       },
+     *     },
+     *   },
+     *   handler: () => new Response('ok'),
+     * }
+     * ```
+     */
+    meta?: RouteMeta
     /**
      * Expected media type(s) for the incoming request body. When provided, the router compares each
      * entry against the incoming `Content-Type` header.
@@ -57,6 +89,7 @@ export interface NormalizedRoute {
     handler: Handler<any, any, any, any, any>
     method?: HttpMethod | HttpMethod[]
     accept?: MediaType[]
+    meta?: RouteMeta
 }
 
 /**
@@ -149,7 +182,7 @@ export type HandlerBody = Buffer | Uint8Array | ReadableStream | string
 export type HandlerResult =
     | Response
     | HandlerBody
-    | Promise<Response | HandlerBody>
+    | Promise<Response | HandlerBody | AsyncGenerator<HandlerYield, HandlerBody>>
     | AsyncGenerator<HandlerYield, HandlerBody>
 
 /**
@@ -162,11 +195,13 @@ export type HandlerResult =
  * }
  * ```
  *
+ * The handler is invoked with `this` bound to the active [`Router`]{@link Router}.
+ *
  * @param ctx - Handler context containing the incoming [`Request`]{@link Request}.
  * @returns A response or streaming generator that yields response metadata.
  */
 export type Handler<TReqBody, TReqPath, TReqQuery, TOkRes, TErr = unknown> =
-    (ctx: { req: Request }) => HandlerResult
+    (this: Router<any>, ctx: { req: Request }) => HandlerResult
 
 /**
  * Middleware that can intercept requests and responses.
