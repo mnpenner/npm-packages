@@ -1,4 +1,5 @@
-import type {NormalizedRoute, Route} from './types'
+import type {MediaType, NormalizedRoute, Route} from './types'
+import {normalizeMediaType, parseMediaType} from './lib/media-type'
 import {pattToName, sanitizeNameParts, splitNameString} from './route-names'
 
 function normalizeRouteName(
@@ -21,10 +22,24 @@ export function normalizeRoute(route: Route): NormalizedRoute {
         ? new URLPattern({ pathname: route.pattern })
         : route.pattern
     const method = route.method
+    const accept = route.accept
+    let normalizedAccept: MediaType | undefined
+    if (accept) {
+        if (typeof accept === 'string') {
+            const parsed = parseMediaType(accept)
+            if (!parsed) {
+                throw new Error(`Invalid accept media type: ${accept}`)
+            }
+            normalizedAccept = parsed
+        } else {
+            normalizedAccept = normalizeMediaType(accept)
+        }
+    }
     return {
         name: normalizeRouteName(route.name, route.method, pattern),
         pattern,
         handler: route.handler,
         ...(method === undefined ? {} : {method}),
+        ...(normalizedAccept === undefined ? {} : {accept: normalizedAccept}),
     }
 }

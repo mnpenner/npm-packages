@@ -1,5 +1,5 @@
 // Do not modify this file. It was auto-generated with the following command:
-// $ bun src/bin/gen-api-client.ts ./examples/router-instance.ts ./examples/api-client.gen.ts
+// $ bun "src\\bin\\gen-api-client.ts" ./examples/router-instance.ts ./examples/api-client.gen.ts
 
 export interface Fetcher {
     fetch(url: string, init: RequestInit): unknown

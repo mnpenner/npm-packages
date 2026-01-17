@@ -3,8 +3,8 @@ import {describe, expect, it, mock} from 'bun:test'
 import {Router} from './router'
 import type {Handler, Middleware} from './types'
 
-const makeRequest = (path: string, method = 'GET') =>
-    new Request(`https://example.com${path}`, {method})
+const makeRequest = (path: string, method = 'GET', headers?: HeadersInit) =>
+    new Request(`https://example.com${path}`, {method, headers})
 
 describe('Router', () => {
     it('works with Bun.serve', async () => {
@@ -253,6 +253,37 @@ describe('Router', () => {
         const getResponse = await router.fetch(makeRequest('/combo', 'GET'))
         expect(getResponse.status).toBe(405)
         expect(calls).toBe(2)
+    })
+
+    it('returns 406 when Content-Type does not satisfy the route accept', async () => {
+        const router = new Router()
+        router.add({
+            method: 'POST',
+            pattern: '/json',
+            accept: 'application/json; charset=UTF-8',
+            handler: () => new Response('ok'),
+        })
+
+        const missingHeader = await router.fetch(makeRequest('/json', 'POST'))
+        expect(missingHeader.status).toBe(406)
+
+        const wrongType = await router.fetch(makeRequest('/json', 'POST', {'content-type': 'text/plain'}))
+        expect(wrongType.status).toBe(406)
+
+        const wrongCharset = await router.fetch(
+            makeRequest('/json', 'POST', {'content-type': 'application/json; charset=latin1'})
+        )
+        expect(wrongCharset.status).toBe(406)
+
+        const noCharset = await router.fetch(makeRequest('/json', 'POST', {'content-type': 'application/json'}))
+        expect(noCharset.status).toBe(200)
+        expect(await noCharset.text()).toBe('ok')
+
+        const normalizedCharset = await router.fetch(
+            makeRequest('/json', 'POST', {'content-type': 'application/json; charset=utf8'})
+        )
+        expect(normalizedCharset.status).toBe(200)
+        expect(await normalizedCharset.text()).toBe('ok')
     })
 })
 

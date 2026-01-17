@@ -1,6 +1,7 @@
 import type {SimpleServerInterface} from './UniversalServerInterface'
 import {joinPrefixPathname, stripPrefixPathname} from './pathname'
 import {normalizeRoute} from './route-normalize'
+import {mediaTypeMatches, parseMediaType} from './lib/media-type'
 import type {
     AnyContext,
     HandlerBody,
@@ -491,6 +492,16 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         }
         if (found === 'not_allowed') {
             return new Response('Method Not Allowed', { status: 405 })
+        }
+        if (found.route.accept) {
+            const contentTypeHeader = request.headers.get('content-type')
+            if (!contentTypeHeader) {
+                return new Response('Not Acceptable', { status: 406 })
+            }
+            const contentType = parseMediaType(contentTypeHeader)
+            if (!contentType || !mediaTypeMatches(found.route.accept, contentType)) {
+                return new Response('Not Acceptable', { status: 406 })
+            }
         }
 
         const serverReq: RequestContext<Ctx> = {

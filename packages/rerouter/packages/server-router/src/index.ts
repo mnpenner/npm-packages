@@ -2,6 +2,7 @@ export {Router} from './router'
 export type {
     AnyContext,
     Handler,
+    MediaType,
     Middleware,
     NormalizedRoute,
     RequestContext,

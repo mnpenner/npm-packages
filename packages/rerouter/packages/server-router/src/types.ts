@@ -20,6 +20,21 @@ export interface Route {
     pattern: string | URLPattern
     handler: Handler<any, any, any, any, any>
     method?: string | string[]
+    /**
+     * Expected media type for the incoming request body. When provided, the router compares it against
+     * the incoming `Content-Type` header.
+     *
+     * @example
+     * ```ts
+     * const route: Route = {
+     *   pattern: '/upload',
+     *   method: 'POST',
+     *   accept: 'multipart/form-data',
+     *   handler: async () => new Response('ok'),
+     * }
+     * ```
+     */
+    accept?: string | MediaType
 }
 
 /**
@@ -40,6 +55,21 @@ export interface NormalizedRoute {
     pattern: URLPattern
     handler: Handler<any, any, any, any, any>
     method?: string | string[]
+    accept?: MediaType
+}
+
+/**
+ * Media type descriptor parsed from a Content-Type or accept string.
+ *
+ * @example
+ * ```ts
+ * const media: MediaType = {type: 'application/json', charset: 'utf-8'}
+ * ```
+ */
+export type MediaType = {
+    type: string
+    charset?: string
+    boundary?: string
 }
 
 /**

@@ -18,7 +18,7 @@
         "gen:server-router": "bun run --filter @mpen/server-router gen",
         "gen": "run-s gen:react-router gen:server-router",
         "test:types": "tsc -b tsconfig.json",
-        "test:impl": "bun test",
+        "test:impl": "bun test packages/",
         "test:gen": "run-s gen test:impl",
         "test": "run-s test:types test:gen"
     }
