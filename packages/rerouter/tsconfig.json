@@ -5,7 +5,7 @@
         { "path": "./packages/http-helpers" },
         { "path": "./packages/react-router" },
         { "path": "./packages/server-router" },
-        { "path": "./packages/server-router-zod-neverject" },
+        { "path": "./experimental/server-router-zod-neverject"},
         { "path": "./packages/uri-template" }
     ]
 }

@@ -1,5 +1,5 @@
 import {Router} from '../src/index'
-import {createZodNeverjectHandler} from '@mpen/server-router-zod-neverject'
+import {createZodNeverjectHandler} from 'experimental/server-router-zod-neverject'
 import {okAsync} from 'neverject'
 import {z} from 'zod'
 import {CommonHeaders, CommonContentTypes, HttpMethod, HttpStatus} from '@mpen/http-helpers'

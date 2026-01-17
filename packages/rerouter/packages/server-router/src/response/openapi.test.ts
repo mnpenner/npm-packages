@@ -77,4 +77,5 @@ describe('openapi', () => {
         expect(document.components.schemas.User.properties.email.format).toBe('email')
         expect(document.security).toEqual([{bearerAuth: []}])
     })
+
 })
