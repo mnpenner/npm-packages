@@ -1,32 +1,67 @@
 #!/usr/bin/env -S bun test
 import {describe, expect, it} from 'bun:test'
-import fs from 'node:fs'
-import os from 'node:os'
-import path from 'node:path'
-import {main} from '../src/bin/gen-api-client'
+import {ApiClient, type Fetcher} from './api-client.gen'
 
-describe('main', function () {
-    it('generates clients for routes defined via zodRoute', async function () {
-        const routerPath = path.resolve(import.meta.dir, 'router-instance.ts')
-        const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'api-client-'))
-        const outputPath = path.join(tempDir, 'api-client.gen.ts')
+type FetchCall = {
+    url: string
+    init: RequestInit
+}
 
-        try {
-            await main(['bun', 'gen-api-client.ts', routerPath, outputPath])
-            const contents = fs.readFileSync(outputPath, 'utf8')
+class RecordingFetcher implements Fetcher {
+    calls: FetchCall[] = []
 
-            expect(contents).toContain('fetch("/", {')
-            expect(contents).toContain('fetch("/name/bar", {')
-            expect(contents).toContain('fetch("/foo/bar", {')
-            expect(contents).toContain('fetch(`/books/${_path.id}`, {')
-            expect(contents).toContain('fetch("/gen", {')
-
-            const postMethods = contents.match(/method: "POST"/g) ?? []
-            const getMethods = contents.match(/method: "GET"/g) ?? []
-            expect(postMethods.length).toBeGreaterThanOrEqual(3)
-            expect(getMethods.length).toBeGreaterThanOrEqual(2)
-        } finally {
-            fs.rmSync(tempDir, {recursive: true, force: true})
+    fetch(url: string, init: RequestInit): unknown {
+        this.calls.push({url, init})
+        if (url.startsWith('/books/')) {
+            const id = url.split('/').pop() ?? ''
+            const body = init.body ? JSON.parse(init.body.toString()) : {}
+            return new Response(JSON.stringify({id, ...body}), {
+                headers: {'content-type': 'application/json'},
+            })
         }
+        return new Response(JSON.stringify({message: 'ok'}), {
+            headers: {'content-type': 'application/json'},
+        })
+    }
+}
+
+describe('api-client.gen', () => {
+    it('invokes fetcher with the generated routes', async () => {
+        const fetcher = new RecordingFetcher()
+        const client = new ApiClient(fetcher)
+
+        const indexResponse = await client.get()
+        expect(await indexResponse.json()).toEqual({message: 'ok'})
+
+        const namedResponse = await client.namedRoute.get()
+        expect(await namedResponse.json()).toEqual({message: 'ok'})
+
+        const namedPostResponse = await client.namedRoute.post()
+        expect(await namedPostResponse.json()).toEqual({message: 'ok'})
+
+        const fooResponse = await client.foo.bar.post()
+        expect(await fooResponse.json()).toEqual({message: 'ok'})
+
+        const booksResponse = await client.booksById.post('123', {title: 'foo', author: 'bar'})
+        expect(await booksResponse.json()).toEqual({id: '123', title: 'foo', author: 'bar'})
+
+        const genResponse = await client.gen.get()
+        expect(await genResponse.json()).toEqual({message: 'ok'})
+
+        expect(fetcher.calls).toEqual([
+            {url: '/', init: {method: 'GET'}},
+            {url: '/name/bar', init: {method: 'GET'}},
+            {url: '/name/bar', init: {method: 'POST'}},
+            {url: '/foo/bar', init: {method: 'POST'}},
+            {
+                url: '/books/123',
+                init: {
+                    method: 'POST',
+                    headers: {'content-type': 'application/json'},
+                    body: JSON.stringify({title: 'foo', author: 'bar'}),
+                },
+            },
+            {url: '/gen', init: {method: 'GET'}},
+        ])
     })
 })

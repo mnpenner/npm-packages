@@ -10,15 +10,17 @@ export type PromisedResponse<T> = Promise<TypedResponse<T>>
 
 type SinglePathParam<TParams, TKey extends string> = TParams extends { [K in TKey]: infer V } ? V : unknown
 
-export type GetIndexResponse = unknown
+export type GetIndexResponse = { message: string; }
 
-export type GetNamedRouteResponse = unknown
+export type GetNamedRouteResponse = { message: string; }
 
-export type PostNamedRouteResponse = unknown
+export type PostNamedRouteResponse = { message: string; }
 
-export type PostFooBarResponse = unknown
+export type PostFooBarResponse = { message: string; }
 
-export type PostBooksByIdResponse = unknown
+export type PostBooksByIdPathParams = { id: string; }
+export type PostBooksByIdRequest = { title: string; author: string; }
+export type PostBooksByIdResponse = { id: string; title: string; author: string; }
 
 export type GetGenResponse = unknown
 
@@ -82,10 +84,12 @@ class ApiClient_Foo_Bar {
 
 class ApiClient_BooksById {
     constructor(private readonly fetcher: Fetcher) {}
-    post(path: any | any) {
+    post(path: PostBooksByIdPathParams | SinglePathParam<PostBooksByIdPathParams, "id">, body: PostBooksByIdRequest) {
         const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { id: path } as any
         return this.fetcher.fetch(`/books/${_path.id}`, {
             method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(body),
         }) as PromisedResponse<PostBooksByIdResponse>
     }
 }

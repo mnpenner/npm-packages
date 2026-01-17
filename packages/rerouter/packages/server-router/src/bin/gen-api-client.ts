@@ -130,6 +130,104 @@ function unwrapExpression(expr: ts.Expression): ts.Expression {
     return current
 }
 
+function getContextualHandlerType(node: ts.Expression, checker: ts.TypeChecker): ts.Type | undefined {
+    if (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) {
+        const contextual = checker.getContextualType(node)
+        if (contextual) return contextual
+    }
+    return checker.getTypeAtLocation(node)
+}
+
+function getZodOutputType(type: ts.Type): ts.Type | undefined {
+    const ref = type as ts.TypeReference
+    if (ref.typeArguments && ref.typeArguments.length >= 1 && type.symbol?.getName() === 'ZodType') {
+        return ref.typeArguments[0]
+    }
+    const aliasArgs = (type as any).aliasTypeArguments as ts.Type[] | undefined
+    if (aliasArgs && aliasArgs.length >= 1 && type.aliasSymbol?.getName() === 'ZodType') {
+        return aliasArgs[0]
+    }
+    const bases = type.getBaseTypes()
+    if (bases) {
+        for (const base of bases) {
+            const found = getZodOutputType(base)
+            if (found) return found
+        }
+    }
+    return undefined
+}
+
+function getZodOutputTypeText(
+    expr: ts.Expression | undefined,
+    checker: ts.TypeChecker,
+    fallbackNode?: ts.Node,
+): string | undefined {
+    if (!expr) return undefined
+    const schemaType = checker.getTypeAtLocation(expr)
+    const outputType = getZodOutputType(schemaType)
+    if (!outputType) return undefined
+    const text = typeText(outputType, checker, fallbackNode ?? expr)
+    return isUnknown(text) ? undefined : text
+}
+
+function getJsonPayloadExpression(expr: ts.Expression): ts.Expression | undefined {
+    const current = unwrapExpression(expr)
+    if (ts.isCallExpression(current)) {
+        const callee = current.expression
+        if (ts.isPropertyAccessExpression(callee) && callee.name.text === 'json') {
+            const receiver = unwrapExpression(callee.expression)
+            if (ts.isIdentifier(receiver) && receiver.text === 'Response') {
+                return current.arguments[0]
+            }
+        }
+    }
+    if (ts.isNewExpression(current)) {
+        const callee = current.expression
+        if (ts.isIdentifier(callee) && callee.text === 'Response') {
+            const [bodyArg] = current.arguments ?? []
+            if (bodyArg && ts.isCallExpression(bodyArg)) {
+                const stringifyCall = bodyArg.expression
+                if (ts.isPropertyAccessExpression(stringifyCall) && stringifyCall.name.text === 'stringify') {
+                    const receiver = unwrapExpression(stringifyCall.expression)
+                    if (ts.isIdentifier(receiver) && receiver.text === 'JSON') {
+                        return bodyArg.arguments[0]
+                    }
+                }
+            }
+        }
+    }
+    return undefined
+}
+
+function getHandlerJsonReturnType(node: ts.Expression, checker: ts.TypeChecker): ts.Type | undefined {
+    if (!ts.isArrowFunction(node) && !ts.isFunctionExpression(node)) return undefined
+    const payloadTypes: ts.Type[] = []
+    const visitReturn = (expr: ts.Expression | undefined) => {
+        if (!expr) return
+        const payloadExpr = getJsonPayloadExpression(expr)
+        if (!payloadExpr) return
+        const payloadType = checker.getTypeAtLocation(payloadExpr)
+        payloadTypes.push(payloadType)
+    }
+
+    if (ts.isBlock(node.body)) {
+        const visitNode = (child: ts.Node) => {
+            if (ts.isReturnStatement(child)) {
+                visitReturn(child.expression)
+                return
+            }
+            ts.forEachChild(child, visitNode)
+        }
+        ts.forEachChild(node.body, visitNode)
+    } else {
+        visitReturn(node.body)
+    }
+
+    if (payloadTypes.length === 0) return undefined
+    if (payloadTypes.length === 1) return payloadTypes[0]
+    return payloadTypes[0]
+}
+
 function resolveRouteOptionsExpression(
     expr: ts.Expression,
     checker: ts.TypeChecker,
@@ -175,6 +273,12 @@ function readHttpMethod(expr: ts.Expression | undefined): HttpMethod | undefined
 function getPathParamNames(pattern: string): string[] {
     const matches = pattern.match(/:([a-zA-Z0-9_]+)/g) ?? []
     return matches.map(m => m.slice(1))
+}
+
+function getTypeTextOrFallback(type: ts.Type | undefined, checker: ts.TypeChecker, node?: ts.Node): string | undefined {
+    if (!type) return undefined
+    const text = typeText(type, checker, node)
+    return isUnknown(text) ? undefined : text
 }
 
 function parseNameNode(nameNode: ts.Expression): string[] | undefined {
@@ -249,30 +353,52 @@ function extractRoutesFromRouterSymbol(
                     const patternNode = getProp(routeOptions, 'pattern')
                     const nameNode = getProp(routeOptions, 'name')
                     const handlerNode = getProp(routeOptions, 'handler')
+                    const bodySchemaNode = getProp(routeOptions, 'body')
+                    const pathSchemaNode = getProp(routeOptions, 'pathParams')
+                    const querySchemaNode = getProp(routeOptions, 'query')
 
                     const method = readHttpMethod(methodNode) ?? HttpMethod.GET
                     const localPattern = patternNode && ts.isStringLiteralLike(patternNode) ? patternNode.text : '/'
                     const pattern = joinPrefixPathname(prefix, localPattern)
 
-                    const handlerType = handlerNode ? checker.getTypeAtLocation(handlerNode) : undefined
+                    const handlerType = handlerNode ? getContextualHandlerType(handlerNode, checker) : undefined
                     const typeArgs = handlerType ? getHandlerTypeArguments(handlerType) : undefined
                     const [bodyType, pathType, queryType, successType, errorTypeArg] = typeArgs ?? []
                     const errorType = errorTypeArg ?? (handlerType ? getHandlerErrorType(handlerType, checker) : undefined)
+                    const handlerJsonReturnType = handlerNode ? getHandlerJsonReturnType(handlerNode, checker) : undefined
 
                     const explicitName = nameNode ? parseNameNode(nameNode) : undefined
                     const name = explicitName
                         ? sanitizeNameParts(explicitName)
                         : pattToName(method, { pathname: pattern } as any)
 
+                    const bodyTypeText =
+                        getTypeTextOrFallback(bodyType, checker, handlerNode)
+                        ?? getZodOutputTypeText(bodySchemaNode, checker, routeOptions)
+                        ?? 'unknown'
+                    const pathTypeText =
+                        getTypeTextOrFallback(pathType, checker, handlerNode)
+                        ?? getZodOutputTypeText(pathSchemaNode, checker, routeOptions)
+                        ?? 'unknown'
+                    const queryTypeText =
+                        getTypeTextOrFallback(queryType, checker, handlerNode)
+                        ?? getZodOutputTypeText(querySchemaNode, checker, routeOptions)
+                        ?? 'unknown'
+                    const successTypeText =
+                        getTypeTextOrFallback(successType, checker, handlerNode)
+                        ?? getTypeTextOrFallback(handlerJsonReturnType, checker, handlerNode)
+                        ?? 'unknown'
+                    const errorTypeText = getTypeTextOrFallback(errorType, checker, handlerNode) ?? 'unknown'
+
                     routes.push({
                         name,
                         method,
                         pattern,
-                        bodyType: bodyType ? typeText(bodyType, checker, handlerNode) : 'unknown',
-                        pathType: pathType ? typeText(pathType, checker, handlerNode) : 'unknown',
-                        queryType: queryType ? typeText(queryType, checker, handlerNode) : 'unknown',
-                        successType: successType ? typeText(successType, checker, handlerNode) : 'unknown',
-                        errorType: errorType ? typeText(errorType, checker, handlerNode) : 'unknown',
+                        bodyType: bodyTypeText,
+                        pathType: pathTypeText,
+                        queryType: queryTypeText,
+                        successType: successTypeText,
+                        errorType: errorTypeText,
                     })
                 }
             } else if (methodName === 'mount' || methodName === 'use') {
