@@ -117,6 +117,61 @@ function getProp(node: ts.ObjectLiteralExpression, propName: string): ts.Express
     return undefined
 }
 
+function unwrapExpression(expr: ts.Expression): ts.Expression {
+    let current = expr
+    while (
+        ts.isParenthesizedExpression(current)
+        || ts.isAsExpression(current)
+        || ts.isTypeAssertionExpression(current)
+        || ts.isNonNullExpression(current)
+    ) {
+        current = current.expression
+    }
+    return current
+}
+
+function resolveRouteOptionsExpression(
+    expr: ts.Expression,
+    checker: ts.TypeChecker,
+    visited: Set<ts.Symbol> = new Set()
+): ts.ObjectLiteralExpression | undefined {
+    const current = unwrapExpression(expr)
+    if (ts.isObjectLiteralExpression(current)) return current
+    if (ts.isCallExpression(current)) {
+        const [firstArg] = current.arguments
+        return firstArg ? resolveRouteOptionsExpression(firstArg, checker, visited) : undefined
+    }
+    if (ts.isIdentifier(current) || ts.isPropertyAccessExpression(current)) {
+        const symbol = getSymbolFromExpression(current, checker)
+        if (!symbol || visited.has(symbol)) return undefined
+        visited.add(symbol)
+        for (const decl of symbol.declarations ?? []) {
+            if (ts.isVariableDeclaration(decl) && decl.initializer) {
+                const found = resolveRouteOptionsExpression(decl.initializer, checker, visited)
+                if (found) return found
+            }
+            if (ts.isPropertyAssignment(decl) && decl.initializer) {
+                const found = resolveRouteOptionsExpression(decl.initializer, checker, visited)
+                if (found) return found
+            }
+            if (ts.isPropertyDeclaration(decl) && decl.initializer) {
+                const found = resolveRouteOptionsExpression(decl.initializer, checker, visited)
+                if (found) return found
+            }
+        }
+    }
+    return undefined
+}
+
+function readHttpMethod(expr: ts.Expression | undefined): HttpMethod | undefined {
+    if (!expr) return undefined
+    const current = unwrapExpression(expr)
+    if (ts.isStringLiteralLike(current)) return current.text as HttpMethod
+    if (ts.isPropertyAccessExpression(current)) return current.name.text as HttpMethod
+    if (ts.isIdentifier(current)) return current.text as HttpMethod
+    return undefined
+}
+
 function getPathParamNames(pattern: string): string[] {
     const matches = pattern.match(/:([a-zA-Z0-9_]+)/g) ?? []
     return matches.map(m => m.slice(1))
@@ -188,15 +243,14 @@ function extractRoutesFromRouterSymbol(
 
             if (methodName === 'add') {
                 const [arg] = node.arguments
-                if (arg && ts.isObjectLiteralExpression(arg)) {
-                    const methodNode = getProp(arg, 'method')
-                    const patternNode = getProp(arg, 'pattern')
-                    const nameNode = getProp(arg, 'name')
-                    const handlerNode = getProp(arg, 'handler')
+                const routeOptions = arg ? resolveRouteOptionsExpression(arg, checker) : undefined
+                if (routeOptions) {
+                    const methodNode = getProp(routeOptions, 'method')
+                    const patternNode = getProp(routeOptions, 'pattern')
+                    const nameNode = getProp(routeOptions, 'name')
+                    const handlerNode = getProp(routeOptions, 'handler')
 
-                    const method = methodNode && ts.isStringLiteralLike(methodNode)
-                        ? methodNode.text as HttpMethod
-                        : HttpMethod.GET
+                    const method = readHttpMethod(methodNode) ?? HttpMethod.GET
                     const localPattern = patternNode && ts.isStringLiteralLike(patternNode) ? patternNode.text : '/'
                     const pattern = joinPrefixPathname(prefix, localPattern)
 
