@@ -27,7 +27,7 @@ type InferSchema<Schema extends z.ZodTypeAny | undefined> =
     Schema extends z.ZodTypeAny ? z.infer<Schema> : unknown
 
 export type ZodRouteHandler<TReqBody, TReqPath, TReqQuery, TOkRes, TErr = unknown> =
-    (this: Router<any>, ctx: HandlerContext<TReqPath> & {body: TReqBody; path: TReqPath; query: TReqQuery}) => HandlerResult
+    (this: Router<any>, ctx: HandlerContext<TReqPath> & {body: TReqBody; query: TReqQuery}) => HandlerResult
 
 export type ZodRouteDefinition<TReqBody, TReqPath, TReqQuery, TOkRes, TErr = unknown> =
     Omit<Route, 'handler'> & {handler: Handler<TReqBody, TReqPath, TReqQuery, TOkRes, TErr>}
@@ -41,7 +41,7 @@ export type ZodRouteOptions<
 > = Omit<Route, 'handler'> & {
     body?: BodySchema
     query?: QuerySchema
-    path?: PathSchema
+    pathParams?: PathSchema
     handler: ZodRouteHandler<
         InferSchema<BodySchema>,
         InferSchema<PathSchema>,
@@ -169,8 +169,8 @@ function mergeOpenApiMeta(existing?: Record<string, unknown>, generated?: Record
  * const route = zodRoute({
  *   pattern: '/users/:id',
  *   method: HttpMethod.GET,
- *   path: z.object({id: z.string()}),
- *   handler: ({path}) => new Response(`user=${path.id}`),
+ *   pathParams: z.object({id: z.string()}),
+ *   handler: ({pathParams}) => new Response(`user=${pathParams.id}`),
  * })
  * router.add(route)
  * ```
@@ -194,7 +194,7 @@ export function zodRoute<
     const {
         body,
         query,
-        path,
+        pathParams,
         handler,
         validationError,
         meta,
@@ -216,8 +216,8 @@ export function zodRoute<
         const parameters = buildParameterEntries(query, 'query')
         if (parameters.length > 0) generatedOpenApi.parameters = parameters
     }
-    if (path) {
-        const parameters = buildParameterEntries(path, 'path')
+    if (pathParams) {
+        const parameters = buildParameterEntries(pathParams, 'path')
         generatedOpenApi.parameters = [
             ...(generatedOpenApi.parameters as OpenApiParameter[] | undefined ?? []),
             ...parameters,
@@ -245,7 +245,6 @@ export function zodRoute<
             req: Request
             pathParams: InferSchema<PathSchema>
             body?: InferSchema<BodySchema>
-            path?: InferSchema<PathSchema>
             query?: InferSchema<QuerySchema>
         } = {req: ctx.req, pathParams: ctx.pathParams}
 
@@ -271,17 +270,16 @@ export function zodRoute<
             handlerContext.body = bodyResult.data as InferSchema<BodySchema>
         }
 
-        if (path) {
-            const pathResult = path.safeParse(ctx.pathParams)
+        if (pathParams) {
+            const pathResult = pathParams.safeParse(ctx.pathParams)
             if (!pathResult.success) {
                 return validationHandler(ValidationError.URL_PATH, pathResult.error)
             }
-            handlerContext.path = pathResult.data as InferSchema<PathSchema>
+            handlerContext.pathParams = pathResult.data as InferSchema<PathSchema>
         }
 
         return await handler.call(this, handlerContext as HandlerContext<InferSchema<PathSchema>> & {
             body: InferSchema<BodySchema>
-            path: InferSchema<PathSchema>
             query: InferSchema<QuerySchema>
         })
     }

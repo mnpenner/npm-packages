@@ -43,10 +43,10 @@ router.add(zodRoute({
 
 router.add(zodRoute({
     pattern: '/books/:id',
-    path: z.object({id: z.string()}),
+    pathParams: z.object({id: z.string()}),
     body: z.object({title: z.string(), author: z.string()}),
-    handler: ({path, body}) => new Response(JSON.stringify({
-        id: path.id,
+    handler: ({pathParams, body}) => new Response(JSON.stringify({
+        id: pathParams.id,
         title: body.title,
         author: body.author,
     }), {

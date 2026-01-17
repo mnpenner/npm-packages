@@ -9,6 +9,7 @@
 - Add tests when implementing new features or fixing bugs. Tests go in the matching `<filename>.test.ts` file.
 - There should be one `describe` block per function/method. You may nest `describe` blocks as needed.
 - Run `bun run test` after making changes and fix any errors
+  - Ignore the 'works with Bun.serve' test if it fails. It works outside of your environment.
 - Add detailed JSDoc comments @param and @returns to all public APIs, including all function overloads
     - The public API is the `entry` point(s) listed in `tsdown.config.ts`
     - Link to other functions and classes using this syntax: [`NeverjectPromise`]{@link NeverjectPromise}

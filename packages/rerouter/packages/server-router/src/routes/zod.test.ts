@@ -12,15 +12,15 @@ describe('zodRoute', () => {
         const route = zodRoute({
             pattern: '/users/:id',
             method: HttpMethod.POST,
-            path: z.object({id: z.string()}),
+            pathParams: z.object({id: z.string()}),
             query: z.object({verbose: z.enum(['yes', 'no'])}),
             body: z.object({name: z.string()}),
-            handler: ({req,path, query, body}) => {
+            handler: ({req, pathParams, query, body}) => {
                 expectType<TypeEqual<typeof req, Request>>(true);
-                expectType<TypeEqual<typeof path, {id:string}>>(true);
+                expectType<TypeEqual<typeof pathParams, {id:string}>>(true);
                 expectType<TypeEqual<typeof query, {verbose:'yes'|'no'}>>(true);
                 expectType<TypeEqual<typeof body, {name:string}>>(true);
-                return new Response(JSON.stringify({path, query, body}), {
+                return new Response(JSON.stringify({pathParams, query, body}), {
                     headers: {'content-type': 'application/json'},
                 })
             },
@@ -36,7 +36,7 @@ describe('zodRoute', () => {
 
         expect(response.status).toBe(HttpStatus.OK)
         expect(await response.json()).toEqual({
-            path: {id: '123'},
+            pathParams: {id: '123'},
             query: {verbose: 'yes'},
             body: {name: 'Ada'},
         })
@@ -46,7 +46,7 @@ describe('zodRoute', () => {
         const route = zodRoute({
             pattern: '/users/:id',
             method: HttpMethod.POST,
-            path: z.object({id: z.string()}),
+            pathParams: z.object({id: z.string()}),
             body: z.object({name: z.string()}),
             handler: () => new Response('ok'),
         })
@@ -67,7 +67,7 @@ describe('zodRoute', () => {
         const route = zodRoute({
             pattern: '/users/:id',
             method: HttpMethod.GET,
-            path: z.object({id: z.string().uuid()}),
+            pathParams: z.object({id: z.string().uuid()}),
             handler: () => new Response('ok'),
             validationError: (component, error) => {
                 expect(component).toBe(ValidationError.URL_PATH)
@@ -86,7 +86,7 @@ describe('zodRoute', () => {
         const route = zodRoute({
             pattern: '/users/:id',
             method: HttpMethod.POST,
-            path: z.object({id: z.string()}),
+            pathParams: z.object({id: z.string()}),
             query: z.object({verbose: z.boolean().optional()}),
             body: z.object({name: z.string()}),
             handler: () => new Response('ok'),
@@ -105,7 +105,7 @@ describe('zodRoute', () => {
         const route = zodRoute({
             pattern: '/users/:id',
             method: HttpMethod.GET,
-            path: z.object({id: z.string()}),
+            pathParams: z.object({id: z.string()}),
             meta: {
                 [JsonSchemaTarget.OPENAPI_3_0]: {
                     summary: 'Get user',

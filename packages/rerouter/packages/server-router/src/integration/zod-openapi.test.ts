@@ -12,7 +12,7 @@ describe('openapi', () => {
         router.add(zodRoute({
             pattern: '/users/:id',
             method: HttpMethod.POST,
-            path: z.object({id: z.string()}),
+            pathParams: z.object({id: z.string()}),
             query: z.object({include: z.string()}),
             body: z.object({name: z.string()}),
             handler: () => new Response('ok'),
