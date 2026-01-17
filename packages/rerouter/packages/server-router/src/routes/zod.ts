@@ -1,7 +1,8 @@
 import {HttpStatus} from '@mpen/http-helpers'
 import type {Router} from '../router'
-import type {Handler, HandlerResult, Route} from '../types'
+import type {Handler, HandlerContext, HandlerResult, Route} from '../types'
 import {z} from 'zod'
+import {JsonSchemaTarget} from '@mpen/server-router/lib/json-schema'
 
 /**
  * Validation error component identifiers for Zod-backed routes.
@@ -26,7 +27,7 @@ type InferSchema<Schema extends z.ZodTypeAny | undefined> =
     Schema extends z.ZodTypeAny ? z.infer<Schema> : unknown
 
 export type ZodRouteHandler<TReqBody, TReqPath, TReqQuery, TOkRes, TErr = unknown> =
-    (this: Router<any>, ctx: {req: Request; body: TReqBody; path: TReqPath; query: TReqQuery}) => HandlerResult
+    (this: Router<any>, ctx: HandlerContext<TReqPath> & {body: TReqBody; path: TReqPath; query: TReqQuery}) => HandlerResult
 
 export type ZodRouteDefinition<TReqBody, TReqPath, TReqQuery, TOkRes, TErr = unknown> =
     Omit<Route, 'handler'> & {handler: Handler<TReqBody, TReqPath, TReqQuery, TOkRes, TErr>}
@@ -37,7 +38,7 @@ export type ZodRouteOptions<
     QuerySchema extends z.ZodTypeAny | undefined,
     TOkRes,
     TErr = unknown,
-> = Omit<Route, 'handler' | 'meta'> & {
+> = Omit<Route, 'handler'> & {
     body?: BodySchema
     query?: QuerySchema
     path?: PathSchema
@@ -49,7 +50,6 @@ export type ZodRouteOptions<
         TErr
     >
     validationError?: ValidationErrorHandler
-    meta?: Route['meta']
 }
 
 const validationErrorComponentName = new Map<ValidationError, ValidationErrorBody['component']>([
@@ -105,7 +105,7 @@ function zodErrorFromThrowable(error: unknown): z.ZodError {
 }
 
 function toOpenApiSchema(schema: z.ZodTypeAny): Record<string, unknown> {
-    return z.toJSONSchema(schema, {target: 'openapi-3.0'}) as Record<string, unknown>
+    return z.toJSONSchema(schema, {target: JsonSchemaTarget.OPENAPI_3_0}) as Record<string, unknown>
 }
 
 type OpenApiParameter = {
@@ -201,10 +201,6 @@ export function zodRoute<
         ...route
     } = options
     const validationHandler = validationError ?? createValidationResponse
-    const pathPattern = typeof route.pattern === 'string'
-        ? new URLPattern({pathname: route.pattern})
-        : route.pattern
-
     const generatedOpenApi: Record<string, unknown> = {}
     if (body) {
         const schema = toOpenApiSchema(body)
@@ -230,9 +226,9 @@ export function zodRoute<
 
     const baseMeta = meta ? {...meta} : undefined
     const generatedMeta = Object.keys(generatedOpenApi).length > 0 ? generatedOpenApi : undefined
-    const openapiMeta = mergeOpenApiMeta(meta?.openapi as Record<string, unknown> | undefined, generatedMeta)
+    const openapiMeta = mergeOpenApiMeta(meta?.[JsonSchemaTarget.OPENAPI_3_0] as Record<string, unknown> | undefined, generatedMeta)
     const routeMeta = openapiMeta
-        ? {...(baseMeta ?? {}), openapi: openapiMeta}
+        ? {...(baseMeta ?? {}), [JsonSchemaTarget.OPENAPI_3_0]: openapiMeta}
         : baseMeta
 
     const wrappedHandler: Handler<
@@ -241,18 +237,17 @@ export function zodRoute<
         InferSchema<QuerySchema>,
         TOkRes,
         TErr
-    > = async function (this: Router<any>, ctx: {req: Request}) {
+    > = async function (this: Router<any>, ctx: HandlerContext<InferSchema<PathSchema>>) {
         const url = new URL(ctx.req.url)
-        const paramsMatch = pathPattern.exec(url)
-        const pathParams = paramsMatch?.pathname.groups ?? {}
         const queryParams = readQueryParams(url.searchParams)
 
         const handlerContext: {
             req: Request
+            pathParams: InferSchema<PathSchema>
             body?: InferSchema<BodySchema>
             path?: InferSchema<PathSchema>
             query?: InferSchema<QuerySchema>
-        } = {req: ctx.req}
+        } = {req: ctx.req, pathParams: ctx.pathParams}
 
         if (query) {
             const queryResult = query.safeParse(queryParams)
@@ -277,15 +272,14 @@ export function zodRoute<
         }
 
         if (path) {
-            const pathResult = path.safeParse(pathParams)
+            const pathResult = path.safeParse(ctx.pathParams)
             if (!pathResult.success) {
                 return validationHandler(ValidationError.URL_PATH, pathResult.error)
             }
             handlerContext.path = pathResult.data as InferSchema<PathSchema>
         }
 
-        return await handler.call(this, handlerContext as {
-            req: Request
+        return await handler.call(this, handlerContext as HandlerContext<InferSchema<PathSchema>> & {
             body: InferSchema<BodySchema>
             path: InferSchema<PathSchema>
             query: InferSchema<QuerySchema>

@@ -136,6 +136,28 @@ export type RequestContext<Ctx extends object = AnyContext> = {
 } & Ctx
 
 /**
+ * Context object provided to route handlers.
+ *
+ * @example
+ * ```ts
+ * const handler: HandlerContext<{id: string}> = {
+ *   req: new Request('https://example.com/users/123'),
+ *   pathParams: {id: '123'},
+ * }
+ * ```
+ */
+export interface HandlerContext<TReqPath = unknown> {
+    /**
+     * Primary request reference for handlers.
+     */
+    req: Request
+    /**
+     * Route path parameters extracted from the matched URL pattern.
+     */
+    pathParams: TReqPath
+}
+
+/**
  * Values yielded by streaming handlers to describe response metadata such as [`HttpStatus`]{@link HttpStatus}.
  *
  * @example
@@ -197,11 +219,11 @@ export type HandlerResult =
  *
  * The handler is invoked with `this` bound to the active [`Router`]{@link Router}.
  *
- * @param ctx - Handler context containing the incoming [`Request`]{@link Request}.
+ * @param ctx - Handler context containing the incoming [`Request`]{@link Request} and path parameters.
  * @returns A response or streaming generator that yields response metadata.
  */
 export type Handler<TReqBody, TReqPath, TReqQuery, TOkRes, TErr = unknown> =
-    (this: Router<any>, ctx: { req: Request }) => HandlerResult
+    (this: Router<any>, ctx: HandlerContext<TReqPath>) => HandlerResult
 
 /**
  * Middleware that can intercept requests and responses.

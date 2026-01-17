@@ -8,6 +8,7 @@ import type {
     Handler,
     HandlerBody,
     HandlerResult,
+    HandlerContext,
     HandlerYield,
     Middleware,
     NormalizedRoute,
@@ -262,9 +263,13 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         const serverReq: RequestContext<Ctx> = {
             req: request,
         } as any
+        const handlerCtx: HandlerContext<Record<string, string>> = {
+            req: request,
+            pathParams: found.match.pathname.groups ?? {},
+        }
 
         try {
-            const result = await this.run(found.route.handler, found.middleware, serverReq, found.router)
+            const result = await this.run(found.route.handler, found.middleware, serverReq, handlerCtx, found.router)
             if (result instanceof Response) {
                 return result
             }
@@ -342,6 +347,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         handler: Handler<any, any, any, any, any>,
         middleware: Middleware<Ctx>[],
         ctx: RequestContext<Ctx>,
+        handlerCtx: HandlerContext<any>,
         router: Router<Ctx>
     ): Promise<HandlerResult> {
         let idx = -1
@@ -350,7 +356,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
             idx = i
 
             if (i === middleware.length) {
-                return await Promise.resolve().then(() => handler.call(router, { req: ctx.req }))
+                return await Promise.resolve().then(() => handler.call(router, handlerCtx))
             }
 
             const mw = middleware[i]
