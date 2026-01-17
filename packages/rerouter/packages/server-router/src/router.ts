@@ -198,6 +198,83 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         return match.methodNotAllowed ? 'not_allowed' : null
     }
 
+    private collectAllowedMethods(url: URL): Set<string> {
+        const methods = new Set<string>()
+        function addMethods(routeMethod?: string | string[]) {
+            if (!routeMethod) return
+            const normalized = Array.isArray(routeMethod) ? routeMethod : [routeMethod]
+            for (const method of normalized) {
+                methods.add(method.toUpperCase())
+            }
+        }
+        function visit(entries: RouteEntry<Ctx>[], currentUrl: URL) {
+            for (const entry of entries) {
+                if (entry.kind === 'route') {
+                    if (!entry.route.pattern.exec(currentUrl)) continue
+                    addMethods(entry.route.method)
+                    continue
+                }
+
+                if (entry.prefix) {
+                    const subPathname = stripPrefixPathname(entry.prefix, currentUrl.pathname)
+                    if (subPathname == null) continue
+                    const subUrl = new URL(currentUrl.toString())
+                    subUrl.pathname = subPathname
+                    visit(entry.router.entries, subUrl)
+                } else {
+                    visit(entry.router.entries, currentUrl)
+                }
+            }
+        }
+        visit(this.entries, url)
+        return methods
+    }
+
+    private formatAllowMethods(methods: Set<string>): string {
+        const order = ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
+        const ordered: string[] = []
+        for (const method of order) {
+            if (methods.has(method)) ordered.push(method)
+        }
+        const remaining = [...methods].filter(method => !order.includes(method)).sort()
+        return [...ordered, ...remaining].join(', ')
+    }
+
+    private async handleMatch(found: MatchResult<Ctx>, request: Request): Promise<Response> {
+        if (found.route.accept && found.route.accept.length > 0) {
+            const contentTypeHeader = request.headers.get('content-type')
+            if (!contentTypeHeader) {
+                return new Response('Not Acceptable', { status: HttpStatus.NOT_ACCEPTABLE })
+            }
+            const contentType = parseMediaType(contentTypeHeader)
+            if (!contentType || !found.route.accept.some(accept => mediaTypeMatches(accept, contentType))) {
+                return new Response('Not Acceptable', { status: HttpStatus.NOT_ACCEPTABLE })
+            }
+        }
+
+        const serverReq: RequestContext<Ctx> = {
+            req: request,
+        } as any
+
+        try {
+            const result = await this.run(found.route.handler as any, found.middleware, serverReq)
+            if (result instanceof Response) {
+                return result
+            }
+            if (this.isAsyncGenerator(result)) {
+                const response = await this.responseFromGenerator(result, request)
+                if (response) return response
+                return new Response(null, { status: HttpStatus.CLIENT_CLOSED_REQUEST })
+            }
+            if (this.isBodyChunk(result) || result instanceof ReadableStream) {
+                return new Response(this.toResponseBody(result))
+            }
+            return await Promise.resolve(result)
+        } catch (_err) {
+            return new Response('Internal Server Error', { status: HttpStatus.INTERNAL_SERVER_ERROR })
+        }
+    }
+
     private methodMatches(routeMethod: string | string[] | undefined, method: string): boolean {
         if (!routeMethod) return true
         const normalized = Array.isArray(routeMethod) ? routeMethod : [routeMethod]
@@ -487,6 +564,25 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         const url = new URL(request.url)
         const method = request.method.toUpperCase()
 
+        if (method === 'OPTIONS') {
+            const explicit = this.match(method, url)
+            if (explicit && explicit !== 'not_allowed') {
+                return await this.handleMatch(explicit, request)
+            }
+            const allowedMethods = this.collectAllowedMethods(url)
+            if (allowedMethods.size === 0) {
+                return new Response('Not Found', { status: HttpStatus.NOT_FOUND })
+            }
+            if (allowedMethods.has('GET')) {
+                allowedMethods.add('HEAD')
+            }
+            allowedMethods.add('OPTIONS')
+            return new Response(null, {
+                status: HttpStatus.NO_CONTENT,
+                headers: {'access-control-allow-methods': this.formatAllowMethods(allowedMethods)},
+            })
+        }
+
         const found = this.match(method, url)
         if (!found) {
             return new Response('Not Found', { status: HttpStatus.NOT_FOUND })
@@ -494,37 +590,6 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         if (found === 'not_allowed') {
             return new Response('Method Not Allowed', { status: HttpStatus.METHOD_NOT_ALLOWED })
         }
-        if (found.route.accept) {
-            const contentTypeHeader = request.headers.get('content-type')
-            if (!contentTypeHeader) {
-                return new Response('Not Acceptable', { status: HttpStatus.NOT_ACCEPTABLE })
-            }
-            const contentType = parseMediaType(contentTypeHeader)
-            if (!contentType || !mediaTypeMatches(found.route.accept, contentType)) {
-                return new Response('Not Acceptable', { status: HttpStatus.NOT_ACCEPTABLE })
-            }
-        }
-
-        const serverReq: RequestContext<Ctx> = {
-            req: request,
-        } as any
-
-        try {
-            const result = await this.run(found.route.handler as any, found.middleware, serverReq)
-            if (result instanceof Response) {
-                return result
-            }
-            if (this.isAsyncGenerator(result)) {
-                const response = await this.responseFromGenerator(result, request)
-                if (response) return response
-                return new Response(null, { status: HttpStatus.CLIENT_CLOSED_REQUEST })
-            }
-            if (this.isBodyChunk(result) || result instanceof ReadableStream) {
-                return new Response(this.toResponseBody(result))
-            }
-            return await Promise.resolve(result)
-        } catch (_err) {
-            return new Response('Internal Server Error', { status: HttpStatus.INTERNAL_SERVER_ERROR })
-        }
+        return await this.handleMatch(found, request)
     }
 }

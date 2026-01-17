@@ -23,16 +23,21 @@ export function normalizeRoute(route: Route): NormalizedRoute {
         : route.pattern
     const method = route.method
     const accept = route.accept
-    let normalizedAccept: MediaType | undefined
+    let normalizedAccept: MediaType[] | undefined
     if (accept) {
-        if (typeof accept === 'string') {
-            const parsed = parseMediaType(accept)
-            if (!parsed) {
-                throw new Error(`Invalid accept media type: ${accept}`)
+        const acceptList = Array.isArray(accept) ? accept : [accept]
+        normalizedAccept = acceptList.map(entry => {
+            if (typeof entry === 'string') {
+                const parsed = parseMediaType(entry)
+                if (!parsed) {
+                    throw new Error(`Invalid accept media type: ${entry}`)
+                }
+                return parsed
             }
-            normalizedAccept = parsed
-        } else {
-            normalizedAccept = normalizeMediaType(accept)
+            return normalizeMediaType(entry)
+        })
+        if (normalizedAccept.length === 0) {
+            normalizedAccept = undefined
         }
     }
     return {

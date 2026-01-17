@@ -1,6 +1,7 @@
 import type {HttpStatus} from '@mpen/http-helpers'
 
-export type {HttpStatus} from '@mpen/http-helpers'
+export type OneOrMany<T> = T | T[]
+
 
 /**
  * Declarative route definition that the router can normalize and register.
@@ -16,25 +17,25 @@ export type {HttpStatus} from '@mpen/http-helpers'
  * ```
  */
 export interface Route {
-    name?: string | string[]
+    name?: OneOrMany<string>
     pattern: string | URLPattern
     handler: Handler<any, any, any, any, any>
-    method?: string | string[]
+    method?: OneOrMany<string>
     /**
-     * Expected media type for the incoming request body. When provided, the router compares it against
-     * the incoming `Content-Type` header.
+     * Expected media type(s) for the incoming request body. When provided, the router compares each
+     * entry against the incoming `Content-Type` header.
      *
      * @example
      * ```ts
      * const route: Route = {
      *   pattern: '/upload',
      *   method: 'POST',
-     *   accept: 'multipart/form-data',
+     *   accept: ['multipart/form-data', {type: 'application/json'}],
      *   handler: async () => new Response('ok'),
      * }
      * ```
      */
-    accept?: string | MediaType
+    accept?: OneOrMany<string | MediaType>
 }
 
 /**
@@ -55,7 +56,7 @@ export interface NormalizedRoute {
     pattern: URLPattern
     handler: Handler<any, any, any, any, any>
     method?: string | string[]
-    accept?: MediaType
+    accept?: MediaType[]
 }
 
 /**

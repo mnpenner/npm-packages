@@ -9,7 +9,7 @@ function normalizeType(value: string): string {
 }
 
 export function normalizeCharset(value: string): string {
-    return normalizeToken(value).toUpperCase().replace(/[-_]/g, '')
+    return normalizeToken(value).toLowerCase().replace(/[-_]/g, '')
 }
 
 export function normalizeMediaType(value: MediaType): MediaType {
