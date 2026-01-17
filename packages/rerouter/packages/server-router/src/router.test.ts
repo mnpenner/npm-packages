@@ -155,6 +155,37 @@ describe('Router', () => {
         expect(await response.text()).toBe('hello world! done')
     })
 
+    it('streams response bodies written after returning a Response', async () => {
+        const {resolve: allowWrite, promise: writeAllowed} = Promise.withResolvers<void>()
+        const router = new Router()
+        router.add({
+            method: HttpMethod.GET,
+            pattern: '/late',
+            handler: async () => {
+                const stream = new ReadableStream<Uint8Array>({
+                    async start(controller) {
+                        await writeAllowed
+                        controller.enqueue(new TextEncoder().encode('late body'))
+                        controller.close()
+                    },
+                })
+                return new Response(stream)
+            },
+        })
+
+        const responsePromise = router.fetch(makeRequest('/late'))
+        const response = await Promise.race([
+            responsePromise,
+            new Promise<Response>((_, reject) =>
+                setTimeout(() => reject(new Error('response did not resolve')), 50)
+            ),
+        ])
+
+        expect(response.status).toBe(HttpStatus.OK)
+        allowWrite()
+        expect(await response.text()).toBe('late body')
+    })
+
     it('returns string or bytes as response bodies', async () => {
         const router = new Router()
         router.add({
