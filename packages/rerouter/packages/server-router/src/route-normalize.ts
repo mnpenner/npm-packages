@@ -1,10 +1,11 @@
 import type {MediaType, NormalizedRoute, Route} from './types'
+import type {HttpMethod} from '@mpen/http-helpers'
 import {normalizeMediaType, parseMediaType} from './lib/media-type'
 import {pattToName, sanitizeNameParts, splitNameString} from './route-names'
 
 function normalizeRouteName(
     name: Route['name'],
-    method: string | string[] | undefined,
+    method: HttpMethod | HttpMethod[] | undefined,
     pattern: URLPattern
 ): string[] {
     const methodName = Array.isArray(method) ? method[0] : method

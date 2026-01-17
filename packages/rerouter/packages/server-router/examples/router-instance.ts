@@ -2,7 +2,7 @@ import {Router} from '../src/index'
 import {createZodNeverjectHandler} from '@mpen/server-router-zod-neverject'
 import {okAsync} from 'neverject'
 import {z} from 'zod'
-import {CommonHeaders, ContentTypes, HttpStatus} from '@mpen/http-helpers'
+import {CommonHeaders, CommonContentTypes, HttpMethod, HttpStatus} from '@mpen/http-helpers'
 
 export const router = new Router()
 
@@ -13,7 +13,7 @@ router.add({
             body: { message: 'Hello World!' }
         })
     }),
-    method: 'GET'
+    method: HttpMethod.GET
 })
 
 router.add({
@@ -24,7 +24,7 @@ router.add({
             body: { message: 'Hello World!' }
         })
     }),
-    method: 'GET'
+    method: HttpMethod.GET
 })
 
 router.add({
@@ -35,7 +35,7 @@ router.add({
             body: { message: 'Hello World!' }
         })
     }),
-    method: 'POST'
+    method: HttpMethod.POST
 })
 
 router.add({
@@ -46,7 +46,7 @@ router.add({
             body: { message: 'Hello World!' }
         })
     }),
-    method: 'POST'
+    method: HttpMethod.POST
 })
 
 
@@ -63,15 +63,16 @@ router.add({
             }
         })
     }),
-    method: 'POST'
+    method: HttpMethod.POST
 })
 
-const sleep = (ms: number): Promise<void> =>
-    new Promise<void>(resolve => setTimeout(resolve, ms))
+function sleep(ms: number): Promise<void> {
+    return new Promise<void>(resolve => setTimeout(resolve, ms))
+}
 
 router.add({
     pattern: '/gen',
-    // method: 'GET',
+    // method: HttpMethod.GET,
     handler: async function* ({req}) {
         console.log('start')
         yield HttpStatus.OK
@@ -79,7 +80,7 @@ router.add({
         yield new Headers({
             'x-foo': 'bar',
             'x-bar': 'baz',
-            [CommonHeaders.CONTENT_TYPE]: ContentTypes.PLAIN_TEXT,
+            [CommonHeaders.CONTENT_TYPE]: CommonContentTypes.PLAIN_TEXT,
         })
         console.log('headers yielded')
         await sleep(1000)

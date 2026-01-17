@@ -4,11 +4,12 @@ import path from 'node:path'
 import fs from 'node:fs'
 import {parseArgs} from 'util'
 import {$} from 'bun'
+import {HttpMethod} from '@mpen/http-helpers'
 import {pattToName, sanitizeNameParts, splitNameString} from '../route-names'
 
 type ExtractedRouteMeta = {
     name: string[]
-    method: string
+    method: HttpMethod
     pattern: string
     bodyType: string
     pathType: string
@@ -193,7 +194,9 @@ function extractRoutesFromRouterSymbol(
                     const nameNode = getProp(arg, 'name')
                     const handlerNode = getProp(arg, 'handler')
 
-                    const method = methodNode && ts.isStringLiteralLike(methodNode) ? methodNode.text : 'GET'
+                    const method = methodNode && ts.isStringLiteralLike(methodNode)
+                        ? methodNode.text as HttpMethod
+                        : HttpMethod.GET
                     const localPattern = patternNode && ts.isStringLiteralLike(patternNode) ? patternNode.text : '/'
                     const pattern = joinPrefixPathname(prefix, localPattern)
 

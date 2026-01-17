@@ -1,5 +1,5 @@
 export * from './CommonHeaders'
-export * from './ContentTypes'
+export * from './CommonContentTypes'
 export * from './HttpMethod'
 export * from './HttpStatus'
-export * from './MediaType'
+export * from './CommonMediaTypes'

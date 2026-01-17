@@ -1,4 +1,4 @@
-import {HttpStatus} from '@mpen/http-helpers'
+import {HttpMethod, HttpStatus} from '@mpen/http-helpers'
 import type {SimpleServerInterface} from './UniversalServerInterface'
 import {joinPrefixPathname, stripPrefixPathname} from './pathname'
 import {normalizeRoute} from './route-normalize'
@@ -30,7 +30,7 @@ type MatchResult<Ctx extends object> = {
  * @example
  * ```ts
  * const router = new Router()
- * router.add({method: 'GET', pattern: '/', handler: async ({req}) => new Response(req.url)})
+ * router.add({method: HttpMethod.GET, pattern: '/', handler: async ({req}) => new Response(req.url)})
  * ```
  */
 export class Router<Ctx extends object = AnyContext> implements SimpleServerInterface {
@@ -136,7 +136,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
      *
      * @example
      * ```ts
-     * router.add({method: 'POST', pattern: '/items', handler: ({req}) => new Response(req.url)})
+     * router.add({method: HttpMethod.POST, pattern: '/items', handler: ({req}) => new Response(req.url)})
      * ```
      *
      * @param route - Route definition to normalize and register.
@@ -183,12 +183,18 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         return routes
     }
 
-    private match(method: string, url: URL): MatchResult<Ctx> | 'not_allowed' | null {
-        const isHead = method === 'HEAD'
+    private match(method: HttpMethod, url: URL): MatchResult<Ctx> | 'not_allowed' | null {
+        const isHead = method === HttpMethod.HEAD
         if (isHead) {
-            const headOnly = this.matchWithMethodCheck(url, routeMethod => this.methodMatches(routeMethod, 'HEAD'))
+            const headOnly = this.matchWithMethodCheck(
+                url,
+                routeMethod => this.methodMatches(routeMethod, HttpMethod.HEAD)
+            )
             if (headOnly.match) return headOnly.match
-            const getOnly = this.matchWithMethodCheck(url, routeMethod => this.methodMatches(routeMethod, 'GET'))
+            const getOnly = this.matchWithMethodCheck(
+                url,
+                routeMethod => this.methodMatches(routeMethod, HttpMethod.GET)
+            )
             if (getOnly.match) return getOnly.match
             if (headOnly.methodNotAllowed || getOnly.methodNotAllowed) return 'not_allowed'
             return null
@@ -198,13 +204,13 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         return match.methodNotAllowed ? 'not_allowed' : null
     }
 
-    private collectAllowedMethods(url: URL): Set<string> {
-        const methods = new Set<string>()
-        function addMethods(routeMethod?: string | string[]) {
+    private collectAllowedMethods(url: URL): Set<HttpMethod> {
+        const methods = new Set<HttpMethod>()
+        function addMethods(routeMethod?: HttpMethod | HttpMethod[]) {
             if (!routeMethod) return
             const normalized = Array.isArray(routeMethod) ? routeMethod : [routeMethod]
             for (const method of normalized) {
-                methods.add(method.toUpperCase())
+                methods.add(method)
             }
         }
         function visit(entries: RouteEntry<Ctx>[], currentUrl: URL) {
@@ -230,9 +236,17 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         return methods
     }
 
-    private formatAllowMethods(methods: Set<string>): string {
-        const order = ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
-        const ordered: string[] = []
+    private formatAllowMethods(methods: Set<HttpMethod>): string {
+        const order = [
+            HttpMethod.GET,
+            HttpMethod.HEAD,
+            HttpMethod.POST,
+            HttpMethod.PUT,
+            HttpMethod.PATCH,
+            HttpMethod.DELETE,
+            HttpMethod.OPTIONS,
+        ]
+        const ordered: HttpMethod[] = []
         for (const method of order) {
             if (methods.has(method)) ordered.push(method)
         }
@@ -275,15 +289,15 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         }
     }
 
-    private methodMatches(routeMethod: string | string[] | undefined, method: string): boolean {
+    private methodMatches(routeMethod: HttpMethod | HttpMethod[] | undefined, method: HttpMethod): boolean {
         if (!routeMethod) return true
         const normalized = Array.isArray(routeMethod) ? routeMethod : [routeMethod]
-        return normalized.some(routeValue => routeValue.toUpperCase() === method)
+        return normalized.some(routeValue => routeValue === method)
     }
 
     private matchWithMethodCheck(
         url: URL,
-        methodCheck: (routeMethod?: string | string[]) => boolean
+        methodCheck: (routeMethod?: HttpMethod | HttpMethod[]) => boolean
     ): {match: MatchResult<Ctx> | null; methodNotAllowed: boolean} {
         let methodNotAllowed = false
         for (const entry of this.entries) {
@@ -392,7 +406,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         generator: AsyncGenerator<HandlerYield, HandlerBody>,
         request: Request
     ): Promise<Response | null> {
-        const isHead = request.method.toUpperCase() === 'HEAD'
+        const isHead = request.method.toUpperCase() === HttpMethod.HEAD
         let status: number | undefined
         let headers: Headers | undefined
         let bodyStream: ReadableStream<Uint8Array> | undefined
@@ -562,9 +576,9 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
      */
     async fetch(request: Request): Promise<Response> {
         const url = new URL(request.url)
-        const method = request.method.toUpperCase()
+        const method = request.method.toUpperCase() as HttpMethod
 
-        if (method === 'OPTIONS') {
+        if (method === HttpMethod.OPTIONS) {
             const explicit = this.match(method, url)
             if (explicit && explicit !== 'not_allowed') {
                 return await this.handleMatch(explicit, request)
@@ -573,10 +587,10 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
             if (allowedMethods.size === 0) {
                 return new Response('Not Found', { status: HttpStatus.NOT_FOUND })
             }
-            if (allowedMethods.has('GET')) {
-                allowedMethods.add('HEAD')
+            if (allowedMethods.has(HttpMethod.GET)) {
+                allowedMethods.add(HttpMethod.HEAD)
             }
-            allowedMethods.add('OPTIONS')
+            allowedMethods.add(HttpMethod.OPTIONS)
             return new Response(null, {
                 status: HttpStatus.NO_CONTENT,
                 headers: {'access-control-allow-methods': this.formatAllowMethods(allowedMethods)},

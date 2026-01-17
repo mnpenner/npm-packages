@@ -1,4 +1,4 @@
-import type {HttpStatus} from '@mpen/http-helpers'
+import type {HttpMethod, HttpStatus} from '@mpen/http-helpers'
 
 export type OneOrMany<T> = T | T[]
 
@@ -10,7 +10,7 @@ export type OneOrMany<T> = T | T[]
  * ```ts
  * const route: Route = {
  *   name: 'user.detail',
- *   method: 'GET',
+ *   method: HttpMethod.GET,
  *   pattern: '/users/:id',
  *   handler: async ({req}) => new Response(await req.text()),
  * }
@@ -20,7 +20,7 @@ export interface Route {
     name?: OneOrMany<string>
     pattern: string | URLPattern
     handler: Handler<any, any, any, any, any>
-    method?: OneOrMany<string>
+    method?: OneOrMany<HttpMethod>
     /**
      * Expected media type(s) for the incoming request body. When provided, the router compares each
      * entry against the incoming `Content-Type` header.
@@ -29,7 +29,7 @@ export interface Route {
      * ```ts
      * const route: Route = {
      *   pattern: '/upload',
-     *   method: 'POST',
+     *   method: HttpMethod.POST,
      *   accept: ['multipart/form-data', {type: 'application/json'}],
      *   handler: async () => new Response('ok'),
      * }
@@ -45,7 +45,7 @@ export interface Route {
  * ```ts
  * const route: NormalizedRoute = {
  *   name: ['user', 'detail'],
- *   method: 'GET',
+ *   method: HttpMethod.GET,
  *   pattern: new URLPattern({pathname: '/users/:id'}),
  *   handler: async ({req}) => new Response(await req.text()),
  * }
@@ -55,7 +55,7 @@ export interface NormalizedRoute {
     name: string[]
     pattern: URLPattern
     handler: Handler<any, any, any, any, any>
-    method?: string | string[]
+    method?: HttpMethod | HttpMethod[]
     accept?: MediaType[]
 }
 

@@ -1,7 +1,7 @@
 /**
  * Media type without charset/params.
  */
-export const enum MediaType {
+export const enum CommonMediaTypes {
     JSON = 'application/json',
     HTML = 'text/html',
     PLAIN_TEXT = 'text/plain',
