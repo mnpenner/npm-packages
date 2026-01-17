@@ -1,13 +1,18 @@
 import type {MediaType} from '../types'
 
-const normalizeToken = (value: string): string => value.trim()
+function normalizeToken(value: string): string {
+    return value.trim()
+}
 
-const normalizeType = (value: string): string => normalizeToken(value).toLowerCase()
+function normalizeType(value: string): string {
+    return normalizeToken(value).toLowerCase()
+}
 
-export const normalizeCharset = (value: string): string =>
-    normalizeToken(value).toUpperCase().replace(/[-_]/g, '')
+export function normalizeCharset(value: string): string {
+    return normalizeToken(value).toUpperCase().replace(/[-_]/g, '')
+}
 
-export const normalizeMediaType = (value: MediaType): MediaType => {
+export function normalizeMediaType(value: MediaType): MediaType {
     const type = normalizeType(value.type)
     const charset = value.charset ? normalizeToken(value.charset) : undefined
     const boundary = value.boundary ? normalizeToken(value.boundary) : undefined
@@ -18,8 +23,8 @@ export const normalizeMediaType = (value: MediaType): MediaType => {
     }
 }
 
-export const parseMediaType = (value: string): MediaType | null => {
-    const [typePart, ...params] = value.split(';')
+export function parseMediaType(value: string): MediaType | null {
+    const [typePart = '', ...params] = value.split(';')
     const type = normalizeType(typePart)
     if (!type) return null
 
@@ -44,7 +49,7 @@ export const parseMediaType = (value: string): MediaType | null => {
     }
 }
 
-export const mediaTypeMatches = (accept: MediaType, contentType: MediaType): boolean => {
+export function mediaTypeMatches(accept: MediaType, contentType: MediaType): boolean {
     const normalizedAccept = normalizeMediaType(accept)
     const normalizedContent = normalizeMediaType(contentType)
     if (normalizedAccept.type !== normalizedContent.type) return false

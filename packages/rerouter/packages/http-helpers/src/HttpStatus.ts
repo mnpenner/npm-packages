@@ -217,6 +217,10 @@ export const enum HttpStatus {
      */
     REQUEST_HEADER_FIELDS_TOO_LARGE = 431,
     /**
+     * 499 Client Closed Request - The client closed the connection before the server could respond.
+     */
+    CLIENT_CLOSED_REQUEST = 499,
+    /**
      * 451 Unavailable For Legal Reasons - The user requests an illegal resource, such as a web page censored by a
      * government.
      */

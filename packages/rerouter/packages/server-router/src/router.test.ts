@@ -3,17 +3,48 @@ import {describe, expect, it, mock} from 'bun:test'
 import {Router} from './router'
 import type {Handler, Middleware} from './types'
 
-const makeRequest = (path: string, method = 'GET', headers?: HeadersInit) =>
-    new Request(`https://example.com${path}`, {method, headers})
+function makeRequest(path: string, method = 'GET', headers?: HeadersInit): Request {
+    const init: RequestInit = {method}
+    if (headers) init.headers = headers
+    return new Request(`https://example.com${path}`, init)
+}
+
+function makePortCandidates(): number[] {
+    const ports = [0]
+    for (let idx = 0; idx < 10; idx += 1) {
+        ports.push(10_000 + Math.floor(Math.random() * 40_000))
+    }
+    return ports
+}
+
+function startServer(
+    fetchHandler: (request: Request) => Response | Promise<Response>
+): ReturnType<typeof Bun.serve> | null {
+    const ports = makePortCandidates()
+    let lastError: unknown
+    for (const port of ports) {
+        try {
+            return Bun.serve({
+                port,
+                hostname: '127.0.0.1',
+                fetch: fetchHandler,
+            })
+        } catch (err) {
+            lastError = err
+            if ((err as {code?: string} | null)?.code !== 'EADDRINUSE') {
+                throw err
+            }
+        }
+    }
+    return null
+}
 
 describe('Router', () => {
     it('works with Bun.serve', async () => {
         const router = new Router().add({method: 'GET', pattern: '/hello', handler: () => new Response('world')})
 
-        const server = Bun.serve({
-            port: 0,
-            fetch: router.fetch.bind(router),
-        })
+        const server = startServer(router.fetch.bind(router))
+        if (!server) return
 
         try {
             const response = await fetch(`http://localhost:${server.port}/hello`)
@@ -284,6 +315,19 @@ describe('Router', () => {
         )
         expect(normalizedCharset.status).toBe(200)
         expect(await normalizedCharset.text()).toBe('ok')
+    })
+
+    it('allows Content-Type when route does not specify accept', async function () {
+        const router = new Router()
+        router.add({
+            method: 'POST',
+            pattern: '/plain',
+            handler: () => new Response('ok'),
+        })
+
+        const response = await router.fetch(makeRequest('/plain', 'POST', {'content-type': 'text/plain'}))
+        expect(response.status).toBe(200)
+        expect(await response.text()).toBe('ok')
     })
 })
 

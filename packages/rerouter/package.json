@@ -11,11 +11,11 @@
         "typescript": "^5.9.3"
     },
     "scripts": {
-        "build:react-router": "bun run --filter @mpen/react-router build",
-        "build:server-router": "bun run --filter @mpen/server-router build",
+        "build:react-router": "bun --cwd packages/react-router run build",
+        "build:server-router": "bun --cwd packages/server-router run build",
         "build": "run-s build:react-router build:server-router",
-        "gen:react-router": "bun run --filter @mpen/react-router gen",
-        "gen:server-router": "bun run --filter @mpen/server-router gen",
+        "gen:react-router": "bun --cwd packages/react-router run gen",
+        "gen:server-router": "bun --cwd packages/server-router run gen",
         "gen": "run-s gen:react-router gen:server-router",
         "test:types": "tsc -b tsconfig.json",
         "test:impl": "bun test packages/",

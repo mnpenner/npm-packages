@@ -59,6 +59,7 @@ export const StatusText: Record<HttpStatus, string> = {
     [HttpStatus.PRECONDITION_REQUIRED]: 'Precondition Required',
     [HttpStatus.TOO_MANY_REQUESTS]: 'Too Many Requests',
     [HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE]: 'Request Header Fields Too Large',
+    [HttpStatus.CLIENT_CLOSED_REQUEST]: 'Client Closed Request',
     [HttpStatus.UNAVAILABLE_FOR_LEGAL_REASONS]: 'Unavailable For Legal Reasons',
 
     // --- 5xx Server Errors ---

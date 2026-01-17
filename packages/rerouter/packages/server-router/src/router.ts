@@ -1,3 +1,4 @@
+import {HttpStatus} from '@mpen/http-helpers'
 import type {SimpleServerInterface} from './UniversalServerInterface'
 import {joinPrefixPathname, stripPrefixPathname} from './pathname'
 import {normalizeRoute} from './route-normalize'
@@ -364,7 +365,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
                     },
                 })
             }
-            if (status === undefined) status = 200
+            if (status === undefined) status = HttpStatus.OK
             resolveResponseOnce(new Response(bodyStream, buildResponseInit()))
         }
 
@@ -410,7 +411,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
                         if (yielded instanceof Headers) {
                             headers = yielded
                             if (status === undefined) {
-                                status = 200
+                                status = HttpStatus.OK
                             }
                             if (isHead && status !== undefined && headers) {
                                 await this.closeGenerator(generator)
@@ -443,7 +444,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
                             if (yieldedHeaders !== undefined) {
                                 headers = new Headers(yieldedHeaders)
                                 if (status === undefined) {
-                                    status = 200
+                                    status = HttpStatus.OK
                                 }
                                 if (isHead && status !== undefined && headers) {
                                     await this.closeGenerator(generator)
@@ -488,19 +489,19 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
 
         const found = this.match(method, url)
         if (!found) {
-            return new Response('Not Found', { status: 404 })
+            return new Response('Not Found', { status: HttpStatus.NOT_FOUND })
         }
         if (found === 'not_allowed') {
-            return new Response('Method Not Allowed', { status: 405 })
+            return new Response('Method Not Allowed', { status: HttpStatus.METHOD_NOT_ALLOWED })
         }
         if (found.route.accept) {
             const contentTypeHeader = request.headers.get('content-type')
             if (!contentTypeHeader) {
-                return new Response('Not Acceptable', { status: 406 })
+                return new Response('Not Acceptable', { status: HttpStatus.NOT_ACCEPTABLE })
             }
             const contentType = parseMediaType(contentTypeHeader)
             if (!contentType || !mediaTypeMatches(found.route.accept, contentType)) {
-                return new Response('Not Acceptable', { status: 406 })
+                return new Response('Not Acceptable', { status: HttpStatus.NOT_ACCEPTABLE })
             }
         }
 
@@ -516,14 +517,14 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
             if (this.isAsyncGenerator(result)) {
                 const response = await this.responseFromGenerator(result, request)
                 if (response) return response
-                return new Response(null, { status: 499 })
+                return new Response(null, { status: HttpStatus.CLIENT_CLOSED_REQUEST })
             }
             if (this.isBodyChunk(result) || result instanceof ReadableStream) {
                 return new Response(this.toResponseBody(result))
             }
             return await Promise.resolve(result)
         } catch (_err) {
-            return new Response('Internal Server Error', { status: 500 })
+            return new Response('Internal Server Error', { status: HttpStatus.INTERNAL_SERVER_ERROR })
         }
     }
 }
