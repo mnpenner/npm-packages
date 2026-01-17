@@ -34,24 +34,14 @@ type MatchResult<Ctx extends object> = {
  * ```
  */
 export class Router<Ctx extends object = AnyContext> implements SimpleServerInterface {
-    private entries: RouteEntry<Ctx>[] = []
+    private _entries: RouteEntry<Ctx>[] = []
     private _middleware: Middleware<Ctx>[] = []
 
     /**
      * Create a new router instance.
-     *
-     * @example
-     * ```ts
-     * const router = new Router()
-     * ```
-     *
-     * @param middleware - Optional middleware or list of middleware.
-     * @returns The created router instance.
      */
-    constructor(middleware?: Middleware<Ctx> | Array<Middleware<Ctx> | null | undefined | false>) {
-        if (middleware) {
-            this.use(middleware as any)
-        }
+    constructor() {
+
     }
 
     /**
@@ -88,9 +78,10 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
     ): this {
         const list = Array.isArray(middleware) ? middleware.filter(Boolean) as Middleware<Ctx>[] : [middleware]
         if (router) {
-            const group = new Router<Ctx>(list)
+            const group = new Router<Ctx>()
+            group.use(list)
             group.mount(router)
-            this.entries.push({ kind: 'router', router: group })
+            this._entries.push({ kind: 'router', router: group })
             return this
         }
         this._middleware.push(...list)
@@ -124,9 +115,9 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
     mount(prefix: string, router: Router<Ctx>): this
     mount(prefixOrRouter: string | Router<Ctx>, maybeRouter?: Router<Ctx>): this {
         if (typeof prefixOrRouter === 'string') {
-            this.entries.push({ kind: 'router', prefix: prefixOrRouter, router: maybeRouter! })
+            this._entries.push({ kind: 'router', prefix: prefixOrRouter, router: maybeRouter! })
         } else {
-            this.entries.push({ kind: 'router', router: prefixOrRouter })
+            this._entries.push({ kind: 'router', router: prefixOrRouter })
         }
         return this
     }
@@ -143,7 +134,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
      * @returns The router instance for chaining.
      */
     add(route: Route): this {
-        this.entries.push({ kind: 'route', route: normalizeRoute(route) })
+        this._entries.push({ kind: 'route', route: normalizeRoute(route) })
         return this
     }
 
@@ -159,7 +150,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
      */
     getRoutes(): NormalizedRoute[] {
         const routes: NormalizedRoute[] = []
-        for (const entry of this.entries) {
+        for (const entry of this._entries) {
             if (entry.kind === 'route') {
                 routes.push(entry.route)
                 continue
@@ -226,13 +217,13 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
                     if (subPathname == null) continue
                     const subUrl = new URL(currentUrl.toString())
                     subUrl.pathname = subPathname
-                    visit(entry.router.entries, subUrl)
+                    visit(entry.router._entries, subUrl)
                 } else {
-                    visit(entry.router.entries, currentUrl)
+                    visit(entry.router._entries, currentUrl)
                 }
             }
         }
-        visit(this.entries, url)
+        visit(this._entries, url)
         return methods
     }
 
@@ -300,7 +291,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         methodCheck: (routeMethod?: HttpMethod | HttpMethod[]) => boolean
     ): {match: MatchResult<Ctx> | null; methodNotAllowed: boolean} {
         let methodNotAllowed = false
-        for (const entry of this.entries) {
+        for (const entry of this._entries) {
             if (entry.kind === 'route') {
                 const route = entry.route
                 const match = route.pattern.exec(url)

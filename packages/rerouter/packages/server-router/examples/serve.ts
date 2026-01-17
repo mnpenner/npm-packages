@@ -5,5 +5,5 @@ import {router} from './router-instance'
 // export default router
 
 
-const server = Bun.serve({ port: 5180, fetch: router.fetch.bind(router) });
+const server = Bun.serve({ port: 0, fetch: router.fetch.bind(router) });
 console.log(`server-router running at http://localhost:${server.port}`);
