@@ -1,70 +1,59 @@
 import {Router} from '../src/index'
-import {createZodNeverjectHandler} from 'experimental/server-router-zod-neverject'
-import {okAsync} from 'neverject'
+import {zodRoute} from '../src/routes/zod'
 import {z} from 'zod'
 import {CommonHeaders, CommonContentTypes, HttpMethod, HttpStatus} from '@mpen/http-helpers'
 
 export const router = new Router()
 
-router.add({
+router.add(zodRoute({
     pattern: '/',
-    handler: createZodNeverjectHandler({
-        exec: (req) => okAsync({
-            body: { message: 'Hello World!' }
-        })
+    handler: () => new Response(JSON.stringify({message: 'Hello World!'}), {
+        headers: {[CommonHeaders.CONTENT_TYPE]: CommonContentTypes.JSON},
     }),
-    method: HttpMethod.GET
-})
+    method: HttpMethod.GET,
+}))
 
-router.add({
+router.add(zodRoute({
     name: 'namedRoute',
     pattern: '/name/bar',
-    handler: createZodNeverjectHandler({
-        exec: (req) => okAsync({
-            body: { message: 'Hello World!' }
-        })
+    handler: () => new Response(JSON.stringify({message: 'Hello World!'}), {
+        headers: {[CommonHeaders.CONTENT_TYPE]: CommonContentTypes.JSON},
     }),
-    method: HttpMethod.GET
-})
+    method: HttpMethod.GET,
+}))
 
-router.add({
+router.add(zodRoute({
     name: 'namedRoute',
     pattern: '/name/bar',
-    handler: createZodNeverjectHandler({
-        exec: (req) => okAsync({
-            body: { message: 'Hello World!' }
-        })
+    handler: () => new Response(JSON.stringify({message: 'Hello World!'}), {
+        headers: {[CommonHeaders.CONTENT_TYPE]: CommonContentTypes.JSON},
     }),
-    method: HttpMethod.POST
-})
+    method: HttpMethod.POST,
+}))
 
-router.add({
+router.add(zodRoute({
     name: 'foo.bar',
     pattern: '/foo/bar',
-    handler: createZodNeverjectHandler({
-        exec: (req) => okAsync({
-            body: { message: 'Hello World!' }
-        })
+    handler: () => new Response(JSON.stringify({message: 'Hello World!'}), {
+        headers: {[CommonHeaders.CONTENT_TYPE]: CommonContentTypes.JSON},
     }),
-    method: HttpMethod.POST
-})
+    method: HttpMethod.POST,
+}))
 
 
-router.add({
+router.add(zodRoute({
     pattern: '/books/:id',
-    handler: createZodNeverjectHandler({
-        path: z.object({ id: z.string() }),
-        body: z.object({ title: z.string(), author: z.string() }),
-        exec: (req) => okAsync({
-            body: {
-                id: req.pathParams.id,
-                title: req.body.title,
-                author: req.body.author
-            }
-        })
+    path: z.object({id: z.string()}),
+    body: z.object({title: z.string(), author: z.string()}),
+    handler: ({path, body}) => new Response(JSON.stringify({
+        id: path.id,
+        title: body.title,
+        author: body.author,
+    }), {
+        headers: {[CommonHeaders.CONTENT_TYPE]: CommonContentTypes.JSON},
     }),
-    method: HttpMethod.POST
-})
+    method: HttpMethod.POST,
+}))
 
 function sleep(ms: number): Promise<void> {
     return new Promise<void>(resolve => setTimeout(resolve, ms))

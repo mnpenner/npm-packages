@@ -263,9 +263,13 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         const serverReq: RequestContext<Ctx> = {
             req: request,
         } as any
+        const rawPathParams = found.match.pathname.groups ?? {}
+        const pathParams = Object.fromEntries(
+            Object.entries(rawPathParams).filter(([, value]) => value !== undefined)
+        ) as Record<string, string>
         const handlerCtx: HandlerContext<Record<string, string>> = {
             req: request,
-            pathParams: found.match.pathname.groups ?? {},
+            pathParams,
         }
 
         try {
