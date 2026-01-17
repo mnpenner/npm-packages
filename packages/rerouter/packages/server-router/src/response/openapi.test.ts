@@ -3,6 +3,7 @@ import {describe, expect, it} from 'bun:test'
 import {HttpMethod} from '@mpen/http-helpers'
 import {Router} from '../router'
 import {openapi} from './openapi'
+import {JsonSchemaTarget} from '@mpen/server-router/lib/json-schema'
 
 describe('openapi', () => {
     it('builds OpenAPI paths from routes and meta', async () => {
@@ -11,7 +12,7 @@ describe('openapi', () => {
             pattern: '/users/:id',
             method: HttpMethod.GET,
             meta: {
-                openapi: {
+                [JsonSchemaTarget.OPENAPI_3_0]: {
                     summary: 'Get user',
                     parameters: [{
                         name: 'id',

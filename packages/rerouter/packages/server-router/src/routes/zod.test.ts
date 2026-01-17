@@ -5,6 +5,7 @@ import {z} from 'zod'
 import {Router} from '../router'
 import {ValidationError, zodRoute} from './zod'
 import {expectType, type TypeEqual} from '@mpen/server-router/testing/type-assert'
+import {JsonSchemaTarget} from '@mpen/server-router/lib/json-schema'
 
 describe('zodRoute', () => {
     it('parses and supplies validated inputs to the handler', async () => {
@@ -91,7 +92,7 @@ describe('zodRoute', () => {
             handler: () => new Response('ok'),
         })
 
-        const openapi = route.meta?.openapi as any
+        const openapi = route.meta?.[JsonSchemaTarget.OPENAPI_3_0] as any
 
         expect(openapi.requestBody.content['application/json'].schema.type).toBe('object')
         expect(openapi.parameters).toEqual([
@@ -106,7 +107,7 @@ describe('zodRoute', () => {
             method: HttpMethod.GET,
             path: z.object({id: z.string()}),
             meta: {
-                openapi: {
+                [JsonSchemaTarget.OPENAPI_3_0]: {
                     summary: 'Get user',
                     parameters: [{name: 'include', in: 'query', schema: {type: 'string'}}],
                 },
@@ -114,7 +115,7 @@ describe('zodRoute', () => {
             handler: () => new Response('ok'),
         })
 
-        const openapi = route.meta?.openapi as any
+        const openapi = route.meta?.[JsonSchemaTarget.OPENAPI_3_0] as any
 
         expect(openapi.summary).toBe('Get user')
         expect(openapi.parameters).toEqual([

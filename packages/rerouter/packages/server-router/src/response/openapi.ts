@@ -1,6 +1,7 @@
 import {HttpMethod, HttpStatus} from '@mpen/http-helpers'
 import type {Router} from '../router'
 import type {Handler, NormalizedRoute} from '../types'
+import {JsonSchemaTarget} from '@mpen/server-router/lib/json-schema'
 
 export type OpenApiInfo = {
     title: string
@@ -104,7 +105,7 @@ export function openapi(options: OpenApiOptions): Handler<unknown, unknown, unkn
 
             const pathItem = paths[pathPattern] ?? (paths[pathPattern] = {})
             for (const method of methods) {
-                pathItem[method] = buildOperation(route.meta?.openapi as Record<string, unknown> | undefined)
+                pathItem[method] = buildOperation(route.meta?.[JsonSchemaTarget.OPENAPI_3_0] as Record<string, unknown> | undefined)
             }
         }
 
