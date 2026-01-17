@@ -238,15 +238,15 @@ export function zodRoute<
         TOkRes,
         TErr
     > = async function (this: Router<any>, ctx: HandlerContext<InferSchema<PathSchema>>) {
-        const url = new URL(ctx.req.url)
-        const queryParams = readQueryParams(url.searchParams)
+        const queryParams = readQueryParams(ctx.url.searchParams)
 
         const handlerContext: {
             req: Request
+            url: URL
             pathParams: InferSchema<PathSchema>
             body?: InferSchema<BodySchema>
             query?: InferSchema<QuerySchema>
-        } = {req: ctx.req, pathParams: ctx.pathParams}
+        } = {req: ctx.req, url: ctx.url, pathParams: ctx.pathParams}
 
         if (query) {
             const queryResult = query.safeParse(queryParams)

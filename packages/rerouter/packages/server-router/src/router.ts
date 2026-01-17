@@ -248,7 +248,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         return [...ordered, ...remaining].join(', ')
     }
 
-    private async handleMatch(found: MatchResult<Ctx>, request: Request): Promise<Response> {
+    private async handleMatch(found: MatchResult<Ctx>, request: Request, url: URL): Promise<Response> {
         if (found.route.accept && found.route.accept.length > 0) {
             const contentTypeHeader = request.headers.get('content-type')
             if (!contentTypeHeader) {
@@ -269,6 +269,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         ) as Record<string, string>
         const handlerCtx: HandlerContext<Record<string, string>> = {
             req: request,
+            url,
             pathParams,
         }
 
@@ -585,7 +586,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         if (method === HttpMethod.OPTIONS) {
             const explicit = this.match(method, url)
             if (explicit && explicit !== 'not_allowed') {
-                return await this.handleMatch(explicit, request)
+                return await this.handleMatch(explicit, request, url)
             }
             const allowedMethods = this.collectAllowedMethods(url)
             if (allowedMethods.size === 0) {
@@ -608,6 +609,6 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         if (found === 'not_allowed') {
             return new Response('Method Not Allowed', { status: HttpStatus.METHOD_NOT_ALLOWED })
         }
-        return await this.handleMatch(found, request)
+        return await this.handleMatch(found, request, url)
     }
 }

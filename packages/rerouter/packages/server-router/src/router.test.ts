@@ -36,6 +36,32 @@ describe('Router', () => {
         expect(await response.text()).toBe('Not Found')
     })
 
+    it('provides the parsed URL to handlers', async () => {
+        const router = new Router()
+        router.add({
+            method: HttpMethod.GET,
+            pattern: '/search',
+            handler: ({url}) => new Response(`${url.pathname}?q=${url.searchParams.get('q')}`),
+        })
+
+        const response = await router.fetch(makeRequest('/search?q=bun'))
+
+        expect(await response.text()).toBe('/search?q=bun')
+    })
+
+    it('provides pathParams to handlers', async () => {
+        const router = new Router()
+        router.add({
+            method: HttpMethod.GET,
+            pattern: '/users/:id',
+            handler: ({pathParams}) => new Response(pathParams.id),
+        })
+
+        const response = await router.fetch(makeRequest('/users/42'))
+
+        expect(await response.text()).toBe('42')
+    })
+
     it('handles HEAD requests for streaming handlers', async () => {
         const beforeHeader = mock()
         const afterHeader = mock()

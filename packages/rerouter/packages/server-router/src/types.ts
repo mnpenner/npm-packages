@@ -142,6 +142,7 @@ export type RequestContext<Ctx extends object = AnyContext> = {
  * ```ts
  * const handler: HandlerContext<{id: string}> = {
  *   req: new Request('https://example.com/users/123'),
+ *   url: new URL('https://example.com/users/123'),
  *   pathParams: {id: '123'},
  * }
  * ```
@@ -151,6 +152,10 @@ export interface HandlerContext<TReqPath = unknown> {
      * Primary request reference for handlers.
      */
     req: Request
+    /**
+     * Parsed request URL for convenience.
+     */
+    url: URL
     /**
      * Route path parameters extracted from the matched URL pattern.
      */
@@ -219,7 +224,7 @@ export type HandlerResult =
  *
  * The handler is invoked with `this` bound to the active [`Router`]{@link Router}.
  *
- * @param ctx - Handler context containing the incoming [`Request`]{@link Request} and path parameters.
+ * @param ctx - Handler context containing the incoming [`Request`]{@link Request}, parsed [`URL`]{@link URL}, and path parameters.
  * @returns A response or streaming generator that yields response metadata.
  */
 export type Handler<TReqBody, TReqPath, TReqQuery, TOkRes, TErr = unknown> =
