@@ -365,64 +365,104 @@ describe('Router', () => {
     })
 })
 
-describe.skip('Router middleware', () => {
-    it('stacks middleware across mounted routers', async () => {
-        const events: string[] = []
-        const log = (label: string): Middleware => async (_ctx, next) => {
-            events.push(`${label}:before`)
-            const result = await next()
-            events.push(`${label}:after`)
-            return result
-        }
-        const handler: Handler<unknown, unknown, unknown, unknown> = async () => {
-            events.push('handler')
-            return new Response('ok')
-        }
+describe('Router.fetch', () => {
+    it('binds handler this to the matching router instance', async () => {
+        const router = new Router()
+        let boundRouter: Router | null = null
+        router.add({
+            method: HttpMethod.GET,
+            pattern: '/ping',
+            handler: function () {
+                boundRouter = this
+                return new Response('ok')
+            },
+        })
 
-        const api = new Router([log('api')])
-        api.add({method: HttpMethod.GET, pattern: '/items', handler})
+        const response = await router.fetch(new Request('https://example.com/ping'))
 
-        const router = new Router([log('root')])
-        router.mount('/api', api)
-
-        const response = await router.fetch(makeRequest('/api/items'))
         expect(response.status).toBe(HttpStatus.OK)
-        expect(events).toEqual([
-            'root:before',
-            'api:before',
-            'handler',
-            'api:after',
-            'root:after',
-        ])
+        expect(boundRouter === router).toBe(true)
     })
 
-    it('scopes middleware when using use(middleware, router)', async () => {
-        const events: string[] = []
-        const log = (label: string): Middleware => async (_ctx, next) => {
-            events.push(`${label}:before`)
-            const result = await next()
-            events.push(`${label}:after`)
-            return result
-        }
-        const scopedHandler: Handler<unknown, unknown, unknown, unknown> = async () => {
-            events.push('scoped')
-            return new Response('scoped')
-        }
-        const rootHandler: Handler<unknown, unknown, unknown, unknown> = async () => {
-            events.push('root')
-            return new Response('root')
-        }
+    it('binds handlers to mounted routers', async () => {
+        const parent = new Router()
+        const child = new Router()
+        let boundRouter: Router | null = null
+        child.add({
+            method: HttpMethod.GET,
+            pattern: '/nested',
+            handler: function () {
+                boundRouter = this
+                return new Response('ok')
+            },
+        })
+        parent.mount('/api', child)
 
-        const scopedRouter = new Router().add({method: HttpMethod.GET, pattern: '/scoped', handler: scopedHandler})
-        const router = new Router()
-        router.add({method: HttpMethod.GET, pattern: '/root', handler: rootHandler})
-        router.use(log('scoped'), scopedRouter)
+        const response = await parent.fetch(new Request('https://example.com/api/nested'))
 
-        await router.fetch(makeRequest('/root'))
-        expect(events).toEqual(['root'])
-
-        events.length = 0
-        await router.fetch(makeRequest('/scoped'))
-        expect(events).toEqual(['scoped:before', 'scoped', 'scoped:after'])
+        expect(response.status).toBe(HttpStatus.OK)
+        expect(boundRouter === child).toBe(true)
     })
 })
+
+// describe('Router middleware', () => {
+//     it('stacks middleware across mounted routers', async () => {
+//         const events: string[] = []
+//         const log = (label: string): Middleware => async (_ctx, next) => {
+//             events.push(`${label}:before`)
+//             const result = await next()
+//             events.push(`${label}:after`)
+//             return result
+//         }
+//         const handler: Handler<unknown, unknown, unknown, unknown> = async () => {
+//             events.push('handler')
+//             return new Response('ok')
+//         }
+//
+//         const api = new Router([log('api')])
+//         api.add({method: HttpMethod.GET, pattern: '/items', handler})
+//
+//         const router = new Router([log('root')])
+//         router.mount('/api', api)
+//
+//         const response = await router.fetch(makeRequest('/api/items'))
+//         expect(response.status).toBe(HttpStatus.OK)
+//         expect(events).toEqual([
+//             'root:before',
+//             'api:before',
+//             'handler',
+//             'api:after',
+//             'root:after',
+//         ])
+//     })
+//
+//     it('scopes middleware when using use(middleware, router)', async () => {
+//         const events: string[] = []
+//         const log = (label: string): Middleware => async (_ctx, next) => {
+//             events.push(`${label}:before`)
+//             const result = await next()
+//             events.push(`${label}:after`)
+//             return result
+//         }
+//         const scopedHandler: Handler<unknown, unknown, unknown, unknown> = async () => {
+//             events.push('scoped')
+//             return new Response('scoped')
+//         }
+//         const rootHandler: Handler<unknown, unknown, unknown, unknown> = async () => {
+//             events.push('root')
+//             return new Response('root')
+//         }
+//
+//         const scopedRouter = new Router().add({method: HttpMethod.GET, pattern: '/scoped', handler: scopedHandler})
+//         const router = new Router()
+//         router.add({method: HttpMethod.GET, pattern: '/root', handler: rootHandler})
+//         router.use(log('scoped'), scopedRouter)
+//
+//         await router.fetch(makeRequest('/root'))
+//         expect(events).toEqual(['root'])
+//
+//         events.length = 0
+//         await router.fetch(makeRequest('/scoped'))
+//         expect(events).toEqual(['scoped:before', 'scoped', 'scoped:after'])
+//     })
+// })
