@@ -5,6 +5,7 @@ export default defineConfig({
     entry: {
         index: 'src/index.ts',
         middleware: 'src/middleware/index.ts',
+        response: 'src/response/index.ts',
     },
     platform: 'node',
     format: ['esm'],
