@@ -24,6 +24,7 @@ describe('zodRoute', () => {
                 })
             },
         })
+
         const router = new Router().add(route)
 
         const response = await router.fetch(new Request('https://example.com/users/123?verbose=yes', {
@@ -78,5 +79,47 @@ describe('zodRoute', () => {
         const response = await router.fetch(new Request('https://example.com/users/not-a-uuid'))
 
         expect(response.status).toBe(HttpStatus.UNPROCESSABLE_ENTITY)
+    })
+
+    it('generates OpenAPI requestBody and parameters from schemas', () => {
+        const route = zodRoute({
+            pattern: '/users/:id',
+            method: HttpMethod.POST,
+            path: z.object({id: z.string()}),
+            query: z.object({verbose: z.boolean().optional()}),
+            body: z.object({name: z.string()}),
+            handler: () => new Response('ok'),
+        })
+
+        const openapi = route.meta?.openapi as any
+
+        expect(openapi.requestBody.content['application/json'].schema.type).toBe('object')
+        expect(openapi.parameters).toEqual([
+            {name: 'verbose', in: 'query', required: false, schema: {type: 'boolean'}},
+            {name: 'id', in: 'path', required: true, schema: {type: 'string'}},
+        ])
+    })
+
+    it('merges generated OpenAPI metadata with existing entries', () => {
+        const route = zodRoute({
+            pattern: '/users/:id',
+            method: HttpMethod.GET,
+            path: z.object({id: z.string()}),
+            meta: {
+                openapi: {
+                    summary: 'Get user',
+                    parameters: [{name: 'include', in: 'query', schema: {type: 'string'}}],
+                },
+            },
+            handler: () => new Response('ok'),
+        })
+
+        const openapi = route.meta?.openapi as any
+
+        expect(openapi.summary).toBe('Get user')
+        expect(openapi.parameters).toEqual([
+            {name: 'include', in: 'query', schema: {type: 'string'}},
+            {name: 'id', in: 'path', required: true, schema: {type: 'string'}},
+        ])
     })
 })
