@@ -439,19 +439,38 @@ function extractRoutesFromRouterSymbol(
     return routes
 }
 
-function extractRoutesFromEntryFile(sourceFile: ts.SourceFile, checker: ts.TypeChecker, rootRouterName: string): ExtractedRouteMeta[] {
-    let rootSymbol: ts.Symbol | undefined
-    const findRoot = (node: ts.Node) => {
-        if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === rootRouterName) {
-            const sym = checker.getSymbolAtLocation(node.name)
-            if (sym) rootSymbol = canonicalSymbol(sym, checker)
+function findDefaultExportSymbol(sourceFile: ts.SourceFile, checker: ts.TypeChecker): ts.Symbol | undefined {
+    for (const statement of sourceFile.statements) {
+        if (!ts.isExportAssignment(statement) || statement.isExportEquals) continue
+        const expr = unwrapExpression(statement.expression)
+        if (ts.isIdentifier(expr) || ts.isPropertyAccessExpression(expr)) {
+            const sym = getSymbolFromExpression(expr, checker)
+            if (sym) return sym
         }
-        if (!rootSymbol) ts.forEachChild(node, findRoot)
     }
-    findRoot(sourceFile)
+    return undefined
+}
+
+function extractRoutesFromEntryFile(
+    sourceFile: ts.SourceFile,
+    checker: ts.TypeChecker,
+    rootRouterName: string,
+): ExtractedRouteMeta[] {
+    let rootSymbol = findDefaultExportSymbol(sourceFile, checker)
 
     if (!rootSymbol) {
-        throw new Error(`Unable to find router symbol for "${rootRouterName}" in ${sourceFile.fileName}`)
+        const findRoot = (node: ts.Node) => {
+            if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === rootRouterName) {
+                const sym = checker.getSymbolAtLocation(node.name)
+                if (sym) rootSymbol = canonicalSymbol(sym, checker)
+            }
+            if (!rootSymbol) ts.forEachChild(node, findRoot)
+        }
+        findRoot(sourceFile)
+    }
+
+    if (!rootSymbol) {
+        throw new Error(`Unable to find router default export (or "${rootRouterName}") in ${sourceFile.fileName}`)
     }
 
     return extractRoutesFromRouterSymbol(rootSymbol, checker, '', new Map())

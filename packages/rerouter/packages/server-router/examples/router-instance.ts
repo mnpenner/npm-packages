@@ -1,10 +1,10 @@
-import {Router} from '../src/index'
+import {Router, type Handler} from '../src/index'
 import {zodRoute} from '../src/routes/zod'
 import {jsonResponse} from '../src/response/simple'
 import {z} from 'zod'
 import {CommonHeaders, CommonContentTypes, HttpMethod, HttpStatus} from '@mpen/http-helpers'
 
-export const router = new Router()
+const router = new Router()
 
 router.add(zodRoute({
     pattern: '/',
@@ -97,3 +97,5 @@ router.add({
 if(import.meta.main) {
     console.log(router)
 }
+
+export default router

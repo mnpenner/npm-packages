@@ -237,7 +237,7 @@ export type HandlerResult<TOkRes = unknown> =
  * @param ctx - Handler context containing the incoming [`Request`]{@link Request}, parsed [`URL`]{@link URL}, and path parameters.
  * @returns A response or streaming generator that yields response metadata.
  */
-export type Handler<TReqBody, TReqPath, TReqQuery, TOkRes, TErr = unknown> =
+export type Handler<TReqBody=unknown, TReqPath=unknown, TReqQuery=unknown, TOkRes=unknown, TErr = unknown> =
     (this: Router<any>, ctx: HandlerContext<TReqPath>) => HandlerResult<TOkRes>
 
 /**
