@@ -2,6 +2,7 @@ import type {HttpMethod, HttpStatus} from '@mpen/http-helpers'
 import type {Router} from './router'
 
 export type OneOrMany<T> = T | T[]
+export type MaybePromise<T> = T | Promise<T>
 
 /**
  * Route metadata used by tooling like OpenAPI generation.

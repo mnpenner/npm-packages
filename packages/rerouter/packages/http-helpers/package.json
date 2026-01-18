@@ -2,10 +2,17 @@
   "name": "@mpen/http-helpers",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./dist/index.mjs",
+    "./common": "./dist/common.mjs",
+    "./package.json": "./package.json"
   },
-  "module": "src/index.ts",
+  "module": "./dist/index.mjs",
   "peerDependencies": {
     "typescript": "^5"
-  }
+  },
+  "scripts": {
+    "build": "tsdown"
+  },
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts"
 }
