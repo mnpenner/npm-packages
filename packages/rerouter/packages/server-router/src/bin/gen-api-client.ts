@@ -631,7 +631,7 @@ function buildApiClientSource(routes: ExtractedRouteMeta[], options: BuildOption
     const usesDefaultResponseType = options.responseType === 'PromisedResponse'
     if (usesDefaultResponseType) {
         lines.push(``)
-        lines.push(`export type TypedResponse<T> = Response & { json(): Promise<T> }`)
+        lines.push(`export type TypedResponse<T> = Omit<Response, 'json'> & { json(): Promise<T> }`)
         lines.push(`export type PromisedResponse<T> = Promise<TypedResponse<T>>`)
     }
 

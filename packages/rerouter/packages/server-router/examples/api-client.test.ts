@@ -14,17 +14,7 @@ class RecordingFetcher implements Fetcher {
 
     fetch(url: string, init: RequestInit): unknown {
         this.calls.push({url, init})
-        return router.fetch(new Request(new URL(url,'https://example.org'), init))
-        // if (url.startsWith('/books/')) {
-        //     const id = url.split('/').pop() ?? ''
-        //     const body = init.body ? JSON.parse(init.body.toString()) : {}
-        //     return new Response(JSON.stringify({id, ...body}), {
-        //         headers: {'content-type': 'application/json'},
-        //     })
-        // }
-        // return new Response(JSON.stringify({message: 'ok'}), {
-        //     headers: {'content-type': 'application/json'},
-        // })
+        return router.fetch(new Request(new URL(url, 'https://example.org'), init))
     }
 }
 
@@ -51,7 +41,7 @@ describe('api-client.gen', () => {
             id: number,
             title: string,
             author: string,
-        }>>(true);
+        }>>(true)
         expect(booksResponseData).toEqual({id: 123, title: 'foo', author: 'bar'})
 
         const genResponse = await client.gen.get()

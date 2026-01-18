@@ -5,7 +5,7 @@ export interface Fetcher {
     fetch(url: string, init: RequestInit): unknown
 }
 
-export type TypedResponse<T> = Response & { json(): Promise<T> }
+export type TypedResponse<T> = Omit<Response, 'json'> & { json(): Promise<T> }
 export type PromisedResponse<T> = Promise<TypedResponse<T>>
 
 type SinglePathParam<TParams, TKey extends string> = TParams extends { [K in TKey]: infer V } ? V : unknown
