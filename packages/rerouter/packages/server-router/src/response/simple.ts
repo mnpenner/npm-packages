@@ -1,4 +1,4 @@
-import {CommonHeaders, HttpStatus, CommonContentTypes} from '@mpen/http-helpers'
+import {CommonHeaders, HttpStatus, CommonContentTypes, StatusText} from '@mpen/http-helpers'
 import type {ResponseWithData} from '../types'
 import {fullWide} from '../lib/format'
 
@@ -46,7 +46,19 @@ export function htmlResponse(data: string, status: number | HttpStatus = HttpSta
 
 
 export function notImplemented() {
-    return new Response(null, {status: HttpStatus.NOT_IMPLEMENTED})
+    return simpleStatus(HttpStatus.NOT_IMPLEMENTED)
+}
+
+export function internalServerError() {
+    return simpleStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+}
+
+export function notFound() {
+    return simpleStatus(HttpStatus.NOT_FOUND)
+}
+
+export function simpleStatus(status: HttpStatus) {
+    return plainTextResponse(StatusText[status] ?? `HTTP Status ${status}`, status)
 }
 
 export function redirect(url: string, status: number = HttpStatus.FOUND) {

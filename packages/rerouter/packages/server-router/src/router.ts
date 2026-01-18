@@ -16,6 +16,7 @@ import type {
     RequestContext,
     Route
 } from './types'
+import {internalServerError, notFound, simpleStatus} from '@mpen/server-router/response/simple'
 
 type RouteEntry =
     | { kind: 'route', route: NormalizedRoute<any> }
@@ -58,12 +59,80 @@ function normalizeMiddlewareList<Ctx extends object>(
 export class Router<Ctx extends object = AnyContext> implements SimpleServerInterface {
     private _entries: RouteEntry[] = []
     private _middleware: ContextMiddleware<any, any>[] = []
+    private _notFoundHandler?: Handler<any, Record<string, string>, any, any, any, Ctx>
+    private _methodNotAllowedHandler?: Handler<any, Record<string, string>, any, any, any, Ctx>
+    private _notAcceptableHandler?: Handler<any, Record<string, string>, any, any, any, Ctx>
+    private _internalErrorHandler?: Handler<any, Record<string, string>, any, any, any, Ctx>
 
     /**
      * Create a new router instance.
      */
     constructor() {
 
+    }
+
+    /**
+     * Register a handler for requests that do not match any route.
+     *
+     * @example
+     * ```ts
+     * router.notFound(() => new Response('missing', {status: 404}))
+     * ```
+     *
+     * @param handler - Handler invoked when no route matches.
+     * @returns The router instance for chaining.
+     */
+    notFound(handler: Handler<any, Record<string, string>, any, any, any, Ctx>): this {
+        this._notFoundHandler = handler
+        return this
+    }
+
+    /**
+     * Register a handler for requests that match a path but use an unsupported method.
+     *
+     * @example
+     * ```ts
+     * router.methodNotAllowed(() => new Response('nope', {status: 405}))
+     * ```
+     *
+     * @param handler - Handler invoked when a route exists but the method does not match.
+     * @returns The router instance for chaining.
+     */
+    methodNotAllowed(handler: Handler<any, Record<string, string>, any, any, any, Ctx>): this {
+        this._methodNotAllowedHandler = handler
+        return this
+    }
+
+    /**
+     * Register a handler for requests that fail the route `accept` check.
+     *
+     * @example
+     * ```ts
+     * router.notAcceptable(() => new Response('unsupported', {status: 406}))
+     * ```
+     *
+     * @param handler - Handler invoked when the incoming `Content-Type` is not accepted.
+     * @returns The router instance for chaining.
+     */
+    notAcceptable(handler: Handler<any, Record<string, string>, any, any, any, Ctx>): this {
+        this._notAcceptableHandler = handler
+        return this
+    }
+
+    /**
+     * Register a handler for unhandled errors thrown by route handlers.
+     *
+     * @example
+     * ```ts
+     * router.internalError(() => new Response('oops', {status: 500}))
+     * ```
+     *
+     * @param handler - Handler invoked when a route handler throws.
+     * @returns The router instance for chaining.
+     */
+    internalError(handler: Handler<any, Record<string, string>, any, any, any, Ctx>): this {
+        this._internalErrorHandler = handler
+        return this
     }
 
     /**
@@ -344,44 +413,114 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         return [...ordered, ...remaining].join(', ')
     }
 
-    private async handleMatch(found: MatchResult, request: Request, url: URL): Promise<Response> {
-        if (found.route.accept && found.route.accept.length > 0) {
-            const contentTypeHeader = request.headers.get('content-type')
-            if (!contentTypeHeader) {
-                return new Response('Not Acceptable', { status: HttpStatus.NOT_ACCEPTABLE })
-            }
-            const contentType = parseMediaType(contentTypeHeader)
-            if (!contentType || !found.route.accept.some(accept => mediaTypeMatches(accept, contentType))) {
-                return new Response('Not Acceptable', { status: HttpStatus.NOT_ACCEPTABLE })
-            }
-        }
-
-        const rawPathParams = found.match.pathname.groups ?? {}
-        const pathParams = Object.fromEntries(
-            Object.entries(rawPathParams).filter(([, value]) => value !== undefined)
-        ) as Record<string, string>
-        const handlerCtx = {
+    private buildHandlerContext(
+        request: Request,
+        url: URL,
+        pathParams: Record<string, string>
+    ): HandlerContext<Record<string, string>, Ctx> {
+        return {
             req: request,
             url,
             pathParams,
         } as HandlerContext<Record<string, string>, Ctx>
+    }
+
+    private async executeHandler(
+        handler: Handler<any, any, any, any, any, any>,
+        middleware: ContextMiddleware<any, any>[],
+        ctx: HandlerContext<any, any>,
+        router: Router<any>,
+        request: Request
+    ): Promise<Response> {
+        const result = await this.run(handler, middleware, ctx, router)
+        if (result instanceof Response) {
+            return result
+        }
+        if (this.isAsyncGenerator(result)) {
+            const response = await this.responseFromGenerator(result, request)
+            if (response) return response
+            return new Response(null, { status: HttpStatus.CLIENT_CLOSED_REQUEST })
+        }
+        if (this.isBodyChunk(result) || result instanceof ReadableStream) {
+            return new Response(this.toResponseBody(result))
+        }
+        return await Promise.resolve(result)
+    }
+
+    private async tryCustomHandler(
+        handler: Handler<any, any, any, any, any, any> | undefined,
+        ctx: HandlerContext<any, any>,
+        router: Router<any>,
+        request: Request
+    ): Promise<Response | null> {
+        if (!handler) return null
+        try {
+            return await this.executeHandler(handler, [], ctx, router, request)
+        } catch (_err) {
+            return simpleStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+        }
+    }
+
+    private async handleNotFound(request: Request, url: URL): Promise<Response> {
+        const ctx = this.buildHandlerContext(request, url, {})
+        const custom = await this.tryCustomHandler(this._notFoundHandler, ctx, this, request)
+        if (custom) return custom
+        return simpleStatus(HttpStatus.NOT_FOUND)
+    }
+
+    private async handleMethodNotAllowed(request: Request, url: URL): Promise<Response> {
+        const ctx = this.buildHandlerContext(request, url, {})
+        const custom = await this.tryCustomHandler(this._methodNotAllowedHandler, ctx, this, request)
+        if (custom) return custom
+        return simpleStatus(HttpStatus.METHOD_NOT_ALLOWED)
+    }
+
+    private async handleInternalError(
+        router: Router<any>,
+        ctx: HandlerContext<any, any>,
+        request: Request
+    ): Promise<Response> {
+        const custom = await this.tryCustomHandler(router._internalErrorHandler, ctx, router, request)
+        if (custom) return custom
+        return simpleStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    }
+
+    private async handleMatch(found: MatchResult, request: Request, url: URL): Promise<Response> {
+        const rawPathParams = found.match.pathname.groups ?? {}
+        const pathParams = Object.fromEntries(
+            Object.entries(rawPathParams).filter(([, value]) => value !== undefined)
+        ) as Record<string, string>
+        const handlerCtx = this.buildHandlerContext(request, url, pathParams)
+
+        if (found.route.accept && found.route.accept.length > 0) {
+            const contentTypeHeader = request.headers.get('content-type')
+            if (!contentTypeHeader) {
+                const custom = await this.tryCustomHandler(
+                    found.router._notAcceptableHandler,
+                    handlerCtx,
+                    found.router,
+                    request
+                )
+                if (custom) return custom
+                return simpleStatus(HttpStatus.NOT_ACCEPTABLE)
+            }
+            const contentType = parseMediaType(contentTypeHeader)
+            if (!contentType || !found.route.accept.some(accept => mediaTypeMatches(accept, contentType))) {
+                const custom = await this.tryCustomHandler(
+                    found.router._notAcceptableHandler,
+                    handlerCtx,
+                    found.router,
+                    request
+                )
+                if (custom) return custom
+                return simpleStatus(HttpStatus.NOT_ACCEPTABLE)
+            }
+        }
 
         try {
-            const result = await this.run(found.route.handler, found.middleware, handlerCtx, found.router)
-            if (result instanceof Response) {
-                return result
-            }
-            if (this.isAsyncGenerator(result)) {
-                const response = await this.responseFromGenerator(result, request)
-                if (response) return response
-                return new Response(null, { status: HttpStatus.CLIENT_CLOSED_REQUEST })
-            }
-            if (this.isBodyChunk(result) || result instanceof ReadableStream) {
-                return new Response(this.toResponseBody(result))
-            }
-            return await Promise.resolve(result)
+            return await this.executeHandler(found.route.handler, found.middleware, handlerCtx, found.router, request)
         } catch (_err) {
-            return new Response('Internal Server Error', { status: HttpStatus.INTERNAL_SERVER_ERROR })
+            return await this.handleInternalError(found.router, handlerCtx, request)
         }
     }
 
@@ -689,7 +828,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
             }
             const allowedMethods = this.collectAllowedMethods(url)
             if (allowedMethods.size === 0) {
-                return new Response('Not Found', { status: HttpStatus.NOT_FOUND })
+                return await this.handleNotFound(request, url)
             }
             if (allowedMethods.has(HttpMethod.GET)) {
                 allowedMethods.add(HttpMethod.HEAD)
@@ -703,10 +842,10 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
 
         const found = this.match(method, url)
         if (!found) {
-            return new Response('Not Found', { status: HttpStatus.NOT_FOUND })
+            return await this.handleNotFound(request, url)
         }
         if (found === 'not_allowed') {
-            return new Response('Method Not Allowed', { status: HttpStatus.METHOD_NOT_ALLOWED })
+            return await this.handleMethodNotAllowed(request, url)
         }
         return await this.handleMatch(found, request, url)
     }

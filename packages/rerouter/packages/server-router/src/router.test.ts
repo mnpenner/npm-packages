@@ -2,7 +2,9 @@
 import {describe, expect, it, mock} from 'bun:test'
 import {HttpMethod, HttpStatus} from '@mpen/http-helpers'
 import {Router} from './router'
-import type {Handler, Middleware} from './types'
+import type {ContextMiddleware, Handler} from './types'
+import {expectType} from './testing/type-assert'
+import {addRequestId} from './middleware/request-id'
 
 function makeRequest(path: string, method: HttpMethod = HttpMethod.GET, headers?: HeadersInit): Request {
     const init: RequestInit = {method}
@@ -384,6 +386,101 @@ describe('Router', () => {
     })
 })
 
+describe('Router.notFound', () => {
+    it('uses the configured notFound handler', async () => {
+        const router = new Router().notFound(() => new Response('missing', {status: HttpStatus.NOT_FOUND}))
+
+        const response = await router.fetch(makeRequest('/missing'))
+
+        expect(response.status).toBe(HttpStatus.NOT_FOUND)
+        expect(await response.text()).toBe('missing')
+    })
+
+    it('falls back to 500 when the notFound handler throws', async () => {
+        const router = new Router().notFound(() => {
+            throw new Error('boom')
+        })
+
+        const response = await router.fetch(makeRequest('/missing'))
+
+        expect(response.status).toBe(HttpStatus.INTERNAL_SERVER_ERROR)
+        expect(await response.text()).toBe('Internal Server Error')
+    })
+})
+
+describe('Router.methodNotAllowed', () => {
+    it('uses the configured methodNotAllowed handler', async () => {
+        const router = new Router()
+            .methodNotAllowed(() => new Response('nope', {status: HttpStatus.METHOD_NOT_ALLOWED}))
+            .add({
+                method: HttpMethod.POST,
+                pattern: '/mutate',
+                handler: () => new Response('ok'),
+            })
+
+        const response = await router.fetch(makeRequest('/mutate', HttpMethod.GET))
+
+        expect(response.status).toBe(HttpStatus.METHOD_NOT_ALLOWED)
+        expect(await response.text()).toBe('nope')
+    })
+})
+
+describe('Router.notAcceptable', () => {
+    it('uses the configured notAcceptable handler', async () => {
+        const router = new Router()
+            .notAcceptable(() => new Response('unsupported', {status: HttpStatus.NOT_ACCEPTABLE}))
+            .add({
+                method: HttpMethod.POST,
+                pattern: '/json',
+                accept: ['application/json'],
+                handler: () => new Response('ok'),
+            })
+
+        const response = await router.fetch(makeRequest('/json', HttpMethod.POST))
+
+        expect(response.status).toBe(HttpStatus.NOT_ACCEPTABLE)
+        expect(await response.text()).toBe('unsupported')
+    })
+})
+
+describe('Router.internalError', () => {
+    it('uses the configured internalError handler', async () => {
+        const router = new Router()
+            .internalError(() => new Response('broken', {status: HttpStatus.SERVICE_UNAVAILABLE}))
+            .add({
+                method: HttpMethod.GET,
+                pattern: '/boom',
+                handler: () => {
+                    throw new Error('boom')
+                },
+            })
+
+        const response = await router.fetch(makeRequest('/boom'))
+
+        expect(response.status).toBe(HttpStatus.SERVICE_UNAVAILABLE)
+        expect(await response.text()).toBe('broken')
+    })
+
+    it('falls back to 500 when the internalError handler throws', async () => {
+        const router = new Router()
+            .internalError(() => {
+                throw new Error('handler boom')
+            })
+            .add({
+                method: HttpMethod.GET,
+                pattern: '/boom',
+                handler: () => {
+                    throw new Error('boom')
+                },
+            })
+
+        const response = await router.fetch(makeRequest('/boom'))
+
+        expect(response.status).toBe(HttpStatus.INTERNAL_SERVER_ERROR)
+        expect(await response.text()).toBe('Internal Server Error')
+    })
+})
+
 describe('Router.fetch', () => {
     it('binds handler this to the matching router instance', async () => {
         const router = new Router()
@@ -424,64 +521,108 @@ describe('Router.fetch', () => {
     })
 })
 
-// describe('Router middleware', () => {
-//     it('stacks middleware across mounted routers', async () => {
-//         const events: string[] = []
-//         const log = (label: string): Middleware => async (_ctx, next) => {
-//             events.push(`${label}:before`)
-//             const result = await next()
-//             events.push(`${label}:after`)
-//             return result
-//         }
-//         const handler: Handler<unknown, unknown, unknown, unknown> = async () => {
-//             events.push('handler')
-//             return new Response('ok')
-//         }
-//
-//         const api = new Router([log('api')])
-//         api.add({method: HttpMethod.GET, pattern: '/items', handler})
-//
-//         const router = new Router([log('root')])
-//         router.mount('/api', api)
-//
-//         const response = await router.fetch(makeRequest('/api/items'))
-//         expect(response.status).toBe(HttpStatus.OK)
-//         expect(events).toEqual([
-//             'root:before',
-//             'api:before',
-//             'handler',
-//             'api:after',
-//             'root:after',
-//         ])
-//     })
-//
-//     it('scopes middleware when using use(middleware, router)', async () => {
-//         const events: string[] = []
-//         const log = (label: string): Middleware => async (_ctx, next) => {
-//             events.push(`${label}:before`)
-//             const result = await next()
-//             events.push(`${label}:after`)
-//             return result
-//         }
-//         const scopedHandler: Handler<unknown, unknown, unknown, unknown> = async () => {
-//             events.push('scoped')
-//             return new Response('scoped')
-//         }
-//         const rootHandler: Handler<unknown, unknown, unknown, unknown> = async () => {
-//             events.push('root')
-//             return new Response('root')
-//         }
-//
-//         const scopedRouter = new Router().add({method: HttpMethod.GET, pattern: '/scoped', handler: scopedHandler})
-//         const router = new Router()
-//         router.add({method: HttpMethod.GET, pattern: '/root', handler: rootHandler})
-//         router.use(log('scoped'), scopedRouter)
-//
-//         await router.fetch(makeRequest('/root'))
-//         expect(events).toEqual(['root'])
-//
-//         events.length = 0
-//         await router.fetch(makeRequest('/scoped'))
-//         expect(events).toEqual(['scoped:before', 'scoped', 'scoped:after'])
-//     })
-// })
+describe('Router.use', () => {
+    it('infers middleware-added context for handlers', () => {
+        const router = new Router().use(addRequestId())
+
+        router.add({
+            method: HttpMethod.GET,
+            pattern: '/',
+            handler: ctx => {
+                expectType<number>(ctx.requestId)
+                return new Response('ok')
+            },
+        })
+    })
+
+    it('merges context across middleware lists', () => {
+        const addUser: ContextMiddleware<{userId: string}> = ctx => {
+            ctx.userId = 'user-1'
+        }
+        const addFlag: ContextMiddleware<{isAdmin: boolean}> = ctx => {
+            ctx.isAdmin = true
+        }
+
+        const router = new Router().use([addUser, addFlag] as const)
+
+        router.add({
+            method: HttpMethod.GET,
+            pattern: '/',
+            handler: ctx => {
+                expectType<string>(ctx.userId)
+                expectType<boolean>(ctx.isAdmin)
+                return new Response('ok')
+            },
+        })
+    })
+
+    it('passes middleware context through to handlers', async () => {
+        const addRequestIdLocal: ContextMiddleware<{requestId: number}> = async (ctx, next) => {
+            ctx.requestId = 42
+            return await next()
+        }
+        const router = new Router().use(addRequestIdLocal)
+        router.add({
+            method: HttpMethod.GET,
+            pattern: '/',
+            handler: ctx => new Response(String(ctx.requestId)),
+        })
+
+        const response = await router.fetch(makeRequest('/'))
+        expect(response.status).toBe(HttpStatus.OK)
+        expect(await response.text()).toBe('42')
+    })
+})
+
+describe('Router.group', () => {
+    it('exposes grouped middleware context to handlers', () => {
+        const addUser: ContextMiddleware<{userId: string}> = ctx => {
+            ctx.userId = 'user-2'
+        }
+
+        const router = new Router().use(addRequestId())
+        router.group([addUser] as const, group => {
+            group.add({
+                method: HttpMethod.GET,
+                pattern: '/',
+                handler: ctx => {
+                    expectType<number>(ctx.requestId)
+                    expectType<string>(ctx.userId)
+                    return new Response('ok')
+                },
+            })
+        })
+    })
+
+    it('applies parent and grouped middleware in order', async () => {
+        const events: string[] = []
+        const log = (label: string): ContextMiddleware => async (_ctx, next) => {
+            events.push(`${label}:before`)
+            const result = await next()
+            events.push(`${label}:after`)
+            return result
+        }
+        const router = new Router().use(log('root'))
+
+        router.group([log('group')], group => {
+            group.add({
+                method: HttpMethod.GET,
+                pattern: '/items',
+                handler: () => {
+                    events.push('handler')
+                    return new Response('ok')
+                },
+            })
+        })
+
+        const response = await router.fetch(makeRequest('/items'))
+        expect(response.status).toBe(HttpStatus.OK)
+        expect(events).toEqual([
+            'root:before',
+            'group:before',
+            'handler',
+            'group:after',
+            'root:after',
+        ])
+    })
+})
