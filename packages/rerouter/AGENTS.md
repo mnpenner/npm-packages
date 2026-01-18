@@ -1,4 +1,5 @@
-- Current code lives in `packages/`. Legacy/older versions live in `experimental/`.
+- Project Structure
+  - Current code lives in `packages/`. Legacy/older versions live in `experimental/`.
 - Commands
   - `bun run build` builds publishable packages (currently `server-router` + `react-router`).
   - `bun run gen` runs the package generators (things under `src/bin/*`) and regenerates example outputs (e.g. `packages/*/examples/*.gen.ts`).
@@ -6,12 +7,13 @@
   - `bun run test:impl` runs implementation tests (examples), placeholder for now.
   - `bun run test:gen` runs generators and then tests generated code, placeholder for now.
   - `bun run test` runs all tests.
-- Add tests when implementing new features or fixing bugs. Tests go in the matching `<filename>.test.ts` file.
-- There should be one `describe` block per function/method. You may nest `describe` blocks as needed.
-- Run `bun run test` after making changes and fix any errors
-  - Ignore the 'works with Bun.serve' test if it fails. It works outside of your environment.
-- Add detailed JSDoc comments @param and @returns to all public APIs, including all function overloads
-    - The public API is the `entry` point(s) listed in `tsdown.config.ts`
-    - Link to other functions and classes using this syntax: [`NeverjectPromise`]{@link NeverjectPromise}
-    - Link to methods using this syntax: [`Err.valueOr`]{@link Err#valueOr} 
-    - Include @example blocks when the usage is not obvious
+- Testing
+  - Add tests when implementing new features or fixing bugs. Tests go in the matching `<filename>.test.ts` file.
+  - There should be one `describe` block per function/method. You may nest `describe` blocks as needed.
+  - Run `bun run test` after making changes and fix any errors
+- Doc Comments
+  - Add detailed JSDoc comments with @param and @returns to all public APIs, including all function overloads
+  - The public API is the `entry` point(s) listed in `tsdown.config.ts`
+  - Link to other functions and classes using this syntax: [`NeverjectPromise`]{@link NeverjectPromise}
+  - Link to methods using this syntax: [`Err.valueOr`]{@link Err#valueOr} 
+  - Include @example blocks when the usage is not obvious

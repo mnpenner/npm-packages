@@ -1,8 +1,12 @@
 import {CommonHeaders, HttpStatus, CommonContentTypes} from '@mpen/http-helpers'
+import type {ResponseWithData} from '../types'
 import {fullWide} from '../lib/format'
 
 const utf8encoder = new TextEncoder()
 
+
+type JsonResponse<T> = ResponseWithData<T>
+type NonJsonResponse = ResponseWithData<never>
 
 export function jsonResponse<T>(data: T, status: number | HttpStatus = HttpStatus.OK, init?: Omit<ResponseInit,'status'>) {
     const encoded = utf8encoder.encode(JSON.stringify(data))
@@ -15,7 +19,7 @@ export function jsonResponse<T>(data: T, status: number | HttpStatus = HttpStatu
         ...init,
         status,
         headers,
-    }) as ResponseWithData<T>
+    }) as JsonResponse<T>
 }
 
 export function plainTextResponse(data: string, status: number | HttpStatus = HttpStatus.OK) {
@@ -26,7 +30,7 @@ export function plainTextResponse(data: string, status: number | HttpStatus = Ht
             [CommonHeaders.CONTENT_LENGTH]: fullWide(encoded.length),
             [CommonHeaders.CONTENT_TYPE]: CommonContentTypes.PLAIN_TEXT,
         }
-    }) as ResponseWithData<string>
+    }) as NonJsonResponse
 }
 
 export function htmlResponse(data: string, status: number | HttpStatus = HttpStatus.OK) {
@@ -37,7 +41,7 @@ export function htmlResponse(data: string, status: number | HttpStatus = HttpSta
             [CommonHeaders.CONTENT_LENGTH]: fullWide(encoded.length),
             [CommonHeaders.CONTENT_TYPE]: CommonContentTypes.HTML,
         }
-    }) as ResponseWithData<string>
+    }) as NonJsonResponse
 }
 
 
@@ -54,5 +58,5 @@ export function redirect(url: string, status: number = HttpStatus.FOUND) {
 
 
 export function noContent() {
-    return new Response(null, {status: HttpStatus.NO_CONTENT}) as ResponseWithData<void>
+    return new Response(null, {status: HttpStatus.NO_CONTENT}) as NonJsonResponse
 }

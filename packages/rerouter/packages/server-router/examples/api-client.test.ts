@@ -44,6 +44,16 @@ describe('api-client.gen', () => {
         }>>(true)
         expect(booksResponseData).toEqual({id: 123, title: 'foo', author: 'bar'})
 
+        const jsonHelperResponse = await client.jsonHelper.get()
+        const jsonHelperData = await jsonHelperResponse.json()
+        expectType<TypeEqual<typeof jsonHelperData, {message: string}>>(true)
+        expect(jsonHelperData).toEqual({message: 'Hello Json Helper!'})
+
+        const jsonHelperZodResponse = await client.jsonHelperZod.post({tag: 'alpha'})
+        const jsonHelperZodData = await jsonHelperZodResponse.json()
+        expectType<TypeEqual<typeof jsonHelperZodData, {ok: boolean, tag: string}>>(true)
+        expect(jsonHelperZodData).toEqual({ok: true, tag: 'alpha'})
+
         const genResponse = await client.gen.get()
         expect(await genResponse.text()).toEqual('herro')
 
@@ -58,6 +68,15 @@ describe('api-client.gen', () => {
                     method: 'POST',
                     headers: {'content-type': 'application/json'},
                     body: JSON.stringify({title: 'foo', author: 'bar'}),
+                },
+            },
+            {url: '/json-helper', init: {method: 'GET'}},
+            {
+                url: '/json-helper-zod',
+                init: {
+                    method: 'POST',
+                    headers: {'content-type': 'application/json'},
+                    body: JSON.stringify({tag: 'alpha'}),
                 },
             },
             {url: '/gen', init: {method: 'GET'}},

@@ -22,6 +22,11 @@ export type PostBooksByIdPathParams = { id: number; }
 export type PostBooksByIdRequest = { title: string; author: string; }
 export type PostBooksByIdResponse = { id: number; title: string; author: string; }
 
+export type GetJsonHelperResponse = { message: string; }
+
+export type PostJsonHelperZodRequest = { tag: string; }
+export type PostJsonHelperZodResponse = { ok: boolean; tag: string; }
+
 export type GetGenResponse = unknown
 
 export class ApiClient {
@@ -37,6 +42,14 @@ export class ApiClient {
 
     get booksById(): ApiClient_BooksById {
         return new ApiClient_BooksById(this.fetcher)
+    }
+
+    get jsonHelper(): ApiClient_JsonHelper {
+        return new ApiClient_JsonHelper(this.fetcher)
+    }
+
+    get jsonHelperZod(): ApiClient_JsonHelperZod {
+        return new ApiClient_JsonHelperZod(this.fetcher)
     }
 
     get gen(): ApiClient_Gen {
@@ -91,6 +104,26 @@ class ApiClient_BooksById {
             headers: { "content-type": "application/json" },
             body: JSON.stringify(body),
         }) as PromisedResponse<PostBooksByIdResponse>
+    }
+}
+
+class ApiClient_JsonHelper {
+    constructor(private readonly fetcher: Fetcher) {}
+    get() {
+        return this.fetcher.fetch("/json-helper", {
+            method: "GET",
+        }) as PromisedResponse<GetJsonHelperResponse>
+    }
+}
+
+class ApiClient_JsonHelperZod {
+    constructor(private readonly fetcher: Fetcher) {}
+    post(body: PostJsonHelperZodRequest) {
+        return this.fetcher.fetch("/json-helper-zod", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(body),
+        }) as PromisedResponse<PostJsonHelperZodResponse>
     }
 }
 

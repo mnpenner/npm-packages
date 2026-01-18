@@ -180,6 +180,12 @@ function getJsonPayloadExpression(expr: ts.Expression): ts.Expression | undefine
                 return current.arguments[0]
             }
         }
+        if (ts.isIdentifier(callee) && callee.text === 'jsonResponse') {
+            return current.arguments[0]
+        }
+        if (ts.isPropertyAccessExpression(callee) && callee.name.text === 'jsonResponse') {
+            return current.arguments[0]
+        }
     }
     if (ts.isNewExpression(current)) {
         const callee = current.expression

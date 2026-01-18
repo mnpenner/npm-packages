@@ -188,6 +188,16 @@ export type HandlerYield =
     | undefined
 
 /**
+ * Response type that preserves the expected JSON payload type.
+ *
+ * @example
+ * ```ts
+ * const response: ResponseWithData<{ok: true}> = new Response('{"ok":true}')
+ * ```
+ */
+export type ResponseWithData<TJson> = Omit<Response, 'json'> & { json(): Promise<TJson> }
+
+/**
  * Final body value returned from streaming handlers.
  *
  * @example
@@ -206,10 +216,10 @@ export type HandlerBody = Buffer | Uint8Array | ReadableStream | string
  * const handler: Handler = async ({req}) => new Response(await req.text())
  * ```
  */
-export type HandlerResult =
-    | Response
+export type HandlerResult<TOkRes = unknown> =
+    | ResponseWithData<TOkRes>
     | HandlerBody
-    | Promise<Response | HandlerBody | AsyncGenerator<HandlerYield, HandlerBody>>
+    | Promise<ResponseWithData<TOkRes> | HandlerBody | AsyncGenerator<HandlerYield, HandlerBody>>
     | AsyncGenerator<HandlerYield, HandlerBody>
 
 /**
@@ -228,7 +238,7 @@ export type HandlerResult =
  * @returns A response or streaming generator that yields response metadata.
  */
 export type Handler<TReqBody, TReqPath, TReqQuery, TOkRes, TErr = unknown> =
-    (this: Router<any>, ctx: HandlerContext<TReqPath>) => HandlerResult
+    (this: Router<any>, ctx: HandlerContext<TReqPath>) => HandlerResult<TOkRes>
 
 /**
  * Middleware that can intercept requests and responses.

@@ -1,6 +1,6 @@
 {
     "private": true,
-    "packageManager": "bun",
+    "packageManager": "bun@1.3.6",
     "workspaces": [
         "packages/*"
     ],
@@ -18,7 +18,8 @@
         "gen:server-router": "bun run --cwd packages/server-router gen",
         "gen": "run-s gen:react-router gen:server-router",
         "test:types": "tsc -b tsconfig.json",
-        "test:impl": "bun test packages/",
+        "test:impl": "bun test packages/server-router packages/react-router packages/http-helpers",
+        "test:all-impl": "bun test packages/",
         "test:gen": "run-s gen test:impl",
         "test": "run-s test:types test:gen"
     }

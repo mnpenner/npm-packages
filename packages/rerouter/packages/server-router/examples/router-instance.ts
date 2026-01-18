@@ -1,5 +1,6 @@
 import {Router} from '../src/index'
 import {zodRoute} from '../src/routes/zod'
+import {jsonResponse} from '../src/response/simple'
 import {z} from 'zod'
 import {CommonHeaders, CommonContentTypes, HttpMethod, HttpStatus} from '@mpen/http-helpers'
 
@@ -51,6 +52,21 @@ router.add(zodRoute({
     }), {
         headers: {[CommonHeaders.CONTENT_TYPE]: CommonContentTypes.JSON},
     }),
+    method: HttpMethod.POST,
+}))
+
+router.add({
+    name: 'jsonHelper',
+    pattern: '/json-helper',
+    handler: () => jsonResponse({message: 'Hello Json Helper!'}),
+    method: HttpMethod.GET,
+})
+
+router.add(zodRoute({
+    name: 'jsonHelperZod',
+    pattern: '/json-helper-zod',
+    body: z.object({tag: z.string()}),
+    handler: ({body}) => jsonResponse({ok: true, tag: body.tag}),
     method: HttpMethod.POST,
 }))
 

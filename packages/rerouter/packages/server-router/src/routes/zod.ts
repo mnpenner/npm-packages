@@ -27,7 +27,7 @@ type InferSchema<Schema extends z.ZodTypeAny | undefined> =
     Schema extends z.ZodTypeAny ? z.infer<Schema> : unknown
 
 export type ZodRouteHandler<TReqBody, TReqPath, TReqQuery, TOkRes, TErr = unknown> =
-    (this: Router<any>, ctx: HandlerContext<TReqPath> & {body: TReqBody; query: TReqQuery}) => HandlerResult
+    (this: Router<any>, ctx: HandlerContext<TReqPath> & {body: TReqBody; query: TReqQuery}) => HandlerResult<TOkRes>
 
 export type ZodRouteDefinition<TReqBody, TReqPath, TReqQuery, TOkRes, TErr = unknown> =
     Omit<Route, 'handler'> & {handler: Handler<TReqBody, TReqPath, TReqQuery, TOkRes, TErr>}
