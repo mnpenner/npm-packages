@@ -5,26 +5,45 @@ import {normalizeRoute} from './route-normalize'
 import {mediaTypeMatches, parseMediaType} from './lib/media-type'
 import type {
     AnyContext,
+    ContextMiddleware,
     Handler,
     HandlerBody,
     HandlerResult,
     HandlerContext,
     HandlerYield,
-    Middleware,
+    MiddlewareList,
     NormalizedRoute,
     RequestContext,
     Route
 } from './types'
 
-type RouteEntry<Ctx extends object> =
-    | { kind: 'route', route: NormalizedRoute }
-    | { kind: 'router', prefix?: string, router: Router<Ctx> }
+type RouteEntry =
+    | { kind: 'route', route: NormalizedRoute<any> }
+    | { kind: 'router', prefix?: string, router: Router<any> }
 
-type MatchResult<Ctx extends object> = {
-    route: NormalizedRoute
+type MatchResult = {
+    route: NormalizedRoute<any>
     match: URLPatternResult
-    middleware: Middleware<Ctx>[]
-    router: Router<Ctx>
+    middleware: ContextMiddleware<any, any>[]
+    router: Router<any>
+}
+
+type MiddlewareEntry<Ctx extends object> = ContextMiddleware<any, Ctx> | null | undefined | false
+
+type AddedContextOf<Middleware> = Middleware extends ContextMiddleware<infer Added, any> ? Added : {}
+
+type AddedContextFromList<List extends readonly unknown[]> = List extends readonly [infer First, ...infer Rest]
+    ? AddedContextOf<First> & AddedContextFromList<Rest>
+    : {}
+
+function normalizeMiddlewareList<Ctx extends object>(
+    middleware: ContextMiddleware<any, Ctx> | MiddlewareList<Ctx> | null | undefined | false
+): ContextMiddleware<any, Ctx>[] {
+    if (!middleware) return []
+    if (Array.isArray(middleware)) {
+        return middleware.filter(Boolean) as ContextMiddleware<any, Ctx>[]
+    }
+    return [middleware as ContextMiddleware<any, Ctx>]
 }
 
 /**
@@ -37,8 +56,8 @@ type MatchResult<Ctx extends object> = {
  * ```
  */
 export class Router<Ctx extends object = AnyContext> implements SimpleServerInterface {
-    private _entries: RouteEntry<Ctx>[] = []
-    private _middleware: Middleware<Ctx>[] = []
+    private _entries: RouteEntry[] = []
+    private _middleware: ContextMiddleware<any, any>[] = []
 
     /**
      * Create a new router instance.
@@ -60,7 +79,19 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
      * @param middleware - Middleware or a list of middleware to register.
      * @returns The router instance for chaining.
      */
-    use(middleware: Middleware<Ctx> | Array<Middleware<Ctx> | null | undefined | false>): this
+    use<AddedCtx extends object>(middleware: ContextMiddleware<AddedCtx, Ctx> | null | undefined | false): Router<Ctx & AddedCtx>
+    /**
+     * Register middleware on the current router.
+     *
+     * @example
+     * ```ts
+     * router.use([auth(), logging()])
+     * ```
+     *
+     * @param middleware - Middleware list to register.
+     * @returns The router instance for chaining.
+     */
+    use<List extends readonly MiddlewareEntry<Ctx>[]>(middleware: List): Router<Ctx & AddedContextFromList<List>>
     /**
      * Register middleware and mount a router that uses it.
      *
@@ -74,20 +105,85 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
      * @param router - Router to mount with the provided middleware.
      * @returns The router instance for chaining.
      */
-    use(middleware: Middleware<Ctx> | Array<Middleware<Ctx> | null | undefined | false>, router: Router<Ctx>): this
+    use<AddedCtx extends object>(
+        middleware: ContextMiddleware<AddedCtx, Ctx> | null | undefined | false,
+        router: Router<Ctx & AddedCtx>
+    ): this
+    /**
+     * Register middleware list and mount a router that uses it.
+     *
+     * @example
+     * ```ts
+     * router.use([auth(), logging()], otherRouter)
+     * ```
+     *
+     * @param middleware - Middleware list to register.
+     * @param router - Router to mount with the provided middleware.
+     * @returns The router instance for chaining.
+     */
+    use<List extends readonly MiddlewareEntry<Ctx>[]>(
+        middleware: List,
+        router: Router<Ctx & AddedContextFromList<List>>
+    ): this
     use(
-        middleware: Middleware<Ctx> | Array<Middleware<Ctx> | null | undefined | false>,
-        router?: Router<Ctx>
-    ): this {
-        const list = Array.isArray(middleware) ? middleware.filter(Boolean) as Middleware<Ctx>[] : [middleware]
+        middleware: ContextMiddleware<any, Ctx> | MiddlewareList<Ctx> | null | undefined | false,
+        router?: Router<any>
+    ): Router<any> {
+        const list = normalizeMiddlewareList(middleware)
         if (router) {
-            const group = new Router<Ctx>()
-            group.use(list)
+            const group = new Router<Ctx>().use(list)
             group.mount(router)
             this._entries.push({ kind: 'router', router: group })
             return this
         }
         this._middleware.push(...list)
+        return this
+    }
+
+    /**
+     * Create a group of routes with additional middleware applied.
+     *
+     * @example
+     * ```ts
+     * router.group([auth(), logging()], groupRouter => {
+     *   groupRouter.add({pattern: '/items', handler: () => new Response('ok')})
+     * })
+     * ```
+     *
+     * @param middleware - Middleware or a list of middleware to apply to the group.
+     * @param configure - Callback used to register routes on the grouped router.
+     * @returns The router instance for chaining.
+     */
+    group<AddedCtx extends object>(
+        middleware: ContextMiddleware<AddedCtx, Ctx> | null | undefined | false,
+        configure: (router: Router<Ctx & AddedCtx>) => void
+    ): this
+    /**
+     * Create a group of routes with additional middleware applied.
+     *
+     * @example
+     * ```ts
+     * router.group([auth(), logging()], groupRouter => {
+     *   groupRouter.add({pattern: '/items', handler: () => new Response('ok')})
+     * })
+     * ```
+     *
+     * @param middleware - Middleware list to apply to the group.
+     * @param configure - Callback used to register routes on the grouped router.
+     * @returns The router instance for chaining.
+     */
+    group<List extends readonly MiddlewareEntry<Ctx>[]>(
+        middleware: List,
+        configure: (router: Router<Ctx & AddedContextFromList<List>>) => void
+    ): this
+    group(
+        middleware: ContextMiddleware<any, Ctx> | MiddlewareList<Ctx> | null | undefined | false,
+        configure: (router: Router<any>) => void
+    ): this {
+        const list = normalizeMiddlewareList(middleware)
+        const group = new Router<Ctx>().use(list)
+        configure(group)
+        this._entries.push({ kind: 'router', router: group })
         return this
     }
 
@@ -102,7 +198,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
      * @param router - Router to mount.
      * @returns The router instance for chaining.
      */
-    mount(router: Router<Ctx>): this
+    mount(router: Router<any>): this
     /**
      * Mount a router under a pathname prefix.
      *
@@ -115,8 +211,8 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
      * @param router - Router to mount.
      * @returns The router instance for chaining.
      */
-    mount(prefix: string, router: Router<Ctx>): this
-    mount(prefixOrRouter: string | Router<Ctx>, maybeRouter?: Router<Ctx>): this {
+    mount(prefix: string, router: Router<any>): this
+    mount(prefixOrRouter: string | Router<any>, maybeRouter?: Router<any>): this {
         if (typeof prefixOrRouter === 'string') {
             this._entries.push({ kind: 'router', prefix: prefixOrRouter, router: maybeRouter! })
         } else {
@@ -136,7 +232,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
      * @param route - Route definition to normalize and register.
      * @returns The router instance for chaining.
      */
-    add(route: Route): this {
+    add(route: Route<Ctx>): this {
         this._entries.push({ kind: 'route', route: normalizeRoute(route) })
         return this
     }
@@ -151,8 +247,8 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
      *
      * @returns Array of normalized routes.
      */
-    getRoutes(): NormalizedRoute[] {
-        const routes: NormalizedRoute[] = []
+    getRoutes(): NormalizedRoute<any>[] {
+        const routes: NormalizedRoute<any>[] = []
         for (const entry of this._entries) {
             if (entry.kind === 'route') {
                 routes.push(entry.route)
@@ -177,7 +273,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         return routes
     }
 
-    private match(method: HttpMethod, url: URL): MatchResult<Ctx> | 'not_allowed' | null {
+    private match(method: HttpMethod, url: URL): MatchResult | 'not_allowed' | null {
         const isHead = method === HttpMethod.HEAD
         if (isHead) {
             const headOnly = this.matchWithMethodCheck(
@@ -207,7 +303,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
                 methods.add(method)
             }
         }
-        function visit(entries: RouteEntry<Ctx>[], currentUrl: URL) {
+        function visit(entries: RouteEntry[], currentUrl: URL) {
             for (const entry of entries) {
                 if (entry.kind === 'route') {
                     if (!entry.route.pattern.exec(currentUrl)) continue
@@ -248,7 +344,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         return [...ordered, ...remaining].join(', ')
     }
 
-    private async handleMatch(found: MatchResult<Ctx>, request: Request, url: URL): Promise<Response> {
+    private async handleMatch(found: MatchResult, request: Request, url: URL): Promise<Response> {
         if (found.route.accept && found.route.accept.length > 0) {
             const contentTypeHeader = request.headers.get('content-type')
             if (!contentTypeHeader) {
@@ -260,21 +356,18 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
             }
         }
 
-        const serverReq: RequestContext<Ctx> = {
-            req: request,
-        } as any
         const rawPathParams = found.match.pathname.groups ?? {}
         const pathParams = Object.fromEntries(
             Object.entries(rawPathParams).filter(([, value]) => value !== undefined)
         ) as Record<string, string>
-        const handlerCtx: HandlerContext<Record<string, string>> = {
+        const handlerCtx = {
             req: request,
             url,
             pathParams,
-        }
+        } as HandlerContext<Record<string, string>, Ctx>
 
         try {
-            const result = await this.run(found.route.handler, found.middleware, serverReq, handlerCtx, found.router)
+            const result = await this.run(found.route.handler, found.middleware, handlerCtx, found.router)
             if (result instanceof Response) {
                 return result
             }
@@ -301,7 +394,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
     private matchWithMethodCheck(
         url: URL,
         methodCheck: (routeMethod?: HttpMethod | HttpMethod[]) => boolean
-    ): {match: MatchResult<Ctx> | null; methodNotAllowed: boolean} {
+    ): {match: MatchResult | null; methodNotAllowed: boolean} {
         let methodNotAllowed = false
         for (const entry of this._entries) {
             if (entry.kind === 'route') {
@@ -349,11 +442,10 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
     }
 
     private async run(
-        handler: Handler<any, any, any, any, any>,
-        middleware: Middleware<Ctx>[],
-        ctx: RequestContext<Ctx>,
-        handlerCtx: HandlerContext<any>,
-        router: Router<Ctx>
+        handler: Handler<any, any, any, any, any, any>,
+        middleware: ContextMiddleware<any, any>[],
+        ctx: HandlerContext<any, Ctx>,
+        router: Router<any>
     ): Promise<HandlerResult> {
         let idx = -1
         const dispatch = async (i: number): Promise<HandlerResult> => {
@@ -361,11 +453,18 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
             idx = i
 
             if (i === middleware.length) {
-                return await Promise.resolve().then(() => handler.call(router, handlerCtx))
+                return await Promise.resolve().then(() => handler.call(router, ctx as any))
             }
 
             const mw = middleware[i]
-            return await Promise.resolve().then(() => mw!(ctx, () => dispatch(i + 1)))
+            if (!mw) {
+                return await dispatch(i + 1)
+            }
+            const result = await mw(ctx as RequestContext<any>, () => dispatch(i + 1))
+            if (result === undefined && mw.length < 2) {
+                return await dispatch(i + 1)
+            }
+            return result as HandlerResult
         }
 
         return dispatch(0)

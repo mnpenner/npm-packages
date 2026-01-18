@@ -1,10 +1,12 @@
 export {Router} from './router'
 export type {
     AnyContext,
+    ContextMiddleware,
     Handler,
     HandlerContext,
     MediaType,
     Middleware,
+    MiddlewareList,
     NormalizedRoute,
     RequestContext,
     Route,

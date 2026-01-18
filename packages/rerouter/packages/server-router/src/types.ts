@@ -27,10 +27,10 @@ export interface RouteMeta {
  * }
  * ```
  */
-export interface Route {
+export interface Route<Ctx extends object = AnyContext> {
     name?: OneOrMany<string>
     pattern: string | URLPattern
-    handler: Handler<any, any, any, any, any>
+    handler: Handler<any, any, any, any, any, Ctx>
     method?: OneOrMany<HttpMethod>
     /**
      * Arbitrary metadata attached to the route.
@@ -83,10 +83,10 @@ export interface Route {
  * }
  * ```
  */
-export interface NormalizedRoute {
+export interface NormalizedRoute<Ctx extends object = AnyContext> {
     name: string[]
     pattern: URLPattern
-    handler: Handler<any, any, any, any, any>
+    handler: Handler<any, any, any, any, any, Ctx>
     method?: HttpMethod | HttpMethod[]
     accept?: MediaType[]
     meta?: RouteMeta
@@ -137,6 +137,7 @@ export type RequestContext<Ctx extends object = AnyContext> = {
 
 /**
  * Context object provided to route handlers.
+ * Includes request metadata as well as any context extensions added by middleware.
  *
  * @example
  * ```ts
@@ -147,11 +148,7 @@ export type RequestContext<Ctx extends object = AnyContext> = {
  * }
  * ```
  */
-export interface HandlerContext<TReqPath = unknown> {
-    /**
-     * Primary request reference for handlers.
-     */
-    req: Request
+export type HandlerContext<TReqPath = unknown, Ctx extends object = AnyContext> = RequestContext<Ctx> & {
     /**
      * Parsed request URL for convenience.
      */
@@ -234,11 +231,38 @@ export type HandlerResult<TOkRes = unknown> =
  *
  * The handler is invoked with `this` bound to the active [`Router`]{@link Router}.
  *
- * @param ctx - Handler context containing the incoming [`Request`]{@link Request}, parsed [`URL`]{@link URL}, and path parameters.
+ * @param ctx - Handler context containing the incoming [`Request`]{@link Request}, parsed [`URL`]{@link URL}, path parameters, and middleware extensions.
  * @returns A response or streaming generator that yields response metadata.
  */
-export type Handler<TReqBody=unknown, TReqPath=unknown, TReqQuery=unknown, TOkRes=unknown, TErr = unknown> =
-    (this: Router<any>, ctx: HandlerContext<TReqPath>) => HandlerResult<TOkRes>
+export type Handler<
+    TReqBody=unknown,
+    TReqPath=unknown,
+    TReqQuery=unknown,
+    TOkRes=unknown,
+    TErr = unknown,
+    Ctx extends object = AnyContext,
+> = (this: Router<any>, ctx: HandlerContext<TReqPath, Ctx>) => HandlerResult<TOkRes>
+
+/**
+ * Middleware that can intercept requests, responses, and extend context.
+ *
+ * @example
+ * ```ts
+ * const addRequestId = (): ContextMiddleware<{requestId: number}> => ctx => {
+ *   ctx.requestId = 123
+ * }
+ * ```
+ *
+ * @param ctx - Request context for the current request, including any added fields.
+ * @param next - Invokes the next middleware or route handler.
+ * @returns The response or handler result, optionally wrapped in a Promise.
+ */
+export type ContextMiddleware<AddedCtx extends object = AnyContext, Ctx extends object = AnyContext> =
+    (ctx: RequestContext<Ctx & AddedCtx>, next: () => Promise<HandlerResult>) =>
+        | HandlerResult
+        | Promise<HandlerResult>
+        | void
+        | Promise<void>
 
 /**
  * Middleware that can intercept requests and responses.
@@ -255,5 +279,18 @@ export type Handler<TReqBody=unknown, TReqPath=unknown, TReqQuery=unknown, TOkRe
  * @param next - Invokes the next middleware or route handler.
  * @returns The response or handler result, optionally wrapped in a Promise.
  */
-export type Middleware<Ctx extends object = AnyContext> =
-    (ctx: RequestContext<Ctx>, next: () => Promise<HandlerResult>) => HandlerResult | Promise<HandlerResult>
+export type Middleware<Ctx extends object = AnyContext> = ContextMiddleware<{}, Ctx>
+
+/**
+ * Middleware list container for registering multiple middleware entries.
+ *
+ * @example
+ * ```ts
+ * const middleware: MiddlewareList = [auth(), logging()]
+ * ```
+ *
+ * @param list - Collection of middleware entries, optionally including falsy values.
+ * @returns A list of middleware compatible with `Router.use`.
+ */
+export type MiddlewareList<Ctx extends object = AnyContext> =
+    ReadonlyArray<ContextMiddleware<any, Ctx> | null | undefined | false>

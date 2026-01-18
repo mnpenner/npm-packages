@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bun test
 import {describe, expect, it} from 'bun:test'
 import {ApiClient, type Fetcher} from './api-client.gen'
-import {router} from './router-instance'
+import router from './router-instance'
 import {expectType, type TypeEqual} from '@mpen/server-router/testing/type-assert'
 
 type FetchCall = {

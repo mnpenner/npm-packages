@@ -1,4 +1,4 @@
-import type {MediaType, NormalizedRoute, Route} from './types'
+import type {AnyContext, MediaType, NormalizedRoute, Route} from './types'
 import type {HttpMethod} from '@mpen/http-helpers'
 import {normalizeMediaType, parseMediaType} from './lib/media-type'
 import {pattToName, sanitizeNameParts, splitNameString} from './route-names'
@@ -18,7 +18,7 @@ function normalizeRouteName(
     return sanitizeNameParts(name)
 }
 
-export function normalizeRoute(route: Route): NormalizedRoute {
+export function normalizeRoute<Ctx extends object = AnyContext>(route: Route<Ctx>): NormalizedRoute<Ctx> {
     const pattern = typeof route.pattern === 'string'
         ? new URLPattern({ pathname: route.pattern })
         : route.pattern

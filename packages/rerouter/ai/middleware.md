@@ -93,3 +93,7 @@ export default router = new Router()
 ```
 
 You may adapt the examples if we need to use method chaining for the types to carry through.
+
+Add tests to ensure all the examples work.
+
+You can implement packages/server-router/src/middleware/request-id.ts similar to shown above and use that in tests or create a new dummy middleware.

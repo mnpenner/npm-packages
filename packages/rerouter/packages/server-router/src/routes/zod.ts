@@ -1,6 +1,6 @@
 import {HttpStatus} from '@mpen/http-helpers'
 import type {Router} from '../router'
-import type {Handler, HandlerContext, HandlerResult, Route} from '../types'
+import type {AnyContext, Handler, HandlerContext, HandlerResult, Route} from '../types'
 import {z} from 'zod'
 import {JsonSchemaTarget} from '@mpen/server-router/lib/json-schema'
 
@@ -26,11 +26,11 @@ type ValidationErrorHandler = (component: ValidationError, error: z.ZodError) =>
 type InferSchema<Schema extends z.ZodTypeAny | undefined> =
     Schema extends z.ZodTypeAny ? z.infer<Schema> : unknown
 
-export type ZodRouteHandler<TReqBody, TReqPath, TReqQuery, TOkRes, TErr = unknown> =
-    (this: Router<any>, ctx: HandlerContext<TReqPath> & {body: TReqBody; query: TReqQuery}) => HandlerResult<TOkRes>
+export type ZodRouteHandler<TReqBody, TReqPath, TReqQuery, TOkRes, TErr = unknown, Ctx extends object = AnyContext> =
+    (this: Router<any>, ctx: HandlerContext<TReqPath, Ctx> & {body: TReqBody; query: TReqQuery}) => HandlerResult<TOkRes>
 
-export type ZodRouteDefinition<TReqBody, TReqPath, TReqQuery, TOkRes, TErr = unknown> =
-    Omit<Route, 'handler'> & {handler: Handler<TReqBody, TReqPath, TReqQuery, TOkRes, TErr>}
+export type ZodRouteDefinition<TReqBody, TReqPath, TReqQuery, TOkRes, TErr = unknown, Ctx extends object = AnyContext> =
+    Omit<Route<Ctx>, 'handler'> & {handler: Handler<TReqBody, TReqPath, TReqQuery, TOkRes, TErr, Ctx>}
 
 export type ZodRouteOptions<
     BodySchema extends z.ZodTypeAny | undefined,
@@ -38,7 +38,8 @@ export type ZodRouteOptions<
     QuerySchema extends z.ZodTypeAny | undefined,
     TOkRes,
     TErr = unknown,
-> = Omit<Route, 'handler'> & {
+    Ctx extends object = AnyContext,
+> = Omit<Route<Ctx>, 'handler'> & {
     body?: BodySchema
     query?: QuerySchema
     pathParams?: PathSchema
@@ -47,7 +48,8 @@ export type ZodRouteOptions<
         InferSchema<PathSchema>,
         InferSchema<QuerySchema>,
         TOkRes,
-        TErr
+        TErr,
+        Ctx
     >
     validationError?: ValidationErrorHandler
 }
@@ -184,12 +186,14 @@ export function zodRoute<
     QuerySchema extends z.ZodTypeAny | undefined,
     TOkRes,
     TErr = unknown,
->(options: ZodRouteOptions<BodySchema, PathSchema, QuerySchema, TOkRes, TErr>): ZodRouteDefinition<
+    Ctx extends object = AnyContext,
+>(options: ZodRouteOptions<BodySchema, PathSchema, QuerySchema, TOkRes, TErr, Ctx>): ZodRouteDefinition<
     InferSchema<BodySchema>,
     InferSchema<PathSchema>,
     InferSchema<QuerySchema>,
     TOkRes,
-    TErr
+    TErr,
+    Ctx
 > {
     const {
         body,
@@ -236,17 +240,17 @@ export function zodRoute<
         InferSchema<PathSchema>,
         InferSchema<QuerySchema>,
         TOkRes,
-        TErr
-    > = async function (this: Router<any>, ctx: HandlerContext<InferSchema<PathSchema>>) {
+        TErr,
+        Ctx
+    > = async function (this: Router<any>, ctx: HandlerContext<InferSchema<PathSchema>, Ctx>) {
         const queryParams = readQueryParams(ctx.url.searchParams)
 
-        const handlerContext: {
-            req: Request
-            url: URL
-            pathParams: InferSchema<PathSchema>
+        const handlerContext = {
+            ...ctx,
+        } as HandlerContext<InferSchema<PathSchema>, Ctx> & {
             body?: InferSchema<BodySchema>
             query?: InferSchema<QuerySchema>
-        } = {req: ctx.req, url: ctx.url, pathParams: ctx.pathParams}
+        }
 
         if (query) {
             const queryResult = query.safeParse(queryParams)
@@ -278,7 +282,7 @@ export function zodRoute<
             handlerContext.pathParams = pathResult.data as InferSchema<PathSchema>
         }
 
-        return await handler.call(this, handlerContext as HandlerContext<InferSchema<PathSchema>> & {
+        return await handler.call(this, handlerContext as HandlerContext<InferSchema<PathSchema>, Ctx> & {
             body: InferSchema<BodySchema>
             query: InferSchema<QuerySchema>
         })

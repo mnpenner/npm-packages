@@ -55,7 +55,7 @@ function routePathToOpenApi(pathname: string): string {
     return pathname.replace(/:([A-Za-z0-9_]+)/g, '{$1}')
 }
 
-function normalizeOpenApiMethods(route: NormalizedRoute): string[] {
+function normalizeOpenApiMethods(route: NormalizedRoute<any>): string[] {
     const rawMethods = route.method
         ? (Array.isArray(route.method) ? route.method : [route.method])
         : DEFAULT_METHODS

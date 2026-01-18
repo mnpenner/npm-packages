@@ -1,5 +1,5 @@
 #!/usr/bin/env -S bun --hot  --no-clear-screen
-import {router} from './router-instance'
+import router from './router-instance'
 
 // BUN_PORT=3001 bun packages/server-router/examples/serve.ts
 // export default router
