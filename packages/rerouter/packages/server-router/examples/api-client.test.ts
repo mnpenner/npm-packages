@@ -2,6 +2,7 @@
 import {describe, expect, it} from 'bun:test'
 import {ApiClient, type Fetcher} from './api-client.gen'
 import {router} from './router-instance'
+import {expectType, type TypeEqual} from '@mpen/server-router/testing/type-assert'
 
 type FetchCall = {
     url: string
@@ -45,10 +46,16 @@ describe('api-client.gen', () => {
         expect(await fooResponse.json()).toEqual({message: 'Hello World!'})
 
         const booksResponse = await client.booksById.post(123, {title: 'foo', author: 'bar'})
-        expect(await booksResponse.json()).toEqual({id: 123, title: 'foo', author: 'bar'})
+        const booksResponseData = await booksResponse.json()
+        expectType<TypeEqual<typeof booksResponseData, {
+            id: number,
+            title: string,
+            author: string,
+        }>>(true);
+        expect(booksResponseData).toEqual({id: 123, title: 'foo', author: 'bar'})
 
         const genResponse = await client.gen.get()
-        expect(await genResponse.json()).toEqual({message: 'Hello World!'})
+        expect(await genResponse.text()).toEqual('herro')
 
         expect(fetcher.calls).toEqual([
             {url: '/', init: {method: 'GET'}},

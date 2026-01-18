@@ -62,18 +62,18 @@ router.add({
     pattern: '/gen',
     // method: HttpMethod.GET,
     handler: async function* ({req}) {
-        console.log('start')
+        // console.log('start')
         yield HttpStatus.OK
-        console.log('ok yielded')
+        // console.log('ok yielded')
         yield new Headers({
             'x-foo': 'bar',
             'x-bar': 'baz',
             [CommonHeaders.CONTENT_TYPE]: CommonContentTypes.PLAIN_TEXT,
         })
-        console.log('headers yielded')
+        // console.log('headers yielded')
         await sleep(1000)
         yield
-        console.log('sleep done')
+        // console.log('sleep done')
         return new TextEncoder().encode('herro')
     }
 })
