@@ -13,7 +13,8 @@
     "scripts": {
         "build:react-router": "bun run --cwd packages/react-router build",
         "build:server-router": "bun run --cwd packages/server-router build",
-        "build": "run-s build:react-router build:server-router",
+        "build:http-helpers": "bun run --cwd packages/http-helpers build",
+        "build": "run-s build:react-router build:server-router build:http-helpers",
         "gen:react-router": "bun run --cwd packages/react-router gen",
         "gen:server-router": "bun run --cwd packages/server-router gen",
         "gen": "run-s gen:react-router gen:server-router",

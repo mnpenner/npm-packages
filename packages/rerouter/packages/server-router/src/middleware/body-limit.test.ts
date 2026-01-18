@@ -2,7 +2,7 @@
 import {describe, expect, it, mock} from 'bun:test'
 import {HttpMethod, HttpStatus} from '@mpen/http-helpers'
 import {Router} from '../router'
-import {maxContentSize} from './max-content-size'
+import {bodyLimit} from './body-limit'
 
 const encoder = new TextEncoder()
 
@@ -17,12 +17,12 @@ function makeStream(chunks: string[]): ReadableStream<Uint8Array> {
     })
 }
 
-describe('maxContentSize', () => {
+describe(bodyLimit.name, () => {
     it('rejects immediately when Content-Length exceeds maxSize', async () => {
         const router = new Router()
         const handler = mock(() => new Response('ok'))
 
-        router.use(maxContentSize({maxSize: 9}))
+        router.use(bodyLimit({maxSize: 9}))
         router.add({method: HttpMethod.POST, pattern: '/upload', handler})
 
         const request = new Request('https://example.com/upload', {
@@ -40,7 +40,7 @@ describe('maxContentSize', () => {
     it('rejects when the streamed body exceeds maxSize', async () => {
         const router = new Router()
 
-        router.use(maxContentSize({maxSize: 4}))
+        router.use(bodyLimit({maxSize: 4}))
         router.add({
             method: HttpMethod.POST,
             pattern: '/upload',
@@ -60,7 +60,7 @@ describe('maxContentSize', () => {
     it('rejects when Content-Length does not match the received bytes', async () => {
         const router = new Router()
 
-        router.use(maxContentSize({maxSize: 10}))
+        router.use(bodyLimit({maxSize: 10}))
         router.add({
             method: HttpMethod.POST,
             pattern: '/upload',
@@ -81,7 +81,7 @@ describe('maxContentSize', () => {
     it('allows requests within the limit and matching Content-Length', async () => {
         const router = new Router()
 
-        router.use(maxContentSize({maxSize: 10}))
+        router.use(bodyLimit({maxSize: 10}))
         router.add({
             method: HttpMethod.POST,
             pattern: '/upload',

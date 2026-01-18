@@ -20,7 +20,7 @@ globalThis._requestCounter ??= 0
  *
  * @returns Middleware that adds `requestId` to the request context.
  */
-export const addRequestId = (): ContextMiddleware<{requestId: number}> => ctx => {
+export const requestIdCtx = (): ContextMiddleware<{requestId: number}> => ctx => {
     ctx.requestId = (globalThis._requestCounter ?? 0) + 1
     globalThis._requestCounter = ctx.requestId
 }

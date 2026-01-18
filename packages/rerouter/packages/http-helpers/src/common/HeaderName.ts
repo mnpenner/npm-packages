@@ -1,4 +1,4 @@
-export const enum CommonHeaders {
+export const enum HeaderName {
     CONTENT_TYPE = 'Content-Type',
     CONTENT_LENGTH = 'Content-Length',
     ACCEPT = 'Accept',

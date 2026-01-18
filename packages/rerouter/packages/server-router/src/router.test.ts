@@ -4,7 +4,7 @@ import {HttpMethod, HttpStatus} from '@mpen/http-helpers'
 import {Router} from './router'
 import type {ContextMiddleware, Handler} from './types'
 import {expectType} from './testing/type-assert'
-import {addRequestId} from './middleware/request-id'
+import {requestIdCtx} from './middleware/request-id-ctx'
 
 function makeRequest(path: string, method: HttpMethod = HttpMethod.GET, headers?: HeadersInit): Request {
     const init: RequestInit = {method}
@@ -523,7 +523,7 @@ describe('Router.fetch', () => {
 
 describe('Router.use', () => {
     it('infers middleware-added context for handlers', () => {
-        const router = new Router().use(addRequestId())
+        const router = new Router().use(requestIdCtx())
 
         router.add({
             method: HttpMethod.GET,
@@ -580,7 +580,7 @@ describe('Router.group', () => {
             ctx.userId = 'user-2'
         }
 
-        const router = new Router().use(addRequestId())
+        const router = new Router().use(requestIdCtx())
         router.group([addUser] as const, group => {
             group.add({
                 method: HttpMethod.GET,

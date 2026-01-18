@@ -1,14 +1,14 @@
 import {HttpStatus} from '@mpen/http-helpers'
 import {simpleStatus} from '@mpen/server-router/response/simple'
-import type {AnyContext, HandlerResult, Middleware, RequestContext} from '../types'
+import type {AnyContext, HandlerResult, MaybePromise, Middleware, RequestContext} from '../types'
 
-type MaxContentSizeHandler<Ctx extends object = AnyContext> =
-    (ctx: RequestContext<Ctx>) => HandlerResult | Promise<HandlerResult>
+type BodyLimitHandler<Ctx extends object = AnyContext> =
+    (ctx: RequestContext<Ctx>) => MaybePromise<HandlerResult>
 
 export interface MaxContentSizeOptions<Ctx extends object = AnyContext> {
     maxSize: number
-    tooLarge?: MaxContentSizeHandler<Ctx>
-    sizeMismatch?: MaxContentSizeHandler<Ctx>
+    tooLarge?: BodyLimitHandler<Ctx>
+    sizeMismatch?: BodyLimitHandler<Ctx>
 }
 
 class PayloadTooLargeError extends Error {
@@ -62,7 +62,7 @@ function chunkByteLength(chunk: Uint8Array | string): number {
  * @param options - Configuration for max size enforcement and error handlers.
  * @returns Middleware that rejects oversized bodies and mismatched Content-Length values.
  */
-export function maxContentSize<Ctx extends object = AnyContext>(
+export function bodyLimit<Ctx extends object = AnyContext>(
     options: MaxContentSizeOptions<Ctx>
 ): Middleware<Ctx> {
     const tooLargeHandler = options.tooLarge

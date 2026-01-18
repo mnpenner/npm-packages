@@ -1,7 +1,7 @@
 /**
  * Response Content-Types, including typical charset if applicable.
  */
-export const enum CommonContentTypes {
+export const enum ContentType {
     JSON = 'application/json',
     YAML = 'application/x-yaml',
     HTML = 'text/html;charset=utf-8',
