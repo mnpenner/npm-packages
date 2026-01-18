@@ -16,7 +16,7 @@ import type {
     RequestContext,
     Route
 } from './types'
-import {internalServerError, notFound, simpleStatus} from '@mpen/server-router/response/simple'
+import {simpleStatus} from './response/simple'
 
 type RouteEntry =
     | { kind: 'route', route: NormalizedRoute<any> }
