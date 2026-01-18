@@ -1,6 +1,7 @@
 #!/usr/bin/env -S bun test
 import {describe, expect, it} from 'bun:test'
 import {ApiClient, type Fetcher} from './api-client.gen'
+import {router} from './router-instance'
 
 type FetchCall = {
     url: string
@@ -12,16 +13,17 @@ class RecordingFetcher implements Fetcher {
 
     fetch(url: string, init: RequestInit): unknown {
         this.calls.push({url, init})
-        if (url.startsWith('/books/')) {
-            const id = url.split('/').pop() ?? ''
-            const body = init.body ? JSON.parse(init.body.toString()) : {}
-            return new Response(JSON.stringify({id, ...body}), {
-                headers: {'content-type': 'application/json'},
-            })
-        }
-        return new Response(JSON.stringify({message: 'ok'}), {
-            headers: {'content-type': 'application/json'},
-        })
+        return router.fetch(new Request(new URL(url,'https://example.org'), init))
+        // if (url.startsWith('/books/')) {
+        //     const id = url.split('/').pop() ?? ''
+        //     const body = init.body ? JSON.parse(init.body.toString()) : {}
+        //     return new Response(JSON.stringify({id, ...body}), {
+        //         headers: {'content-type': 'application/json'},
+        //     })
+        // }
+        // return new Response(JSON.stringify({message: 'ok'}), {
+        //     headers: {'content-type': 'application/json'},
+        // })
     }
 }
 
@@ -31,22 +33,22 @@ describe('api-client.gen', () => {
         const client = new ApiClient(fetcher)
 
         const indexResponse = await client.get()
-        expect(await indexResponse.json()).toEqual({message: 'ok'})
+        expect(await indexResponse.json()).toEqual({message: 'Hello World!'})
 
         const namedResponse = await client.namedRoute.get()
-        expect(await namedResponse.json()).toEqual({message: 'ok'})
+        expect(await namedResponse.json()).toEqual({message: 'Hello World!'})
 
         const namedPostResponse = await client.namedRoute.post()
-        expect(await namedPostResponse.json()).toEqual({message: 'ok'})
+        expect(await namedPostResponse.json()).toEqual({message: 'Hello World!'})
 
         const fooResponse = await client.foo.bar.post()
-        expect(await fooResponse.json()).toEqual({message: 'ok'})
+        expect(await fooResponse.json()).toEqual({message: 'Hello World!'})
 
-        const booksResponse = await client.booksById.post('123', {title: 'foo', author: 'bar'})
-        expect(await booksResponse.json()).toEqual({id: '123', title: 'foo', author: 'bar'})
+        const booksResponse = await client.booksById.post(123, {title: 'foo', author: 'bar'})
+        expect(await booksResponse.json()).toEqual({id: 123, title: 'foo', author: 'bar'})
 
         const genResponse = await client.gen.get()
-        expect(await genResponse.json()).toEqual({message: 'ok'})
+        expect(await genResponse.json()).toEqual({message: 'Hello World!'})
 
         expect(fetcher.calls).toEqual([
             {url: '/', init: {method: 'GET'}},

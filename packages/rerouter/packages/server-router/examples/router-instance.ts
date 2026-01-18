@@ -40,10 +40,9 @@ router.add(zodRoute({
     method: HttpMethod.POST,
 }))
 
-
 router.add(zodRoute({
     pattern: '/books/:id',
-    pathParams: z.object({id: z.string()}),
+    pathParams: z.object({id: z.coerce.number().int()}),
     body: z.object({title: z.string(), author: z.string()}),
     handler: ({pathParams, body}) => new Response(JSON.stringify({
         id: pathParams.id,

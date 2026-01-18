@@ -696,9 +696,11 @@ export async function main(argv: string[] = Bun.argv) {
     const routes = extractRoutesFromEntryFile(sourceFile, program.getTypeChecker(), 'router')
     const rawArgs = argv.slice(1)
     if (rawArgs[0] && path.isAbsolute(rawArgs[0])) {
-        rawArgs[0] = path.relative(process.cwd(), rawArgs[0]).replace(/\\\\/g, '/')
+        rawArgs[0] = path.relative(process.cwd(), rawArgs[0]).replace(/\\/g, '/')
     }
+    // const normalizedArgs = rawArgs.map(arg => arg.replace(/\\/g, '/'))
     const commandText = ['bun', ...rawArgs.map(arg => $.escape(arg))].join(' ')
+
     const client = buildApiClientSource(routes, {
         clientName,
         responseType,

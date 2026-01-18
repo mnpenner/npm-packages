@@ -18,9 +18,9 @@ export type PostNamedRouteResponse = { message: string; }
 
 export type PostFooBarResponse = { message: string; }
 
-export type PostBooksByIdPathParams = { id: string; }
+export type PostBooksByIdPathParams = { id: number; }
 export type PostBooksByIdRequest = { title: string; author: string; }
-export type PostBooksByIdResponse = { id: string; title: string; author: string; }
+export type PostBooksByIdResponse = { id: number; title: string; author: string; }
 
 export type GetGenResponse = unknown
 
