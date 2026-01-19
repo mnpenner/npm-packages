@@ -207,6 +207,39 @@ describe('Router', () => {
         expect(await response.text()).toBe('late body')
     })
 
+    it('exposes request aborts so handlers can stop early', async () => {
+        const {resolve: handlerStarted, promise: handlerStartedPromise} = Promise.withResolvers<void>()
+        const {resolve: allowCheck, promise: allowCheckPromise} = Promise.withResolvers<void>()
+        const controller = new AbortController()
+        let sawAbort = false
+        let finished = false
+        const router = new Router()
+        router.add({
+            method: HttpMethod.GET,
+            pattern: '/slow',
+            handler: async ({req}) => {
+                handlerStarted()
+                await allowCheckPromise
+                if (req.signal.aborted) {
+                    sawAbort = true
+                    return new Response('aborted', {status: HttpStatus.CLIENT_CLOSED_REQUEST})
+                }
+                finished = true
+                return new Response('ok')
+            },
+        })
+
+        const responsePromise = router.fetch(new Request('https://example.com/slow', {signal: controller.signal}))
+        await handlerStartedPromise
+        controller.abort()
+        allowCheck()
+
+        const response = await responsePromise
+        expect(response.status).toBe(HttpStatus.CLIENT_CLOSED_REQUEST)
+        expect(sawAbort).toBe(true)
+        expect(finished).toBe(false)
+    })
+
     it('returns string or bytes as response bodies', async () => {
         const router = new Router()
         router.add({
