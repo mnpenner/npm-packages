@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bun test
 import {describe, expect, it} from 'bun:test'
-import {mediaTypeMatches, normalizeCharset, parseAcceptHeader, parseMediaType} from './media-type'
+import {mediaTypeMatches, parseAcceptHeader, parseMediaType} from './media-type'
 
 describe(parseMediaType.name, function () {
     it('parses types with parameters', function () {
@@ -8,7 +8,7 @@ describe(parseMediaType.name, function () {
         expect(media).toEqual({
             type: 'multipart/form-data',
             boundary: 'abc',
-            charset: 'UTF-8',
+            charset: 'utf-8',
         })
     })
 
@@ -36,13 +36,7 @@ describe(parseMediaType.name, function () {
     })
 })
 
-describe(normalizeCharset.name, function () {
-    it('normalizes charset tokens', function () {
-        expect(normalizeCharset('utf8')).toBe('utf8')
-        expect(normalizeCharset('UTF-8')).toBe('utf8')
-        expect(normalizeCharset('utf_8')).toBe('utf8')
-    })
-
+describe(mediaTypeMatches.name, function () {
     it('matches types and charsets when compatible', function () {
         const accept = parseMediaType('application/json; charset=utf-8')!
         const contentType = parseMediaType('application/json; charset=UTF8')!

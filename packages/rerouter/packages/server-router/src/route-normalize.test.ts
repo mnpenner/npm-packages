@@ -29,7 +29,7 @@ describe('normalizeRoute', function () {
         })
 
         expect(route.accept).toEqual([
-            {type: 'application/json', charset: 'UTF-8'},
+            {type: 'application/json', charset: 'utf-8'},
             {type: 'text/plain'},
         ])
     })

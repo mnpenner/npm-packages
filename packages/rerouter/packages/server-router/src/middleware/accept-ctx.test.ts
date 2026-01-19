@@ -16,13 +16,14 @@ describe(acceptCtx.name, () => {
         })
 
         const request = new Request('https://example.com/', {
-            headers: {accept: 'text/plain;q=0.5, application/json, text/html;q=0.9'},
+            headers: {accept: 'text/plain;q=0.5, application/json, text/html;q=0.9,application/yaml;q=1'},
         })
 
         const response = await router.fetch(request)
 
         expect(await response.json()).toEqual([
             {type: 'application/json', q: 1},
+            {type: 'application/yaml', q: 1},
             {type: 'text/html', q: 0.9},
             {type: 'text/plain', q: 0.5},
         ])

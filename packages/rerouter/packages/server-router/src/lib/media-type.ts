@@ -1,4 +1,5 @@
 import type {MediaType} from '../types'
+import {normalizeCharsetName} from './charset'
 
 function normalizeToken(value: string): string {
     return value.trim()
@@ -8,21 +9,16 @@ function normalizeType(value: string): string {
     return normalizeToken(value).toLowerCase()
 }
 
-export function normalizeCharset(value: string): string {
-    return normalizeToken(value).toLowerCase().replace(/[-_]/g, '')
-}
-
 export function normalizeMediaType(value: MediaType): MediaType {
     const type = normalizeType(value.type)
-    const charset = value.charset ? normalizeToken(value.charset) : undefined
+    const charset = value.charset ? normalizeCharsetName(value.charset) : undefined
     const boundary = value.boundary ? normalizeToken(value.boundary) : undefined
     const q = value.q
-    return {
-        type,
-        ...(charset ? {charset} : {}),
-        ...(boundary ? {boundary} : {}),
-        ...(q !== undefined ? {q} : {}),
-    }
+    const result: MediaType = {type}
+    if (charset) result.charset = charset
+    if (boundary) result.boundary = boundary
+    if (q !== undefined) result.q = q
+    return result
 }
 
 export function parseMediaType(value: string): MediaType | null {
@@ -30,9 +26,7 @@ export function parseMediaType(value: string): MediaType | null {
     const type = normalizeType(typePart)
     if (!type) return null
 
-    let charset: string | undefined
-    let boundary: string | undefined
-    let q: number | undefined
+    const result: MediaType = {type}
     for (const param of params) {
         const [rawKey, ...rest] = param.split('=')
         if (!rawKey || rest.length === 0) continue
@@ -41,20 +35,15 @@ export function parseMediaType(value: string): MediaType | null {
         if (paramValue.startsWith('"') && paramValue.endsWith('"')) {
             paramValue = paramValue.slice(1, -1)
         }
-        if (key === 'charset') charset = paramValue
-        if (key === 'boundary') boundary = paramValue
+        if (key === 'charset') result.charset = normalizeCharsetName(paramValue)
+        if (key === 'boundary') result.boundary = paramValue
         if (key === 'q') {
             const parsed = Number.parseFloat(paramValue)
-            if (!Number.isNaN(parsed)) q = parsed
+            if (!Number.isNaN(parsed)) result.q = parsed
         }
     }
 
-    return {
-        type,
-        ...(charset ? {charset} : {}),
-        ...(boundary ? {boundary} : {}),
-        ...(q !== undefined ? {q} : {}),
-    }
+    return result
 }
 
 /**
@@ -87,7 +76,7 @@ export function mediaTypeMatches(accept: MediaType, contentType: MediaType): boo
     const normalizedContent = normalizeMediaType(contentType)
     if (normalizedAccept.type !== normalizedContent.type) return false
     if (normalizedAccept.charset && normalizedContent.charset) {
-        if (normalizeCharset(normalizedAccept.charset) !== normalizeCharset(normalizedContent.charset)) return false
+        if (normalizeCharsetName(normalizedAccept.charset) !== normalizeCharsetName(normalizedContent.charset)) return false
     }
     if (normalizedAccept.boundary && normalizedContent.boundary) {
         if (normalizedAccept.boundary !== normalizedContent.boundary) return false
