@@ -37,6 +37,8 @@ type AddedContextFromList<List extends readonly unknown[]> = List extends readon
     ? AddedContextOf<First> & AddedContextFromList<Rest>
     : {}
 
+type RouteWithoutMethod<Ctx extends object> = Omit<Route<Ctx>, 'method'>
+
 function normalizeMiddlewareList<Ctx extends object>(
     middleware: ContextMiddleware<any, Ctx> | MiddlewareList<Ctx> | null | undefined | false
 ): ContextMiddleware<any, Ctx>[] {
@@ -304,6 +306,66 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
     add(route: Route<Ctx>): this {
         this._entries.push({ kind: 'route', route: normalizeRoute(route) })
         return this
+    }
+
+    /**
+     * Add a GET route definition to this router.
+     *
+     * @param route - Route definition without a method.
+     * @returns The router instance for chaining.
+     */
+    get(route: RouteWithoutMethod<Ctx>): this {
+        return this.add({...route, method: HttpMethod.GET})
+    }
+
+    /**
+     * Add a HEAD route definition to this router.
+     *
+     * @param route - Route definition without a method.
+     * @returns The router instance for chaining.
+     */
+    head(route: RouteWithoutMethod<Ctx>): this {
+        return this.add({...route, method: HttpMethod.HEAD})
+    }
+
+    /**
+     * Add a POST route definition to this router.
+     *
+     * @param route - Route definition without a method.
+     * @returns The router instance for chaining.
+     */
+    post(route: RouteWithoutMethod<Ctx>): this {
+        return this.add({...route, method: HttpMethod.POST})
+    }
+
+    /**
+     * Add a PUT route definition to this router.
+     *
+     * @param route - Route definition without a method.
+     * @returns The router instance for chaining.
+     */
+    put(route: RouteWithoutMethod<Ctx>): this {
+        return this.add({...route, method: HttpMethod.PUT})
+    }
+
+    /**
+     * Add a DELETE route definition to this router.
+     *
+     * @param route - Route definition without a method.
+     * @returns The router instance for chaining.
+     */
+    delete(route: RouteWithoutMethod<Ctx>): this {
+        return this.add({...route, method: HttpMethod.DELETE})
+    }
+
+    /**
+     * Add a PATCH route definition to this router.
+     *
+     * @param route - Route definition without a method.
+     * @returns The router instance for chaining.
+     */
+    patch(route: RouteWithoutMethod<Ctx>): this {
+        return this.add({...route, method: HttpMethod.PATCH})
     }
 
     /**

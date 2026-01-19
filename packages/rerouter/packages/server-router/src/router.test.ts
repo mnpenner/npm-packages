@@ -386,6 +386,102 @@ describe('Router', () => {
     })
 })
 
+describe('Router.get', () => {
+    it('registers GET routes', async () => {
+        const router = new Router()
+        router.get({
+            pattern: '/get',
+            handler: () => new Response('ok'),
+        })
+
+        const [route] = router.getRoutes()
+        expect(route?.method).toBe(HttpMethod.GET)
+
+        const response = await router.fetch(makeRequest('/get', HttpMethod.GET))
+        expect(response.status).toBe(HttpStatus.OK)
+    })
+})
+
+describe('Router.head', () => {
+    it('registers HEAD routes', async () => {
+        const router = new Router()
+        router.head({
+            pattern: '/head',
+            handler: () => new Response('ok'),
+        })
+
+        const [route] = router.getRoutes()
+        expect(route?.method).toBe(HttpMethod.HEAD)
+
+        const response = await router.fetch(makeRequest('/head', HttpMethod.HEAD))
+        expect(response.status).toBe(HttpStatus.OK)
+    })
+})
+
+describe('Router.post', () => {
+    it('registers POST routes', async () => {
+        const router = new Router()
+        router.post({
+            pattern: '/post',
+            handler: () => new Response('ok'),
+        })
+
+        const [route] = router.getRoutes()
+        expect(route?.method).toBe(HttpMethod.POST)
+
+        const response = await router.fetch(makeRequest('/post', HttpMethod.POST))
+        expect(response.status).toBe(HttpStatus.OK)
+    })
+})
+
+describe('Router.put', () => {
+    it('registers PUT routes', async () => {
+        const router = new Router()
+        router.put({
+            pattern: '/put',
+            handler: () => new Response('ok'),
+        })
+
+        const [route] = router.getRoutes()
+        expect(route?.method).toBe(HttpMethod.PUT)
+
+        const response = await router.fetch(makeRequest('/put', HttpMethod.PUT))
+        expect(response.status).toBe(HttpStatus.OK)
+    })
+})
+
+describe('Router.delete', () => {
+    it('registers DELETE routes', async () => {
+        const router = new Router()
+        router.delete({
+            pattern: '/delete',
+            handler: () => new Response('ok'),
+        })
+
+        const [route] = router.getRoutes()
+        expect(route?.method).toBe(HttpMethod.DELETE)
+
+        const response = await router.fetch(makeRequest('/delete', HttpMethod.DELETE))
+        expect(response.status).toBe(HttpStatus.OK)
+    })
+})
+
+describe('Router.patch', () => {
+    it('registers PATCH routes', async () => {
+        const router = new Router()
+        router.patch({
+            pattern: '/patch',
+            handler: () => new Response('ok'),
+        })
+
+        const [route] = router.getRoutes()
+        expect(route?.method).toBe(HttpMethod.PATCH)
+
+        const response = await router.fetch(makeRequest('/patch', HttpMethod.PATCH))
+        expect(response.status).toBe(HttpStatus.OK)
+    })
+})
+
 describe('Router.notFound', () => {
     it('uses the configured notFound handler', async () => {
         const router = new Router().notFound(() => new Response('missing', {status: HttpStatus.NOT_FOUND}))
