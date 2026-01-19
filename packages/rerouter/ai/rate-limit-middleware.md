@@ -1,28 +1,6 @@
-create `packages/server-router/src/middleware/rate-limit.ts`
+Create `packages/server-router/src/middleware/rate-limit.ts`
 
-it should have options:
-
-- getUserId(ctx): Promise<string|number>
-- getIp(ctx): Promise<string>
-- getPeakConcurrentUsers(ctx): Promise<number>  // ran once at startup
-- retryAfterHeader: boolean  // add Retry-After header
-
-If getUserId returns a falsy value, then rate limit will be applied against ip address instead, multiplied by some value to accomodate possible multiple users running on same IP.
-
-IP should be converted to a country so we can have per-country limits (applied whether or not user is logged in)
-
-We should try to fingerprint the user from the request headers and apply a rate limit per fingerprint. Or maybe not because these headers are easy to forge.
-
-There will be a limit on the total # of requests from a user/ip/country, and then per-path with and without query params. Query params should be normalized.
-
-e.g. we might specify that a user might make up to 3 requests to a particular endpoint per 6 seconds. Then we can smooth this out by multiplying...
-
-- Max 3*5=15 requests per 6*5=30 seconds per user to GET /foo/bar?with=query_string
-- Max 3*5=15 requests per 6*5=30 seconds per user to POST /foo/bar without query string
-- If user ID is falsy, then per-IP limits apply but at 10x the rate. So 150 requests per 30 seconds per IP
-- Then the per-country limits are scaled by the peak concurrent users and # of humans per country
-
-`getIp` can look at `X-Forwarded-For` and/or `X-Real-IP` headers by default.
+An example of the options it should support is below.
 
 ```ts
 import {URLPattern} from 'node:url'
@@ -33,11 +11,15 @@ interface Bucket {
     scale: number
 }
 
+interface AsnRecord {
+    asn: number
+    org: string
+}
 
 interface Options {
     getUserId(ctx): Promise<string | number>
 
-    getIp(ctx): Promise<string>
+    getIpAddress?(ctx): Promise<string>
 
     getGlobalPeakConcurrentUsers(ctx): Promise<number>
 
@@ -47,18 +29,20 @@ interface Options {
      */
     baseBucketDurationMs: number
     buckets: Bucket[]
-    /**
-     * Filepath
-     */
-    maxmindAsnDatabase: string
-    maxmindCountryDatabase: string
+    /** Filepath */
+    maxmindAsnDatabase?: string
+    /** Filepath */
+    maxmindCountryDatabase?: string
+    
+    getAsn(ctx, {userId, ipAddress}): AsnRecord
+    getCountryCode(ctx, {userId, ipAddress}): string
     
     endpointLimits: EndpointLimit[]
     
     asnToClass(number): string
 }
 
-const ASN_OVERRIDES: Record<number, AsnClass> = {
+const ASN_OVERRIDES: Record<number, string> = {
     16509: 'cloud',      // AWS
     15169: 'cloud',      // Google
     8075:  'cloud',      // Microsoft
@@ -101,7 +85,7 @@ const config = {
     getUserId(ctx) {
         return ctx.req.headers.get('x-user-id')
     },
-    getIp(ctx) {
+    getIpAddress(ctx) {
         return ctx.req.headers.get('x-forwarded-for').split(',', 2)[0].trim()
     },
     getGlobalPeakConcurrentUsers(ctx) {
@@ -181,4 +165,6 @@ Next we use the global peak concurrent users and multiply by the country scale. 
 
 `scales.country` needn't sum to one if you don't know your exact user distribution. If the country cannot be determined from the user's IP using the maxmind DB, the `unknown` limit will apply. If the country *can* be determined by isn't specified in `scales.country`, then `other` will apply. To be clear, there will be no "other" bucket in the cache, it will use the real country code but with the "other" limit. "unknown" (or "ZZ") will be a real bucket.
 
+If `maxmindAsnDatabase` is set, then `getAsn` will use the default implementation, reading the maxmind database. If it's not set, the user can implement it themselves by defining `getAsn`. If neither are set, ASN limits will not apply.
 
+Likewise for country.
