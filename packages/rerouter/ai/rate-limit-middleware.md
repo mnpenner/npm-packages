@@ -1,170 +1,354 @@
-Create `packages/server-router/src/middleware/rate-limit.ts`
+Create `packages/server-router/src/middleware/rate-limit.ts`.
 
-An example of the options it should support is below.
+Implement a configurable rate limiting middleware for this server framework.
+
+The middleware enforces limits simultaneously across multiple “dimensions”:
+
+* Per authenticated user (primary key: userId)
+* Per anonymous IP (primary key: ipAddress; scaled up because NAT)
+* Per subnet (IPv4 /24, IPv6 /64; always applied)
+* Per ASN (optional; requires MaxMind ASN DB or user-supplied resolver)
+* Per country (optional; requires MaxMind Country DB or user-supplied resolver)
+* Per endpoint (method + path, with variants for “with normalized query” and “without query”)
+
+The middleware uses a bucket system. A “bucket” defines a duration window and a scale. Limits are derived from a base rate reference.
+
+Terminology:
+
+* “Base rate”: `baseMaxRequestsPerBaseWindow` requests per `baseWindowMs`.
+* For a bucket window `bucket.windowMs`, base max for that bucket is:
+
+    * `bucketMax = floor(baseMaxRequestsPerBaseWindow * (bucket.windowMs / baseWindowMs) * bucket.scale)`
+
+Then each dimension applies an additional multiplier (identity multipliers, country/ASN multipliers, subnet multipliers, etc).
+
+The middleware must support a default in-memory LRU store, but also allow pluggable storage via `readCounter` / `writeCounter` (see below) so callers can use Redis or any datastore.
+
+---
+
+## Types / API
 
 ```ts
 import {URLPattern} from 'node:url'
 
-
-interface Bucket {
-    durationMs: number
+export interface RateBucket {
+    windowMs: number
     scale: number
 }
 
-interface AsnRecord {
+export interface AsnRecord {
     asn: number
-    org: string
+    organization: string
 }
 
-interface Options {
-    getUserId(ctx): Promise<string | number>
+export type HttpMethod = 'GET'|'POST'|'PUT'|'PATCH'|'DELETE'
 
-    getIpAddress?(ctx): Promise<string>
+export type MethodLimit = number | Partial<Record<HttpMethod, number>>
 
-    getGlobalPeakConcurrentUsers(ctx): Promise<number>
-
-    addRetryAfterHeader: boolean
+export interface EndpointLimit {
+    pattern: string | URLPattern | ConstructorParameters<typeof URLPattern>
     /**
-     * Input numbers are assumed to be per this number of milliseconds. Defaults to 1_000 (i.e. values are in QPS)
+     * Max requests per base window (baseWindowMs) for this endpoint, prior to bucket/window expansion.
+     * If number: applies to all methods.
+     * If object: per-method limits.
      */
-    baseBucketDurationMs: number
-    buckets: Bucket[]
-    /** Filepath */
+    limit: MethodLimit
+}
+
+export type AsnClass =
+    | 'cloud'
+    | 'hosting'
+    | 'cdn'
+    | 'residential'
+    | 'mobile'
+    | 'unknown'
+    | (string & {})  // allow user-defined strings
+
+export interface FixedWindowCounter {
+    windowStartMs: number
+    count: number
+}
+
+export interface CounterReadResult {
+    counter: FixedWindowCounter | null
+}
+
+export interface CounterWriteInput {
+    counter: FixedWindowCounter
+    /**
+     * Milliseconds until this counter can be safely discarded.
+     * For in-memory LRU this is used as the entry TTL.
+     * For Redis, set key expiry to this.
+     */
+    ttlMs: number
+}
+
+export interface RateLimitStorage<C> {
+    /**
+     * Read the counter for a given key.
+     */
+    readCounter(ctx: C, key: string): Promise<CounterReadResult>
+    /**
+     * Persist the updated counter for a given key.
+     */
+    writeCounter(ctx: C, key: string, input: CounterWriteInput): Promise<void>
+}
+
+export interface RateLimitOptions<C> {
+    // --- identity
+    getUserId(ctx: C): Promise<string | number | null | undefined>
+
+    /**
+     * Default implementation should read X-Forwarded-For and/or X-Real-IP.
+     * Only trust these if the deployment is behind a trusted proxy / LB.
+     */
+    getIpAddress?: (ctx: C) => Promise<string>
+
+    /**
+     * Used to scale country caps by concurrency.
+     * Called once at middleware init.
+     */
+    getGlobalPeakConcurrentUsers: (ctx: C) => Promise<number>
+
+    // --- base definition
+    /**
+     * Base reference window duration.
+     * Defaults to 1_000 (i.e. base limit is QPS-style).
+     */
+    baseWindowMs: number
+
+    /**
+     * Base reference max requests per baseWindowMs, per authenticated user.
+     * Bucket/window expansion is derived from this.
+     */
+    baseMaxRequestsPerBaseWindow: number
+
+    /**
+     * If userId is falsy, use ipAddress as the identity key but increase limits by this multiplier
+     * to accommodate multiple users behind NAT.
+     */
+    anonymousIpMultiplier: number
+
+    // --- response behavior
+    addRetryAfterHeader: boolean
+
+    // --- buckets
+    buckets: RateBucket[]
+
+    // --- query normalization for endpoint keys
+    normalizeQuery?: (url: URL) => string
+
+    // --- MaxMind (optional)
+    /** File path to GeoLite2-ASN.mmdb */
     maxmindAsnDatabase?: string
-    /** Filepath */
+    /** File path to GeoLite2-Country.mmdb */
     maxmindCountryDatabase?: string
-    
-    getAsn(ctx, {userId, ipAddress}): AsnRecord
-    getCountryCode(ctx, {userId, ipAddress}): string
-    
+
+    // --- ASN/Country resolvers (optional overrides)
+    /**
+     * If maxmindAsnDatabase is set and getAsn is not set, use default MaxMind lookup.
+     * If getAsn is set, it overrides the default.
+     * If neither is set, ASN limits are not applied.
+     */
+    getAsn?: (ctx: C, input: {userId: string|number|null|undefined; ipAddress: string}) => Promise<AsnRecord | null>
+
+    /**
+     * If maxmindCountryDatabase is set and getCountryCode is not set, use default MaxMind lookup.
+     * If getCountryCode is set, it overrides the default.
+     * If neither is set, country limits are not applied.
+     */
+    getCountryCode?: (ctx: C, input: {userId: string|number|null|undefined; ipAddress: string}) => Promise<string | null>
+
+    // --- ASN classing (used for scaling)
+    asnToClass?: (asn: number, organization: string) => AsnClass
+
+    // --- scaling
+    scales: {
+        /**
+         * Country scaling.
+         * If IP->country is unknown => use `unknown` scale.
+         * If known but not explicitly listed => use `other` scale.
+         */
+        country?: Record<string, number> & {unknown: number; other: number}
+
+        /**
+         * ASN class scaling. Only applied if ASN is available.
+         * If class not listed => use `unknown`.
+         */
+        asnClass?: Record<string, number> & {unknown: number}
+
+        /**
+         * Subnet scaling. Always applied.
+         */
+        subnet: {
+            ipv4: number  // multiplier for /24 bucket limits
+            ipv6: number  // multiplier for /64 bucket limits
+            /**
+             * Optional multiplier layered on top of ipv4/ipv6 based on ASN class (if available).
+             * Example: {cloud: 0.2, hosting: 0.2, residential: 1, unknown: 0.7}
+             */
+            byAsnClass?: Record<string, number> & {unknown: number}
+            /**
+             * Prefix sizes (defaults: 24 and 64).
+             * Only support /24 for IPv4 and /64 for IPv6 unless you implement broader support.
+             */
+            ipv4Prefix?: 24
+            ipv6Prefix?: 64
+        }
+    }
+
+    // --- endpoint limits
     endpointLimits: EndpointLimit[]
-    
-    asnToClass(number): string
+
+    // --- storage
+    /**
+     * If provided, use this storage. Otherwise use an in-memory LRU implementation.
+     */
+    storage?: RateLimitStorage<C>
+
+    /**
+     * In-memory store sizing (used only if storage is not provided)
+     */
+    inMemory?: {
+        maxEntries?: number
+        /**
+         * TTL for counters; default should be 10x the largest bucket window.
+         */
+        entryTtlMs?: number
+    }
+}
+```
+
+---
+
+## Default ASN classification
+
+Include a default `asnToClass` implementation with explicit overrides plus keyword heuristics.
+
+```ts
+const ASN_OVERRIDES: Record<number, AsnClass> = {
+    16509: 'cloud',  // AWS
+    15169: 'cloud',  // Google
+    8075: 'cloud',   // Microsoft
+    13335: 'cdn',    // Cloudflare
 }
 
-const ASN_OVERRIDES: Record<number, string> = {
-    16509: 'cloud',      // AWS
-    15169: 'cloud',      // Google
-    8075:  'cloud',      // Microsoft
-    13335: 'cdn',        // Cloudflare
-}
+const CDN_KEYWORDS = ['cloudflare','fastly','akamai','cdn']
+const CLOUD_KEYWORDS = ['amazon','aws','google','gcp','microsoft','azure','digitalocean','linode','vultr','ovh','hetzner','oracle','alibaba','tencent']
+const HOSTING_KEYWORDS = ['hosting','host','colo','datacenter','data center','server']
+const MOBILE_KEYWORDS = ['mobile','wireless','cellular','lte','5g']
+const RESIDENTIAL_KEYWORDS = ['telecom','communications','broadband','cable','fiber']
 
-function defaultAsnToClass(asn: number, org: string): string {
-    if(ASN_OVERRIDES.has(asn)) return ASN_OVERRIDES.get(asn)
+function defaultAsnToClass(asn: number, organization: string): AsnClass {
+    const override = ASN_OVERRIDES[asn]
+    if (override) return override
 
-    if (!org) return 'unknown'
-    const s = org.toLowerCase()
+    if (!organization) return 'unknown'
+    const s = organization.toLowerCase()
 
     if (CDN_KEYWORDS.some(k => s.includes(k))) return 'cdn'
     if (CLOUD_KEYWORDS.some(k => s.includes(k))) return 'cloud'
     if (HOSTING_KEYWORDS.some(k => s.includes(k))) return 'hosting'
     if (MOBILE_KEYWORDS.some(k => s.includes(k))) return 'mobile'
     if (RESIDENTIAL_KEYWORDS.some(k => s.includes(k))) return 'residential'
-
     return 'unknown'
-}
-
-type Limit = number | {
-    GET?: number
-    POST?: number
-    PUT?: number
-    PATCH?: number
-    DELETE?: number
-}
-
-interface EndpointLimit {
-    pattern: string | URLPattern | ConstructorParameters<URLPattern>
-    limit: Limit
-}
-
-// Example
-import countryDb from './data/GeoLite2-Country.mmdb'
-import asnDb from './data/GeoLite2-ASN.mmdb'
-
-const config = {
-    getUserId(ctx) {
-        return ctx.req.headers.get('x-user-id')
-    },
-    getIpAddress(ctx) {
-        return ctx.req.headers.get('x-forwarded-for').split(',', 2)[0].trim()
-    },
-    getGlobalPeakConcurrentUsers(ctx) {
-        return ctx.db.query(/*sql*/)
-    },
-    maxmindCountryDatabase: countryDb,
-    maxmindAsnDatabase: asnDb,
-    addRetryAfterHeader: true,
-    baseBucketDurationMs: 6_000,
-    globalMaxPerUserQueries: 15,
-    anonUserIpMultiplier: 10,
-    buckets: [
-        {
-            durationMs: 30_000,
-            scale: 1,
-        },
-        {
-            durationMs: 1_000 * 60 * 5,
-            scale: .9,
-        },
-        {
-            durationMs: 1_000 * 60 * 75,
-            scale: .8,
-        },
-        {
-            durationMs: 1_000 * 60 * 60 * 20,
-            scale: .7,
-        },
-    ],
-    scales: {
-        country: {
-            US: .85,
-            CA: .10,
-            UK: .05,
-            unknown: .10,
-            other: .02,
-        },
-        asn: {
-            cloud: .2,
-            cdn: .1,
-            residential: 1,
-            unknown: .7,
-        },
-    },
-    endpointLimits: [
-        {
-            pattern: '/users/*',
-            limit: 5,
-        },
-        {
-            pattern: '/comments/*',
-            limit: {
-                GET: 10,
-                POST: 2,
-            }
-        }
-    ],
 }
 ```
 
-Here we specify each user can make a max of 15 queries per 6 seconds, but this is just used as the base reference point to calculate the buckets.
+---
 
-Buckets:
+## Keys / Dimensions
 
-1. 30_000/6_000*15*1 = 75 queries per 30 seconds (avg 2.5 QPS)
-2. 300000/6_000*15*.9 = 675 queries per 5 minutes (avg 2.25 QPS)
-3. 4500000/6_000*15*.8 = 9000 queries per 75 minutes (avg 2 QPS)
-4. 72000000/6_000*15*.7 = 126_000 queries per 20 hours (avg 1.75 QPS)
+For each request, derive these identifiers:
 
-These user the user's ID as a key for each bucket.
+* `userId` via `getUserId(ctx)`
 
-If the user is not logged in, then we use their IP address for the bucket key but with higher limits in case multiple users share an IP. The multiplier is specified in anonUserIpMultiplier.
+* `ipAddress` via `getIpAddress(ctx)` (or default implementation)
 
-Next we use the global peak concurrent users and multiply by the country scale. So for example if getGlobalPeakConcurrentUsers is 100, then the max for the first bucket for US would be:
+* `identityKey`:
 
-1. 30_000/6_000*15*100*1*.85 = 6375 queries per 30 seconds (which is 85x the per-user max)
+    * if userId truthy: `user:${userId}`
+    * else: `ip:${ipAddress}` and apply `anonymousIpMultiplier`
 
-`scales.country` needn't sum to one if you don't know your exact user distribution. If the country cannot be determined from the user's IP using the maxmind DB, the `unknown` limit will apply. If the country *can* be determined by isn't specified in `scales.country`, then `other` will apply. To be clear, there will be no "other" bucket in the cache, it will use the real country code but with the "other" limit. "unknown" (or "ZZ") will be a real bucket.
+* Subnet key (always):
 
-If `maxmindAsnDatabase` is set, then `getAsn` will use the default implementation, reading the maxmind database. If it's not set, the user can implement it themselves by defining `getAsn`. If neither are set, ASN limits will not apply.
+    * IPv4 /24: `ip24:${a}.${b}.${c}.0/24`
+    * IPv6 /64: parse IPv6 and compute first 4 hextets:
 
-Likewise for country.
+        * `ip64:${h1}:${h2}:${h3}:${h4}::/64`
+    * If IP parsing fails, use `subnet:unknown` (still a bucket)
+
+* Country key (if enabled):
+
+    * Resolve code `CC` or null
+    * If null => `country:unknown`
+    * Else => `country:${CC}` (scale uses either explicit CC, or `other` if not present)
+
+* ASN key (if enabled):
+
+    * Resolve `{asn, organization}` or null
+    * Key: `asn:${asn}` and class via `asnToClass`
+    * If null => `asn:unknown` and class `unknown`
+
+* Endpoint keys:
+
+    * Use `URLPattern` match against `ctx.req.url` (or equivalent). If multiple match, apply all (most strict wins).
+    * Build method/path keys:
+
+        * Without query: `route:${METHOD}:${pathname}`
+        * With normalized query: `routeq:${METHOD}:${pathname}?${normalizedQuery}`
+    * `normalizeQuery(url)` default:
+
+        * stable sort all query params by (key, value)
+        * preserve duplicates
+        * percent-encode key/value
+        * return `k=v&k2=v2...` (no leading '?')
+
+---
+
+## Enforcement / math
+
+Compute the base bucket max for each bucket:
+
+* `bucketMax = floor(baseMaxRequestsPerBaseWindow * (bucket.windowMs / baseWindowMs) * bucket.scale)`
+
+Then apply per-dimension multipliers:
+
+1. Identity bucket:
+
+* multiplier = `1` if authenticated
+* multiplier = `anonymousIpMultiplier` if anonymous
+* max = `bucketMax * multiplier`
+
+2. Subnet bucket (always):
+
+* base multiplier = `scales.subnet.ipv4|ipv6` depending on IP version
+* if ASN class known and `scales.subnet.byAsnClass` exists, multiply by `byAsnClass[class]` (or `unknown`)
+* max = `bucketMax * subnetMultiplier`
+
+3. Country bucket (optional):
+
+* multiplier = `getScale(countryCode)`:
+
+    * if code null => `scales.country.unknown`
+    * else if code present in scales.country => that
+    * else => `scales.country.other`
+* multiply by `globalPeakConcurrentUsers`
+* max = `bucketMax * globalPeakConcurrentUsers * multiplier`
+
+4. ASN class bucket (optional):
+
+* multiplier = `scales.asnClass[class]` or `scales.asnClass.unknown`
+* max = `bucketMax * multiplier`
+
+5. Endpoint bucket(s):
+
+* For each matching EndpointLimit:
+
+    * Convert its per-base-window limit into bucket-window max:
+
+        * `endpointBucketMax = floor(endpointBaseLimit * (bucket.windowMs / baseWindowMs) * bucket.scale)`
+    * Apply identity multiplier (anonymous multiplier if applicable)
+    * Enforce both:
+
+        * key including query normalized (route
