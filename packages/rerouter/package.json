@@ -29,5 +29,8 @@
         "test:gen": "run-s gen test:impl",
         "test": "run-s test:types test:gen",
         "lint": "bun run --bun eslint --fix --"
+    },
+    "dependencies": {
+        "maxmind": "^5.0.3"
     }
 }

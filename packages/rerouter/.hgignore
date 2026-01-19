@@ -12,6 +12,8 @@ syntax: regexp
 # Suffixes
 ~$
 \.log$
+\.mmdb$
+\.csv$
 \.tsbuildinfo$
 
 # All dotfiles except *ignore and *rc files
