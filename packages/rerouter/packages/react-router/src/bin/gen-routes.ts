@@ -6,15 +6,6 @@ import * as ts from 'typescript'
 import {$} from 'bun'
 import {parse} from 'path-to-regexp'
 
-type Token = any
-
-type __AllOrNone<T> =
-    | Required<T>
-    | { [K in keyof T]?: never }
-
-type __ParamType = string | number | boolean
-type __WildcardType = Iterable<__ParamType>
-
 type CompileOptions = {
     delimiter?: string
     encode?: string

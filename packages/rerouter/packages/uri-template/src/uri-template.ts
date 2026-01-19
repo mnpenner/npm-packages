@@ -8,7 +8,7 @@ const MODIFIER_RE = /(?<repeat>\*)?(?::(?<func>[a-zA-Z][a-zA-Z0-9_]*))?(?::(?:(?
       character. */
 
 const UNRESERVED = /[^a-zA-Z0-9\-._~]+/ugs
-const UR_SET = /[^a-zA-Z0-9\-._~:\/?#[\]@!$&'()*+,;=]+/ugs
+const UR_SET = /[^a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,;=]+/ugs
 const PERCENT_RE = /^%[0-9a-fA-F]{2}$/
 
 const STR = Symbol('string')
@@ -146,7 +146,7 @@ export class UriTemplate<P extends UriParams> {
                 vars: [],
             }
             this.expandParts.push(ph)
-            if (m[1] == null) throw new Error('Invalid UriTemplate placeholder')
+            if(m[1] == null) throw new Error('Invalid UriTemplate placeholder')
             let varStr = m[1]
             const prefix = varStr.match(PREFIX_RE)
             if(prefix) {
@@ -268,14 +268,14 @@ export class UriTemplate<P extends UriParams> {
         const out = []
         for(const p of this.expandParts) {
             switch(p.type) {
-                case VAR:
+                case VAR: {
                     const vs: string[] = []
                     for(const v of p.vars) {
-                            if(Object.hasOwn(variables, v.name)) {
-                                const x = variables[v.name]
-                                if(x == null) continue
+                        if(Object.hasOwn(variables, v.name)) {
+                            const x = variables[v.name]
+                            if(x == null) continue
                             const sep = v.repeat ? SeparatorMap[p.prefix]! : ','
-                            const esc = (x: Primitive|PrimitivePair) => percentEncodeRegExp(x, ReservedExpansion[p.prefix]!, v.length, v.repeat ? '=' : ',')
+                            const esc = (x: Primitive | PrimitivePair) => percentEncodeRegExp(x, ReservedExpansion[p.prefix]!, v.length, v.repeat ? '=' : ',')
                             let pre = ''
                             if(Named[p.prefix]) {
                                 pre = v.name + (isEmpty(x) ? IfEmp[p.prefix] : '=')
@@ -298,7 +298,7 @@ export class UriTemplate<P extends UriParams> {
                     if(vs.length) {
                         out.push(FirstMap[p.prefix]!, vs.join(SeparatorMap[p.prefix]!))
                     }
-                    break
+                } break
                 case STR:
                     out.push(p.value)
                     break
@@ -428,8 +428,8 @@ function isEmpty(x: any): x is null | undefined | '' | [] | {} {
 
 
 type Primitive = string | number | boolean | null
-type PrimitivePair = [key:string,value:Primitive]
-type PrimitiveMap = {[K in string]: Primitive}
+type PrimitivePair = [key: string, value: Primitive]
+type PrimitiveMap = { [K in string]: Primitive }
 export type UrlParamValue = Primitive | Primitive[] | PrimitivePair[] | PrimitiveMap;
 
 function escapeRegExp(string: string) {
@@ -445,7 +445,7 @@ export function fullWide(n: number): string {
     }
 }
 
-function percentEncodeRegExp(value: Primitive|PrimitivePair, reserved: boolean, length: number | null, separator: string): string {
+function percentEncodeRegExp(value: Primitive | PrimitivePair, reserved: boolean, length: number | null, separator: string): string {
     if(typeof value === 'number') {
         return fullWide(value)
     }
@@ -454,7 +454,7 @@ function percentEncodeRegExp(value: Primitive|PrimitivePair, reserved: boolean, 
     if(value == null) return ''
 
     if(Array.isArray(value)) {
-        return value.map(v => percentEncodeRegExp(v,reserved,length,separator)).join(separator)
+        return value.map(v => percentEncodeRegExp(v, reserved, length, separator)).join(separator)
     }
 
     if(length != null) {

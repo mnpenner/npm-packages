@@ -77,7 +77,7 @@ function sleep(ms: number): Promise<void> {
 router.add({
     pattern: '/gen',
     // method: HttpMethod.GET,
-    handler: async function* ({req}) {
+    handler: async function* () {
         // console.log('start')
         yield HttpStatus.OK
         // console.log('ok yielded')

@@ -3,7 +3,7 @@ import terser from '@rollup/plugin-terser';
 import {nodeResolve} from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import replace from '@rollup/plugin-replace';
-import pkgJson from './package.json' assert {type: 'json'}
+import pkgJson from './package.json' with {type: 'json'}
 
 const production = !process.env.ROLLUP_WATCH;
 

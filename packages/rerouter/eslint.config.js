@@ -25,7 +25,7 @@ export default defineConfig([
             globals: globals.es2026,
         },
         rules: {
-            'require-await': 'warn',
+            'require-await': 'off',
             'prefer-const': [
                 'warn',
                 {destructuring: 'all'},
