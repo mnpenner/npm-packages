@@ -456,7 +456,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         if (!handler) return null
         try {
             return await this.executeHandler(handler, [], ctx, router, request)
-        } catch (_err) {
+        } catch {
             return simpleStatus(HttpStatus.INTERNAL_SERVER_ERROR)
         }
     }
@@ -519,7 +519,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
 
         try {
             return await this.executeHandler(found.route.handler, found.middleware, handlerCtx, found.router, request)
-        } catch (_err) {
+        } catch {
             return await this.handleInternalError(found.router, handlerCtx, request)
         }
     }
@@ -580,7 +580,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         return { match: null, methodNotAllowed }
     }
 
-    private async run(
+    private run(
         handler: Handler<any, any, any, any, any, any>,
         middleware: ContextMiddleware<any, any>[],
         ctx: HandlerContext<any, Ctx>,

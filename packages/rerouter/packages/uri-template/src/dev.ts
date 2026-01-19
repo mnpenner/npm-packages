@@ -1,4 +1,3 @@
-import Chalk from 'chalk'
 
 // https://t-code.pl/blog/2016/11/Towards-server-side-routing-with-URI-Templates/
 // https://www.npmjs.com/package/urijs
@@ -39,7 +38,6 @@ import Chalk from 'chalk'
 
 
 import {UriTemplate} from "./uri-template"
-import log from './log'
 
 // const templ = new UriTemplate('/schedule/{year:int:4}-{month:int:2}-{day:int:2}{?foo,q*}');
 // log(templ);

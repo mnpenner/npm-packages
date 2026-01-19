@@ -1,4 +1,4 @@
-import {Router, type Handler} from '../src/index'
+import {Router} from '../src/index'
 import {zodRoute} from '../src/routes/zod'
 import {jsonResponse} from '../src/response/simple'
 import {z} from 'zod'

@@ -315,7 +315,7 @@ export class UriTemplate<P extends UriParams> {
         // console.log(`${JSON.stringify(url)}.match(${this.matchRegex})`);
         if(m !== null) {
             // log('m',m);
-            let params: Array<[string, UrlParamValue]> = []
+            const params: Array<[string, UrlParamValue]> = []
             if(m.groups != null) {
                 // log('m.groups',m.groups)
                 for(const [k, v] of Object.entries(m.groups)) {
@@ -463,7 +463,7 @@ function percentEncodeRegExp(value: Primitive|PrimitivePair, reserved: boolean, 
 
     if(reserved) {
         return value.replace(/%[0-9a-fA-F]{2}|./ugs, m => {
-            let v = PERCENT_RE.test(m) ? decodeURIComponent(m) : m
+            const v = PERCENT_RE.test(m) ? decodeURIComponent(m) : m
             if(UR_SET.test(v)) {
                 return percentEncode(v)
             }
