@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bun test
 import {describe, expect, it} from 'bun:test'
-import {mediaTypeMatches, normalizeCharset, parseMediaType} from './media-type'
+import {mediaTypeMatches, normalizeCharset, parseAcceptHeader, parseMediaType} from './media-type'
 
 describe(parseMediaType.name, function () {
     it('parses types with parameters', function () {
@@ -24,6 +24,14 @@ describe(parseMediaType.name, function () {
         const media = parseMediaType('application/json')
         expect(media).toEqual({
             type: 'application/json',
+        })
+    })
+
+    it('parses q parameters', function () {
+        const media = parseMediaType('application/json; q=0.7')
+        expect(media).toEqual({
+            type: 'application/json',
+            q: 0.7,
         })
     })
 })
@@ -52,5 +60,19 @@ describe(normalizeCharset.name, function () {
         const accept = parseMediaType('application/json')!
         const contentType = parseMediaType('text/plain')!
         expect(mediaTypeMatches(accept, contentType)).toBe(false)
+    })
+})
+
+describe(parseAcceptHeader.name, function () {
+    it('sorts by descending q and preserves order for ties', function () {
+        const accept = parseAcceptHeader(
+            'text/plain;q=0.5, application/json, text/html;q=0.9, image/png;q=0.9',
+        )
+        expect(accept).toEqual([
+            {type: 'application/json', q: 1},
+            {type: 'text/html', q: 0.9},
+            {type: 'image/png', q: 0.9},
+            {type: 'text/plain', q: 0.5},
+        ])
     })
 })

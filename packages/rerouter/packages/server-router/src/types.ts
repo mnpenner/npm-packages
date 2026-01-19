@@ -105,6 +105,7 @@ export type MediaType = {
     type: string
     charset?: string
     boundary?: string
+    q?: number
 }
 
 /**
