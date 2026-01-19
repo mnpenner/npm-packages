@@ -351,7 +351,17 @@ function extractRoutesFromRouterSymbol(
                 return
             }
 
-            if (methodName === 'add') {
+            const verbMethodMap: Record<string, HttpMethod> = {
+                get: HttpMethod.GET,
+                head: HttpMethod.HEAD,
+                post: HttpMethod.POST,
+                put: HttpMethod.PUT,
+                delete: HttpMethod.DELETE,
+                patch: HttpMethod.PATCH,
+            }
+            const verbMethod = verbMethodMap[methodName]
+
+            if (methodName === 'add' || verbMethod) {
                 const [arg] = node.arguments
                 const routeOptions = arg ? resolveRouteOptionsExpression(arg, checker) : undefined
                 if (routeOptions) {
@@ -363,7 +373,7 @@ function extractRoutesFromRouterSymbol(
                     const pathSchemaNode = getProp(routeOptions, 'pathParams')
                     const querySchemaNode = getProp(routeOptions, 'query')
 
-                    const method = readHttpMethod(methodNode) ?? HttpMethod.GET
+                    const method = verbMethod ?? readHttpMethod(methodNode) ?? HttpMethod.GET
                     const localPattern = patternNode && ts.isStringLiteralLike(patternNode) ? patternNode.text : '/'
                     const pattern = joinPrefixPathname(prefix, localPattern)
 
@@ -631,6 +641,7 @@ function emitClass(node: RouteNode, parts: string[], options: BuildOptions, line
 function buildApiClientSource(routes: ExtractedRouteMeta[], options: BuildOptions): string {
     const processedRoutes: ProcessedRouteMeta[] = routes.map(route => ({
         ...route,
+        successType: route.method === HttpMethod.HEAD ? 'never' : route.successType,
         typeBase: routeTypeBaseName(route),
         pathParams: getPathParamNames(route.pattern),
     }))

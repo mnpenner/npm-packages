@@ -27,6 +27,18 @@ export type GetJsonHelperResponse = { message: string; }
 export type PostJsonHelperZodRequest = { tag: string; }
 export type PostJsonHelperZodResponse = { ok: boolean; tag: string; }
 
+export type GetHealthResponse = unknown
+
+export type HeadHealthResponse = never
+
+export type PostSubmitResponse = unknown
+
+export type PutItemsByIdResponse = unknown
+
+export type DeleteItemsByIdResponse = unknown
+
+export type PatchItemsByIdResponse = unknown
+
 export type GetGenResponse = unknown
 
 export class ApiClient {
@@ -50,6 +62,18 @@ export class ApiClient {
 
     get jsonHelperZod(): ApiClient_JsonHelperZod {
         return new ApiClient_JsonHelperZod(this.fetcher)
+    }
+
+    get health(): ApiClient_Health {
+        return new ApiClient_Health(this.fetcher)
+    }
+
+    get submit(): ApiClient_Submit {
+        return new ApiClient_Submit(this.fetcher)
+    }
+
+    get itemsById(): ApiClient_ItemsById {
+        return new ApiClient_ItemsById(this.fetcher)
     }
 
     get gen(): ApiClient_Gen {
@@ -124,6 +148,54 @@ class ApiClient_JsonHelperZod {
             headers: { "content-type": "application/json" },
             body: JSON.stringify(body),
         }) as PromisedResponse<PostJsonHelperZodResponse>
+    }
+}
+
+class ApiClient_Health {
+    constructor(private readonly fetcher: Fetcher) {}
+    get() {
+        return this.fetcher.fetch("/health", {
+            method: "GET",
+        }) as PromisedResponse<GetHealthResponse>
+    }
+
+    head() {
+        return this.fetcher.fetch("/health", {
+            method: "HEAD",
+        }) as PromisedResponse<HeadHealthResponse>
+    }
+}
+
+class ApiClient_Submit {
+    constructor(private readonly fetcher: Fetcher) {}
+    post() {
+        return this.fetcher.fetch("/submit", {
+            method: "POST",
+        }) as PromisedResponse<PostSubmitResponse>
+    }
+}
+
+class ApiClient_ItemsById {
+    constructor(private readonly fetcher: Fetcher) {}
+    put(path: any | any) {
+        const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { id: path } as any
+        return this.fetcher.fetch(`/items/${_path.id}`, {
+            method: "PUT",
+        }) as PromisedResponse<PutItemsByIdResponse>
+    }
+
+    delete(path: any | any) {
+        const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { id: path } as any
+        return this.fetcher.fetch(`/items/${_path.id}`, {
+            method: "DELETE",
+        }) as PromisedResponse<DeleteItemsByIdResponse>
+    }
+
+    patch(path: any | any) {
+        const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { id: path } as any
+        return this.fetcher.fetch(`/items/${_path.id}`, {
+            method: "PATCH",
+        }) as PromisedResponse<PatchItemsByIdResponse>
     }
 }
 

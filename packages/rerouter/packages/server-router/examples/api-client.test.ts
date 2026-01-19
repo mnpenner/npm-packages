@@ -54,6 +54,24 @@ describe('api-client.gen', () => {
         expectType<TypeEqual<typeof jsonHelperZodData, {ok: boolean, tag: string}>>(true)
         expect(jsonHelperZodData).toEqual({ok: true, tag: 'alpha'})
 
+        const healthResponse = await client.health.get()
+        expect(await healthResponse.text()).toEqual('ok')
+
+        const healthHeadResponse = await client.health.head()
+        expect(await healthHeadResponse.text()).toEqual('')
+
+        const submitResponse = await client.submit.post()
+        expect(await submitResponse.text()).toEqual('submitted')
+
+        const putResponse = await client.itemsById.put(123)
+        expect(await putResponse.text()).toEqual('updated')
+
+        const deleteResponse = await client.itemsById.delete(123)
+        expect(await deleteResponse.text()).toEqual('deleted')
+
+        const patchResponse = await client.itemsById.patch(123)
+        expect(await patchResponse.text()).toEqual('patched')
+
         const genResponse = await client.gen.get()
         expect(await genResponse.text()).toEqual('herro')
 
@@ -79,6 +97,12 @@ describe('api-client.gen', () => {
                     body: JSON.stringify({tag: 'alpha'}),
                 },
             },
+            {url: '/health', init: {method: 'GET'}},
+            {url: '/health', init: {method: 'HEAD'}},
+            {url: '/submit', init: {method: 'POST'}},
+            {url: '/items/123', init: {method: 'PUT'}},
+            {url: '/items/123', init: {method: 'DELETE'}},
+            {url: '/items/123', init: {method: 'PATCH'}},
             {url: '/gen', init: {method: 'GET'}},
         ])
     })
