@@ -1,26 +1,32 @@
-import type {ContextMiddleware} from '../types'
+import type {AnyContext, ContextMiddleware, OneOrMany} from '../types'
+import {toArray} from '@mpen/server-router/lib/collections'
 
 declare global {
-    var _requestCounter: number | undefined
+    var _requestCounter: number
 }
 
 globalThis._requestCounter ??= 0
 
-/**
- * Add an incrementing request id to the router context.
- *
- * @example
- * ```ts
- * const router = new Router().use(addRequestId())
- * router.add({
- *   pattern: '/',
- *   handler: ctx => new Response(String(ctx.requestId)),
- * })
- * ```
- *
- * @returns Middleware that adds `requestId` to the request context.
- */
-export const requestIdCtx = (): ContextMiddleware<{requestId: number}> => ctx => {
-    ctx.requestId = (globalThis._requestCounter ?? 0) + 1
-    globalThis._requestCounter = ctx.requestId
+export interface RequestIdCtxOptions<Ctx extends object = AnyContext> {
+    /**
+     * Header(s) to check for a Request ID. Defaults to "x-request-id"
+     */
+    requestIdHeader?: OneOrMany<string>
+}
+
+export function requestIdCtx<Ctx extends object = AnyContext>(
+    options: RequestIdCtxOptions<Ctx> = {}
+): ContextMiddleware<{ requestId: string }> {
+    const headers = toArray(options.requestIdHeader ?? 'x-request-id')
+
+    return ctx => {
+        let headerId: string | null = null
+
+        for (const name of headers) {
+            headerId = ctx.req.headers.get(name)
+            if (headerId !== null) break
+        }
+
+        ctx.requestId = headerId ?? (++globalThis._requestCounter).toString(36)
+    }
 }
