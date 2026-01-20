@@ -611,6 +611,21 @@ describe('Router.fetch', () => {
         expect(boundRouter === router).toBe(true)
     })
 
+    it('handles unbound fetch usage', async () => {
+        const router = new Router()
+        router.add({
+            method: HttpMethod.GET,
+            pattern: '/ping',
+            handler: () => new Response('ok'),
+        })
+
+        const fetch = router.fetch
+        const response = await fetch(new Request('https://example.com/ping'))
+
+        expect(response.status).toBe(HttpStatus.OK)
+        expect(await response.text()).toBe('ok')
+    })
+
     it('binds handlers to mounted routers', async () => {
         const parent = new Router()
         const child = new Router()

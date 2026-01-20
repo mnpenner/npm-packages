@@ -1,5 +1,6 @@
 import type {AnyContext, ContextMiddleware} from '..'
 import {randomUUID} from 'node:crypto'
+import chalk from 'chalk'
 
 const enum LogLevel {
     TRACE = 'trace',
@@ -63,7 +64,7 @@ function prettyJsonLogger(entry: LogEntry) {
 }
 
 function prettyConsoleLogger(entry: LogEntry) {
-    console.log(entry)
+    console.log('qqq',entry)
     // TODO: format for terminal
 }
 

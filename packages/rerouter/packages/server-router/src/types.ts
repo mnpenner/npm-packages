@@ -237,8 +237,8 @@ export type HandlerResult<TOkRes = unknown> =
  * @returns A response or streaming generator that yields response metadata.
  */
 export type Handler<
-    TReqBody=unknown,
-    TReqPath=unknown,
+    TReqBody=unknown,  // FIXME: remove unused params..?
+    TReqPath=unknown,  // how is it that TReqPath is used?
     TReqQuery=unknown,
     TOkRes=unknown,
     TErr = unknown,

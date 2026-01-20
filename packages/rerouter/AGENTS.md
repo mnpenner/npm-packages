@@ -11,6 +11,8 @@
   - Add tests when implementing new features or fixing bugs. Tests go in the matching `<filename>.test.ts` file.
   - There should be one `describe` block per function/method. You may nest `describe` blocks as needed.
   - Run `bun run test` after making changes and fix any errors
+- Code Style
+  - Private members should be prefixed with `_`
 - Doc Comments
   - Add detailed JSDoc comments with @param and @returns to all public APIs, including all function overloads
   - The public API is the `entry` point(s) listed in `tsdown.config.ts`

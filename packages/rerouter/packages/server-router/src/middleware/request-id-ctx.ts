@@ -37,7 +37,7 @@ export interface RequestIdCtxOptions<Ctx extends object = AnyContext> {
      * Custom request id generator used when no read header is present.
      * Receives the request context along with prefix and counter metadata.
      */
-    generate?: (ctx: RequestContext<Ctx & {requestId?: string}>, xtra: ExtraContext) => string
+    generate?: (ctx: RequestContext<Ctx>, xtra: ExtraContext) => string
 }
 
 function isBodyChunk(value: unknown): value is Uint8Array | string {
@@ -98,6 +98,15 @@ function wrapGeneratorWithRequestId(
     return wrapped()
 }
 
+function defaultRequestIdGenerator(ctx: RequestContext, extra: ExtraContext) {
+    let requestId = `${extra.hotReloadCounter}.${extra.requestCounter}`
+    if(extra.prefix) requestId = `${extra.prefix}.${requestId}`
+    return requestId
+}
+
+// TEST: curl -H "x-request-id: SAMPLE_REQUEST_ID" http://localhost:3000
+// x-request-id should be set by Envoy: https://gateway.envoyproxy.io/docs/api/extension_types/#requestidaction
+
 /**
  * Attach a request id to the context and optionally mirror it in the response headers.
  *
@@ -116,33 +125,33 @@ function wrapGeneratorWithRequestId(
 export function requestIdCtx<Ctx extends object = AnyContext>(
     options: RequestIdCtxOptions<Ctx> = {}
 ): ContextMiddleware<{ requestId: string }> {
-    const prefix = options.prefix ?? 'req'
+    const prefix = options.prefix ?? ''
     const headers = options.readHeaderName === undefined
         ? ['x-request-id', 'x-trace-id', 'traceparent']
         : (options.readHeaderName ? toArray(options.readHeaderName) : [])
 
     let requestCounter = 0
     const hotReloadCounter = globalThis._reloadCounter
-    const generate = (ctx: RequestContext<Ctx & {requestId?: string}>) => {
+    const generate = (ctx: RequestContext<Ctx>) => {
         const extra: ExtraContext = {
             prefix,
             hotReloadCounter,
             requestCounter: ++requestCounter,
         }
-        if (options.generate) return options.generate(ctx, extra)
-        return `${extra.prefix}.${extra.hotReloadCounter}.${extra.requestCounter}`
+        return (options.generate ?? defaultRequestIdGenerator)(ctx, extra)
     }
 
     if (!options.writeHeaderName) {
         return ctx => {
             let headerId: string | null = null
 
+            // FIXME: we shouldn't read the headers if options.generate is defined. User can impl this themselves. `readHeaderName` should be mutually exclusive with `generate`
             for (const name of headers) {
                 headerId = ctx.req.headers.get(name)
                 if (headerId !== null) break
             }
 
-            ctx.requestId = headerId ?? generate(ctx)
+            ctx.requestId = headerId ?? generate(ctx) // FIXME: TS error here.
         }
     }
 

@@ -29,7 +29,8 @@
     }
   },
   "dependencies": {
-    "@mpen/http-helpers": "*"
+    "@mpen/http-helpers": "*",
+    "chalk": "^5.6.2"
   },
   "scripts": {
     "build": "tsdown",
