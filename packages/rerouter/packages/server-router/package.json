@@ -18,8 +18,14 @@
     "zod": "^4.3.5"
   },
   "peerDependencies": {
+    "maxmind": "^5.0.3",
     "typescript": "^5",
     "zod": "^4.3.5"
+  },
+  "peerDependenciesMeta": {
+    "maxmind": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@mpen/http-helpers": "*"
