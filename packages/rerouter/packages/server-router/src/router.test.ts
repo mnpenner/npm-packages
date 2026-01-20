@@ -422,10 +422,7 @@ describe('Router', () => {
 describe('Router.get', () => {
     it('registers GET routes', async () => {
         const router = new Router()
-        router.get({
-            pattern: '/get',
-            handler: () => new Response('ok'),
-        })
+        router.get('/get', () => new Response('ok'))
 
         const [route] = router.getRoutes()
         expect(route?.method).toBe(HttpMethod.GET)
@@ -438,10 +435,7 @@ describe('Router.get', () => {
 describe('Router.head', () => {
     it('registers HEAD routes', async () => {
         const router = new Router()
-        router.head({
-            pattern: '/head',
-            handler: () => new Response('ok'),
-        })
+        router.head('/head', () => new Response('ok'))
 
         const [route] = router.getRoutes()
         expect(route?.method).toBe(HttpMethod.HEAD)
@@ -454,10 +448,7 @@ describe('Router.head', () => {
 describe('Router.post', () => {
     it('registers POST routes', async () => {
         const router = new Router()
-        router.post({
-            pattern: '/post',
-            handler: () => new Response('ok'),
-        })
+        router.post('/post', () => new Response('ok'))
 
         const [route] = router.getRoutes()
         expect(route?.method).toBe(HttpMethod.POST)
@@ -470,10 +461,7 @@ describe('Router.post', () => {
 describe('Router.put', () => {
     it('registers PUT routes', async () => {
         const router = new Router()
-        router.put({
-            pattern: '/put',
-            handler: () => new Response('ok'),
-        })
+        router.put('/put', () => new Response('ok'))
 
         const [route] = router.getRoutes()
         expect(route?.method).toBe(HttpMethod.PUT)
@@ -486,10 +474,7 @@ describe('Router.put', () => {
 describe('Router.delete', () => {
     it('registers DELETE routes', async () => {
         const router = new Router()
-        router.delete({
-            pattern: '/delete',
-            handler: () => new Response('ok'),
-        })
+        router.delete('/delete', () => new Response('ok'))
 
         const [route] = router.getRoutes()
         expect(route?.method).toBe(HttpMethod.DELETE)
@@ -502,10 +487,7 @@ describe('Router.delete', () => {
 describe('Router.patch', () => {
     it('registers PATCH routes', async () => {
         const router = new Router()
-        router.patch({
-            pattern: '/patch',
-            handler: () => new Response('ok'),
-        })
+        router.patch('/patch', () => new Response('ok'))
 
         const [route] = router.getRoutes()
         expect(route?.method).toBe(HttpMethod.PATCH)

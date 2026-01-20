@@ -361,7 +361,7 @@ function extractRoutesFromRouterSymbol(
             }
             const verbMethod = verbMethodMap[methodName]
 
-            if (methodName === 'add' || verbMethod) {
+            if (methodName === 'add') {
                 const [arg] = node.arguments
                 const routeOptions = arg ? resolveRouteOptionsExpression(arg, checker) : undefined
                 if (routeOptions) {
@@ -373,7 +373,7 @@ function extractRoutesFromRouterSymbol(
                     const pathSchemaNode = getProp(routeOptions, 'pathParams')
                     const querySchemaNode = getProp(routeOptions, 'query')
 
-                    const method = verbMethod ?? readHttpMethod(methodNode) ?? HttpMethod.GET
+                    const method = readHttpMethod(methodNode) ?? HttpMethod.GET
                     const localPattern = patternNode && ts.isStringLiteralLike(patternNode) ? patternNode.text : '/'
                     const pattern = joinPrefixPathname(prefix, localPattern)
 
@@ -409,6 +409,92 @@ function extractRoutesFromRouterSymbol(
                     routes.push({
                         name,
                         method,
+                        pattern,
+                        bodyType: bodyTypeText,
+                        pathType: pathTypeText,
+                        queryType: queryTypeText,
+                        successType: successTypeText,
+                        errorType: errorTypeText,
+                    })
+                }
+            } else if (verbMethod) {
+                const [patternArg, handlerArg] = node.arguments
+                const routeOptions = patternArg ? resolveRouteOptionsExpression(patternArg, checker) : undefined
+                if (routeOptions) {
+                    const patternNode = getProp(routeOptions, 'pattern')
+                    const nameNode = getProp(routeOptions, 'name')
+                    const handlerNode = getProp(routeOptions, 'handler')
+                    const bodySchemaNode = getProp(routeOptions, 'body')
+                    const pathSchemaNode = getProp(routeOptions, 'pathParams')
+                    const querySchemaNode = getProp(routeOptions, 'query')
+
+                    const localPattern = patternNode && ts.isStringLiteralLike(patternNode) ? patternNode.text : '/'
+                    const pattern = joinPrefixPathname(prefix, localPattern)
+
+                    const handlerType = handlerNode ? getContextualHandlerType(handlerNode, checker) : undefined
+                    const typeArgs = handlerType ? getHandlerTypeArguments(handlerType) : undefined
+                    const [bodyType, pathType, queryType, successType, errorTypeArg] = typeArgs ?? []
+                    const errorType = errorTypeArg ?? (handlerType ? getHandlerErrorType(handlerType, checker) : undefined)
+                    const handlerJsonReturnType = handlerNode ? getHandlerJsonReturnType(handlerNode, checker) : undefined
+
+                    const explicitName = nameNode ? parseNameNode(nameNode) : undefined
+                    const name = explicitName
+                        ? sanitizeNameParts(explicitName)
+                        : pattToName(verbMethod, { pathname: pattern } as any)
+
+                    const bodyTypeText =
+                        getTypeTextOrFallback(bodyType, checker, handlerNode)
+                        ?? getZodOutputTypeText(bodySchemaNode, checker, routeOptions)
+                        ?? 'unknown'
+                    const pathTypeText =
+                        getTypeTextOrFallback(pathType, checker, handlerNode)
+                        ?? getZodOutputTypeText(pathSchemaNode, checker, routeOptions)
+                        ?? 'unknown'
+                    const queryTypeText =
+                        getTypeTextOrFallback(queryType, checker, handlerNode)
+                        ?? getZodOutputTypeText(querySchemaNode, checker, routeOptions)
+                        ?? 'unknown'
+                    const successTypeText =
+                        getTypeTextOrFallback(successType, checker, handlerNode)
+                        ?? getTypeTextOrFallback(handlerJsonReturnType, checker, handlerNode)
+                        ?? 'unknown'
+                    const errorTypeText = getTypeTextOrFallback(errorType, checker, handlerNode) ?? 'unknown'
+
+                    routes.push({
+                        name,
+                        method: verbMethod,
+                        pattern,
+                        bodyType: bodyTypeText,
+                        pathType: pathTypeText,
+                        queryType: queryTypeText,
+                        successType: successTypeText,
+                        errorType: errorTypeText,
+                    })
+                } else if (patternArg) {
+                    const localPattern = ts.isStringLiteralLike(patternArg) ? patternArg.text : '/'
+                    const pattern = joinPrefixPathname(prefix, localPattern)
+                    const handlerNode = handlerArg
+
+                    const handlerType = handlerNode ? getContextualHandlerType(handlerNode, checker) : undefined
+                    const typeArgs = handlerType ? getHandlerTypeArguments(handlerType) : undefined
+                    const [bodyType, pathType, queryType, successType, errorTypeArg] = typeArgs ?? []
+                    const errorType = errorTypeArg ?? (handlerType ? getHandlerErrorType(handlerType, checker) : undefined)
+                    const handlerJsonReturnType = handlerNode ? getHandlerJsonReturnType(handlerNode, checker) : undefined
+
+                    const name = pattToName(verbMethod, { pathname: pattern } as any)
+
+                    const bodyTypeText = getTypeTextOrFallback(bodyType, checker, handlerNode) ?? 'unknown'
+                    const pathTypeText = getTypeTextOrFallback(pathType, checker, handlerNode) ?? 'unknown'
+                    const queryTypeText = getTypeTextOrFallback(queryType, checker, handlerNode) ?? 'unknown'
+                    const successTypeText =
+                        getTypeTextOrFallback(successType, checker, handlerNode)
+                        ?? getTypeTextOrFallback(handlerJsonReturnType, checker, handlerNode)
+                        ?? 'unknown'
+                    const errorTypeText = getTypeTextOrFallback(errorType, checker, handlerNode) ?? 'unknown'
+
+                    routes.push({
+                        name,
+                        method: verbMethod,
                         pattern,
                         bodyType: bodyTypeText,
                         pathType: pathTypeText,

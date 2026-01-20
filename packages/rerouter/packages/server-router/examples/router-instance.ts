@@ -70,35 +70,17 @@ router.add(zodRoute({
     method: HttpMethod.POST,
 }))
 
-router.get({
-    pattern: '/health',
-    handler: () => new Response('ok'),
-})
+router.get('/health', () => new Response('ok'))
 
-router.head({
-    pattern: '/health',
-    handler: () => new Response(null),
-})
+router.head('/health', () => new Response(null))
 
-router.post({
-    pattern: '/submit',
-    handler: () => new Response('submitted'),
-})
+router.post('/submit', () => new Response('submitted'))
 
-router.put({
-    pattern: '/items/:id',
-    handler: () => new Response('updated'),
-})
+router.put('/items/:id', () => new Response('updated'))
 
-router.delete({
-    pattern: '/items/:id',
-    handler: () => new Response('deleted'),
-})
+router.delete('/items/:id', () => new Response('deleted'))
 
-router.patch({
-    pattern: '/items/:id',
-    handler: () => new Response('patched'),
-})
+router.patch('/items/:id', () => new Response('patched'))
 
 function sleep(ms: number): Promise<void> {
     return new Promise<void>(resolve => setTimeout(resolve, ms))

@@ -12,6 +12,8 @@ syntax: regexp
 # Suffixes
 ~$
 \.log$
+\.zip$
+\.gz$
 \.mmdb$
 \.csv$
 \.tsbuildinfo$
