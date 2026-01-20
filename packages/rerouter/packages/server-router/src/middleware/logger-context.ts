@@ -68,7 +68,10 @@ function prettyJsonLogger(entry: LogEntry) {
 }
 
 function prettyConsoleLogger(entry: LogEntry) {
+    // TODO: if request id is the same as last request, then show relative time, like +4ms.
+    // TODO: colorize request IDs or maybe put a divider between requests
     const { timestamp, level, path, message, data, context, filepath, line_no } = entry;
+    const { request_id } = context;
     const date = new Date(timestamp);
     const timeStr = date.toISOString().replace('T', ' ').replace('Z', '');
 
@@ -84,6 +87,7 @@ function prettyConsoleLogger(entry: LogEntry) {
 
     const levelStr = level.toUpperCase().padEnd(5);
     const coloredLevel = levelColors[level] ? levelColors[level](levelStr) : levelStr;
+    const requestIdStr = request_id ? chalk.gray(` (${request_id})`) : '';
 
     const pathStr = path && path.length > 0 ? chalk.gray(`[/${path.join('/')}]`) : '';
     const locationStr = filepath ? chalk.gray(`${filepath}${line_no ? ':' + line_no : ''}`) : '';
@@ -96,7 +100,7 @@ function prettyConsoleLogger(entry: LogEntry) {
             if (item instanceof Error) {
                 dataStr += '\n' + chalk.bgRed.white(` ${item.name} `) + ' ' + item.message + '\n' + chalk.gray(item.stack || '');
             } else if (typeof item === 'object' && item !== null && Object.keys(item).length > 0) {
-                dataStr += '\n' + inspect(item, { colors: true, depth: null });
+                dataStr += '\n' + inspect(item, { colors: true, depth: 8, maxStringLength: 80 });
             } else {
                 const inspected = inspect(item, { colors: true });
                 if (inspected !== '{}') {
@@ -106,11 +110,11 @@ function prettyConsoleLogger(entry: LogEntry) {
         }
     }
 
-    const firstLine = `${chalk.gray(timeStr)} ${coloredLevel} ${pathStr} ${locationStr} ${msgStr}`.trimEnd();
+    const firstLine = `${chalk.gray(timeStr)} ${coloredLevel}${requestIdStr} ${pathStr} ${locationStr} ${msgStr}`.trimEnd();
 
     if (dataStr) {
         // Indent subsequent lines
-        const indent = ' '.repeat(timeStr.length + 1 + levelStr.length + 1);
+        const indent = ' '.repeat(2);
         const indentedData = dataStr.split('\n').map((line, i) => i === 0 ? line : indent + line).join('\n');
         console.log(firstLine + indentedData);
     } else {
@@ -182,7 +186,7 @@ class Logger {
         const spanId = randomUUID()
         const entry: LogEntry = {
             span_id: spanId,
-            context: {...this._context},
+            context: this._context,
             level,
             timestamp: Date.now(),
             path: this._path,
@@ -233,6 +237,5 @@ export function loggerCtx<Ctx extends object = AnyContext>(
     return ctx => {
         ctx.logger = new Logger(logFn, options.name ? [options.name] : [], options.context ?? Object.create(null), null, rootPath)
         if(ctx.requestId) ctx.logger.set('request_id', ctx.requestId)
-        if((ctx as any).request_id) ctx.logger.set('request_id', (ctx as any).request_id)
     }
 }

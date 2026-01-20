@@ -16,12 +16,8 @@ const router = new Router()
     .get('/ping', () => plainTextResponse('pong'))
 
     .get('/', ctx => {
-        ctx.logger.info('hello',{foo:'bar'},234,[4,5,6], new Set([7,8]))
-        ctx.logger.warn('warning')
-        ctx.logger.error('err0r')
-        const sub = ctx.logger.withName('sub')
-        sub.debug('sub info')
-        sub.withName('sub2').trace('sub info 2')
+        const logger = ctx.logger.withName('root')
+        logger.info(Object.fromEntries(ctx.req.headers as any))
         return plainTextResponse('Hello World!')
     })
 
