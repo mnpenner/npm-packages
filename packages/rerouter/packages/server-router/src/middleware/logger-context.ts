@@ -1,5 +1,6 @@
 import type {AnyContext, ContextMiddleware} from '..'
 import {randomUUID} from 'node:crypto'
+import {inspect} from 'node:util'
 import chalk from 'chalk'
 
 const enum LogLevel {
@@ -23,7 +24,7 @@ interface LogEntry {
     parent_span_id?: string
     level: LogLevel // or is "severity" better/more standard?
     message?: string
-    data?: any
+    data?: any[]
     timestamp: number
     context: Record<string, any>
     path: string[]
@@ -64,8 +65,43 @@ function prettyJsonLogger(entry: LogEntry) {
 }
 
 function prettyConsoleLogger(entry: LogEntry) {
-    console.log('qqq',entry)
-    // TODO: format for terminal
+    const { timestamp, level, path, message, data, context } = entry;
+    const date = new Date(timestamp);
+    const timeStr = date.toISOString().replace('T', ' ').replace('Z', '');
+    
+    const levelColors: Record<LogLevel, typeof chalk> = {
+        [LogLevel.TRACE]: chalk.gray,
+        [LogLevel.DEBUG]: chalk.blue,
+        [LogLevel.INFO]: chalk.green,
+        [LogLevel.WARN]: chalk.yellow,
+        [LogLevel.ERROR]: chalk.red,
+        [LogLevel.FATAL]: chalk.bgRed.white,
+    };
+
+    const levelStr = level.toUpperCase().padEnd(5);
+    const coloredLevel = levelColors[level] ? levelColors[level](levelStr) : levelStr;
+    
+    const pathStr = path && path.length > 0 ? chalk.gray(`[/${path.join('/')}]`) : '';
+    const msgStr = message ? message : '';
+    
+    let dataStr = '';
+    if (data !== undefined) {
+        const items = Array.isArray(data) ? data : [data];
+        for (const item of items) {
+            if (item instanceof Error) {
+                dataStr += '\n' + chalk.bgRed.white(` ${item.name} `) + ' ' + item.message + '\n' + chalk.gray(item.stack || '');
+            } else if (typeof item === 'object' && item !== null && Object.keys(item).length > 0) {
+                dataStr += '\n' + inspect(item, { colors: true, depth: null });
+            } else {
+                const inspected = inspect(item, { colors: true });
+                if (inspected !== '{}') {
+                    dataStr += ' ' + inspected;
+                }
+            }
+        }
+    }
+
+    console.log(`${chalk.gray(timeStr)} ${coloredLevel} ${pathStr} ${msgStr}${dataStr}`);
 }
 
 
@@ -125,19 +161,20 @@ class Logger {
         return this._log(LogLevel.FATAL, data)
     }
 
-    private _log(level: LogLevel, vars: any[]) {
+    private _log(level: LogLevel, data: any[]) {
         const spanId = randomUUID()
         const entry: LogEntry = {
             span_id: spanId,
-            context: this._context,
+            context: {...this._context},
             level,
             timestamp: Date.now(),
+            path: this._path,
         }
         if(this._parentEntry) entry.parent_span_id = this._parentEntry.span_id
-        if(vars.length === 0 && typeof vars[0] === 'string') {
-            entry.message = vars[0]
+        if(data.length === 1 && typeof data[0] === 'string') {
+            entry.message = data[0]
         } else {
-            entry.data = vars
+            entry.data = data
         }
         this._write(entry)
         return new Logger(this._write, this._path, this._context, entry)
