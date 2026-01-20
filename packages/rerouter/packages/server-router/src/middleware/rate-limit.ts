@@ -275,17 +275,30 @@ function cleanIpAddress(ip: string): string {
     }
     const zoneIndex = value.indexOf('%')
     if (zoneIndex !== -1) value = value.slice(0, zoneIndex)
-    if (value.includes('.') && value.split(':').length === 2) {
-        const segment = value.split(':')[0]
-        if (!segment) return 'unknown'
-        value = segment
+    if (value.includes('.')) {
+        const lastSegment = value.split(':').pop()?.trim()
+        if (lastSegment && parseIpv4Address(lastSegment)) return lastSegment
+        if (value.split(':').length === 2) {
+            const segment = value.split(':')[0]
+            if (!segment) return 'unknown'
+            value = segment
+        }
     }
     return value
 }
 
 function normalizeQueryString(url: URL): string {
-    const query = url.searchParams.toString()
-    return query
+    const entries = Array.from(url.searchParams.entries())
+    entries.sort((a, b) => {
+        const keyCompare = a[0].localeCompare(b[0])
+        if (keyCompare !== 0) return keyCompare
+        return a[1].localeCompare(b[1])
+    })
+    const normalized = new URLSearchParams()
+    for (const [key, value] of entries) {
+        normalized.append(key, value)
+    }
+    return normalized.toString()
 }
 
 function getBucketMax(baseMax: number, baseWindowMs: number, bucket: RateBucket): number {
@@ -303,7 +316,9 @@ async function applyFixedWindowLimit<C>(
     windowMs: number,
     max: number,
     ttlMs: number,
-    nowMs: number
+    nowMs: number,
+    ttlOverrideMs?: number,
+    useWindowAlignedTtl = false
 ): Promise<{allowed: boolean; resetAtMs: number}> {
     const stored = await storage.readCounter(ctx, key)
     const resetAtMs = getBucketResetAt(nowMs, windowMs)
@@ -313,7 +328,11 @@ async function applyFixedWindowLimit<C>(
             : {resetAtMs, count: 0}
     const nextCount = counter.count + 1
     const updated: FixedWindowCounter = {resetAtMs: counter.resetAtMs, count: nextCount}
-    await storage.writeCounter(ctx, key, updated, ttlMs)
+    const ttlBase = useWindowAlignedTtl
+        ? Math.max(1, counter.resetAtMs - nowMs + 1000)
+        : ttlMs
+    const ttlEffective = ttlOverrideMs == null ? ttlBase : Math.max(ttlBase, ttlOverrideMs)
+    await storage.writeCounter(ctx, key, updated, ttlEffective)
     return {allowed: nextCount <= max, resetAtMs: counter.resetAtMs}
 }
 
@@ -429,12 +448,12 @@ function deriveSubnet(ipAddress: string, ipv4Prefix = 24, ipv6Prefix = 64): Subn
             const b2 = (network >>> 8) & 0xff
             const b3 = network & 0xff
             return {
-                key: `ip4:${b0}.${b1}.${b2}.${b3}/${ipv4Prefix}`,
+                key: `subnet:ip4:${b0}.${b1}.${b2}.${b3}/${ipv4Prefix}`,
                 version: 'ipv4',
             }
         }
         return {
-            key: `ip24:${o1}.${o2}.${o3}.0/24`,
+            key: `subnet:ip24:${o1}.${o2}.${o3}.0/24`,
             version: 'ipv4',
         }
     }
@@ -452,12 +471,12 @@ function deriveSubnet(ipAddress: string, ipv4Prefix = 24, ipv6Prefix = 64): Subn
             const masked = maskIpv6(ipv6, ipv6Prefix)
             const keyParts = masked.map((value) => value.toString(16))
             return {
-                key: `ip6:${keyParts.join(':')}/${ipv6Prefix}`,
+                key: `subnet:ip6:${keyParts.join(':')}/${ipv6Prefix}`,
                 version: 'ipv6',
             }
         }
         return {
-            key: `ip64:${h1.toString(16)}:${h2.toString(16)}:${h3.toString(16)}:${h4.toString(16)}::/64`,
+            key: `subnet:ip64:${h1.toString(16)}:${h2.toString(16)}:${h3.toString(16)}:${h4.toString(16)}::/64`,
             version: 'ipv6',
         }
     }
@@ -564,7 +583,13 @@ function createGeoResolvers<C>(options: RateLimitOptions<C>): GeoResolvers<C> {
         const reader = await loadCountryReader()
         if (!reader) return null
         const record = reader.get(input.ipAddress)
-        const code = record?.country?.iso_code ?? record?.country?.isoCode
+        const code =
+            record?.country?.iso_code
+            ?? record?.country?.isoCode
+            ?? record?.registered_country?.iso_code
+            ?? record?.registeredCountry?.isoCode
+            ?? record?.represented_country?.iso_code
+            ?? record?.representedCountry?.isoCode
         return normalizeCountryCode(typeof code === 'string' ? code : null)
     })
 
@@ -640,6 +665,9 @@ export function rateLimit<Ctx extends object = AnyContext>(
     const countryLimitEnabled = Boolean(options.scales.country && (options.getCountryCode || options.maxmindCountryDatabase))
     const subnetAsnClassEnabled = Boolean(options.scales.subnet.byAsnClass && (options.getAsn || options.maxmindAsnDatabase))
 
+    const useWindowAlignedTtl = !options.storage
+    const ttlOverrideMs = useWindowAlignedTtl ? options.inMemory?.ttlMs : undefined
+
     return async (ctx, next) => {
         const nowMs = (ctx as any).startTime ?? Date.now()
         const url = new URL(ctx.req.url)
@@ -685,7 +713,7 @@ export function rateLimit<Ctx extends object = AnyContext>(
             normalizeQuery
         )
         const endpointIdentityKey = endpointKeyBase ? `${endpointKeyBase}:identity:${identityKey}` : null
-        const endpointSubnetKey = endpointKeyBase ? `${endpointKeyBase}:subnet:${subnet.key}` : null
+        const endpointSubnetKey = endpointKeyBase ? `${endpointKeyBase}:${subnet.key}` : null
 
         const globalPeak = (asnLimitEnabled || countryLimitEnabled)
             ? await getGlobalPeakConcurrentUsers(ctx)
@@ -707,7 +735,9 @@ export function rateLimit<Ctx extends object = AnyContext>(
                 bucket.windowMs,
                 identityMax,
                 options.storage ? storageTtlMs : inMemoryTtlMs,
-                nowMs
+                nowMs,
+                ttlOverrideMs,
+                useWindowAlignedTtl
             )
             if (!identityResult.allowed) {
                 return buildTooManyRequests(options.addRetryAfterHeader, identityResult.resetAtMs, nowMs)
@@ -721,7 +751,9 @@ export function rateLimit<Ctx extends object = AnyContext>(
                 bucket.windowMs,
                 subnetMax,
                 options.storage ? storageTtlMs : inMemoryTtlMs,
-                nowMs
+                nowMs,
+                ttlOverrideMs,
+                useWindowAlignedTtl
             )
             if (!subnetResult.allowed) {
                 return buildTooManyRequests(options.addRetryAfterHeader, subnetResult.resetAtMs, nowMs)
@@ -738,7 +770,9 @@ export function rateLimit<Ctx extends object = AnyContext>(
                     bucket.windowMs,
                     asnMax,
                     options.storage ? storageTtlMs : inMemoryTtlMs,
-                    nowMs
+                    nowMs,
+                    ttlOverrideMs,
+                    useWindowAlignedTtl
                 )
                 if (!asnResult.allowed) {
                     return buildTooManyRequests(options.addRetryAfterHeader, asnResult.resetAtMs, nowMs)
@@ -758,7 +792,9 @@ export function rateLimit<Ctx extends object = AnyContext>(
                     bucket.windowMs,
                     countryMax,
                     options.storage ? storageTtlMs : inMemoryTtlMs,
-                    nowMs
+                    nowMs,
+                    ttlOverrideMs,
+                    useWindowAlignedTtl
                 )
                 if (!countryResult.allowed) {
                     return buildTooManyRequests(options.addRetryAfterHeader, countryResult.resetAtMs, nowMs)
@@ -781,7 +817,9 @@ export function rateLimit<Ctx extends object = AnyContext>(
                     bucket.windowMs,
                     endpointIdentityMax,
                     options.storage ? storageTtlMs : inMemoryTtlMs,
-                    nowMs
+                    nowMs,
+                    ttlOverrideMs,
+                    useWindowAlignedTtl
                 )
                 if (!endpointIdentityResult.allowed) {
                     return buildTooManyRequests(options.addRetryAfterHeader, endpointIdentityResult.resetAtMs, nowMs)
@@ -794,7 +832,9 @@ export function rateLimit<Ctx extends object = AnyContext>(
                     bucket.windowMs,
                     endpointSubnetMax,
                     options.storage ? storageTtlMs : inMemoryTtlMs,
-                    nowMs
+                    nowMs,
+                    ttlOverrideMs,
+                    useWindowAlignedTtl
                 )
                 if (!endpointSubnetResult.allowed) {
                     return buildTooManyRequests(options.addRetryAfterHeader, endpointSubnetResult.resetAtMs, nowMs)
@@ -818,6 +858,9 @@ function buildEndpointKeyBase(
         return `route:${normalizedMethod}:${pathname}`
     }
     const query = normalizeQuery(url)
+    if (!query) {
+        return `routeq:${normalizedMethod}:${pathname}`
+    }
     return `routeq:${normalizedMethod}:${pathname}?${query}`
 }
 

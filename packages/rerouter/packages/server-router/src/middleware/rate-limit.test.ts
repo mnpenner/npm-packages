@@ -10,6 +10,20 @@ const asnDbPath = fileURLToPath(new URL('../testing/GeoLite2-ASN.mmdb', import.m
 const countryDbPath = fileURLToPath(new URL('../testing/GeoLite2-Country.mmdb', import.meta.url))
 const hasMaxmindDbs = existsSync(asnDbPath) && existsSync(countryDbPath)
 
+class CaptureStorage {
+    keys: string[] = []
+
+    async readCounter(_ctx: unknown, _key: string) {
+        return null
+    }
+
+    async writeCounter(_ctx: unknown, key: string, _counter: unknown, _ttlMs: number) {
+        this.keys.push(key)
+    }
+}
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
 describe(rateLimit.name, () => {
     it('enforces per-user identity limits', async () => {
         const router = new Router()
@@ -76,6 +90,40 @@ describe(rateLimit.name, () => {
         expect(response2.headers.get('retry-after')).not.toBeNull()
     })
 
+    it('normalizes query params by default', async () => {
+        const router = new Router()
+        router.use(rateLimit({
+            getUserId: async () => null,
+            getGlobalPeakConcurrentUsers: async () => 1,
+            baseWindowMs: 1000,
+            baseMaxRequestsPerBaseWindow: 10,
+            anonymousIpMultiplier: 1,
+            addRetryAfterHeader: false,
+            buckets: [{windowMs: 1000, scale: 1}],
+            endpointLimits: [{pattern: '/search', limit: {GET: 1}}],
+            includeQueryInEndpointKey: true,
+            scales: {subnet: {ipv4: 10, ipv6: 10}},
+        }))
+        router.add({
+            method: HttpMethod.GET,
+            pattern: '/search',
+            handler: () => new Response('ok'),
+        })
+
+        const request1 = new Request('https://example.com/search?a=1&b=2', {
+            headers: {'x-forwarded-for': '203.0.113.70'},
+        })
+        const request2 = new Request('https://example.com/search?b=2&a=1', {
+            headers: {'x-forwarded-for': '203.0.113.70'},
+        })
+
+        const response1 = await router.fetch(request1)
+        const response2 = await router.fetch(request2)
+
+        expect(response1.status).toBe(200)
+        expect(response2.status).toBe(429)
+    })
+
     it('enforces ipv4 subnet limits', async () => {
         const router = new Router()
         router.use(rateLimit({
@@ -138,7 +186,7 @@ describe(rateLimit.name, () => {
         expect(response2.status).toBe(429)
     })
 
-    it('uses custom ipv4Prefix for subnet grouping', async () => {
+    it('uses ipv4-mapped IPv6 addresses as ipv4', async () => {
         const router = new Router()
         router.use(rateLimit({
             getUserId: async () => 'user-1',
@@ -150,6 +198,38 @@ describe(rateLimit.name, () => {
             buckets: [{windowMs: 1000, scale: 1}],
             endpointLimits: [],
             includeQueryInEndpointKey: false,
+            scales: {subnet: {ipv4: 0.2, ipv6: 10}},
+        }))
+        router.add({
+            method: HttpMethod.GET,
+            pattern: '/ipv4-mapped',
+            handler: () => new Response('ok'),
+        })
+
+        const request = () => new Request('https://example.com/ipv4-mapped', {
+            headers: {'x-forwarded-for': '::ffff:203.0.113.80'},
+        })
+
+        const response1 = await router.fetch(request())
+        const response2 = await router.fetch(request())
+
+        expect(response1.status).toBe(200)
+        expect(response2.status).toBe(429)
+    })
+
+    it('uses ipv4Prefix:32 so subnet keys are per-IP (no grouping)', async () => {
+        const router = new Router()
+        router.use(rateLimit({
+            getUserId: async () => null,  // force identity=ip so subnet layer is what we’re testing
+            getGlobalPeakConcurrentUsers: async () => 1,
+            baseWindowMs: 1000,
+            baseMaxRequestsPerBaseWindow: 5,
+            anonymousIpMultiplier: 1,
+            addRetryAfterHeader: false,
+            buckets: [{windowMs: 1000, scale: 1}],
+            endpointLimits: [],
+            includeQueryInEndpointKey: false,
+            // subnet max = bucketMax * ipv4 scale = 5 * 0.2 = 1 request per /prefix per second
             scales: {subnet: {ipv4: 0.2, ipv6: 10, ipv4Prefix: 32}},
         }))
         router.add({
@@ -162,13 +242,58 @@ describe(rateLimit.name, () => {
             headers: {'x-forwarded-for': ip},
         })
 
-        const response1 = await router.fetch(request('203.0.113.10'))
-        const response2 = await router.fetch(request('203.0.113.11'))
-        const response3 = await router.fetch(request('203.0.113.10'))
+        // Different IPs => different /32 subnet keys => both allowed (each gets 1)
+        const r1 = await router.fetch(request('203.0.113.10'))
+        const r2 = await router.fetch(request('203.0.113.11'))
 
-        expect(response1.status).toBe(200)
-        expect(response2.status).toBe(200)
-        expect(response3.status).toBe(429)
+        // Second request from same IP => same /32 subnet key => blocked
+        const r3 = await router.fetch(request('203.0.113.10'))
+        const r4 = await router.fetch(request('203.0.113.11'))
+
+        expect(r1.status).toBe(200)
+        expect(r2.status).toBe(200)
+        expect(r3.status).toBe(429)
+        expect(r4.status).toBe(429)
+    })
+
+    it('uses ipv4Prefix:16 so all IPs in the same /16 share a subnet bucket', async () => {
+        const router = new Router()
+        router.use(rateLimit({
+            getUserId: async () => null,  // force identity=ip; subnet layer is under test
+            getGlobalPeakConcurrentUsers: async () => 1,
+            baseWindowMs: 1000,
+            baseMaxRequestsPerBaseWindow: 5,
+            anonymousIpMultiplier: 1,
+            addRetryAfterHeader: false,
+            buckets: [{windowMs: 1000, scale: 1}],
+            endpointLimits: [],
+            includeQueryInEndpointKey: false,
+            // subnet max = 5 * 0.2 = 1 request per /16 per second
+            scales: {subnet: {ipv4: 0.2, ipv6: 10, ipv4Prefix: 16}},
+        }))
+        router.add({
+            method: HttpMethod.GET,
+            pattern: '/ipv4-prefix',
+            handler: () => new Response('ok'),
+        })
+
+        const request = (ip: string) => new Request('https://example.com/ipv4-prefix', {
+            headers: {'x-forwarded-for': ip},
+        })
+
+        // Same /16: 203.0.0.0/16
+        const r1 = await router.fetch(request('203.0.113.10'))
+        const r2 = await router.fetch(request('203.0.200.42'))
+
+        // Different /16: 198.51.0.0/16
+        const r3 = await router.fetch(request('198.51.100.5'))
+
+        expect(r1.status).toBe(200)
+        // Second request from same /16 exceeds subnet bucket
+        expect(r2.status).toBe(429)
+
+        // Different /16 should not be affected
+        expect(r3.status).toBe(200)
     })
 
     it('uses custom ipv6Prefix for subnet grouping', async () => {
@@ -202,6 +327,35 @@ describe(rateLimit.name, () => {
         expect(response1.status).toBe(200)
         expect(response2.status).toBe(200)
         expect(response3.status).toBe(429)
+    })
+
+    it('prefixes subnet keys to avoid collisions', async () => {
+        const storage = new CaptureStorage()
+        const router = new Router()
+        router.use(rateLimit({
+            getUserId: async () => 'user-1',
+            getGlobalPeakConcurrentUsers: async () => 1,
+            baseWindowMs: 1000,
+            baseMaxRequestsPerBaseWindow: 1,
+            anonymousIpMultiplier: 1,
+            addRetryAfterHeader: false,
+            buckets: [{windowMs: 1000, scale: 1}],
+            endpointLimits: [],
+            includeQueryInEndpointKey: false,
+            storage,
+            scales: {subnet: {ipv4: 10, ipv6: 10}},
+        }))
+        router.add({
+            method: HttpMethod.GET,
+            pattern: '/subnet-prefix',
+            handler: () => new Response('ok'),
+        })
+
+        await router.fetch(new Request('https://example.com/subnet-prefix', {
+            headers: {'x-forwarded-for': '203.0.113.90'},
+        }))
+
+        expect(storage.keys.some((key) => key.startsWith('subnet:'))).toBe(true)
     })
 
     it('enforces country limits', async () => {
@@ -377,6 +531,41 @@ describe(rateLimit.name, () => {
         expect(response2.status).toBe(429)
     })
 
+    it.skipIf(!hasMaxmindDbs)('falls back to registered country from MaxMind', async () => {
+        const router = new Router()
+        router.use(rateLimit({
+            getUserId: async () => 'user-1',
+            getGlobalPeakConcurrentUsers: async () => 1,
+            baseWindowMs: 1000,
+            baseMaxRequestsPerBaseWindow: 5,
+            anonymousIpMultiplier: 1,
+            addRetryAfterHeader: false,
+            buckets: [{windowMs: 1000, scale: 1}],
+            endpointLimits: [],
+            includeQueryInEndpointKey: false,
+            maxmindCountryDatabase: countryDbPath,
+            scales: {
+                subnet: {ipv4: 10, ipv6: 10},
+                country: {AU: 0.2, other: 1, unknown: 1},
+            },
+        }))
+        router.add({
+            method: HttpMethod.GET,
+            pattern: '/country-registered',
+            handler: () => new Response('ok'),
+        })
+
+        const request = () => new Request('https://example.com/country-registered', {
+            headers: {'x-forwarded-for': '1.1.1.1'},
+        })
+
+        const response1 = await router.fetch(request())
+        const response2 = await router.fetch(request())
+
+        expect(response1.status).toBe(200)
+        expect(response2.status).toBe(429)
+    })
+
     it('applies non-default baseWindowMs and anonymousIpMultiplier', async () => {
         const router = new Router()
         router.use(rateLimit({
@@ -402,6 +591,39 @@ describe(rateLimit.name, () => {
         })
 
         const response1 = await router.fetch(request())
+        const response2 = await router.fetch(request())
+
+        expect(response1.status).toBe(200)
+        expect(response2.status).toBe(429)
+    })
+
+    it('does not expire in-memory counters before the window resets', async () => {
+        const router = new Router()
+        router.use(rateLimit({
+            getUserId: async () => null,
+            getGlobalPeakConcurrentUsers: async () => 1,
+            baseWindowMs: 1000,
+            baseMaxRequestsPerBaseWindow: 1,
+            anonymousIpMultiplier: 1,
+            addRetryAfterHeader: false,
+            buckets: [{windowMs: 1000, scale: 1}],
+            endpointLimits: [],
+            includeQueryInEndpointKey: false,
+            inMemory: {ttlMs: 10},
+            scales: {subnet: {ipv4: 10, ipv6: 10}},
+        }))
+        router.add({
+            method: HttpMethod.GET,
+            pattern: '/ttl',
+            handler: () => new Response('ok'),
+        })
+
+        const request = () => new Request('https://example.com/ttl', {
+            headers: {'x-forwarded-for': '203.0.113.100'},
+        })
+
+        const response1 = await router.fetch(request())
+        await delay(30)
         const response2 = await router.fetch(request())
 
         expect(response1.status).toBe(200)
@@ -440,5 +662,34 @@ describe(rateLimit.name, () => {
 
         expect(response1.status).toBe(200)
         expect(response2.status).toBe(429)
+    })
+
+    it('omits query separator when the query is empty', async () => {
+        const storage = new CaptureStorage()
+        const router = new Router()
+        router.use(rateLimit({
+            getUserId: async () => null,
+            getGlobalPeakConcurrentUsers: async () => 1,
+            baseWindowMs: 1000,
+            baseMaxRequestsPerBaseWindow: 1,
+            anonymousIpMultiplier: 1,
+            addRetryAfterHeader: false,
+            buckets: [{windowMs: 1000, scale: 1}],
+            endpointLimits: [{pattern: '/empty-query', limit: {GET: 1}}],
+            includeQueryInEndpointKey: true,
+            storage,
+            scales: {subnet: {ipv4: 10, ipv6: 10}},
+        }))
+        router.add({
+            method: HttpMethod.GET,
+            pattern: '/empty-query',
+            handler: () => new Response('ok'),
+        })
+
+        await router.fetch(new Request('https://example.com/empty-query', {
+            headers: {'x-forwarded-for': '203.0.113.110'},
+        }))
+
+        expect(storage.keys.some((key) => key.includes('routeq:GET:/empty-query?'))).toBe(false)
     })
 })
