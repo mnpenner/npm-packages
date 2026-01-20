@@ -1,4 +1,4 @@
-import {HttpStatus} from '@mpen/http-helpers'
+import {CommonHeaders, HttpStatus, HttpMethod} from '@mpen/http-helpers'
 import type {
     AnyContext,
     HandlerBody,
@@ -9,6 +9,7 @@ import type {
     OneOrMany,
     RequestContext,
 } from '../types'
+import {isLocalhost} from '../lib/host'
 
 type CorsOriginResolver<Ctx extends object> =
     (origin: string | null, ctx: RequestContext<Ctx>) => MaybePromise<string | null | undefined | false>
@@ -25,8 +26,9 @@ type AllowedOriginEntry =
 export interface CorsOptions<Ctx extends object = AnyContext> {
     /**
      * Allowed origin(s) for cross-origin requests.
+     * Use `'*'` to allow all origins.
      */
-    origin?: OneOrMany<string | URL | RegExp> | CorsOriginResolver<Ctx>
+    origin: OneOrMany<string | URL | RegExp> | CorsOriginResolver<Ctx>
     /**
      * Allowed methods to echo in preflight responses.
      */
@@ -61,18 +63,18 @@ export interface CorsOptions<Ctx extends object = AnyContext> {
     preflightStatus?: number
 }
 
-const headerOrigin = 'origin'
-const headerVary = 'vary'
-const headerAccessControlRequestMethod = 'access-control-request-method'
-const headerAccessControlRequestHeaders = 'access-control-request-headers'
-const headerAllowOrigin = 'access-control-allow-origin'
-const headerAllowMethods = 'access-control-allow-methods'
-const headerAllowHeaders = 'access-control-allow-headers'
-const headerAllowCredentials = 'access-control-allow-credentials'
-const headerExposeHeaders = 'access-control-expose-headers'
-const headerMaxAge = 'access-control-max-age'
+const headerOrigin = CommonHeaders.ORIGIN
+const headerVary = CommonHeaders.VARY
+const headerAccessControlRequestMethod = CommonHeaders.ACCESS_CONTROL_REQUEST_METHOD
+const headerAccessControlRequestHeaders = CommonHeaders.ACCESS_CONTROL_REQUEST_HEADERS
+const headerAllowOrigin = CommonHeaders.ACCESS_CONTROL_ALLOW_ORIGIN
+const headerAllowMethods = CommonHeaders.ACCESS_CONTROL_ALLOW_METHODS
+const headerAllowHeaders = CommonHeaders.ACCESS_CONTROL_ALLOW_HEADERS
+const headerAllowCredentials = CommonHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS
+const headerExposeHeaders = CommonHeaders.ACCESS_CONTROL_EXPOSE_HEADERS
+const headerMaxAge = CommonHeaders.ACCESS_CONTROL_MAX_AGE
 
-const defaultAllowedMethods = ['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH']
+const defaultAllowedMethods = [HttpMethod.GET, HttpMethod.HEAD, HttpMethod.PUT, HttpMethod.POST, HttpMethod.DELETE, HttpMethod.PATCH]
 
 function normalizeHeaderValue(value: string | null): string | null {
     if (!value) return null
@@ -153,11 +155,6 @@ function hasWildcardOrigin(value?: OneOrMany<string | URL | RegExp>): boolean {
         return typeof value === 'string' && value.trim() === '*'
     }
     return value.some((entry) => typeof entry === 'string' && entry.trim() === '*')
-}
-
-function isLocalhost(hostname: string): boolean {
-    const lower = hostname.toLowerCase()
-    return lower === 'localhost' || lower === '127.0.0.1' || lower === '::1' || lower === '0.0.0.0'
 }
 
 function isOriginAllowed(
@@ -288,20 +285,20 @@ function wrapGeneratorWithCors(
  *
  * @example
  * ```ts
- * router.use(cors())
+ * router.use(cors({origin: '*'}))
  * router.use(cors({origin: ['https://app.example.com'], credentials: true}))
- * router.use(cors({dev: true}))
+ * router.use(cors({origin: 'https://app.example.com', dev: true}))
  * ```
  *
  * @param options - Configuration for origin, preflight, and header behavior.
  * @returns Middleware that applies CORS headers to matching requests.
  */
 export function cors<Ctx extends object = AnyContext>(
-    options: CorsOptions<Ctx> = {}
+    options: CorsOptions<Ctx>
 ): Middleware<Ctx> {
     const allowCredentials = options.credentials ?? false
     const allowLocalhost = options.allowLocalhost ?? options.dev ?? false
-    const originOption = options.origin ?? '*'
+    const originOption = options.origin
     const originResolver = typeof originOption === 'function'
         ? originOption
         : undefined

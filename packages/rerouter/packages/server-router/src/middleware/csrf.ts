@@ -1,5 +1,6 @@
 import {HttpStatus} from '@mpen/http-helpers'
 import {simpleStatus} from '../response/simple'
+import {isLocalhost} from '../lib/host'
 import type {AnyContext, HandlerResult, MaybePromise, Middleware, OneOrMany, RequestContext} from '../types'
 
 type CsrfHandler<Ctx extends object = AnyContext> =
@@ -89,11 +90,6 @@ function isOriginAllowlisted(origin: URL, allowlist: AllowedOriginEntry[]): bool
         }
     }
     return false
-}
-
-function isLocalhost(hostname: string): boolean {
-    const lower = hostname.toLowerCase()
-    return lower === 'localhost' || lower === '127.0.0.1' || lower === '::1' || lower === '0.0.0.0'
 }
 
 function isIpAddress(hostname: string): boolean {
