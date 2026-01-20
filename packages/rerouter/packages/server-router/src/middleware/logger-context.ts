@@ -11,7 +11,13 @@ const enum LogLevel {
 }
 
 
-interface LogEntry {  // These are more like "events" https://signoz.io/blog/opentelemetry-spans/#what-are-span-events
+
+// FIXME: Entries like "events" https://signoz.io/blog/opentelemetry-spans/#what-are-span-events
+// "Spans" have a start and end time.
+// the RequestLogger middleware can create a span... should it overwrite this logger with a Span entry?? Or add ctx.span? This is already associated with the request...
+// We can maybe construct the spans after the fact? https://chatgpt.com/share/696f293e-d734-8000-8443-4af92a694e0c
+
+interface LogEntry {  
     span_id: string
     parent_span_id?: string
     level: LogLevel // or is "severity" better/more standard?
@@ -29,6 +35,14 @@ const enum LogWriter {
     PRETTY_JSON = 'pretty_json',
 }
 
+const LOG_LEVEL_TO_VERBOSITY: Record<LogLevel, number> = {
+    [LogLevel.TRACE]: 1,
+    [LogLevel.DEBUG]: 2,
+    [LogLevel.INFO]: 3,
+    [LogLevel.WARN]: 4,
+    [LogLevel.ERROR]: 5,
+    [LogLevel.FATAL]: 6,
+}
 const DEFAULT_WRITERS: Record<LogWriter,WriteLogFn> = {
     [LogWriter.CONSOLE]: consoleLogger,
     [LogWriter.PRETTY_CONSOLE]: prettyConsoleLogger,

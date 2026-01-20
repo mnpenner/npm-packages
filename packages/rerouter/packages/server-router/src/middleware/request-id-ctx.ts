@@ -2,12 +2,28 @@ import type {AnyContext, ContextMiddleware, HandlerBody, HandlerYield, OneOrMany
 import {toArray} from '@mpen/server-router/lib/collections'
 
 declare global {
-    var _requestCounter: number
+    var _reloadCounter: number
 }
 
-globalThis._requestCounter ??= 0
+globalThis._reloadCounter = globalThis._reloadCounter == null ? 0 : globalThis._reloadCounter+1
+
+interface ExtraContext {
+    prefix: string
+    /**
+     * Number of times this server has been hot-reloaded.
+     */
+    hotReloadCounter: number
+    /**
+     * Sequential request number.
+     */
+    requestCounter: number
+}
 
 export interface RequestIdCtxOptions<Ctx extends object = AnyContext> {
+    /**
+     * Prefix used by the default generator. Defaults to "req".
+     */
+    prefix?: string
     /**
      * Header(s) to check for a request id. Defaults to "x-request-id".
      * Set to null or empty array to disable.
@@ -19,8 +35,9 @@ export interface RequestIdCtxOptions<Ctx extends object = AnyContext> {
     writeHeaderName?: string
     /**
      * Custom request id generator used when no read header is present.
+     * Receives the request context along with prefix and counter metadata.
      */
-    generate?: (ctx: RequestContext<Ctx>) => string
+    generate?: (ctx: RequestContext<Ctx & {requestId?: string}>, xtra: ExtraContext) => string
 }
 
 function isBodyChunk(value: unknown): value is Uint8Array | string {
@@ -99,10 +116,22 @@ function wrapGeneratorWithRequestId(
 export function requestIdCtx<Ctx extends object = AnyContext>(
     options: RequestIdCtxOptions<Ctx> = {}
 ): ContextMiddleware<{ requestId: string }> {
+    const prefix = options.prefix ?? 'req'
     const headers = options.readHeaderName === undefined
         ? ['x-request-id', 'x-trace-id', 'traceparent']
         : (options.readHeaderName ? toArray(options.readHeaderName) : [])
-    const generate = options.generate ?? (() => (++globalThis._requestCounter).toString(36))
+
+    let requestCounter = 0
+    const hotReloadCounter = globalThis._reloadCounter
+    const generate = (ctx: RequestContext<Ctx & {requestId?: string}>) => {
+        const extra: ExtraContext = {
+            prefix,
+            hotReloadCounter,
+            requestCounter: ++requestCounter,
+        }
+        if (options.generate) return options.generate(ctx, extra)
+        return `${extra.prefix}.${extra.hotReloadCounter}.${extra.requestCounter}`
+    }
 
     if (!options.writeHeaderName) {
         return ctx => {
@@ -129,6 +158,7 @@ export function requestIdCtx<Ctx extends object = AnyContext>(
 
         const requestId = headerId ?? generate(ctx)
         ctx.requestId = requestId
+        ctx.logger?.set('request_id', requestId)
 
         const result = await next()
         if (result instanceof Response) {
