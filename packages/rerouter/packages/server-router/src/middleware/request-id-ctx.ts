@@ -99,7 +99,7 @@ function wrapGeneratorWithRequestId(
 }
 
 function defaultRequestIdGenerator(ctx: RequestContext, extra: ExtraContext) {
-    let requestId = `${extra.hotReloadCounter}.${extra.requestCounter}`
+    let requestId = `${extra.hotReloadCounter.toString(36)}.${extra.requestCounter.toString(36)}`
     if(extra.prefix) requestId = `${extra.prefix}.${requestId}`
     return requestId
 }
@@ -152,6 +152,9 @@ export function requestIdCtx<Ctx extends object = AnyContext>(
             }
 
             ctx.requestId = headerId ?? generate(ctx) // FIXME: TS error here.
+
+            // FIXME: we really shouldn't have 2 very similar branches and be duplicating all this code...
+            ctx.logger?.set('request_id', ctx.requestId)
         }
     }
 
