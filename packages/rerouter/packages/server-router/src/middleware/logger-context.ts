@@ -1,22 +1,39 @@
 import type {AnyContext, ContextMiddleware} from '..'
+import {randomUUID} from 'node:crypto'
 
-enum LogLevel {
-    TRACE='trace',
-    DEBUG='debug',
-    INFO='info',
-    WARN='warn',
-    ERROR='error',
-    FATAL='fatal',
+const enum LogLevel {
+    TRACE = 'trace',
+    DEBUG = 'debug',
+    INFO = 'info',
+    WARN = 'warn',
+    ERROR = 'error',
+    FATAL = 'fatal',
 }
 
 
-interface LogEntry {
+interface LogEntry {  // These are more like "events" https://signoz.io/blog/opentelemetry-spans/#what-are-span-events
+    span_id: string
+    parent_span_id?: string
     level: LogLevel // or is "severity" better/more standard?
     message?: string
     data?: any
     timestamp: number
-    context: Record<string,any>
+    context: Record<string, any>
     path: string[]
+}
+
+const enum LogWriter {
+    CONSOLE = 'console',
+    PRETTY_CONSOLE = 'pretty_console',
+    JSON = 'json',
+    PRETTY_JSON = 'pretty_json',
+}
+
+const DEFAULT_WRITERS: Record<LogWriter,WriteLogFn> = {
+    [LogWriter.CONSOLE]: consoleLogger,
+    [LogWriter.PRETTY_CONSOLE]: prettyConsoleLogger,
+    [LogWriter.JSON]: jsonLogger,
+    [LogWriter.PRETTY_JSON]: prettyJsonLogger,
 }
 
 function consoleLogger(entry: LogEntry) {
@@ -27,73 +44,99 @@ function jsonLogger(entry: LogEntry) {
     console.log(JSON.stringify(entry))
 }
 
-function prettyLogger(entry: LogEntry) {
+function prettyJsonLogger(entry: LogEntry) {
+    console.log(JSON.stringify(entry,null,2))
+}
+
+function prettyConsoleLogger(entry: LogEntry) {
+    console.log(entry)
     // TODO: format for terminal
 }
 
 
-type WriteLog = (entry: LogEntry) => void
+type WriteLogFn = (entry: LogEntry) => void
 
 export interface LoggerCtxOptions<Ctx extends object = AnyContext> {
     name?: string
-    context?: Record<string,any>
-    log?: WriteLog
+    context?: Record<string, any>
+    log?: WriteLogFn|LogWriter
 }
 
 class Logger {
-    private _path: string[] = []
-    private _context: Record<string,any> = {}
-    private _write: WriteLog
+    private readonly _path: string[] = []
+    private readonly _context: Record<string, any> = {}
+    private readonly _write: WriteLogFn
+    private readonly _parentEntry: LogEntry | null
 
-    constructor(write: WriteLog, path:string[]=[],context:Record<string,any>={}) {
+    constructor(write: WriteLogFn, path: string[] = [], context: Record<string, any> = {}, parentEntry: LogEntry | null = null) {
         this._write = write
         this._path = path
         this._context = context
+        this._parentEntry = parentEntry
     }
 
     withName(name: string) {
         return new Logger(this._write, [...this._path, name], this._context)
     }
 
+    get context() {
+        return this._context
+    }
+
+    get parentEntry() {
+        return this._parentEntry
+    }
+
     set(name: string, value: any) {
         this._context[name] = value
     }
 
-    info(message: string):void
-    info(...vars: any[]):void
-    info(...vars: any[]) {
-        this._log(LogLevel.INFO, vars)
+    trace(...data: any[]) {
+        return this._log(LogLevel.TRACE, data)
+    }
+    debug(...data: any[]) {
+        return this._log(LogLevel.DEBUG, data)
+    }
+    info(...data: any[]) {
+        return this._log(LogLevel.INFO, data)
+    }
+    warn(...data: any[]) {
+        return this._log(LogLevel.WARN, data)
+    }
+    error(...data: any[]) {
+        return this._log(LogLevel.ERROR, data)
+    }
+    fatal(...data: any[]) {
+        return this._log(LogLevel.FATAL, data)
     }
 
-    warn(message: string):void
-    warn(...vars: any[]):void
-    warn(...vars: any[]) {
-        this._log(LogLevel.WARN, vars)
-    }
-
-    // TODO: add other log levels
-
-    private _log(level: LogLevel, vars: any) {
+    private _log(level: LogLevel, vars: any[]) {
+        const spanId = randomUUID()
         const entry: LogEntry = {
+            span_id: spanId,
             context: this._context,
             level,
             timestamp: Date.now(),
         }
+        if(this._parentEntry) entry.parent_span_id = this._parentEntry.span_id
         if(vars.length === 0 && typeof vars[0] === 'string') {
             entry.message = vars[0]
         } else {
             entry.data = vars
         }
         this._write(entry)
+        return new Logger(this._write, this._path, this._context, entry)
     }
 }
 
 export function loggerCtx<Ctx extends object = AnyContext>(
     options: LoggerCtxOptions<Ctx> = {}
 ): ContextMiddleware<{ logger: Logger }> {
-    const log = options?.log ?? consoleLogger
+    const logMode = options.log ?? LogWriter.PRETTY_CONSOLE
+    const logFn = typeof logMode === 'function' ? logMode : DEFAULT_WRITERS[logMode]
 
     return ctx => {
-        ctx.logger = new Logger(log, options.name ? [options.name] : [], options.context ?? Object.create(null))
+        ctx.logger = new Logger(logFn, options.name ? [options.name] : [], options.context ?? Object.create(null))
+        if(ctx.requestId) ctx.logger.set('request_id', ctx.requestId)
     }
 }

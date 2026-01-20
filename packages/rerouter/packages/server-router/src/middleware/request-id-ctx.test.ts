@@ -30,13 +30,18 @@ describe(requestIdCtx.name, () => {
 
     it('uses the generate callback when missing a header', async () => {
         const router = new Router()
+        const seenExtra: {prefix: string; hotReloadCounter: number; requestCounter: number}[] = []
         const generated: string[] = []
-        const generate = () => {
-            const value = `generated-${generated.length + 1}`
+        const generate = (
+            _ctx: unknown,
+            extra: {prefix: string; hotReloadCounter: number; requestCounter: number}
+        ) => {
+            seenExtra.push(extra)
+            const value = `${extra.prefix}.${extra.hotReloadCounter}.${extra.requestCounter}`
             generated.push(value)
             return value
         }
-        router.use(requestIdCtx({generate}))
+        router.use(requestIdCtx({generate, prefix: 'custom'}))
         router.add({
             method: HttpMethod.GET,
             pattern: '/',
@@ -49,9 +54,14 @@ describe(requestIdCtx.name, () => {
         const first = await router.fetch(makeRequest())
         const second = await router.fetch(makeRequest())
 
-        expect(await first.text()).toBe('generated-1')
-        expect(await second.text()).toBe('generated-2')
-        expect(generated).toEqual(['generated-1', 'generated-2'])
+        expect(await first.text()).toMatch(/^custom\.\d+\.\d+$/)
+        expect(await second.text()).toMatch(/^custom\.\d+\.\d+$/)
+        expect(seenExtra).toHaveLength(2)
+        expect(seenExtra[0]?.prefix).toBe('custom')
+        expect(seenExtra[1]?.prefix).toBe('custom')
+        expect(seenExtra[0]?.hotReloadCounter).toBe(seenExtra[1]?.hotReloadCounter)
+        expect(seenExtra[0]?.requestCounter).toBe(1)
+        expect(seenExtra[1]?.requestCounter).toBe(2)
     })
 
     it('respects header order when multiple names are provided', async () => {
@@ -97,5 +107,34 @@ describe(requestIdCtx.name, () => {
 
         expect(response.headers.get('x-request-id')).toBe('req-42')
         expect(await response.text()).toBe('ok')
+    })
+
+    it('uses the default generator format when no header is provided', async () => {
+        const router = new Router()
+        const ids: string[] = []
+        router.use(requestIdCtx({prefix: 'req'}))
+        router.add({
+            method: HttpMethod.GET,
+            pattern: '/',
+            handler: ({requestId}) => {
+                ids.push(requestId)
+                return new Response(requestId)
+            },
+        })
+
+        const first = await router.fetch(makeRequest())
+        const second = await router.fetch(makeRequest())
+
+        const firstId = await first.text()
+        const secondId = await second.text()
+
+        expect(firstId).toMatch(/^req\.\d+\.\d+$/)
+        expect(secondId).toMatch(/^req\.\d+\.\d+$/)
+        const [, firstReload, firstCount] = firstId.split('.')
+        const [, secondReload, secondCount] = secondId.split('.')
+        expect(firstReload).toBe(secondReload)
+        expect(firstCount).toBe('1')
+        expect(secondCount).toBe('2')
+        expect(ids).toEqual([firstId, secondId])
     })
 })
