@@ -1,6 +1,7 @@
 import type {AnyContext, ContextMiddleware} from '..'
 import {randomUUID} from 'node:crypto'
 import {inspect} from 'node:util'
+import path from 'node:path'
 import chalk from 'chalk'
 
 const enum LogLevel {
@@ -19,7 +20,7 @@ const enum LogLevel {
 // the RequestLogger middleware can create a span... should it overwrite this logger with a Span entry?? Or add ctx.span? This is already associated with the request...
 // We can maybe construct the spans after the fact? https://chatgpt.com/share/696f293e-d734-8000-8443-4af92a694e0c
 
-interface LogEntry {  
+interface LogEntry {
     span_id: string
     parent_span_id?: string
     level: LogLevel // or is "severity" better/more standard?
@@ -28,6 +29,8 @@ interface LogEntry {
     timestamp: number
     context: Record<string, any>
     path: string[]
+    filepath?: string
+    line_no?: number
 }
 
 const enum LogWriter {
@@ -65,11 +68,12 @@ function prettyJsonLogger(entry: LogEntry) {
 }
 
 function prettyConsoleLogger(entry: LogEntry) {
-    const { timestamp, level, path, message, data, context } = entry;
+    const { timestamp, level, path, message, data, context, filepath, line_no } = entry;
     const date = new Date(timestamp);
     const timeStr = date.toISOString().replace('T', ' ').replace('Z', '');
-    
-    const levelColors: Record<LogLevel, typeof chalk> = {
+
+    type ChalkColor = typeof chalk.gray;
+    const levelColors: Record<LogLevel, ChalkColor> = {
         [LogLevel.TRACE]: chalk.gray,
         [LogLevel.DEBUG]: chalk.blue,
         [LogLevel.INFO]: chalk.green,
@@ -80,10 +84,11 @@ function prettyConsoleLogger(entry: LogEntry) {
 
     const levelStr = level.toUpperCase().padEnd(5);
     const coloredLevel = levelColors[level] ? levelColors[level](levelStr) : levelStr;
-    
+
     const pathStr = path && path.length > 0 ? chalk.gray(`[/${path.join('/')}]`) : '';
+    const locationStr = filepath ? chalk.gray(`${filepath}${line_no ? ':' + line_no : ''}`) : '';
     const msgStr = message ? message : '';
-    
+
     let dataStr = '';
     if (data !== undefined) {
         const items = Array.isArray(data) ? data : [data];
@@ -101,7 +106,16 @@ function prettyConsoleLogger(entry: LogEntry) {
         }
     }
 
-    console.log(`${chalk.gray(timeStr)} ${coloredLevel} ${pathStr} ${msgStr}${dataStr}`);
+    const firstLine = `${chalk.gray(timeStr)} ${coloredLevel} ${pathStr} ${locationStr} ${msgStr}`.trimEnd();
+
+    if (dataStr) {
+        // Indent subsequent lines
+        const indent = ' '.repeat(timeStr.length + 1 + levelStr.length + 1);
+        const indentedData = dataStr.split('\n').map((line, i) => i === 0 ? line : indent + line).join('\n');
+        console.log(firstLine + indentedData);
+    } else {
+        console.log(firstLine);
+    }
 }
 
 
@@ -111,6 +125,7 @@ export interface LoggerCtxOptions<Ctx extends object = AnyContext> {
     name?: string
     context?: Record<string, any>
     log?: WriteLogFn|LogWriter
+    rootPath?: string
 }
 
 class Logger {
@@ -118,16 +133,18 @@ class Logger {
     private readonly _context: Record<string, any> = {}
     private readonly _write: WriteLogFn
     private readonly _parentEntry: LogEntry | null
+    private readonly _rootPath: string
 
-    constructor(write: WriteLogFn, path: string[] = [], context: Record<string, any> = {}, parentEntry: LogEntry | null = null) {
+    constructor(write: WriteLogFn, path: string[] = [], context: Record<string, any> = {}, parentEntry: LogEntry | null = null, rootPath: string = process.cwd()) {
         this._write = write
         this._path = path
         this._context = context
         this._parentEntry = parentEntry
+        this._rootPath = rootPath
     }
 
     withName(name: string) {
-        return new Logger(this._write, [...this._path, name], this._context)
+        return new Logger(this._write, [...this._path, name], this._context, null, this._rootPath)
     }
 
     get context() {
@@ -176,8 +193,31 @@ class Logger {
         } else {
             entry.data = data
         }
+
+        // Capture call site information
+        const error = new Error()
+        const stack = error.stack?.split('\n')
+        if (stack) {
+            // Skip stack frames until we're outside of current file
+            for (let i = 1; i < stack.length; i++) {
+                const line = stack[i]
+                if (!line.includes(__filename)) {
+                    const match = line.match(/\((.+):(\d+):\d+\)/) || line.match(/at (.+):(\d+):\d+/)
+                    if (match) {
+                        let filepath = match[1]
+                        if (path.isAbsolute(filepath)) {
+                            filepath = path.relative(this._rootPath, filepath)
+                        }
+                        entry.filepath = filepath
+                        entry.line_no = parseInt(match[2], 10)
+                    }
+                    break
+                }
+            }
+        }
+
         this._write(entry)
-        return new Logger(this._write, this._path, this._context, entry)
+        return new Logger(this._write, this._path, this._context, entry, this._rootPath)
     }
 }
 
@@ -186,9 +226,11 @@ export function loggerCtx<Ctx extends object = AnyContext>(
 ): ContextMiddleware<{ logger: Logger }> {
     const logMode = options.log ?? LogWriter.PRETTY_CONSOLE
     const logFn = typeof logMode === 'function' ? logMode : DEFAULT_WRITERS[logMode]
+    const rootPath = options.rootPath ?? process.cwd()
 
     return ctx => {
-        ctx.logger = new Logger(logFn, options.name ? [options.name] : [], options.context ?? Object.create(null))
+        ctx.logger = new Logger(logFn, options.name ? [options.name] : [], options.context ?? Object.create(null), null, rootPath)
         if(ctx.requestId) ctx.logger.set('request_id', ctx.requestId)
+        if((ctx as any).request_id) ctx.logger.set('request_id', (ctx as any).request_id)
     }
 }
