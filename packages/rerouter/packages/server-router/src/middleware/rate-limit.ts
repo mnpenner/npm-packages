@@ -128,8 +128,8 @@ export interface RateLimitOptions<C> {
             ipv4: number
             ipv6: number
             byAsnClass?: Record<string, number> & {unknown: number}
-            ipv4Prefix?: 24   // default
-            ipv6Prefix?: 64   // default
+            ipv4Prefix?: number   // default 24
+            ipv6Prefix?: number   // default 64
         }
     }
 
@@ -407,7 +407,7 @@ function parseIpv6Segments(parts: string[]): number[] | null {
     return hextets
 }
 
-function deriveSubnet(ipAddress: string): SubnetInfo {
+function deriveSubnet(ipAddress: string, ipv4Prefix = 24, ipv6Prefix = 64): SubnetInfo {
     const ipv4 = parseIpv4Address(ipAddress)
     if (ipv4) {
         if (ipv4.length !== 4) {
@@ -416,6 +416,22 @@ function deriveSubnet(ipAddress: string): SubnetInfo {
         const [o1, o2, o3] = ipv4
         if (o1 == null || o2 == null || o3 == null) {
             return {key: 'subnet:unknown', version: 'unknown'}
+        }
+        if (!Number.isInteger(ipv4Prefix) || ipv4Prefix < 0 || ipv4Prefix > 32) {
+            return {key: 'subnet:unknown', version: 'unknown'}
+        }
+        if (ipv4Prefix !== 24) {
+            const ipInt = ((o1 << 24) | (o2 << 16) | (o3 << 8) | (ipv4[3] ?? 0)) >>> 0
+            const mask = ipv4Prefix === 0 ? 0 : (0xffffffff << (32 - ipv4Prefix)) >>> 0
+            const network = ipInt & mask
+            const b0 = (network >>> 24) & 0xff
+            const b1 = (network >>> 16) & 0xff
+            const b2 = (network >>> 8) & 0xff
+            const b3 = network & 0xff
+            return {
+                key: `ip4:${b0}.${b1}.${b2}.${b3}/${ipv4Prefix}`,
+                version: 'ipv4',
+            }
         }
         return {
             key: `ip24:${o1}.${o2}.${o3}.0/24`,
@@ -429,6 +445,17 @@ function deriveSubnet(ipAddress: string): SubnetInfo {
         const h2 = ipv6[1]!
         const h3 = ipv6[2]!
         const h4 = ipv6[3]!
+        if (!Number.isInteger(ipv6Prefix) || ipv6Prefix < 0 || ipv6Prefix > 128) {
+            return {key: 'subnet:unknown', version: 'unknown'}
+        }
+        if (ipv6Prefix !== 64) {
+            const masked = maskIpv6(ipv6, ipv6Prefix)
+            const keyParts = masked.map((value) => value.toString(16))
+            return {
+                key: `ip6:${keyParts.join(':')}/${ipv6Prefix}`,
+                version: 'ipv6',
+            }
+        }
         return {
             key: `ip64:${h1.toString(16)}:${h2.toString(16)}:${h3.toString(16)}:${h4.toString(16)}::/64`,
             version: 'ipv6',
@@ -436,6 +463,26 @@ function deriveSubnet(ipAddress: string): SubnetInfo {
     }
 
     return {key: 'subnet:unknown', version: 'unknown'}
+}
+
+function maskIpv6(hextets: number[], prefix: number): number[] {
+    const masked: number[] = []
+    let remaining = prefix
+    for (const hextet of hextets) {
+        if (remaining >= 16) {
+            masked.push(hextet)
+            remaining -= 16
+            continue
+        }
+        if (remaining <= 0) {
+            masked.push(0)
+            continue
+        }
+        const mask = ((0xffff << (16 - remaining)) & 0xffff) >>> 0
+        masked.push(hextet & mask)
+        remaining = 0
+    }
+    return masked
 }
 
 function defaultAsnToClass(asn: number, organization: string): AsnClass {
@@ -594,7 +641,7 @@ export function rateLimit<Ctx extends object = AnyContext>(
     const subnetAsnClassEnabled = Boolean(options.scales.subnet.byAsnClass && (options.getAsn || options.maxmindAsnDatabase))
 
     return async (ctx, next) => {
-        const nowMs = Date.now()
+        const nowMs = (ctx as any).startTime ?? Date.now()
         const url = new URL(ctx.req.url)
         const method = ctx.req.method.toUpperCase()
 
@@ -604,7 +651,11 @@ export function rateLimit<Ctx extends object = AnyContext>(
         const identityKey = userId ? `identity:user:${userId}` : `identity:ip:${ipAddress}`
         const identityMultiplier = userId ? 1 : options.anonymousIpMultiplier
 
-        const subnet = deriveSubnet(ipAddress)
+        const subnet = deriveSubnet(
+            ipAddress,
+            options.scales.subnet.ipv4Prefix ?? 24,
+            options.scales.subnet.ipv6Prefix ?? 64
+        )
         const subnetScaleBase = subnet.version === 'ipv6' ? options.scales.subnet.ipv6 : options.scales.subnet.ipv4
         let asnRecord: AsnRecord | null = null
         let asnClass: AsnClass = 'unknown'

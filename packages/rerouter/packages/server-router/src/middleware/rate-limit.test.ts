@@ -138,6 +138,72 @@ describe(rateLimit.name, () => {
         expect(response2.status).toBe(429)
     })
 
+    it('uses custom ipv4Prefix for subnet grouping', async () => {
+        const router = new Router()
+        router.use(rateLimit({
+            getUserId: async () => 'user-1',
+            getGlobalPeakConcurrentUsers: async () => 1,
+            baseWindowMs: 1000,
+            baseMaxRequestsPerBaseWindow: 5,
+            anonymousIpMultiplier: 1,
+            addRetryAfterHeader: false,
+            buckets: [{windowMs: 1000, scale: 1}],
+            endpointLimits: [],
+            includeQueryInEndpointKey: false,
+            scales: {subnet: {ipv4: 0.2, ipv6: 10, ipv4Prefix: 32}},
+        }))
+        router.add({
+            method: HttpMethod.GET,
+            pattern: '/ipv4-prefix',
+            handler: () => new Response('ok'),
+        })
+
+        const request = (ip: string) => new Request('https://example.com/ipv4-prefix', {
+            headers: {'x-forwarded-for': ip},
+        })
+
+        const response1 = await router.fetch(request('203.0.113.10'))
+        const response2 = await router.fetch(request('203.0.113.11'))
+        const response3 = await router.fetch(request('203.0.113.10'))
+
+        expect(response1.status).toBe(200)
+        expect(response2.status).toBe(200)
+        expect(response3.status).toBe(429)
+    })
+
+    it('uses custom ipv6Prefix for subnet grouping', async () => {
+        const router = new Router()
+        router.use(rateLimit({
+            getUserId: async () => 'user-1',
+            getGlobalPeakConcurrentUsers: async () => 1,
+            baseWindowMs: 1000,
+            baseMaxRequestsPerBaseWindow: 5,
+            anonymousIpMultiplier: 1,
+            addRetryAfterHeader: false,
+            buckets: [{windowMs: 1000, scale: 1}],
+            endpointLimits: [],
+            includeQueryInEndpointKey: false,
+            scales: {subnet: {ipv4: 10, ipv6: 0.2, ipv6Prefix: 128}},
+        }))
+        router.add({
+            method: HttpMethod.GET,
+            pattern: '/ipv6-prefix',
+            handler: () => new Response('ok'),
+        })
+
+        const request = (ip: string) => new Request('https://example.com/ipv6-prefix', {
+            headers: {'x-forwarded-for': ip},
+        })
+
+        const response1 = await router.fetch(request('2001:db8:abcd:12::1'))
+        const response2 = await router.fetch(request('2001:db8:abcd:12::2'))
+        const response3 = await router.fetch(request('2001:db8:abcd:12::1'))
+
+        expect(response1.status).toBe(200)
+        expect(response2.status).toBe(200)
+        expect(response3.status).toBe(429)
+    })
+
     it('enforces country limits', async () => {
         const router = new Router()
         router.use(rateLimit({
