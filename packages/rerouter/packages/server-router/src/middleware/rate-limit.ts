@@ -12,6 +12,11 @@ export interface AsnRecord {
     organization: string
 }
 
+export interface RateLimitIdentityInput {
+    userId: string | number | null | undefined
+    ipAddress: string
+}
+
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 export type MethodLimit = number | Partial<Record<HttpMethod, number>>
 
@@ -98,12 +103,12 @@ export interface RateLimitOptions<C> {
     // --- resolvers (optional overrides)
     getAsn?(
         ctx: C,
-        input: {userId: string | number | null | undefined; ipAddress: string}
+        input: RateLimitIdentityInput
     ): Promise<AsnRecord | null>
 
     getCountryCode?(
         ctx: C,
-        input: {userId: string | number | null | undefined; ipAddress: string}
+        input: RateLimitIdentityInput
     ): Promise<string | null>
 
     // --- ASN classification
@@ -156,8 +161,8 @@ type SubnetInfo = {
 }
 
 type GeoResolvers<C> = {
-    getAsn: (ctx: C, input: {userId: string | number | null | undefined; ipAddress: string}) => Promise<AsnRecord | null>
-    getCountry: (ctx: C, input: {userId: string | number | null | undefined; ipAddress: string}) => Promise<string | null>
+    getAsn: (ctx: C, input: RateLimitIdentityInput) => Promise<AsnRecord | null>
+    getCountry: (ctx: C, input: RateLimitIdentityInput) => Promise<string | null>
 }
 
 type MaxmindModule = {
@@ -642,12 +647,13 @@ export function rateLimit<Ctx extends object = AnyContext>(
                 options.baseWindowMs,
                 bucket
             )
+            const bucketSuffix = `:w${bucket.windowMs}`
 
             const identityMax = Math.floor(bucketMax * identityMultiplier)
             const identityResult = await applyFixedWindowLimit(
                 ctx,
                 storage,
-                identityKey,
+                `${identityKey}${bucketSuffix}`,
                 bucket.windowMs,
                 identityMax,
                 options.storage ? storageTtlMs : inMemoryTtlMs,
@@ -661,7 +667,7 @@ export function rateLimit<Ctx extends object = AnyContext>(
             const subnetResult = await applyFixedWindowLimit(
                 ctx,
                 storage,
-                subnet.key,
+                `${subnet.key}${bucketSuffix}`,
                 bucket.windowMs,
                 subnetMax,
                 options.storage ? storageTtlMs : inMemoryTtlMs,
@@ -678,7 +684,7 @@ export function rateLimit<Ctx extends object = AnyContext>(
                 const asnResult = await applyFixedWindowLimit(
                     ctx,
                     storage,
-                    asnKey,
+                    `${asnKey}${bucketSuffix}`,
                     bucket.windowMs,
                     asnMax,
                     options.storage ? storageTtlMs : inMemoryTtlMs,
@@ -698,7 +704,7 @@ export function rateLimit<Ctx extends object = AnyContext>(
                 const countryResult = await applyFixedWindowLimit(
                     ctx,
                     storage,
-                    countryKey,
+                    `${countryKey}${bucketSuffix}`,
                     bucket.windowMs,
                     countryMax,
                     options.storage ? storageTtlMs : inMemoryTtlMs,
@@ -721,7 +727,7 @@ export function rateLimit<Ctx extends object = AnyContext>(
                 const endpointIdentityResult = await applyFixedWindowLimit(
                     ctx,
                     storage,
-                    endpointIdentityKey,
+                    `${endpointIdentityKey}${bucketSuffix}`,
                     bucket.windowMs,
                     endpointIdentityMax,
                     options.storage ? storageTtlMs : inMemoryTtlMs,
@@ -734,7 +740,7 @@ export function rateLimit<Ctx extends object = AnyContext>(
                 const endpointSubnetResult = await applyFixedWindowLimit(
                     ctx,
                     storage,
-                    endpointSubnetKey,
+                    `${endpointSubnetKey}${bucketSuffix}`,
                     bucket.windowMs,
                     endpointSubnetMax,
                     options.storage ? storageTtlMs : inMemoryTtlMs,

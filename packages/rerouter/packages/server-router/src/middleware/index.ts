@@ -11,6 +11,7 @@ export type {
     HttpMethod,
     MethodLimit,
     RateBucket,
+    RateLimitIdentityInput,
     RateLimitOptions,
     RateLimitStorage,
 } from './rate-limit'
