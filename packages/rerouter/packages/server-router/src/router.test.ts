@@ -655,7 +655,7 @@ describe('Router.use', () => {
             method: HttpMethod.GET,
             pattern: '/',
             handler: ctx => {
-                expectType<number>(ctx.requestId)
+                expectType<string>(ctx.requestId)
                 return new Response('ok')
             },
         })
@@ -712,7 +712,7 @@ describe('Router.group', () => {
                 method: HttpMethod.GET,
                 pattern: '/',
                 handler: ctx => {
-                    expectType<number>(ctx.requestId)
+                    expectType<string>(ctx.requestId)
                     expectType<string>(ctx.userId)
                     return new Response('ok')
                 },

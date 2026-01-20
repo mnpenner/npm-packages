@@ -201,18 +201,20 @@ class Logger {
             // Skip stack frames until we're outside of current file
             for (let i = 1; i < stack.length; i++) {
                 const line = stack[i]
-                if (!line.includes(__filename)) {
-                    const match = line.match(/\((.+):(\d+):\d+\)/) || line.match(/at (.+):(\d+):\d+/)
-                    if (match) {
-                        let filepath = match[1]
-                        if (path.isAbsolute(filepath)) {
-                            filepath = path.relative(this._rootPath, filepath)
-                        }
-                        entry.filepath = filepath
+                if (!line) continue
+                const match = line.match(/\((.+):(\d+):\d+\)/) || line.match(/at (.+):(\d+):\d+/)
+                if (match) {
+                    let filepath = match[1]
+                    if (!filepath || filepath === __filename) continue
+                    if (path.isAbsolute(filepath)) {
+                        filepath = path.relative(this._rootPath, filepath)
+                    }
+                    entry.filepath = filepath
+                    if (match[2]) {
                         entry.line_no = parseInt(match[2], 10)
                     }
-                    break
                 }
+                break
             }
         }
 

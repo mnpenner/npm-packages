@@ -132,13 +132,13 @@ export function requestIdCtx<Ctx extends object = AnyContext>(
 
     let requestCounter = 0
     const hotReloadCounter = globalThis._reloadCounter
-    const generate = (ctx: RequestContext<Ctx>) => {
+    const generate = (ctx: RequestContext<any>) => {
         const extra: ExtraContext = {
             prefix,
             hotReloadCounter,
             requestCounter: ++requestCounter,
         }
-        return (options.generate ?? defaultRequestIdGenerator)(ctx, extra)
+        return (options.generate as any ?? defaultRequestIdGenerator)(ctx, extra)
     }
 
     if (!options.writeHeaderName) {
