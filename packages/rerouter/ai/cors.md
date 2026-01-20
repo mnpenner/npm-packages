@@ -1,4 +1,4 @@
-Implement a CORs middleware at packages/server-router/src/middleware/cors.ts inspired by other frameworks but adapted for this project.
+Implement a CORs middleware at packages/server-router/src/middleware/cors.ts inspired by other frameworks but adapted for this project. Maybe add a dev mode like packages/server-router/src/middleware/csrf.ts if it'll be helpful. If you need to share any functions with that file, move the helpers under packages/server-router/src/lib/.
 
 Docs for other popular CORs middlewares are below for your reference.
 
