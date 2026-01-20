@@ -20,3 +20,4 @@ syntax: regexp
 
 # All dotfiles except *ignore and *rc files
 (^|/)\.(?![^/]+(ignore|rc)$)
+^coverage/
