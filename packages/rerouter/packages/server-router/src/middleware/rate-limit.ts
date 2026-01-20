@@ -142,8 +142,8 @@ export interface RateLimitOptions<C> {
     inMemory?: {
         maxEntries?: number
         /**
-         * Defaults to the largest bucket.windowMs.
-         * Implementations MAY extend (e.g. 2x) for safety.
+         * Extra retention (ms) after the fixed window reset before eviction.
+         * Defaults to 1000ms for a small safety buffer.
          */
         ttlMs?: number
     }
@@ -284,7 +284,8 @@ function cleanIpAddress(ip: string): string {
             value = segment
         }
     }
-    return value
+    if (parseIpv4Address(value) || parseIpv6Hextets(value)) return value
+    return 'unknown'
 }
 
 function normalizeQueryString(url: URL): string {
@@ -315,10 +316,8 @@ async function applyFixedWindowLimit<C>(
     key: string,
     windowMs: number,
     max: number,
-    ttlMs: number,
     nowMs: number,
-    ttlOverrideMs?: number,
-    useWindowAlignedTtl = false
+    retentionMs: number
 ): Promise<{allowed: boolean; resetAtMs: number}> {
     const stored = await storage.readCounter(ctx, key)
     const resetAtMs = getBucketResetAt(nowMs, windowMs)
@@ -328,11 +327,10 @@ async function applyFixedWindowLimit<C>(
             : {resetAtMs, count: 0}
     const nextCount = counter.count + 1
     const updated: FixedWindowCounter = {resetAtMs: counter.resetAtMs, count: nextCount}
-    const ttlBase = useWindowAlignedTtl
-        ? Math.max(1, counter.resetAtMs - nowMs + 1000)
-        : ttlMs
-    const ttlEffective = ttlOverrideMs == null ? ttlBase : Math.max(ttlBase, ttlOverrideMs)
+    const ttlAligned = Math.max(1, counter.resetAtMs - nowMs + 1000)
+    const ttlEffective = ttlAligned + Math.max(0, retentionMs)
     await storage.writeCounter(ctx, key, updated, ttlEffective)
+
     return {allowed: nextCount <= max, resetAtMs: counter.resetAtMs}
 }
 
@@ -638,9 +636,6 @@ export function rateLimit<Ctx extends object = AnyContext>(
         throw new Error('rateLimit requires at least one bucket')
     }
 
-    const maxBucketWindowMs = Math.max(...options.buckets.map((bucket) => bucket.windowMs))
-    const storageTtlMs = maxBucketWindowMs
-    const inMemoryTtlMs = options.inMemory?.ttlMs ?? maxBucketWindowMs
     const storage = options.storage
         ?? new InMemoryRateLimitStorage<RequestContext<Ctx>>(options.inMemory?.maxEntries ?? DEFAULT_MAX_ENTRIES)
     const getIpAddress = options.getIpAddress ?? defaultGetIpAddress
@@ -652,21 +647,10 @@ export function rateLimit<Ctx extends object = AnyContext>(
     const asnToClass = options.asnToClass ?? defaultAsnToClass
     const geoResolvers = createGeoResolvers(options)
 
-    let globalPeakPromise: Promise<number> | null = null
-
-    const getGlobalPeakConcurrentUsers = (ctx: RequestContext<Ctx>) => {
-        if (!globalPeakPromise) {
-            globalPeakPromise = options.getGlobalPeakConcurrentUsers(ctx)
-        }
-        return globalPeakPromise
-    }
-
     const asnLimitEnabled = Boolean(options.scales.asnClass && (options.getAsn || options.maxmindAsnDatabase))
     const countryLimitEnabled = Boolean(options.scales.country && (options.getCountryCode || options.maxmindCountryDatabase))
     const subnetAsnClassEnabled = Boolean(options.scales.subnet.byAsnClass && (options.getAsn || options.maxmindAsnDatabase))
-
-    const useWindowAlignedTtl = !options.storage
-    const ttlOverrideMs = useWindowAlignedTtl ? options.inMemory?.ttlMs : undefined
+    const retentionMs = options.storage ? 0 : (options.inMemory?.ttlMs ?? 1000)
 
     return async (ctx, next) => {
         const nowMs = (ctx as any).startTime ?? Date.now()
@@ -684,7 +668,11 @@ export function rateLimit<Ctx extends object = AnyContext>(
             options.scales.subnet.ipv4Prefix ?? 24,
             options.scales.subnet.ipv6Prefix ?? 64
         )
-        const subnetScaleBase = subnet.version === 'ipv6' ? options.scales.subnet.ipv6 : options.scales.subnet.ipv4
+        const subnetScaleBase = subnet.version === 'ipv6'
+            ? options.scales.subnet.ipv6
+            : subnet.version === 'ipv4'
+                ? options.scales.subnet.ipv4
+                : Math.min(options.scales.subnet.ipv4, options.scales.subnet.ipv6)
         let asnRecord: AsnRecord | null = null
         let asnClass: AsnClass = 'unknown'
 
@@ -712,11 +700,11 @@ export function rateLimit<Ctx extends object = AnyContext>(
             options.includeQueryInEndpointKey,
             normalizeQuery
         )
-        const endpointIdentityKey = endpointKeyBase ? `${endpointKeyBase}:identity:${identityKey}` : null
-        const endpointSubnetKey = endpointKeyBase ? `${endpointKeyBase}:${subnet.key}` : null
+        const endpointIdentityKey = endpointKeyBase ? `endpoint:${endpointKeyBase}:${identityKey}` : null
+        const endpointSubnetKey = endpointKeyBase ? `endpoint:${endpointKeyBase}:${subnet.key}` : null
 
         const globalPeak = (asnLimitEnabled || countryLimitEnabled)
-            ? await getGlobalPeakConcurrentUsers(ctx)
+            ? await options.getGlobalPeakConcurrentUsers(ctx)
             : 1
 
         for (const bucket of options.buckets) {
@@ -734,10 +722,8 @@ export function rateLimit<Ctx extends object = AnyContext>(
                 `${identityKey}${bucketSuffix}`,
                 bucket.windowMs,
                 identityMax,
-                options.storage ? storageTtlMs : inMemoryTtlMs,
                 nowMs,
-                ttlOverrideMs,
-                useWindowAlignedTtl
+                retentionMs
             )
             if (!identityResult.allowed) {
                 return buildTooManyRequests(options.addRetryAfterHeader, identityResult.resetAtMs, nowMs)
@@ -750,10 +736,8 @@ export function rateLimit<Ctx extends object = AnyContext>(
                 `${subnet.key}${bucketSuffix}`,
                 bucket.windowMs,
                 subnetMax,
-                options.storage ? storageTtlMs : inMemoryTtlMs,
                 nowMs,
-                ttlOverrideMs,
-                useWindowAlignedTtl
+                retentionMs
             )
             if (!subnetResult.allowed) {
                 return buildTooManyRequests(options.addRetryAfterHeader, subnetResult.resetAtMs, nowMs)
@@ -769,10 +753,8 @@ export function rateLimit<Ctx extends object = AnyContext>(
                     `${asnKey}${bucketSuffix}`,
                     bucket.windowMs,
                     asnMax,
-                    options.storage ? storageTtlMs : inMemoryTtlMs,
                     nowMs,
-                    ttlOverrideMs,
-                    useWindowAlignedTtl
+                    retentionMs
                 )
                 if (!asnResult.allowed) {
                     return buildTooManyRequests(options.addRetryAfterHeader, asnResult.resetAtMs, nowMs)
@@ -791,10 +773,8 @@ export function rateLimit<Ctx extends object = AnyContext>(
                     `${countryKey}${bucketSuffix}`,
                     bucket.windowMs,
                     countryMax,
-                    options.storage ? storageTtlMs : inMemoryTtlMs,
                     nowMs,
-                    ttlOverrideMs,
-                    useWindowAlignedTtl
+                    retentionMs
                 )
                 if (!countryResult.allowed) {
                     return buildTooManyRequests(options.addRetryAfterHeader, countryResult.resetAtMs, nowMs)
@@ -816,10 +796,8 @@ export function rateLimit<Ctx extends object = AnyContext>(
                     `${endpointIdentityKey}${bucketSuffix}`,
                     bucket.windowMs,
                     endpointIdentityMax,
-                    options.storage ? storageTtlMs : inMemoryTtlMs,
                     nowMs,
-                    ttlOverrideMs,
-                    useWindowAlignedTtl
+                    retentionMs
                 )
                 if (!endpointIdentityResult.allowed) {
                     return buildTooManyRequests(options.addRetryAfterHeader, endpointIdentityResult.resetAtMs, nowMs)
@@ -831,10 +809,8 @@ export function rateLimit<Ctx extends object = AnyContext>(
                     `${endpointSubnetKey}${bucketSuffix}`,
                     bucket.windowMs,
                     endpointSubnetMax,
-                    options.storage ? storageTtlMs : inMemoryTtlMs,
                     nowMs,
-                    ttlOverrideMs,
-                    useWindowAlignedTtl
+                    retentionMs
                 )
                 if (!endpointSubnetResult.allowed) {
                     return buildTooManyRequests(options.addRetryAfterHeader, endpointSubnetResult.resetAtMs, nowMs)
