@@ -1,8 +1,14 @@
 #!/usr/bin/env -S bun test
 import {describe, expect, it} from 'bun:test'
 import {HttpMethod} from '@mpen/http-helpers'
+import {existsSync} from 'node:fs'
+import {fileURLToPath} from 'node:url'
 import {Router} from '../router'
 import {rateLimit} from './rate-limit'
+
+const asnDbPath = fileURLToPath(new URL('../testing/GeoLite2-ASN.mmdb', import.meta.url))
+const countryDbPath = fileURLToPath(new URL('../testing/GeoLite2-Country.mmdb', import.meta.url))
+const hasMaxmindDbs = existsSync(asnDbPath) && existsSync(countryDbPath)
 
 describe(rateLimit.name, () => {
     it('enforces per-user identity limits', async () => {
@@ -202,6 +208,42 @@ describe(rateLimit.name, () => {
         expect(response2.status).toBe(429)
     })
 
+
+    it.skipIf(!hasMaxmindDbs)('enforces ASN limits via MaxMind database', async () => {
+        const router = new Router()
+        router.use(rateLimit({
+            getUserId: async () => 'user-1',
+            getGlobalPeakConcurrentUsers: async () => 1,
+            baseWindowMs: 1000,
+            baseMaxRequestsPerBaseWindow: 5,
+            anonymousIpMultiplier: 1,
+            addRetryAfterHeader: false,
+            buckets: [{windowMs: 1000, scale: 1}],
+            endpointLimits: [],
+            includeQueryInEndpointKey: false,
+            maxmindAsnDatabase: asnDbPath,
+            scales: {
+                subnet: {ipv4: 10, ipv6: 10},
+                asnClass: {cloud: 0.2, unknown: 1},
+            },
+        }))
+        router.add({
+            method: HttpMethod.GET,
+            pattern: '/asn-maxmind',
+            handler: () => new Response('ok'),
+        })
+
+        const request = () => new Request('https://example.com/asn-maxmind', {
+            headers: {'x-forwarded-for': '8.8.8.8'},
+        })
+
+        const response1 = await router.fetch(request())
+        const response2 = await router.fetch(request())
+
+        expect(response1.status).toBe(200)
+        expect(response2.status).toBe(429)
+    })
+
     it('uses a custom getIpAddress implementation', async () => {
         const router = new Router()
         router.use(rateLimit({
@@ -232,6 +274,41 @@ describe(rateLimit.name, () => {
 
         expect(response1.status).toBe(200)
         expect(response2.status).toBe(200)
+    })
+
+    it.skipIf(!hasMaxmindDbs)('enforces country limits via MaxMind database', async () => {
+        const router = new Router()
+        router.use(rateLimit({
+            getUserId: async () => 'user-1',
+            getGlobalPeakConcurrentUsers: async () => 1,
+            baseWindowMs: 1000,
+            baseMaxRequestsPerBaseWindow: 5,
+            anonymousIpMultiplier: 1,
+            addRetryAfterHeader: false,
+            buckets: [{windowMs: 1000, scale: 1}],
+            endpointLimits: [],
+            includeQueryInEndpointKey: false,
+            maxmindCountryDatabase: countryDbPath,
+            scales: {
+                subnet: {ipv4: 10, ipv6: 10},
+                country: {US: 0.2, other: 1, unknown: 1},
+            },
+        }))
+        router.add({
+            method: HttpMethod.GET,
+            pattern: '/country-maxmind',
+            handler: () => new Response('ok'),
+        })
+
+        const request = () => new Request('https://example.com/country-maxmind', {
+            headers: {'x-forwarded-for': '8.8.8.8'},
+        })
+
+        const response1 = await router.fetch(request())
+        const response2 = await router.fetch(request())
+
+        expect(response1.status).toBe(200)
+        expect(response2.status).toBe(429)
     })
 
     it('applies non-default baseWindowMs and anonymousIpMultiplier', async () => {

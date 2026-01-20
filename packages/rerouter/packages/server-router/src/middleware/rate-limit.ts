@@ -1,4 +1,4 @@
-import {HttpStatus} from '@mpen/http-helpers'
+import {HttpMethod, HttpStatus} from '@mpen/http-helpers'
 import {simpleStatus} from '@mpen/server-router/response/simple'
 import type {AnyContext, Middleware, RequestContext} from '../types'
 
@@ -17,7 +17,6 @@ export interface RateLimitIdentityInput {
     ipAddress: string
 }
 
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 export type MethodLimit = number | Partial<Record<HttpMethod, number>>
 
 export interface EndpointLimit {
