@@ -167,17 +167,50 @@ type MaxmindModule = {
 const DEFAULT_MAX_ENTRIES = 100_000
 
 const ASN_OVERRIDES: Record<number, AsnClass> = {
-    16509: 'cloud',
-    15169: 'cloud',
-    8075: 'cloud',
-    13335: 'cdn',
+    // Cloud hyperscalers
+    16509: 'cloud',     // AWS
+    14618: 'cloud',     // Amazon.com (enterprise)
+    15169: 'cloud',     // Google
+    8075:  'cloud',     // Microsoft Azure
+    31898: 'cloud',     // Oracle Cloud
+    45102: 'cloud',     // Alibaba Cloud
+    132203: 'cloud',    // Tencent Cloud
+    36351: 'cloud',     // IBM Cloud
+
+    // CDN
+    13335: 'cdn',       // Cloudflare
+    54113: 'cdn',       // Fastly
+    20940: 'cdn',       // Akamai
+
+    // Other cloud/hosting
+    14061: 'cloud',     // DigitalOcean
+    20473: 'cloud',     // Vultr
+    63949: 'cloud',     // Linode (Akamai)
+    24940: 'hosting',   // Hetzner
+    16276: 'hosting',   // OVHcloud
+    12876: 'hosting',   // Scaleway
+    8560:  'hosting',   // IONOS
+    47583: 'hosting',   // Hostinger
+    22612: 'hosting',   // Namecheap
 }
 
-const KEYWORDS: Record<Exclude<AsnClass, string & {}>, string[]> = {
+const KEYWORDS: Record<Extract<AsnClass, string>, string[]> = {
     cdn: ['cloudflare', 'fastly', 'akamai', 'cdn'],
-    cloud: ['amazon', 'aws', 'google', 'gcp', 'azure', 'digitalocean', 'linode', 'vultr', 'ovh', 'hetzner'],
-    hosting: ['hosting', 'host', 'datacenter', 'server'],
-    mobile: ['mobile', 'wireless', 'lte', '5g'],
+    cloud: [
+        'amazon', 'aws',
+        'google', 'gcp',
+        'microsoft', 'azure',
+        'oracle', 'alibaba',
+        'tencent', 'digitalocean',
+        'vultr', 'linode', 'ibm'
+    ],
+    hosting: [
+        'hosting', 'host', 'colo',
+        'datacenter', 'data center',
+        'ovh', 'scaleway', 'ionos',
+        'hostinger', 'namecheap'
+    ],
+    mobile: ['mobile', 'wireless', 'cellular', 'lte', '5g'],
     residential: ['telecom', 'broadband', 'cable', 'fiber'],
     unknown: [],
 }
@@ -738,17 +771,3 @@ function ensureURLPattern(): typeof URLPattern {
     }
     return URLPattern
 }
-
-// Example:
-// const limiter = rateLimit({
-//   getUserId: async ({session}) => session?.userId,
-//   getGlobalPeakConcurrentUsers: async () => 1000,
-//   baseWindowMs: 60_000,
-//   baseMaxRequestsPerBaseWindow: 120,
-//   anonymousIpMultiplier: 0.5,
-//   addRetryAfterHeader: true,
-//   buckets: [{windowMs: 60_000, scale: 1}],
-//   endpointLimits: [{pattern: '/login', limit: {POST: 10}}],
-//   includeQueryInEndpointKey: false,
-//   scales: {subnet: {ipv4: 2, ipv6: 1}},
-// })
