@@ -3,9 +3,11 @@ import {toArray} from '@mpen/server-router/lib/collections'
 
 declare global {
     var _reloadCounter: number
+    var _globalRequestCounter: number
 }
 
 globalThis._reloadCounter = globalThis._reloadCounter == null ? 0 : globalThis._reloadCounter+1
+globalThis._globalRequestCounter ??= 0
 
 interface ExtraContext {
     prefix: string
@@ -17,6 +19,8 @@ interface ExtraContext {
      * Sequential request number.
      */
     requestCounter: number
+
+    globalRequestCounter: number
 }
 
 export interface RequestIdCtxOptions<Ctx extends object = AnyContext> {
@@ -99,7 +103,7 @@ function wrapGeneratorWithRequestId(
 }
 
 function defaultRequestIdGenerator(ctx: RequestContext, extra: ExtraContext) {
-    let requestId = `${extra.hotReloadCounter.toString(36)}.${extra.requestCounter.toString(36)}`
+    let requestId = `${extra.hotReloadCounter.toString(36)}.${extra.requestCounter.toString(36)}}`
     if(extra.prefix) requestId = `${extra.prefix}.${requestId}`
     return requestId
 }
@@ -137,6 +141,7 @@ export function requestIdCtx<Ctx extends object = AnyContext>(
             prefix,
             hotReloadCounter,
             requestCounter: ++requestCounter,
+            globalRequestCounter: ++globalThis._globalRequestCounter,
         }
         return (options.generate as any ?? defaultRequestIdGenerator)(ctx, extra)
     }
