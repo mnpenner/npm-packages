@@ -102,8 +102,13 @@ function wrapGeneratorWithRequestId(
     return wrapped()
 }
 
+export const isHMR = import.meta.hot !== undefined || process.execArgv.includes("--hot")
+
 function defaultRequestIdGenerator(ctx: RequestContext, extra: ExtraContext) {
-    let requestId = `${extra.hotReloadCounter.toString(36)}.${extra.requestCounter.toString(36)}}`
+    let requestId = extra.requestCounter.toString(36)
+    if(isHMR) {
+        requestId = extra.hotReloadCounter.toString(36) + '.'+requestId
+    }
     if(extra.prefix) requestId = `${extra.prefix}.${requestId}`
     return requestId
 }

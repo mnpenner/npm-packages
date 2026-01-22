@@ -111,13 +111,11 @@ describe(requestIdCtx.name, () => {
 
     it('uses the default generator format when no header is provided', async () => {
         const router = new Router()
-        const ids: string[] = []
         router.use(requestIdCtx({prefix: 'req'}))
         router.add({
             method: HttpMethod.GET,
             pattern: '/',
             handler: ({requestId}) => {
-                ids.push(requestId)
                 return new Response(requestId)
             },
         })
@@ -128,13 +126,7 @@ describe(requestIdCtx.name, () => {
         const firstId = await first.text()
         const secondId = await second.text()
 
-        expect(firstId).toMatch(/^req\.\d+\.\d+$/)
-        expect(secondId).toMatch(/^req\.\d+\.\d+$/)
-        const [, firstReload, firstCount] = firstId.split('.')
-        const [, secondReload, secondCount] = secondId.split('.')
-        expect(firstReload).toBe(secondReload)
-        expect(firstCount).toBe('1')
-        expect(secondCount).toBe('2')
-        expect(ids).toEqual([firstId, secondId])
+        expect(firstId).toBe('req.1')
+        expect(secondId).toBe('req.2')
     })
 })
