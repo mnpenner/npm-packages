@@ -1,5 +1,5 @@
 #!/usr/bin/env -S bun
-import {HtmlDocument} from './custom-components'
+import {HtmlDocument} from './custom'
 import {css, js} from './template-strings'
 import Path from 'path'
 
