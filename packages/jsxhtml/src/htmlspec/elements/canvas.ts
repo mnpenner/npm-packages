@@ -3,9 +3,13 @@ import type {ElementForTag} from './element-types'
 import type {Numeric} from '../attributes/StandardGlobalAttributes'
 
 export interface CanvasAttributes extends CommonAttributes<ElementForTag<'canvas'>> {
-    /** height attribute. */
+    /**
+     * The height of the coordinate space in CSS pixels. Defaults to 150.
+     */
     height?: Numeric
-    /** width attribute. */
+    /**
+     * The width of the coordinate space in CSS pixels. Defaults to 300.
+     */
     width?: Numeric
 }
 

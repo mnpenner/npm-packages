@@ -7,17 +7,17 @@ import type {Numeric} from '../attributes/StandardGlobalAttributes'
  */
 export interface FencedframeAttributes extends CommonAttributes<ElementForTag<'fencedframe'>> {
     /**
-     * Specifies a Permissions Policy for the fenced frame.
+     * Specifies a [Permissions Policy](/en-US/docs/Web/HTTP/Guides/Permissions_Policy) for the `<fencedframe>`, which defines what features are available to the `<fencedframe>` based on the origin of the request. See [Permissions policies available to fenced frames](#permissions_policies_available_to_fenced_frames) for more details of which features can be controlled via a policy set on a fenced frame.
      */
     allow?: string
 
     /**
-     * The height of the fenced frame in CSS pixels.
+     * A unitless integer representing the height of the fenced frame in CSS pixels. The default is `150`.
      */
     height?: Numeric
 
     /**
-     * The width of the fenced frame in CSS pixels.
+     * A unitless integer representing the width of the fenced frame in CSS pixels. The default is `300`.
      */
     width?: Numeric
 }

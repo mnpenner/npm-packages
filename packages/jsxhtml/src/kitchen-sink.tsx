@@ -1,3 +1,4 @@
+#!/usr/bin/env -S bun
 import {HtmlDocument} from './custom-components'
 import {css, js} from './template-strings'
 import Path from 'path'
@@ -131,7 +132,7 @@ export const kitchenSink = (
                         <figcaption>Responsive image</figcaption>
                     </figure>
 
-                    <video controls="true" width="320" height="180" poster="/poster.jpg" preload="metadata">
+                    <video controls="true" width="320" height={180} poster="/poster.jpg" preload="metadata">
                         <source src="/clip.mp4" type="video/mp4" />
                         <track kind="captions" src="/captions.vtt" srclang="en" label="English" />
                     </video>
@@ -143,7 +144,7 @@ export const kitchenSink = (
                     <iframe
                         title="Map"
                         src="/map"
-                        width="320"
+                        width={320}
                         height="180"
                         loading="lazy"
                         referrerpolicy="no-referrer"
@@ -182,7 +183,7 @@ export const kitchenSink = (
                     <blockquote cite="/quote">
                         <p>We can only see a short distance ahead.</p>
                     </blockquote>
-                    <pre>{js`const answer = 42`}</pre>
+                    <pre>const answer = 42</pre>
                 </section>
             </main>
 

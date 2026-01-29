@@ -6,16 +6,24 @@ import type {CssFrag} from '../../template-strings'
  * Represents the attributes of a <style> HTML element.
  */
 export interface StyleAttributes extends CommonAttributes<ElementForTag<'style'>> {
-    /** Space-separated list of blocking operations, e.g., "render" */
+    /**
+     * This attribute explicitly indicates that certain operations should be blocked on the fetching of critical subresources and the application of the stylesheet to the document. -ed stylesheets are generally considered as critical subresources, whereas  and fonts are not. The operations that are to be blocked must be a space-separated list of blocking tokens listed below. Currently there is only one token:
+     */
     blocking?: string
 
-    /** Media query determining when the styles apply, defaults to "all" */
+    /**
+     * This attribute defines which media the style should be applied to. Its value is a [media query](/en-US/docs/Web/CSS/Guides/Media_queries/Using), which defaults to `all` if the attribute is missing.
+     */
     media?: string
 
-    /** Cryptographic nonce for CSP compliance */
+    /**
+     * A cryptographic  (number used once) used to allow inline styles in a [style-src Content-Security-Policy](/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/style-src). The server must generate a unique nonce value each time it transmits a policy. It is critical to provide a nonce that cannot be guessed as bypassing a resource's policy is otherwise trivial.
+     */
     nonce?: string
 
-    /** Title of the style sheet set */
+    /**
+     * This attribute specifies [alternative style sheet](/en-US/docs/Web/HTML/Reference/Attributes/rel/alternate_stylesheet) sets.
+     */
     title?: string
 
     /**

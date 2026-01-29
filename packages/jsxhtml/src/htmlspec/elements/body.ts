@@ -2,49 +2,93 @@ import type {CommonAttributes} from '../attributes/ElementAttributes'
 import type {ElementForTag} from './element-types'
 
 export interface BodyAttributes extends CommonAttributes<ElementForTag<'body'>> {
-    /** onafterprint attribute. */
+    /**
+     * Function to call after the user has printed the document.
+     */
     onafterprint?: string
-    /** onbeforeprint attribute. */
+    /**
+     * Function to call when the user requests printing of the document.
+     */
     onbeforeprint?: string
-    /** onbeforeunload attribute. */
+    /**
+     * Function to call when the document is about to be unloaded.
+     */
     onbeforeunload?: string
-    /** onblur attribute. */
+    /**
+     * Function to call when the document loses focus.
+     */
     onblur?: string
-    /** onerror attribute. */
+    /**
+     * Function to call when the document fails to load properly.
+     */
     onerror?: string
-    /** onfocus attribute. */
+    /**
+     * Function to call when the document receives focus.
+     */
     onfocus?: string
-    /** onhashchange attribute. */
+    /**
+     * Function to call when the fragment identifier part (starting with the hash (`'#'`) character) of the document's current address has changed.
+     */
     onhashchange?: string
-    /** onlanguagechange attribute. */
+    /**
+     * Function to call when the preferred languages changed.
+     */
     onlanguagechange?: string
-    /** onload attribute. */
+    /**
+     * Function to call when the document has finished loading.
+     */
     onload?: string
-    /** onmessage attribute. */
+    /**
+     * Function to call when the document has received a message.
+     */
     onmessage?: string
-    /** onmessageerror attribute. */
+    /**
+     * Function to call when the document has received a message that cannot be deserialized.
+     */
     onmessageerror?: string
-    /** onoffline attribute. */
+    /**
+     * Function to call when network communication has failed.
+     */
     onoffline?: string
-    /** ononline attribute. */
+    /**
+     * Function to call when network communication has been restored.
+     */
     ononline?: string
-    /** onpageswap attribute. */
+    /**
+     * Function to call when you navigate across documents, when the previous document is about to unload.
+     */
     onpageswap?: string
-    /** onpagehide attribute. */
+    /**
+     * Function to call when the browser hides the current page in the process of presenting a different page from the session's history.
+     */
     onpagehide?: string
-    /** onpagereveal attribute. */
+    /**
+     * Function to call when a document is first rendered, either when loading a fresh document from the network or activating a document.
+     */
     onpagereveal?: string
-    /** onpageshow attribute. */
+    /**
+     * Function to call when the browser displays the window's document due to navigation.
+     */
     onpageshow?: string
-    /** onpopstate attribute. */
+    /**
+     * Function to call when the user has navigated session history.
+     */
     onpopstate?: string
-    /** onresize attribute. */
+    /**
+     * Function to call when the document has been resized.
+     */
     onresize?: string
-    /** onrejectionhandled attribute. */
+    /**
+     * Function to call when a JavaScript  is handled late.
+     */
     onrejectionhandled?: string
-    /** onstorage attribute. */
+    /**
+     * Function to call when the storage area has changed.
+     */
     onstorage?: string
-    /** onunhandledrejection attribute. */
+    /**
+     * Function to call when a JavaScript  that has no rejection handler is rejected.
+     */
     onunhandledrejection?: string
 }
 
