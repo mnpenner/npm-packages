@@ -15,7 +15,7 @@ it('handles basic inputs', () => {
 })
 
 it('supports custom types', () => {
-    expect(String(<C>some comment</C>)).toEqual('<!-- some comment -->')
+    expect(String(<C>some comment</C>)).toEqual(process.env.NODE_ENV === 'production' ? '' : '<!-- some comment -->')
     expect(String(<DocType html />)).toEqual('<!DOCTYPE html>')
 })
 
