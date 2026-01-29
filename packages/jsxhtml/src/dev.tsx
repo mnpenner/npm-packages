@@ -32,6 +32,7 @@ function externalFunc(this: HTMLButtonElement) {
 // @ts-ignore
 const jsxNode = <HtmlDocument lang="en">
     <head>
+        <meta charset="utf-8" />
         <title>Hello JsxHtml</title>
     </head>
     {/*<style> {'a'}</style>*/}
