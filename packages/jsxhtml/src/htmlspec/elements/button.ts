@@ -78,6 +78,7 @@ export interface ButtonAttributes extends CommonAttributes<ElementForTag<'button
 
     /**
      * Defines the `<button ` element as an **interest invoker**. Its value is the `id` of a target element, which will be affected in some way (normally shown or hidden) when interest is shown or lost on the invoker element (for example, by hovering/unhovering or focusing/blurring it). See Using interest invokers for more details and examples.
+     * @experimental
      */
     interestfor?: string
 

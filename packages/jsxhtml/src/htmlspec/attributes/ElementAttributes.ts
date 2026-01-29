@@ -27,6 +27,6 @@ export interface SpecialAttributes {
     class?: ClassNames
 }
 
-export type CommonAttributes<E=HTMLElement> = Override<AllGlobalAttributes<E>, SpecialAttributes>
+export interface CommonAttributes<E=HTMLElement> extends Override<AllGlobalAttributes<E>, SpecialAttributes> {}
 
-export type AnyAttributes<E=HTMLElement> = Override<AttrObj, CommonAttributes<E>>
+export interface AnyAttributes<E=HTMLElement> extends Override<AttrObj, CommonAttributes<E>> {}

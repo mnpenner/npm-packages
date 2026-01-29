@@ -20,6 +20,7 @@ export interface TemplateAttributes extends CommonAttributes<ElementForTag<'temp
     shadowrootdelegatesfocus?: string
     /**
      * Sets the value of the `referenceTarget` property of a `ShadowRoot` created using this element. The value should be the ID of an element inside the shadow DOM. If set, target references to the host element from outside the shadow DOM will cause the referenced target element to become the effective target of the reference to the host element.
+     * @experimental
      */
     shadowrootreferencetarget?: string
     /**

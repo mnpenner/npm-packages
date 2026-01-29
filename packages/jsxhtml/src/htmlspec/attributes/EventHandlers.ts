@@ -32,10 +32,21 @@ export interface EventHandlerMap {
     onerror: ErrorEvent
     onfocus: FocusEvent
     onformdata: FormDataEvent
+    /**
+     * @experimental
+     */
+    ongesturechange: Event
+    /**
+     * @experimental
+     */
+    ongestureend: Event
+    /**
+     * @experimental
+     */
+    ongesturestart: Event
     oninput: InputEvent
     oninvalid: Event
     onkeydown: KeyboardEvent
-    onkeypress: KeyboardEvent
     onkeyup: KeyboardEvent
     onload: Event
     onloadeddata: Event
@@ -70,10 +81,25 @@ export interface EventHandlerMap {
     ontoggle: Event
     onvolumechange: Event
     onwaiting: Event
+    /**
+     * @experimental
+     */
+    onwebkitmouseforcechanged: Event
+    /**
+     * @experimental
+     */
+    onwebkitmouseforcedown: Event
+    /**
+     * @experimental
+     */
+    onwebkitmouseforceup: Event
+    /**
+     * @experimental
+     */
+    onwebkitmouseforcewillbegin: Event
     onwheel: WheelEvent
 }
 
-// TODO: HTMLElement should be more specific, like HTMLButtonElement
 export type GlobalEventHandlers<E=HTMLElement> = {
     [K in keyof EventHandlerMap]?: string | ((this: E, ev: EventHandlerMap[K]) => any)
 }

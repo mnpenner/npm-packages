@@ -3,14 +3,6 @@ import type {ElementForTag} from './element-types'
 
 export interface AAttributes extends CommonAttributes<ElementForTag<'a'>> {
     /**
-     * Specifies that you want the browser to send an Attribution-Reporting-Eligible header.
-     * Can be a boolean attribute or a space-separated list of URLs.
-     *
-     * @deprecated
-     */
-    attributionsrc?: string | boolean
-
-    /**
      * Causes the browser to treat the linked URL as a download. Can be used with or without a `filename` value:
      *
      * Possible values:
@@ -30,6 +22,7 @@ export interface AAttributes extends CommonAttributes<ElementForTag<'a'>> {
 
     /**
      * Defines the `<a ` element as an **interest invoker**. Its value is the `id` of the target element, which will be affected in some way (normally shown or hidden) when interest is shown or lost on the invoker element (for example, by hovering/unhovering or focusing/blurring it). See Using interest invokers for more details and examples.
+     * @experimental
      */
     interestfor?: string
 
@@ -70,26 +63,6 @@ export interface AAttributes extends CommonAttributes<ElementForTag<'a'>> {
      * Hints at the linked URL's format with a MIME type. No built-in functionality.
      */
     type?: string
-    /**
-     * @deprecated
-     */
-    charset?: string
-    /**
-     * @deprecated
-     */
-    coords?: string
-    /**
-     * @deprecated
-     */
-    name?: string
-    /**
-     * @deprecated
-     */
-    rev?: string
-    /**
-     * @deprecated
-     */
-    shape?: string
 }
 
 

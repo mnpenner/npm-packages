@@ -51,12 +51,6 @@ export interface StandardGlobalAttributes {
      */
     contenteditable?: string
     /**
-     * The id of a `<menu>` to use as the contextual menu for this element.
-     *
-     * @deprecated
-     */
-    contextmenu?: string
-    /**
      * Forms a class of attributes, called custom data attributes, that allow proprietary information to be exchanged
      * between the HTML and its DOM representation that may be used by scripts. All such custom data are available via
      * the HTMLElement interface of the element the attribute is set on. The HTMLElement.dataset property gives access
@@ -231,6 +225,8 @@ export interface StandardGlobalAttributes {
      * - `auto` or an empty string, which automatically shows the virtual keyboard when the element is focused or
      * tapped.
      * - `manual`, which decouples focus and tap on the element from the virtual keyboard's state.
+     *
+     * @experimental
      */
     virtualkeyboardpolicy?: true | 'auto' | 'manual'
     /**
@@ -239,7 +235,8 @@ export interface StandardGlobalAttributes {
     writingsuggestions?: boolean | 'true' | 'false'
 }
 
-export type Numeric = number | bigint | `${number}` | `${bigint}`
+export type NumericString = `${number}` | `${bigint}`
+export type Numeric = number | bigint | NumericString
 
 export const enum InputMode {
     /**

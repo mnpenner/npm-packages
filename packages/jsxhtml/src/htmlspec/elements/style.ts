@@ -21,11 +21,6 @@ export interface StyleAttributes extends CommonAttributes<ElementForTag<'style'>
 
 
 
-    /**
-     * @deprecated Only allowed value is "text/css" or empty string.
-     */
-    type?: '' | 'text/css'
-
     /** children attribute. */
     children?: CssFrag
 }

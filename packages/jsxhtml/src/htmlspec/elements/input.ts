@@ -28,8 +28,6 @@ export type InputType =
     | 'time'
     | 'url'
     | 'week'
-    // Obsolete
-    | 'datetime'
 
 /**
  * Type definition for the attributes of the HTML <input> element, excluding global attributes.
@@ -142,7 +140,7 @@ export interface InputAttributes extends CommonAttributes<ElementForTag<'input'>
     multiple?: boolean;
 
     /**
-     * A string specifying a name for the input control. This name is submitted along with the control's value when the form data is submitted. Consider the `name` a required attribute (even though it's not). If an input has no `name` specified, or `name` is empty, the input's value is not submitted with the form! (Disabled controls, unchecked radio buttons, unchecked checkboxes, and reset buttons are also not sent.) There are two special cases: 1. `_charset_` : If used as the name of an `<input ` element of type hidden, the input's `value` is automatically set by the user agent to the character encoding being used to submit the form. 2. `isindex`: For historical reasons, the name `isindex` is not allowed. The `name` attribute creates a unique behavior for radio buttons. Only one radio button in a same-named group of radio buttons can be checked at a time. Selecting any radio button in that group automatically deselects any currently-selected radio button in the same group. The value of that one checked radio button is sent along with the name if the form is submitted, When tabbing into a series of same-named group of radio buttons, if one is checked, that one will receive focus. If they aren't grouped together in source order, if one of the group is checked, tabbing into the group starts when the first one in the group is encountered, skipping all those that aren't checked. In other words, if one is checked, tabbing skips the unchecked radio buttons in the group. If none are checked, the radio button group receives focus when the first button in the same name group is reached. Once one of the radio buttons in a group has focus, using the arrow keys will navigate through all the radio buttons of the same name, even if the radio buttons are not grouped together in the source order. When an input element is given a `name`, that name becomes a property of the owning form element's HTMLFormElement.elements property. If you have an input whose `name` is set to `guest` and another whose `name` is `hat-size`, the following code can be used: ```js let form = document.querySelector("form"); let guestName = form.elements.guest; let hatSize = form.elements["hat-size"]; ``` When this code has run, `guestName` will be the HTMLInputElement for the `guest` field, and `hatSize` the object for the `hat-size` field.
+     * A string specifying a name for the input control. This name is submitted along with the control's value when the form data is submitted. Consider the `name` a required attribute (even though it's not). If an input has no `name` specified, or `name` is empty, the input's value is not submitted with the form! (Disabled controls, unchecked radio buttons, unchecked checkboxes, and reset buttons are also not sent.) There are two special cases: 1. `_charset_` : If used as the name of an `<input ` element of type hidden, the input's `value` is automatically set by the user agent to the character encoding being used to submit the form. 2. `isindex`: For historical reasons, the name `isindex` is not allowed. The `name` attribute creates a unique behavior for radio buttons. Only one radio button in a same-named group of radio buttons can be checked at a time. Selecting any radio button in that group automatically deselects any currently-selected radio button in the same group. The value of that one checked radio button is sent along with the name if the form is submitted, When tabbing into a series of same-named group of radio buttons, if one is checked, that one will receive focus. If they aren't grouped together in source order, if one of the group is checked, tabbing into the group starts when the first one in the group is encountered, skipping all those that aren't checked. In other words, if one is checked, tabbing skips the unchecked radio buttons in the group. If none are checked, the radio button group receives focus when the first button in the same name group is reached. Once one of the radio buttons in a group has focus, using the arrow keys will navigate through all the radio buttons of the same name, even if the radio buttons are not grouped together in the source order. When an input element is given a `name`, that name becomes a property of the owning form element's HTMLFormElement.elements property. If you have an input whose `name` is set to `guest` and another whose `name` is `hat-size`, the following code can be used:
      */
     name?: string;
 
@@ -165,11 +163,11 @@ export interface InputAttributes extends CommonAttributes<ElementForTag<'input'>
      * Specifies the action to be performed on a popover element being controlled by a control `<input type="button" `. Possible values are: The button will hide a shown popover. If you try to hide an already hidden popover, no action will be taken. The button will show a hidden popover. If you try to show an already showing popover, no action will be taken. The button will toggle a popover between showing and hidden. If the popover is hidden, it will be shown; if the popover is showing, it will be hidden. If `popovertargetaction` is omitted, `"toggle"` is the default action that will be performed by the control button.
      *
      * Possible values:
-     * - "hide"
-     * - "show"
-     * - "toggle"
+     * - hide
+     * - show
+     * - toggle
      */
-    popovertargetaction?: '"hide"' | '"show"' | '"toggle"'
+    popovertargetaction?: 'hide' | 'show' | 'toggle'
 
     /**
      * The Boolean **`readonly`** attribute, when present, makes the element not mutable, meaning the user can not edit the control.
@@ -207,7 +205,7 @@ export interface InputAttributes extends CommonAttributes<ElementForTag<'input'>
     value?: string | Numeric;
 
     /**
-     * Valid for the `image` input button only, the `width` is the width of the image file to display to represent the graphical submit button. See the image input type. The following non-standard attributes are also available on some browsers. As a general rule, you should avoid using them unless it can't be helped. <table class="no-markdown" <thead <tr <th scope="col" Attribute</th <th scope="col" Description</th </tr </thead <tbody <tr <td <a href="#incremental" <code incremental</code </a </td <td Whether or not to send repeated search events to allow updating live search results while the user is still editing the value of the field. <strong WebKit and Blink only (Safari, Chrome, Opera, etc.).</strong </td </tr <tr <td <code mozactionhint</code </td <td <p A string indicating the type of action that will be taken when the user presses the <kbd Enter</kbd or <kbd Return</kbd key while editing the field; this is used to determine an appropriate label for that key on a virtual keyboard. <strong Since this attribute is deprecated, use <a href="/en-US/docs/Web/HTML/Reference/Global_attributes/enterkeyhint" <code enterkeyhint</code </a instead.</strong </p </td </tr <tr <td <a href="#orient" <code orient</code </a </td <td Sets the orientation of the range slider. <strong Firefox only</strong . </td </tr <tr <td <a href="#results" <code results</code </a </td <td The maximum number of items that should be displayed in the drop-down list of previous search queries. <strong Safari only.</strong </td </tr <tr <td <a href="#webkitdirectory" <code webkitdirectory</code </a </td <td A Boolean indicating whether to only allow the user to choose a directory (or directories, if <a href="#multiple" <code multiple</code </a is also present) </td </tr </tbody </table
+     * Valid for the `image` input button only, the `width` is the width of the image file to display to represent the graphical submit button. See the image input type.
      */
     width?: Numeric;
 
@@ -215,33 +213,39 @@ export interface InputAttributes extends CommonAttributes<ElementForTag<'input'>
 
     /**
      * The Boolean attribute `incremental` is a WebKit and Blink extension (so supported by Safari, Opera, Chrome, etc.) which, if present, tells the user agent to process the input as a live search. As the user edits the value of the field, the user agent sends search events to the HTMLInputElement object representing the search box. This allows your code to update the search results in real time as the user edits the search. If `incremental` is not specified, the search event is only sent when the user explicitly initiates a search (such as by pressing the <kbd Enter</kbd or <kbd Return</kbd key while editing the field). The `search` event is rate-limited so that it is not sent more frequently than an implementation-defined interval.
+     * @experimental
      */
     incremental?: boolean;
 
     /**
      * Similar to the -moz-orient non-standard CSS property impacting the progress and meter elements, the `orient` attribute defines the orientation of the range slider. Values include `horizontal`, meaning the range is rendered horizontally, and `vertical`, where the range is rendered vertically. See Creating vertical form controls for a modern approach to creating vertical form controls.
+     * @experimental
      */
     orient?: 'horizontal' | 'vertical';
 
     /**
      * The `results` attribute-supported only by Safari-is a numeric value that lets you override the maximum number of entries to be displayed in the `<input ` element's natively-provided drop-down menu of previous search queries. The value must be a non-negative decimal number. If not provided, or an invalid value is given, the browser's default maximum number of entries is used.
+     * @experimental
      */
-    results?: number;
+    results?: Numeric;
 
     /**
      * The Boolean `webkitdirectory` attribute, if present, indicates that only directories should be available to be selected by the user in the file picker interface. See HTMLInputElement.webkitdirectory for additional details and examples. Though originally implemented only for WebKit-based browsers, `webkitdirectory` is also usable in Microsoft Edge as well as Firefox 50 and later. However, even though it has relatively broad support, it is still not standard and should not be used unless you have no alternative.
+     * @experimental
      */
     webkitdirectory?: boolean;
     /**
      * Valid for the `color` input type only, the `alpha` attribute provides the end user with the ability to set the opacity of the color being selected.
+     * @experimental
      */
-    alpha?: string
+    alpha?: boolean
     /**
      * Valid for the `color` input type only, the `colorspace` attribute specifies the color space that is used by the `type="color"` input. Possible enumerated values are:
      *
      * Possible values:
-     * - "limited-srgb"
-     * - "display-p3"
+     * - limited-srgb
+     * - display-p3
+     * @experimental
      */
     colorspace?: 'limited-srgb' | 'display-p3'
 

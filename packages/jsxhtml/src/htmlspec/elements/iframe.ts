@@ -13,10 +13,12 @@ export interface IframeAttributes extends CommonAttributes<ElementForTag<'iframe
     allowfullscreen?: boolean
     /**
      * Set to `true` to make the `<iframe ` credentialless, meaning that its content will be loaded in a new, ephemeral context. It doesn't have access to the network, cookies, and storage data associated with its origin. It uses a new context local to the top-level document lifetime. In return, the Cross-Origin-Embedder-Policy (COEP) embedding rules can be lifted, so documents with COEP set can embed third-party documents that do not. See IFrame credentialless for more details.
+     * @experimental
      */
     credentialless?: string
     /**
      * A Content Security Policy enforced for the embedded resource. See HTMLIFrameElement.csp for details.
+     * @experimental
      */
     csp?: string
     /**
@@ -37,6 +39,7 @@ export interface IframeAttributes extends CommonAttributes<ElementForTag<'iframe
     name?: string
     /**
      * Contains a string representation of an options object representing a private state token operation; this object has the same structure as the `RequestInit` dictionary's `privateToken` property. IFrames containing this attribute can initiate operations such as issuing or redeeming tokens when their embedded content is loaded.
+     * @experimental
      */
     privateToken?: string
     /**
