@@ -1,5 +1,13 @@
 export type AnchorElement = {
     /**
+     * Specifies that you want the browser to send an Attribution-Reporting-Eligible header.
+     * Can be a boolean attribute or a space-separated list of URLs.
+     *
+     * @deprecated
+     */
+    attributionsrc?: string | boolean
+
+    /**
      * Causes the browser to treat the linked URL as a download. Can be used with or without a filename value:
      *
      *   - Without a value, the browser will suggest a filename/extension, generated from various sources:
@@ -31,6 +39,12 @@ export type AnchorElement = {
      * global lang attribute.
      */
     hreflang?: string
+    /**
+     * Defines the <a> element as an interest invoker, targeting the element with the given id.
+     * @experimental
+     * @nonstandard
+     */
+    interestfor?: string
 
     /**
      * A space-separated list of URLs. When the link is followed, the browser will send POST requests with the body
@@ -48,7 +62,7 @@ export type AnchorElement = {
     /**
      * Where to display the linked URL, as the name for a browsing context (a tab, window, or <iframe>).
      */
-    target?: '_self' | '_blank' | '_parent' | '_top' | string
+    target?: '_self' | '_blank' | '_parent' | '_top' | '_unfencedTop' | string
     /**
      * Hints at the linked URL's format with a MIME type. No built-in functionality.
      */

@@ -46,6 +46,11 @@ export type ButtonAttributes = {
      */
     formtarget?: string
 
+    /**
+     * Defines the <button> element as an interest invoker, targeting the element with the given id.
+     */
+    interestfor?: string
+
     /** Name of the button, submitted as name=value with the form. */
     name?: string
 

@@ -11,6 +11,13 @@ export type StandardGlobalAttributes = {
      */
     accesskey?: string
     /**
+     * Associates a positioned element with an anchor element via its id.
+     *
+     * @experimental
+     * @nonstandard
+     */
+    anchor?: string
+    /**
      * Controls whether and how text input is automatically capitalized as it is entered/edited by the user. It can
      * have the following values:
      *
@@ -21,6 +28,10 @@ export type StandardGlobalAttributes = {
      * - `characters`, all letters should default to uppercase
      */
     autocapitalize?: string
+    /**
+     * Controls whether autocorrection is enabled for editable text.
+     */
+    autocorrect?: true | 'on' | 'off'
     /**
      * Indicates that an element is to be focused on page load, or as soon as the <dialog> it is part of is displayed.
      * This attribute is a boolean, initially false.
@@ -168,6 +179,10 @@ export type StandardGlobalAttributes = {
      */
     popover?: string
     /**
+     * Assigns a slot in a shadow DOM tree to an element.
+     */
+    slot?: string
+    /**
      * An enumerated attribute defines whether the element may be checked for spelling errors. It may have the
      * following values:
      *
@@ -218,6 +233,10 @@ export type StandardGlobalAttributes = {
      * - `manual`, which decouples focus and tap on the element from the virtual keyboard's state.
      */
     virtualkeyboardpolicy?: true | 'auto' | 'manual'
+    /**
+     * Controls whether browser-provided writing suggestions are enabled.
+     */
+    writingsuggestions?: boolean | 'true' | 'false'
 }
 
 export type Numeric = number | `${number}`
@@ -366,4 +385,3 @@ export type GlobalEventHandlers<E=HTMLElement> = {
 }
 
 export type AllGlobalAttributes<E=HTMLElement> = StandardGlobalAttributes&AriaAttributes&GlobalEventHandlers<E>
-

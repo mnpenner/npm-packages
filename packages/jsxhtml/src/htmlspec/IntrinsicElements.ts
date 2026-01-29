@@ -1,5 +1,6 @@
 import type {AnyAttributes, CommonProps} from '../jsx-types'
 import type {AnchorElement} from './AnchorElement'
+import type {FencedFrameAttributes} from './FencedFrameElement'
 import type {ScriptElementAttributes} from './ScriptElement'
 import type {ButtonAttributes} from './ButtonElement'
 import type {StyleHTMLAttributes} from './StyleAttributes'
@@ -214,6 +215,11 @@ export type IntrinsicElements = {
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/embed
      */
     embed: AnyAttributes<HTMLEmbedElement>,
+    /**
+     * The <fencedframe> HTML element represents a nested browsing context with additional privacy boundaries.
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/fencedframe
+     */
+    fencedframe: FencedFrameAttributes & CommonProps<HTMLElement>,
     /**
      * The <fieldset> HTML element is used to group several controls as well as labels (<label>) within a web form.
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/fieldset
@@ -569,6 +575,12 @@ export type IntrinsicElements = {
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/select
      */
     select: AnyAttributes<HTMLSelectElement>,
+    /**
+     * The <selectedcontent> HTML element is used inside a <select> to display the selected option in the first child
+     * <button>.
+     * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/selectedcontent
+     */
+    selectedcontent: AnyAttributes,
     /**
      * The <slot> HTML element—part of the Web Components technology suite—is a placeholder inside a web component that
      * you can fill with your own markup, which lets you create separate DOM trees and present them together.

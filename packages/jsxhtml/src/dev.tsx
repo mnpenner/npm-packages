@@ -39,7 +39,10 @@ const jsxNode = <HtmlDocument lang="en">
     <style>{css`
         .cr-blue-box {
             border: 5px solid blue;
-            border-radius: 5px;
+            border-radius: 8px;
+            corner-shape: bevel;
+            padding: 6px;
+            background-color: #edfbff;
         }
     `}</style>
     <style children={css`
