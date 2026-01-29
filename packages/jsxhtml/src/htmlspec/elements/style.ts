@@ -23,6 +23,7 @@ export interface StyleAttributes extends CommonAttributes<ElementForTag<'style'>
      */
     type?: '' | 'text/css'
 
+    /** children attribute. */
     children?: CssFrag
 }
 

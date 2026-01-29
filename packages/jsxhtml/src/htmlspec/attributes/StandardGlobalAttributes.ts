@@ -239,7 +239,8 @@ export interface StandardGlobalAttributes {
     writingsuggestions?: boolean | 'true' | 'false'
 }
 
-export type Numeric = number | `${number}`
+export type NumericString = `${number}`
+export type Numeric = number | bigint | NumericString | `${bigint}`
 
 export const enum InputMode {
     /**

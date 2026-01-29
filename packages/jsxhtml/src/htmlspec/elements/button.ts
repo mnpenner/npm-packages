@@ -1,5 +1,6 @@
 import type {CommonAttributes} from '../attributes/ElementAttributes'
 import type {ElementForTag} from './element-types'
+import type {Numeric} from '../attributes/StandardGlobalAttributes'
 
 /**
  * All standard attributes for the `<button>` HTML element.
@@ -75,6 +76,6 @@ export interface ButtonAttributes extends CommonAttributes<ElementForTag<'button
     type?: 'submit' | 'reset' | 'button'
 
     /** Value submitted with the form when using this button. */
-    value?: string
+    value?: string | Numeric
 }
 

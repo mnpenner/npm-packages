@@ -1,5 +1,6 @@
 import type {CommonAttributes} from '../attributes/ElementAttributes'
 import type {ElementForTag} from './element-types'
+import type {Numeric} from '../attributes/StandardGlobalAttributes'
 
 /**
  * A union of all possible 'type' attribute values for the <input> element.
@@ -128,7 +129,7 @@ export interface InputAttributes extends CommonAttributes<ElementForTag<'input'>
      * Valid for the `image` input type only.
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#height
      */
-    height?: string | number;
+    height?: Numeric;
 
     /**
      * The ID of a `<datalist>` element located in the same document to provide a list of predefined values to suggest for this input.
@@ -141,28 +142,28 @@ export interface InputAttributes extends CommonAttributes<ElementForTag<'input'>
      * Valid for `date`, `month`, `week`, `time`, `datetime-local`, `number`, and `range`.
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#max
      */
-    max?: string | number;
+    max?: string | Numeric;
 
     /**
      * The maximum string length (in UTF-16 code units) that the user can enter.
      * Valid for `text`, `search`, `url`, `tel`, `email`, and `password`.
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#maxlength
      */
-    maxlength?: number;
+    maxlength?: Numeric;
 
     /**
      * The most negative value in the range of permitted values.
      * Valid for `date`, `month`, `week`, `time`, `datetime-local`, `number`, and `range`.
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#min
      */
-    min?: string | number;
+    min?: string | Numeric;
 
     /**
      * The minimum string length (in UTF-16 code units) that the user can enter.
      * Valid for `text`, `search`, `url`, `tel`, `email`, and `password`.
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#minlength
      */
-    minlength?: number;
+    minlength?: Numeric;
 
     /**
      * If present, the user can enter multiple values.
@@ -220,7 +221,7 @@ export interface InputAttributes extends CommonAttributes<ElementForTag<'input'>
      * Valid for `email`, `password`, `tel`, `url`, and `text`.
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#size
      */
-    size?: number;
+    size?: Numeric;
 
     /**
      * The URL of the image file to display for the graphical submit button.
@@ -234,7 +235,7 @@ export interface InputAttributes extends CommonAttributes<ElementForTag<'input'>
      * Valid for `date`, `month`, `week`, `time`, `datetime-local`, `number`, and `range`.
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#step
      */
-    step?: number | 'any';
+    step?: Numeric | 'any';
 
     /**
      * The type of control to render. If omitted, the default is `text`.
@@ -246,14 +247,14 @@ export interface InputAttributes extends CommonAttributes<ElementForTag<'input'>
      * The input control's value. When specified in the HTML, this is the initial value.
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#value
      */
-    value?: string | number | readonly string[];
+    value?: string | Numeric;
 
     /**
      * The width of the image file to display for the graphical submit button.
      * Valid for the `image` input type only.
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#width
      */
-    width?: string | number;
+    width?: Numeric;
 
     // --- Non-standard attributes ---
 
@@ -284,7 +285,9 @@ export interface InputAttributes extends CommonAttributes<ElementForTag<'input'>
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#webkitdirectory
      */
     webkitdirectory?: boolean;
+    /** alpha attribute. */
     alpha?: string
+    /** colorspace attribute. */
     colorspace?: string
 }
 

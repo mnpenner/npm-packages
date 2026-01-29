@@ -1,4 +1,3 @@
-/// <reference lib="dom" />
 import type {AnyAttributes} from './jsx-types'
 import {C, HtmlDocument, RawHtml} from './custom-components'
 import {css, js} from './template-strings'
@@ -28,8 +27,6 @@ function externalFunc(this: HTMLButtonElement) {
 }
 
 
-// @ts-ignore
-// @ts-ignore
 const jsxNode = <HtmlDocument lang="en">
     <head>
         <meta charset="utf-8" />
