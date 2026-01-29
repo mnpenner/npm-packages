@@ -29,7 +29,17 @@ export function attrValue(value: Stringable) {
         // window.event: https://developer.mozilla.org/en-US/docs/Web/API/Window/event
         value = `(${value}).call(this,event)`
     }
-    return `"${String(value).replace(/"/gu, entity)}"`
+    const stringValue = String(value)
+    const needsQuoted = stringValue.length === 0 || /[ \t\n\f\r"'=<>`]/u.test(stringValue)
+    if(!needsQuoted) return stringValue
+
+    if(!stringValue.includes('"')) {
+        return `"${stringValue.replace(/"/gu, entity)}"`
+    }
+    if(!stringValue.includes("'")) {
+        return `'${stringValue.replace(/'/gu, entity)}'`
+    }
+    return `"${stringValue.replace(/"/gu, entity)}"`
 }
 
 export function attrKvPair(rawAttr: string, rawVal: AttributeValue) {

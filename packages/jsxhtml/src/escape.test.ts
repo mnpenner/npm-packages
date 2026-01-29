@@ -28,7 +28,7 @@ describe(attrName.name, () => {
 
 describe(attrValue.name, () => {
     it('quotes and escapes string values', () => {
-        expect(attrValue('a"b')).toBe('"a&quot;b"')
+        expect(attrValue('a"b')).toBe('\'a"b\'')
     })
 
     it('wraps function values with an event call', () => {
@@ -36,9 +36,9 @@ describe(attrValue.name, () => {
             return 'ok'
         }
         const out = attrValue(handler)
-        expect(out.startsWith('"(')).toBe(true)
+        expect(out.startsWith('"(') || out.startsWith("'(")).toBe(true)
         expect(out).toContain('call(this,event)')
-        expect(out.endsWith('"')).toBe(true)
+        expect(out.endsWith('"') || out.endsWith("'")).toBe(true)
     })
 })
 
@@ -50,12 +50,12 @@ describe(attrKvPair.name, () => {
     })
 
     it('stringifies data- attributes when needed', () => {
-        expect(attrKvPair('data-info', {a: 1})).toBe('data-info="{&quot;a&quot;:1}"')
+        expect(attrKvPair('data-info', {a: 1})).toBe('data-info=\'{"a":1}\'')
     })
 
     it('normalizes class and style values', () => {
         expect(attrKvPair('class', ['a', false, 'b'])).toBe('class="a b"')
-        expect(attrKvPair('style', {backgroundColor: 'red', width: 2})).toBe('style="background-color:red;width:2px;"')
+        expect(attrKvPair('style', {backgroundColor: 'red', width: 2})).toBe('style=background-color:red;width:2px;')
     })
 })
 
@@ -65,11 +65,11 @@ describe(attrs.name, () => {
     })
 
     it('serializes object attributes with leading spaces', () => {
-        expect(attrs({id: 'a', disabled: true, hidden: false})).toBe(' id="a" disabled')
+        expect(attrs({id: 'a', disabled: true, hidden: false})).toBe(' id=a disabled')
     })
 
     it('accepts array entries as input', () => {
-        expect(attrs([['id', 'a'], ['title', 'hello']])).toBe(' id="a" title="hello"')
+        expect(attrs([['id', 'a'], ['title', 'hello']])).toBe(' id=a title=hello')
     })
 })
 
