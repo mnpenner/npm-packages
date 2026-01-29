@@ -284,5 +284,7 @@ export interface InputAttributes extends CommonAttributes<ElementForTag<'input'>
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#webkitdirectory
      */
     webkitdirectory?: boolean;
+    alpha?: string
+    colorspace?: string
 }
 

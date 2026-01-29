@@ -21,4 +21,5 @@ export interface MetaAttributes extends CommonAttributes<ElementForTag<'meta'>> 
      * Provides an HTTP header for the information/value of the content attribute.
      */
     'http-equiv'?: string
+    media?: string
 }
