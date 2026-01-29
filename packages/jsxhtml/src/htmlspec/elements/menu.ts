@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface MenuSpecificAttributes {
+export interface MenuAttributes extends CommonAttributes<ElementForTag<'menu'>> {
 }
 
-export type MenuAttributes = MenuSpecificAttributes & CommonProps<HTMLMenuElement>

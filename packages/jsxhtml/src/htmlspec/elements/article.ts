@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface ArticleSpecificAttributes {
+export interface ArticleAttributes extends CommonAttributes<ElementForTag<'article'>> {
 }
 
-export type ArticleAttributes = ArticleSpecificAttributes & CommonProps<HTMLElement>

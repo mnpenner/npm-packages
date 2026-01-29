@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface DlSpecificAttributes {
+export interface DlAttributes extends CommonAttributes<ElementForTag<'dl'>> {
 }
 
-export type DlAttributes = DlSpecificAttributes & CommonProps<HTMLDListElement>

@@ -1,9 +1,10 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
 /**
  * All standard attributes for the `<button>` HTML element.
  */
-export interface ButtonSpecificAttributes {
+export interface ButtonAttributes extends CommonAttributes<ElementForTag<'button'>> {
     /** Automatically focus the button when the page loads. */
     autofocus?: boolean
 
@@ -77,4 +78,3 @@ export interface ButtonSpecificAttributes {
     value?: string
 }
 
-export type ButtonAttributes = ButtonSpecificAttributes & CommonProps<HTMLButtonElement>

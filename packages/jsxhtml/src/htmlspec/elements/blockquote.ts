@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface BlockquoteSpecificAttributes {
+export interface BlockquoteAttributes extends CommonAttributes<ElementForTag<'blockquote'>> {
 }
 
-export type BlockquoteAttributes = BlockquoteSpecificAttributes & CommonProps<HTMLQuoteElement>

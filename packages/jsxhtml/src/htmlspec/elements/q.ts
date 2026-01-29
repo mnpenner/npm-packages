@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface QSpecificAttributes {
+export interface QAttributes extends CommonAttributes<ElementForTag<'q'>> {
 }
 
-export type QAttributes = QSpecificAttributes & CommonProps<HTMLQuoteElement>

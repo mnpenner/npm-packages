@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface LegendSpecificAttributes {
+export interface LegendAttributes extends CommonAttributes<ElementForTag<'legend'>> {
 }
 
-export type LegendAttributes = LegendSpecificAttributes & CommonProps<HTMLLegendElement>

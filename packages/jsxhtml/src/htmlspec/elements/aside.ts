@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface AsideSpecificAttributes {
+export interface AsideAttributes extends CommonAttributes<ElementForTag<'aside'>> {
 }
 
-export type AsideAttributes = AsideSpecificAttributes & CommonProps<HTMLElement>

@@ -1,9 +1,9 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
 /**
  * @deprecated
  */
-export interface DirSpecificAttributes {
+export interface DirAttributes extends CommonAttributes<ElementForTag<'dir'>> {
 }
 
-export type DirAttributes = DirSpecificAttributes & CommonProps<HTMLDirectoryElement>

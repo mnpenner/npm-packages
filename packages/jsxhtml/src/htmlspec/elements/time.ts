@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface TimeSpecificAttributes {
+export interface TimeAttributes extends CommonAttributes<ElementForTag<'time'>> {
 }
 
-export type TimeAttributes = TimeSpecificAttributes & CommonProps<HTMLTimeElement>

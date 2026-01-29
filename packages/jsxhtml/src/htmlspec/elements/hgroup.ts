@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface HgroupSpecificAttributes {
+export interface HgroupAttributes extends CommonAttributes<ElementForTag<'hgroup'>> {
 }
 
-export type HgroupAttributes = HgroupSpecificAttributes & CommonProps<HTMLElement>

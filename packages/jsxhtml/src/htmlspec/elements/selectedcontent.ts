@@ -1,9 +1,9 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
 /**
  * @experimental
  */
-export interface SelectedcontentSpecificAttributes {
+export interface SelectedcontentAttributes extends CommonAttributes<ElementForTag<'selectedcontent'>> {
 }
 
-export type SelectedcontentAttributes = SelectedcontentSpecificAttributes & CommonProps<HTMLElement>

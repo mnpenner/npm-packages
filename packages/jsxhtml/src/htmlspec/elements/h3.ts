@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface H3SpecificAttributes {
+export interface H3Attributes extends CommonAttributes<ElementForTag<'h3'>> {
 }
 
-export type H3Attributes = H3SpecificAttributes & CommonProps<HTMLHeadingElement>

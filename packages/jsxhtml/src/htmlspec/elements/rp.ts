@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface RpSpecificAttributes {
+export interface RpAttributes extends CommonAttributes<ElementForTag<'rp'>> {
 }
 
-export type RpAttributes = RpSpecificAttributes & CommonProps<HTMLElement>

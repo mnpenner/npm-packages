@@ -1,9 +1,9 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
 /**
  * @deprecated
  */
-export interface StrikeSpecificAttributes {
+export interface StrikeAttributes extends CommonAttributes<ElementForTag<'strike'>> {
 }
 
-export type StrikeAttributes = StrikeSpecificAttributes & CommonProps<HTMLElement>

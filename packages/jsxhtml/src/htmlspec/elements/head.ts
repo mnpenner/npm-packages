@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface HeadSpecificAttributes {
+export interface HeadAttributes extends CommonAttributes<ElementForTag<'head'>> {
 }
 
-export type HeadAttributes = HeadSpecificAttributes & CommonProps<HTMLHeadElement>

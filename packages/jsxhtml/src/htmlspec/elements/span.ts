@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface SpanSpecificAttributes {
+export interface SpanAttributes extends CommonAttributes<ElementForTag<'span'>> {
 }
 
-export type SpanAttributes = SpanSpecificAttributes & CommonProps<HTMLSpanElement>

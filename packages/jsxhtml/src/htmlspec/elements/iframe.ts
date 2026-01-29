@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface IframeSpecificAttributes {
+export interface IframeAttributes extends CommonAttributes<ElementForTag<'iframe'>> {
 }
 
-export type IframeAttributes = IframeSpecificAttributes & CommonProps<HTMLIFrameElement>

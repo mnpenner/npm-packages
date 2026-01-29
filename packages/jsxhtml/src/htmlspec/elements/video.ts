@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface VideoSpecificAttributes {
+export interface VideoAttributes extends CommonAttributes<ElementForTag<'video'>> {
 }
 
-export type VideoAttributes = VideoSpecificAttributes & CommonProps<HTMLVideoElement>

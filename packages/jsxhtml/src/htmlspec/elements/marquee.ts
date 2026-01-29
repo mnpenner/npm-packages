@@ -1,9 +1,9 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
 /**
  * @deprecated
  */
-export interface MarqueeSpecificAttributes {
+export interface MarqueeAttributes extends CommonAttributes<ElementForTag<'marquee'>> {
 }
 
-export type MarqueeAttributes = MarqueeSpecificAttributes & CommonProps<HTMLMarqueeElement>

@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface AudioSpecificAttributes {
+export interface AudioAttributes extends CommonAttributes<ElementForTag<'audio'>> {
 }
 
-export type AudioAttributes = AudioSpecificAttributes & CommonProps<HTMLAudioElement>

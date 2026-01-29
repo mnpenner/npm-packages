@@ -1,4 +1,5 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
 /**
  * A union of all possible 'type' attribute values for the <input> element.
@@ -34,7 +35,7 @@ export type InputType =
  * The <input> element is used to create interactive controls for web-based forms to accept data from the user.
  * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input
  */
-export interface InputSpecificAttributes {
+export interface InputAttributes extends CommonAttributes<ElementForTag<'input'>> {
     /**
      * Specifies the types of files that the server accepts (that can be submitted through a file upload).
      * Valid for the `file` input type only.
@@ -285,4 +286,3 @@ export interface InputSpecificAttributes {
     webkitdirectory?: boolean;
 }
 
-export type InputAttributes = InputSpecificAttributes & CommonProps<HTMLInputElement>

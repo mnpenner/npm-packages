@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface DialogSpecificAttributes {
+export interface DialogAttributes extends CommonAttributes<ElementForTag<'dialog'>> {
 }
 
-export type DialogAttributes = DialogSpecificAttributes & CommonProps<HTMLDialogElement>

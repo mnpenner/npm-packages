@@ -1,9 +1,9 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
 /**
  * @deprecated
  */
-export interface BigSpecificAttributes {
+export interface BigAttributes extends CommonAttributes<ElementForTag<'big'>> {
 }
 
-export type BigAttributes = BigSpecificAttributes & CommonProps<HTMLElement>

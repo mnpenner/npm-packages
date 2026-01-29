@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface KbdSpecificAttributes {
+export interface KbdAttributes extends CommonAttributes<ElementForTag<'kbd'>> {
 }
 
-export type KbdAttributes = KbdSpecificAttributes & CommonProps<HTMLElement>

@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface FormSpecificAttributes {
+export interface FormAttributes extends CommonAttributes<ElementForTag<'form'>> {
 }
 
-export type FormAttributes = FormSpecificAttributes & CommonProps<HTMLFormElement>

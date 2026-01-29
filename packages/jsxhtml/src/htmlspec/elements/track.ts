@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface TrackSpecificAttributes {
+export interface TrackAttributes extends CommonAttributes<ElementForTag<'track'>> {
 }
 
-export type TrackAttributes = TrackSpecificAttributes & CommonProps<HTMLTrackElement>

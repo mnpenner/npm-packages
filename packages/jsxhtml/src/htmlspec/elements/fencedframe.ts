@@ -1,9 +1,10 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
 /**
  * @experimental
  */
-export interface FencedframeSpecificAttributes {
+export interface FencedframeAttributes extends CommonAttributes<ElementForTag<'fencedframe'>> {
     /**
      * Specifies a Permissions Policy for the fenced frame.
      */
@@ -20,4 +21,3 @@ export interface FencedframeSpecificAttributes {
     width?: number | string
 }
 
-export type FencedframeAttributes = FencedframeSpecificAttributes & CommonProps<HTMLElement>

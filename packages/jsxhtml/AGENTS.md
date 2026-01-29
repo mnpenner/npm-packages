@@ -8,3 +8,5 @@
 - Rename/refactor `src/htmlspec/AnchorElement.ts` to `src/htmlspec/a.ts`.
 - Create `src/htmlspec/attributes/` for shared attribute groups; refactor `src/htmlspec/GlobalAttributes.ts` into it.
 - Add `@experimental` tags to experimental elements/attributes and `@deprecated` to deprecated ones.
+
+- Use `hg mv` for file renames from now on (Mercurial repo).

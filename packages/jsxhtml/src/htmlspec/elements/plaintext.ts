@@ -1,9 +1,9 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
 /**
  * @deprecated
  */
-export interface PlaintextSpecificAttributes {
+export interface PlaintextAttributes extends CommonAttributes<ElementForTag<'plaintext'>> {
 }
 
-export type PlaintextAttributes = PlaintextSpecificAttributes & CommonProps<HTMLElement>

@@ -1,9 +1,9 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
 /**
  * @deprecated
  */
-export interface NoembedSpecificAttributes {
+export interface NoembedAttributes extends CommonAttributes<ElementForTag<'noembed'>> {
 }
 
-export type NoembedAttributes = NoembedSpecificAttributes & CommonProps<HTMLElement>

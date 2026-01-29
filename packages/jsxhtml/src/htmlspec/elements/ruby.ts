@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface RubySpecificAttributes {
+export interface RubyAttributes extends CommonAttributes<ElementForTag<'ruby'>> {
 }
 
-export type RubyAttributes = RubySpecificAttributes & CommonProps<HTMLElement>

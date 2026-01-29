@@ -1,10 +1,11 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 import type {JsFrag} from '../../template-strings'
 
 /**
  * All valid properties for a <script> HTML element.
  */
-export interface ScriptSpecificAttributes {
+export interface ScriptAttributes extends CommonAttributes<ElementForTag<'script'>> {
     /** Fetches script asynchronously if present. Only works with `src`. */
     async?: boolean
 
@@ -60,4 +61,3 @@ export interface ScriptSpecificAttributes {
     children?: JsFrag
 }
 
-export type ScriptAttributes = ScriptSpecificAttributes & CommonProps<HTMLScriptElement>

@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface BdoSpecificAttributes {
+export interface BdoAttributes extends CommonAttributes<ElementForTag<'bdo'>> {
 }
 
-export type BdoAttributes = BdoSpecificAttributes & CommonProps<HTMLElement>

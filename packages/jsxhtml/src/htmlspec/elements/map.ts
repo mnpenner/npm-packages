@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface MapSpecificAttributes {
+export interface MapAttributes extends CommonAttributes<ElementForTag<'map'>> {
 }
 
-export type MapAttributes = MapSpecificAttributes & CommonProps<HTMLMapElement>

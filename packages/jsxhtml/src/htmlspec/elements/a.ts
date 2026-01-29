@@ -1,6 +1,7 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface ASpecificAttributes {
+export interface AAttributes extends CommonAttributes<ElementForTag<'a'>> {
     /**
      * Specifies that you want the browser to send an Attribution-Reporting-Eligible header.
      * Can be a boolean attribute or a space-separated list of URLs.
@@ -92,7 +93,6 @@ export interface ASpecificAttributes {
     shape?: string
 }
 
-export type AAttributes = ASpecificAttributes & CommonProps<HTMLAnchorElement>
 
 export const enum ReferrerPolicy {
     NoReferrer = 'no-referrer',

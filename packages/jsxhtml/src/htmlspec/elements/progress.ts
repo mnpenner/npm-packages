@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface ProgressSpecificAttributes {
+export interface ProgressAttributes extends CommonAttributes<ElementForTag<'progress'>> {
 }
 
-export type ProgressAttributes = ProgressSpecificAttributes & CommonProps<HTMLProgressElement>

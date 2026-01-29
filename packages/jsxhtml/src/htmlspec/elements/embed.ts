@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface EmbedSpecificAttributes {
+export interface EmbedAttributes extends CommonAttributes<ElementForTag<'embed'>> {
 }
 
-export type EmbedAttributes = EmbedSpecificAttributes & CommonProps<HTMLEmbedElement>

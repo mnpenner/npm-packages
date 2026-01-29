@@ -1,9 +1,9 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
 /**
  * @deprecated
  */
-export interface FramesetSpecificAttributes {
+export interface FramesetAttributes extends CommonAttributes<ElementForTag<'frameset'>> {
 }
 
-export type FramesetAttributes = FramesetSpecificAttributes & CommonProps<HTMLFrameSetElement>

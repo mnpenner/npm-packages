@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface OptgroupSpecificAttributes {
+export interface OptgroupAttributes extends CommonAttributes<ElementForTag<'optgroup'>> {
 }
 
-export type OptgroupAttributes = OptgroupSpecificAttributes & CommonProps<HTMLOptGroupElement>

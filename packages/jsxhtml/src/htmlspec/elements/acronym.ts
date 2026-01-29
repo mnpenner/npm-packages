@@ -1,9 +1,9 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
 /**
  * @deprecated
  */
-export interface AcronymSpecificAttributes {
+export interface AcronymAttributes extends CommonAttributes<ElementForTag<'acronym'>> {
 }
 
-export type AcronymAttributes = AcronymSpecificAttributes & CommonProps<HTMLElement>

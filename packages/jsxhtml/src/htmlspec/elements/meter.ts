@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface MeterSpecificAttributes {
+export interface MeterAttributes extends CommonAttributes<ElementForTag<'meter'>> {
 }
 
-export type MeterAttributes = MeterSpecificAttributes & CommonProps<HTMLMeterElement>

@@ -1,9 +1,9 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
 /**
  * @deprecated
  */
-export interface RbSpecificAttributes {
+export interface RbAttributes extends CommonAttributes<ElementForTag<'rb'>> {
 }
 
-export type RbAttributes = RbSpecificAttributes & CommonProps<HTMLElement>

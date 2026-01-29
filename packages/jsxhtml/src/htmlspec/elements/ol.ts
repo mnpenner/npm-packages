@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface OlSpecificAttributes {
+export interface OlAttributes extends CommonAttributes<ElementForTag<'ol'>> {
 }
 
-export type OlAttributes = OlSpecificAttributes & CommonProps<HTMLOListElement>

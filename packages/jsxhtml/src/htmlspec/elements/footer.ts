@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface FooterSpecificAttributes {
+export interface FooterAttributes extends CommonAttributes<ElementForTag<'footer'>> {
 }
 
-export type FooterAttributes = FooterSpecificAttributes & CommonProps<HTMLElement>

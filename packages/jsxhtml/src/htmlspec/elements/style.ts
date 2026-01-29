@@ -1,10 +1,11 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 import type {CssFrag} from '../../template-strings'
 
 /**
  * Represents the attributes of a <style> HTML element.
  */
-export interface StyleSpecificAttributes {
+export interface StyleAttributes extends CommonAttributes<ElementForTag<'style'>> {
     /** Space-separated list of blocking operations, e.g., "render" */
     blocking?: string
 
@@ -25,4 +26,3 @@ export interface StyleSpecificAttributes {
     children?: CssFrag
 }
 
-export type StyleAttributes = StyleSpecificAttributes & CommonProps<HTMLStyleElement>

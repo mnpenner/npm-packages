@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface TextareaSpecificAttributes {
+export interface TextareaAttributes extends CommonAttributes<ElementForTag<'textarea'>> {
 }
 
-export type TextareaAttributes = TextareaSpecificAttributes & CommonProps<HTMLTextAreaElement>

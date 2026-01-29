@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface AreaSpecificAttributes {
+export interface AreaAttributes extends CommonAttributes<ElementForTag<'area'>> {
 }
 
-export type AreaAttributes = AreaSpecificAttributes & CommonProps<HTMLAreaElement>

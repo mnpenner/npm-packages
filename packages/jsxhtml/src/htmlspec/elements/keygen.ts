@@ -1,9 +1,9 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
 /**
  * @deprecated
  */
-export interface KeygenSpecificAttributes {
+export interface KeygenAttributes extends CommonAttributes<ElementForTag<'keygen'>> {
 }
 
-export type KeygenAttributes = KeygenSpecificAttributes & CommonProps<HTMLElement>

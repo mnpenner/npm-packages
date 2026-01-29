@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface NoscriptSpecificAttributes {
+export interface NoscriptAttributes extends CommonAttributes<ElementForTag<'noscript'>> {
 }
 
-export type NoscriptAttributes = NoscriptSpecificAttributes & CommonProps<HTMLElement>

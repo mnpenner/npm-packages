@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface DatalistSpecificAttributes {
+export interface DatalistAttributes extends CommonAttributes<ElementForTag<'datalist'>> {
 }
 
-export type DatalistAttributes = DatalistSpecificAttributes & CommonProps<HTMLDataListElement>

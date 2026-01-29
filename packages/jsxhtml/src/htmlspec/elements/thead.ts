@@ -1,6 +1,6 @@
-import type {CommonProps} from '../../jsx-types'
+import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {ElementForTag} from './element-types'
 
-export interface TheadSpecificAttributes {
+export interface TheadAttributes extends CommonAttributes<ElementForTag<'thead'>> {
 }
 
-export type TheadAttributes = TheadSpecificAttributes & CommonProps<HTMLTableSectionElement>
