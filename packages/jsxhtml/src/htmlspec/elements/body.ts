@@ -79,7 +79,7 @@ export interface BodyAttributes extends CommonAttributes<ElementForTag<'body'>> 
      */
     onresize?: string
     /**
-     * Function to call when a JavaScript  is handled late.
+     * Function to call when a JavaScript Promise is handled late.
      */
     onrejectionhandled?: string
     /**
@@ -87,7 +87,7 @@ export interface BodyAttributes extends CommonAttributes<ElementForTag<'body'>> 
      */
     onstorage?: string
     /**
-     * Function to call when a JavaScript  that has no rejection handler is rejected.
+     * Function to call when a JavaScript Promise that has no rejection handler is rejected.
      */
     onunhandledrejection?: string
 }

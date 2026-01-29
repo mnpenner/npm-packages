@@ -12,16 +12,22 @@ export interface ThAttributes extends CommonAttributes<ElementForTag<'th'>> {
      */
     colspan?: Numeric
     /**
-     * A list of space-separated strings corresponding to the `id` attributes of the `<th>` elements that provide the headers for this header cell.
+     * A list of space-separated strings corresponding to the `id` attributes of the `<th ` elements that provide the headers for this header cell.
      */
     headers?: string
     /**
-     * A non-negative integer value indicating how many rows the header cell spans or extends. The default value is `1`; if its value is set to `0`, the header cell will extend to the end of the table grouping section (, , , even if implicitly defined), that the `<th>` belongs to. Values higher than `65534` are clipped at `65534`.
+     * A non-negative integer value indicating how many rows the header cell spans or extends. The default value is `1`; if its value is set to `0`, the header cell will extend to the end of the table grouping section (thead, tbody, tfoot, even if implicitly defined), that the `<th ` belongs to. Values higher than `65534` are clipped at `65534`.
      */
     rowspan?: Numeric
     /**
-     * Defines the cells that the header (defined in the `<th>`) element relates to. Possible  values are:
+     * Defines the cells that the header (defined in the `<th `) element relates to. Possible enumerated values are: If the `scope` attribute is not specified, or its value is not `row`, `col`, `rowgroup`, or `colgroup`, then browsers automatically select the set of cells to which the header cell applies. The following attributes are deprecated and should not be used. They are documented below for reference when updating existing code and for historical interest only.
+     *
+     * Possible values:
+     * - row
+     * - col
+     * - rowgroup
+     * - colgroup
      */
-    scope?: string
+    scope?: 'row' | 'col' | 'rowgroup' | 'colgroup'
 }
 

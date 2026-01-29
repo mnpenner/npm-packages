@@ -4,7 +4,7 @@ import type {Numeric} from '../attributes/StandardGlobalAttributes'
 
 export interface ProgressAttributes extends CommonAttributes<ElementForTag<'progress'>> {
     /**
-     * This attribute describes how much work the task indicated by the `progress` element requires. The `max` attribute, if present, must have a value greater than `0` and be a valid floating point number. The default value is `1`.
+     * The **`max`** attribute defines the maximum value that is acceptable and valid for the input containing the attribute. If the `value` of the element is greater than this, the element fails validation. This value must be greater than or equal to the value of the `min` attribute. If the `max` attribute is present but is not specified or is invalid, no `max` value is applied. If the `max` attribute is valid and a non-empty value is greater than the maximum allowed by the `max` attribute, constraint validation will prevent form submission.
      */
     max?: string | Numeric
     /**

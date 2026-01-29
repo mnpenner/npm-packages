@@ -4,32 +4,35 @@ import type {Numeric} from '../attributes/StandardGlobalAttributes'
 
 export interface TextareaAttributes extends CommonAttributes<ElementForTag<'textarea'>> {
     /**
-     * Controls whether entered text can be automatically completed by the browser. Possible values are:
+     * Controls whether the browser may automatically complete the value and provides guidance about the type of information expected in the field.
+     *
+     * Possible values:
+     * - off
+     * - on
      */
-    autocomplete?: string
+    autocomplete?: 'on' | 'off' | string
     /**
      * The visible width of the text control, in average character widths. If it is specified, it must be a positive integer. If it is not specified, the default value is `20`.
      */
     cols?: Numeric
     /**
-     * This attribute is used to indicate the text directionality of the element contents.
-     * For more information, see the [`dirname` attribute](/en-US/docs/Web/HTML/Reference/Attributes/dirname).
+     * The **`dirname`** attribute can be used on the textarea element and several input types and describes the directionality of the element's text content during form submission. The browser uses this attribute's value to determine whether text the user has entered is left-to-right or right-to-left oriented. When used, the element's text directionality value is included in form submission data along with the `dirname` attribute's value as the name of the field.
      */
     dirname?: string
     /**
-     * This Boolean attribute indicates that the user cannot interact with the control. If this attribute is not specified, the control inherits its setting from the containing element, for example ; if there is no containing element when the `disabled` attribute is set, the control is enabled.
+     * The Boolean **`disabled`** attribute, when present, makes the element not mutable, focusable, or even submitted with the form. The user can neither edit nor focus on the control, nor its form control descendants.
      */
-    disabled?: string
+    disabled?: boolean
     /**
-     * The form element that the `<textarea>` element is associated with (its "form owner"). The value of the attribute must be the `id` of a form element in the same document. If this attribute is not specified, the `<textarea>` element must be a descendant of a form element. This attribute enables you to place `<textarea>` elements anywhere within a document, not just as descendants of form elements.
+     * The `form` HTML attribute associates a form-associated element with a form element within the same document. This attribute applies to the button, fieldset, input, object, output, select, and textarea elements.
      */
     form?: string
     /**
-     * The maximum string length (measured in ) that the user can enter. If this value isn't specified, the user can enter an unlimited number of characters.
+     * The **`maxlength`** attribute defines the maximum string length that the user can enter into an input or textarea. The attribute must have an integer value of 0 or higher.
      */
     maxlength?: Numeric
     /**
-     * The minimum string length (measured in ) required that the user should enter.
+     * The **`minlength`** attribute defines the minimum string length that the user can enter into an input or textarea. The attribute must have an integer value of 0 or higher.
      */
     minlength?: Numeric
     /**
@@ -37,26 +40,29 @@ export interface TextareaAttributes extends CommonAttributes<ElementForTag<'text
      */
     name?: string
     /**
-     * A hint to the user of what can be entered in the control. Carriage returns or line-feeds within the placeholder text must be treated as line breaks when rendering the hint.
-     * > [!NOTE]
-     * > Placeholders should only be used to show an example of the type of data that should be entered into a form; they are _not_ a substitute for a proper  element tied to the input. See [`<input>` labels](/en-US/docs/Web/HTML/Reference/Elements/input#labels) for a full explanation.
+     * The **`placeholder`** attribute defines the text displayed in a form control when the control has no value. The placeholder text should provide a brief hint to the user as to the expected type of data that should be entered into the control.
      */
     placeholder?: string
     /**
-     * This Boolean attribute indicates that the user cannot modify the value of the control. Unlike the `disabled` attribute, the `readonly` attribute does not prevent the user from clicking or selecting in the control. The value of a read-only control is still submitted with the form.
+     * The Boolean **`readonly`** attribute, when present, makes the element not mutable, meaning the user can not edit the control.
      */
-    readonly?: string
+    readonly?: boolean
     /**
-     * This attribute specifies that the user must fill in a value before submitting a form.
+     * The Boolean **`required`** attribute, if present, indicates that the user must specify a value for the input before the owning form can be submitted.
      */
-    required?: string
+    required?: boolean
     /**
      * The number of visible text lines for the control. If it is specified, it must be a positive integer. If it is not specified, the default value is 2.
      */
     rows?: Numeric
     /**
-     * Indicates how the control should wrap the value for form submission. Possible values are:
+     * Indicates how the control should wrap the value for form submission. Possible values are: If this attribute is not specified, `soft` is its default value.
+     *
+     * Possible values:
+     * - hard
+     * - soft
+     * - off
      */
-    wrap?: string
-}
+    wrap?: 'hard' | 'soft' | 'off'
 
+}

@@ -50,3 +50,11 @@ it('anchor', () => {
     expect(String(<a>with children</a>)).toEqual('<a>with children</a>')
     expect(String(<a href={"/foo"} target={'_blank'} />)).toEqual('<a href="/foo" target="_blank"></a>')
 })
+
+it('renders exotic attributes', () => {
+    expect(String(<input type="color" colorspace="display-p3" />)).toEqual('<input type="color" colorspace="display-p3">')
+    expect(String(<input type="number" step={1n} min={0n} max={42n} />)).toEqual('<input type="number" step="1" min="0" max="42">')
+    expect(String(<input type="text" disabled />)).toEqual('<input type="text" disabled>')
+    expect(String(<details open />)).toEqual('<details open></details>')
+    expect(String(<img src="/hero.jpg" width={640} height={"360"} loading="lazy" />)).toEqual('<img src="/hero.jpg" width="640" height="360" loading="lazy">')
+})

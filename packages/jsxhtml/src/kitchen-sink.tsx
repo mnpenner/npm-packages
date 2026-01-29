@@ -132,12 +132,12 @@ export const kitchenSink = (
                         <figcaption>Responsive image</figcaption>
                     </figure>
 
-                    <video controls="true" width="320" height={180} poster="/poster.jpg" preload="metadata">
+                    <video controls width="320" height={180} poster="/poster.jpg" preload="metadata">
                         <source src="/clip.mp4" type="video/mp4" />
                         <track kind="captions" src="/captions.vtt" srclang="en" label="English" />
                     </video>
 
-                    <audio controls="true" preload="none">
+                    <audio controls preload="none">
                         <source src="/audio.mp3" type="audio/mpeg" />
                     </audio>
 
@@ -188,7 +188,7 @@ export const kitchenSink = (
             </main>
 
             <aside class="box" role="complementary">
-                <details open="true">
+                <details open>
                     <summary>More info</summary>
                     <p contenteditable="true">Editable note.</p>
                 </details>

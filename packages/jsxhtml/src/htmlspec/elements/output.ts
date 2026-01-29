@@ -3,16 +3,15 @@ import type {ElementForTag} from './element-types'
 
 export interface OutputAttributes extends CommonAttributes<ElementForTag<'output'>> {
     /**
-     * A space-separated list of other elements' [`id`](/en-US/docs/Web/HTML/Reference/Global_attributes/id)s, indicating that those elements contributed input values to (or otherwise affected) the calculation.
+     * The **`for`** attribute is an allowed attribute for label and output. When used on a `<label ` element it indicates the form element that this label describes. When used on an `<output ` element it allows for an explicit relationship between the elements that represent values which are used in the output.
      */
     for?: string
     /**
-     * The  element to associate the output with (its _form owner_). The value of this attribute must be the [`id`](/en-US/docs/Web/HTML/Reference/Global_attributes/id) of a `<form>` in the same document. (If this attribute is not set, the `<output>` is associated with its ancestor `<form>` element, if any.)
-     * This attribute lets you associate `<output>` elements to `<form>`s anywhere in the document, not just inside a `<form>`. It can also override an ancestor `<form>` element. The `<output>` element's name and content are not submitted when the form is submitted.
+     * The `form` HTML attribute associates a form-associated element with a form element within the same document. This attribute applies to the button, fieldset, input, object, output, select, and textarea elements.
      */
     form?: string
     /**
-     * The element's name. Used in the  API.
+     * The element's name. Used in the form.elements API. The `<output ` value, name, and contents are NOT submitted during form submission.
      */
     name?: string
 }

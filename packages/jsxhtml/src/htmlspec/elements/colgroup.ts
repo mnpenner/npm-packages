@@ -4,9 +4,7 @@ import type {Numeric} from '../attributes/StandardGlobalAttributes'
 
 export interface ColgroupAttributes extends CommonAttributes<ElementForTag<'colgroup'>> {
     /**
-     * Specifies the number of consecutive columns the `<colgroup>` element spans. The value must be a positive integer greater than zero. If not present, its default value is `1`.
-     * > [!NOTE]
-     * > The `span` attribute is not permitted if there are one or more  elements within the `<colgroup>`.
+     * Specifies the number of consecutive columns the `<colgroup ` element spans. The value must be a positive integer greater than zero. If not present, its default value is `1`. The following attributes are deprecated and should not be used. They are documented below for reference when updating existing code and for historical interest only.
      */
     span?: Numeric
 }
