@@ -1,4 +1,4 @@
-import type {Class} from 'classcat'
+import type {ClassNames} from '../../classnames'
 import type {Properties, PropertiesHyphen} from 'csstype'
 import type {AllGlobalAttributes} from './GlobalAttributes'
 import type {Override} from '../../util-types'
@@ -7,7 +7,7 @@ export interface Stringable {
     toString(): string
 }
 
-export type ClassNames = Class
+export type {ClassNames}
 export type StyleObject = Properties | PropertiesHyphen
 export type AttributeValue = Stringable | StyleObject | ClassNames
 export type AttrKvPair = [name: string, value: AttributeValue]

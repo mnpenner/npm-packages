@@ -1,5 +1,5 @@
 import entityMap from './entityMap'
-import classcat from 'classcat'
+import {classCat} from './classnames'
 import * as util from '@mpen/is-type'
 import styleObjectToString from './styleObjectToString'
 import type {AttrArr, Attributes, AttributeValue, Stringable} from './jsx-types'
@@ -50,7 +50,7 @@ export function attrKvPair(rawAttr: string, rawVal: AttributeValue) {
     }
 
     if(rawAttr === 'class' && !util.isString(rawVal)) {
-        rawVal = classcat(rawVal as any);
+        rawVal = classCat(rawVal as any);
     }
 
     if(rawAttr === 'style' && util.isPlainObject(rawVal)) {

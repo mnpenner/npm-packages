@@ -1,8 +1,8 @@
 import {expect, it} from 'bun:test'
-import {C, DocType} from '../custom-components'
-import {InputMode} from '../htmlspec/attributes/GlobalAttributes'
-import {expectType, TypeEqual} from './type-assert'
-import {JsxNode} from '../jsx-node'
+import {C, DocType} from './custom-components'
+import {InputMode} from './htmlspec/attributes/GlobalAttributes'
+import {expectType, TypeEqual} from './internal/type-assert'
+import {JsxNode} from './jsx-node'
 
 it('is typed', () => {
     const div = <div />
