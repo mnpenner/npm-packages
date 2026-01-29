@@ -62,7 +62,7 @@ export function attrKvPair(rawAttr: string, rawVal: AttributeValue) {
 
 export function attrs(attributes: Attributes) {
     if(attributes == null) return ''
-    if(util.isObject(attributes)) {
+    if(util.isPlainObject(attributes)) {
         attributes = Object.entries(attributes);
     }
     return (attributes as AttrArr).map(([k,v]) => attrKvPair(k,v)).filter(x => x).map(x => ` ${x}`).join('');
