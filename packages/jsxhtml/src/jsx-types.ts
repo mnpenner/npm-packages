@@ -1,5 +1,5 @@
 import type {JsxNode} from './jsx-node'
-import type {AllGlobalAttributes} from './htmlspec/GlobalAttributes'
+import type {AllGlobalAttributes} from './htmlspec/attributes/GlobalAttributes'
 import type {Override} from './util-types'
 import type {Class} from 'classcat'
 import type {Properties,PropertiesHyphen} from 'csstype'

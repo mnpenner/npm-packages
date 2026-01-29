@@ -1,7 +1,9 @@
+import type {CommonProps} from '../../jsx-types'
+
 /**
  * All standard attributes for the `<button>` HTML element.
  */
-export type ButtonAttributes = {
+export interface ButtonSpecificAttributes {
     /** Automatically focus the button when the page loads. */
     autofocus?: boolean
 
@@ -48,6 +50,8 @@ export type ButtonAttributes = {
 
     /**
      * Defines the <button> element as an interest invoker, targeting the element with the given id.
+     * @experimental
+     * @nonstandard
      */
     interestfor?: string
 
@@ -72,3 +76,5 @@ export type ButtonAttributes = {
     /** Value submitted with the form when using this button. */
     value?: string
 }
+
+export type ButtonAttributes = ButtonSpecificAttributes & CommonProps<HTMLButtonElement>

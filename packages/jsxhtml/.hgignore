@@ -5,6 +5,7 @@ syntax: regexp
 ^\.pnp\.
 
 ^dist/
+^\.idea/
 
 # Default ignored files
 ^\.idea/shelf/
@@ -14,3 +15,8 @@ syntax: regexp
 # Datasource local storage ignored files
 ^\.idea/dataSources/
 ^\.idea/dataSources\.local\.xml$
+^docs/html/
+node_modules
+\.local$
+\.png$
+\.jpe?g$

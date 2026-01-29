@@ -1,4 +1,6 @@
-export type AnchorElement = {
+import type {CommonProps} from '../../jsx-types'
+
+export interface ASpecificAttributes {
     /**
      * Specifies that you want the browser to send an Attribution-Reporting-Eligible header.
      * Can be a boolean attribute or a space-separated list of URLs.
@@ -14,7 +16,7 @@ export type AnchorElement = {
      *     - The `Content-Disposition` HTTP header
      *     - The final segment in the URL path
      *     - The media type (from the Content-Type header, the start of a data: URL, or Blob.type for a blob: URL)
-     *   - `filename`: defining a value suggests it as the filename. / and \ characters are converted to underscores
+     *   - `filename`: defining a value suggests it as the filename. / and \\ characters are converted to underscores
      * (_). Filesystems may forbid other characters in filenames, so browsers will adjust the suggested name if
      * necessary.
      */
@@ -39,6 +41,7 @@ export type AnchorElement = {
      * global lang attribute.
      */
     hreflang?: string
+
     /**
      * Defines the <a> element as an interest invoker, targeting the element with the given id.
      * @experimental
@@ -88,6 +91,8 @@ export type AnchorElement = {
      */
     shape?: string
 }
+
+export type AAttributes = ASpecificAttributes & CommonProps<HTMLAnchorElement>
 
 export const enum ReferrerPolicy {
     NoReferrer = 'no-referrer',

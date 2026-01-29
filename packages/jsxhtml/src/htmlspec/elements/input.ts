@@ -1,3 +1,5 @@
+import type {CommonProps} from '../../jsx-types'
+
 /**
  * A union of all possible 'type' attribute values for the <input> element.
  */
@@ -25,14 +27,14 @@ export type InputType =
     | 'url'
     | 'week'
     // Obsolete
-    | 'datetime';
+    | 'datetime'
 
 /**
  * Type definition for the attributes of the HTML <input> element, excluding global attributes.
  * The <input> element is used to create interactive controls for web-based forms to accept data from the user.
  * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input
  */
-export type InputAttributes = {
+export interface InputSpecificAttributes {
     /**
      * Specifies the types of files that the server accepts (that can be submitted through a file upload).
      * Valid for the `file` input type only.
@@ -281,4 +283,6 @@ export type InputAttributes = {
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#webkitdirectory
      */
     webkitdirectory?: boolean;
-};
+}
+
+export type InputAttributes = InputSpecificAttributes & CommonProps<HTMLInputElement>
