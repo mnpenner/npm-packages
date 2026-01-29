@@ -22,6 +22,9 @@ export type {ClassNames, StyleObject, AttributeValue, AttrKvPair, AttrArr, AttrO
 export type UnkFn = (...args: unknown[]) => unknown
 export type AnyFn = (...args: any[]) => any
 
+/**
+ * @experimental
+ */
 export type HtmlSafe = { __html: string }
 
 export type {JsxRenderable, JsxChildren}

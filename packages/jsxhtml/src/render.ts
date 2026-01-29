@@ -5,7 +5,9 @@ import {isIterable} from '@mpen/is-type'
 import {fullWide, getStringTag, isEmptyRender, mapIter} from './util'
 import {isJsxNode} from './jsx-node'
 
-
+/**
+ * @experimental
+ */
 export function isHtmlSafe(x: any): x is HtmlSafe {
     return util.isPlainObject(x) && util.isString(x.__html)
 }
