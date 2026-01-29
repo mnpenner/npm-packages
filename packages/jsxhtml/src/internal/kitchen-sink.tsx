@@ -1,6 +1,15 @@
 #!/usr/bin/env -S bun
-import {HtmlDocument} from './custom'
-import {css, js} from './template-strings'
+import {
+    Checkbox,
+    ColorInput,
+    DateInput,
+    EmailInput,
+    FileInput,
+    HtmlDocument,
+    NumberInput,
+    PasswordInput, RadioButton, SearchInput, TelephoneInput, TimeInput, UrlInput, WeekInput
+} from '../custom'
+import {css, js} from '../template-strings'
 import Path from 'path'
 
 const tagLine = 'Kitchen Sink'
@@ -150,7 +159,7 @@ export const kitchenSink = (
                         referrerpolicy="no-referrer"
                     ></iframe>
 
-                    <canvas width="240" height="120"></canvas>
+                    <canvas width="240" height={120n}></canvas>
                 </section>
 
                 <section id="tables" class="box">
@@ -184,6 +193,23 @@ export const kitchenSink = (
                         <p>We can only see a short distance ahead.</p>
                     </blockquote>
                     <pre>const answer = 42</pre>
+                </section>
+
+                <section>
+                    <h2>Custom Inputs</h2>
+                    <Checkbox checked/>
+                    <ColorInput/>
+                    <DateInput/>
+                    <EmailInput/>
+                    <FileInput/>
+                    <NumberInput/>
+                    <PasswordInput/>
+                    <RadioButton/>
+                    <SearchInput/>
+                    <TelephoneInput/>
+                    <TimeInput/>
+                    <UrlInput/>
+                    <WeekInput/>
                 </section>
             </main>
 

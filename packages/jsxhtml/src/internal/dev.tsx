@@ -1,6 +1,6 @@
-import type {AnyAttributes} from './jsx-types'
-import {C, HtmlDocument, RawHtml} from './custom-components'
-import {css, js} from './template-strings'
+import type {AnyAttributes} from '../jsx-types'
+import {C, HtmlDocument, RawHtml} from '../custom'
+import {css, js} from '../template-strings'
 import Path from 'path'
 
 

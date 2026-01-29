@@ -4,6 +4,7 @@
         "target": "ESNext",
         "module": "ESNext",
         "moduleResolution": "bundler",
+        "baseUrl": ".",
         "declaration": true,
         "declarationDir": "./dist",
         "emitDeclarationOnly": true,
@@ -16,7 +17,7 @@
         "lib": ["ESNext", "DOM"],
         "types": ["bun-types"],
         "jsx": "react-jsx",
-        "jsxImportSource": ".",
+        "jsxImportSource": "src",
         "outDir": "./dist"
     }
 }
