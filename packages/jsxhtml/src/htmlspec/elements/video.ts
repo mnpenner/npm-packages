@@ -17,8 +17,14 @@ export interface VideoAttributes extends CommonAttributes<ElementForTag<'video'>
     controlslist?: 'anonymous' | 'use-credentials'
     /**
      * The **`crossorigin`** attribute, valid on the audio, img, link, script, and video elements, provides support for CORS, defining how the element handles cross-origin requests, thereby enabling the configuration of the CORS requests for the element's fetched data. Depending on the element, the attribute can be a CORS settings attribute.
+     *
+     * Possible values:
+     * - `anonymous`: Request uses CORS headers with credentials mode set to `same-origin` (no credentials sent for cross-origin requests).
+     * - `use-credentials`: Request uses CORS headers with credentials mode set to `include` (credentials always sent).
+     * - `""`: Setting the attribute to an empty value (or providing it without a value) is the same as `anonymous`.
+     * - `true`: Boolean form; emits the attribute without a value (same as `""` / `anonymous`).
      */
-    crossorigin?: 'anonymous' | 'use-credentials'
+    crossorigin?: '' | 'anonymous' | 'use-credentials' | true
     /**
      * Prevents the browser from suggesting a Picture-in-Picture context menu or to request Picture-in-Picture automatically in some cases.
      */
@@ -66,4 +72,3 @@ export interface VideoAttributes extends CommonAttributes<ElementForTag<'video'>
     src?: string
 
 }
-

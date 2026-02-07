@@ -24,8 +24,14 @@ export interface ScriptAttributes extends CommonAttributes<ElementForTag<'script
 
     /**
      * The **`crossorigin`** attribute, valid on the audio, img, link, script, and video elements, provides support for CORS, defining how the element handles cross-origin requests, thereby enabling the configuration of the CORS requests for the element's fetched data. Depending on the element, the attribute can be a CORS settings attribute.
+     *
+     * Possible values:
+     * - `anonymous`: Request uses CORS headers with credentials mode set to `same-origin` (no credentials sent for cross-origin requests).
+     * - `use-credentials`: Request uses CORS headers with credentials mode set to `include` (credentials always sent).
+     * - `""`: Setting the attribute to an empty value (or providing it without a value) is the same as `anonymous`.
+     * - `true`: Boolean form; emits the attribute without a value (same as `""` / `anonymous`).
      */
-    crossorigin?: '' | 'anonymous' | 'use-credentials'
+    crossorigin?: '' | 'anonymous' | 'use-credentials' | true
 
     /**
      * This Boolean attribute is set to indicate to a browser that the script is meant to be executed after the document has been parsed, but before firing DOMContentLoaded event. Scripts with the `defer` attribute will prevent the `DOMContentLoaded` event from firing until the script has loaded and finished evaluating. Scripts with the `defer` attribute will execute in the order in which they appear in the document. This attribute allows the elimination of **parser-blocking JavaScript** where the browser would have to load and evaluate scripts before continuing to parse. `async` has a similar effect in this case. If the attribute is specified with the `async` attribute, the element will act as if only the `async` attribute is specified.

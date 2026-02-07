@@ -25,6 +25,8 @@ export const kitchenSink = (
             <base href="/" />
             <title>{tagLine}</title>
             <link rel="stylesheet" href="/kitchen-sink.css" media="all" />
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+            <link rel="icon" type="image/png" href="/static/favicon-96x96.png" sizes="96x96" />
             <link rel="preload" as="image" href="/hero.jpg" fetchpriority="high" />
             <style>{css`
                 body {

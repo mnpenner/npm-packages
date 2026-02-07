@@ -15,8 +15,14 @@ export interface LinkAttributes extends CommonAttributes<ElementForTag<'link'>> 
     blocking?: 'render'
     /**
      * The **`crossorigin`** attribute, valid on the audio, img, link, script, and video elements, provides support for CORS, defining how the element handles cross-origin requests, thereby enabling the configuration of the CORS requests for the element's fetched data. Depending on the element, the attribute can be a CORS settings attribute.
+     *
+     * Possible values:
+     * - `anonymous`: Request uses CORS headers with credentials mode set to `same-origin` (no credentials sent for cross-origin requests).
+     * - `use-credentials`: Request uses CORS headers with credentials mode set to `include` (credentials always sent).
+     * - `""`: Setting the attribute to an empty value (or providing it without a value) is the same as `anonymous`.
+     * - `true`: Boolean form; emits the attribute without a value (same as `""` / `anonymous`).
      */
-    crossorigin?: 'anonymous' | 'use-credentials'
+    crossorigin?: '' | 'anonymous' | 'use-credentials' | true
     /**
      * The Boolean **`disabled`** attribute, when present, makes the element not mutable, focusable, or even submitted with the form. The user can neither edit nor focus on the control, nor its form control descendants.
      */
@@ -68,13 +74,13 @@ export interface LinkAttributes extends CommonAttributes<ElementForTag<'link'>> 
      * This attribute defines the sizes of the icons for visual media contained in the resource. It must be present only if the `rel` contains a value of `icon` or a non-standard type such as Apple's `apple-touch-icon`. It may have the following values:
      *
      * Possible values:
-     * - any
+     * - any (the icon can be scaled to any size, such as a vector format like `image/svg+xml`)
+     * - A whitespace-separated list of sizes, each in the format `<width>x<height>` or `<width>X<height>` in pixels
      */
-    sizes?: 'any'
+    sizes?: 'any' | string
     /**
      * This attribute is used to define the type of the content linked to. The value of the attribute should be a MIME type such as **text/html**, **text/css**, and so on. The common use of this attribute is to define the type of stylesheet being referenced (such as **text/css**), but given that CSS is the only stylesheet language used on the web, not only is it possible to omit the `type` attribute, but is actually now recommended practice. It is also used on `rel="preload"` link types, to make sure the browser only downloads file types that it supports.
      */
     type?: string
 
 }
-
