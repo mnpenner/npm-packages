@@ -1,6 +1,7 @@
 import type {CommonAttributes} from '../attributes/ElementAttributes'
 import type {ElementForTag} from './element-types'
 import type {Numeric} from '../attributes/StandardGlobalAttributes'
+import type {AnyString} from '../../util-types'
 
 export interface TextareaAttributes extends CommonAttributes<ElementForTag<'textarea'>> {
     /**
@@ -10,7 +11,7 @@ export interface TextareaAttributes extends CommonAttributes<ElementForTag<'text
      * - off
      * - on
      */
-    autocomplete?: 'on' | 'off' | string
+    autocomplete?: 'on' | 'off' | AnyString
     /**
      * The visible width of the text control, in average character widths. If it is specified, it must be a positive integer. If it is not specified, the default value is `20`.
      */

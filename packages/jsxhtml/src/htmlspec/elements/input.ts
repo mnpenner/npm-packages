@@ -1,6 +1,7 @@
 import type {CommonAttributes} from '../attributes/ElementAttributes'
 import type {ElementForTag} from './element-types'
 import type {Numeric} from '../attributes/StandardGlobalAttributes'
+import type {AnyString} from '../../util-types'
 
 /**
  * A union of all possible 'type' attribute values for the <input> element.
@@ -52,7 +53,7 @@ export interface InputAttributes extends CommonAttributes<ElementForTag<'input'>
      * - off
      * - on
      */
-    autocomplete?: 'on' | 'off' | string;
+    autocomplete?: 'on' | 'off' | AnyString;
 
     /**
      * The **`capture`** attribute specifies that, optionally, a new file should be captured, and which device should be used to capture that new media of a type defined by the `accept` attribute.

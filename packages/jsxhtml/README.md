@@ -62,40 +62,13 @@ Add these options to your `tsconfig.json` or Babel config.
 
 ## Elysia Integration
 
-JsxHtml is primarily designed for server-side rendering. It pairs nicely with frameworks such as [Elysia](https://elysiajs.com/), so you can return a block of HTML with no fuss:
-
-```tsx
-import {elysiaJsx} from '@mpen/jsxhtml'
-
-new Elysia()
-    .use(elysiaJsx())
-    .get('/', () => {
-        return (
-            <HtmlDocument lang="en">
-                <head>
-                    <title>Hello JsxHtml</title>
-                </head>
-                <body>
-                    Hi there!
-                </body>
-            </HtmlDocument>
-        )
-    })
-    .listen(3000)
-```
-```txt
-<!DOCTYPE html><html lang="en"><head><title>Hello JsxHtml</title></head><body>Hi there!</body></html>
-```
-
-It should be just as easy to integrate with [Express](https://expressjs.com/) or any other JavaScript server, because JsxHtml compiles to an object with a `.toString()` method -- so if your framework allows you to send a string in the response body, you're good to go.
-
-For reference, so you can see how easy this is, the entire Elysia plugin is this:
+As of v0.5, the Elysia plugin has been removed, but it's very easy to implement yourself:
 
 ```ts
 import {isJsxNode} from './jsx-nodes'
+import {Elysia} from 'elysia'
 
 export function elysiaJsx() {
-    const {Elysia} = require('elysia') as typeof import('elysia')
     return new Elysia()
         .onAfterHandle(({response}) => {
             if(isJsxNode(response)) {

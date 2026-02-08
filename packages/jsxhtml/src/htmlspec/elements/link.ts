@@ -1,6 +1,6 @@
 import type {CommonAttributes, CrossOrigin} from '../attributes/ElementAttributes'
 import type {ElementForTag} from './element-types'
-import {AnyString} from '../../util-types'
+import type {AnyString} from '../../util-types'
 
 export interface LinkAttributes extends CommonAttributes<ElementForTag<'link'>> {
     /**

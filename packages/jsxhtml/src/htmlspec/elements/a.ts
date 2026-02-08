@@ -1,5 +1,6 @@
 import type {CommonAttributes} from '../attributes/ElementAttributes'
 import type {ElementForTag} from './element-types'
+import type {AnyString} from '../../util-types'
 
 export interface AAttributes extends CommonAttributes<ElementForTag<'a'>> {
     /**
@@ -8,7 +9,7 @@ export interface AAttributes extends CommonAttributes<ElementForTag<'a'>> {
      * Possible values:
      * - filename
      */
-    download?: true | string
+    download?: true | AnyString
 
     /**
      * The URL that the hyperlink points to. Links are not restricted to HTTP-based URLs - they can use any URL scheme supported by browsers: Moreover other URL features can locate specific parts of the resource, including:
@@ -43,7 +44,7 @@ export interface AAttributes extends CommonAttributes<ElementForTag<'a'>> {
      * - strict-origin-when-cross-origin
      * - unsafe-url
      */
-    referrerpolicy?: ReferrerPolicy | string
+    referrerpolicy?: ReferrerPolicy | AnyString
     /**
      * The **`rel`** attribute defines the relationship between a linked resource and the current document. Valid on link, a, area, and form, the supported values depend on the element on which the attribute is found.
      */
@@ -58,7 +59,7 @@ export interface AAttributes extends CommonAttributes<ElementForTag<'a'>> {
      * - _top
      * - _unfencedTop
      */
-    target?: '_self' | '_blank' | '_parent' | '_top' | '_unfencedTop' | string
+    target?: '_self' | '_blank' | '_parent' | '_top' | '_unfencedTop' | AnyString
     /**
      * Hints at the linked URL's format with a MIME type. No built-in functionality.
      */

@@ -1,6 +1,5 @@
 export * from './jsx-elements'
 export * from './custom-components'
-export * from './elysia-plugin'
 export * from './jsx-node'
 export {js} from './template-strings'
 

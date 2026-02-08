@@ -1,5 +1,6 @@
 import type {CommonAttributes} from '../attributes/ElementAttributes'
 import type {ElementForTag} from './element-types'
+import type {AnyString} from '../../util-types'
 
 export interface FormAttributes extends CommonAttributes<ElementForTag<'form'>> {
     /**
@@ -13,7 +14,7 @@ export interface FormAttributes extends CommonAttributes<ElementForTag<'form'>> 
      * - off
      * - on
      */
-    autocomplete?: 'on' | 'off' | string
+    autocomplete?: 'on' | 'off' | AnyString
     /**
      * The name of the form. The value must not be the empty string, and must be unique among the `form` elements in the forms collection that it is in, if any. The name becomes a property of the Window, Document, and document.forms objects, containing a reference to the form element.
      */

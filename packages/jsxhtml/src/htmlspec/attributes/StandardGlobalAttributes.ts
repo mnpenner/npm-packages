@@ -2,6 +2,7 @@
 
 // https://html.spec.whatwg.org/multipage/dom.html#global-attributes
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes
+import type {AnyString} from '../../util-types'
 
 export interface StandardGlobalAttributes {
     /**
@@ -106,7 +107,7 @@ export interface StandardGlobalAttributes {
      * Provides a hint to browsers about the type of virtual keyboard configuration to use when editing this element or
      * its contents. Used primarily on <input> elements, but is usable on any element while in contenteditable mode.
      */
-    inputmode?: InputMode | string
+    inputmode?: InputMode | AnyString
     /**
      * Allows you to specify that a standard HTML element should behave like a registered custom built-in element (see
      * Using custom elements for more details).
