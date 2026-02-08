@@ -1,4 +1,4 @@
-import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {CommonAttributes, CrossOrigin} from '../attributes/ElementAttributes'
 import type {ElementForTag} from './element-types'
 import type {Numeric} from '../attributes/StandardGlobalAttributes'
 
@@ -16,7 +16,7 @@ export interface ImgAttributes extends CommonAttributes<ElementForTag<'img'>> {
      * - `""`: Setting the attribute to an empty value (or providing it without a value) is the same as `anonymous`.
      * - `true`: Boolean form; emits the attribute without a value (same as `""` / `anonymous`).
      */
-    crossorigin?: '' | 'anonymous' | 'use-credentials' | true
+    crossorigin?: CrossOrigin
     /**
      * This attribute provides a hint to the browser as to whether it should perform image decoding along with rendering the other DOM content in a single presentation step that looks more "correct" (`sync`), or render and present the other DOM content first and then decode the image and present it later (`async`). In practice, `async` means that the next paint does not wait for the image to decode. It is often difficult to perceive any noticeable effect when using `decoding` on static `<img ` elements. They'll likely be initially rendered as empty images while the image files are fetched (either from the network or from the cache) and then handled independently anyway, so the "syncing" of content updates is less apparent. However, the blocking of rendering while decoding happens, while often quite small, _can_ be measured - even if it is difficult to observe with the human eye. See What does the image decoding attribute actually do? for a more detailed analysis (tunetheweb.com, 2023). Using different `decoding` types can result in more noticeable differences when dynamically inserting `<img ` elements into the DOM via JavaScript - see HTMLImageElement.decoding for more details. Allowed values: Decode the image synchronously along with rendering the other DOM content, and present everything together. Decode the image asynchronously, after rendering and presenting the other DOM content. No preference for the decoding mode; the browser decides what is best for the user. This is the default value.
      *

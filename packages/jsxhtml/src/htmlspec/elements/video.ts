@@ -1,4 +1,4 @@
-import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {CommonAttributes, CrossOrigin} from '../attributes/ElementAttributes'
 import type {ElementForTag} from './element-types'
 import type {Numeric} from '../attributes/StandardGlobalAttributes'
 
@@ -24,7 +24,7 @@ export interface VideoAttributes extends CommonAttributes<ElementForTag<'video'>
      * - `""`: Setting the attribute to an empty value (or providing it without a value) is the same as `anonymous`.
      * - `true`: Boolean form; emits the attribute without a value (same as `""` / `anonymous`).
      */
-    crossorigin?: '' | 'anonymous' | 'use-credentials' | true
+    crossorigin?: CrossOrigin
     /**
      * Prevents the browser from suggesting a Picture-in-Picture context menu or to request Picture-in-Picture automatically in some cases.
      */

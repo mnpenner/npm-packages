@@ -1,4 +1,4 @@
-import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {CommonAttributes, CrossOrigin} from '../attributes/ElementAttributes'
 import type {ElementForTag} from './element-types'
 import type {JsFrag} from '../../template-strings'
 
@@ -31,7 +31,7 @@ export interface ScriptAttributes extends CommonAttributes<ElementForTag<'script
      * - `""`: Setting the attribute to an empty value (or providing it without a value) is the same as `anonymous`.
      * - `true`: Boolean form; emits the attribute without a value (same as `""` / `anonymous`).
      */
-    crossorigin?: '' | 'anonymous' | 'use-credentials' | true
+    crossorigin?: CrossOrigin
 
     /**
      * This Boolean attribute is set to indicate to a browser that the script is meant to be executed after the document has been parsed, but before firing DOMContentLoaded event. Scripts with the `defer` attribute will prevent the `DOMContentLoaded` event from firing until the script has loaded and finished evaluating. Scripts with the `defer` attribute will execute in the order in which they appear in the document. This attribute allows the elimination of **parser-blocking JavaScript** where the browser would have to load and evaluate scripts before continuing to parse. `async` has a similar effect in this case. If the attribute is specified with the `async` attribute, the element will act as if only the `async` attribute is specified.

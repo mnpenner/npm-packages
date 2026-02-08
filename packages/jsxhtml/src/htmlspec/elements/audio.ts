@@ -1,4 +1,4 @@
-import type {CommonAttributes} from '../attributes/ElementAttributes'
+import type {CommonAttributes, CrossOrigin} from '../attributes/ElementAttributes'
 import type {ElementForTag} from './element-types'
 
 export interface AudioAttributes extends CommonAttributes<ElementForTag<'audio'>> {
@@ -23,7 +23,7 @@ export interface AudioAttributes extends CommonAttributes<ElementForTag<'audio'>
      * - `""`: Setting the attribute to an empty value (or providing it without a value) is the same as `anonymous`.
      * - `true`: Boolean form; emits the attribute without a value (same as `""` / `anonymous`).
      */
-    crossorigin?: '' | 'anonymous' | 'use-credentials' | true
+    crossorigin?: CrossOrigin
     /**
      * A Boolean attribute used to disable the capability of remote playback in devices that are attached using wired (HDMI, DVI, etc.) and wireless technologies (Miracast, Chromecast, DLNA, AirPlay, etc.). See the proposed Remote Playback API specification for more information. In Safari, you can use `x-webkit-airplay="deny"` as a fallback.
      */

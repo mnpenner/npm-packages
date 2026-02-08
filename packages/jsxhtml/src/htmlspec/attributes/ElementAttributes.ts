@@ -14,6 +14,7 @@ export type AttrKvPair = [name: string, value: AttributeValue]
 export type AttrArr = AttrKvPair[]
 export type AttrObj = Record<string, AttributeValue>
 export type Attributes = AttrObj | AttrArr
+export type CrossOrigin = '' | 'anonymous' | 'use-credentials' | true
 
 export type JsxRenderable = any
 export type JsxChildren = JsxRenderable | Iterable<JsxRenderable>
