@@ -1,3 +1,5 @@
+import {sameValueZero} from './compare.ts'
+
 /**
  * Filter-map. Map over any iterable and filter out `undefined` return values.
  */
@@ -11,14 +13,6 @@ export function fmap<T, R>(iter: Iterable<T>, fn: (el: T, idx: number) => R): R[
         }
     }
     return out
-}
-
-function sameValueZero(x: any, y: any): boolean {
-    if(typeof x === "number" && typeof y === "number") {
-        // x and y are equal (may be -0 and 0) or they are both NaN
-        return x === y || (x !== x && y !== y)
-    }
-    return x === y
 }
 
 export function shallowArrayEqual(a: readonly any[], b: readonly any[]): boolean {
