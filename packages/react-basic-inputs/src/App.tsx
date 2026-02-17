@@ -289,13 +289,13 @@ function FieldSet({legend, children}: FieldSetProps) {
 function OtherTextInputsFieldset() {
     return (
         <FieldSet legend="Other Text Inputs">
-            <EmailInput placeholder="Email" />
-            <NumberInput placeholder={123} />
-            <DecimalInput placeholder="456" />
-            <NumericInput placeholder="3.14" />
-            <PhoneInput placeholder="867-5309" />
-            <SearchInput placeholder="Google" />
-            <UrlInput placeholder="example.org" />
+            <label className={css.flexRow}>Email: <EmailInput placeholder="Email" /></label>
+            <label className={css.flexRow}>Number: <NumberInput placeholder={123} /></label>
+            <label className={css.flexRow}>Decimal: <DecimalInput placeholder="456" /></label>
+            <label className={css.flexRow}>Numeric: <NumericInput placeholder="3.14" /></label>
+            <label className={css.flexRow}>Phone: <PhoneInput placeholder="867-5309" /></label>
+            <label className={css.flexRow}>Search: <SearchInput placeholder="Google" /></label>
+            <label className={css.flexRow}>Url: <UrlInput placeholder="example.org" /></label>
         </FieldSet>
     )
 }

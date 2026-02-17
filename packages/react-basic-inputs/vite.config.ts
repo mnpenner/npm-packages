@@ -10,6 +10,9 @@ export default defineConfig({
     // root: 'src',
     // publicDir: '../public',
 
+    server: {
+        host: false,
+    },
     plugins: [
         react(),
         dts({

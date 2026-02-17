@@ -108,6 +108,11 @@
         background-color: oklch(0.983 0.018 86.145);
     }
 
+    input:invalid {
+        outline: 2px solid red;
+    }
+
+
     //select {
     //    hr {
     //        padding-block: .4em;

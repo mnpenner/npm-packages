@@ -50,7 +50,7 @@ export const TextArea = forwardRef<TextAreaRef, TextAreaProps>(function TextArea
         onInput?.(ev)
     })
 
-    useLayoutEffect(() => {
+    useLayoutEffect(() => {  // TODO: just use CSS `field-sizing: content`
         adjustHeight()
 
         const textarea = ref.current

@@ -6,6 +6,6 @@ export type PasswordInputProps = Override<InputProps, {
 }>
 
 export function PasswordInput(props: PasswordInputProps) {
-    return <Input type="password" {...props} />
+    return <Input type="password" pattern="\S(?:.*\S)?" {...props} />
 }
 
