@@ -6,6 +6,5 @@ export type Resolvable<TValue = unknown, TArgs extends ReadonlyArray<unknown> = 
 export type Resolved<T> = T extends Fn ? ReturnType<T> : T
 
 export function resolveValue<TValue, TArgs extends ReadonlyArray<any>>(val: Resolvable<TValue, TArgs>, ...args: TArgs): TValue {
-    return typeof val === 'function' ? val(...args) : val
+    return typeof val === 'function' ? val(...args) : val as TValue
 }
-

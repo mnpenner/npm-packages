@@ -7,7 +7,7 @@ Thin wrappers around native input elements to make them behave better.
 ## Installation
 
 ```sh
-bun add --dev @mpen/react-basic-inputs
+bun add @mpen/react-basic-inputs
 # or
 yarn add @mpen/react-basic-inputs
 # or
@@ -18,6 +18,7 @@ npm install @mpen/react-basic-inputs
 
 - Npm: https://www.npmjs.com/package/@mpen/react-basic-inputs
   - https://www.npmjs.com/package/@mpen/react-basic-inputs?activeTab=code
+- Npmx: https://npmx.dev/package/@mpen/react-basic-inputs
 - Yarn: https://yarnpkg.com/package/@mpen/react-basic-inputs
 - pkg-size: https://pkg-size.dev/@mpen%2Freact-basic-inputs
 - Bundlephobia: https://bundlephobia.com/package/@mpen/react-basic-inputs
