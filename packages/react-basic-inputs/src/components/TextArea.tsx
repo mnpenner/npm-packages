@@ -1,7 +1,8 @@
 import type {
-    InputEventHandler} from 'react';
+    InputEventHandler,
+    Ref} from 'react';
 import {
-    forwardRef, useCallback,
+    useCallback,
     useImperativeHandle,
     useLayoutEffect,
     useRef,
@@ -19,14 +20,16 @@ export type TextAreaRef = {
 export type TextAreaProps = OverrideProps<'textarea', {
     /** Initial/minimum height. "0" or "auto" are good choices. Defaults to "auto" */
     initialHeight?: string
+    ref?: Ref<TextAreaRef>
 }>
 
-export const TextArea = forwardRef<TextAreaRef, TextAreaProps>(function TextArea({
+export function TextArea({
     onInput,
     style,
     initialHeight = 'auto',
+    ref: fwdRef,
     ...rest
-}, fwdRef) {
+}: TextAreaProps) {
     const ref = useRef<HtmlTextAreaElement>(null)
     const [height, setHeight] = useState(initialHeight)
 
@@ -71,4 +74,4 @@ export const TextArea = forwardRef<TextAreaRef, TextAreaProps>(function TextArea
         ...style,
         height: height,
     }} onInput={input} ref={ref} />
-})
+}

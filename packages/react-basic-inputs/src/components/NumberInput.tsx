@@ -1,7 +1,6 @@
 import type {EventCallback, HtmlInputElement, OverrideProps} from "../types/utility";
 import {Input} from "./Input";
-import type {ComponentPropsWithoutRef} from "react";
-import { forwardRef} from "react";
+import type {ComponentPropsWithRef, ComponentPropsWithoutRef} from "react";
 import {formatStrNumber, numberToString, stringToNumber} from "../util/format";
 
 export type NumberChangeEvent = {
@@ -16,12 +15,13 @@ export type NumberInputProps = OverrideProps<typeof Input, {
     value?: number
     placeholder?: string | number
     onChange?: NumberChangeEventHandler
+    ref?: ComponentPropsWithRef<typeof Input>['ref']
 }, 'type'>
 
 // TODO: format as a number and return Number type for ev.value
 
 
-export const NumberInput = forwardRef<HtmlInputElement, NumberInputProps>(function NumberInput({placeholder, formatOnChange = formatStrNumber, onChange, value, ...otherProps}, ref) {
+export function NumberInput({placeholder, formatOnChange = formatStrNumber, onChange, value, ref, ...otherProps}: NumberInputProps) {
     const props: ComponentPropsWithoutRef<typeof Input> = {
         inputMode: 'decimal',
         ...otherProps,
@@ -45,4 +45,4 @@ export const NumberInput = forwardRef<HtmlInputElement, NumberInputProps>(functi
     }
 
     return <Input {...props} ref={ref}/>
-})
+}

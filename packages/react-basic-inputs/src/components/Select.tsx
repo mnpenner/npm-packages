@@ -55,7 +55,6 @@ export type SelectProps<T extends NonNil> = OverrideProps<'select', {
 const PLACEHOLDER_KEY = '3c9369b7-0a5e-46ea-93c2-e8b9fec67fdb'
 const INVALID_OPTION_KEY = '1a53f789-77f5-4ce6-a829-b00e563f1ee8'
 
-// TODO: how to forwardRef?
 export function Select<T extends NonNil>({
     options,
     value,

@@ -1,5 +1,5 @@
 import type { ComponentPropsWithRef} from 'react';
-import { forwardRef, useRef, useState} from 'react'
+import { useRef, useState} from 'react'
 import {useUpdateEffect} from 'react-use'
 import type {EventCallback, HtmlInputElement, OverrideProps} from "../types/utility";
 import {identity} from "../util/constants";
@@ -15,6 +15,7 @@ export type InputChangeEventHandler = EventCallback<InputChangeEvent>
 export type InputProps = OverrideProps<'input', {
     onChange?: InputChangeEventHandler
     value?: string
+    ref?: ComponentPropsWithRef<'input'>['ref']
     /**
      * Function used to format value on blur.
      */
@@ -22,7 +23,7 @@ export type InputProps = OverrideProps<'input', {
 }>
 
 
-export const Input = forwardRef<HtmlInputElement, InputProps>(function Input({value: initialValue = '', onPaste, onChange, onInput, onBlur, formatOnChange = identity, ...otherProps}, ref) {
+export function Input({value: initialValue = '', onPaste, onChange, onInput, onBlur, formatOnChange = identity, ref, ...otherProps}: InputProps) {
     const [currentValue, setCurrentValue] = useState(initialValue)
     const lastValue = useRef(initialValue)
     const modified = useRef(false)
@@ -82,4 +83,4 @@ export const Input = forwardRef<HtmlInputElement, InputProps>(function Input({va
     }
 
     return <input {...props} />
-})
+}
