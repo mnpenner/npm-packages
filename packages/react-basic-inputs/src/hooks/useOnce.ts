@@ -14,33 +14,41 @@ export function useOnce(callback: () => void) {
 
 export function useOnceEffect(callback: () => void) {
     const first = useRef(true)
+    const cb = useBox(callback)
     useLayoutEffect(() => {
         if(first.current) {
             first.current = false
-            callback()
+            cb.current()
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [cb])
 }
 
 export function useLayoutEffectCounter(callback: (count: number) => void, deps?: DependencyList) {
     const counter = useRef(0)
     const cb = useBox(callback)
+    const prevDeps = useRef<DependencyList | undefined>(undefined)
     useLayoutEffect(() => {
-        cb.current?.(counter.current++)
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, deps)
+        const shouldRun = deps == null || prevDeps.current == null || !shallowArrayEqual(prevDeps.current, deps)
+        if(shouldRun) {
+            cb.current?.(counter.current++)
+            prevDeps.current = deps
+        }
+    })
 }
 
 
 export function useFirstLayoutEffect(callback: (isFirst: boolean) => void, deps?: DependencyList) {
     const first = useRef(true)
     const cb = useBox(callback)
+    const prevDeps = useRef<DependencyList | undefined>(undefined)
     useLayoutEffect(() => {
-        cb.current?.(first.current)
-        first.current = false
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, deps)
+        const shouldRun = deps == null || prevDeps.current == null || !shallowArrayEqual(prevDeps.current, deps)
+        if(shouldRun) {
+            cb.current?.(first.current)
+            first.current = false
+            prevDeps.current = deps
+        }
+    })
 }
 
 

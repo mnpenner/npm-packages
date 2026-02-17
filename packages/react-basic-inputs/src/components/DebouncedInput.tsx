@@ -1,7 +1,6 @@
 import type {OverrideProps} from '../types/utility.ts'
 import type { FC, MutableRefObject} from 'react';
-import {useUpdateEffect} from 'react-use'
-import {useNullRef} from '../hooks/useNullRef.ts'
+import {useEffect, useRef, useState} from 'react'
 
 export type DebouncedInputChangeEvent = {
     value: string
@@ -36,24 +35,23 @@ export const DebouncedInput: FC<DebouncedInputProps> = (({
     debounce = 500,
     ...props
 }) => {
-    const inputRef = useNullRef<HTMLInputElement>()
-    const timer = useNullRef<Timer>()
+    const timer = useRef<Timer | null>(null)
+    const [inputValue, setInputValue] = useState(valueProp)
 
-    useUpdateEffect(() => {
+    useEffect(() => {
         clearTimer(timer)
-        if(inputRef.current != null) {
-            inputRef.current.value = valueProp
-        }
+        setInputValue(valueProp)
     }, [valueProp])
 
     const fireChange = () => {
-        if(inputRef.current != null && inputRef.current.value !== valueProp) {
-            onChange?.({value: inputRef.current.value})
+        if(inputValue !== valueProp) {
+            onChange?.({value: inputValue})
         }
     }
 
     return (
-        <input {...props} ref={inputRef} defaultValue={valueProp} onInput={() => {
+        <input {...props} value={inputValue} onChange={ev => {
+            setInputValue(ev.currentTarget.value)
             clearTimer(timer)
             timer.current = setTimeout(fireChange, debounce)
         }} onBlur={() => {

@@ -6,9 +6,9 @@ export type ActionButtonProps = RequiredKeys<ComponentPropsWithoutRef<'button'>,
 
 export function ActionButton({onClick, ...props}: ActionButtonProps) {
     assumeProps<'button'>(props)
-    props.onClick = ev => {
+    const handleClick: ActionButtonProps['onClick'] = ev => {
         ev.preventDefault()
         onClick?.(ev)
     }
-    return <button type="button" {...props} />
+    return <button type="button" {...props} onClick={handleClick} />
 }

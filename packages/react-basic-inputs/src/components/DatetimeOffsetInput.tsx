@@ -172,8 +172,8 @@ export function DatetimeOffsetInput({
         })
     }, [onChange, updateRef])
 
-    if(min != null) props.min = toDateInputValue(min)
-    if(max != null) props.max = toDateInputValue(max)
+    const minProp = min != null ? toDateInputValue(min) : props.min
+    const maxProp = max != null ? toDateInputValue(max) : props.max
 
     const computedOffset = offsetEnabled
         ? offset
@@ -219,12 +219,14 @@ export function DatetimeOffsetInput({
 
     return (
         <span>
-            <input
-                type="datetime-local"
-                {...props}
-                value={dateValue}
-                onChange={handleDateChange}
-            />
+                <input
+                    type="datetime-local"
+                    {...props}
+                    min={minProp}
+                    max={maxProp}
+                    value={dateValue}
+                    onChange={handleDateChange}
+                />
             <input
                 type="checkbox"
                 title={offsetEnabled ? "Use UTC offset from this device" : "Enable UTC offset selection"}
@@ -240,4 +242,3 @@ export function DatetimeOffsetInput({
         </span>
     )
 }
-

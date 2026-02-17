@@ -1,13 +1,13 @@
 import {describe, it, expect} from 'bun:test'
 import {deepEqual} from './collections.ts'
 
-function func1() {
+function _func1() {
 }
 
-function func2() {
+function _func2() {
 }
 
-const skipBigInt = false
+const _skipBigInt = false
 const emptyObj = {};
 
 class MyMap extends Map {}

@@ -1,3 +1,4 @@
+import type {ChangeEventHandler} from 'react'
 import type { OverrideProps} from "../types/utility";
 import {assumeProps} from '../util/assert.ts'
 import type {DateValue, IsoDateOptions} from '../util/time.ts';
@@ -25,12 +26,13 @@ const DATE_INPUT_OPTIONS: IsoDateOptions = {offset: false}
 
 export function DatetimeLocalInput({value, defaultValue, min, max, onChange, ...props}: DatetimeLocalInputProps) {
     assumeProps<'input'>(props)
-    if(value !== undefined) props.value = value === null ? '' : toIsoDateString(value, DATE_INPUT_OPTIONS)
-    if(defaultValue != null) props.defaultValue = toIsoDateString(defaultValue, DATE_INPUT_OPTIONS)
-    if(min != null) props.min = toIsoDateString(min, DATE_INPUT_OPTIONS)
-    if(max != null) props.max = toIsoDateString(max, DATE_INPUT_OPTIONS)
-    if(onChange != null) {
-        props.onChange = ev => {
+    const valueProp = value !== undefined ? (value === null ? '' : toIsoDateString(value, DATE_INPUT_OPTIONS)) : props.value
+    const defaultValueProp = defaultValue != null ? toIsoDateString(defaultValue, DATE_INPUT_OPTIONS) : props.defaultValue
+    const minProp = min != null ? toIsoDateString(min, DATE_INPUT_OPTIONS) : props.min
+    const maxProp = max != null ? toIsoDateString(max, DATE_INPUT_OPTIONS) : props.max
+    const handleChange: ChangeEventHandler<HTMLInputElement> | undefined = onChange == null
+        ? props.onChange
+        : (ev) => {
             const value = ev.currentTarget.value
             const date = value === '' ? null : new Date(value)
             onChange({
@@ -39,6 +41,6 @@ export function DatetimeLocalInput({value, defaultValue, min, max, onChange, ...
                 isoString: date != null && !Number.isNaN(+date) ? date.toISOString() : '',
             })
         }
-    }
-    return <input type="datetime-local" {...props} />
+
+    return <input type="datetime-local" {...props} value={valueProp} defaultValue={defaultValueProp} min={minProp} max={maxProp} onChange={handleChange} />
 }

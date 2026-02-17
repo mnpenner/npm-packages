@@ -48,14 +48,6 @@ export function isInvalidDateInput(date: DateValue | nil): date is nil | '' {
     return date == null || Number.isNaN(date) || date === '' || Number.isNaN(+new Date(date))
 }
 
-function isValidDateInput(date: DateValue | nil): date is DateValue {
-    if(date == null || date === '') return false
-    if(typeof date === 'number') return Number.isSafeInteger(date)
-    if(date instanceof Date) return !Number.isNaN(+date)
-    if(typeof date === 'string') return INPUT_REGEX.test(date)
-    return false
-}
-
 export function toDateInputValue(date: DateValue | nil): string {
     if(typeof date === 'string') {
         const m = date.match(INPUT_REGEX)

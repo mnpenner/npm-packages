@@ -1,7 +1,7 @@
 import { useReducer, useRef} from 'react'
 
 
-export function usePropState<T>(prop: T, onChange?: () => void) {
+export function usePropState<T>(prop: T, _onChange?: () => void) {
 
     const [, forceUpdate] = useReducer(() => Symbol(), Symbol());
 
@@ -74,11 +74,3 @@ export function usePropState<T>(prop: T, onChange?: () => void) {
     ] as const
 }
 
-
-function useFastEffect(callback: () => void, value: unknown) {
-    const ref = useRef(value)
-    if(value !== ref.current) {
-        callback()
-        ref.current = value
-    }
-}
