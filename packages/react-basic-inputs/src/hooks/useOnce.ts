@@ -1,4 +1,5 @@
-import {DependencyList, useEffect, useLayoutEffect, useRef, useState} from 'react'
+import type {DependencyList} from 'react';
+import { useLayoutEffect, useRef} from 'react'
 import {useBox} from './useBox.ts'
 import {shallowArrayEqual} from '../util/collections.ts'
 

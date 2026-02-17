@@ -1,6 +1,7 @@
-import {HtmlInputElement} from "../types/utility";
+import type {HtmlInputElement} from "../types/utility";
 import {forwardRef} from "react";
-import {Input, InputProps} from "./Input";
+import type { InputProps} from "./Input";
+import {Input} from "./Input";
 
 export type ColorInputProps = Omit<InputProps, 'type'>
 

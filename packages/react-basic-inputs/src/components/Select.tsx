@@ -1,9 +1,11 @@
-import {ChangeEvent, ReactNode, useCallback, useMemo, useRef} from 'react'
+import type {ChangeEvent, ReactNode} from 'react';
+import { useCallback, useMemo, useRef} from 'react'
 import useEvent from '../hooks/useEvent'
-import {Resolvable} from '../util/resolvable'
+import type {Resolvable} from '../util/resolvable'
 import {useUpdateEffect} from 'react-use'
-import {EventCallback, HtmlSelectElement, NonNil, OverrideProps} from "../types/utility"
-import {AnyOption, KeyFixer} from '../util/key-fixer'
+import type {EventCallback, HtmlSelectElement, NonNil, OverrideProps} from "../types/utility"
+import type {AnyOption} from '../util/key-fixer';
+import { KeyFixer} from '../util/key-fixer'
 
 
 export type SelectOption<T> = OverrideProps<'option', {

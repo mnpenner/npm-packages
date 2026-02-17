@@ -1,5 +1,5 @@
-import {ComponentPropsWithoutRef} from 'react'
-import {RequiredKeys} from '../types/utility.ts'
+import type {ComponentPropsWithoutRef} from 'react'
+import type {RequiredKeys} from '../types/utility.ts'
 import {assumeProps} from '../util/assert.ts'
 
 export type ActionButtonProps = RequiredKeys<ComponentPropsWithoutRef<'button'>, 'onClick'>

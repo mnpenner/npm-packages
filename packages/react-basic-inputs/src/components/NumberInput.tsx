@@ -1,6 +1,7 @@
-import {EventCallback, HtmlInputElement, OverrideProps} from "../types/utility";
+import type {EventCallback, HtmlInputElement, OverrideProps} from "../types/utility";
 import {Input} from "./Input";
-import {ComponentPropsWithoutRef, forwardRef} from "react";
+import type {ComponentPropsWithoutRef} from "react";
+import { forwardRef} from "react";
 import {formatStrNumber, numberToString, stringToNumber} from "../util/format";
 
 export type NumberChangeEvent = {

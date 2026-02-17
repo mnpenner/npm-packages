@@ -1,6 +1,6 @@
 import {useDebugValue, useInsertionEffect, useRef} from 'react'
 import {NOOP} from '../util/constants'
-import {AnyFn, EventCallback} from "../types/utility"
+import type {AnyFn, EventCallback} from "../types/utility"
 
 /**
  * @see https://github.com/reactjs/rfcs/blob/useevent/text/0000-useevent.md

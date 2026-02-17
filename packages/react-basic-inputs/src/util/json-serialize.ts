@@ -1,4 +1,4 @@
-import {AnyObject} from '../types/utility'
+import type {AnyObject} from '../types/utility'
 
 const TYPE_KEY = '__js$type'
 import {isPojo} from '@mpen/is-type'

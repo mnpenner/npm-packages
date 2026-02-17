@@ -1,4 +1,4 @@
-import {nil} from "../types/utility"
+import type {nil} from "../types/utility"
 
 export function collapseWhitespace(str: string | nil): string {
     if(!str) return ''

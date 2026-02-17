@@ -1,5 +1,4 @@
-import {DependencyList, useCallback, useReducer, useRef, useState} from 'react'
-import {useUpdateEffect} from 'react-use'
+import { useReducer, useRef} from 'react'
 
 
 export function usePropState<T>(prop: T, onChange?: () => void) {

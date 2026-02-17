@@ -1,12 +1,13 @@
+import type {
+    InputEventHandler} from 'react';
 import {
     forwardRef, useCallback,
-    InputEventHandler,
     useImperativeHandle,
     useLayoutEffect,
     useRef,
     useState
 } from 'react'
-import {HtmlTextAreaElement, OverrideProps, VoidFn} from '../types/utility'
+import type {HtmlTextAreaElement, OverrideProps, VoidFn} from '../types/utility'
 import {useEventHandler} from '../hooks/useEvent'
 
 export type TextAreaRef = {

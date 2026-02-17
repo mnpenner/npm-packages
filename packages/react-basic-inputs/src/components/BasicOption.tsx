@@ -1,4 +1,4 @@
-import {OverrideProps} from '../types/utility.ts'
+import type {OverrideProps} from '../types/utility.ts'
 
 export type BasicOptionProps<T> = OverrideProps<'option', {
     value: T

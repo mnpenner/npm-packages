@@ -1,6 +1,7 @@
-import {ComponentPropsWithoutRef, ComponentPropsWithRef, forwardRef, useRef, useState} from 'react'
+import type { ComponentPropsWithRef} from 'react';
+import { forwardRef, useRef, useState} from 'react'
 import {useUpdateEffect} from 'react-use'
-import {EventCallback, HtmlInputElement, OverrideProps} from "../types/utility";
+import type {EventCallback, HtmlInputElement, OverrideProps} from "../types/utility";
 import {identity} from "../util/constants";
 
 export type InputChangeEvent = {

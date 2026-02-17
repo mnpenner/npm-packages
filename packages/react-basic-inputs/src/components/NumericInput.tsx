@@ -1,4 +1,5 @@
-import {TextInput, TextInputProps} from './TextInput'
+import type { TextInputProps} from './TextInput';
+import {TextInput} from './TextInput'
 
 
 export type NumericInputProps = Omit<TextInputProps, 'inputMode'>

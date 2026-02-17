@@ -1,5 +1,6 @@
-import {describe, it, expect, test} from 'bun:test'
-import {IsoDateOptions, toIsoDateString} from './time.ts'
+import {describe, it, expect} from 'bun:test'
+import type {IsoDateOptions} from './time.ts';
+import { toIsoDateString} from './time.ts'
 
 describe(toIsoDateString.name, () => {
     process.env.TZ = "America/Los_Angeles"

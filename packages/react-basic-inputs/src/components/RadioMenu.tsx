@@ -1,10 +1,11 @@
-import {EventCallback, HtmlInputElement, NonNil, OverrideProps} from '../types/utility'
-import {ChangeEventHandler, Key, ReactNode, useId} from 'react'
-import {Resolvable} from '../util/resolvable'
+import type {EventCallback, HtmlInputElement, NonNil, OverrideProps} from '../types/utility'
+import type {ChangeEventHandler, Key, ReactNode} from 'react';
+import { useId} from 'react'
+import type {Resolvable} from '../util/resolvable'
 import {useEventHandler} from '../hooks/useEvent'
 import {KeyFixer} from '../util/key-fixer'
 import {assumeType} from '../util/assert'
-import {JSX} from 'react/jsx-runtime'
+import type {JSX} from 'react/jsx-runtime'
 
 
 export type RadioMenuOption<T extends NonNil> = OverrideProps<'input', {

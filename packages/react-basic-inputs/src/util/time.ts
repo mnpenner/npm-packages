@@ -1,5 +1,5 @@
 import {pad0} from './format.ts'
-import {nil} from '../types/utility.ts'
+import type {nil} from '../types/utility.ts'
 
 export type IsoDateOptions = {
     seconds?: boolean

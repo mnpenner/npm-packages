@@ -1,5 +1,5 @@
-import {Attributes, ComponentType, FC} from "react";
-import {Optionalize} from "../types/utility";
+import type {Attributes, ComponentType, FC} from "react";
+import type {Optionalize} from "../types/utility";
 
 
 export function withDefaultProps<P>(Component: ComponentType<P>, defaultProps: Partial<P>, displayName?: string): FC<Optionalize<P, typeof defaultProps>> {

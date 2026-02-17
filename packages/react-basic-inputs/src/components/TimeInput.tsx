@@ -1,4 +1,4 @@
-import {OmitProps} from "../types/utility";
+import type {OmitProps} from "../types/utility";
 
 export type TimeInputProps = OmitProps<'input', 'type'>
 

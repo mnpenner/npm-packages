@@ -1,4 +1,5 @@
-import {MutableRefObject, useRef} from 'react'
+import type {MutableRefObject} from 'react';
+import { useRef} from 'react'
 
 /**
  * "Box" a value inside an object ("ref") and keep it up to date.

@@ -1,4 +1,5 @@
-import {Resolvable, resolveValue} from './resolvable'
+import type {Resolvable} from './resolvable';
+import { resolveValue} from './resolvable'
 
 function makeKey<T>(opt: AnyOption<T>, idx: number): string {
     if(opt.uniqueKey != null) {

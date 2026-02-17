@@ -1,6 +1,7 @@
-import {HtmlSelectElement, OmitProps, OverrideProps} from "../types/utility"
+import type { OverrideProps} from "../types/utility";
 import {assumeProps} from '../util/assert.ts'
-import {DateValue, IsoDateOptions, toIsoDateString} from '../util/time.ts'
+import type {DateValue, IsoDateOptions} from '../util/time.ts';
+import { toIsoDateString} from '../util/time.ts'
 
 export type DatetimeLocalInputChangeEvent = {
     value: string

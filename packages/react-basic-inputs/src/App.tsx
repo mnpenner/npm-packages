@@ -10,9 +10,11 @@ import {NumericInput} from './components/NumericInput'
 import {PasswordInput} from './components/PasswordInput'
 import {PhoneInput} from './components/PhoneInput'
 import {RadioMenu} from './components/RadioMenu'
-import {FC, ReactNode, useState} from 'react'
+import type {FC, ReactNode} from 'react';
+import { useState} from 'react'
 import {SearchInput} from './components/SearchInput'
-import {Select, SelectOption} from './components/Select'
+import type { SelectOption} from './components/Select';
+import {Select} from './components/Select'
 import {TextArea} from './components/TextArea'
 import {TextInput} from './components/TextInput'
 import {TimeInput} from './components/TimeInput'
@@ -23,11 +25,10 @@ import css from './App.module.css'
 import {BasicSelect} from './components/BasicSelect.tsx'
 import {DebouncedInput} from './components/DebouncedInput.tsx'
 import {ActionButton} from './components/ActionButton.tsx'
-import {logJson} from './util/debug.ts'
 import {jsonStringify} from './util/json-serialize.ts'
 import {BasicOption} from './components/BasicOption.tsx'
 import {DatetimeOffsetInput} from './components/DatetimeOffsetInput.tsx'
-import {DateValue} from './util/time.ts'
+import type {DateValue} from './util/time.ts'
 
 
 const FRUIT_OPTIONS: SelectOption<number>[] = [

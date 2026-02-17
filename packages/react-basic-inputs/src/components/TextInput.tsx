@@ -1,5 +1,6 @@
 import {collapseWhitespace} from '../util/format'
-import {Input, InputProps} from "./Input";
+import type { InputProps} from "./Input";
+import {Input} from "./Input";
 
 
 export type TextInputProps = Omit<InputProps, 'text'>
