@@ -17,23 +17,23 @@
     "dev": "bun run --bun vite",
     "build": "run-p 'build:*'",
     "build:libs": "bun run --bun vite build",
+    "build:docs": "typedoc && hg addremove docs",
     "lint": "run-s 'lint:*'",
     "lint:ts": "bun run --bun tsc",
     "lint:es": "bun run --bun eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "bun run --bun vite preview",
     "_prepublishOnly": "bun run --bun build",
     "_publish": "npm publish --access=public",
-    "build:docs": "typedoc && hg addremove docs",
     "bump": "npm version patch && bun.exe run build && npm publish"
   },
   "peerDependencies": {
-    "react": "^18.2.0"
+    "react": "^19"
   },
   "devDependencies": {
     "@mpen/is-type": "^0.1.11",
     "@types/bun": "^1.1.2",
-    "@types/react": "^18.2.66",
-    "@types/react-dom": "^18.2.22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
     "@typescript-eslint/eslint-plugin": "^7.2.0",
     "@typescript-eslint/parser": "^7.2.0",
     "@vitejs/plugin-react": "^4.2.1",
@@ -41,8 +41,8 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.6",
     "npm-run-all": "^4.1.5",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "^19",
+    "react-dom": "^19",
     "react-use": "^17.5.0",
     "sass": "^1.77.2",
     "typedoc": "^0.26.6",
