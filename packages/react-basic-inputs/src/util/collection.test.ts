@@ -13,7 +13,7 @@ const emptyObj = {};
 class MyMap extends Map {}
 class MySet extends Set {}
 
-function map(obj: any, Class: any) {
+function map(obj: any, Class?: any) {
     const a = new (Class || Map);
     for (const key in obj)
         a.set(key, obj[key]);
@@ -24,7 +24,7 @@ function myMap(obj: any) {
     return map(obj, MyMap);
 }
 
-function set(arr: any, Class: any) {
+function set(arr: any, Class?: any) {
     const a = new (Class || Set);
     for (const value of arr)
         a.add(value);
@@ -477,8 +477,8 @@ const testCases = [
             // },
             {
                 description: 'equal maps (different key order)',
-                value1: new Map([['a', 1], ['b', '2']]),
-                value2: new Map([['b', '2'],['a', 1]]),
+                value1: new Map<any, any>([['a', 1], ['b', '2']]),
+                value2: new Map<any, any>([['b', '2'],['a', 1]]),
                 equal: true
             },
             {

@@ -27,7 +27,7 @@
     "bump": "npm version patch && bun.exe run build && npm publish"
   },
   "peerDependencies": {
-    "react": "^19"
+    "react": ">=18"
   },
   "devDependencies": {
     "@mpen/is-type": "^0.1.11",

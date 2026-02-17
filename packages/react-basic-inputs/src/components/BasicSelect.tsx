@@ -1,5 +1,5 @@
 import {EventCallback, HtmlSelectElement, nil, OverrideProps} from '../types/utility.ts'
-import {ChangeEventHandler, useMemo, useRef} from 'react'
+import {ChangeEventHandler, ReactNode, useMemo, useRef} from 'react'
 import {iterateChildren} from '../util/react-children.ts'
 import {deepEqual, fmap} from '../util/collections.ts'
 import {useFastChangeFirst, useFirstLayoutEffect, useLayoutEffectCounter} from '../hooks/useOnce.ts'
@@ -39,11 +39,12 @@ export function BasicSelect<T>({
     equals = deepEqual,
     ...props
 }: BasicSelectProps<T>) {
-    const values = useMemo(() => fmap(iterateChildren(children), child => {
-        if(child.type === 'option' || (child.type as any).__is$option) {
-            return child.props.value !== undefined
-                ? child.props.value
-                : child.props.children
+    const values = useMemo<Array<T | undefined>>(() => fmap(iterateChildren(children), child => {
+        const optionChild = child as typeof child & {props: {value?: T; children?: ReactNode}}
+        if(optionChild.type === 'option' || (optionChild.type as any).__is$option) {
+            return optionChild.props.value !== undefined
+                ? optionChild.props.value
+                : optionChild.props.children as T
         }
     }), [children])
 
@@ -56,7 +57,7 @@ export function BasicSelect<T>({
         const index = ev.target.selectedIndex
         selectedIndex.current = index
         // console.log('selected',index)
-        const value = values[index]
+        const value = values[index] as T
         onChange?.({
             value,
             index,

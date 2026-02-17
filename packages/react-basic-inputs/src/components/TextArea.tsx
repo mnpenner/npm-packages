@@ -1,6 +1,6 @@
 import {
-    FormEventHandler,
     forwardRef, useCallback,
+    InputEventHandler,
     useImperativeHandle,
     useLayoutEffect,
     useRef,
@@ -45,7 +45,7 @@ export const TextArea = forwardRef<TextAreaRef, TextAreaProps>(function TextArea
         adjustHeight: adjustHeight,
     }), [adjustHeight])
 
-    const input = useEventHandler<FormEventHandler<HtmlTextAreaElement>>(ev => {
+    const input = useEventHandler<InputEventHandler<HtmlTextAreaElement>>(ev => {
         adjustHeight()
         onInput?.(ev)
     })

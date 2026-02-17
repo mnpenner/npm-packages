@@ -4,6 +4,8 @@ import {DateValue, IsoDateOptions, toIsoDateString} from '../util/time.ts'
 
 export type DatetimeLocalInputChangeEvent = {
     value: string
+    date: Date | null
+    isoString: string
 }
 
 
@@ -28,11 +30,14 @@ export function DatetimeLocalInput({value, defaultValue, min, max, onChange, ...
     if(max != null) props.max = toIsoDateString(max, DATE_INPUT_OPTIONS)
     if(onChange != null) {
         props.onChange = ev => {
+            const value = ev.currentTarget.value
+            const date = value === '' ? null : new Date(value)
             onChange({
-                value: ev.currentTarget.value
+                value,
+                date: date != null && !Number.isNaN(+date) ? date : null,
+                isoString: date != null && !Number.isNaN(+date) ? date.toISOString() : '',
             })
         }
     }
     return <input type="datetime-local" {...props} />
 }
-

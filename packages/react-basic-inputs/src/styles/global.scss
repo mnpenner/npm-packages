@@ -88,9 +88,12 @@
     }
 
     fieldset {
+        border-style: solid;
         border-color: #9b9b9b #6C6C6C #6C6C6C #9b9b9b;
-        border-radius: 5px;
+        corner-shape: bevel;
+        border-radius: 8px;
         background-color: white;
+        border-width: 2px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle drop shadow */
     }
 
