@@ -45,9 +45,9 @@ export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readon
                 print(` ${Chalk.gray('[')}options${Chalk.gray(']')}`)
             }
         }
-        if (cmd.arguments?.length) {
+        if (cmd.positonals?.length) {
             print(` ${Chalk.grey('[')}--${Chalk.grey(']')}`)
-            for (const arg of cmd.arguments) {
+            for (const arg of cmd.positonals) {
                 print(' ')
                 print(Chalk.grey(arg.required ? '<' : '['))
                 if (arg.repeatable) {
@@ -58,7 +58,7 @@ export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readon
             }
         }
     } else {
-        print(` ${Chalk.gray('[options] [arguments]')}`)
+        print(` ${Chalk.gray('[options] [positionals]')}`)
     }
     printLn()
 
@@ -73,10 +73,10 @@ export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readon
             }
         }
 
-        if (cmd.arguments?.length) {
-            printLn(Chalk.yellow('\nArguments:'))
-            const width = Math.max(...cmd.arguments.map((arg: {name: string}) => stringWidth(arg.name)))
-            for (const arg of cmd.arguments) {
+        if (cmd.positonals?.length) {
+            printLn(Chalk.yellow('\nPositionals:'))
+            const width = Math.max(...cmd.positonals.map((arg: {name: string}) => stringWidth(arg.name)))
+            for (const arg of cmd.positonals) {
                 print('  ' + Chalk.green(arg.name))
                 if (arg.description) {
                     print(space(width + 2, arg.name) + arg.description)

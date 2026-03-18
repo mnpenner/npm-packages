@@ -8,7 +8,7 @@ import {sortBy} from '../utils'
 export const helpCommand = defineCommand({
     name: 'help',
     description: 'Displays help for a command',
-    arguments: [
+    positonals: [
         {
             name: 'command',
             description: 'The command path.',

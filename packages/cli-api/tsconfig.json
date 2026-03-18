@@ -15,11 +15,5 @@
         "lib": ["ESNext"],
         "types": ["bun-types"],
         "outDir": "./dist"
-    },
-    "files": [
-        "src/index.ts"
-    ],
-    "include": [
-        "src/**/*.d.ts"
-    ]
+    }
 }

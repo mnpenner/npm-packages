@@ -10,3 +10,4 @@ syntax: regexp
 (?<![^/])\.gitignore$
 (?<![^/])\.env$
 (?<![^/])\.(?![^/]+(ignore|rc)$) # all dotfiles except *ignore and *rc files
+ai/.*\.png$

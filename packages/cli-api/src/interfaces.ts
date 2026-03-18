@@ -43,7 +43,7 @@ export type OptionsOf<
     ) : {}) &
     (Flags extends readonly any[] ? Partial<MergeFlagProps<Flags[number]>> : {})
 
-// ----- arguments (never boolean) -----
+// ----- positonals (never boolean) -----
 type ValueOfArg<A extends Argument> =
     A['repeatable'] extends true
         ? PrimitiveOfOptType<A['type']>[]
@@ -153,7 +153,7 @@ type LeafFields<
 > = {
     options?: Opts
     flags?: Flags
-    arguments?: As
+    positonals?: As
     execute(this: AnyApp, options: OptionsOf<Opts, Flags>, args: ArgsOf<As>): MaybePromise<number | void>
     subCommands?: never
 }
@@ -162,7 +162,7 @@ type BranchFields<Cs extends CommandChildren> = {
     subCommands: Cs
     options?: never
     flags?: never
-    arguments?: never
+    positonals?: never
     execute?: never
 }
 

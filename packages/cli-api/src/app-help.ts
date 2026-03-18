@@ -16,9 +16,9 @@ export function printHelp(app: AnyApp, commands: readonly AnyCmd[]) {
         print(` ${Chalk.gray('<')}command${Chalk.gray('>')}`)
     }
     if (isExecutable(app)) {
-        print(` ${Chalk.gray('[options] [arguments]')}`)
+        print(` ${Chalk.gray('[options] [positionals]')}`)
     } else if (hasSubCommands(app)) {
-        print(` ${Chalk.gray('[options] [arguments]')}`)
+        print(` ${Chalk.gray('[options] [positionals]')}`)
     }
     printLn('\n')
 

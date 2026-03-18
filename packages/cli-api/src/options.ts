@@ -81,8 +81,12 @@ export function parseArgs(cmd: AnyLeafCommand, argv: string[]): [any[], Record<s
             if(opts[k] === undefined) opts[k] = []
         }
     }
-    if(cmd.arguments?.length) {
-        for(const a of cmd.arguments) {
+    if(cmd.positonals?.length) {
+        for(let i = 0; i < cmd.positonals.length; ++i) {
+            const a = cmd.positonals[i]
+            if(a.repeatable && i < cmd.positonals.length - 1) {
+                throw new Error('Only the last positional can be repeatable')
+            }
             if(a.repeatable) {
                 const k = a.key ?? a.name
                 if(k && opts[k] === undefined) opts[k] = []
@@ -161,7 +165,7 @@ export function parseArgs(cmd: AnyLeafCommand, argv: string[]): [any[], Record<s
             }
         } else {
             let value: any = token
-            const def = cmd.arguments?.[argIdx]
+            const def = cmd.positonals?.[argIdx]
 
             if(def) {
                 if(def.type != null) value = coerceType(value, def.type)
@@ -183,7 +187,7 @@ export function parseArgs(cmd: AnyLeafCommand, argv: string[]): [any[], Record<s
                         if(def.type != null) v = coerceType(v, def.type)
                         arr.push(v)
                     }
-                    argIdx = cmd.arguments.length
+                    argIdx = cmd.positonals.length
                     args.push(...arr)
                     continue
                 } else {
@@ -209,11 +213,11 @@ export function parseArgs(cmd: AnyLeafCommand, argv: string[]): [any[], Record<s
         }
     }
 
-    if(cmd.arguments?.length) {
-        for(let i = 0; i < cmd.arguments.length; ++i) {
-            const a: any = cmd.arguments[i]
+    if(cmd.positonals?.length) {
+        for(let i = 0; i < cmd.positonals.length; ++i) {
+            const a: any = cmd.positonals[i]
             if(a.required && argIdx <= i && !a.repeatable) {
-                throw new Error(`"${a.name}" argument is required`)
+                throw new Error(`"${a.name}" positional is required`)
             }
             const k = a.key ?? a.name
             if(k && opts[k] === undefined && a.defaultValue !== undefined) {
