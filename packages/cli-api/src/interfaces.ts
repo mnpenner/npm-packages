@@ -29,7 +29,6 @@ type FlagPropMap<F extends Flag> = { [K in KeyOfItem<F>]: boolean }
 type MergeOptionProps<IU extends Option> = U2I<IU extends any ? OptionPropMap<IU> : never>
 type MergeFlagProps<FU extends Flag> = U2I<FU extends any ? FlagPropMap<FU> : never>
 
-// only Options can be "required"
 type RequiredOptions<I extends Option> = Extract<I, { required: true }>
 type OptionalOptions<I extends Option> = Exclude<I, RequiredOptions<I>>
 
@@ -115,7 +114,7 @@ export interface ArgumentOrOption extends ArgumentOrOptionOrFlag {
     defaultValue?: any | (() => any)
 }
 
-/** Boolean flag. */
+/** Same as options, but the type is bool and a value is not required. */
 export interface Flag extends ArgumentOrOptionOrFlag, OptionOrFlag {
     valueNotRequired?: true
     /** Default value if not provided. */
@@ -139,26 +138,36 @@ export interface Option extends ArgumentOrOption, OptionOrFlag {
 
 type CommandBase = {
     name: string
+    /** Alias(es) for the command. Usually one or two letters. */
     alias?: string | string[]
     description?: string
     longDescription?: string
 }
 
+type AppBase = CommandBase & {
+    argv0?: string
+    version?: string
+    globalOptions?: Option[]
+}
+
 export type CommandChildren = readonly Command<any, any, any, any>[]
 
-type LeafFields<
+export type LeafCommandInput<
     Opts extends readonly Option[] | undefined,
     Flags extends readonly Flag[] | undefined,
     As extends readonly Argument[] | undefined
-> = {
+> = CommandBase & {
+    /** Key-value pairs of options. */
     options?: Opts
+    /** Same as options, but the type is bool and a value is not required. */
     flags?: Flags
+    /** Positional arguments. */
     positonals?: As
     execute(this: AnyApp, options: OptionsOf<Opts, Flags>, args: ArgsOf<As>): MaybePromise<number | void>
     subCommands?: never
 }
 
-type BranchFields<Cs extends CommandChildren> = {
+export type BranchCommandInput<Cs extends CommandChildren> = CommandBase & {
     subCommands: Cs
     options?: never
     flags?: never
@@ -170,11 +179,11 @@ export type LeafCommand<
     Opts extends readonly Option[] | undefined = undefined,
     Flags extends readonly Flag[] | undefined = undefined,
     As extends readonly Argument[] | undefined = undefined,
-> = CommandBase & LeafFields<Opts, Flags, As>
+> = LeafCommandInput<Opts, Flags, As>
 
 export type BranchCommand<
     Cs extends CommandChildren = CommandChildren,
-> = CommandBase & BranchFields<Cs>
+> = BranchCommandInput<Cs>
 
 export type Command<
     Opts extends readonly Option[] | undefined = undefined,
@@ -183,21 +192,35 @@ export type Command<
     Cs extends CommandChildren = CommandChildren,
 > = LeafCommand<Opts, Flags, As> | BranchCommand<Cs>
 
-type AppBase = CommandBase & {
-    argv0?: string
-    version?: string
-    globalOptions?: Option[]
+export type LeafAppInput<
+    Opts extends readonly Option[] | undefined,
+    Flags extends readonly Flag[] | undefined,
+    As extends readonly Argument[] | undefined
+> = AppBase & {
+    options?: Opts
+    flags?: Flags
+    positonals?: As
+    execute(this: AnyApp, options: OptionsOf<Opts, Flags>, args: ArgsOf<As>): MaybePromise<number | void>
+    subCommands?: never
+}
+
+export type BranchAppInput<Cs extends CommandChildren> = AppBase & {
+    subCommands: Cs
+    options?: never
+    flags?: never
+    positonals?: never
+    execute?: never
 }
 
 export type LeafApp<
     Opts extends readonly Option[] | undefined = undefined,
     Flags extends readonly Flag[] | undefined = undefined,
     As extends readonly Argument[] | undefined = undefined,
-> = AppBase & LeafFields<Opts, Flags, As>
+> = LeafAppInput<Opts, Flags, As>
 
 export type BranchApp<
     Cs extends CommandChildren = CommandChildren,
-> = AppBase & BranchFields<Cs>
+> = BranchAppInput<Cs>
 
 export type App<
     Opts extends readonly Option[] | undefined = undefined,
@@ -225,10 +248,10 @@ export function defineCommand<
     const Opts extends readonly Option[] | undefined,
     const Flags extends readonly Flag[] | undefined,
     const As extends readonly Argument[] | undefined,
->(c: LeafCommand<Opts, Flags, As>): LeafCommand<Opts, Flags, As>
+>(c: LeafCommandInput<Opts, Flags, As>): LeafCommand<Opts, Flags, As>
 export function defineCommand<
     const Cs extends CommandChildren,
->(c: BranchCommand<Cs>): BranchCommand<Cs>
+>(c: BranchCommandInput<Cs>): BranchCommand<Cs>
 export function defineCommand(c: AnyCmd): AnyCmd {
     return c
 }
@@ -237,10 +260,10 @@ export function defineApp<
     const Opts extends readonly Option[] | undefined,
     const Flags extends readonly Flag[] | undefined,
     const As extends readonly Argument[] | undefined,
->(app: LeafApp<Opts, Flags, As>): LeafApp<Opts, Flags, As>
+>(app: LeafAppInput<Opts, Flags, As>): LeafApp<Opts, Flags, As>
 export function defineApp<
     const Cs extends CommandChildren,
->(app: BranchApp<Cs>): BranchApp<Cs>
+>(app: BranchAppInput<Cs>): BranchApp<Cs>
 export function defineApp(app: AnyApp): AnyApp {
     return app
 }
