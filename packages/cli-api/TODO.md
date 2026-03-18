@@ -1,0 +1,4 @@
+- Compare with https://crustjs.com/docs
+- https://news.ycombinator.com/item?id=47421701
+  - https://github.com/gutenye/script.js 
+- Tab completion...?
