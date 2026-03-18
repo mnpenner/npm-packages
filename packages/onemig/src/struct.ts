@@ -1,4 +1,4 @@
-import {ConnectionPool, sql} from "mysql3";
+import {ConnectionPool, sql} from "./mysql.ts";
 import {parallel, sortBy, splitValues} from "./util";
 import {DbColumn, DbColumnType, DbFkMap, DbForeignKey, DbIndex, DbIndexMap, DbTable, DbTrigger} from "./dbtypes";
 import * as Yaml from 'js-yaml'

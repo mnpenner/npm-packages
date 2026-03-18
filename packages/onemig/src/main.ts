@@ -1,15 +1,14 @@
-import run from "cli-api";
-import * as pkg from '../package.json'
-import commands from './commands'
+import { helpPlugin, versionPlugin } from "@crustjs/plugins";
+import pkg from "../package.json";
+import { app } from "./app.ts";
+import commands from "./commands/index.ts";
 
-// TODO:  generate json schema
-//  .\node_modules\.bin/typescript-json-schema .\src\struct.ts OneMig
-//  ./node_modules/.bin/ts-json-schema-generator -p .\src\struct.ts
+let cli = app
+	.use(versionPlugin(pkg.version))
+	.use(helpPlugin());
 
-run({
-    name: "OneMig",
-    version: pkg.version,
-    argv0: pkg.name,
-    commands
-})
+for (const command of commands) {
+	cli = cli.command(command);
+}
 
+await cli.execute();

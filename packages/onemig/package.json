@@ -3,34 +3,40 @@
   "version": "0.2.3",
   "license": "UNLICENSED",
   "private": true,
-  "bin": "src/main.js",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "bin": {
+    "onemig": "dist/cli"
+  },
   "devDependencies": {
+    "@crustjs/core": "latest",
+    "@crustjs/crust": "latest",
+    "@crustjs/plugins": "latest",
     "@sinclair/typebox-codegen": "^0.8.13",
+    "@types/bun": "latest",
     "@types/inflection": "^1.5.28",
     "@types/js-yaml": "^4.0.0",
     "@types/lodash": "^4.14.172",
     "@types/node": "^14.14.34",
     "@types/tar-stream": "^2.2.0",
-    "bun-types": "^1.0.15",
-    "cross-env": "^7.0.3",
-    "dotenv": "^8.2.0",
-    "esbuild": "^0.12.26",
     "ts-json-schema-generator": "^0.84.0",
-    "typescript": "^4.1.3",
+    "typescript": "^5",
     "typescript-json-schema": "^0.48.0"
   },
   "dependencies": {
+    "@crustjs/style": "^0.0.5",
     "@mnpenner/is-type": "^0.1.7",
     "@sinclair/typebox": "^0.31.28",
     "chalk": "^4.1.0",
-    "cli-api": "^0.1.0",
     "cli-highlight": "^2.1.10",
     "csv-parse": "^4.15.1",
     "inflection": "^1.13.1",
     "js-yaml": "^4.0.0",
     "json5": "^2.2.0",
     "lodash": "^4.17.21",
-    "mysql3": "^0.5.13",
+    "mysql2": "^3.19.1",
     "ora": "^5.3.0",
     "string-width": "^4.2.0",
     "tar-stream": "^2.2.0",
@@ -40,16 +46,10 @@
     "node": ">=12"
   },
   "scripts": {
-    "build": "esbuild src/main.ts --bundle --outfile=dist/onemig.js --platform=node --target=node14",
-    "dev": "esbuild src/main.ts --bundle --outfile=dist/onemig.js --platform=node --sourcemap --watch",
-    "exec": "node -r dotenv/config --enable-source-maps --max-old-space-size=16384 dist/onemig.js",
-    "_run": "cross-env BABEL_ENV=development babel-node --max_old_space_size=10000 --extensions \".ts\" src/main.ts",
-    "_tsdecls": "tsc --emitDeclarationOnly",
-    "_lint": "tsc --noEmit",
-    "_clean": "rm -rf dist yarn-error.log",
-    "_build": "cross-env BABEL_ENV=production rollup -c",
-    "devold": "cross-env BABEL_ENV=development rollup -cw",
-    "_verbump": "npm version minor",
-    "_publish": "pnpm run build && cd dist && pnpm publish --ignore-scripts"
+    "dev": "bun run src/cli.ts",
+    "build": "crust build",
+    "prepack": "bun run build",
+    "start": "./dist/cli",
+    "check:types": "bunx tsc --noEmit"
   }
 }

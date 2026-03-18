@@ -1,34 +1,15 @@
 {
-    "compilerOptions": {
-        "strict": true,
-        "importHelpers": false,
-        "inlineSources": false,
-        "noEmitOnError": true,
-        "pretty": true,
-        "module": "ESNext",
-        "target": "ESNext",
-        "lib": ["ESNext"],
-        "noImplicitAny": true,
-        "suppressImplicitAnyIndexErrors": false,
-        "removeComments": false,
-        "preserveConstEnums": true,
-        "sourceMap": false,
-        "skipLibCheck": true,
-        "exactOptionalPropertyTypes": true,
-        "outDir": "dist",
-        "declaration": true,
-        "resolveJsonModule": true,
-        "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true,
-        "moduleResolution": "node",
-        "isolatedModules": true,
-        "allowSyntheticDefaultImports": true,
-        "types": ["bun-types"]
-    },
-    "files": [
-        "./src/main.ts"
-    ],
-    "include": [
-        "src/**/*.d.ts"
-    ]
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "noEmit": true,
+    "strict": true,
+    "skipLibCheck": true
+  },
+  "include": ["src"]
 }

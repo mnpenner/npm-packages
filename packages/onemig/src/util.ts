@@ -1,6 +1,6 @@
 import highlight from "cli-highlight";
-import type {SqlFrag} from 'mysql3'
-import {isFrag} from 'mysql3'
+import type {SqlFrag} from './mysql.ts'
+import {isFrag} from './mysql.ts'
 
 export function printSql(sql: string|SqlFrag) {
     if(isFrag(sql)) {

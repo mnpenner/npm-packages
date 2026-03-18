@@ -1,57 +1,47 @@
-import {createPool,PoolConfig} from "mysql3";
-import {OptType} from "cli-api";
-import {userInfo} from "os";
-
-
+import { userInfo } from "os";
+import { createPool } from "./mysql.ts";
+import type { PoolConfig } from "./mysql.ts";
 
 export function createConnection(opts: PoolConfig) {
-    return createPool({
-        connectionLimit: 25,
-        dateStrings: true,
-        ...opts,
-    })
+	return createPool({
+		connectionLimit: 25,
+		dateStrings: true,
+		...opts,
+	});
 }
 
-export const dbOptionsWithoutDb = [
-    {
-        name: 'host',
-        alias: 'h',
-        description: "Connect to the MySQL server on the given host.",
-        defaultValue: process.env.DB_HOST ?? 'localhost',
-        valuePlaceholder: 'host_name',
-    },
-    {
-        name: 'port',
-        alias: 'P',
-        description: "For TCP/IP connections, the port number to use.",
-        type: OptType.INT,
-        defaultValue: process.env.DB_PORT !== undefined ? Number(process.env.DB_PORT) : 3306,
-    },
-    {
-        name: 'user',
-        alias: 'u',
-        description: "The user name of the MySQL account to use for connecting to the server.",
-        defaultValue: () => process.env.DB_USER ?? userInfo().username,
-        valuePlaceholder: 'user_name',
-    },
-    {
-        name: 'password',
-        alias: 'p',
-        description: "The password of the MySQL account used for connecting to the server.",
-        defaultValue: process.env.DB_PASSWORD,
-        defaultValueText: process.env.DB_PASSWORD !== undefined ? '$DB_PASSWORD' : '(no pasword)',
-    }
-]
+export const dbFlagsWithoutDatabase = {
+	host: {
+		type: "string",
+		short: "h",
+		description: "Connect to the MySQL server on the given host.",
+		default: process.env.DB_HOST ?? "localhost",
+	},
+	port: {
+		type: "number",
+		short: "P",
+		description: "For TCP/IP connections, the port number to use.",
+		default: process.env.DB_PORT !== undefined ? Number(process.env.DB_PORT) : 3306,
+	},
+	user: {
+		type: "string",
+		short: "u",
+		description: "The user name of the MySQL account to use for connecting to the server.",
+		default: process.env.DB_USER ?? userInfo().username,
+	},
+	password: {
+		type: "string",
+		short: "p",
+		description: "The password of the MySQL account used for connecting to the server.",
+		default: process.env.DB_PASSWORD,
+	},
+} as const;
 
-export const dbOptions = [
-    ...dbOptionsWithoutDb,
-    {
-        name: 'database',
-        alias: 'D',
-        description: "The database to use.",
-        valuePlaceholder: 'db_name',
-        defaultValue: process.env.DB_NAME,
-        required: true
-    },
-]
-
+export const dbFlags = {
+	...dbFlagsWithoutDatabase,
+	database: {
+		type: "string",
+		short: "D",
+		description: "The database to use.",
+	},
+} as const;

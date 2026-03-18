@@ -1,88 +1,69 @@
-import {sql} from "mysql3";
-import {Command, OptType} from "cli-api";
-import CsvWriter from "../CsvWriter";
-import {createConnection, dbOptions} from "../db";
 import * as Chalk from "chalk";
-import {exportTableDataToFile} from '../struct'
+import { sql } from "../mysql.ts";
+import { exportTableDataToFile } from "../struct";
+import { app } from "../app.ts";
+import { createConnection, dbFlags } from "../db.ts";
 
+export const exportDataCmd = app
+	.sub("export-data")
+	.meta({ description: "Export table data in CSV format" })
+	.flags({
+		...dbFlags,
+		null: {
+			type: "string",
+			description: "Value used to represent NULL",
+			default: "\\N",
+		},
+		table: {
+			type: "string",
+			short: "t",
+			description: "Table to export",
+		},
+		all: {
+			type: "boolean",
+			short: "A",
+			description: "Export all tables",
+		},
+	})
+	.args([
+		{
+			name: "outdir",
+			type: "string",
+			description: "Directory to write tables to",
+		},
+	])
+	.run(async ({ args, flags }) => {
+		console.log(`Exporting database ${Chalk.cyan(flags.database)} ...`);
 
-const cmd: Command = {
-    name: "export-data",
-    alias: 'xd',
-    description: "Export table data in CSV format",
-    async execute(opts, args) {
-        console.log(`Exporting database ${Chalk.cyan(opts.database)} ...`);
+		const startTime = Date.now();
+		const conn = await createConnection(flags);
 
+		let tables: string[];
+		if (flags.table) {
+			tables = [flags.table];
+		} else if (flags.all) {
+			const result = await conn.query<{ name: string }>(
+				sql`SELECT TABLE_NAME 'name'
+						FROM INFORMATION_SCHEMA.TABLES
+						WHERE TABLES.TABLE_SCHEMA=${flags.database} AND TABLE_TYPE='BASE TABLE'
+						ORDER BY name`,
+			);
+			tables = result.map((r) => r.name);
+		} else {
+			throw new Error("Must specify --table or --all");
+		}
 
-        const startTime = Date.now()
-        const conn = await createConnection(opts)
+		for (const tbl of tables) {
+			process.stdout.write(`  Exporting table ${Chalk.yellow(tbl)} ...`);
+			const tblTime = Date.now();
 
-        let tables: string[]
-        if (opts.table) {
-            tables = [opts.table]
-        } else if (opts.all) {
-            const result = await conn.query<{name:string}>(sql`SELECT 
-                        TABLE_NAME 'name'
-                        FROM INFORMATION_SCHEMA.TABLES 
-                        WHERE TABLES.TABLE_SCHEMA=${opts.database} AND TABLE_TYPE='BASE TABLE'
-                        ORDER BY name
-                        `);
-            tables = result.map(r => r.name)
-        } else {
-            throw new Error("Must specify --table or --all")
-        }
+			await exportTableDataToFile(conn, flags.database, tbl, `${args.outdir}/${tbl}.csv`);
 
-        for (const tbl of tables) {
-            process.stdout.write(`  Exporting table ${Chalk.yellow(tbl)} ...`)
-            const tblTime = Date.now()
+			process.stdout.write(` ${Chalk.green(Date.now() - tblTime)}ms\n`);
+		}
 
-            await exportTableDataToFile(conn,opts.database,tbl,`${args[0]}/${tbl}.csv`)
+		await conn.close();
 
-            process.stdout.write(` ${Chalk.green(Date.now() - tblTime)}ms\n`)
-        }
-
-        await conn.close()
-
-
-        const elapsed = Date.now() - startTime
-
-        console.log(`Exported ${Chalk.cyan(opts.database)} in ${Chalk.green(elapsed)}ms`)
-        return 0
-
-    },
-    options: [
-        ...dbOptions,
-        {
-            // TODO
-            name: 'null',
-            description: "Value used to represent NULL",
-            defaultValue: '\\N',
-            defaultValueText: '\\N',
-            valuePlaceholder: 'str',
-        },
-        {
-            name: 'table',
-            alias: 't',
-            valuePlaceholder: 'table_name',
-            description: "Table to export",
-        },
-        // TODO: option to include or xclude generated columns
-    ],
-    flags: [
-        {
-            name: 'all',
-            alias: 'A',
-            description: "Export all tables",
-        },
-    ],
-    arguments: [
-        {
-            name: 'outdir',
-            type: OptType.OUTPUT_DIRECTORY,
-            required: true,
-            description: "Directory to write tables to",
-        }
-    ]
-}
-
-export default cmd
+		const elapsed = Date.now() - startTime;
+		console.log(`Exported ${Chalk.cyan(flags.database)} in ${Chalk.green(elapsed)}ms`);
+	});
