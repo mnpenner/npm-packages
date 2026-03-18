@@ -13,7 +13,7 @@ const worldCmd = defineCommand({
             description: "Person you want to greet",
             required: true,
         },
-    ] as const,
+    ],
     flags: [
         {
             name: 'verbose',
@@ -25,7 +25,7 @@ const worldCmd = defineCommand({
             alias: 'q',
             description: "Prints less info",
         }
-    ] as const,
+    ],
     async execute(opts, args, app) {
         console.log(`Hello ${opts.name}`)
     },
@@ -35,5 +35,5 @@ run({
     name: "hello",
     version: pkg.version,
     argv0: pkg.name,
-    commands: [worldCmd] as const,
+    commands: [worldCmd],
 })

@@ -88,9 +88,9 @@ export type Command<
 export type MaybePromise<V> = V | PromiseLike<V>
 
 export function defineCommand<
-    Opts extends readonly Option[] | undefined,
-    Flags extends readonly Flag[] | undefined,
-    As extends readonly Argument[] | undefined
+    const Opts extends readonly Option[] | undefined,
+    const Flags extends readonly Flag[] | undefined,
+    const As extends readonly Argument[] | undefined
 >(c: Command<Opts, Flags, As>): Command<Opts, Flags, As> { return c }
 
 export enum OptType {
