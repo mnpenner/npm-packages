@@ -1,4 +1,4 @@
-// union → intersection
+// union -> intersection
 type U2I<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never
 
 type PrimitiveOfOptType<T extends AnyOptType | undefined> =
@@ -24,23 +24,23 @@ type ValueOfOption<O extends Option> =
         : PrimitiveOfOptType<O['type']>
 
 type OptionPropMap<I extends Option> = { [K in KeyOfItem<I>]: ValueOfOption<I> }
-type FlagPropMap<F extends Flag>     = { [K in KeyOfItem<F>]: boolean }
+type FlagPropMap<F extends Flag> = { [K in KeyOfItem<F>]: boolean }
 
 type MergeOptionProps<IU extends Option> = U2I<IU extends any ? OptionPropMap<IU> : never>
-type MergeFlagProps<FU extends Flag>     = U2I<FU extends any ? FlagPropMap<FU>   : never>
+type MergeFlagProps<FU extends Flag> = U2I<FU extends any ? FlagPropMap<FU> : never>
 
 // only Options can be "required"
 type RequiredOptions<I extends Option> = Extract<I, { required: true }>
 type OptionalOptions<I extends Option> = Exclude<I, RequiredOptions<I>>
 
 export type OptionsOf<
-    Opts  extends readonly Option[] | undefined,
-    Flags extends readonly Flag[]   | undefined
+    Opts extends readonly Option[] | undefined,
+    Flags extends readonly Flag[] | undefined
 > =
-    (Opts  extends readonly any[] ? (
+    (Opts extends readonly any[] ? (
         MergeOptionProps<RequiredOptions<Opts[number]>> &
         Partial<MergeOptionProps<OptionalOptions<Opts[number]>>>
-        ) : {}) &
+    ) : {}) &
     (Flags extends readonly any[] ? Partial<MergeFlagProps<Flags[number]>> : {})
 
 // ----- arguments (never boolean) -----
@@ -59,7 +59,7 @@ type _ArgsFixed<As extends readonly Argument[], Acc extends unknown[] = []> =
 
 type _ArgsTailRepeat<As extends readonly Argument[]> =
     As extends readonly [...infer _, infer L]
-        ? L extends Argument ? (L['repeatable'] extends true ? ValueOfArg<L> : never) : never
+        ? L extends Argument ? (L['repeatable'] extends true ? PrimitiveOfOptType<L['type']> : never) : never
         : never
 
 export type ArgsOf<As extends readonly Argument[] | undefined> =
@@ -69,29 +69,7 @@ export type ArgsOf<As extends readonly Argument[] | undefined> =
             : [..._ArgsFixed<As>, ..._ArgsTailRepeat<As>[]]
         : unknown[]
 
-// ---------- Generic Command with inferred execute ----------
-export type Command<
-    Opts  extends readonly Option[] | undefined  = undefined,
-    Flags extends readonly Flag[]   | undefined  = undefined,
-    As    extends readonly Argument[] | undefined = undefined
-> = {
-    name: string
-    alias?: string | string[]
-    description?: string
-    longDescription?: string
-    options?: Opts
-    flags?: Flags
-    arguments?: As
-    execute(options: OptionsOf<Opts, Flags>, args: ArgsOf<As>, app: App<any>): MaybePromise<number | void>
-}
-
 export type MaybePromise<V> = V | PromiseLike<V>
-
-export function defineCommand<
-    const Opts extends readonly Option[] | undefined,
-    const Flags extends readonly Flag[] | undefined,
-    const As extends readonly Argument[] | undefined
->(c: Command<Opts, Flags, As>): Command<Opts, Flags, As> { return c }
 
 export enum OptType {
     STRING,
@@ -124,7 +102,7 @@ interface ArgumentOrOptionOrFlag {
     key?: string
 }
 
-export type AnyOptType = OptType | string[] // | ((value:string)=>any)
+export type AnyOptType = OptType | string[]
 
 export interface ArgumentOrOption extends ArgumentOrOptionOrFlag {
     /** Type to coerce the option value to. */
@@ -146,11 +124,9 @@ export interface Flag extends ArgumentOrOptionOrFlag, OptionOrFlag {
 
 /** Positional argument. */
 export interface Argument extends ArgumentOrOption {
-
 }
 
 interface OptionOrFlag {
-
 }
 
 /** Option with value. */
@@ -161,13 +137,110 @@ export interface Option extends ArgumentOrOption, OptionOrFlag {
     valueNotRequired?: boolean
 }
 
-export interface App<Cs extends readonly Command<any, any, any>[] = readonly Command<any, any, any>[]> {
+type CommandBase = {
     name: string
+    alias?: string | string[]
+    description?: string
+    longDescription?: string
+}
+
+export type CommandChildren = readonly Command<any, any, any, any>[]
+
+type LeafFields<
+    Opts extends readonly Option[] | undefined,
+    Flags extends readonly Flag[] | undefined,
+    As extends readonly Argument[] | undefined
+> = {
+    options?: Opts
+    flags?: Flags
+    arguments?: As
+    execute(this: AnyApp, options: OptionsOf<Opts, Flags>, args: ArgsOf<As>): MaybePromise<number | void>
+    subCommands?: never
+}
+
+type BranchFields<Cs extends CommandChildren> = {
+    subCommands: Cs
+    options?: never
+    flags?: never
+    arguments?: never
+    execute?: never
+}
+
+export type LeafCommand<
+    Opts extends readonly Option[] | undefined = undefined,
+    Flags extends readonly Flag[] | undefined = undefined,
+    As extends readonly Argument[] | undefined = undefined,
+> = CommandBase & LeafFields<Opts, Flags, As>
+
+export type BranchCommand<
+    Cs extends CommandChildren = CommandChildren,
+> = CommandBase & BranchFields<Cs>
+
+export type Command<
+    Opts extends readonly Option[] | undefined = undefined,
+    Flags extends readonly Flag[] | undefined = undefined,
+    As extends readonly Argument[] | undefined = undefined,
+    Cs extends CommandChildren = CommandChildren,
+> = LeafCommand<Opts, Flags, As> | BranchCommand<Cs>
+
+type AppBase = CommandBase & {
     argv0?: string
     version?: string
-    commands: Cs
     globalOptions?: Option[]
 }
 
-export type AnyCmd = Command<any, any, any>
-export type AnyApp = App<readonly AnyCmd[]>
+export type LeafApp<
+    Opts extends readonly Option[] | undefined = undefined,
+    Flags extends readonly Flag[] | undefined = undefined,
+    As extends readonly Argument[] | undefined = undefined,
+> = AppBase & LeafFields<Opts, Flags, As>
+
+export type BranchApp<
+    Cs extends CommandChildren = CommandChildren,
+> = AppBase & BranchFields<Cs>
+
+export type App<
+    Opts extends readonly Option[] | undefined = undefined,
+    Flags extends readonly Flag[] | undefined = undefined,
+    As extends readonly Argument[] | undefined = undefined,
+    Cs extends CommandChildren = CommandChildren,
+> = LeafApp<Opts, Flags, As> | BranchApp<Cs>
+
+export type AnyLeafCommand = LeafCommand<any, any, any>
+export type AnyBranchCommand = BranchCommand<CommandChildren>
+export type AnyCmd = Command<any, any, any, any>
+export type AnyLeafApp = LeafApp<any, any, any>
+export type AnyBranchApp = BranchApp<CommandChildren>
+export type AnyApp = App<any, any, any, any>
+
+export function hasSubCommands(value: AnyCmd | AnyApp): value is AnyBranchCommand | AnyBranchApp {
+    return 'subCommands' in value
+}
+
+export function isExecutable(value: AnyCmd | AnyApp): value is AnyLeafCommand | AnyLeafApp {
+    return 'execute' in value
+}
+
+export function defineCommand<
+    const Opts extends readonly Option[] | undefined,
+    const Flags extends readonly Flag[] | undefined,
+    const As extends readonly Argument[] | undefined,
+>(c: LeafCommand<Opts, Flags, As>): LeafCommand<Opts, Flags, As>
+export function defineCommand<
+    const Cs extends CommandChildren,
+>(c: BranchCommand<Cs>): BranchCommand<Cs>
+export function defineCommand(c: AnyCmd): AnyCmd {
+    return c
+}
+
+export function defineApp<
+    const Opts extends readonly Option[] | undefined,
+    const Flags extends readonly Flag[] | undefined,
+    const As extends readonly Argument[] | undefined,
+>(app: LeafApp<Opts, Flags, As>): LeafApp<Opts, Flags, As>
+export function defineApp<
+    const Cs extends CommandChildren,
+>(app: BranchApp<Cs>): BranchApp<Cs>
+export function defineApp(app: AnyApp): AnyApp {
+    return app
+}

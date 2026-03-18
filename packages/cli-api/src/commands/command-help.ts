@@ -1,28 +1,35 @@
-import {App, Command, defineCommand} from '../interfaces'
+import {defineCommand, hasSubCommands} from '../interfaces'
+import {versionCommand} from './version'
 import {getCommand} from '../options'
 import {printCommandHelp} from '../print-command-help'
-import {printAvailableCommands} from '../app-help'
-import {printLn} from '../utils'
+import {printHelp} from '../app-help'
+import {sortBy} from '../utils'
 
 export const helpCommand = defineCommand({
     name: 'help',
-    // alias: '--help',
-    description: "Displays help for a command",
+    description: 'Displays help for a command',
     arguments: [
         {
-            name: "command",
-            description: "The command name.",
+            name: 'command',
+            description: 'The command path.',
             required: false,
+            repeatable: true,
         }
-    ] as const,
-    async execute(options, [commandName], app) {
-        if(commandName) {
-            printCommandHelp(app, getCommand(commandName, app))
+    ],
+    async execute(options, commandPath) {
+        const rootCommands = [
+            ...(hasSubCommands(this) ? sortBy(this.subCommands, c => c.name) : []),
+            versionCommand,
+            helpCommand,
+        ] as const
+
+        if(commandPath.length) {
+            const {command, path} = getCommand(commandPath as string[], rootCommands)
+            printCommandHelp(this, command, path)
+        } else if(hasSubCommands(this)) {
+            printHelp(this, rootCommands)
         } else {
-            printCommandHelp(app, getCommand('help', app))
-            printLn()
-            printAvailableCommands(app)
+            printCommandHelp(this, this, [])
         }
     }
 })
-

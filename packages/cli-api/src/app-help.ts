@@ -1,34 +1,48 @@
-import type {App} from './interfaces'
+import type {AnyApp, AnyCmd} from './interfaces'
+import {hasSubCommands, isExecutable} from './interfaces'
 import {getProcName, print, printLn, space} from './utils'
 import Chalk from 'chalk'
 import stringWidth from 'string-width'
 
-export function printHelp(app: App) {
+export function printHelp(app: AnyApp, commands: readonly AnyCmd[]) {
     print(Chalk.green(app.name))
     if (app.version) {
         print(` version ${Chalk.yellow(app.version)}`)
     }
     print('\n\n')
-    printLn(Chalk.yellow("Usage:"))
-    printLn(`  ${Chalk.cyan(getProcName(app))} ${Chalk.gray('<')}command${Chalk.gray('>')} ${Chalk.gray(`[options] [arguments]`)}\n`)
+    printLn(Chalk.yellow('Usage:'))
+    print(`  ${Chalk.cyan(getProcName(app))}`)
+    if (hasSubCommands(app)) {
+        print(` ${Chalk.gray('<')}command${Chalk.gray('>')}`)
+    }
+    if (isExecutable(app)) {
+        print(` ${Chalk.gray('[options] [arguments]')}`)
+    } else if (hasSubCommands(app)) {
+        print(` ${Chalk.gray('[options] [arguments]')}`)
+    }
+    printLn('\n')
 
     if (app.globalOptions) {
-        printLn("TODO")
+        printLn('TODO')
     }
 
-    printAvailableCommands(app)
+    if (commands.length) {
+        printAvailableCommands(commands)
+    }
 }
 
-export function printAvailableCommands(app: App) {
-    printLn(Chalk.yellow("Available commands:"))
-    const width = Math.max(...app.commands.map(c => stringWidth(c.name))) + 2
-    for (const cmd of app.commands) {
+export function printAvailableCommands(commands: readonly AnyCmd[], title: string = 'Available commands:') {
+    if (!commands.length) {
+        return
+    }
+
+    printLn(Chalk.yellow(title))
+    const width = Math.max(...commands.map(c => stringWidth(c.name))) + 2
+    for (const cmd of commands) {
         print(`  ${Chalk.green(cmd.name)}`)
         if (cmd.description) {
             print(`${space(width, cmd.name)}${cmd.description}`)
         }
         printLn()
     }
-
-    // printLn()
 }

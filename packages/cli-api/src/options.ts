@@ -1,10 +1,16 @@
-import type {AnyCmd, AnyOptType, App, Command, Option} from './interfaces'
-import {OptType} from './interfaces'
+import type {AnyCmd, AnyLeafCommand, AnyOptType, Option} from './interfaces'
+import {OptType, hasSubCommands} from './interfaces'
 import type {NullableObj} from './utils'
 import {abort, includes, resolve, statSync, toArray, toBool} from './utils'
 import Chalk from 'chalk'
 import Path from 'path'
 import FileSys from 'fs'
+
+export interface ResolvedCommand {
+    command: AnyCmd | undefined
+    path: string[]
+    remainingArgv: string[]
+}
 
 export function formatOption(opt: Option): [string, string] {
     const aliases: string[] = []
@@ -17,7 +23,7 @@ export function formatOption(opt: Option): [string, string] {
     }
     aliases.push(opt.name)
     let flags = aliases.map(a => Chalk.green(a.length === 1 ? `-${a}` : `--${a}`)).join(', ')
-    let valuePlaceholder = getValuePlaceholder(opt)
+    const valuePlaceholder = getValuePlaceholder(opt)
     if(opt.type !== OptType.BOOL) {
         flags += `=${valuePlaceholder}`
     }
@@ -51,7 +57,7 @@ export function getValuePlaceholder(opt: Option): string {
     }
 }
 
-export function getOptions(cmd: AnyCmd): Option[] {
+export function getOptions(cmd: AnyLeafCommand): Option[] {
     return [
         ...toArray(cmd.options),
         ...toArray(cmd.flags).map(f => ({
@@ -59,30 +65,22 @@ export function getOptions(cmd: AnyCmd): Option[] {
             valueNotRequired: true,
             type: OptType.BOOL,
         })),
-        // {
-        //     name: 'help',
-        //     description: "Print help for this command",
-        //     valueNotRequired: true,
-        //     type: OptType.BOOL,
-        // }
     ] as Option[]
 }
 
-export function parseArgs(cmd: AnyCmd, argv: string[]): [any[], Record<string, any>] {
+export function parseArgs(cmd: AnyLeafCommand, argv: string[]): [any[], Record<string, any>] {
     const args: any[] = []
     const opts: Record<string, any> = Object.create(null)
     let parseFlags = true
 
     const allOptions = getOptions(cmd)
 
-    // init repeatable options to []
     for(const opt of allOptions) {
         if(opt.repeatable) {
             const k = opt.key ?? opt.name
             if(opts[k] === undefined) opts[k] = []
         }
     }
-    // init repeatable positional args to []
     if(cmd.arguments?.length) {
         for(const a of cmd.arguments) {
             if(a.repeatable) {
@@ -113,7 +111,6 @@ export function parseArgs(cmd: AnyCmd, argv: string[]): [any[], Record<string, a
             }
 
             if(token.startsWith('--')) {
-                // long option
                 const name = token.slice(2)
                 const opt = findOpt(name)
                 if(!opt) abort(`"${cmd.name}" command does not have option "${name}".`)
@@ -132,7 +129,6 @@ export function parseArgs(cmd: AnyCmd, argv: string[]): [any[], Record<string, a
                 if(opt.repeatable) (opts[k] as any[]).push(value)
                 else opts[k] = value
             } else {
-                // short option(s)
                 const cluster = token.slice(1)
                 let j = 0
                 while(j < cluster.length) {
@@ -141,7 +137,6 @@ export function parseArgs(cmd: AnyCmd, argv: string[]): [any[], Record<string, a
                     if(!opt) abort(`"${cmd.name}" command does not have option "${ch}".`)
 
                     if(opt.valueNotRequired) {
-                        // boolean flag
                         const k = opt.key ?? opt.name
                         const v = !resolve(opt.defaultValue)
                         if(opt.repeatable) (opts[k] as any[]).push(v)
@@ -150,7 +145,6 @@ export function parseArgs(cmd: AnyCmd, argv: string[]): [any[], Record<string, a
                         continue
                     }
 
-                    // option requires a value → remainder or next argv
                     let value: any
                     const remainder = cluster.slice(j + 1)
                     if(inlineValue !== undefined) value = inlineValue
@@ -162,13 +156,10 @@ export function parseArgs(cmd: AnyCmd, argv: string[]): [any[], Record<string, a
                     const k = opt.key ?? opt.name
                     if(opt.repeatable) (opts[k] as any[]).push(value)
                     else opts[k] = value
-
-                    // stop processing cluster (value consumed rest)
                     break
                 }
             }
         } else {
-            // positional argument
             let value: any = token
             const def = cmd.arguments?.[argIdx]
 
@@ -192,7 +183,7 @@ export function parseArgs(cmd: AnyCmd, argv: string[]): [any[], Record<string, a
                         if(def.type != null) v = coerceType(v, def.type)
                         arr.push(v)
                     }
-                    argIdx = (cmd.arguments?.length ?? 0)
+                    argIdx = cmd.arguments.length
                     args.push(...arr)
                     continue
                 } else {
@@ -236,7 +227,6 @@ export function parseArgs(cmd: AnyCmd, argv: string[]): [any[], Record<string, a
 
 function coerceType(value: string, type: AnyOptType) {
     if(Array.isArray(type)) {
-        // TODO: search for closest match of value in type or throw error
         return String(value).trim().toLowerCase()
     }
     switch(type) {
@@ -251,7 +241,7 @@ function coerceType(value: string, type: AnyOptType) {
         case OptType.STRING:
             return String(value)
         case OptType.INPUT_FILE: {
-            if(value === '-') return '/dev/stdin'    // TODO: support windows
+            if(value === '-') return '/dev/stdin'
             const file = Path.normalize(value)
             const fullPath = Path.resolve(file)
             const stat = statSync(file)
@@ -274,16 +264,13 @@ function coerceType(value: string, type: AnyOptType) {
             return dir
         }
         case OptType.OUTPUT_FILE: {
-            if(value === '-') return '/dev/stdout'  // TODO: support windows
+            if(value === '-') return '/dev/stdout'
             const file = Path.normalize(value)
             const stat = statSync(file)
             if(stat) {
                 if(!stat.isFile()) {
                     throw new Error(`'${file}' is not a file`)
                 }
-                // if((stat.mode & 0x222) === 0) { // TODO: does this work?
-                //     throw new Error(`'${value}' is not writeable`);
-                // }
                 FileSys.accessSync(file, FileSys.constants.W_OK)
             } else {
                 FileSys.accessSync(Path.dirname(file), FileSys.constants.W_OK)
@@ -315,17 +302,66 @@ function coerceType(value: string, type: AnyOptType) {
     return value
 }
 
-
 export function getOptName(opt: Option) {
     return (opt.name.length > 1 ? '--' : '-') + opt.name
 }
 
-export function getCommand(name: string, app: App): Command {
+export function findSubCommand(name: string, subCommands: readonly AnyCmd[]): AnyCmd | undefined {
     const cmdName = String(name).trim().replace(/^-{1,2}/, '').toLowerCase()
-    const cmd = app.commands.find(c => c.name === cmdName || includes(cmdName, c.alias))
-    if(cmd === undefined) {
-        // TODO: levenshtein search for closest match? "Did you mean...?"
-        throw new Error(`Command "${name}" does not exist.`)
+    return subCommands.find(c => c.name === cmdName || includes(cmdName, c.alias))
+}
+
+export function resolveCommand(argv: readonly string[], subCommands: readonly AnyCmd[]): ResolvedCommand {
+    const path: string[] = []
+    let command: AnyCmd | undefined
+    let current = subCommands
+    let index = 0
+
+    while(index < argv.length) {
+        const candidate = findSubCommand(argv[index], current)
+        if(!candidate) {
+            break
+        }
+        command = candidate
+        path.push(candidate.name)
+        index += 1
+        if(!hasSubCommands(candidate)) {
+            break
+        }
+        current = candidate.subCommands
     }
-    return cmd
+
+    return {
+        command,
+        path,
+        remainingArgv: argv.slice(index),
+    }
+}
+
+export function getCommand(path: readonly string[], subCommands: readonly AnyCmd[]): {command: AnyCmd, path: string[]} {
+    if(!path.length) {
+        throw new Error('Command path is required.')
+    }
+
+    let current = subCommands
+    let command: AnyCmd | undefined
+    const resolvedPath: string[] = []
+
+    for(let i = 0; i < path.length; ++i) {
+        const segment = path[i]
+        const next = findSubCommand(segment, current)
+        if(next === undefined) {
+            throw new Error(`Command "${segment}" does not exist.`)
+        }
+        command = next
+        resolvedPath.push(next.name)
+        if(i < path.length - 1) {
+            if(!hasSubCommands(next)) {
+                throw new Error(`Command "${resolvedPath.join(' ')}" does not have subCommands.`)
+            }
+            current = next.subCommands
+        }
+    }
+
+    return {command: command!, path: resolvedPath}
 }

@@ -57,7 +57,8 @@
         "lint": "sh -c 'eslint --quiet --fix --fix-type problem,suggestion,layout,directive -- \"${@:-.}\"' --",
         "clean": "rm -rf dist yarn-error.log",
         "build": "cross-env NODE_ENV=production rollup -c",
-        "dev": "bun run src/test.ts -- world --name foo",
+        "dev": "bun run examples/root-command.ts -- --name foo",
+        "dev:sub": "bun run examples/sub-commands.ts -- world greet --name foo",
         "prod": "npm-run-all clean --parallel tsdecls build"
     },
     "repository": {
