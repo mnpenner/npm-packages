@@ -1,0 +1,1 @@
+Add --interactive as a global option. When enabled, it should give the user a menu to pick sub-commands, then prompt them to fill out required options one by one, then give them some checkboxes to enable/disable optional boolean flags, and let them select and type in the values for non-bool options.

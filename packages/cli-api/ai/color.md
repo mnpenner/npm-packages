@@ -1,0 +1,1 @@
+Add `--color <WHEN>` as a global option with options always,never,auto. "auto" should infer whether or not to enable color based on the user's environment using whatever heuristics are typical of CLI apps.
