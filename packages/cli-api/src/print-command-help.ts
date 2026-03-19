@@ -5,6 +5,15 @@ import {getProcName, print, printLn, space, toArray} from './utils'
 import Chalk from 'chalk'
 import {formatOption, getOptions, getOptName, getValuePlaceholder} from './options'
 import stringWidth from 'string-width'
+import type {Option} from './interfaces'
+
+const HELP_OPTION: Option = {
+    name: 'help',
+    alias: 'h',
+    description: 'Show help text',
+    type: OptType.BOOL,
+    valueNotRequired: true,
+}
 
 function getCommandLabel(app: AnyApp, path: readonly string[]) {
     const proc = Chalk.cyan(getProcName(app))
@@ -89,6 +98,17 @@ export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readon
     if (hasSubCommands(cmd)) {
         printLn()
         printAvailableCommands(cmd.subCommands, 'Sub-commands:')
+    }
+
+    const globalOptions = [HELP_OPTION, ...(app.globalOptions ?? [])]
+    if (globalOptions.length) {
+        printLn()
+        printLn(Chalk.yellow('Global Options:'))
+        const lines = globalOptions.map(formatOption)
+        const width = Math.max(...lines.map(line => stringWidth(line[0])))
+        for (const line of lines) {
+            printLn('  ' + line[0] + space(width + 2, line[0]) + line[1])
+        }
     }
 
     if (cmd.alias) {

@@ -340,18 +340,53 @@ class FluentCommand<
     Cs extends CommandChildren = [],
     Executable extends boolean = false,
 > {
-    readonly name: string
-    alias?: string | string[]
-    description?: string
-    longDescription?: string
-    options?: Option[]
-    flags?: Flag[]
-    positonals?: Argument[]
-    subCommands?: AnyCmd[]
-    handler?: FluentExecuteHandler<Opts, Flags, As>
+    private readonly _name: string
+    private _alias?: string | string[]
+    private _description?: string
+    private _longDescription?: string
+    private _options?: Option[]
+    private _positonals?: Argument[]
+    private _subCommands?: AnyCmd[]
+    private _handler?: FluentExecuteHandler<Opts, Flags, As>
 
     constructor(name: string) {
-        this.name = name
+        this._name = name
+    }
+
+    get name(): string {
+        return this._name
+    }
+
+    get alias(): string | string[] | undefined {
+        return this._alias
+    }
+
+    get description(): string | undefined {
+        return this._description
+    }
+
+    get longDescription(): string | undefined {
+        return this._longDescription
+    }
+
+    get options(): Option[] | undefined {
+        return this._options
+    }
+
+    get positonals(): Argument[] | undefined {
+        return this._positonals
+    }
+
+    get subCommands(): AnyCmd[] | undefined {
+        return this._subCommands
+    }
+
+    get handler(): FluentExecuteHandler<Opts, Flags, As> | undefined {
+        return this._handler
+    }
+
+    protected setLongDescription(longDescription: string): void {
+        this._longDescription = longDescription
     }
 
     /**
@@ -361,7 +396,7 @@ class FluentCommand<
      * @returns The same fluent command builder with the aliases applied.
      */
     aliases(...aliases: string[]): this {
-        this.alias = aliases.length <= 1 ? aliases[0] : aliases
+        this._alias = aliases.length <= 1 ? aliases[0] : aliases
         return this
     }
 
@@ -373,9 +408,9 @@ class FluentCommand<
      * @returns The same fluent command builder with updated descriptions.
      */
     describe(description: string, longDescription?: string): this {
-        this.description = description
+        this._description = description
         if(longDescription !== undefined) {
-            this.longDescription = longDescription
+            this._longDescription = longDescription
         }
         return this
     }
@@ -391,7 +426,7 @@ class FluentCommand<
         name: Name,
         config?: Config,
     ): FluentCommand<Opts, [...Flags, BuildFlag<Name, Config>], As, Cs, Executable> {
-        ;(this.flags ??= []).push({name, ...(config ?? {}), valueNotRequired: true})
+        ;(this._options ??= []).push({name, ...(config ?? {}), valueNotRequired: true, type: OptType.BOOL})
         return this as unknown as FluentCommand<Opts, [...Flags, BuildFlag<Name, Config>], As, Cs, Executable>
     }
 
@@ -406,7 +441,7 @@ class FluentCommand<
         name: Name,
         config?: Config,
     ): FluentCommand<[...Opts, BuildOption<Name, Config>], Flags, As, Cs, Executable> {
-        ;(this.options ??= []).push({name, ...(config ?? {})})
+        ;(this._options ??= []).push({name, ...(config ?? {})})
         return this as unknown as FluentCommand<[...Opts, BuildOption<Name, Config>], Flags, As, Cs, Executable>
     }
 
@@ -421,7 +456,7 @@ class FluentCommand<
         name: Name,
         config?: Config,
     ): FluentCommand<Opts, Flags, [...As, BuildArgument<Name, Config>], Cs, Executable> {
-        ;(this.positonals ??= []).push({name, ...(config ?? {})})
+        ;(this._positonals ??= []).push({name, ...(config ?? {})})
         return this as unknown as FluentCommand<Opts, Flags, [...As, BuildArgument<Name, Config>], Cs, Executable>
     }
 
@@ -435,7 +470,7 @@ class FluentCommand<
         this: FluentCommand<Opts, Flags, As, Cs, false>,
         subCommand: AnyCmd | FluentCommand<any, any, any, any, any>,
     ): FluentCommand<Opts, Flags, As, CommandChildren, false> {
-        ;(this.subCommands ??= []).push(subCommand as AnyCmd)
+        ;(this._subCommands ??= []).push(subCommand as AnyCmd)
         return this as unknown as FluentCommand<Opts, Flags, As, CommandChildren, false>
     }
 
@@ -449,8 +484,8 @@ class FluentCommand<
         this: FluentCommand<Opts, Flags, As, [], false>,
         handler: RunHandler<Opts, Flags, As>,
     ): FluentCommand<Opts, Flags, As, [], true> {
-        this.handler = function(this: AnyApp, kwargs: KwargsOf<Opts, Flags, As>, args: ArgsOf<As>) {
-            return handler(args, kwargs)
+        this._handler = function(this: AnyApp, kwargs: KwargsOf<Opts, Flags, As>, args: ArgsOf<As>) {
+            return handler.call(this, args, kwargs)
         }
         return this as unknown as FluentCommand<Opts, Flags, As, [], true>
     }
@@ -463,9 +498,21 @@ class FluentApp<
     Cs extends CommandChildren = [],
     Executable extends boolean = false,
 > extends FluentCommand<Opts, Flags, As, Cs, Executable> {
-    _argv0?: string
-    _version?: string
-    globalOptions?: Option[]
+    private _argv0?: string
+    private _version?: string
+    private _globalOptions?: Option[]
+
+    get globalOptions(): Option[] | undefined {
+        return this._globalOptions
+    }
+
+    get argv0Value(): string | undefined {
+        return this._argv0
+    }
+
+    get versionValue(): string | undefined {
+        return this._version
+    }
 
     /**
      * Applies metadata to the root app in one call.
@@ -483,7 +530,7 @@ class FluentApp<
         if(config.description !== undefined) {
             this.describe(config.description, config.longDescription)
         } else if(config.longDescription !== undefined) {
-            this.longDescription = config.longDescription
+            this.setLongDescription(config.longDescription)
         }
 
         return this
@@ -660,7 +707,7 @@ export function getExecuteHandler(value: AnyCmd | AnyApp): AnyLeafCommand['execu
  * @returns The configured display name, if any.
  */
 export function getAppArgv0(app: AnyApp): string | undefined {
-    return app instanceof FluentApp ? app._argv0 : undefined
+    return app instanceof FluentApp ? app.argv0Value : undefined
 }
 
 /**
@@ -670,5 +717,5 @@ export function getAppArgv0(app: AnyApp): string | undefined {
  * @returns The configured version string, if any.
  */
 export function getAppVersion(app: AnyApp): string | undefined {
-    return app instanceof FluentApp ? app._version : undefined
+    return app instanceof FluentApp ? app.versionValue : undefined
 }

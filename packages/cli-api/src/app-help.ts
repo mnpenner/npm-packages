@@ -29,12 +29,7 @@ export function printHelp(app: AnyApp, commands: readonly AnyCmd[]) {
     printLn(Chalk.yellow('Usage:'))
     print(`  ${Chalk.cyan(getProcName(app))}`)
     if (hasSubCommands(app)) {
-        print(` ${Chalk.gray('<')}command${Chalk.gray('>')}`)
-    }
-    if (isExecutable(app)) {
-        print(` ${Chalk.gray('[options] [positionals]')}`)
-    } else if (hasSubCommands(app)) {
-        print(` ${Chalk.gray('[options] [positionals]')}`)
+        print(` ${Chalk.gray('[--global-options]')} ${Chalk.gray('<')}command${Chalk.gray('>')}`)
     }
     printLn('\n')
 

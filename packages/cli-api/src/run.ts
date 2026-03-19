@@ -17,6 +17,10 @@ function isVersionFlag(arg: string | undefined): boolean {
     return arg === '--version'
 }
 
+function stripHelpFlags(argv: readonly string[]): string[] {
+    return argv.filter(arg => !isHelpFlag(arg))
+}
+
 function getRootCommands(app: AnyApp): readonly AnyCmd[] {
     const userCommands = hasSubCommands(app)
         ? sortBy(app.subCommands as readonly AnyCmd[], c => c.name)
@@ -70,7 +74,24 @@ export async function executeApp(app: AnyApp, argv: string[] = process.argv.slic
         return 0
     }
 
-    if (isHelpFlag(argv[0])) {
+    if (argv.some(isHelpFlag)) {
+        if (hasSubCommands(app)) {
+            const filteredArgv = stripHelpFlags(argv)
+            if (!filteredArgv.length) {
+                printHelp(app, rootCommands)
+                return 0
+            }
+
+            const resolved = resolveCommand(filteredArgv, rootCommands)
+            if (!resolved.command) {
+                printHelp(app, rootCommands)
+                return 0
+            }
+
+            printCommandHelp(app, resolved.command, resolved.path)
+            return 0
+        }
+
         if (isExecutable(app)) {
             printCommandHelp(app, app, [])
         } else {

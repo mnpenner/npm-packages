@@ -12,7 +12,7 @@ export interface ResolvedCommand {
     remainingArgv: string[]
 }
 
-type ParseableCommand = Pick<AnyLeafCommand, 'name' | 'options' | 'flags' | 'positonals'>
+type ParseableCommand = Pick<AnyLeafCommand, 'name' | 'options' | 'positonals'>
 
 export function formatOption(opt: Option): [string, string] {
     const aliases: string[] = []
@@ -60,14 +60,7 @@ export function getValuePlaceholder(opt: Option): string {
 }
 
 export function getOptions(cmd: ParseableCommand): Option[] {
-    return [
-        ...toArray(cmd.options),
-        ...toArray(cmd.flags).map(f => ({
-            ...f,
-            valueNotRequired: true,
-            type: OptType.BOOL,
-        })),
-    ] as Option[]
+    return [...toArray(cmd.options)] as Option[]
 }
 
 export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record<string, any>] {
