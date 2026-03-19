@@ -1,5 +1,4 @@
 import type {AnyApp} from './interfaces'
-import {getAppArgv0} from './interfaces'
 import Path from 'path'
 import stringWidth from 'string-width'
 import Chalk from 'chalk'
@@ -11,6 +10,7 @@ export const printLn = console.log.bind(console)
 
 export type nil = null | undefined
 export type NullableObj = Record<string, any> | nil
+type InternalAppMetadata = AnyApp & {_argv0?: string}
 
 function blockError(str: string) {
     const lines = str.split('\n')
@@ -63,7 +63,7 @@ export function space(len: number, str?: string) {
 }
 
 export function getProcName(app: AnyApp) {
-    const argv0 = getAppArgv0(app)
+    const argv0 = (app as InternalAppMetadata)._argv0
     if(argv0 != null) {
         return argv0
     }

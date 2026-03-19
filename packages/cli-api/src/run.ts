@@ -3,11 +3,12 @@ import {getExecuteHandler, hasSubCommands, isExecutable} from './interfaces'
 import {helpCommand} from './commands/command-help'
 import {versionCommand} from './commands/version'
 import {printHelp} from './app-help'
-import {findSubCommand, parseArgs, resolveCommand} from './options'
+import {findSubCommand, parseArgs, resolveCommand, UnknownOptionError} from './options'
 import {getProcName, printError, sortBy} from './utils'
 import {printCommandHelp} from './print-command-help'
 import {printLn} from './utils'
-import {getAppVersion} from './interfaces'
+
+type InternalAppMetadata = AnyApp & {_version?: string}
 
 function isHelpFlag(arg: string | undefined): boolean {
     return arg === '--help' || arg === '-h'
@@ -33,22 +34,6 @@ function getRootCommands(app: AnyApp): readonly AnyCmd[] {
     ] as const
 }
 
-/**
- * Rewrites parser errors into user-facing CLI argument errors when needed.
- *
- * @param app The app whose `argv0` should be used in formatted messages.
- * @param message The raw parser error message.
- * @returns The rewritten message when a CLI-specific format applies, otherwise the original message.
- */
-export function formatArgumentError(app: AnyApp, message: string): string {
-    const shortMatch = /^"[^"]+" command does not have option "([^"]+)"\.$/.exec(message)
-    if(shortMatch && shortMatch[1].length === 1) {
-        return `${getProcName(app)}: option -${shortMatch[1]} not recognized`
-    }
-
-    return message
-}
-
 async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], path: readonly string[]): Promise<number> {
     if (rawArgs.some(isHelpFlag)) {
         printCommandHelp(app, cmd, path)
@@ -60,8 +45,11 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
     try {
         ;[args, opts] = parseArgs(cmd, rawArgs)
     } catch (err) {
-        const message = err instanceof Error ? err.message : String(err)
-        printError(formatArgumentError(app, message))
+        if(err instanceof UnknownOptionError) {
+            printError(`${getProcName(app)}: ${err.message}`)
+            return 1
+        }
+        printError(err instanceof Error ? err.message : String(err))
         return 1
     }
 
@@ -118,7 +106,7 @@ export async function executeApp(app: AnyApp, argv: string[] = process.argv.slic
     }
 
     if (isVersionFlag(argv[0])) {
-        printLn(getAppVersion(app))
+        printLn((app as InternalAppMetadata)._version)
         return 0
     }
 

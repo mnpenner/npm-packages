@@ -14,6 +14,15 @@ export interface ResolvedCommand {
 
 type ParseableCommand = Pick<AnyLeafCommand, 'name' | 'options' | 'positonals'>
 
+export class UnknownOptionError extends Error {
+    readonly option: string
+
+    constructor(option: string) {
+        super(`option ${option} not recognized`)
+        this.option = option
+    }
+}
+
 export function formatOption(opt: Option): [string, string] {
     const aliases: string[] = []
     if(opt.alias) {
@@ -122,7 +131,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
                 }
                 const name = token.slice(2)
                 const opt = findOpt(name)
-                if(!opt) throw new Error(`"${cmd.name}" command does not have option "${name}".`)
+                if(!opt) throw new UnknownOptionError(`--${name}`)
                 let value = inlineValue
                 if(value === undefined) {
                     if(opt.valueNotRequired) {
@@ -146,14 +155,14 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
                 if(hasInlineAssignment) {
                     const unknownOption = getUnknownShortOption(cluster)
                     if(unknownOption !== undefined) {
-                        throw new Error(`"${cmd.name}" command does not have option "${unknownOption}".`)
+                        throw new UnknownOptionError(`-${unknownOption}`)
                     }
                 }
                 let j = 0
                 while(j < cluster.length) {
                     const ch = cluster[j]
                     const opt = findOpt(ch)
-                    if(!opt) throw new Error(`"${cmd.name}" command does not have option "${ch}".`)
+                    if(!opt) throw new UnknownOptionError(`-${ch}`)
 
                     if(opt.valueNotRequired) {
                         const k = opt.key ?? opt.name

@@ -498,21 +498,9 @@ class FluentApp<
     Cs extends CommandChildren = [],
     Executable extends boolean = false,
 > extends FluentCommand<Opts, Flags, As, Cs, Executable> {
-    private _argv0?: string
-    private _version?: string
-    private _globalOptions?: Option[]
-
-    get globalOptions(): Option[] | undefined {
-        return this._globalOptions
-    }
-
-    get argv0Value(): string | undefined {
-        return this._argv0
-    }
-
-    get versionValue(): string | undefined {
-        return this._version
-    }
+    _argv0?: string
+    _version?: string
+    _globalOptions?: Option[]
 
     /**
      * Applies metadata to the root app in one call.
@@ -698,24 +686,4 @@ export function getExecuteHandler(value: AnyCmd | AnyApp): AnyLeafCommand['execu
     }
 
     return undefined
-}
-
-/**
- * Resolves the configured `argv0` value for an app.
- *
- * @param app The app to inspect.
- * @returns The configured display name, if any.
- */
-export function getAppArgv0(app: AnyApp): string | undefined {
-    return app instanceof FluentApp ? app.argv0Value : undefined
-}
-
-/**
- * Resolves the configured version value for an app.
- *
- * @param app The app to inspect.
- * @returns The configured version string, if any.
- */
-export function getAppVersion(app: AnyApp): string | undefined {
-    return app instanceof FluentApp ? app.versionValue : undefined
 }

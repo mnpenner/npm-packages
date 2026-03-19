@@ -67,7 +67,13 @@ describe(parseArgs.name, () => {
     it('reports an unknown short option before a missing value in a cluster with =', () => {
         const cmd = makeCommand().opt('n', {key: 'n'})
 
-        expect(() => parseArgs(cmd, ['-name=foo'])).toThrow(/does not have option "a"/i)
+        expect(() => parseArgs(cmd, ['-name=foo'])).toThrow(/option -a not recognized/i)
+    })
+
+    it('reports unknown short options with the canonical parser message', () => {
+        const cmd = makeCommand()
+
+        expect(() => parseArgs(cmd, ['-a'])).toThrow('option -a not recognized')
     })
 
     it('uses a provided value for valueNotRequired options', () => {
