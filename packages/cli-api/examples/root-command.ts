@@ -12,16 +12,16 @@ const app = new App('hello')
         alias: 'n',
         description: 'Person you want to greet',
         required: true,
-        valuePlaceholder: 'person',
+        valuePlaceholder: 'PERSON',
     })
     .opt('shout', {
-        alias: 's',
         description: 'Shout the greeting',
         valueNotRequired: true,
     })
     .arg('greeting', {
         description: 'Greeting to print',
         defaultValue: 'Hello',
+        repeatable: true,
     })
     .arg('disclaimer', {
         description: 'Trailing text',

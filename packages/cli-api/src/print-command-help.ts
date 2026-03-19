@@ -5,7 +5,7 @@ import {getProcName, print, printLn, space, toArray} from './utils'
 import Chalk from 'chalk'
 import {formatOption, getOptions, getOptName, getValuePlaceholder} from './options'
 import stringWidth from 'string-width'
-import type {Option} from './interfaces'
+import type {Argument, Option} from './interfaces'
 
 const HELP_OPTION: Option = {
     name: 'help',
@@ -21,6 +21,24 @@ function getCommandLabel(app: AnyApp, path: readonly string[]) {
         return proc
     }
     return `${proc} ${path.join(' ')}`
+}
+
+function formatUsageOption(opt: Option): string {
+    const optionName = Chalk.green(getOptName(opt))
+    if (opt.type === OptType.BOOL) {
+        return optionName
+    }
+
+    const valuePlaceholder = Chalk.magenta(getValuePlaceholder(opt))
+    if (opt.valueNotRequired) {
+        return `${optionName}${Chalk.grey('[')}=${valuePlaceholder}${Chalk.grey(']')}`
+    }
+    return `${optionName}=${valuePlaceholder}`
+}
+
+function formatUsageArgument(arg: Argument): string {
+    const argumentName = Chalk.magenta(arg.repeatable ? `${arg.name}...` : arg.name)
+    return `${Chalk.grey(arg.required ? '<' : '[')}${argumentName}${Chalk.grey(arg.required ? '>' : ']')}`
 }
 
 export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readonly string[] = []) {
@@ -42,28 +60,19 @@ export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readon
             let otherOptions = 0
             for (const opt of allOptions) {
                 if (opt.required) {
-                    print(` ${getOptName(opt)}`)
-                    if (opt.type !== OptType.BOOL) {
-                        print(`=${getValuePlaceholder(opt)}`)
-                    }
+                    print(` ${formatUsageOption(opt)}`)
                 } else {
                     ++otherOptions
                 }
             }
             if (otherOptions) {
-                print(` ${Chalk.gray('[')}options${Chalk.gray(']')}`)
+                print(` ${Chalk.gray('[')}${Chalk.magenta('--options')}${Chalk.gray(']')}`)
             }
         }
         if (cmd.positonals?.length) {
             print(` ${Chalk.grey('[')}--${Chalk.grey(']')}`)
             for (const arg of cmd.positonals) {
-                print(' ')
-                print(Chalk.grey(arg.required ? '<' : '['))
-                if (arg.repeatable) {
-                    print(Chalk.grey('...'))
-                }
-                print(arg.name)
-                print(Chalk.grey(arg.required ? '>' : ']'))
+                print(` ${formatUsageArgument(arg)}`)
             }
         }
     } else if (!hasSubCommands(cmd)) {

@@ -46,11 +46,14 @@ export function formatOption(opt: Option): [string, string] {
     }
     aliases.push(opt.name)
     let flags = aliases.map(a => Chalk.green(a.length === 1 ? `-${a}` : `--${a}`)).join(', ')
-    const valuePlaceholder = getValuePlaceholder(opt)
+    if(!opt.alias && opt.name.length > 1) {
+        flags = `    ${flags}`
+    }
     if(opt.type !== OptType.BOOL) {
+        const valuePlaceholder = Chalk.magenta(getValuePlaceholder(opt))
         flags += opt.valueNotRequired
             ? `${Chalk.grey('[')}=${valuePlaceholder}${Chalk.grey(']')}`
-            : `=${valuePlaceholder}`
+            : ` ${Chalk.grey('<')}${valuePlaceholder}${Chalk.grey('>')}`
     }
     let desc = opt.description ?? ''
     let defaultValueText = opt.defaultValueText
@@ -68,7 +71,7 @@ export function getValuePlaceholder(opt: Option): string {
         return opt.valuePlaceholder
     }
     if(Array.isArray(opt.type)) {
-        return opt.type.join('|')
+        return opt.type.join('|').toUpperCase()
     } else if(opt.type == OptType.BOOL) {
         return JSON.stringify(!resolve(opt.defaultValue))
     } else if(opt.type === OptType.INT || opt.type === OptType.FLOAT) {
@@ -78,7 +81,7 @@ export function getValuePlaceholder(opt: Option): string {
     } else if(opt.type === OptType.INPUT_DIRECTORY || opt.type === OptType.OUTPUT_DIRECTORY || opt.type === OptType.EMPTY_DIRECTORY) {
         return 'DIR'
     } else {
-        return opt.name
+        return opt.name.toUpperCase()
     }
 }
 

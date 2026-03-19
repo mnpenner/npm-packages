@@ -222,7 +222,41 @@ describe(formatOption.name, () => {
             valueNotRequired: true,
         })
 
-        expect(flags).toBe(`${Chalk.green('-s')}, ${Chalk.green('--shout')}${Chalk.grey('[')}=shout${Chalk.grey(']')}`)
+        expect(flags).toBe(`${Chalk.green('-s')}, ${Chalk.green('--shout')}${Chalk.grey('[')}=${Chalk.magenta('SHOUT')}${Chalk.grey(']')}`)
+        expect(description).toBe('Shout the greeting')
+    })
+
+    it('renders required option values with magenta placeholders in angle brackets', () => {
+        const [flags, description] = formatOption({
+            alias: 'n',
+            description: 'Person you want to greet',
+            name: 'name',
+            valuePlaceholder: 'person',
+        })
+
+        expect(flags).toBe(`${Chalk.green('-n')}, ${Chalk.green('--name')} ${Chalk.grey('<')}${Chalk.magenta('person')}${Chalk.grey('>')}`)
+        expect(description).toBe('Person you want to greet')
+    })
+
+    it('uppercases inferred placeholders when no explicit placeholder is provided', () => {
+        const [flags, description] = formatOption({
+            alias: 'o',
+            description: 'Output file',
+            name: 'output',
+        })
+
+        expect(flags).toBe(`${Chalk.green('-o')}, ${Chalk.green('--output')} ${Chalk.grey('<')}${Chalk.magenta('OUTPUT')}${Chalk.grey('>')}`)
+        expect(description).toBe('Output file')
+    })
+
+    it('indents aliasless long options so they align with aliased entries', () => {
+        const [flags, description] = formatOption({
+            description: 'Shout the greeting',
+            name: 'shout',
+            valueNotRequired: true,
+        })
+
+        expect(flags).toBe(`    ${Chalk.green('--shout')}${Chalk.grey('[')}=${Chalk.magenta('SHOUT')}${Chalk.grey(']')}`)
         expect(description).toBe('Shout the greeting')
     })
 })
