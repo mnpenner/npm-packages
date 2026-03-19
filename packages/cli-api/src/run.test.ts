@@ -1,4 +1,5 @@
 import {describe, expect, it} from 'bun:test'
+import Path from 'path'
 import {App, Command} from './interfaces'
 import {executeAppResult} from './run'
 
@@ -43,5 +44,33 @@ describe(executeAppResult.name, () => {
             code: 2,
             error: 'cli-api: option -a not recognized',
         })
+    })
+})
+
+describe(App.name, () => {
+    it('sets the process exit code when parsing fails', () => {
+        const result = Bun.spawnSync({
+            cmd: [process.execPath, 'examples/root-command.ts', '-a'],
+            cwd: Path.resolve(import.meta.dir, '..'),
+            stderr: 'pipe',
+            stdout: 'pipe',
+        })
+
+        expect(result.exitCode).toBe(2)
+    })
+
+    it('sets the process exit code from an explicit handler return code', () => {
+        const result = Bun.spawnSync({
+            cmd: [
+                process.execPath,
+                '-e',
+                "import {App} from './src'; const app = new App('hello').run(() => 7); await app.execute([])",
+            ],
+            cwd: Path.resolve(import.meta.dir, '..'),
+            stderr: 'pipe',
+            stdout: 'pipe',
+        })
+
+        expect(result.exitCode).toBe(7)
     })
 })

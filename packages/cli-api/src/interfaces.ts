@@ -643,7 +643,9 @@ export class App<
      */
     async execute(args: string[] = process.argv.slice(2)): Promise<number> {
         const {executeApp} = await import('./run')
-        return executeApp(this as unknown as AnyApp, args)
+        const code = await executeApp(this as unknown as AnyApp, args)
+        process.exitCode = code
+        return code
     }
 }
 

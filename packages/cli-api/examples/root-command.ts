@@ -22,6 +22,7 @@ const app = new App('hello')
             console.log('Preparing greeting...')
         }
         console.log(`${kwargs.greeting} ${kwargs.name}`)
+        return 5
     })
 
 if(import.meta.main) {
