@@ -3,3 +3,5 @@
     - Link to other functions and classes using this syntax: [`exampleFunc`]{@link exampleFunc}
     - Link to methods using this syntax: [`Class.method`]{@link Class#method} 
 - This repo uses hg for version control
+- Add a test to prevent regressions every time the user reports a bug or error
+- Prefix private props with _

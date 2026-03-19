@@ -57,7 +57,7 @@ export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readon
                 print(Chalk.grey(arg.required ? '>' : ']'))
             }
         }
-    } else {
+    } else if (!hasSubCommands(cmd)) {
         print(` ${Chalk.gray('[options] [positionals]')}`)
     }
     printLn()

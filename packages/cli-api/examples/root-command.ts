@@ -13,11 +13,15 @@ const app = new App('hello')
         description: 'Person you want to greet',
         required: true,
     })
+    .arg('greeting', {
+        description: 'Greeting to print',
+        defaultValue: 'Hello',
+    })
     .run((args, kwargs) => {
         if (kwargs.verbose) {
             console.log('Preparing greeting...')
         }
-        console.log(`Hello ${kwargs.name}`)
+        console.log(`${kwargs.greeting} ${kwargs.name}`)
     })
 
 if(import.meta.main) {

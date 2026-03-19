@@ -1,6 +1,6 @@
 {
     "name": "cli-api",
-    "version": "0.1.2",
+    "version": "0.2.0",
     "license": "UNLICENSED",
     "private": false,
     "exports": {

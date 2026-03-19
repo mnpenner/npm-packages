@@ -14,8 +14,7 @@ const world = new Command('world')
         alias: 'v',
         description: 'Print more info',
     })
-    .opt('name', {
-        alias: 'n',
+    .arg('name', {
         description: 'Person you want to greet',
         required: true,
     })
@@ -33,6 +32,6 @@ await new App('hello')
 ```
 
 ```shell
-$ hello world --name Mark
+$ hello world Mark
 Hello Mark
 ```

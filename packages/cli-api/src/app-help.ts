@@ -1,30 +1,31 @@
-import type {AnyApp, AnyCmd} from './interfaces'
-import {getAppVersion, hasSubCommands, isExecutable} from './interfaces'
+import type {AnyApp, AnyCmd, Option} from './interfaces'
+import {getAppVersion, hasSubCommands, isExecutable, OptType} from './interfaces'
 import {getProcName, print, printLn, space} from './utils'
 import Chalk from 'chalk'
 import stringWidth from 'string-width'
 import {formatOption} from './options'
-import type {Option} from './interfaces'
 
 const HELP_OPTION: Option = {
     name: 'help',
     alias: 'h',
     description: 'Show help text',
+    type: OptType.BOOL,
     valueNotRequired: true,
 }
 
 export function printHelp(app: AnyApp, commands: readonly AnyCmd[]) {
-    if (app.description) {
-        printLn(app.description)
-        printLn()
-    }
-
     print(Chalk.green(app.name))
     const version = getAppVersion(app)
     if (version) {
         print(` version ${Chalk.yellow(version)}`)
     }
-    print('\n\n')
+    printLn()
+
+    if (app.description) {
+        printLn(app.description)
+    }
+
+    printLn()
     printLn(Chalk.yellow('Usage:'))
     print(`  ${Chalk.cyan(getProcName(app))}`)
     if (hasSubCommands(app)) {
@@ -44,7 +45,7 @@ export function printHelp(app: AnyApp, commands: readonly AnyCmd[]) {
     const globalOptions = [HELP_OPTION, ...(app.globalOptions ?? [])]
     if (globalOptions.length) {
         printLn()
-        printLn(Chalk.yellow('Global options:'))
+        printLn(Chalk.yellow('Global Options:'))
         const lines = globalOptions.map(formatOption)
         const width = Math.max(...lines.map(line => stringWidth(line[0])))
         for (const line of lines) {

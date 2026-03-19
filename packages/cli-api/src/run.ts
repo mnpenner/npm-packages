@@ -6,9 +6,15 @@ import {printHelp} from './app-help'
 import {findSubCommand, parseArgs, resolveCommand} from './options'
 import {printError, sortBy} from './utils'
 import {printCommandHelp} from './print-command-help'
+import {printLn} from './utils'
+import {getAppVersion} from './interfaces'
 
 function isHelpFlag(arg: string | undefined): boolean {
     return arg === '--help' || arg === '-h'
+}
+
+function isVersionFlag(arg: string | undefined): boolean {
+    return arg === '--version'
 }
 
 function getRootCommands(app: AnyApp): readonly AnyCmd[] {
@@ -70,6 +76,11 @@ export async function executeApp(app: AnyApp, argv: string[] = process.argv.slic
         } else {
             printHelp(app, rootCommands)
         }
+        return 0
+    }
+
+    if (isVersionFlag(argv[0])) {
+        printLn(getAppVersion(app))
         return 0
     }
 
