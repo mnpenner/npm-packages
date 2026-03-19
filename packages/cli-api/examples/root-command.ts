@@ -21,11 +21,11 @@ const app = new App('hello')
     .arg('greeting', {
         description: 'Greeting to print',
         defaultValue: 'Hello',
-        repeatable: true,
     })
     .arg('disclaimer', {
         description: 'Trailing text',
         repeatable: true,
+        required: true,
     })
     .run((args, kwargs) => {
         if (kwargs.verbose) {
