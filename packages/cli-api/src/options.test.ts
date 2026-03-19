@@ -119,6 +119,14 @@ describe(parseArgs.name, () => {
         expect(opts.tags).toEqual(['a', 'b', 'c'])
     })
 
+    it('initializes missing repeatable options as empty arrays', () => {
+        const cmd = makeCommand().opt('tag', {key: 'tags', repeatable: true})
+
+        const [, opts] = parseArgs(cmd, [])
+
+        expect(opts.tags).toEqual([])
+    })
+
     it('treats tokens after -- as positonals', () => {
         const cmd = makeCommand()
             .opt('n', {key: 'n'})
@@ -152,9 +160,19 @@ describe(parseArgs.name, () => {
         expect(opts.files).toEqual(['a.js', 'b.js', 'c.js'])
     })
 
+    it('initializes missing optional repeatable positonals as empty arrays', () => {
+        const cmd = makeCommand()
+            .arg('input', {required: true})
+            .arg('files', {key: 'files', repeatable: true})
+
+        const [, opts] = parseArgs(cmd, ['main.ts'])
+
+        expect(opts.files).toEqual([])
+    })
+
     it('requires at least one value for required repeatable positonals', () => {
         const cmd = makeCommand()
-            .arg('name')
+            .arg('name', {required: true})
             .arg('disclaimer', {key: 'disclaimer', repeatable: true, required: true})
 
         expect(() => parseArgs(cmd, ['tom'])).toThrow(/"disclaimer" positional requires at least 1 value/i)

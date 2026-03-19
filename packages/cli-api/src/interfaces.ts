@@ -35,6 +35,7 @@ type KeyOfItem<I> =
 type TypeOfItem<I> = I extends { type: infer T extends AnyOptType } ? T : undefined
 type IsRepeatable<I> = I extends { repeatable: true | number } ? true : false
 type IsRequired<I> = I extends { required: true | number } ? true : false
+type IsAlwaysPresent<I> = IsRepeatable<I> extends true ? true : IsRequired<I>
 
 type ValueOfOption<O extends Option> =
     IsRepeatable<O> extends true
@@ -47,7 +48,7 @@ type FlagPropMap<F extends Flag> = { [K in KeyOfItem<F>]: boolean }
 type MergeOptionProps<IU extends Option> = U2I<IU extends any ? OptionPropMap<IU> : never>
 type MergeFlagProps<FU extends Flag> = U2I<FU extends any ? FlagPropMap<FU> : never>
 
-type RequiredOptions<I extends Option> = I extends any ? (IsRequired<I> extends true ? I : never) : never
+type RequiredOptions<I extends Option> = I extends any ? (IsAlwaysPresent<I> extends true ? I : never) : never
 type OptionalOptions<I extends Option> = Exclude<I, RequiredOptions<I>>
 
 export type OptionsOf<
@@ -81,7 +82,7 @@ type _ArgsTailRepeat<As extends readonly Argument[]> =
 
 type ArgumentPropMap<I extends Argument> = { [K in KeyOfItem<I>]: ValueOfArg<I> }
 type MergeArgumentProps<IU extends Argument> = U2I<IU extends any ? ArgumentPropMap<IU> : never>
-type RequiredArguments<I extends Argument> = I extends any ? (IsRequired<I> extends true ? I : never) : never
+type RequiredArguments<I extends Argument> = I extends any ? (IsAlwaysPresent<I> extends true ? I : never) : never
 type OptionalArguments<I extends Argument> = Exclude<I, RequiredArguments<I>>
 
 export type ArgsOf<As extends readonly Argument[] | undefined> =

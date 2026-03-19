@@ -26,7 +26,7 @@ const app = new App('hello')
     .arg('disclaimer', {
         description: 'Trailing text',
         repeatable: true,
-        // required: true,
+        required: true,
     })
     .run((args, kwargs) => {
         if (kwargs.verbose) {
@@ -37,7 +37,7 @@ const app = new App('hello')
             : `${kwargs.greeting} ${kwargs.name}.`
         console.log(greeting)
 
-        if(kwargs.disclaimer?.length) {
+        if(kwargs.disclaimer.length) {
             console.log(`Disclaimer: ${kwargs.disclaimer.join(', ')}`)
         }
         return 5

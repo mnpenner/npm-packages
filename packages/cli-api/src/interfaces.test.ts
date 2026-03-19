@@ -29,7 +29,7 @@ describe(Command.name, () => {
                         verbose?: boolean
                         mode?: 'fast' | 'slow'
                         input: string
-                        rest?: string[]
+                        rest: string[]
                     }>>(true)
                 })
 
@@ -39,7 +39,7 @@ describe(Command.name, () => {
                 .run((args, kwargs) => {
                     expectType<TypeEqual<typeof args, string[]>>(true)
                     expectType<TypeEqual<typeof kwargs, {
-                        tag?: string[]
+                        tag: string[]
                         files: string[]
                     }>>(true)
                 })
