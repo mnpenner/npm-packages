@@ -1,3 +1,4 @@
+#!/usr/bin/env bun
 import {App, Command} from '../src'
 import * as pkg from '../package.json'
 
@@ -23,7 +24,10 @@ const worldCommand = new Command('world')
     .describe('World-related commands.')
     .command(greetCommand)
 
-await new App('hello')
-    .meta({version: pkg.version, argv0: pkg.name})
+const app = new App('hello')
+    .meta({version: pkg.version, argv0: pkg.name, description: 'Example app'})
     .command(worldCommand)
-    .execute()
+
+if(import.meta.main) {
+    await app.execute()
+}

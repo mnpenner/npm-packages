@@ -7,6 +7,10 @@ import {findSubCommand, parseArgs, resolveCommand} from './options'
 import {printError, sortBy} from './utils'
 import {printCommandHelp} from './print-command-help'
 
+function isHelpFlag(arg: string | undefined): boolean {
+    return arg === '--help' || arg === '-h'
+}
+
 function getRootCommands(app: AnyApp): readonly AnyCmd[] {
     const userCommands = hasSubCommands(app)
         ? sortBy(app.subCommands as readonly AnyCmd[], c => c.name)
@@ -20,7 +24,7 @@ function getRootCommands(app: AnyApp): readonly AnyCmd[] {
 }
 
 async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], path: readonly string[]): Promise<number> {
-    if (rawArgs.includes('--help')) {
+    if (rawArgs.some(isHelpFlag)) {
         printCommandHelp(app, cmd, path)
         return 0
     }
@@ -60,7 +64,7 @@ export async function executeApp(app: AnyApp, argv: string[] = process.argv.slic
         return 0
     }
 
-    if (argv[0] === '--help') {
+    if (isHelpFlag(argv[0])) {
         if (isExecutable(app)) {
             printCommandHelp(app, app, [])
         } else {
@@ -85,7 +89,7 @@ export async function executeApp(app: AnyApp, argv: string[] = process.argv.slic
     }
 
     if (hasSubCommands(resolved.command)) {
-        if (!resolved.remainingArgv.length || resolved.remainingArgv[0] === '--help') {
+        if (!resolved.remainingArgv.length || isHelpFlag(resolved.remainingArgv[0])) {
             printCommandHelp(app, resolved.command, resolved.path)
             return 0
         }

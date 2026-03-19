@@ -1,7 +1,8 @@
+#!/usr/bin/env bun
 import {App} from '../src'
 import * as pkg from '../package.json'
 
-await new App('hello')
+const app = new App('hello')
     .meta({version: pkg.version, argv0: pkg.name})
     .flag('verbose', {
         alias: 'v',
@@ -18,4 +19,7 @@ await new App('hello')
         }
         console.log(`Hello ${kwargs.name}`)
     })
-    .execute()
+
+if(import.meta.main) {
+    await app.execute()
+}

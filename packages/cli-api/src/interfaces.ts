@@ -177,8 +177,6 @@ type CommandBase = {
 }
 
 type AppBase = CommandBase & {
-    argv0?: string
-    version?: string
     globalOptions?: Option[]
 }
 
@@ -328,9 +326,6 @@ type FluentExecuteHandler<
     As extends readonly Argument[] | undefined,
 > = ExecutableInput<Opts, Flags, As>['execute']
 
-const APP_ARGV0 = Symbol('app-argv0')
-const APP_VERSION = Symbol('app-version')
-
 type AppMetaConfig = {
     argv0?: string
     version?: string
@@ -468,6 +463,8 @@ class FluentApp<
     Cs extends CommandChildren = [],
     Executable extends boolean = false,
 > extends FluentCommand<Opts, Flags, As, Cs, Executable> {
+    _argv0?: string
+    _version?: string
     globalOptions?: Option[]
 
     /**
@@ -499,7 +496,7 @@ class FluentApp<
      * @returns The same fluent app builder with the updated program name.
      */
     argv0(argv0: string): this {
-        ;(this as Record<PropertyKey, unknown>)[APP_ARGV0] = argv0
+        this._argv0 = argv0
         return this
     }
 
@@ -510,7 +507,7 @@ class FluentApp<
      * @returns The same fluent app builder with the version applied.
      */
     version(version: string): this {
-        ;(this as Record<PropertyKey, unknown>)[APP_VERSION] = version
+        this._version = version
         return this
     }
 
@@ -657,21 +654,21 @@ export function getExecuteHandler(value: AnyCmd | AnyApp): AnyLeafCommand['execu
 }
 
 /**
- * Resolves the configured `argv0` value for a fluent or plain app object.
+ * Resolves the configured `argv0` value for an app.
  *
  * @param app The app to inspect.
  * @returns The configured display name, if any.
  */
 export function getAppArgv0(app: AnyApp): string | undefined {
-    return (((app as unknown as Record<PropertyKey, unknown>)[APP_ARGV0]) as string | undefined) ?? app.argv0
+    return app instanceof FluentApp ? app._argv0 : undefined
 }
 
 /**
- * Resolves the configured version value for a fluent or plain app object.
+ * Resolves the configured version value for an app.
  *
  * @param app The app to inspect.
  * @returns The configured version string, if any.
  */
 export function getAppVersion(app: AnyApp): string | undefined {
-    return (((app as unknown as Record<PropertyKey, unknown>)[APP_VERSION]) as string | undefined) ?? app.version
+    return app instanceof FluentApp ? app._version : undefined
 }
