@@ -13,6 +13,8 @@ export interface ResolvedCommand {
 }
 
 type ParseableCommand = Pick<AnyLeafCommand, 'name' | 'options' | 'positonals'>
+type Repeatability = boolean | number | undefined
+type Requirement = boolean | number | undefined
 
 /**
  * Error thrown when argument parsing encounters an unknown option name.
@@ -27,6 +29,76 @@ export class UnknownOptionError extends Error {
         super(`option ${option} not recognized`)
         this.option = option
     }
+}
+
+function isRepeatable(value: Repeatability): boolean {
+    return value === true || typeof value === 'number'
+}
+
+function getMaxRepeatCount(value: Repeatability): number | undefined {
+    if(value === true || value === false || value === undefined) {
+        return undefined
+    }
+    return value
+}
+
+function getMinRequiredCount(value: Requirement): number {
+    if(value === true) {
+        return 1
+    }
+    if(typeof value === 'number') {
+        return value
+    }
+    return 0
+}
+
+function assertValidCount(name: string, value: number, {allowZero = false}: {allowZero?: boolean} = {}): void {
+    if(!Number.isInteger(value) || value < 0 || (!allowZero && value === 0)) {
+        throw new Error(`${name} must be ${allowZero ? 'a non-negative' : 'a positive'} integer`)
+    }
+}
+
+function validatePositionalDefinitions(cmd: ParseableCommand): void {
+    if(!cmd.positonals?.length) {
+        return
+    }
+
+    let encounteredOptionalPositional = false
+    for(let i = 0; i < cmd.positonals.length; ++i) {
+        const arg = cmd.positonals[i]
+        const repeatable = isRepeatable(arg.repeatable)
+        const minRequired = getMinRequiredCount(arg.required)
+        const maxRepeatCount = getMaxRepeatCount(arg.repeatable)
+
+        if(typeof arg.required === 'number') {
+            assertValidCount(`"${arg.name}" positional required count`, arg.required, {allowZero: true})
+            if(!repeatable) {
+                throw new Error(`"${arg.name}" positional cannot use a numeric required count unless it is repeatable`)
+            }
+        }
+        if(typeof arg.repeatable === 'number') {
+            assertValidCount(`"${arg.name}" positional repeatable count`, arg.repeatable)
+        }
+        if(repeatable && i < cmd.positonals.length - 1) {
+            throw new Error('Only the last positional can be repeatable')
+        }
+        if(maxRepeatCount !== undefined && minRequired > maxRepeatCount) {
+            throw new Error(`"${arg.name}" positional requires at least ${minRequired} values but allows at most ${maxRepeatCount}`)
+        }
+        if(encounteredOptionalPositional && minRequired > 0) {
+            throw new Error('Required positional arguments cannot come after optional positional arguments')
+        }
+        if(minRequired === 0) {
+            encounteredOptionalPositional = true
+        }
+    }
+}
+
+function pushRepeatableValue(target: any[], value: any, itemName: string, maxCount: number | undefined, kind: 'option' | 'positional'): void {
+    if(maxCount !== undefined && target.length >= maxCount) {
+        throw new Error(`"${itemName}" ${kind} allows at most ${maxCount} value${maxCount === 1 ? '' : 's'}`)
+    }
+    target.push(value)
 }
 
 /**
@@ -95,9 +167,13 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
     let parseFlags = true
 
     const allOptions = getOptions(cmd)
+    validatePositionalDefinitions(cmd)
 
     for(const opt of allOptions) {
-        if(opt.repeatable) {
+        if(typeof opt.repeatable === 'number') {
+            assertValidCount(`"${opt.name}" option repeatable count`, opt.repeatable)
+        }
+        if(isRepeatable(opt.repeatable)) {
             const k = opt.key ?? opt.name
             if(opts[k] === undefined) opts[k] = []
         }
@@ -105,10 +181,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
     if(cmd.positonals?.length) {
         for(let i = 0; i < cmd.positonals.length; ++i) {
             const a: Argument = cmd.positonals[i]
-            if(a.repeatable && i < cmd.positonals.length - 1) {
-                throw new Error('Only the last positional can be repeatable')
-            }
-            if(a.repeatable) {
+            if(isRepeatable(a.repeatable)) {
                 const k = a.key ?? a.name
                 if(k && opts[k] === undefined) opts[k] = []
             }
@@ -161,7 +234,9 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
                 }
                 if(opt.type != null) value = coerceType(value, opt.type)
                 const k = opt.key ?? opt.name
-                if(opt.repeatable) (opts[k] as any[]).push(value)
+                if(isRepeatable(opt.repeatable)) {
+                    pushRepeatableValue(opts[k] as any[], value, opt.name, getMaxRepeatCount(opt.repeatable), 'option')
+                }
                 else opts[k] = value
             } else {
                 const clusterText = token.slice(1)
@@ -184,7 +259,9 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
                     if(opt.valueNotRequired) {
                         const k = opt.key ?? opt.name
                         const v = !resolve(opt.defaultValue)
-                        if(opt.repeatable) (opts[k] as any[]).push(v)
+                        if(isRepeatable(opt.repeatable)) {
+                            pushRepeatableValue(opts[k] as any[], v, opt.name, getMaxRepeatCount(opt.repeatable), 'option')
+                        }
                         else opts[k] = v
                         j += 1
                         continue
@@ -200,7 +277,9 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
 
                     if(opt.type != null) value = coerceType(value, opt.type)
                     const k = opt.key ?? opt.name
-                    if(opt.repeatable) (opts[k] as any[]).push(value)
+                    if(isRepeatable(opt.repeatable)) {
+                        pushRepeatableValue(opts[k] as any[], value, opt.name, getMaxRepeatCount(opt.repeatable), 'option')
+                    }
                     else opts[k] = value
                     break
                 }
@@ -213,9 +292,9 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
                 if(def.type != null) value = coerceType(value, def.type)
 
                 const k = def.key ?? def.name
-                if(def.repeatable) {
+                if(isRepeatable(def.repeatable)) {
                     const arr = (opts[k] ??= [])
-                    arr.push(value)
+                    pushRepeatableValue(arr, value, def.name, getMaxRepeatCount(def.repeatable), 'positional')
                     for(i = i + 1; i < argv.length; ++i) {
                         let v: any = argv[i]
                         if(parseFlags && v === '--') {
@@ -227,9 +306,9 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
                             break
                         }
                         if(def.type != null) v = coerceType(v, def.type)
-                        arr.push(v)
+                        pushRepeatableValue(arr, v, def.name, getMaxRepeatCount(def.repeatable), 'positional')
                     }
-                    argIdx = def.repeatable && cmd.positonals ? cmd.positonals.length : argIdx
+                    argIdx = isRepeatable(def.repeatable) && cmd.positonals ? cmd.positonals.length : argIdx
                     args.push(...arr)
                     continue
                 } else {
@@ -258,10 +337,14 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
     if(cmd.positonals?.length) {
         for(let i = 0; i < cmd.positonals.length; ++i) {
             const a: any = cmd.positonals[i]
-            if(a.required && argIdx <= i && !a.repeatable) {
+            const minRequired = getMinRequiredCount(a.required)
+            if(minRequired > 0 && argIdx <= i && !isRepeatable(a.repeatable)) {
                 throw new Error(`"${a.name}" positional is required`)
             }
             const k = a.key ?? a.name
+            if(isRepeatable(a.repeatable) && ((opts[k] as any[] | undefined)?.length ?? 0) < minRequired) {
+                throw new Error(`"${a.name}" positional requires at least ${minRequired} value${minRequired === 1 ? '' : 's'}`)
+            }
             if(k && opts[k] === undefined && a.defaultValue !== undefined) {
                 opts[k] = resolve(a.defaultValue)
             }

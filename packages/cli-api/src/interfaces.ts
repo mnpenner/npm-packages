@@ -33,9 +33,11 @@ type KeyOfItem<I> =
 
 // ----- options & flags -----
 type TypeOfItem<I> = I extends { type: infer T extends AnyOptType } ? T : undefined
+type IsRepeatable<I> = I extends { repeatable: true | number } ? true : false
+type IsRequired<I> = I extends { required: true | number } ? true : false
 
 type ValueOfOption<O extends Option> =
-    O extends { repeatable: true }
+    IsRepeatable<O> extends true
         ? PrimitiveOfOptType<TypeOfItem<O>>[]
         : PrimitiveOfOptType<TypeOfItem<O>>
 
@@ -45,7 +47,7 @@ type FlagPropMap<F extends Flag> = { [K in KeyOfItem<F>]: boolean }
 type MergeOptionProps<IU extends Option> = U2I<IU extends any ? OptionPropMap<IU> : never>
 type MergeFlagProps<FU extends Flag> = U2I<FU extends any ? FlagPropMap<FU> : never>
 
-type RequiredOptions<I extends Option> = Extract<I, { required: true }>
+type RequiredOptions<I extends Option> = I extends any ? (IsRequired<I> extends true ? I : never) : never
 type OptionalOptions<I extends Option> = Exclude<I, RequiredOptions<I>>
 
 export type OptionsOf<
@@ -60,26 +62,26 @@ export type OptionsOf<
 
 // ----- positonals (never boolean) -----
 type ValueOfArg<A extends Argument> =
-    A extends { repeatable: true }
+    IsRepeatable<A> extends true
         ? PrimitiveOfOptType<TypeOfItem<A>>[]
         : PrimitiveOfOptType<TypeOfItem<A>>
 
 type _ArgsFixed<As extends readonly Argument[], Acc extends unknown[] = []> =
     As extends readonly [infer A, ...infer R]
         ? A extends Argument
-            ? A['repeatable'] extends true ? Acc
+            ? IsRepeatable<A> extends true ? Acc
                 : _ArgsFixed<R & readonly Argument[], [...Acc, ValueOfArg<A>]>
             : Acc
         : Acc
 
 type _ArgsTailRepeat<As extends readonly Argument[]> =
     As extends readonly [...infer _, infer L]
-        ? L extends Argument ? (L extends { repeatable: true } ? PrimitiveOfOptType<TypeOfItem<L>> : never) : never
+        ? L extends Argument ? (IsRepeatable<L> extends true ? PrimitiveOfOptType<TypeOfItem<L>> : never) : never
         : never
 
 type ArgumentPropMap<I extends Argument> = { [K in KeyOfItem<I>]: ValueOfArg<I> }
 type MergeArgumentProps<IU extends Argument> = U2I<IU extends any ? ArgumentPropMap<IU> : never>
-type RequiredArguments<I extends Argument> = Extract<I, { required: true }>
+type RequiredArguments<I extends Argument> = I extends any ? (IsRequired<I> extends true ? I : never) : never
 type OptionalArguments<I extends Argument> = Exclude<I, RequiredArguments<I>>
 
 export type ArgsOf<As extends readonly Argument[] | undefined> =
@@ -139,10 +141,10 @@ export type AnyOptType = OptType | readonly string[]
 export interface ArgumentOrOption extends ArgumentOrOptionOrFlag {
     /** Type to coerce the option value to. */
     type?: AnyOptType
-    /** Option is repeatable by specifying the flag again. Value will be an array. */
-    repeatable?: boolean
-    /** Option is required. */
-    required?: boolean
+    /** Option or positional may be provided more than once. When set to a number, that number is the maximum count. */
+    repeatable?: boolean | number
+    /** Option or positional is required. For repeatable positionals, a number means the minimum count required. */
+    required?: boolean | number
     /** Default value if not provided. */
     defaultValue?: any | (() => any)
 }

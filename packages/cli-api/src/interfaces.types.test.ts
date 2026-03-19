@@ -33,15 +33,28 @@ describe(Command.name, () => {
                     }>>(true)
                 })
 
+            const boundedCommand = new Command('bounded')
+                .opt('tag', {repeatable: 2})
+                .arg('files', {repeatable: 3, required: 2})
+                .run((args, kwargs) => {
+                    expectType<TypeEqual<typeof args, string[]>>(true)
+                    expectType<TypeEqual<typeof kwargs, {
+                        tag?: string[]
+                        files: string[]
+                    }>>(true)
+                })
+
             const fluentApp = new App('hello')
                 .meta({argv0: 'hello', version: '1.0.0', description: 'Example app'})
                 .command(greetCommand)
                 .command(inspectCommand)
+                .command(boundedCommand)
 
             expectType<TypeEqual<typeof fluentApp.execute, (args?: string[]) => Promise<number>>>(true)
 
             void greetCommand
             void inspectCommand
+            void boundedCommand
             void fluentApp
         })
     })

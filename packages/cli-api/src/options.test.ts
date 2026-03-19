@@ -152,12 +152,59 @@ describe(parseArgs.name, () => {
         expect(opts.files).toEqual(['a.js', 'b.js', 'c.js'])
     })
 
+    it('requires at least one value for required repeatable positonals', () => {
+        const cmd = makeCommand()
+            .arg('name')
+            .arg('disclaimer', {key: 'disclaimer', repeatable: true, required: true})
+
+        expect(() => parseArgs(cmd, ['tom'])).toThrow(/"disclaimer" positional requires at least 1 value/i)
+    })
+
+    it('supports numeric minimum counts for repeatable positonals', () => {
+        const cmd = makeCommand().arg('files', {key: 'files', repeatable: true, required: 2})
+
+        expect(() => parseArgs(cmd, ['a.txt'])).toThrow(/"files" positional requires at least 2 values/i)
+        expect(parseArgs(cmd, ['a.txt', 'b.txt'])[1].files).toEqual(['a.txt', 'b.txt'])
+    })
+
+    it('supports numeric maximum counts for repeatable positonals', () => {
+        const cmd = makeCommand().arg('files', {key: 'files', repeatable: 2})
+
+        expect(() => parseArgs(cmd, ['a.txt', 'b.txt', 'c.txt'])).toThrow(/"files" positional allows at most 2 values/i)
+    })
+
+    it('supports numeric maximum counts for repeatable options', () => {
+        const cmd = makeCommand().opt('tag', {key: 'tags', repeatable: 2})
+
+        expect(() => parseArgs(cmd, ['--tag=a', '--tag=b', '--tag=c'])).toThrow(/"tag" option allows at most 2 values/i)
+    })
+
     it('throws when a repeatable positional is not last', () => {
         const cmd = makeCommand()
             .arg('files', {repeatable: true})
             .arg('dest')
 
         expect(() => parseArgs(cmd, ['a.txt', 'b.txt'])).toThrow(/only the last positional can be repeatable/i)
+    })
+
+    it('throws when a required positional comes after an optional positional', () => {
+        const cmd = makeCommand()
+            .arg('maybe')
+            .arg('must', {required: true})
+
+        expect(() => parseArgs(cmd, ['value'])).toThrow(/required positional arguments cannot come after optional positional arguments/i)
+    })
+
+    it('throws when a numeric required count is used on a non-repeatable positional', () => {
+        const cmd = makeCommand().arg('files', {required: 2})
+
+        expect(() => parseArgs(cmd, ['a.txt'])).toThrow(/cannot use a numeric required count unless it is repeatable/i)
+    })
+
+    it('throws when a repeatable positional minimum exceeds its maximum', () => {
+        const cmd = makeCommand().arg('files', {repeatable: 2, required: 3})
+
+        expect(() => parseArgs(cmd, ['a.txt'])).toThrow(/requires at least 3 values but allows at most 2/i)
     })
 
     it('fills defaults for missing options and positonals', () => {
