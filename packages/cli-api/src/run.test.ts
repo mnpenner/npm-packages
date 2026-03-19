@@ -1,16 +1,47 @@
 import {describe, expect, it} from 'bun:test'
-import {App} from './interfaces'
-import {formatArgumentError} from './run'
+import {App, Command} from './interfaces'
+import {executeAppResult} from './run'
 
-describe(formatArgumentError.name, () => {
-    it('formats unknown short options with argv0', () => {
+describe(executeAppResult.name, () => {
+    it('returns exit code 2 for unknown root commands', async () => {
         const app = new App('hello')
-            .meta({argv0: 'examples/root-command.ts'})
+            .meta({argv0: 'cli-api'})
+            .command(new Command('world'))
+
+        const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['bacon'])
+
+        expect(result).toEqual({
+            code: 2,
+            error: "cli-api: unknown command 'bacon'",
+        })
+    })
+
+    it('returns exit code 2 for unknown nested commands', async () => {
+        const app = new App('hello')
+            .meta({argv0: 'cli-api'})
+            .command(new Command('world')
+                .command(new Command('greet')
+                    .run(() => {})))
+
+        const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['world', 'bacon'])
+
+        expect(result).toEqual({
+            code: 2,
+            error: "cli-api: unknown command 'bacon'",
+        })
+    })
+
+    it('returns exit code 2 for unknown options', async () => {
+        const app = new App('hello')
+            .meta({argv0: 'cli-api'})
             .opt('name', {alias: 'n', required: true})
-            .run(() => {}) as Parameters<typeof formatArgumentError>[0]
+            .run(() => {})
 
-        const message = formatArgumentError(app, '"hello" command does not have option "a".')
+        const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['-a'])
 
-        expect(message).toEqualIgnoringWhitespace('examples/root-command.ts: option -a not recognized')
+        expect(result).toEqual({
+            code: 2,
+            error: 'cli-api: option -a not recognized',
+        })
     })
 })

@@ -190,14 +190,14 @@ export type BranchCommand<
     Cs extends CommandChildren = CommandChildren,
 > = BranchCommandInput<Cs>
 
-export type Command<
+export type CommandShape<
     Opts extends readonly Option[] | undefined = undefined,
     Flags extends readonly Flag[] | undefined = undefined,
     As extends readonly Argument[] | undefined = undefined,
     Cs extends CommandChildren = CommandChildren,
 > = LeafCommand<Opts, Flags, As> | BranchCommand<Cs>
 
-export type CommandChildren = readonly Command<any, any, any, any>[]
+export type CommandChildren = readonly CommandShape<any, any, any, any>[]
 
 export interface ExecutableInput<
     Opts extends readonly Option[] | undefined,
@@ -236,7 +236,7 @@ export type BranchApp<
     Cs extends CommandChildren = CommandChildren,
 > = BranchAppInput<Cs>
 
-export type App<
+export type AppShape<
     Opts extends readonly Option[] | undefined = undefined,
     Flags extends readonly Flag[] | undefined = undefined,
     As extends readonly Argument[] | undefined = undefined,
@@ -295,21 +295,21 @@ export interface AnyBranchApp extends AppBase {
 
 export type AnyApp = AnyLeafApp | AnyBranchApp
 
-type FluentFlagConfig = Omit<Flag, 'name' | 'key' | 'valueNotRequired'> & { key?: string }
-type FluentOptionConfig = Omit<Option, 'name' | 'key'> & { key?: string }
-type FluentArgumentConfig = Omit<Argument, 'name' | 'key'> & { key?: string }
+type FlagConfigInput = Omit<Flag, 'name' | 'key' | 'valueNotRequired'> & { key?: string }
+type OptionConfigInput = Omit<Option, 'name' | 'key'> & { key?: string }
+type ArgumentConfigInput = Omit<Argument, 'name' | 'key'> & { key?: string }
 
-type BuildFlag<Name extends string, Config extends FluentFlagConfig | undefined> = Flatten<
+type BuildFlag<Name extends string, Config extends FlagConfigInput | undefined> = Flatten<
     { name: Name } &
     (Config extends undefined ? {} : Config)
 >
 
-type BuildOption<Name extends string, Config extends FluentOptionConfig | undefined> = Flatten<
+type BuildOption<Name extends string, Config extends OptionConfigInput | undefined> = Flatten<
     { name: Name } &
     (Config extends undefined ? {} : Config)
 >
 
-type BuildArgument<Name extends string, Config extends FluentArgumentConfig | undefined> = Flatten<
+type BuildArgument<Name extends string, Config extends ArgumentConfigInput | undefined> = Flatten<
     { name: Name } &
     (Config extends undefined ? {} : Config)
 >
@@ -318,9 +318,9 @@ export type RunHandler<
     Opts extends readonly Option[] | undefined,
     Flags extends readonly Flag[] | undefined,
     As extends readonly Argument[] | undefined,
-> = (args: ArgsOf<As>, kwargs: KwargsOf<Opts, Flags, As>) => MaybePromise<number | void>
+> = (this: App<any, any, any, any, any>, args: ArgsOf<As>, kwargs: KwargsOf<Opts, Flags, As>) => MaybePromise<number | void>
 
-type FluentExecuteHandler<
+type ExecuteHandler<
     Opts extends readonly Option[] | undefined,
     Flags extends readonly Flag[] | undefined,
     As extends readonly Argument[] | undefined,
@@ -333,7 +333,7 @@ type AppMetaConfig = {
     longDescription?: string
 }
 
-class FluentCommand<
+export class Command<
     Opts extends readonly Option[] = [],
     Flags extends readonly Flag[] = [],
     As extends readonly Argument[] = [],
@@ -347,7 +347,7 @@ class FluentCommand<
     private _options?: Option[]
     private _positonals?: Argument[]
     private _subCommands?: AnyCmd[]
-    private _handler?: FluentExecuteHandler<Opts, Flags, As>
+    private _handler?: ExecuteHandler<Opts, Flags, As>
 
     constructor(name: string) {
         this._name = name
@@ -381,7 +381,7 @@ class FluentCommand<
         return this._subCommands
     }
 
-    get handler(): FluentExecuteHandler<Opts, Flags, As> | undefined {
+    get handler(): ExecuteHandler<Opts, Flags, As> | undefined {
         return this._handler
     }
 
@@ -422,12 +422,12 @@ class FluentCommand<
      * @param config Optional metadata such as aliases and descriptions.
      * @returns A fluent command builder whose inferred option shape includes the new flag.
      */
-    flag<const Name extends string, const Config extends FluentFlagConfig | undefined = undefined>(
+    flag<const Name extends string, const Config extends FlagConfigInput | undefined = undefined>(
         name: Name,
         config?: Config,
-    ): FluentCommand<Opts, [...Flags, BuildFlag<Name, Config>], As, Cs, Executable> {
+    ): Command<Opts, [...Flags, BuildFlag<Name, Config>], As, Cs, Executable> {
         ;(this._options ??= []).push({name, ...(config ?? {}), valueNotRequired: true, type: OptType.BOOL})
-        return this as unknown as FluentCommand<Opts, [...Flags, BuildFlag<Name, Config>], As, Cs, Executable>
+        return this as unknown as Command<Opts, [...Flags, BuildFlag<Name, Config>], As, Cs, Executable>
     }
 
     /**
@@ -437,12 +437,12 @@ class FluentCommand<
      * @param config Optional metadata such as aliases, descriptions, and coercion rules.
      * @returns A fluent command builder whose inferred option shape includes the new option.
      */
-    opt<const Name extends string, const Config extends FluentOptionConfig | undefined = undefined>(
+    opt<const Name extends string, const Config extends OptionConfigInput | undefined = undefined>(
         name: Name,
         config?: Config,
-    ): FluentCommand<[...Opts, BuildOption<Name, Config>], Flags, As, Cs, Executable> {
+    ): Command<[...Opts, BuildOption<Name, Config>], Flags, As, Cs, Executable> {
         ;(this._options ??= []).push({name, ...(config ?? {})})
-        return this as unknown as FluentCommand<[...Opts, BuildOption<Name, Config>], Flags, As, Cs, Executable>
+        return this as unknown as Command<[...Opts, BuildOption<Name, Config>], Flags, As, Cs, Executable>
     }
 
     /**
@@ -452,12 +452,12 @@ class FluentCommand<
      * @param config Optional metadata such as coercion and requiredness.
      * @returns A fluent command builder whose inferred positional tuple includes the new argument.
      */
-    arg<const Name extends string, const Config extends FluentArgumentConfig | undefined = undefined>(
+    arg<const Name extends string, const Config extends ArgumentConfigInput | undefined = undefined>(
         name: Name,
         config?: Config,
-    ): FluentCommand<Opts, Flags, [...As, BuildArgument<Name, Config>], Cs, Executable> {
+    ): Command<Opts, Flags, [...As, BuildArgument<Name, Config>], Cs, Executable> {
         ;(this._positonals ??= []).push({name, ...(config ?? {})})
-        return this as unknown as FluentCommand<Opts, Flags, [...As, BuildArgument<Name, Config>], Cs, Executable>
+        return this as unknown as Command<Opts, Flags, [...As, BuildArgument<Name, Config>], Cs, Executable>
     }
 
     /**
@@ -467,11 +467,11 @@ class FluentCommand<
      * @returns A fluent command builder that is now treated as a branch command.
      */
     command(
-        this: FluentCommand<Opts, Flags, As, Cs, false>,
-        subCommand: AnyCmd | FluentCommand<any, any, any, any, any>,
-    ): FluentCommand<Opts, Flags, As, CommandChildren, false> {
+        this: Command<Opts, Flags, As, Cs, false>,
+        subCommand: AnyCmd | Command<any, any, any, any, any>,
+    ): Command<Opts, Flags, As, CommandChildren, false> {
         ;(this._subCommands ??= []).push(subCommand as AnyCmd)
-        return this as unknown as FluentCommand<Opts, Flags, As, CommandChildren, false>
+        return this as unknown as Command<Opts, Flags, As, CommandChildren, false>
     }
 
     /**
@@ -481,23 +481,23 @@ class FluentCommand<
      * @returns A fluent command builder that is now treated as executable.
      */
     run(
-        this: FluentCommand<Opts, Flags, As, [], false>,
+        this: Command<Opts, Flags, As, [], false>,
         handler: RunHandler<Opts, Flags, As>,
-    ): FluentCommand<Opts, Flags, As, [], true> {
+    ): Command<Opts, Flags, As, [], true> {
         this._handler = function(this: AnyApp, kwargs: KwargsOf<Opts, Flags, As>, args: ArgsOf<As>) {
-            return handler.call(this, args, kwargs)
+            return handler.call(this as App<any, any, any, any, any>, args, kwargs)
         }
-        return this as unknown as FluentCommand<Opts, Flags, As, [], true>
+        return this as unknown as Command<Opts, Flags, As, [], true>
     }
 }
 
-class FluentApp<
+export class App<
     Opts extends readonly Option[] = [],
     Flags extends readonly Flag[] = [],
     As extends readonly Argument[] = [],
     Cs extends CommandChildren = [],
     Executable extends boolean = false,
-> extends FluentCommand<Opts, Flags, As, Cs, Executable> {
+> extends Command<Opts, Flags, As, Cs, Executable> {
     _argv0?: string
     _version?: string
     _globalOptions?: Option[]
@@ -574,11 +574,11 @@ class FluentApp<
      * @param config Optional metadata such as aliases and descriptions.
      * @returns A fluent app builder whose inferred option shape includes the new flag.
      */
-    override flag<const Name extends string, const Config extends FluentFlagConfig | undefined = undefined>(
+    override flag<const Name extends string, const Config extends FlagConfigInput | undefined = undefined>(
         name: Name,
         config?: Config,
-    ): FluentApp<Opts, [...Flags, BuildFlag<Name, Config>], As, Cs, Executable> {
-        return super.flag(name, config) as unknown as FluentApp<Opts, [...Flags, BuildFlag<Name, Config>], As, Cs, Executable>
+    ): App<Opts, [...Flags, BuildFlag<Name, Config>], As, Cs, Executable> {
+        return super.flag(name, config) as unknown as App<Opts, [...Flags, BuildFlag<Name, Config>], As, Cs, Executable>
     }
 
     /**
@@ -588,11 +588,11 @@ class FluentApp<
      * @param config Optional metadata such as aliases, descriptions, and coercion rules.
      * @returns A fluent app builder whose inferred option shape includes the new option.
      */
-    override opt<const Name extends string, const Config extends FluentOptionConfig | undefined = undefined>(
+    override opt<const Name extends string, const Config extends OptionConfigInput | undefined = undefined>(
         name: Name,
         config?: Config,
-    ): FluentApp<[...Opts, BuildOption<Name, Config>], Flags, As, Cs, Executable> {
-        return super.opt(name, config) as unknown as FluentApp<[...Opts, BuildOption<Name, Config>], Flags, As, Cs, Executable>
+    ): App<[...Opts, BuildOption<Name, Config>], Flags, As, Cs, Executable> {
+        return super.opt(name, config) as unknown as App<[...Opts, BuildOption<Name, Config>], Flags, As, Cs, Executable>
     }
 
     /**
@@ -602,11 +602,11 @@ class FluentApp<
      * @param config Optional metadata such as coercion and requiredness.
      * @returns A fluent app builder whose inferred positional tuple includes the new argument.
      */
-    override arg<const Name extends string, const Config extends FluentArgumentConfig | undefined = undefined>(
+    override arg<const Name extends string, const Config extends ArgumentConfigInput | undefined = undefined>(
         name: Name,
         config?: Config,
-    ): FluentApp<Opts, Flags, [...As, BuildArgument<Name, Config>], Cs, Executable> {
-        return super.arg(name, config) as unknown as FluentApp<Opts, Flags, [...As, BuildArgument<Name, Config>], Cs, Executable>
+    ): App<Opts, Flags, [...As, BuildArgument<Name, Config>], Cs, Executable> {
+        return super.arg(name, config) as unknown as App<Opts, Flags, [...As, BuildArgument<Name, Config>], Cs, Executable>
     }
 
     /**
@@ -616,10 +616,10 @@ class FluentApp<
      * @returns A fluent app builder that is now treated as a branch app.
      */
     override command(
-        this: FluentApp<Opts, Flags, As, Cs, false>,
-        subCommand: AnyCmd | FluentCommand<any, any, any, any, any>,
-    ): FluentApp<Opts, Flags, As, CommandChildren, false> {
-        return super.command(subCommand) as unknown as FluentApp<Opts, Flags, As, CommandChildren, false>
+        this: App<Opts, Flags, As, Cs, false>,
+        subCommand: AnyCmd | Command<any, any, any, any, any>,
+    ): App<Opts, Flags, As, CommandChildren, false> {
+        return super.command(subCommand) as unknown as App<Opts, Flags, As, CommandChildren, false>
     }
 
     /**
@@ -629,10 +629,10 @@ class FluentApp<
      * @returns A fluent app builder that is now treated as executable.
      */
     override run(
-        this: FluentApp<Opts, Flags, As, [], false>,
+        this: App<Opts, Flags, As, [], false>,
         handler: RunHandler<Opts, Flags, As>,
-    ): FluentApp<Opts, Flags, As, [], true> {
-        return super.run(handler) as unknown as FluentApp<Opts, Flags, As, [], true>
+    ): App<Opts, Flags, As, [], true> {
+        return super.run(handler) as unknown as App<Opts, Flags, As, [], true>
     }
 
     /**
@@ -646,9 +646,6 @@ class FluentApp<
         return executeApp(this as unknown as AnyApp, args)
     }
 }
-
-export const Command: new (name: string) => FluentCommand<[], [], [], [], false> = FluentCommand
-export const App: new (name: string) => FluentApp<[], [], [], [], false> = FluentApp
 
 /**
  * Checks whether a command or app contains nested sub-commands.

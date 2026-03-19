@@ -14,6 +14,12 @@ export interface ResolvedCommand {
 
 type ParseableCommand = Pick<AnyLeafCommand, 'name' | 'options' | 'positonals'>
 
+/**
+ * Error thrown when argument parsing encounters an unknown option name.
+ *
+ * @param option The unrecognized option token, including its leading dashes.
+ * @returns A parser error whose message matches the CLI's unknown-option wording.
+ */
 export class UnknownOptionError extends Error {
     readonly option: string
 

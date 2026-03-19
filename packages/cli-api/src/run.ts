@@ -10,6 +10,14 @@ import {printLn} from './utils'
 
 type InternalAppMetadata = AnyApp & {_version?: string}
 
+/**
+ * Result of executing or validating a CLI invocation.
+ */
+export interface ExecutionResult {
+    code: number
+    error?: string
+}
+
 function isHelpFlag(arg: string | undefined): boolean {
     return arg === '--help' || arg === '-h'
 }
@@ -34,10 +42,17 @@ function getRootCommands(app: AnyApp): readonly AnyCmd[] {
     ] as const
 }
 
-async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], path: readonly string[]): Promise<number> {
+function unknownCommandResult(app: AnyApp, commandName: string): ExecutionResult {
+    return {
+        code: 2,
+        error: `${getProcName(app)}: unknown command '${commandName}'`,
+    }
+}
+
+async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], path: readonly string[]): Promise<ExecutionResult> {
     if (rawArgs.some(isHelpFlag)) {
         printCommandHelp(app, cmd, path)
-        return 0
+        return {code: 0}
     }
 
     let args: any[]
@@ -46,29 +61,32 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
         ;[args, opts] = parseArgs(cmd, rawArgs)
     } catch (err) {
         if(err instanceof UnknownOptionError) {
-            printError(`${getProcName(app)}: ${err.message}`)
-            return 1
+            return {code: 2, error: `${getProcName(app)}: ${err.message}`}
         }
-        printError(err instanceof Error ? err.message : String(err))
-        return 1
+        return {code: 1, error: err instanceof Error ? err.message : String(err)}
     }
 
     const handler = getExecuteHandler(cmd)
     if(handler === undefined) {
-        printError('Command is not executable.')
-        return 1
+        return {code: 1, error: 'Command is not executable.'}
     }
 
     try {
         const code = await Promise.resolve(handler.call(app, opts as any, args as any))
-        return code ?? 0
+        return {code: code ?? 0}
     } catch (err) {
-        printError(String((err as any)?.stack ?? err))
-        return 1
+        return {code: 1, error: String((err as any)?.stack ?? err)}
     }
 }
 
-export async function executeApp(app: AnyApp, argv: string[] = process.argv.slice(2)): Promise<number> {
+/**
+ * Parses CLI arguments and returns the resulting exit code and optional error message.
+ *
+ * @param app The app to execute.
+ * @param argv The raw CLI arguments to parse. Defaults to `process.argv.slice(2)`.
+ * @returns The execution result, including any user-facing error text that should be printed.
+ */
+export async function executeAppResult(app: AnyApp, argv: string[] = process.argv.slice(2)): Promise<ExecutionResult> {
     const rootCommands = getRootCommands(app)
 
     if (argv.length === 0) {
@@ -76,7 +94,7 @@ export async function executeApp(app: AnyApp, argv: string[] = process.argv.slic
             return executeLeaf(app, app, [], [])
         }
         printHelp(app, rootCommands)
-        return 0
+        return {code: 0}
     }
 
     if (argv.some(isHelpFlag)) {
@@ -84,17 +102,17 @@ export async function executeApp(app: AnyApp, argv: string[] = process.argv.slic
             const filteredArgv = stripHelpFlags(argv)
             if (!filteredArgv.length) {
                 printHelp(app, rootCommands)
-                return 0
+                return {code: 0}
             }
 
             const resolved = resolveCommand(filteredArgv, rootCommands)
             if (!resolved.command) {
                 printHelp(app, rootCommands)
-                return 0
+                return {code: 0}
             }
 
             printCommandHelp(app, resolved.command, resolved.path)
-            return 0
+            return {code: 0}
         }
 
         if (isExecutable(app)) {
@@ -102,12 +120,12 @@ export async function executeApp(app: AnyApp, argv: string[] = process.argv.slic
         } else {
             printHelp(app, rootCommands)
         }
-        return 0
+        return {code: 0}
     }
 
     if (isVersionFlag(argv[0])) {
         printLn((app as InternalAppMetadata)._version)
-        return 0
+        return {code: 0}
     }
 
     if (isExecutable(app) && !hasSubCommands(app)) {
@@ -121,23 +139,35 @@ export async function executeApp(app: AnyApp, argv: string[] = process.argv.slic
 
     const resolved = resolveCommand(argv, rootCommands)
     if (!resolved.command) {
-        printError(`Command "${argv[0]}" does not exist.`)
-        return 1
+        return unknownCommandResult(app, argv[0])
     }
 
     if (hasSubCommands(resolved.command)) {
         if (!resolved.remainingArgv.length || isHelpFlag(resolved.remainingArgv[0])) {
             printCommandHelp(app, resolved.command, resolved.path)
-            return 0
+            return {code: 0}
         }
-        printError(`Command "${resolved.remainingArgv[0]}" does not exist.`)
-        return 1
+        return unknownCommandResult(app, resolved.remainingArgv[0])
     }
 
     if (!isExecutable(resolved.command)) {
-        printError('Command is not executable.')
-        return 1
+        return {code: 1, error: 'Command is not executable.'}
     }
 
     return executeLeaf(app, resolved.command, resolved.remainingArgv, resolved.path)
+}
+
+/**
+ * Parses CLI arguments, prints any resulting error, and executes the matching command.
+ *
+ * @param app The app to execute.
+ * @param argv The raw CLI arguments to parse. Defaults to `process.argv.slice(2)`.
+ * @returns The process exit code for the CLI invocation.
+ */
+export async function executeApp(app: AnyApp, argv: string[] = process.argv.slice(2)): Promise<number> {
+    const result = await executeAppResult(app, argv)
+    if(result.error !== undefined) {
+        printError(result.error)
+    }
+    return result.code
 }

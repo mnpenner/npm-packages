@@ -1,4 +1,4 @@
-import type {AnyApp, AnyCmd} from '../interfaces'
+import type {AnyCmd} from '../interfaces'
 import {Command, hasSubCommands} from '../interfaces'
 import {versionCommand} from './version'
 import {getCommand} from '../options'
@@ -12,19 +12,20 @@ export const helpCommand = new Command('help')
         description: 'The command path.',
         repeatable: true,
     })
-    .run(async function(this: AnyApp, commandPath: string[]) {
+    .run(async function(commandPath: string[]) {
+        const app = this as unknown as import('../interfaces').AnyApp
         const rootCommands = [
-            ...(hasSubCommands(this) ? sortBy(this.subCommands, c => c.name) : []),
+            ...(hasSubCommands(app) ? sortBy(app.subCommands, c => c.name) : []),
             versionCommand as unknown as AnyCmd,
             helpCommand as unknown as AnyCmd,
         ] as const satisfies readonly AnyCmd[]
 
         if(commandPath.length) {
             const {command, path} = getCommand(commandPath as string[], rootCommands)
-            printCommandHelp(this, command, path)
-        } else if(hasSubCommands(this)) {
-            printHelp(this, rootCommands)
+            printCommandHelp(app, command, path)
+        } else if(hasSubCommands(app)) {
+            printHelp(app, rootCommands)
         } else {
-            printCommandHelp(this, this, [])
+            printCommandHelp(app, app, [])
         }
     })
