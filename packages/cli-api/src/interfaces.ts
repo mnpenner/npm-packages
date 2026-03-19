@@ -328,7 +328,15 @@ type FluentExecuteHandler<
     As extends readonly Argument[] | undefined,
 > = ExecutableInput<Opts, Flags, As>['execute']
 
-let appExecutor: ((app: AnyApp, args?: string[]) => void) | undefined
+const APP_ARGV0 = Symbol('app-argv0')
+const APP_VERSION = Symbol('app-version')
+
+type AppMetaConfig = {
+    argv0?: string
+    version?: string
+    description?: string
+    longDescription?: string
+}
 
 class FluentCommand<
     Opts extends readonly Option[] = [],
@@ -460,9 +468,29 @@ class FluentApp<
     Cs extends CommandChildren = [],
     Executable extends boolean = false,
 > extends FluentCommand<Opts, Flags, As, Cs, Executable> {
-    argv0?: string
-    version?: string
     globalOptions?: Option[]
+
+    /**
+     * Applies metadata to the root app in one call.
+     *
+     * @param config Metadata for the app, including version, argv0, and descriptions.
+     * @returns The same fluent app builder with the metadata applied.
+     */
+    meta(config: AppMetaConfig): this {
+        if(config.argv0 !== undefined) {
+            this.argv0(config.argv0)
+        }
+        if(config.version !== undefined) {
+            this.version(config.version)
+        }
+        if(config.description !== undefined) {
+            this.describe(config.description, config.longDescription)
+        } else if(config.longDescription !== undefined) {
+            this.longDescription = config.longDescription
+        }
+
+        return this
+    }
 
     /**
      * Sets the program name shown in help and generated messages.
@@ -470,8 +498,8 @@ class FluentApp<
      * @param argv0 The display name for the CLI binary.
      * @returns The same fluent app builder with the updated program name.
      */
-    withArgv0(argv0: string): this {
-        this.argv0 = argv0
+    argv0(argv0: string): this {
+        ;(this as Record<PropertyKey, unknown>)[APP_ARGV0] = argv0
         return this
     }
 
@@ -481,8 +509,8 @@ class FluentApp<
      * @param version The version string to display.
      * @returns The same fluent app builder with the version applied.
      */
-    withVersion(version: string): this {
-        this.version = version
+    version(version: string): this {
+        ;(this as Record<PropertyKey, unknown>)[APP_VERSION] = version
         return this
     }
 
@@ -579,49 +607,16 @@ class FluentApp<
      * Parses CLI arguments and executes the matching root command or sub-command.
      *
      * @param args The raw CLI arguments to parse. Defaults to `process.argv.slice(2)`.
-     * @returns Nothing. This method exits the current process when execution completes.
+     * @returns The numeric exit code returned by the resolved command handler.
      */
-    execute(args: string[] = process.argv.slice(2)): void {
-        if(appExecutor === undefined) {
-            throw new Error('App executor has not been registered.')
-        }
-
-        appExecutor(this as unknown as AnyApp, args)
+    async execute(args: string[] = process.argv.slice(2)): Promise<number> {
+        const {executeApp} = await import('./run')
+        return executeApp(this as unknown as AnyApp, args)
     }
 }
 
 export const Command: new (name: string) => FluentCommand<[], [], [], [], false> = FluentCommand
 export const App: new (name: string) => FluentApp<[], [], [], [], false> = FluentApp
-
-/**
- * Preserves the literal types for an options array definition.
- *
- * @param options The options array to preserve.
- * @returns The same options array with its literal types retained.
- */
-export function defineOptions<const Opts extends readonly Option[]>(options: Opts): Opts {
-    return options
-}
-
-/**
- * Preserves the literal types for a flags array definition.
- *
- * @param flags The flags array to preserve.
- * @returns The same flags array with its literal types retained.
- */
-export function defineFlags<const Flags extends readonly Flag[]>(flags: Flags): Flags {
-    return flags
-}
-
-/**
- * Preserves the literal types for a positional-arguments array definition.
- *
- * @param positonals The positional arguments array to preserve.
- * @returns The same positional arguments array with its literal types retained.
- */
-export function definePositonals<const As extends readonly Argument[]>(positonals: As): As {
-    return positonals
-}
 
 /**
  * Checks whether a command or app contains nested sub-commands.
@@ -662,53 +657,21 @@ export function getExecuteHandler(value: AnyCmd | AnyApp): AnyLeafCommand['execu
 }
 
 /**
- * Registers the internal app executor used by [`App.execute`]{@link FluentApp#execute}.
+ * Resolves the configured `argv0` value for a fluent or plain app object.
  *
- * @param executor The function responsible for parsing argv and running the selected command.
- * @returns Nothing.
+ * @param app The app to inspect.
+ * @returns The configured display name, if any.
  */
-export function registerAppExecutor(executor: (app: AnyApp, args?: string[]) => void): void {
-    appExecutor = executor
+export function getAppArgv0(app: AnyApp): string | undefined {
+    return (((app as unknown as Record<PropertyKey, unknown>)[APP_ARGV0]) as string | undefined) ?? app.argv0
 }
 
-export interface DefineCommand {
-    /**
-     * Defines a leaf command with options, flags, positional arguments, and an execute handler.
-     *
-     * @param c The command definition.
-     * @returns The same command definition with literal types preserved.
-     */
-    <const Opts extends readonly Option[] | undefined, const Flags extends readonly Flag[] | undefined, const As extends readonly Argument[] | undefined>(
-        c: LeafCommandInput<Opts, Flags, As>
-    ): LeafCommand<Opts, Flags, As>
-    /**
-     * Defines a branch command with nested sub-commands.
-     *
-     * @param c The branch command definition.
-     * @returns The same command definition with literal types preserved.
-     */
-    <const Cs extends CommandChildren>(c: BranchCommandInput<Cs>): BranchCommand<Cs>
+/**
+ * Resolves the configured version value for a fluent or plain app object.
+ *
+ * @param app The app to inspect.
+ * @returns The configured version string, if any.
+ */
+export function getAppVersion(app: AnyApp): string | undefined {
+    return (((app as unknown as Record<PropertyKey, unknown>)[APP_VERSION]) as string | undefined) ?? app.version
 }
-
-export const defineCommand = (((c: AnyCmd) => c) as unknown) as DefineCommand
-
-export interface DefineApp {
-    /**
-     * Defines a leaf app with options, flags, positional arguments, and an execute handler.
-     *
-     * @param app The app definition.
-     * @returns The same app definition with literal types preserved.
-     */
-    <const Opts extends readonly Option[] | undefined, const Flags extends readonly Flag[] | undefined, const As extends readonly Argument[] | undefined>(
-        app: LeafAppInput<Opts, Flags, As>
-    ): LeafApp<Opts, Flags, As>
-    /**
-     * Defines a branch app with nested sub-commands.
-     *
-     * @param app The branch app definition.
-     * @returns The same app definition with literal types preserved.
-     */
-    <const Cs extends CommandChildren>(app: BranchAppInput<Cs>): BranchApp<Cs>
-}
-
-export const defineApp = (((app: AnyApp) => app) as unknown) as DefineApp

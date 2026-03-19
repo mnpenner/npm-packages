@@ -1,13 +1,14 @@
 import type {AnyApp, AnyCmd} from './interfaces'
-import {hasSubCommands, isExecutable} from './interfaces'
+import {getAppVersion, hasSubCommands, isExecutable} from './interfaces'
 import {getProcName, print, printLn, space} from './utils'
 import Chalk from 'chalk'
 import stringWidth from 'string-width'
 
 export function printHelp(app: AnyApp, commands: readonly AnyCmd[]) {
     print(Chalk.green(app.name))
-    if (app.version) {
-        print(` version ${Chalk.yellow(app.version)}`)
+    const version = getAppVersion(app)
+    if (version) {
+        print(` version ${Chalk.yellow(version)}`)
     }
     print('\n\n')
     printLn(Chalk.yellow('Usage:'))

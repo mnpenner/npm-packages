@@ -1,4 +1,5 @@
 import type {AnyApp} from './interfaces'
+import {getAppArgv0} from './interfaces'
 import Path from 'path'
 import stringWidth from 'string-width'
 import Chalk from 'chalk'
@@ -22,8 +23,12 @@ function blockError(str: string) {
     printLn(Chalk.bgRed(space(width)))
 }
 
-export function abort(message: string, code: number = 1): never {
+export function printError(message: string): void {
     blockError(message)
+}
+
+export function abort(message: string, code: number = 1): never {
+    printError(message)
     process.exit(code)
 }
 
@@ -58,8 +63,9 @@ export function space(len: number, str?: string) {
 }
 
 export function getProcName(app: AnyApp) {
-    if(app.argv0 != null) {
-        return app.argv0
+    const argv0 = getAppArgv0(app)
+    if(argv0 != null) {
+        return argv0
     }
     const relPath = Path.relative(process.cwd(), process.argv[1])
     // console.log(relPath, process.argv[1])

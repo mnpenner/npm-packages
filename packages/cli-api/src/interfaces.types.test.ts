@@ -1,62 +1,20 @@
 import {it} from 'bun:test'
-import {App, Command, OptType, defineApp, defineCommand, defineFlags, defineOptions} from './interfaces'
+import {App, Command, OptType} from './interfaces'
 import {expectType, TypeEqual} from './testing/type-assert'
 
-it('preserves public type inference for object and fluent APIs', () => {
-    const rootApp = defineApp({
-        name: 'hello',
-        argv0: 'hello',
-        options: defineOptions([
-            {
-                name: 'name',
-                required: true,
-            },
-        ]),
-        flags: defineFlags([
-            {
-                name: 'verbose',
-                alias: 'v',
-            },
-        ]),
-        async execute(opts) {
-            type Expected = {
-                name: string
-                verbose?: boolean
-            }
-
-            expectType<TypeEqual<typeof opts, Expected>>(true)
-        },
-    })
-
-    const subCommand = defineCommand({
-        name: 'greet',
-        options: defineOptions([
-            {
-                name: 'target',
-                required: true,
-            },
-        ]),
-        flags: defineFlags([
-            {
-                name: 'loud',
-            },
-        ]),
-        async execute(opts) {
-            type Expected = {
+it('preserves public type inference for the fluent API', () => {
+    const greetCommand = new Command('greet')
+        .flag('loud')
+        .opt('target', {required: true})
+        .run((args, kwargs) => {
+            expectType<TypeEqual<typeof args, []>>(true)
+            expectType<TypeEqual<typeof kwargs, {
                 target: string
                 loud?: boolean
-            }
+            }>>(true)
+        })
 
-            expectType<TypeEqual<typeof opts, Expected>>(true)
-        },
-    })
-
-    const commandApp = defineApp({
-        name: 'hello',
-        subCommands: [subCommand],
-    })
-
-    const fluentCommand = new Command('greet')
+    const inspectCommand = new Command('inspect')
         .flag('verbose', {alias: 'v'})
         .opt('count', {type: OptType.INT, required: true})
         .opt('mode', {type: ['fast', 'slow'] as const})
@@ -74,12 +32,13 @@ it('preserves public type inference for object and fluent APIs', () => {
         })
 
     const fluentApp = new App('hello')
-        .withArgv0('hello')
-        .withVersion('1.0.0')
-        .command(fluentCommand)
+        .meta({argv0: 'hello', version: '1.0.0', description: 'Example app'})
+        .command(greetCommand)
+        .command(inspectCommand)
 
-    void rootApp
-    void commandApp
-    void fluentCommand
+    expectType<TypeEqual<typeof fluentApp.execute, (args?: string[]) => Promise<number>>>(true)
+
+    void greetCommand
+    void inspectCommand
     void fluentApp
 })

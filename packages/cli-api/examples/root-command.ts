@@ -1,9 +1,8 @@
 import {App} from '../src'
 import * as pkg from '../package.json'
 
-new App('hello')
-    .withVersion(pkg.version)
-    .withArgv0(pkg.name)
+await new App('hello')
+    .meta({version: pkg.version, argv0: pkg.name})
     .flag('verbose', {
         alias: 'v',
         description: 'Prints more info',

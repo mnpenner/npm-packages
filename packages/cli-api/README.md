@@ -26,9 +26,8 @@ const world = new Command('world')
         console.log(`Hello ${kwargs.name}`)
     })
 
-new App('hello')
-    .withVersion(pkg.version)
-    .withArgv0(pkg.name)
+await new App('hello')
+    .meta({version: pkg.version, argv0: pkg.name})
     .command(world)
     .execute()
 ```

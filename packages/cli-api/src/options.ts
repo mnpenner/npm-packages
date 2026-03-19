@@ -1,7 +1,7 @@
 import type {AnyCmd, AnyLeafCommand, AnyOptType, Argument, Option} from './interfaces'
 import {OptType, hasSubCommands} from './interfaces'
 import type {NullableObj} from './utils'
-import {abort, includes, resolve, statSync, toArray, toBool} from './utils'
+import {includes, resolve, statSync, toArray, toBool} from './utils'
 import Chalk from 'chalk'
 import Path from 'path'
 import FileSys from 'fs'
@@ -119,7 +119,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
             if(token.startsWith('--')) {
                 const name = token.slice(2)
                 const opt = findOpt(name)
-                if(!opt) abort(`"${cmd.name}" command does not have option "${name}".`)
+                if(!opt) throw new Error(`"${cmd.name}" command does not have option "${name}".`)
                 let value = inlineValue
                 if(value === undefined) {
                     if(opt.valueNotRequired) {
@@ -127,7 +127,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
                     } else if(i < argv.length - 1) {
                         value = argv[++i]
                     } else {
-                        abort(`Missing required value for option "${token}"`)
+                        throw new Error(`Missing required value for option "${token}"`)
                     }
                 }
                 if(opt.type != null) value = coerceType(value, opt.type)
@@ -140,7 +140,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
                 while(j < cluster.length) {
                     const ch = cluster[j]
                     const opt = findOpt(ch)
-                    if(!opt) abort(`"${cmd.name}" command does not have option "${ch}".`)
+                    if(!opt) throw new Error(`"${cmd.name}" command does not have option "${ch}".`)
 
                     if(opt.valueNotRequired) {
                         const k = opt.key ?? opt.name
@@ -156,7 +156,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
                     if(inlineValue !== undefined) value = inlineValue
                     else if(remainder.length) value = remainder
                     else if(i < argv.length - 1) value = argv[++i]
-                    else abort(`Missing required value for option "-${ch}"`)
+                    else throw new Error(`Missing required value for option "-${ch}"`)
 
                     if(opt.type != null) value = coerceType(value, opt.type)
                     const k = opt.key ?? opt.name

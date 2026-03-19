@@ -1,10 +1,10 @@
 import type {AnyApp, AnyCmd, AnyLeafCommand} from './interfaces'
-import {getExecuteHandler, hasSubCommands, isExecutable, registerAppExecutor} from './interfaces'
+import {getExecuteHandler, hasSubCommands, isExecutable} from './interfaces'
 import {helpCommand} from './commands/command-help'
 import {versionCommand} from './commands/version'
 import {printHelp} from './app-help'
 import {findSubCommand, parseArgs, resolveCommand} from './options'
-import {abort, sortBy} from './utils'
+import {printError, sortBy} from './utils'
 import {printCommandHelp} from './print-command-help'
 
 function getRootCommands(app: AnyApp): readonly AnyCmd[] {
@@ -14,15 +14,15 @@ function getRootCommands(app: AnyApp): readonly AnyCmd[] {
 
     return [
         ...userCommands,
-        versionCommand as AnyCmd,
-        helpCommand as AnyCmd,
+        versionCommand as unknown as AnyCmd,
+        helpCommand as unknown as AnyCmd,
     ] as const
 }
 
-function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], path: readonly string[]) {
+async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], path: readonly string[]): Promise<number> {
     if (rawArgs.includes('--help')) {
         printCommandHelp(app, cmd, path)
-        process.exit(0)
+        return 0
     }
 
     let args: any[]
@@ -30,32 +30,34 @@ function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], path: 
     try {
         ;[args, opts] = parseArgs(cmd, rawArgs)
     } catch (err) {
-        abort(err instanceof Error ? err.message : String(err))
+        printError(err instanceof Error ? err.message : String(err))
+        return 1
     }
 
     const handler = getExecuteHandler(cmd)
     if(handler === undefined) {
-        abort('Command is not executable.')
+        printError('Command is not executable.')
+        return 1
     }
 
-    Promise.resolve(handler.call(app, opts as any, args as any))
-        .then(code => process.exit(code ?? 0))
-        .catch(err => {
-            abort(String((err as any)?.stack ?? err))
-            process.exit(1)
-        })
+    try {
+        const code = await Promise.resolve(handler.call(app, opts as any, args as any))
+        return code ?? 0
+    } catch (err) {
+        printError(String((err as any)?.stack ?? err))
+        return 1
+    }
 }
 
-export function executeApp(app: AnyApp, argv: string[] = process.argv.slice(2)) {
+export async function executeApp(app: AnyApp, argv: string[] = process.argv.slice(2)): Promise<number> {
     const rootCommands = getRootCommands(app)
 
     if (argv.length === 0) {
         if (isExecutable(app)) {
-            executeLeaf(app, app, [], [])
-            return
+            return executeLeaf(app, app, [], [])
         }
         printHelp(app, rootCommands)
-        process.exit(0)
+        return 0
     }
 
     if (argv[0] === '--help') {
@@ -64,38 +66,37 @@ export function executeApp(app: AnyApp, argv: string[] = process.argv.slice(2)) 
         } else {
             printHelp(app, rootCommands)
         }
-        process.exit(0)
+        return 0
     }
 
     if (isExecutable(app) && !hasSubCommands(app)) {
         const builtin = findSubCommand(argv[0], rootCommands)
         if (builtin && isExecutable(builtin)) {
-            executeLeaf(app, builtin, argv.slice(1), [builtin.name])
-            return
+            return executeLeaf(app, builtin, argv.slice(1), [builtin.name])
         }
 
-        executeLeaf(app, app, argv, [])
-        return
+        return executeLeaf(app, app, argv, [])
     }
 
     const resolved = resolveCommand(argv, rootCommands)
     if (!resolved.command) {
-        abort(`Command "${argv[0]}" does not exist.`)
+        printError(`Command "${argv[0]}" does not exist.`)
+        return 1
     }
 
     if (hasSubCommands(resolved.command)) {
         if (!resolved.remainingArgv.length || resolved.remainingArgv[0] === '--help') {
             printCommandHelp(app, resolved.command, resolved.path)
-            process.exit(0)
+            return 0
         }
-        abort(`Command "${resolved.remainingArgv[0]}" does not exist.`)
+        printError(`Command "${resolved.remainingArgv[0]}" does not exist.`)
+        return 1
     }
 
     if (!isExecutable(resolved.command)) {
-        abort('Command is not executable.')
+        printError('Command is not executable.')
+        return 1
     }
 
-    executeLeaf(app, resolved.command, resolved.remainingArgv, resolved.path)
+    return executeLeaf(app, resolved.command, resolved.remainingArgv, resolved.path)
 }
-
-registerAppExecutor(executeApp)
