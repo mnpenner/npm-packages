@@ -64,6 +64,12 @@ describe(parseArgs.name, () => {
         expect(() => parseArgs(cmd, ['-name=foo'])).toThrow(/missing required value for option "-n"/i)
     })
 
+    it('reports an unknown short option before a missing value in a cluster with =', () => {
+        const cmd = makeCommand().opt('n', {key: 'n'})
+
+        expect(() => parseArgs(cmd, ['-name=foo'])).toThrow(/does not have option "a"/i)
+    })
+
     it('uses a provided value for valueNotRequired options', () => {
         const cmd = makeCommand().opt('mode', {key: 'mode', valueNotRequired: true, defaultValue: 'auto'})
 

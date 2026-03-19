@@ -92,6 +92,16 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
     const findOpt = (name: string) =>
         allOptions.find(o => o.name === name || includes(name, o.alias))
 
+    const getUnknownShortOption = (cluster: string): string | undefined => {
+        for(let j = 0; j < cluster.length; ++j) {
+            const ch = cluster[j]
+            if(!findOpt(ch)) {
+                return ch
+            }
+        }
+        return undefined
+    }
+
     let argIdx = 0
     for(let i = 0; i < argv.length; ++i) {
         let token = argv[i]
@@ -133,6 +143,12 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
                 const cluster = equalIndex === -1 ? clusterText : clusterText.slice(0, equalIndex)
                 const hasInlineAssignment = equalIndex !== -1
                 inlineValue = equalIndex === -1 ? undefined : clusterText.slice(equalIndex + 1)
+                if(hasInlineAssignment) {
+                    const unknownOption = getUnknownShortOption(cluster)
+                    if(unknownOption !== undefined) {
+                        throw new Error(`"${cmd.name}" command does not have option "${unknownOption}".`)
+                    }
+                }
                 let j = 0
                 while(j < cluster.length) {
                     const ch = cluster[j]
