@@ -54,6 +54,16 @@ describe(parseArgs.name, () => {
         expect(parseArgs(cmd, ['-n=foo'])[1].n).toBe('foo')
     })
 
+    it('does not treat clustered short options with = as a value for the first option', () => {
+        const cmd = makeCommand()
+            .opt('n', {key: 'n'})
+            .flag('a')
+            .flag('m')
+            .flag('e')
+
+        expect(() => parseArgs(cmd, ['-name=foo'])).toThrow(/missing required value for option "-n"/i)
+    })
+
     it('uses a provided value for valueNotRequired options', () => {
         const cmd = makeCommand().opt('mode', {key: 'mode', valueNotRequired: true, defaultValue: 'auto'})
 
@@ -73,6 +83,19 @@ describe(parseArgs.name, () => {
         expect(opts.a).toBe(true)
         expect(opts.b).toBe(true)
         expect(opts.n).toBe('X')
+    })
+
+    it('applies an =value to the last short option in a cluster', () => {
+        const cmd = makeCommand()
+            .flag('a')
+            .flag('b')
+            .opt('n', {key: 'n'})
+
+        const [, opts] = parseArgs(cmd, ['-abn=foo'])
+
+        expect(opts.a).toBe(true)
+        expect(opts.b).toBe(true)
+        expect(opts.n).toBe('foo')
     })
 
     it('collects repeatable option values', () => {

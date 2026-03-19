@@ -103,13 +103,13 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
 
         if(parseFlags && token.length >= 2 && token.startsWith('-')) {
             let inlineValue: any
-            if(token.includes('=')) {
-                const [left, right] = token.split('=', 2)
-                token = left
-                inlineValue = right
-            }
 
             if(token.startsWith('--')) {
+                if(token.includes('=')) {
+                    const [left, right] = token.split('=', 2)
+                    token = left
+                    inlineValue = right
+                }
                 const name = token.slice(2)
                 const opt = findOpt(name)
                 if(!opt) throw new Error(`"${cmd.name}" command does not have option "${name}".`)
@@ -128,7 +128,11 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
                 if(opt.repeatable) (opts[k] as any[]).push(value)
                 else opts[k] = value
             } else {
-                const cluster = token.slice(1)
+                const clusterText = token.slice(1)
+                const equalIndex = clusterText.indexOf('=')
+                const cluster = equalIndex === -1 ? clusterText : clusterText.slice(0, equalIndex)
+                const hasInlineAssignment = equalIndex !== -1
+                inlineValue = equalIndex === -1 ? undefined : clusterText.slice(equalIndex + 1)
                 let j = 0
                 while(j < cluster.length) {
                     const ch = cluster[j]
@@ -146,8 +150,9 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
 
                     let value: any
                     const remainder = cluster.slice(j + 1)
-                    if(inlineValue !== undefined) value = inlineValue
-                    else if(remainder.length) value = remainder
+                    if(remainder.length && !hasInlineAssignment) value = remainder
+                    else if(remainder.length && hasInlineAssignment) throw new Error(`Missing required value for option "-${ch}"`)
+                    else if(inlineValue !== undefined && remainder.length === 0) value = inlineValue
                     else if(i < argv.length - 1) value = argv[++i]
                     else throw new Error(`Missing required value for option "-${ch}"`)
 

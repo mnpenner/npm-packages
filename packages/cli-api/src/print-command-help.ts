@@ -83,7 +83,7 @@ export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readon
         }
 
         if (cmd.positonals?.length) {
-            printLn(Chalk.yellow('\nPositionals:'))
+            printLn(Chalk.yellow('\nPositional Arguments:'))
             const width = Math.max(...cmd.positonals.map((arg: {name: string}) => stringWidth(arg.name)))
             for (const arg of cmd.positonals) {
                 print('  ' + Chalk.green(arg.name))
