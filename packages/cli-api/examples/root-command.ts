@@ -12,16 +12,29 @@ const app = new App('hello')
         alias: 'n',
         description: 'Person you want to greet',
         required: true,
+        valuePlaceholder: 'person',
+    })
+    .opt('shout', {
+        alias: 's',
+        description: 'Shout the greeting',
+        valueNotRequired: true,
     })
     .arg('greeting', {
         description: 'Greeting to print',
         defaultValue: 'Hello',
     })
+    .arg('disclaimer', {
+        description: 'Trailing text',
+        repeatable: true,
+    })
     .run((args, kwargs) => {
         if (kwargs.verbose) {
             console.log('Preparing greeting...')
         }
-        console.log(`${kwargs.greeting} ${kwargs.name}`)
+        const greeting = kwargs.shout
+            ? `${kwargs.greeting} ${kwargs.name}!`.toUpperCase()
+            : `${kwargs.greeting} ${kwargs.name}.`
+        console.log(greeting)
         return 5
     })
 

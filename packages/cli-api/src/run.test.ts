@@ -14,6 +14,7 @@ describe(executeAppResult.name, () => {
         expect(result).toEqual({
             code: 2,
             error: "cli-api: unknown command 'bacon'",
+            setProcessExitCode: true,
         })
     })
 
@@ -29,6 +30,7 @@ describe(executeAppResult.name, () => {
         expect(result).toEqual({
             code: 2,
             error: "cli-api: unknown command 'bacon'",
+            setProcessExitCode: true,
         })
     })
 
@@ -43,6 +45,7 @@ describe(executeAppResult.name, () => {
         expect(result).toEqual({
             code: 2,
             error: 'cli-api: option -a not recognized',
+            setProcessExitCode: true,
         })
     })
 })
@@ -50,7 +53,11 @@ describe(executeAppResult.name, () => {
 describe(App.name, () => {
     it('sets the process exit code when parsing fails', () => {
         const result = Bun.spawnSync({
-            cmd: [process.execPath, 'examples/root-command.ts', '-a'],
+            cmd: [
+                process.execPath,
+                '-e',
+                "import {App} from './src'; const app = new App('hello').meta({argv0:'cli-api'}).opt('name',{alias:'n', required:true}).run(() => {}); await app.execute(['-a'])",
+            ],
             cwd: Path.resolve(import.meta.dir, '..'),
             stderr: 'pipe',
             stdout: 'pipe',
@@ -72,5 +79,20 @@ describe(App.name, () => {
         })
 
         expect(result.exitCode).toBe(7)
+    })
+
+    it('does not overwrite a manual process.exitCode when the handler returns undefined', () => {
+        const result = Bun.spawnSync({
+            cmd: [
+                process.execPath,
+                '-e',
+                "import {App} from './src'; const app = new App('hello').run(() => { process.exitCode = 9 }); await app.execute([])",
+            ],
+            cwd: Path.resolve(import.meta.dir, '..'),
+            stderr: 'pipe',
+            stdout: 'pipe',
+        })
+
+        expect(result.exitCode).toBe(9)
     })
 })

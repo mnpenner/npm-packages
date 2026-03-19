@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test'
-import { parseArgs } from './options'
+import Chalk from 'chalk'
+import { formatOption, parseArgs } from './options'
 import { Command, OptType } from './interfaces'
 
 function makeCommand() {
@@ -209,5 +210,19 @@ describe(parseArgs.name, () => {
             name: 'mark',
             file: 'readme.md',
         })
+    })
+})
+
+describe(formatOption.name, () => {
+    it('renders valueNotRequired options with bracketed optional values in help text', () => {
+        const [flags, description] = formatOption({
+            alias: 's',
+            description: 'Shout the greeting',
+            name: 'shout',
+            valueNotRequired: true,
+        })
+
+        expect(flags).toBe(`${Chalk.green('-s')}, ${Chalk.green('--shout')}${Chalk.grey('[')}=shout${Chalk.grey(']')}`)
+        expect(description).toBe('Shout the greeting')
     })
 })

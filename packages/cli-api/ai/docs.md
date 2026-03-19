@@ -1,0 +1,4 @@
+--output FILE        Option with required argument
+--config file.json   Required option with required argument (shows in usage)
+--color[=WHEN]       Option with optional argument
+--verbose            Flag

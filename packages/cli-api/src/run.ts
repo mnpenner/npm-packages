@@ -16,6 +16,7 @@ type InternalAppMetadata = AnyApp & {_version?: string}
 export interface ExecutionResult {
     code: number
     error?: string
+    setProcessExitCode?: true
 }
 
 function isHelpFlag(arg: string | undefined): boolean {
@@ -46,6 +47,7 @@ function unknownCommandResult(app: AnyApp, commandName: string): ExecutionResult
     return {
         code: 2,
         error: `${getProcName(app)}: unknown command '${commandName}'`,
+        setProcessExitCode: true,
     }
 }
 
@@ -61,21 +63,24 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
         ;[args, opts] = parseArgs(cmd, rawArgs)
     } catch (err) {
         if(err instanceof UnknownOptionError) {
-            return {code: 2, error: `${getProcName(app)}: ${err.message}`}
+            return {code: 2, error: `${getProcName(app)}: ${err.message}`, setProcessExitCode: true}
         }
-        return {code: 1, error: err instanceof Error ? err.message : String(err)}
+        return {code: 1, error: err instanceof Error ? err.message : String(err), setProcessExitCode: true}
     }
 
     const handler = getExecuteHandler(cmd)
     if(handler === undefined) {
-        return {code: 1, error: 'Command is not executable.'}
+        return {code: 1, error: 'Command is not executable.', setProcessExitCode: true}
     }
 
     try {
         const code = await Promise.resolve(handler.call(app, opts as any, args as any))
-        return {code: code ?? 0}
+        if(code === undefined) {
+            return {code: 0}
+        }
+        return {code, setProcessExitCode: true}
     } catch (err) {
-        return {code: 1, error: String((err as any)?.stack ?? err)}
+        return {code: 1, error: String((err as any)?.stack ?? err), setProcessExitCode: true}
     }
 }
 
@@ -151,7 +156,7 @@ export async function executeAppResult(app: AnyApp, argv: string[] = process.arg
     }
 
     if (!isExecutable(resolved.command)) {
-        return {code: 1, error: 'Command is not executable.'}
+        return {code: 1, error: 'Command is not executable.', setProcessExitCode: true}
     }
 
     return executeLeaf(app, resolved.command, resolved.remainingArgv, resolved.path)

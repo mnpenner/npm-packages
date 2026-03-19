@@ -29,6 +29,12 @@ export class UnknownOptionError extends Error {
     }
 }
 
+/**
+ * Formats an option definition for display in help output.
+ *
+ * @param opt The option metadata to render.
+ * @returns A tuple containing the formatted flag label and its description text.
+ */
 export function formatOption(opt: Option): [string, string] {
     const aliases: string[] = []
     if(opt.alias) {
@@ -42,7 +48,9 @@ export function formatOption(opt: Option): [string, string] {
     let flags = aliases.map(a => Chalk.green(a.length === 1 ? `-${a}` : `--${a}`)).join(', ')
     const valuePlaceholder = getValuePlaceholder(opt)
     if(opt.type !== OptType.BOOL) {
-        flags += `=${valuePlaceholder}`
+        flags += opt.valueNotRequired
+            ? `${Chalk.grey('[')}=${valuePlaceholder}${Chalk.grey(']')}`
+            : `=${valuePlaceholder}`
     }
     let desc = opt.description ?? ''
     let defaultValueText = opt.defaultValueText

@@ -642,10 +642,16 @@ export class App<
      * @returns The numeric exit code returned by the resolved command handler.
      */
     async execute(args: string[] = process.argv.slice(2)): Promise<number> {
-        const {executeApp} = await import('./run')
-        const code = await executeApp(this as unknown as AnyApp, args)
-        process.exitCode = code
-        return code
+        const {executeAppResult} = await import('./run')
+        const result = await executeAppResult(this as unknown as AnyApp, args)
+        if(result.error !== undefined) {
+            const {printError} = await import('./utils')
+            printError(result.error)
+        }
+        if(result.setProcessExitCode) {
+            process.exitCode = result.code
+        }
+        return result.code
     }
 }
 
