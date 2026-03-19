@@ -1,4 +1,4 @@
-import type {App} from './interfaces'
+import type {AnyApp} from './interfaces'
 import Path from 'path'
 import stringWidth from 'string-width'
 import Chalk from 'chalk'
@@ -27,9 +27,10 @@ export function abort(message: string, code: number = 1): never {
     process.exit(code)
 }
 
-export function toArray<T>(x: T | T[]): readonly T[] {
+export function toArray<T>(x: T | readonly T[] | undefined): readonly T[] {
     if(!x) return EMPTY_ARRAY
-    return Array.isArray(x) ? x : [x]
+    if(Array.isArray(x)) return x
+    return [x as T]
 }
 
 export function resolve<T>(x: any): T {
@@ -56,7 +57,7 @@ export function space(len: number, str?: string) {
     return len > 0 ? ' '.repeat(len) : ''
 }
 
-export function getProcName(app: App) {
+export function getProcName(app: AnyApp) {
     if(app.argv0 != null) {
         return app.argv0
     }

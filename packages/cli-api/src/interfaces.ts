@@ -1,6 +1,20 @@
 // union -> intersection
 type U2I<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never
 
+type OptionalKeys<T> = {
+    [K in keyof T]-?: {} extends Pick<T, K> ? K : never
+}[keyof T]
+
+type RequiredKeys<T> = Exclude<keyof T, OptionalKeys<T>>
+
+type Flatten<T> = { [K in keyof T]: T[K] } & {}
+
+type Simplify<T> = {
+    [K in RequiredKeys<T>]: T[K]
+} & {
+    [K in OptionalKeys<T>]?: Exclude<T[K], undefined>
+}
+
 type PrimitiveOfOptType<T extends AnyOptType | undefined> =
     T extends undefined ? string :
         T extends OptType.STRING ? string :
@@ -18,10 +32,12 @@ type KeyOfItem<I> =
             never
 
 // ----- options & flags -----
+type TypeOfItem<I> = I extends { type: infer T extends AnyOptType } ? T : undefined
+
 type ValueOfOption<O extends Option> =
-    O['repeatable'] extends true
-        ? PrimitiveOfOptType<O['type']>[]
-        : PrimitiveOfOptType<O['type']>
+    O extends { repeatable: true }
+        ? PrimitiveOfOptType<TypeOfItem<O>>[]
+        : PrimitiveOfOptType<TypeOfItem<O>>
 
 type OptionPropMap<I extends Option> = { [K in KeyOfItem<I>]: ValueOfOption<I> }
 type FlagPropMap<F extends Flag> = { [K in KeyOfItem<F>]: boolean }
@@ -44,9 +60,9 @@ export type OptionsOf<
 
 // ----- positonals (never boolean) -----
 type ValueOfArg<A extends Argument> =
-    A['repeatable'] extends true
-        ? PrimitiveOfOptType<A['type']>[]
-        : PrimitiveOfOptType<A['type']>
+    A extends { repeatable: true }
+        ? PrimitiveOfOptType<TypeOfItem<A>>[]
+        : PrimitiveOfOptType<TypeOfItem<A>>
 
 type _ArgsFixed<As extends readonly Argument[], Acc extends unknown[] = []> =
     As extends readonly [infer A, ...infer R]
@@ -58,8 +74,13 @@ type _ArgsFixed<As extends readonly Argument[], Acc extends unknown[] = []> =
 
 type _ArgsTailRepeat<As extends readonly Argument[]> =
     As extends readonly [...infer _, infer L]
-        ? L extends Argument ? (L['repeatable'] extends true ? PrimitiveOfOptType<L['type']> : never) : never
+        ? L extends Argument ? (L extends { repeatable: true } ? PrimitiveOfOptType<TypeOfItem<L>> : never) : never
         : never
+
+type ArgumentPropMap<I extends Argument> = { [K in KeyOfItem<I>]: ValueOfArg<I> }
+type MergeArgumentProps<IU extends Argument> = U2I<IU extends any ? ArgumentPropMap<IU> : never>
+type RequiredArguments<I extends Argument> = Extract<I, { required: true }>
+type OptionalArguments<I extends Argument> = Exclude<I, RequiredArguments<I>>
 
 export type ArgsOf<As extends readonly Argument[] | undefined> =
     As extends readonly Argument[]
@@ -67,6 +88,18 @@ export type ArgsOf<As extends readonly Argument[] | undefined> =
             ? _ArgsFixed<As>
             : [..._ArgsFixed<As>, ..._ArgsTailRepeat<As>[]]
         : unknown[]
+
+export type KwargsOf<
+    Opts extends readonly Option[] | undefined,
+    Flags extends readonly Flag[] | undefined,
+    As extends readonly Argument[] | undefined,
+> = Simplify<
+    OptionsOf<Opts, Flags> &
+    (As extends readonly any[] ? (
+        MergeArgumentProps<RequiredArguments<As[number]>> &
+        Partial<MergeArgumentProps<OptionalArguments<As[number]>>>
+    ) : {})
+>
 
 export type MaybePromise<V> = V | PromiseLike<V>
 
@@ -101,7 +134,7 @@ interface ArgumentOrOptionOrFlag {
     key?: string
 }
 
-export type AnyOptType = OptType | string[]
+export type AnyOptType = OptType | readonly string[]
 
 export interface ArgumentOrOption extends ArgumentOrOptionOrFlag {
     /** Type to coerce the option value to. */
@@ -149,35 +182,6 @@ type AppBase = CommandBase & {
     globalOptions?: Option[]
 }
 
-export type CommandChildren = readonly Command<any, any, any, any>[]
-
-export interface ExecutableInput<
-    Opts extends readonly Option[] | undefined,
-    Flags extends readonly Flag[] | undefined,
-    As extends readonly Argument[] | undefined,
-> {
-    options?: Opts
-    flags?: Flags
-    positonals?: As
-    execute(this: AnyApp, options: OptionsOf<Opts, Flags>, args: ArgsOf<As>): MaybePromise<number | void>
-}
-
-export interface LeafCommandInput<
-    Opts extends readonly Option[] | undefined,
-    Flags extends readonly Flag[] | undefined,
-    As extends readonly Argument[] | undefined,
-> extends CommandBase, ExecutableInput<Opts, Flags, As> {
-    subCommands?: never
-}
-
-export interface BranchCommandInput<Cs extends CommandChildren> extends CommandBase {
-    subCommands: Cs
-    options?: never
-    flags?: never
-    positonals?: never
-    execute?: never
-}
-
 export type LeafCommand<
     Opts extends readonly Option[] | undefined = undefined,
     Flags extends readonly Flag[] | undefined = undefined,
@@ -195,15 +199,28 @@ export type Command<
     Cs extends CommandChildren = CommandChildren,
 > = LeafCommand<Opts, Flags, As> | BranchCommand<Cs>
 
-export interface LeafAppInput<
+export type CommandChildren = readonly Command<any, any, any, any>[]
+
+export interface ExecutableInput<
     Opts extends readonly Option[] | undefined,
     Flags extends readonly Flag[] | undefined,
     As extends readonly Argument[] | undefined,
-> extends AppBase, ExecutableInput<Opts, Flags, As> {
+> {
+    options?: Opts
+    flags?: Flags
+    positonals?: As
+    execute(this: AnyApp, kwargs: KwargsOf<Opts, Flags, As>, args: ArgsOf<As>): MaybePromise<number | void>
+}
+
+export interface LeafCommandInput<
+    Opts extends readonly Option[] | undefined,
+    Flags extends readonly Flag[] | undefined,
+    As extends readonly Argument[] | undefined,
+> extends CommandBase, ExecutableInput<Opts, Flags, As> {
     subCommands?: never
 }
 
-export interface BranchAppInput<Cs extends CommandChildren> extends AppBase {
+export interface BranchCommandInput<Cs extends CommandChildren> extends CommandBase {
     subCommands: Cs
     options?: never
     flags?: never
@@ -228,47 +245,470 @@ export type App<
     Cs extends CommandChildren = CommandChildren,
 > = LeafApp<Opts, Flags, As> | BranchApp<Cs>
 
-export type AnyLeafCommand = LeafCommand<any, any, any>
+export interface LeafAppInput<
+    Opts extends readonly Option[] | undefined,
+    Flags extends readonly Flag[] | undefined,
+    As extends readonly Argument[] | undefined,
+> extends AppBase, ExecutableInput<Opts, Flags, As> {
+    subCommands?: never
+}
 
+export interface BranchAppInput<Cs extends CommandChildren> extends AppBase {
+    subCommands: Cs
+    options?: never
+    flags?: never
+    positonals?: never
+    execute?: never
+}
+
+export interface AnyLeafCommand extends CommandBase {
+    options?: readonly Option[] | undefined
+    flags?: readonly Flag[] | undefined
+    positonals?: readonly Argument[] | undefined
+    execute(this: AnyApp, kwargs: Record<string, any>, args: any[]): MaybePromise<number | void>
+    subCommands?: never | undefined
+}
+
+export interface AnyBranchCommand extends CommandBase {
+    subCommands: readonly AnyCmd[]
+    options?: never | undefined
+    flags?: never | undefined
+    positonals?: never | undefined
+    execute?: never | undefined
+}
+
+export type AnyCmd = AnyLeafCommand | AnyBranchCommand
+
+export interface AnyLeafApp extends AppBase {
+    options?: readonly Option[] | undefined
+    flags?: readonly Flag[] | undefined
+    positonals?: readonly Argument[] | undefined
+    execute(this: AnyApp, kwargs: Record<string, any>, args: any[]): MaybePromise<number | void>
+    subCommands?: never | undefined
+}
+
+export interface AnyBranchApp extends AppBase {
+    subCommands: readonly AnyCmd[]
+    options?: never | undefined
+    flags?: never | undefined
+    positonals?: never | undefined
+    execute?: never | undefined
+}
+
+export type AnyApp = AnyLeafApp | AnyBranchApp
+
+type FluentFlagConfig = Omit<Flag, 'name' | 'key' | 'valueNotRequired'> & { key?: string }
+type FluentOptionConfig = Omit<Option, 'name' | 'key'> & { key?: string }
+type FluentArgumentConfig = Omit<Argument, 'name' | 'key'> & { key?: string }
+
+type BuildFlag<Name extends string, Config extends FluentFlagConfig | undefined> = Flatten<
+    { name: Name } &
+    (Config extends undefined ? {} : Config)
+>
+
+type BuildOption<Name extends string, Config extends FluentOptionConfig | undefined> = Flatten<
+    { name: Name } &
+    (Config extends undefined ? {} : Config)
+>
+
+type BuildArgument<Name extends string, Config extends FluentArgumentConfig | undefined> = Flatten<
+    { name: Name } &
+    (Config extends undefined ? {} : Config)
+>
+
+export type RunHandler<
+    Opts extends readonly Option[] | undefined,
+    Flags extends readonly Flag[] | undefined,
+    As extends readonly Argument[] | undefined,
+> = (args: ArgsOf<As>, kwargs: KwargsOf<Opts, Flags, As>) => MaybePromise<number | void>
+
+type FluentExecuteHandler<
+    Opts extends readonly Option[] | undefined,
+    Flags extends readonly Flag[] | undefined,
+    As extends readonly Argument[] | undefined,
+> = ExecutableInput<Opts, Flags, As>['execute']
+
+let appExecutor: ((app: AnyApp, args?: string[]) => void) | undefined
+
+class FluentCommand<
+    Opts extends readonly Option[] = [],
+    Flags extends readonly Flag[] = [],
+    As extends readonly Argument[] = [],
+    Cs extends CommandChildren = [],
+    Executable extends boolean = false,
+> {
+    readonly name: string
+    alias?: string | string[]
+    description?: string
+    longDescription?: string
+    options?: Option[]
+    flags?: Flag[]
+    positonals?: Argument[]
+    subCommands?: AnyCmd[]
+    handler?: FluentExecuteHandler<Opts, Flags, As>
+
+    constructor(name: string) {
+        this.name = name
+    }
+
+    /**
+     * Sets one or more aliases for this command.
+     *
+     * @param aliases Alternative names that should resolve to this command.
+     * @returns The same fluent command builder with the aliases applied.
+     */
+    aliases(...aliases: string[]): this {
+        this.alias = aliases.length <= 1 ? aliases[0] : aliases
+        return this
+    }
+
+    /**
+     * Sets the short and long descriptions used in generated help output.
+     *
+     * @param description The one-line description shown in summaries.
+     * @param longDescription Additional help text shown in detailed command help.
+     * @returns The same fluent command builder with updated descriptions.
+     */
+    describe(description: string, longDescription?: string): this {
+        this.description = description
+        if(longDescription !== undefined) {
+            this.longDescription = longDescription
+        }
+        return this
+    }
+
+    /**
+     * Adds a boolean flag to this command.
+     *
+     * @param name The CLI flag name without leading dashes.
+     * @param config Optional metadata such as aliases and descriptions.
+     * @returns A fluent command builder whose inferred option shape includes the new flag.
+     */
+    flag<const Name extends string, const Config extends FluentFlagConfig | undefined = undefined>(
+        name: Name,
+        config?: Config,
+    ): FluentCommand<Opts, [...Flags, BuildFlag<Name, Config>], As, Cs, Executable> {
+        ;(this.flags ??= []).push({name, ...(config ?? {}), valueNotRequired: true})
+        return this as unknown as FluentCommand<Opts, [...Flags, BuildFlag<Name, Config>], As, Cs, Executable>
+    }
+
+    /**
+     * Adds an option that accepts a value to this command.
+     *
+     * @param name The CLI option name without leading dashes.
+     * @param config Optional metadata such as aliases, descriptions, and coercion rules.
+     * @returns A fluent command builder whose inferred option shape includes the new option.
+     */
+    opt<const Name extends string, const Config extends FluentOptionConfig | undefined = undefined>(
+        name: Name,
+        config?: Config,
+    ): FluentCommand<[...Opts, BuildOption<Name, Config>], Flags, As, Cs, Executable> {
+        ;(this.options ??= []).push({name, ...(config ?? {})})
+        return this as unknown as FluentCommand<[...Opts, BuildOption<Name, Config>], Flags, As, Cs, Executable>
+    }
+
+    /**
+     * Adds a positional argument to this command.
+     *
+     * @param name The positional argument name used in help output and inferred kwargs.
+     * @param config Optional metadata such as coercion and requiredness.
+     * @returns A fluent command builder whose inferred positional tuple includes the new argument.
+     */
+    arg<const Name extends string, const Config extends FluentArgumentConfig | undefined = undefined>(
+        name: Name,
+        config?: Config,
+    ): FluentCommand<Opts, Flags, [...As, BuildArgument<Name, Config>], Cs, Executable> {
+        ;(this.positonals ??= []).push({name, ...(config ?? {})})
+        return this as unknown as FluentCommand<Opts, Flags, [...As, BuildArgument<Name, Config>], Cs, Executable>
+    }
+
+    /**
+     * Adds a nested sub-command to this command.
+     *
+     * @param subCommand The child command to register.
+     * @returns A fluent command builder that is now treated as a branch command.
+     */
+    command(
+        this: FluentCommand<Opts, Flags, As, Cs, false>,
+        subCommand: AnyCmd | FluentCommand<any, any, any, any, any>,
+    ): FluentCommand<Opts, Flags, As, CommandChildren, false> {
+        ;(this.subCommands ??= []).push(subCommand as AnyCmd)
+        return this as unknown as FluentCommand<Opts, Flags, As, CommandChildren, false>
+    }
+
+    /**
+     * Marks this command as executable and registers the handler invoked after parsing.
+     *
+     * @param handler The function that receives parsed positional arguments and keyword arguments.
+     * @returns A fluent command builder that is now treated as executable.
+     */
+    run(
+        this: FluentCommand<Opts, Flags, As, [], false>,
+        handler: RunHandler<Opts, Flags, As>,
+    ): FluentCommand<Opts, Flags, As, [], true> {
+        this.handler = function(this: AnyApp, kwargs: KwargsOf<Opts, Flags, As>, args: ArgsOf<As>) {
+            return handler(args, kwargs)
+        }
+        return this as unknown as FluentCommand<Opts, Flags, As, [], true>
+    }
+}
+
+class FluentApp<
+    Opts extends readonly Option[] = [],
+    Flags extends readonly Flag[] = [],
+    As extends readonly Argument[] = [],
+    Cs extends CommandChildren = [],
+    Executable extends boolean = false,
+> extends FluentCommand<Opts, Flags, As, Cs, Executable> {
+    argv0?: string
+    version?: string
+    globalOptions?: Option[]
+
+    /**
+     * Sets the program name shown in help and generated messages.
+     *
+     * @param argv0 The display name for the CLI binary.
+     * @returns The same fluent app builder with the updated program name.
+     */
+    withArgv0(argv0: string): this {
+        this.argv0 = argv0
+        return this
+    }
+
+    /**
+     * Sets the application version surfaced by the built-in version command.
+     *
+     * @param version The version string to display.
+     * @returns The same fluent app builder with the version applied.
+     */
+    withVersion(version: string): this {
+        this.version = version
+        return this
+    }
+
+    /**
+     * Adds one or more aliases for the root command while preserving the `App` builder type.
+     *
+     * @param aliases Alternative names that should resolve to the root app.
+     * @returns The same fluent app builder with the aliases applied.
+     */
+    override aliases(...aliases: string[]): this {
+        return super.aliases(...aliases)
+    }
+
+    /**
+     * Sets the short and long descriptions used in generated help output while preserving the `App` builder type.
+     *
+     * @param description The one-line description shown in summaries.
+     * @param longDescription Additional help text shown in detailed help.
+     * @returns The same fluent app builder with updated descriptions.
+     */
+    override describe(description: string, longDescription?: string): this {
+        return super.describe(description, longDescription)
+    }
+
+    /**
+     * Adds a boolean flag to the root app while preserving the `App` builder type.
+     *
+     * @param name The CLI flag name without leading dashes.
+     * @param config Optional metadata such as aliases and descriptions.
+     * @returns A fluent app builder whose inferred option shape includes the new flag.
+     */
+    override flag<const Name extends string, const Config extends FluentFlagConfig | undefined = undefined>(
+        name: Name,
+        config?: Config,
+    ): FluentApp<Opts, [...Flags, BuildFlag<Name, Config>], As, Cs, Executable> {
+        return super.flag(name, config) as unknown as FluentApp<Opts, [...Flags, BuildFlag<Name, Config>], As, Cs, Executable>
+    }
+
+    /**
+     * Adds a valued option to the root app while preserving the `App` builder type.
+     *
+     * @param name The CLI option name without leading dashes.
+     * @param config Optional metadata such as aliases, descriptions, and coercion rules.
+     * @returns A fluent app builder whose inferred option shape includes the new option.
+     */
+    override opt<const Name extends string, const Config extends FluentOptionConfig | undefined = undefined>(
+        name: Name,
+        config?: Config,
+    ): FluentApp<[...Opts, BuildOption<Name, Config>], Flags, As, Cs, Executable> {
+        return super.opt(name, config) as unknown as FluentApp<[...Opts, BuildOption<Name, Config>], Flags, As, Cs, Executable>
+    }
+
+    /**
+     * Adds a positional argument to the root app while preserving the `App` builder type.
+     *
+     * @param name The positional argument name used in help output and inferred kwargs.
+     * @param config Optional metadata such as coercion and requiredness.
+     * @returns A fluent app builder whose inferred positional tuple includes the new argument.
+     */
+    override arg<const Name extends string, const Config extends FluentArgumentConfig | undefined = undefined>(
+        name: Name,
+        config?: Config,
+    ): FluentApp<Opts, Flags, [...As, BuildArgument<Name, Config>], Cs, Executable> {
+        return super.arg(name, config) as unknown as FluentApp<Opts, Flags, [...As, BuildArgument<Name, Config>], Cs, Executable>
+    }
+
+    /**
+     * Adds a nested sub-command to the root app while preserving the `App` builder type.
+     *
+     * @param subCommand The child command to register.
+     * @returns A fluent app builder that is now treated as a branch app.
+     */
+    override command(
+        this: FluentApp<Opts, Flags, As, Cs, false>,
+        subCommand: AnyCmd | FluentCommand<any, any, any, any, any>,
+    ): FluentApp<Opts, Flags, As, CommandChildren, false> {
+        return super.command(subCommand) as unknown as FluentApp<Opts, Flags, As, CommandChildren, false>
+    }
+
+    /**
+     * Marks the root app as executable by registering the handler invoked after parsing.
+     *
+     * @param handler The function that receives parsed positional arguments and keyword arguments.
+     * @returns A fluent app builder that is now treated as executable.
+     */
+    override run(
+        this: FluentApp<Opts, Flags, As, [], false>,
+        handler: RunHandler<Opts, Flags, As>,
+    ): FluentApp<Opts, Flags, As, [], true> {
+        return super.run(handler) as unknown as FluentApp<Opts, Flags, As, [], true>
+    }
+
+    /**
+     * Parses CLI arguments and executes the matching root command or sub-command.
+     *
+     * @param args The raw CLI arguments to parse. Defaults to `process.argv.slice(2)`.
+     * @returns Nothing. This method exits the current process when execution completes.
+     */
+    execute(args: string[] = process.argv.slice(2)): void {
+        if(appExecutor === undefined) {
+            throw new Error('App executor has not been registered.')
+        }
+
+        appExecutor(this as unknown as AnyApp, args)
+    }
+}
+
+export const Command: new (name: string) => FluentCommand<[], [], [], [], false> = FluentCommand
+export const App: new (name: string) => FluentApp<[], [], [], [], false> = FluentApp
+
+/**
+ * Preserves the literal types for an options array definition.
+ *
+ * @param options The options array to preserve.
+ * @returns The same options array with its literal types retained.
+ */
 export function defineOptions<const Opts extends readonly Option[]>(options: Opts): Opts {
     return options
 }
 
+/**
+ * Preserves the literal types for a flags array definition.
+ *
+ * @param flags The flags array to preserve.
+ * @returns The same flags array with its literal types retained.
+ */
 export function defineFlags<const Flags extends readonly Flag[]>(flags: Flags): Flags {
     return flags
 }
 
+/**
+ * Preserves the literal types for a positional-arguments array definition.
+ *
+ * @param positonals The positional arguments array to preserve.
+ * @returns The same positional arguments array with its literal types retained.
+ */
 export function definePositonals<const As extends readonly Argument[]>(positonals: As): As {
     return positonals
 }
-export type AnyBranchCommand = BranchCommand<CommandChildren>
-export type AnyCmd = Command<any, any, any, any>
-export type AnyLeafApp = LeafApp<any, any, any>
-export type AnyBranchApp = BranchApp<CommandChildren>
-export type AnyApp = App<any, any, any, any>
 
+/**
+ * Checks whether a command or app contains nested sub-commands.
+ *
+ * @param value The command or app to inspect.
+ * @returns `true` when the value has sub-commands.
+ */
 export function hasSubCommands(value: AnyCmd | AnyApp): value is AnyBranchCommand | AnyBranchApp {
-    return 'subCommands' in value
+    return Array.isArray((value as any).subCommands)
 }
 
+/**
+ * Checks whether a command or app can be executed directly.
+ *
+ * @param value The command or app to inspect.
+ * @returns `true` when the value has an executable handler.
+ */
 export function isExecutable(value: AnyCmd | AnyApp): value is AnyLeafCommand | AnyLeafApp {
-    return 'execute' in value
+    return typeof (value as any).handler === 'function' || Object.prototype.hasOwnProperty.call(value, 'execute')
+}
+
+/**
+ * Resolves the executable handler for an object-style or fluent command/app.
+ *
+ * @param value The command or app to inspect.
+ * @returns The handler function when one exists, otherwise `undefined`.
+ */
+export function getExecuteHandler(value: AnyCmd | AnyApp): AnyLeafCommand['execute'] | undefined {
+    if(typeof (value as any).handler === 'function') {
+        return (value as any).handler as AnyLeafCommand['execute']
+    }
+
+    if(Object.prototype.hasOwnProperty.call(value, 'execute')) {
+        return (value as any).execute as AnyLeafCommand['execute']
+    }
+
+    return undefined
+}
+
+/**
+ * Registers the internal app executor used by [`App.execute`]{@link FluentApp#execute}.
+ *
+ * @param executor The function responsible for parsing argv and running the selected command.
+ * @returns Nothing.
+ */
+export function registerAppExecutor(executor: (app: AnyApp, args?: string[]) => void): void {
+    appExecutor = executor
 }
 
 export interface DefineCommand {
+    /**
+     * Defines a leaf command with options, flags, positional arguments, and an execute handler.
+     *
+     * @param c The command definition.
+     * @returns The same command definition with literal types preserved.
+     */
     <const Opts extends readonly Option[] | undefined, const Flags extends readonly Flag[] | undefined, const As extends readonly Argument[] | undefined>(
         c: LeafCommandInput<Opts, Flags, As>
     ): LeafCommand<Opts, Flags, As>
+    /**
+     * Defines a branch command with nested sub-commands.
+     *
+     * @param c The branch command definition.
+     * @returns The same command definition with literal types preserved.
+     */
     <const Cs extends CommandChildren>(c: BranchCommandInput<Cs>): BranchCommand<Cs>
 }
 
-export const defineCommand = ((c: AnyCmd) => c) as DefineCommand
+export const defineCommand = (((c: AnyCmd) => c) as unknown) as DefineCommand
 
 export interface DefineApp {
+    /**
+     * Defines a leaf app with options, flags, positional arguments, and an execute handler.
+     *
+     * @param app The app definition.
+     * @returns The same app definition with literal types preserved.
+     */
     <const Opts extends readonly Option[] | undefined, const Flags extends readonly Flag[] | undefined, const As extends readonly Argument[] | undefined>(
         app: LeafAppInput<Opts, Flags, As>
     ): LeafApp<Opts, Flags, As>
+    /**
+     * Defines a branch app with nested sub-commands.
+     *
+     * @param app The branch app definition.
+     * @returns The same app definition with literal types preserved.
+     */
     <const Cs extends CommandChildren>(app: BranchAppInput<Cs>): BranchApp<Cs>
 }
 
-export const defineApp = ((app: AnyApp) => app) as DefineApp
+export const defineApp = (((app: AnyApp) => app) as unknown) as DefineApp

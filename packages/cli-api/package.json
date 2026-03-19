@@ -52,14 +52,10 @@
         "bun": ">=1.2"
     },
     "scripts": {
-        "!preinstall": "npx only-allow pnpm",
-        "tsdecls": "tsc --emitDeclarationOnly",
-        "lint": "sh -c 'eslint --quiet --fix --fix-type problem,suggestion,layout,directive -- \"${@:-.}\"' --",
-        "clean": "rm -rf dist yarn-error.log",
-        "build": "cross-env NODE_ENV=production rollup -c",
-        "dev": "bun run examples/root-command.ts -- --name foo",
-        "dev:sub": "bun run examples/sub-commands.ts -- world greet --name foo",
-        "prod": "npm-run-all clean --parallel tsdecls build"
+        "test:tsc": "tsc --noEmit && echo \"tsc: no errors\"",
+        "test:bun": "bun test",
+        "test": "run-p 'test:*'",
+        "lint": "bun run --bun eslint --fix --"
     },
     "repository": {
         "type": "git",

@@ -1,3 +1,4 @@
-export type {App, Command, Option, Flag, Argument} from './interfaces'
-export {OptType, defineApp, defineCommand, defineOptions, defineFlags, definePositonals} from './interfaces'
-export {default as default} from './run'
+import './run'
+
+export type {Option, Flag, Argument, KwargsOf, ArgsOf, OptionsOf, RunHandler} from './interfaces'
+export {App, Command, OptType, defineApp, defineCommand, defineOptions, defineFlags, definePositonals} from './interfaces'

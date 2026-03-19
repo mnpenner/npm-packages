@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { parseArgs } from './options'
-import { defineCommand, OptType } from './interfaces'
+import { Command, defineCommand, OptType } from './interfaces'
 
 function makeCommand() {
     return defineCommand({
@@ -214,5 +214,22 @@ describe(parseArgs.name, () => {
         expect(opts.count).toBe(3)
         expect(opts.scale).toBe(2.5)
         expect(positionals).toEqual([2.5])
+    })
+
+    it('parses fluent builder commands with boolean flags and valued options', () => {
+        const cmd = new Command('test')
+            .flag('verbose', {alias: 'v'})
+            .opt('name', {alias: 'n'})
+            .arg('file', {required: true})
+            .run(async () => {})
+
+        const [positionals, opts] = parseArgs(cmd, ['-v', '--name=mark', 'readme.md'])
+
+        expect(positionals).toEqual(['readme.md'])
+        expect(opts).toEqual({
+            verbose: true,
+            name: 'mark',
+            file: 'readme.md',
+        })
     })
 })

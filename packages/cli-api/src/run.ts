@@ -1,5 +1,5 @@
 import type {AnyApp, AnyCmd, AnyLeafCommand} from './interfaces'
-import {hasSubCommands, isExecutable} from './interfaces'
+import {getExecuteHandler, hasSubCommands, isExecutable, registerAppExecutor} from './interfaces'
 import {helpCommand} from './commands/command-help'
 import {versionCommand} from './commands/version'
 import {printHelp} from './app-help'
@@ -33,7 +33,12 @@ function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], path: 
         abort(err instanceof Error ? err.message : String(err))
     }
 
-    Promise.resolve(cmd.execute.call(app, opts as any, args as any))
+    const handler = getExecuteHandler(cmd)
+    if(handler === undefined) {
+        abort('Command is not executable.')
+    }
+
+    Promise.resolve(handler.call(app, opts as any, args as any))
         .then(code => process.exit(code ?? 0))
         .catch(err => {
             abort(String((err as any)?.stack ?? err))
@@ -41,9 +46,8 @@ function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], path: 
         })
 }
 
-export default function run(app: AnyApp) {
+export function executeApp(app: AnyApp, argv: string[] = process.argv.slice(2)) {
     const rootCommands = getRootCommands(app)
-    const argv = process.argv.slice(2)
 
     if (argv.length === 0) {
         if (isExecutable(app)) {
@@ -93,3 +97,5 @@ export default function run(app: AnyApp) {
 
     executeLeaf(app, resolved.command, resolved.remainingArgv, resolved.path)
 }
+
+registerAppExecutor(executeApp)

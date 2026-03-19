@@ -5,36 +5,35 @@ Easily create a CLI app.
 ## Usage
 
 ```ts
-import run from "cli-api";
+import {App, Command} from 'cli-api'
 import * as pkg from '../package.json'
-import commands from './commands'
 
-run({
-    name: "hello",
-    version: pkg.version,
-    argv0: pkg.name,
-    commands: [
-        {
-            name: "world",
-            alias: 'w',
-            description: 'Prints "Hello World".',
-            async execute(opts, args) {
-                console.log(`Hello ${opts.name}`)
-            },
-            options: [
-                {
-                    name: 'name',
-                    alias: 'n',
-                    description: "Person you want to greet",
-                    required: true,
-                },
-            ]
+const world = new Command('world')
+    .describe('Prints a greeting.')
+    .flag('verbose', {
+        alias: 'v',
+        description: 'Print more info',
+    })
+    .opt('name', {
+        alias: 'n',
+        description: 'Person you want to greet',
+        required: true,
+    })
+    .run((args, kwargs) => {
+        if (kwargs.verbose) {
+            console.log('Preparing greeting...')
         }
-    ]
-})
+        console.log(`Hello ${kwargs.name}`)
+    })
+
+new App('hello')
+    .withVersion(pkg.version)
+    .withArgv0(pkg.name)
+    .command(world)
+    .execute()
 ```
 
 ```shell
-$ hello world -n Mark
+$ hello world --name Mark
 Hello Mark
 ```

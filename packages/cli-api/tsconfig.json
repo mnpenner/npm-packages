@@ -3,9 +3,6 @@
         "target": "ESNext",
         "module": "ESNext",
         "moduleResolution": "bundler",
-        "declaration": true,
-        "declarationDir": "./dist",
-        "emitDeclarationOnly": true,
         "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
         "strict": true,
@@ -16,10 +13,12 @@
         "types": ["bun-types"],
         "outDir": "./dist"
     },
-    "files": [
-        "src/index.ts"
-    ],
     "include": [
-        "src/**/*.d.ts"
+        "src/**/*.ts"
+    ],
+    "exclude": [
+        "dist",
+        "node_modules",
+        "examples"
     ]
 }

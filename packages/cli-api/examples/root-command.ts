@@ -1,29 +1,22 @@
-import run, {defineApp} from '../src'
+import {App} from '../src'
 import * as pkg from '../package.json'
 
-run(defineApp({
-    name: 'hello',
-    version: pkg.version,
-    argv0: pkg.name,
-    options: [
-        {
-            name: 'name',
-            alias: 'n',
-            description: 'Person you want to greet',
-            required: true,
-        },
-    ],
-    flags: [
-        {
-            name: 'verbose',
-            alias: 'v',
-            description: 'Prints more info',
-        },
-    ],
-    async execute(opts) {
-        if (opts.verbose) {
+new App('hello')
+    .withVersion(pkg.version)
+    .withArgv0(pkg.name)
+    .flag('verbose', {
+        alias: 'v',
+        description: 'Prints more info',
+    })
+    .opt('name', {
+        alias: 'n',
+        description: 'Person you want to greet',
+        required: true,
+    })
+    .run((args, kwargs) => {
+        if (kwargs.verbose) {
             console.log('Preparing greeting...')
         }
-        console.log(`Hello ${opts.name}`)
-    },
-}))
+        console.log(`Hello ${kwargs.name}`)
+    })
+    .execute()

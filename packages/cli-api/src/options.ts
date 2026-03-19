@@ -1,4 +1,4 @@
-import type {AnyCmd, AnyLeafCommand, AnyOptType, Option} from './interfaces'
+import type {AnyCmd, AnyLeafCommand, AnyOptType, Argument, Option} from './interfaces'
 import {OptType, hasSubCommands} from './interfaces'
 import type {NullableObj} from './utils'
 import {abort, includes, resolve, statSync, toArray, toBool} from './utils'
@@ -11,6 +11,8 @@ export interface ResolvedCommand {
     path: string[]
     remainingArgv: string[]
 }
+
+type ParseableCommand = Pick<AnyLeafCommand, 'name' | 'options' | 'flags' | 'positonals'>
 
 export function formatOption(opt: Option): [string, string] {
     const aliases: string[] = []
@@ -57,7 +59,7 @@ export function getValuePlaceholder(opt: Option): string {
     }
 }
 
-export function getOptions(cmd: AnyLeafCommand): Option[] {
+export function getOptions(cmd: ParseableCommand): Option[] {
     return [
         ...toArray(cmd.options),
         ...toArray(cmd.flags).map(f => ({
@@ -68,7 +70,7 @@ export function getOptions(cmd: AnyLeafCommand): Option[] {
     ] as Option[]
 }
 
-export function parseArgs(cmd: AnyLeafCommand, argv: string[]): [any[], Record<string, any>] {
+export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record<string, any>] {
     const args: any[] = []
     const opts: Record<string, any> = Object.create(null)
     let parseFlags = true
@@ -83,7 +85,7 @@ export function parseArgs(cmd: AnyLeafCommand, argv: string[]): [any[], Record<s
     }
     if(cmd.positonals?.length) {
         for(let i = 0; i < cmd.positonals.length; ++i) {
-            const a = cmd.positonals[i]
+            const a: Argument = cmd.positonals[i]
             if(a.repeatable && i < cmd.positonals.length - 1) {
                 throw new Error('Only the last positional can be repeatable')
             }
@@ -187,7 +189,7 @@ export function parseArgs(cmd: AnyLeafCommand, argv: string[]): [any[], Record<s
                         if(def.type != null) v = coerceType(v, def.type)
                         arr.push(v)
                     }
-                    argIdx = cmd.positonals.length
+                    argIdx = def.repeatable && cmd.positonals ? cmd.positonals.length : argIdx
                     args.push(...arr)
                     continue
                 } else {

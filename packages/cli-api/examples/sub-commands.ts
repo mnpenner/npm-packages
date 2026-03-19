@@ -1,45 +1,30 @@
-import run, {defineApp, defineCommand} from '../src'
+import {App, Command} from '../src'
 import * as pkg from '../package.json'
 
-const greetCommand = defineCommand({
-    name: 'greet',
-    description: 'Greet someone by name.',
-    options: [
-        {
-            name: 'name',
-            alias: 'n',
-            description: 'Person you want to greet',
-            required: true,
-        },
-    ],
-    flags: [
-        {
-            name: 'verbose',
-            alias: 'v',
-            description: 'Print extra information',
-        },
-    ],
-    async execute(opts) {
-        if (opts.verbose) {
-            console.log(`Running ${this.name} ${pkg.version}`)
+const greetCommand = new Command('greet')
+    .describe('Greet someone by name.')
+    .flag('verbose', {
+        alias: 'v',
+        description: 'Print extra information',
+    })
+    .opt('name', {
+        alias: 'n',
+        description: 'Person you want to greet',
+        required: true,
+    })
+    .run((args, kwargs) => {
+        if (kwargs.verbose) {
+            console.log(`Running greet ${pkg.version}`)
         }
-        console.log(`Hello ${opts.name}`)
-    },
-})
+        console.log(`Hello ${kwargs.name}`)
+    })
 
-const worldCommand = defineCommand({
-    name: 'world',
-    description: 'World-related commands.',
-    subCommands: [
-        greetCommand,
-    ],
-})
+const worldCommand = new Command('world')
+    .describe('World-related commands.')
+    .command(greetCommand)
 
-run(defineApp({
-    name: 'hello',
-    version: pkg.version,
-    argv0: pkg.name,
-    subCommands: [
-        worldCommand,
-    ],
-}))
+new App('hello')
+    .withVersion(pkg.version)
+    .withArgv0(pkg.name)
+    .command(worldCommand)
+    .execute()
