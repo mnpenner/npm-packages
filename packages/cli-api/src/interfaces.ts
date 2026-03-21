@@ -642,7 +642,7 @@ export class App<
      * Parses CLI arguments and executes the matching root command or sub-command.
      *
      * @param args The raw CLI arguments to parse. Defaults to `process.argv.slice(2)`.
-     * @returns The numeric exit code returned by the resolved command handler.
+     * @returns The numeric exit code returned by the resolved command handler, or `0` when the handler does not return one.
      */
     async execute(args: string[] = process.argv.slice(2)): Promise<number> {
         const {executeAppResult} = await import('./run')
@@ -651,10 +651,10 @@ export class App<
             const {printError} = await import('./utils')
             printError(result.error, result.errorStyle)
         }
-        if(result.setProcessExitCode) {
+        if(result.code !== null) {
             process.exitCode = result.code
         }
-        return result.code
+        return result.code ?? 0
     }
 }
 

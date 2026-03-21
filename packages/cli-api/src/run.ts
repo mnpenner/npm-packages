@@ -11,14 +11,18 @@ import {printLn} from './utils'
 type InternalAppMetadata = AnyApp & {_version?: string}
 type ErrorStyle = 'default' | 'config'
 
+function formatConfigError(error: unknown): string {
+    const message = error instanceof Error ? error.message : String(error)
+    return `Config Error: ${message}`
+}
+
 /**
  * Result of executing or validating a CLI invocation.
  */
 export interface ExecutionResult {
-    code: number
+    code: number | null
     error?: string
     errorStyle?: ErrorStyle
-    setProcessExitCode?: true
 }
 
 function isHelpFlag(arg: string | undefined): boolean {
@@ -49,7 +53,6 @@ function unknownCommandResult(app: AnyApp, commandName: string): ExecutionResult
     return {
         code: 2,
         error: `${getProcName(app)}: unknown command '${commandName}'`,
-        setProcessExitCode: true,
     }
 }
 
@@ -58,10 +61,9 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
         validateCommandConfig(cmd)
     } catch (err) {
         return {
-            code: 1,
-            error: err instanceof Error ? err.message : String(err),
+            code: 3,
+            error: formatConfigError(err),
             errorStyle: 'config',
-            setProcessExitCode: true,
         }
     }
 
@@ -76,24 +78,24 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
         ;[args, opts] = parseArgs(cmd, rawArgs)
     } catch (err) {
         if(err instanceof UnknownOptionError) {
-            return {code: 2, error: `${getProcName(app)}: ${err.message}`, setProcessExitCode: true}
+            return {code: 2, error: `${getProcName(app)}: ${err.message}`}
         }
-        return {code: 1, error: err instanceof Error ? err.message : String(err), setProcessExitCode: true}
+        return {code: 1, error: err instanceof Error ? err.message : String(err)}
     }
 
     const handler = getExecuteHandler(cmd)
     if(handler === undefined) {
-        return {code: 1, error: 'Command is not executable.', setProcessExitCode: true}
+        return {code: 1, error: 'Command is not executable.'}
     }
 
     try {
         const code = await Promise.resolve(handler.call(app, opts as any, args as any))
         if(code === undefined) {
-            return {code: 0}
+            return {code: null}
         }
-        return {code, setProcessExitCode: true}
+        return {code}
     } catch (err) {
-        return {code: 1, error: String((err as any)?.stack ?? err), setProcessExitCode: true}
+        return {code: 1, error: String((err as any)?.stack ?? err)}
     }
 }
 
@@ -134,10 +136,9 @@ export async function executeAppResult(app: AnyApp, argv: string[] = process.arg
                     validateCommandConfig(resolved.command)
                 } catch (err) {
                     return {
-                        code: 1,
-                        error: err instanceof Error ? err.message : String(err),
+                        code: 3,
+                        error: formatConfigError(err),
                         errorStyle: 'config',
-                        setProcessExitCode: true,
                     }
                 }
             }
@@ -182,7 +183,7 @@ export async function executeAppResult(app: AnyApp, argv: string[] = process.arg
     }
 
     if (!isExecutable(resolved.command)) {
-        return {code: 1, error: 'Command is not executable.', setProcessExitCode: true}
+        return {code: 1, error: 'Command is not executable.'}
     }
 
     return executeLeaf(app, resolved.command, resolved.remainingArgv, resolved.path)
@@ -200,5 +201,5 @@ export async function executeApp(app: AnyApp, argv: string[] = process.argv.slic
     if(result.error !== undefined) {
         printError(result.error, result.errorStyle)
     }
-    return result.code
+    return result.code ?? 0
 }
