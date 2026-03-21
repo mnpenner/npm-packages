@@ -136,7 +136,7 @@ interface ArgumentOrOptionOrFlag {
     description?: string
     /** Default value to display in help. */
     defaultValueText?: string
-    /** Property name to use in `execute()` options. */
+    /** Property name to use in `run()` kwargs. */
     key?: string
 }
 
@@ -293,9 +293,9 @@ export interface AnyBranchCommand extends CommandBase {
 
 export type AnyCmd = AnyLeafCommand | AnyBranchCommand
 
-type FlagConfigInput = Omit<Flag, 'name' | 'key' | 'valueNotRequired'> & { key?: string }
-type OptionConfigInput = Omit<Option, 'name' | 'key'> & { key?: string }
-type ArgumentConfigInput = Omit<Argument, 'name' | 'key'> & { key?: string }
+type FlagConfigInput = Omit<Flag, 'name' | 'valueNotRequired'>
+type OptionConfigInput = Omit<Option, 'name'>
+type ArgumentConfigInput = Omit<Argument, 'name'>
 
 type BuildFlag<Name extends string, Config extends FlagConfigInput | undefined> = Flatten<
     { name: Name } &

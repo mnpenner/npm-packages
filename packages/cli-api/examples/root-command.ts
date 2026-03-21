@@ -25,6 +25,7 @@ const app = new App('hello')
     })
     .arg('greeting', {
         description: 'Greeting to print',
+        key: 'greet',
         defaultValue: 'Hello',
         required: true,
         // repeatable: true,
@@ -39,8 +40,8 @@ const app = new App('hello')
             console.log('Preparing greeting...')
         }
         const greeting = kwargs.shout
-            ? `${kwargs.greeting} ${kwargs.name}!`.toUpperCase()
-            : `${kwargs.greeting} ${kwargs.name}.`
+            ? `${kwargs.greet} ${kwargs.name}!`.toUpperCase()
+            : `${kwargs.greet} ${kwargs.name}.`
         console.log(greeting)
 
         if(kwargs.disclaimer.length) {
