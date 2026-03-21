@@ -12,19 +12,29 @@ export type nil = null | undefined
 export type NullableObj = Record<string, any> | nil
 type InternalAppMetadata = AnyApp & {_argv0?: string}
 
-function blockError(str: string) {
+type ErrorStyle = 'default' | 'config'
+
+function blockError(str: string, style: ErrorStyle = 'default') {
     const lines = str.split('\n')
     const width = Math.max(...lines.map(l => stringWidth(l))) + 4
-    printLn(Chalk.bgRed(space(width)))
+    const background = style === 'config' ? Chalk.bgMagenta : Chalk.bgRed
+    printLn(background(space(width)))
     for(const line of lines) {
         const txt = `  ${line}`
-        printLn(Chalk.bgRed(txt + space(width, txt)))
+        printLn(background(txt + space(width, txt)))
     }
-    printLn(Chalk.bgRed(space(width)))
+    printLn(background(space(width)))
 }
 
-export function printError(message: string): void {
-    blockError(message)
+/**
+ * Prints a user-facing CLI error block.
+ *
+ * @param message The error text to render.
+ * @param style Optional styling variant used to distinguish configuration errors.
+ * @returns Nothing.
+ */
+export function printError(message: string, style: ErrorStyle = 'default'): void {
+    blockError(message, style)
 }
 
 export function abort(message: string, code: number = 1): never {

@@ -3,12 +3,13 @@ import {getExecuteHandler, hasSubCommands, isExecutable} from './interfaces'
 import {helpCommand} from './commands/command-help'
 import {versionCommand} from './commands/version'
 import {printHelp} from './app-help'
-import {findSubCommand, parseArgs, resolveCommand, UnknownOptionError} from './options'
+import {findSubCommand, parseArgs, resolveCommand, UnknownOptionError, validateCommandConfig} from './options'
 import {getProcName, printError, sortBy} from './utils'
 import {printCommandHelp} from './print-command-help'
 import {printLn} from './utils'
 
 type InternalAppMetadata = AnyApp & {_version?: string}
+type ErrorStyle = 'default' | 'config'
 
 /**
  * Result of executing or validating a CLI invocation.
@@ -16,6 +17,7 @@ type InternalAppMetadata = AnyApp & {_version?: string}
 export interface ExecutionResult {
     code: number
     error?: string
+    errorStyle?: ErrorStyle
     setProcessExitCode?: true
 }
 
@@ -52,6 +54,17 @@ function unknownCommandResult(app: AnyApp, commandName: string): ExecutionResult
 }
 
 async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], path: readonly string[]): Promise<ExecutionResult> {
+    try {
+        validateCommandConfig(cmd)
+    } catch (err) {
+        return {
+            code: 1,
+            error: err instanceof Error ? err.message : String(err),
+            errorStyle: 'config',
+            setProcessExitCode: true,
+        }
+    }
+
     if (rawArgs.some(isHelpFlag)) {
         printCommandHelp(app, cmd, path)
         return {code: 0}
@@ -116,15 +129,28 @@ export async function executeAppResult(app: AnyApp, argv: string[] = process.arg
                 return {code: 0}
             }
 
+            if (isExecutable(resolved.command)) {
+                try {
+                    validateCommandConfig(resolved.command)
+                } catch (err) {
+                    return {
+                        code: 1,
+                        error: err instanceof Error ? err.message : String(err),
+                        errorStyle: 'config',
+                        setProcessExitCode: true,
+                    }
+                }
+            }
+
             printCommandHelp(app, resolved.command, resolved.path)
             return {code: 0}
         }
 
         if (isExecutable(app)) {
-            printCommandHelp(app, app, [])
-        } else {
-            printHelp(app, rootCommands)
+            return executeLeaf(app, app, argv, [])
         }
+
+        printHelp(app, rootCommands)
         return {code: 0}
     }
 
@@ -172,7 +198,7 @@ export async function executeAppResult(app: AnyApp, argv: string[] = process.arg
 export async function executeApp(app: AnyApp, argv: string[] = process.argv.slice(2)): Promise<number> {
     const result = await executeAppResult(app, argv)
     if(result.error !== undefined) {
-        printError(result.error)
+        printError(result.error, result.errorStyle)
     }
     return result.code
 }

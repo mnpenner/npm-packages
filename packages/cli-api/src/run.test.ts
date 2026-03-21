@@ -55,6 +55,7 @@ describe(executeAppResult.name, () => {
 })
 
 describe(App.name, () => {
+    describe(App.prototype.execute.name, () => {
     it('sets the process exit code when parsing fails', () => {
         const result = Bun.spawnSync({
             cmd: [
@@ -124,5 +125,53 @@ describe(App.name, () => {
         expect(usageLine).toContain(
             '\x1B[90m[\x1B[39m\x1B[35m--options\x1B[39m\x1B[90m]\x1B[39m \x1B[90m[\x1B[39m--\x1B[90m]\x1B[39m \x1B[90m[\x1B[39m\x1B[35mgreeting\x1B[39m\x1B[90m]\x1B[39m \x1B[90m[\x1B[39m\x1B[35mdisclaimer...\x1B[39m\x1B[90m]\x1B[39m',
         )
+    })
+
+        it('prints misconfiguration errors with a magenta background', () => {
+            const result = Bun.spawnSync({
+                cmd: [
+                    process.execPath,
+                    '-e',
+                    "import {App} from './src'; const app = new App('hello').meta({argv0:'cli-api'}).arg('first',{repeatable:true, required:true}).arg('second',{repeatable:true, required:true}).run(() => {}); await app.execute([])",
+                ],
+                cwd: Path.resolve(import.meta.dir, '..'),
+                stderr: 'pipe',
+                stdout: 'pipe',
+                env: {
+                    ...process.env,
+                    FORCE_COLOR: '1',
+                },
+            })
+
+            const stdout = Buffer.from(result.stdout).toString()
+
+            expect(result.exitCode).toBe(1)
+            expect(stripAnsi(stdout)).toContain('Only the last positional can be repeatable')
+            expect(stdout).toContain('\x1B[45m')
+            expect(stdout).not.toContain('\x1B[41m')
+        })
+
+        it('validates misconfigured commands before handling help flags', () => {
+            const result = Bun.spawnSync({
+                cmd: [
+                    process.execPath,
+                    '-e',
+                    "import {App} from './src'; const app = new App('hello').meta({argv0:'cli-api'}).arg('first',{repeatable:true, required:true}).arg('second',{repeatable:true, required:true}).run(() => {}); await app.execute(['--help'])",
+                ],
+                cwd: Path.resolve(import.meta.dir, '..'),
+                stderr: 'pipe',
+                stdout: 'pipe',
+                env: {
+                    ...process.env,
+                    FORCE_COLOR: '1',
+                },
+            })
+
+            const stdout = Buffer.from(result.stdout).toString()
+
+            expect(result.exitCode).toBe(1)
+            expect(stripAnsi(stdout)).toContain('Only the last positional can be repeatable')
+            expect(stripAnsi(stdout)).not.toContain('Usage:')
+        })
     })
 })

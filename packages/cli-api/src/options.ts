@@ -161,18 +161,31 @@ export function getOptions(cmd: ParseableCommand): Option[] {
     return [...toArray(cmd.options)] as Option[]
 }
 
+/**
+ * Validates a command's static option and positional configuration before parsing argv.
+ *
+ * @param cmd The command definition to validate.
+ * @returns Nothing. Throws when the command configuration is internally inconsistent.
+ */
+export function validateCommandConfig(cmd: ParseableCommand): void {
+    validatePositionalDefinitions(cmd)
+
+    for(const opt of getOptions(cmd)) {
+        if(typeof opt.repeatable === 'number') {
+            assertValidCount(`"${opt.name}" option repeatable count`, opt.repeatable)
+        }
+    }
+}
+
 export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record<string, any>] {
     const args: any[] = []
     const opts: Record<string, any> = Object.create(null)
     let parseFlags = true
 
     const allOptions = getOptions(cmd)
-    validatePositionalDefinitions(cmd)
+    validateCommandConfig(cmd)
 
     for(const opt of allOptions) {
-        if(typeof opt.repeatable === 'number') {
-            assertValidCount(`"${opt.name}" option repeatable count`, opt.repeatable)
-        }
         if(isRepeatable(opt.repeatable)) {
             const k = opt.key ?? opt.name
             if(opts[k] === undefined) opts[k] = []

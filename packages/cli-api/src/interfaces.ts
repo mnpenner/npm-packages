@@ -649,7 +649,7 @@ export class App<
         const result = await executeAppResult(this as unknown as AnyApp, args)
         if(result.error !== undefined) {
             const {printError} = await import('./utils')
-            printError(result.error)
+            printError(result.error, result.errorStyle)
         }
         if(result.setProcessExitCode) {
             process.exitCode = result.code
