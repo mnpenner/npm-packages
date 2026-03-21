@@ -3,7 +3,11 @@ import {App} from '../src'
 import * as pkg from '../package.json'
 
 const app = new App('hello')
-    .meta({version: pkg.version, bin: pkg.name})
+    .meta({
+        version: pkg.version,
+        bin: pkg.name,
+        author: 'Mark Penner'
+    })
     .flag('verbose', {
         alias: 'v',
         description: 'Prints more info',

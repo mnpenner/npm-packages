@@ -1,11 +1,16 @@
 import type {AnyApp, AnyCmd, Option} from './interfaces'
-import {hasSubCommands, isExecutable, OptType} from './interfaces'
+import {hasSubCommands, OptType} from './interfaces'
 import {getProcName, print, printLn, space} from './utils'
 import Chalk from 'chalk'
 import stringWidth from 'string-width'
 import {formatOption} from './options'
 
-type InternalAppMetadata = AnyApp & {globalOptions?: Option[], _version?: string, _globalOptions?: Option[]}
+type InternalAppMetadata = AnyApp & {
+    globalOptions?: Option[]
+    _version?: string
+    _author?: string
+    _globalOptions?: Option[]
+}
 
 const HELP_OPTION: Option = {
     name: 'help',
@@ -17,7 +22,7 @@ const HELP_OPTION: Option = {
 
 export function printHelp(app: AnyApp, commands: readonly AnyCmd[]) {
     print(Chalk.green(app.name))
-    const version = (app as InternalAppMetadata)._version
+    const {_author: author, _version: version} = app as InternalAppMetadata
     if (version) {
         print(` version ${Chalk.yellow(version)}`)
     }
@@ -25,6 +30,9 @@ export function printHelp(app: AnyApp, commands: readonly AnyCmd[]) {
 
     if (app.description) {
         printLn(app.description)
+    }
+    if (author) {
+        printLn(`Author: ${author}`)
     }
 
     printLn()

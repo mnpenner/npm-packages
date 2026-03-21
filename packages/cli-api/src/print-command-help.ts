@@ -7,6 +7,8 @@ import {formatOption, getOptions, getOptName, getValuePlaceholder} from './optio
 import stringWidth from 'string-width'
 import type {Argument, Option} from './interfaces'
 
+type InternalAppMetadata = AnyApp & {_author?: string}
+
 const HELP_OPTION: Option = {
     name: 'help',
     alias: 'h',
@@ -45,6 +47,13 @@ export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readon
     if (cmd.description) {
         printLn(cmd.description)
         printLn()
+    }
+    if (cmd === app) {
+        const author = (app as InternalAppMetadata)._author
+        if (author) {
+            printLn(`Author: ${author}`)
+            printLn()
+        }
     }
 
     printLn(Chalk.yellow('Usage:'))

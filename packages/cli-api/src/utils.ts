@@ -12,12 +12,42 @@ export type nil = null | undefined
 export type NullableObj = Record<string, any> | nil
 type InternalAppMetadata = AnyApp & {_bin?: string}
 
-type ErrorStyle = 'default' | 'config'
+export enum ErrorStyle {
+    InvalidArg = 'invalid-arg',
+    Misconfig = 'misconfig',
+    Internal = 'internal',
+}
 
-function blockError(str: string, style: ErrorStyle = 'default') {
+function getErrorBackground(style: ErrorStyle): typeof Chalk.bgRed {
+    if(style === ErrorStyle.Misconfig) {
+        return Chalk.bgMagenta
+    }
+    if(style === ErrorStyle.Internal) {
+        return Chalk.bgBlue
+    }
+    return Chalk.bgRed
+}
+
+/**
+ * Gets the process exit code associated with a given error style.
+ *
+ * @param style The error style to map to a process exit code.
+ * @returns The default exit code used for that error style.
+ */
+export function getErrorExitCode(style: ErrorStyle): number {
+    if(style === ErrorStyle.Misconfig) {
+        return 254
+    }
+    if(style === ErrorStyle.Internal) {
+        return 253
+    }
+    return 2
+}
+
+function blockError(str: string, style: ErrorStyle = ErrorStyle.InvalidArg) {
     const lines = str.split('\n')
     const width = Math.max(...lines.map(l => stringWidth(l))) + 4
-    const background = style === 'config' ? Chalk.bgMagenta : Chalk.bgRed
+    const background = getErrorBackground(style)
     printLn(background(space(width)))
     for(const line of lines) {
         const txt = `  ${line}`
@@ -30,15 +60,23 @@ function blockError(str: string, style: ErrorStyle = 'default') {
  * Prints a user-facing CLI error block.
  *
  * @param message The error text to render.
- * @param style Optional styling variant used to distinguish configuration errors.
+ * @param style Optional styling variant used to distinguish invalid-argument, misconfiguration, and internal errors.
  * @returns Nothing.
  */
-export function printError(message: string, style: ErrorStyle = 'default'): void {
+export function printError(message: string, style: ErrorStyle = ErrorStyle.InvalidArg): void {
     blockError(message, style)
 }
 
-export function abort(message: string, code: number = 1): never {
-    printError(message)
+/**
+ * Prints a user-facing CLI error block and exits the process.
+ *
+ * @param message The error text to render.
+ * @param style The style that controls the default exit code and visual treatment.
+ * @param code Optional explicit exit code override.
+ * @returns This function never returns because it exits the process.
+ */
+export function abort(message: string, style: ErrorStyle = ErrorStyle.InvalidArg, code: number = getErrorExitCode(style)): never {
+    printError(message, style)
     process.exit(code)
 }
 

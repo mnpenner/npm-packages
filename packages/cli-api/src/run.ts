@@ -4,12 +4,11 @@ import {helpCommand} from './commands/command-help'
 import {versionCommand} from './commands/version'
 import {printHelp} from './app-help'
 import {findSubCommand, parseArgs, resolveCommand, UnknownOptionError, validateCommandConfig} from './options'
-import {getProcName, printError, sortBy} from './utils'
+import {ErrorStyle, getErrorExitCode, getProcName, printError, sortBy} from './utils'
 import {printCommandHelp} from './print-command-help'
 import {printLn} from './utils'
 
 type InternalAppMetadata = AnyApp & {_version?: string}
-type ErrorStyle = 'default' | 'config'
 
 function formatConfigError(error: unknown): string {
     const message = error instanceof Error ? error.message : String(error)
@@ -51,8 +50,9 @@ function getRootCommands(app: AnyApp): readonly AnyCmd[] {
 
 function unknownCommandResult(app: AnyApp, commandName: string): ExecutionResult {
     return {
-        code: 2,
+        code: getErrorExitCode(ErrorStyle.InvalidArg),
         error: `${getProcName(app)}: unknown command '${commandName}'`,
+        errorStyle: ErrorStyle.InvalidArg,
     }
 }
 
@@ -61,9 +61,9 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
         validateCommandConfig(cmd)
     } catch (err) {
         return {
-            code: 3,
+            code: getErrorExitCode(ErrorStyle.Misconfig),
             error: formatConfigError(err),
-            errorStyle: 'config',
+            errorStyle: ErrorStyle.Misconfig,
         }
     }
 
@@ -78,14 +78,26 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
         ;[args, opts] = parseArgs(cmd, rawArgs)
     } catch (err) {
         if(err instanceof UnknownOptionError) {
-            return {code: 2, error: `${getProcName(app)}: ${err.message}`}
+            return {
+                code: getErrorExitCode(ErrorStyle.InvalidArg),
+                error: `${getProcName(app)}: ${err.message}`,
+                errorStyle: ErrorStyle.InvalidArg,
+            }
         }
-        return {code: 1, error: err instanceof Error ? err.message : String(err)}
+        return {
+            code: getErrorExitCode(ErrorStyle.InvalidArg),
+            error: err instanceof Error ? err.message : String(err),
+            errorStyle: ErrorStyle.InvalidArg,
+        }
     }
 
     const handler = getExecuteHandler(cmd)
     if(handler === undefined) {
-        return {code: 1, error: 'Command is not executable.'}
+        return {
+            code: getErrorExitCode(ErrorStyle.Internal),
+            error: 'Command is not executable.',
+            errorStyle: ErrorStyle.Internal,
+        }
     }
 
     try {
@@ -95,7 +107,11 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
         }
         return {code}
     } catch (err) {
-        return {code: 1, error: String((err as any)?.stack ?? err)}
+        return {
+            code: getErrorExitCode(ErrorStyle.Internal),
+            error: String((err as any)?.stack ?? err),
+            errorStyle: ErrorStyle.Internal,
+        }
     }
 }
 
@@ -136,9 +152,9 @@ export async function executeAppResult(app: AnyApp, argv: string[] = process.arg
                     validateCommandConfig(resolved.command)
                 } catch (err) {
                     return {
-                        code: 3,
+                        code: getErrorExitCode(ErrorStyle.Misconfig),
                         error: formatConfigError(err),
-                        errorStyle: 'config',
+                        errorStyle: ErrorStyle.Misconfig,
                     }
                 }
             }
@@ -183,7 +199,11 @@ export async function executeAppResult(app: AnyApp, argv: string[] = process.arg
     }
 
     if (!isExecutable(resolved.command)) {
-        return {code: 1, error: 'Command is not executable.'}
+        return {
+            code: getErrorExitCode(ErrorStyle.Internal),
+            error: 'Command is not executable.',
+            errorStyle: ErrorStyle.Internal,
+        }
     }
 
     return executeLeaf(app, resolved.command, resolved.remainingArgv, resolved.path)

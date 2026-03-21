@@ -332,6 +332,7 @@ type ExecuteHandler<
 type AppMetaConfig = {
     bin?: string
     version?: string
+    author?: string
     description?: string
     longDescription?: string
 }
@@ -503,12 +504,13 @@ export class App<
 > extends Command<Opts, Flags, As, Cs, Executable> {
     _bin?: string
     _version?: string
+    _author?: string
     _globalOptions?: Option[]
 
     /**
      * Applies metadata to the root app in one call.
      *
-     * @param config Metadata for the app, including version, argv0, and descriptions.
+     * @param config Metadata for the app, including version, author, argv0, and descriptions.
      * @returns The same fluent app builder with the metadata applied.
      */
     meta(config: AppMetaConfig): this {
@@ -517,6 +519,9 @@ export class App<
         }
         if(config.version !== undefined) {
             this.version(config.version)
+        }
+        if(config.author !== undefined) {
+            this.author(config.author)
         }
         if(config.description !== undefined) {
             this.describe(config.description, config.longDescription)
@@ -546,6 +551,17 @@ export class App<
      */
     version(version: string): this {
         this._version = version
+        return this
+    }
+
+    /**
+     * Sets the application author surfaced by root help output.
+     *
+     * @param author The author string to display in app help.
+     * @returns The same fluent app builder with the author applied.
+     */
+    author(author: string): this {
+        this._author = author
         return this
     }
 
