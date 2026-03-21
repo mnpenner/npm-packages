@@ -298,7 +298,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 2,
-            error: createError('Invalid value for option `--color`: rainbow', ErrorStyle.InvalidArg),
+            error: createError('Invalid value "rainbow" (expected one of: always, never, auto)', ErrorStyle.InvalidArg),
         })
     })
 })
