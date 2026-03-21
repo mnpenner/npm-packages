@@ -4,7 +4,7 @@ import * as pkg from '../package.json'
 
 
 const app = new App('hello')
-    .meta({version: pkg.version, argv0: pkg.name, description: 'Example app'})
+    .meta({version: pkg.version, bin: pkg.name, description: 'Example app'})
     .command(new Command('world')
         .describe('World-related commands.')
         .command(new Command('greet')

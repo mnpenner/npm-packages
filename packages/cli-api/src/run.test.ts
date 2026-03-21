@@ -4,7 +4,7 @@ import {executeAppResult} from './run'
 
 function createMisconfiguredApp(): Parameters<typeof executeAppResult>[0] {
     return new App('hello')
-        .meta({argv0: 'cli-api'})
+        .meta({bin: 'cli-api'})
         .arg('first', {repeatable: true, required: true})
         .arg('second', {repeatable: true, required: true})
         .run(() => {}) as Parameters<typeof executeAppResult>[0]
@@ -13,7 +13,7 @@ function createMisconfiguredApp(): Parameters<typeof executeAppResult>[0] {
 describe(executeAppResult.name, () => {
     it('returns exit code 2 for unknown root commands', async () => {
         const app = new App('hello')
-            .meta({argv0: 'cli-api'})
+            .meta({bin: 'cli-api'})
             .command(new Command('world'))
 
         const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['bacon'])
@@ -26,7 +26,7 @@ describe(executeAppResult.name, () => {
 
     it('returns exit code 2 for unknown nested commands', async () => {
         const app = new App('hello')
-            .meta({argv0: 'cli-api'})
+            .meta({bin: 'cli-api'})
             .command(new Command('world')
                 .command(new Command('greet')
                     .run(() => {})))
@@ -41,7 +41,7 @@ describe(executeAppResult.name, () => {
 
     it('returns exit code 2 for unknown options', async () => {
         const app = new App('hello')
-            .meta({argv0: 'cli-api'})
+            .meta({bin: 'cli-api'})
             .opt('name', {alias: 'n', required: true})
             .run(() => {})
 

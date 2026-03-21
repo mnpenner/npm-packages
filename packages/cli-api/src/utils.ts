@@ -10,7 +10,7 @@ export const printLn = console.log.bind(console)
 
 export type nil = null | undefined
 export type NullableObj = Record<string, any> | nil
-type InternalAppMetadata = AnyApp & {_argv0?: string}
+type InternalAppMetadata = AnyApp & {_bin?: string}
 
 type ErrorStyle = 'default' | 'config'
 
@@ -73,9 +73,9 @@ export function space(len: number, str?: string) {
 }
 
 export function getProcName(app: AnyApp) {
-    const argv0 = (app as InternalAppMetadata)._argv0
-    if(argv0 != null) {
-        return argv0
+    const bin = (app as InternalAppMetadata)._bin
+    if(bin != null) {
+        return bin
     }
     const relPath = Path.relative(process.cwd(), process.argv[1])
     // console.log(relPath, process.argv[1])

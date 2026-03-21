@@ -330,7 +330,7 @@ type ExecuteHandler<
 > = ExecutableInput<Opts, Flags, As>['execute']
 
 type AppMetaConfig = {
-    argv0?: string
+    bin?: string
     version?: string
     description?: string
     longDescription?: string
@@ -501,7 +501,7 @@ export class App<
     Cs extends CommandChildren = [],
     Executable extends boolean = false,
 > extends Command<Opts, Flags, As, Cs, Executable> {
-    _argv0?: string
+    _bin?: string
     _version?: string
     _globalOptions?: Option[]
 
@@ -512,8 +512,8 @@ export class App<
      * @returns The same fluent app builder with the metadata applied.
      */
     meta(config: AppMetaConfig): this {
-        if(config.argv0 !== undefined) {
-            this.argv0(config.argv0)
+        if(config.bin !== undefined) {
+            this.bin(config.bin)
         }
         if(config.version !== undefined) {
             this.version(config.version)
@@ -530,11 +530,11 @@ export class App<
     /**
      * Sets the program name shown in help and generated messages.
      *
-     * @param argv0 The display name for the CLI binary.
+     * @param binaryName The display name for the CLI binary.
      * @returns The same fluent app builder with the updated program name.
      */
-    argv0(argv0: string): this {
-        this._argv0 = argv0
+    bin(binaryName: string): this {
+        this._bin = binaryName
         return this
     }
 

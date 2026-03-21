@@ -3,7 +3,7 @@ import {App} from '../src'
 import * as pkg from '../package.json'
 
 const app = new App('hello')
-    .meta({version: pkg.version, argv0: pkg.name})
+    .meta({version: pkg.version, bin: pkg.name})
     .flag('verbose', {
         alias: 'v',
         description: 'Prints more info',
