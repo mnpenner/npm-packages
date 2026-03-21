@@ -4,7 +4,8 @@ import {helpCommand} from './commands/command-help'
 import {versionCommand} from './commands/version'
 import {printHelp} from './app-help'
 import {findSubCommand, parseArgs, resolveCommand, UnknownOptionError, validateCommandConfig} from './options'
-import {ErrorStyle, getErrorExitCode, getProcName, printError, sortBy} from './utils'
+import type {CliError} from './utils'
+import {createError, ErrorType, getErrorExitCode, getProcName, printError, sortBy} from './utils'
 import {printCommandHelp} from './print-command-help'
 import {printLn} from './utils'
 
@@ -20,8 +21,7 @@ function formatConfigError(error: unknown): string {
  */
 export interface ExecutionResult {
     code: number | null
-    error?: string
-    errorStyle?: ErrorStyle
+    error?: CliError
 }
 
 function isHelpFlag(arg: string | undefined): boolean {
@@ -49,10 +49,10 @@ function getRootCommands(app: AnyApp): readonly AnyCmd[] {
 }
 
 function unknownCommandResult(app: AnyApp, commandName: string): ExecutionResult {
+    const error = createError(`${getProcName(app)}: unknown command '${commandName}'`, ErrorType.InvalidArg)
     return {
-        code: getErrorExitCode(ErrorStyle.InvalidArg),
-        error: `${getProcName(app)}: unknown command '${commandName}'`,
-        errorStyle: ErrorStyle.InvalidArg,
+        code: getErrorExitCode(error),
+        error,
     }
 }
 
@@ -60,14 +60,18 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
     try {
         validateCommandConfig(cmd)
     } catch (err) {
+        const error = createError(formatConfigError(err), ErrorType.Misconfig)
         return {
-            code: getErrorExitCode(ErrorStyle.Misconfig),
-            error: formatConfigError(err),
-            errorStyle: ErrorStyle.Misconfig,
+            code: getErrorExitCode(error),
+            error,
         }
     }
 
     if (rawArgs.some(isHelpFlag)) {
+        if (cmd === app && !hasSubCommands(app)) {
+            printHelp(app, getRootCommands(app))
+            return {code: 0}
+        }
         printCommandHelp(app, cmd, path)
         return {code: 0}
     }
@@ -78,25 +82,25 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
         ;[args, opts] = parseArgs(cmd, rawArgs)
     } catch (err) {
         if(err instanceof UnknownOptionError) {
+            const error = createError(`${getProcName(app)}: ${err.message}`, ErrorType.InvalidArg)
             return {
-                code: getErrorExitCode(ErrorStyle.InvalidArg),
-                error: `${getProcName(app)}: ${err.message}`,
-                errorStyle: ErrorStyle.InvalidArg,
+                code: getErrorExitCode(error),
+                error,
             }
         }
+        const error = createError(err instanceof Error ? err.message : String(err), ErrorType.InvalidArg)
         return {
-            code: getErrorExitCode(ErrorStyle.InvalidArg),
-            error: err instanceof Error ? err.message : String(err),
-            errorStyle: ErrorStyle.InvalidArg,
+            code: getErrorExitCode(error),
+            error,
         }
     }
 
     const handler = getExecuteHandler(cmd)
     if(handler === undefined) {
+        const error = createError('Command is not executable.', ErrorType.Internal)
         return {
-            code: getErrorExitCode(ErrorStyle.Internal),
-            error: 'Command is not executable.',
-            errorStyle: ErrorStyle.Internal,
+            code: getErrorExitCode(error),
+            error,
         }
     }
 
@@ -107,10 +111,10 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
         }
         return {code}
     } catch (err) {
+        const error = createError(String((err as any)?.stack ?? err), ErrorType.Internal)
         return {
-            code: getErrorExitCode(ErrorStyle.Internal),
-            error: String((err as any)?.stack ?? err),
-            errorStyle: ErrorStyle.Internal,
+            code: getErrorExitCode(error),
+            error,
         }
     }
 }
@@ -151,10 +155,10 @@ export async function executeAppResult(app: AnyApp, argv: string[] = process.arg
                 try {
                     validateCommandConfig(resolved.command)
                 } catch (err) {
+                    const error = createError(formatConfigError(err), ErrorType.Misconfig)
                     return {
-                        code: getErrorExitCode(ErrorStyle.Misconfig),
-                        error: formatConfigError(err),
-                        errorStyle: ErrorStyle.Misconfig,
+                        code: getErrorExitCode(error),
+                        error,
                     }
                 }
             }
@@ -199,10 +203,10 @@ export async function executeAppResult(app: AnyApp, argv: string[] = process.arg
     }
 
     if (!isExecutable(resolved.command)) {
+        const error = createError('Command is not executable.', ErrorType.Internal)
         return {
-            code: getErrorExitCode(ErrorStyle.Internal),
-            error: 'Command is not executable.',
-            errorStyle: ErrorStyle.Internal,
+            code: getErrorExitCode(error),
+            error,
         }
     }
 
@@ -219,7 +223,7 @@ export async function executeAppResult(app: AnyApp, argv: string[] = process.arg
 export async function executeApp(app: AnyApp, argv: string[] = process.argv.slice(2)): Promise<number> {
     const result = await executeAppResult(app, argv)
     if(result.error !== undefined) {
-        printError(result.error, result.errorStyle)
+        printError(result.error)
     }
     return result.code ?? 0
 }

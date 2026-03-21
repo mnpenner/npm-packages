@@ -1,5 +1,5 @@
 - Use `expectType<TypeEqual<typeof VALUE, EXPECTED_TYPE>>(true)` to assert exact types in tests.
-- Add detailed JSDoc comments including @param and @returns to all public APIs, including all function overloads
+- Add detailed JSDoc comments including @param and @returns to all public APIs (exported from src/index.ts), including all function overloads
     - Link to other functions and classes using this syntax: [`exampleFunc`]{@link exampleFunc}
     - Link to methods using this syntax: [`Class.method`]{@link Class#method} 
 - This repo uses hg for version control

@@ -6,7 +6,8 @@ const app = new App('hello')
     .meta({
         version: pkg.version,
         bin: pkg.name,
-        author: 'Mark Penner'
+        author: 'Mark Penner',
+        description: 'Example app',
     })
     .flag('verbose', {
         alias: 'v',

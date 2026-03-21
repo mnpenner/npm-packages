@@ -2,7 +2,7 @@ import {describe, expect, it} from 'bun:test'
 import Path from 'path'
 import {App, Command} from './interfaces'
 import {executeAppResult} from './run'
-import {ErrorStyle} from './utils'
+import {createError, ErrorType} from './utils'
 
 function createMisconfiguredApp(): Parameters<typeof executeAppResult>[0] {
     return new App('hello')
@@ -22,8 +22,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 2,
-            error: "cli-api: unknown command 'bacon'",
-            errorStyle: ErrorStyle.InvalidArg,
+            error: createError("cli-api: unknown command 'bacon'", ErrorType.InvalidArg),
         })
     })
 
@@ -38,8 +37,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 2,
-            error: "cli-api: unknown command 'bacon'",
-            errorStyle: ErrorStyle.InvalidArg,
+            error: createError("cli-api: unknown command 'bacon'", ErrorType.InvalidArg),
         })
     })
 
@@ -53,8 +51,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 2,
-            error: 'cli-api: option -a not recognized',
-            errorStyle: ErrorStyle.InvalidArg,
+            error: createError('cli-api: option -a not recognized', ErrorType.InvalidArg),
         })
     })
 
@@ -63,8 +60,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 254,
-            error: 'Config Error: Only the last positional can be repeatable',
-            errorStyle: ErrorStyle.Misconfig,
+            error: createError('Config Error: Only the last positional can be repeatable', ErrorType.Misconfig),
         })
     })
 
@@ -73,8 +69,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 254,
-            error: 'Config Error: Only the last positional can be repeatable',
-            errorStyle: ErrorStyle.Misconfig,
+            error: createError('Config Error: Only the last positional can be repeatable', ErrorType.Misconfig),
         })
     })
 
@@ -88,8 +83,8 @@ describe(executeAppResult.name, () => {
         const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], [])
 
         expect(result.code).toBe(253)
-        expect(result.errorStyle).toBe(ErrorStyle.Internal)
-        expect(result.error).toContain('Error: kaboom')
+        expect(result.error?.type).toBe(ErrorType.Internal)
+        expect(result.error?.message).toContain('Error: kaboom')
     })
 
     it('renders the correct colors for each error style', () => {
@@ -99,10 +94,10 @@ describe(executeAppResult.name, () => {
                 '--eval',
                 [
                     "process.env.FORCE_COLOR = '1'",
-                    "import {ErrorStyle, printError} from './src/utils'",
-                    "printError('invalid', ErrorStyle.InvalidArg)",
-                    "printError('misconfig', ErrorStyle.Misconfig)",
-                    "printError('internal', ErrorStyle.Internal)",
+                    "import {createError, ErrorType, printError} from './src/utils'",
+                    "printError(createError('invalid', ErrorType.InvalidArg))",
+                    "printError(createError('misconfig', ErrorType.Misconfig))",
+                    "printError(createError('internal', ErrorType.Internal))",
                 ].join('\n'),
             ],
             cwd: Path.resolve(import.meta.dir, '..'),
@@ -145,5 +140,54 @@ describe(executeAppResult.name, () => {
         expect(result.exitCode).toBe(0)
         expect(result.stderr.toString()).toBe('')
         expect(result.stdout.toString()).toContain('Author: Mark Penner')
+    })
+
+    it('prints app name, version, and description for executable root app help', () => {
+        const result = Bun.spawnSync({
+            cmd: [
+                process.execPath,
+                '--eval',
+                [
+                    "import {App} from './src/interfaces'",
+                    "import {executeAppResult} from './src/run'",
+                    "const app = new App('hello')",
+                    "  .meta({bin: 'cli-api', version: '1.0.0', description: 'Example app'})",
+                    "  .opt('name', {required: true})",
+                    "  .run(() => {})",
+                    "await executeAppResult(app, ['--help'])",
+                ].join('\n'),
+            ],
+            cwd: Path.resolve(import.meta.dir, '..'),
+            stdout: 'pipe',
+            stderr: 'pipe',
+        })
+
+        expect(result.exitCode).toBe(0)
+        expect(result.stderr.toString()).toBe('')
+
+        const output = result.stdout.toString()
+        expect(output).toContain('hello version 1.0.0')
+        expect(output).toContain('Example app')
+        expect(output).toContain('Commands:')
+    })
+
+    it('runs the sub-command example help without module export errors', () => {
+        const result = Bun.spawnSync({
+            cmd: [
+                process.execPath,
+                'examples/sub-commands.ts',
+                '-h',
+            ],
+            cwd: Path.resolve(import.meta.dir, '..'),
+            stdout: 'pipe',
+            stderr: 'pipe',
+        })
+
+        expect(result.exitCode).toBe(0)
+        expect(result.stderr.toString()).toBe('')
+
+        const output = result.stdout.toString()
+        expect(output).toContain('hello version 0.2.0')
+        expect(output).toContain('Example app')
     })
 })
