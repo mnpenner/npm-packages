@@ -1,25 +1,13 @@
 import {Chalk, type ChalkInstance, type ColorSupportLevel, supportsColor} from 'chalk'
-import type {AnyApp, Option} from './interfaces'
+import type {AnyApp} from './interfaces'
 
 export type ColorMode = 'always' | 'auto' | 'never'
 
 type InternalAppMetadata = AnyApp & {_chalk?: ChalkInstance}
 
-const DEFAULT_COLOR_LEVEL = supportsColor ? supportsColor.level : 0
+const DEFAULT_COLOR_LEVEL: ColorSupportLevel = supportsColor ? supportsColor.level : 0
 
-const COLOR_MODES = new Set<ColorMode>(['always', 'auto', 'never'])
-
-let _chalk: ChalkInstance = new Chalk({level: DEFAULT_COLOR_LEVEL})
-
-export const COLOR_OPTION: Option = {
-    name: 'color',
-    description: 'Control ANSI color output (always, never, auto). Alias: --no-color.',
-    type: ['always', 'never', 'auto'] as const,
-    valuePlaceholder: 'WHEN',
-    valueNotRequired: true,
-}
-
-function getColorLevel(mode: ColorMode): ColorSupportLevel {
+export function getColorLevel(mode: ColorMode): ColorSupportLevel {
     if(mode === 'always') {
         return 3
     }
@@ -29,27 +17,20 @@ function getColorLevel(mode: ColorMode): ColorSupportLevel {
     return DEFAULT_COLOR_LEVEL
 }
 
-export function getChalk(): ChalkInstance {
-    return _chalk
+export function createChalk(mode: ColorMode = 'auto'): ChalkInstance {
+    return new Chalk({level: getColorLevel(mode)})
 }
 
-export function setColorMode(mode: ColorMode): ChalkInstance {
-    _chalk = new Chalk({level: getColorLevel(mode)})
-    return _chalk
+export function ensureAppChalk(app: AnyApp): ChalkInstance {
+    const metadata = app as InternalAppMetadata
+    if(metadata._chalk === undefined) {
+        metadata._chalk = createChalk()
+    }
+    return metadata._chalk
 }
 
 export function setAppColorMode(app: AnyApp, mode: ColorMode): ChalkInstance {
-    const chalk = setColorMode(mode)
+    const chalk = createChalk(mode)
     ;(app as InternalAppMetadata)._chalk = chalk
     return chalk
-}
-
-export function syncAppChalk(app: AnyApp): ChalkInstance {
-    const chalk = (app as InternalAppMetadata)._chalk ?? new Chalk({level: DEFAULT_COLOR_LEVEL})
-    _chalk = chalk
-    return chalk
-}
-
-export function isColorMode(value: string): value is ColorMode {
-    return COLOR_MODES.has(value as ColorMode)
 }

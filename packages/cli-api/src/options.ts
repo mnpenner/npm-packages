@@ -2,7 +2,8 @@ import type {AnyCmd, AnyLeafCommand, AnyOptType, Argument, Option} from './inter
 import {OptType, hasSubCommands} from './interfaces'
 import type {NullableObj} from './utils'
 import {includes, resolve, statSync, toArray, toBool} from './utils'
-import {getChalk} from './color'
+import type {ChalkInstance} from 'chalk'
+import {createChalk} from './color'
 import Path from 'path'
 import FileSys from 'fs'
 
@@ -29,6 +30,36 @@ export class UnknownOptionError extends Error {
         super(`option ${option} not recognized`)
         this.option = option
     }
+}
+
+function getEnumValues(item: {type?: AnyOptType, enumValues?: readonly string[]}): readonly string[] | undefined {
+    if(Array.isArray(item.type)) {
+        return item.type
+    }
+    if(item.type === OptType.ENUM) {
+        return item.enumValues
+    }
+    return undefined
+}
+
+function getOptionImplicitValue(opt: Option): any {
+    if(opt.valueIfSet !== undefined) {
+        return resolve(opt.valueIfSet)
+    }
+    if(opt.type === OptType.BOOL) {
+        return true
+    }
+    return !resolve(opt.defaultValue)
+}
+
+function getOptionNoPrefixValue(opt: Option): any {
+    if(opt.valueIfNoPrefix !== undefined) {
+        return resolve(opt.valueIfNoPrefix)
+    }
+    if(opt.type === OptType.BOOL) {
+        return false
+    }
+    throw new Error(`\`${getOptName(opt)}\` option must define valueIfNoPrefix when noPrefix is enabled`)
 }
 
 function isRepeatable(value: Repeatability): boolean {
@@ -107,8 +138,7 @@ function pushRepeatableValue(target: any[], value: any, itemName: string, maxCou
  * @param opt The option metadata to render.
  * @returns A tuple containing the formatted flag label and its description text.
  */
-export function formatOption(opt: Option): [string, string] {
-    const chalk = getChalk()
+export function formatOption(opt: Option, chalk: ChalkInstance = createChalk()): [string, string] {
     const aliases: string[] = []
     if(opt.alias) {
         if(Array.isArray(opt.alias)) {
@@ -117,8 +147,7 @@ export function formatOption(opt: Option): [string, string] {
             aliases.push(opt.alias)
         }
     }
-    aliases.push(opt.name)
-    let flags = aliases.map(a => chalk.green(a.length === 1 ? `-${a}` : `--${a}`)).join(', ')
+    let flags = [...aliases.map(a => chalk.green(a.length === 1 ? `-${a}` : `--${a}`)), chalk.green(`--${opt.name}`)].join(', ')
     if(!opt.alias && opt.name.length > 1) {
         flags = `    ${flags}`
     }
@@ -128,6 +157,9 @@ export function formatOption(opt: Option): [string, string] {
             ? `${chalk.grey('[')}=${valuePlaceholder}${chalk.grey(']')}`
             : `=${valuePlaceholder}`
     }
+    if(opt.noPrefix) {
+        flags += `, ${chalk.green(`--no-${opt.name}`)}`
+    }
     let desc = opt.description ?? ''
     let defaultValueText = opt.defaultValueText
     if(defaultValueText === undefined && opt.defaultValue !== undefined) {
@@ -136,6 +168,10 @@ export function formatOption(opt: Option): [string, string] {
     if(defaultValueText !== undefined) {
         desc += chalk.yellow(` [default: ${defaultValueText}]`)
     }
+    const enumValues = getEnumValues(opt)
+    if(enumValues?.length) {
+        desc += ` [possible values: ${enumValues.join(', ')}]`
+    }
     return [flags, desc]
 }
 
@@ -143,8 +179,9 @@ export function getValuePlaceholder(opt: Option): string {
     if(opt.valuePlaceholder !== undefined) {
         return opt.valuePlaceholder
     }
-    if(Array.isArray(opt.type)) {
-        return opt.type.join('|').toUpperCase()
+    const enumValues = getEnumValues(opt)
+    if(enumValues !== undefined) {
+        return enumValues.join('|').toUpperCase()
     } else if(opt.type == OptType.BOOL) {
         return JSON.stringify(!resolve(opt.defaultValue))
     } else if(opt.type === OptType.INT || opt.type === OptType.FLOAT) {
@@ -175,6 +212,15 @@ export function validateCommandConfig(cmd: ParseableCommand): void {
         if(typeof opt.repeatable === 'number') {
             assertValidCount(`\`${opt.name}\` option repeatable count`, opt.repeatable)
         }
+        if(opt.noPrefix && !opt.valueNotRequired) {
+            throw new Error(`\`${getOptName(opt)}\` option cannot enable noPrefix unless valueNotRequired is enabled`)
+        }
+        if(opt.type === OptType.ENUM && !getEnumValues(opt)?.length) {
+            throw new Error(`\`${getOptName(opt)}\` option must define enumValues when using OptType.ENUM`)
+        }
+        if(opt.noPrefix && opt.type !== OptType.BOOL && opt.valueIfNoPrefix === undefined) {
+            throw new Error(`\`${getOptName(opt)}\` option must define valueIfNoPrefix when noPrefix is enabled`)
+        }
     }
 }
 
@@ -202,8 +248,17 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
         }
     }
 
-    const findOpt = (name: string) =>
-        allOptions.find(o => o.name === name || includes(name, o.alias))
+    const findOpt = (name: string): {opt: Option, negated: boolean} | undefined => {
+        const option = allOptions.find(o => o.name === name || includes(name, o.alias))
+        if(option !== undefined) {
+            return {opt: option, negated: false}
+        }
+        const negatedOption = allOptions.find(o => o.noPrefix && `no-${o.name}` === name)
+        if(negatedOption !== undefined) {
+            return {opt: negatedOption, negated: true}
+        }
+        return undefined
+    }
 
     const getUnknownShortOption = (cluster: string): string | undefined => {
         for(let j = 0; j < cluster.length; ++j) {
@@ -234,19 +289,25 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
                     inlineValue = right
                 }
                 const name = token.slice(2)
-                const opt = findOpt(name)
-                if(!opt) throw new UnknownOptionError(`--${name}`)
+                const match = findOpt(name)
+                if(!match) throw new UnknownOptionError(`--${name}`)
+                const {opt, negated} = match
+                if(negated && inlineValue !== undefined) {
+                    throw new Error(`Option \`--no-${opt.name}\` does not take a value`)
+                }
                 let value = inlineValue
-                if(value === undefined) {
+                if(negated) {
+                    value = getOptionNoPrefixValue(opt)
+                } else if(value === undefined) {
                     if(opt.valueNotRequired) {
-                        value = !resolve(opt.defaultValue)
+                        value = getOptionImplicitValue(opt)
                     } else if(i < argv.length - 1) {
                         value = argv[++i]
                     } else {
                         throw new Error(`Missing required value for option \`${token}\``)
                     }
                 }
-                if(opt.type != null) value = coerceType(value, opt.type)
+                if(opt.type != null) value = coerceType(value, opt.type, getEnumValues(opt))
                 const k = opt.key ?? opt.name
                 if(isRepeatable(opt.repeatable)) {
                     pushRepeatableValue(opts[k] as any[], value, opt.name, getMaxRepeatCount(opt.repeatable), 'option')
@@ -267,12 +328,13 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
                 let j = 0
                 while(j < cluster.length) {
                     const ch = cluster[j]
-                    const opt = findOpt(ch)
-                    if(!opt) throw new UnknownOptionError(`-${ch}`)
+                    const match = findOpt(ch)
+                    if(!match) throw new UnknownOptionError(`-${ch}`)
+                    const {opt} = match
 
                     if(opt.valueNotRequired) {
                         const k = opt.key ?? opt.name
-                        const v = !resolve(opt.defaultValue)
+                        const v = getOptionImplicitValue(opt)
                         if(isRepeatable(opt.repeatable)) {
                             pushRepeatableValue(opts[k] as any[], v, opt.name, getMaxRepeatCount(opt.repeatable), 'option')
                         }
@@ -289,7 +351,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
                     else if(i < argv.length - 1) value = argv[++i]
                     else throw new Error(`Missing required value for option "-${ch}"`)
 
-                    if(opt.type != null) value = coerceType(value, opt.type)
+                    if(opt.type != null) value = coerceType(value, opt.type, getEnumValues(opt))
                     const k = opt.key ?? opt.name
                     if(isRepeatable(opt.repeatable)) {
                         pushRepeatableValue(opts[k] as any[], value, opt.name, getMaxRepeatCount(opt.repeatable), 'option')
@@ -303,7 +365,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
             const def = cmd.positonals?.[argIdx]
 
             if(def) {
-                if(def.type != null) value = coerceType(value, def.type)
+                if(def.type != null) value = coerceType(value, def.type, getEnumValues(def))
 
                 const k = def.key ?? def.name
                 if(isRepeatable(def.repeatable)) {
@@ -319,7 +381,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
                             i -= 1
                             break
                         }
-                        if(def.type != null) v = coerceType(v, def.type)
+                        if(def.type != null) v = coerceType(v, def.type, getEnumValues(def))
                         pushRepeatableValue(arr, v, def.name, getMaxRepeatCount(def.repeatable), 'positional')
                     }
                     argIdx = isRepeatable(def.repeatable) && cmd.positonals ? cmd.positonals.length : argIdx
@@ -368,9 +430,17 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
     return [args, opts]
 }
 
-function coerceType(value: string, type: AnyOptType) {
+function coerceType(value: string, type: AnyOptType, enumValues?: readonly string[]) {
+    const normalizedEnumValue = () => {
+        const normalized = String(value).trim().toLowerCase()
+        const allowedValues = enumValues ?? (Array.isArray(type) ? type : undefined)
+        if(allowedValues !== undefined && !allowedValues.includes(normalized)) {
+            throw new Error(`Invalid value "${value}" (expected one of: ${allowedValues.join(', ')})`)
+        }
+        return normalized
+    }
     if(Array.isArray(type)) {
-        return String(value).trim().toLowerCase()
+        return normalizedEnumValue()
     }
     switch(type) {
         case OptType.BOOL:
@@ -380,7 +450,7 @@ function coerceType(value: string, type: AnyOptType) {
         case OptType.FLOAT:
             return Number(value)
         case OptType.ENUM:
-            return String(value).trim().toLowerCase()
+            return normalizedEnumValue()
         case OptType.STRING:
             return String(value)
         case OptType.INPUT_FILE: {
@@ -389,15 +459,15 @@ function coerceType(value: string, type: AnyOptType) {
             const fullPath = Path.resolve(file)
             const stat = statSync(file)
             if(!stat) {
-                throw new Error(`File ${getChalk().underline(fullPath)} does not exist`)
+                throw new Error(`File ${createChalk().underline(fullPath)} does not exist`)
             }
             if(!stat.isFile()) {
-                throw new Error(`${getChalk().underline(fullPath)} is not a file`)
+                throw new Error(`${createChalk().underline(fullPath)} is not a file`)
             }
             try {
                 FileSys.accessSync(file, FileSys.constants.R_OK)
             } catch(err) {
-                throw new Error(`${getChalk().underline(fullPath)} is not readable`)
+                throw new Error(`${createChalk().underline(fullPath)} is not readable`)
             }
             return file
         }
@@ -437,7 +507,7 @@ function coerceType(value: string, type: AnyOptType) {
                 }
             }
             if(files.length) {
-                throw new Error(`${getChalk().underline(dir)} is not empty`)
+                throw new Error(`${createChalk().underline(dir)} is not empty`)
             }
             return dir
         }

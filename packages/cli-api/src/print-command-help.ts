@@ -2,7 +2,8 @@ import type {AnyApp, AnyCmd} from './interfaces'
 import {OptType, hasSubCommands, isExecutable} from './interfaces'
 import {printAvailableCommands} from './app-help'
 import {getProcName, print, printLn, space, toArray} from './utils'
-import {COLOR_OPTION, getChalk} from './color'
+import {createChalk, ensureAppChalk} from './color'
+import {getGlobalOptions} from './global-options'
 import {formatOption, getOptions, getOptName, getValuePlaceholder} from './options'
 import stringWidth from 'string-width'
 import type {Argument, Option} from './interfaces'
@@ -18,7 +19,7 @@ const HELP_OPTION: Option = {
 }
 
 function getCommandLabel(app: AnyApp, path: readonly string[]) {
-    const proc = getChalk().cyan(getProcName(app))
+    const proc = ensureAppChalk(app).cyan(getProcName(app))
     if (!path.length) {
         return proc
     }
@@ -26,7 +27,7 @@ function getCommandLabel(app: AnyApp, path: readonly string[]) {
 }
 
 function formatUsageOption(opt: Option): string {
-    const chalk = getChalk()
+    const chalk = createChalk()
     const optionName = chalk.green(getOptName(opt))
     if (opt.type === OptType.BOOL) {
         return optionName
@@ -40,13 +41,13 @@ function formatUsageOption(opt: Option): string {
 }
 
 function formatUsageArgument(arg: Argument): string {
-    const chalk = getChalk()
+    const chalk = createChalk()
     const argumentName = chalk.magenta(arg.repeatable ? `${arg.name}...` : arg.name)
     return `${chalk.grey(arg.required ? '<' : '[')}${argumentName}${chalk.grey(arg.required ? '>' : ']')}`
 }
 
 export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readonly string[] = []) {
-    const chalk = getChalk()
+    const chalk = ensureAppChalk(app)
     if (cmd.description) {
         printLn(cmd.description)
         printLn()
@@ -96,7 +97,7 @@ export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readon
         const allOptions = getOptions(cmd)
         if (allOptions.length) {
             printLn(chalk.yellow('\nOptions:'))
-            const lines = allOptions.map(formatOption)
+            const lines = allOptions.map(option => formatOption(option, chalk))
             const width = Math.max(...lines.map(l => stringWidth(l[0])))
             for (const line of lines) {
                 printLn('  ' + line[0] + space(width + 2, line[0]) + line[1])
@@ -118,14 +119,14 @@ export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readon
 
     if (hasSubCommands(cmd)) {
         printLn()
-        printAvailableCommands(cmd.subCommands, 'Sub-commands:')
+        printAvailableCommands(cmd.subCommands, 'Sub-commands:', chalk)
     }
 
-    const globalOptions = [HELP_OPTION, COLOR_OPTION, ...(app.globalOptions ?? [])]
+    const globalOptions = getGlobalOptions(app)
     if (globalOptions.length) {
         printLn()
         printLn(chalk.yellow('Global Options:'))
-        const lines = globalOptions.map(formatOption)
+        const lines = globalOptions.map(option => formatOption(option, chalk))
         const width = Math.max(...lines.map(line => stringWidth(line[0])))
         for (const line of lines) {
             printLn('  ' + line[0] + space(width + 2, line[0]) + line[1])

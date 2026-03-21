@@ -1,7 +1,8 @@
 import type {AnyApp} from './interfaces'
 import Path from 'path'
 import stringWidth from 'string-width'
-import {getChalk} from './color'
+import type {ChalkInstance} from 'chalk'
+import {createChalk} from './color'
 import {EMPTY_ARRAY, FALSE_VALUES, TRUE_VALUES} from './constants'
 import FileSys from 'fs'
 
@@ -35,10 +36,10 @@ const ERROR_PRESENTATION: Record<ErrorStyle, {code: number, color: string}> = {
     [ErrorStyle.Internal]: {code: 253, color: '#6684E1'},
 }
 
-function blockError(str: string, style: ErrorStyle) {
+function blockError(str: string, style: ErrorStyle, chalk: ChalkInstance) {
     const lines = str.split('\n')
     const width = Math.max(...lines.map(l => stringWidth(l))) + 4
-    const background = getChalk().bgHex(ERROR_PRESENTATION[style].color).hex('#FEFBEC')
+    const background = chalk.bgHex(ERROR_PRESENTATION[style].color).hex('#FEFBEC')
     printLn(background(space(width)))
     for(const line of lines) {
         const txt = `  ${line}`
@@ -74,8 +75,8 @@ export function getErrorExitCode(error: CliError): number {
  * @param error The structured CLI error to render.
  * @returns Nothing.
  */
-export function printError(error: CliError): void {
-    blockError(error.message, error.type)
+export function printError(error: CliError, chalk: ChalkInstance = createChalk()): void {
+    blockError(error.message, error.type, chalk)
 }
 
 /**

@@ -1,5 +1,5 @@
 import type {ChalkInstance} from 'chalk'
-import {getChalk} from './color'
+import {createChalk} from './color'
 
 // union -> intersection
 type U2I<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never
@@ -145,6 +145,8 @@ export type AnyOptType = OptType | readonly string[]
 export interface ArgumentOrOption extends ArgumentOrOptionOrFlag {
     /** Type to coerce the option value to. */
     type?: AnyOptType
+    /** Allowed values for `OptType.ENUM`. */
+    enumValues?: readonly string[]
     /** Option or positional may be provided more than once. When set to a number, that number is the maximum count. */
     repeatable?: boolean | number
     /** Option or positional is required. For repeatable positionals, a number means the minimum count required. */
@@ -165,13 +167,19 @@ export interface Argument extends ArgumentOrOption {
 }
 
 interface OptionOrFlag {
+    /** Add a `--no-${name}` long-form alias that uses `valueIfNoPrefix` or `false`. */
+    noPrefix?: boolean
+    /** Value to use when the option is present without an explicit value. */
+    valueIfSet?: any | (() => any)
+    /** Value to use when the `--no-${name}` form is provided. */
+    valueIfNoPrefix?: any | (() => any)
 }
 
 /** Option with value. */
 export interface Option extends ArgumentOrOption, OptionOrFlag {
     /** Placeholder value to use in help. */
     valuePlaceholder?: string
-    /** Caller may specify a value (--opt=value), but it's not required (will negate `defaultValue` instead). */
+    /** Caller may specify a value (`--opt=value`), but it's not required. When omitted, `valueIfSet` is used. */
     valueNotRequired?: boolean
 }
 
@@ -511,13 +519,18 @@ export class App<
     _globalOptions?: Option[]
     _chalk?: ChalkInstance
 
+    constructor(name: string) {
+        super(name)
+        this._chalk = createChalk()
+    }
+
     /**
      * Gets the chalk instance configured for the current app execution.
      *
      * @returns The active chalk instance. During command execution this reflects built-in color flags such as `--color` and `--no-color`.
      */
     get chalk(): ChalkInstance {
-        return this._chalk ?? getChalk()
+        return this._chalk!
     }
 
     /**
