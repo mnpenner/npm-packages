@@ -2,7 +2,7 @@ import type {AnyCmd, AnyLeafCommand, AnyOptType, Argument, Option} from './inter
 import {OptType, hasSubCommands} from './interfaces'
 import type {NullableObj} from './utils'
 import {includes, resolve, statSync, toArray, toBool} from './utils'
-import Chalk from 'chalk'
+import {getChalk} from './color'
 import Path from 'path'
 import FileSys from 'fs'
 
@@ -108,6 +108,7 @@ function pushRepeatableValue(target: any[], value: any, itemName: string, maxCou
  * @returns A tuple containing the formatted flag label and its description text.
  */
 export function formatOption(opt: Option): [string, string] {
+    const chalk = getChalk()
     const aliases: string[] = []
     if(opt.alias) {
         if(Array.isArray(opt.alias)) {
@@ -117,15 +118,15 @@ export function formatOption(opt: Option): [string, string] {
         }
     }
     aliases.push(opt.name)
-    let flags = aliases.map(a => Chalk.green(a.length === 1 ? `-${a}` : `--${a}`)).join(', ')
+    let flags = aliases.map(a => chalk.green(a.length === 1 ? `-${a}` : `--${a}`)).join(', ')
     if(!opt.alias && opt.name.length > 1) {
         flags = `    ${flags}`
     }
     if(opt.type !== OptType.BOOL) {
-        const valuePlaceholder = Chalk.magenta(getValuePlaceholder(opt))
+        const valuePlaceholder = chalk.magenta(getValuePlaceholder(opt))
         flags += opt.valueNotRequired
-            ? `${Chalk.grey('[')}=${valuePlaceholder}${Chalk.grey(']')}`
-            : ` ${Chalk.grey('<')}${valuePlaceholder}${Chalk.grey('>')}`
+            ? `${chalk.grey('[')}=${valuePlaceholder}${chalk.grey(']')}`
+            : `=${valuePlaceholder}`
     }
     let desc = opt.description ?? ''
     let defaultValueText = opt.defaultValueText
@@ -133,7 +134,7 @@ export function formatOption(opt: Option): [string, string] {
         defaultValueText = JSON.stringify(resolve(opt.defaultValue))
     }
     if(defaultValueText !== undefined) {
-        desc += Chalk.yellow(` [default: ${defaultValueText}]`)
+        desc += chalk.yellow(` [default: ${defaultValueText}]`)
     }
     return [flags, desc]
 }
@@ -388,15 +389,15 @@ function coerceType(value: string, type: AnyOptType) {
             const fullPath = Path.resolve(file)
             const stat = statSync(file)
             if(!stat) {
-                throw new Error(`File ${Chalk.underline(fullPath)} does not exist`)
+                throw new Error(`File ${getChalk().underline(fullPath)} does not exist`)
             }
             if(!stat.isFile()) {
-                throw new Error(`${Chalk.underline(fullPath)} is not a file`)
+                throw new Error(`${getChalk().underline(fullPath)} is not a file`)
             }
             try {
                 FileSys.accessSync(file, FileSys.constants.R_OK)
             } catch(err) {
-                throw new Error(`${Chalk.underline(fullPath)} is not readable`)
+                throw new Error(`${getChalk().underline(fullPath)} is not readable`)
             }
             return file
         }
@@ -436,7 +437,7 @@ function coerceType(value: string, type: AnyOptType) {
                 }
             }
             if(files.length) {
-                throw new Error(`${Chalk.underline(dir)} is not empty`)
+                throw new Error(`${getChalk().underline(dir)} is not empty`)
             }
             return dir
         }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import Chalk from 'chalk'
+import {getChalk} from './color'
 import { formatOption, parseArgs } from './options'
 import { Command, OptType } from './interfaces'
 
@@ -62,7 +62,7 @@ describe(parseArgs.name, () => {
             .flag('m')
             .flag('e')
 
-        expect(() => parseArgs(cmd, ['-name=foo'])).toThrow(/missing required value for option "-n"/i)
+        expect(() => parseArgs(cmd, ['-name=foo'])).toThrow(/missing required value for option [`"]-n[`"]/i)
     })
 
     it('reports an unknown short option before a missing value in a cluster with =', () => {
@@ -175,13 +175,13 @@ describe(parseArgs.name, () => {
             .arg('name', {required: true})
             .arg('disclaimer', {key: 'disclaimer', repeatable: true, required: true})
 
-        expect(() => parseArgs(cmd, ['tom'])).toThrow(/"disclaimer" positional requires at least 1 value/i)
+        expect(() => parseArgs(cmd, ['tom'])).toThrow(/[`"]disclaimer[`"] positional requires at least 1 value/i)
     })
 
     it('supports numeric minimum counts for repeatable positonals', () => {
         const cmd = makeCommand().arg('files', {key: 'files', repeatable: true, required: 2})
 
-        expect(() => parseArgs(cmd, ['a.txt'])).toThrow(/"files" positional requires at least 2 values/i)
+        expect(() => parseArgs(cmd, ['a.txt'])).toThrow(/[`"]files[`"] positional requires at least 2 values/i)
         expect(parseArgs(cmd, ['a.txt', 'b.txt'])[1].files).toEqual(['a.txt', 'b.txt'])
     })
 
@@ -287,11 +287,13 @@ describe(formatOption.name, () => {
             valueNotRequired: true,
         })
 
-        expect(flags).toBe(`${Chalk.green('-s')}, ${Chalk.green('--shout')}${Chalk.grey('[')}=${Chalk.magenta('SHOUT')}${Chalk.grey(']')}`)
+        const chalk = getChalk()
+
+        expect(flags).toBe(`${chalk.green('-s')}, ${chalk.green('--shout')}${chalk.grey('[')}=${chalk.magenta('SHOUT')}${chalk.grey(']')}`)
         expect(description).toBe('Shout the greeting')
     })
 
-    it('renders required option values with magenta placeholders in angle brackets', () => {
+    it('renders required option values with = placeholders', () => {
         const [flags, description] = formatOption({
             alias: 'n',
             description: 'Person you want to greet',
@@ -299,7 +301,9 @@ describe(formatOption.name, () => {
             valuePlaceholder: 'person',
         })
 
-        expect(flags).toBe(`${Chalk.green('-n')}, ${Chalk.green('--name')} ${Chalk.grey('<')}${Chalk.magenta('person')}${Chalk.grey('>')}`)
+        const chalk = getChalk()
+
+        expect(flags).toBe(`${chalk.green('-n')}, ${chalk.green('--name')}=${chalk.magenta('person')}`)
         expect(description).toBe('Person you want to greet')
     })
 
@@ -310,7 +314,9 @@ describe(formatOption.name, () => {
             name: 'output',
         })
 
-        expect(flags).toBe(`${Chalk.green('-o')}, ${Chalk.green('--output')} ${Chalk.grey('<')}${Chalk.magenta('OUTPUT')}${Chalk.grey('>')}`)
+        const chalk = getChalk()
+
+        expect(flags).toBe(`${chalk.green('-o')}, ${chalk.green('--output')}=${chalk.magenta('OUTPUT')}`)
         expect(description).toBe('Output file')
     })
 
@@ -321,7 +327,9 @@ describe(formatOption.name, () => {
             valueNotRequired: true,
         })
 
-        expect(flags).toBe(`    ${Chalk.green('--shout')}${Chalk.grey('[')}=${Chalk.magenta('SHOUT')}${Chalk.grey(']')}`)
+        const chalk = getChalk()
+
+        expect(flags).toBe(`    ${chalk.green('--shout')}${chalk.grey('[')}=${chalk.magenta('SHOUT')}${chalk.grey(']')}`)
         expect(description).toBe('Shout the greeting')
     })
 })

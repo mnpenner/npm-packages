@@ -143,9 +143,9 @@ describe(executeAppResult.name, () => {
         expect(result.stderr.toString()).toBe('')
 
         const output = result.stdout.toString()
-        expect(output).toContain('\u001B[41m')
-        expect(output).toContain('\u001B[45m')
-        expect(output).toContain('\u001B[44m')
+        expect(output).toContain('\u001B[48;2;215;55;55m')
+        expect(output).toContain('\u001B[48;2;184;84;212m')
+        expect(output).toContain('\u001B[48;2;102;132;225m')
     })
 
     it('prints app author in root help output', () => {
@@ -224,5 +224,81 @@ describe(executeAppResult.name, () => {
         expect(output).toContain('hello ver. 0.2.0 by Mark Penner')
         expect(output).toContain('hello ver. 0.2.0 by Mark Penner\n\nExample app')
         expect(output).toContain('Example app')
+    })
+
+    it('exposes the app chalk instance to command handlers', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api'})
+            .run(function() {
+                expect(this.chalk.blue('blue')).toBe('\u001B[34mblue\u001B[39m')
+            })
+
+        const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['--color=always'])
+
+        expect(result).toEqual({code: null})
+    })
+
+    it('shows the built-in color option in help text with an optional value placeholder', () => {
+        const result = Bun.spawnSync({
+            cmd: [
+                process.execPath,
+                '--eval',
+                [
+                    "import {App} from './src/interfaces'",
+                    "import {executeAppResult} from './src/run'",
+                    "const app = new App('hello').meta({bin: 'cli-api', description: 'Example app'}).run(() => {})",
+                    "await executeAppResult(app, ['--help', '--no-color'])",
+                ].join('\n'),
+            ],
+            cwd: Path.resolve(import.meta.dir, '..'),
+            stdout: 'pipe',
+            stderr: 'pipe',
+        })
+
+        expect(result.exitCode).toBe(0)
+        expect(result.stderr.toString()).toBe('')
+
+        const output = result.stdout.toString()
+        expect(output).toContain('--color[=WHEN]')
+        expect(output).not.toContain('\u001B[')
+    })
+
+    it('enables forced color output for help when requested', () => {
+        const result = Bun.spawnSync({
+            cmd: [
+                process.execPath,
+                '--eval',
+                [
+                    "import {App} from './src/interfaces'",
+                    "import {executeAppResult} from './src/run'",
+                    "const app = new App('hello').meta({bin: 'cli-api', description: 'Example app'}).run(() => {})",
+                    "await executeAppResult(app, ['--help', '--color=always'])",
+                ].join('\n'),
+            ],
+            cwd: Path.resolve(import.meta.dir, '..'),
+            stdout: 'pipe',
+            stderr: 'pipe',
+            env: {
+                ...process.env,
+                FORCE_COLOR: '0',
+            },
+        })
+
+        expect(result.exitCode).toBe(0)
+        expect(result.stderr.toString()).toBe('')
+        expect(result.stdout.toString()).toContain('\u001B[')
+    })
+
+    it('returns an invalid-arg error for unsupported color values', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api'})
+            .run(() => {})
+
+        const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['--color=rainbow'])
+
+        expect(result).toEqual({
+            code: 2,
+            error: createError('Invalid value for option `--color`: rainbow', ErrorStyle.InvalidArg),
+        })
     })
 })

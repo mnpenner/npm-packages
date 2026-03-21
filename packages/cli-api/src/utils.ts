@@ -1,7 +1,7 @@
 import type {AnyApp} from './interfaces'
 import Path from 'path'
 import stringWidth from 'string-width'
-import Chalk from 'chalk'
+import {getChalk} from './color'
 import {EMPTY_ARRAY, FALSE_VALUES, TRUE_VALUES} from './constants'
 import FileSys from 'fs'
 
@@ -29,16 +29,16 @@ export interface CliError {
     type: ErrorStyle
 }
 
-const ERROR_PRESENTATION: Record<ErrorStyle, {code: number, format: typeof Chalk.bgRed}> = {
-    [ErrorStyle.InvalidArg]: {code: 2, format: Chalk.bgHex('#D73737').hex('#FEFBEC')},
-    [ErrorStyle.Misconfig]: {code: 254, format: Chalk.bgHex('#B854D4').hex('#FEFBEC')},
-    [ErrorStyle.Internal]: {code: 253, format: Chalk.bgHex('#6684E1').hex('#FEFBEC')},
+const ERROR_PRESENTATION: Record<ErrorStyle, {code: number, color: string}> = {
+    [ErrorStyle.InvalidArg]: {code: 2, color: '#D73737'},
+    [ErrorStyle.Misconfig]: {code: 254, color: '#B854D4'},
+    [ErrorStyle.Internal]: {code: 253, color: '#6684E1'},
 }
 
 function blockError(str: string, style: ErrorStyle) {
     const lines = str.split('\n')
     const width = Math.max(...lines.map(l => stringWidth(l))) + 4
-    const background = ERROR_PRESENTATION[style].format
+    const background = getChalk().bgHex(ERROR_PRESENTATION[style].color).hex('#FEFBEC')
     printLn(background(space(width)))
     for(const line of lines) {
         const txt = `  ${line}`

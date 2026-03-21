@@ -1,4 +1,5 @@
 import {describe, it} from 'bun:test'
+import type {ChalkInstance} from 'chalk'
 import {App, Command, OptType} from './interfaces'
 import {expectType, TypeEqual} from './testing/type-assert'
 
@@ -51,6 +52,7 @@ describe(Command.name, () => {
                 .command(boundedCommand)
 
             expectType<TypeEqual<typeof fluentApp.execute, (args?: string[]) => Promise<number>>>(true)
+            expectType<TypeEqual<typeof fluentApp.chalk, ChalkInstance>>(true)
 
             void greetCommand
             void inspectCommand

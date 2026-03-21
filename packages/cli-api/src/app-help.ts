@@ -1,7 +1,7 @@
 import type {AnyApp, AnyCmd, Option} from './interfaces'
 import {hasSubCommands, OptType} from './interfaces'
 import {getProcName, print, printLn, space} from './utils'
-import Chalk from 'chalk'
+import {COLOR_OPTION, getChalk} from './color'
 import stringWidth from 'string-width'
 import {formatOption} from './options'
 
@@ -21,13 +21,14 @@ const HELP_OPTION: Option = {
 }
 
 export function printHelp(app: AnyApp, commands: readonly AnyCmd[]) {
-    print(Chalk.green(app.name))
+    const chalk = getChalk()
+    print(chalk.green(app.name))
     const {_author: author, _version: version} = app as InternalAppMetadata
     if (version) {
-        print(` ver. ${Chalk.yellow(version)}`)
+        print(` ver. ${chalk.yellow(version)}`)
     }
     if (author) {
-        print(` by ${Chalk.cyan(author)}`)
+        print(` by ${chalk.cyan(author)}`)
     }
     printLn()
 
@@ -37,10 +38,10 @@ export function printHelp(app: AnyApp, commands: readonly AnyCmd[]) {
     }
 
     printLn()
-    printLn(Chalk.yellow('Usage:'))
-    print(`  ${Chalk.cyan(getProcName(app))}`)
+    printLn(chalk.yellow('Usage:'))
+    print(`  ${chalk.cyan(getProcName(app))}`)
     if (hasSubCommands(app)) {
-        print(` ${Chalk.gray('[--global-options]')} ${Chalk.gray('<')}command${Chalk.gray('>')}`)
+        print(` ${chalk.gray('[--global-options]')} ${chalk.gray('<')}command${chalk.gray('>')}`)
     }
     printLn('\n')
 
@@ -48,10 +49,10 @@ export function printHelp(app: AnyApp, commands: readonly AnyCmd[]) {
         printAvailableCommands(commands)
     }
 
-    const globalOptions = [HELP_OPTION, ...((app as InternalAppMetadata)._globalOptions ?? (app as InternalAppMetadata).globalOptions ?? [])]
+    const globalOptions = [HELP_OPTION, COLOR_OPTION, ...((app as InternalAppMetadata)._globalOptions ?? (app as InternalAppMetadata).globalOptions ?? [])]
     if (globalOptions.length) {
         printLn()
-        printLn(Chalk.yellow('Global Options:'))
+        printLn(chalk.yellow('Global Options:'))
         const lines = globalOptions.map(formatOption)
         const width = Math.max(...lines.map(line => stringWidth(line[0])))
         for (const line of lines) {
@@ -65,10 +66,11 @@ export function printAvailableCommands(commands: readonly AnyCmd[], title: strin
         return
     }
 
-    printLn(Chalk.yellow(title))
+    const chalk = getChalk()
+    printLn(chalk.yellow(title))
     const width = Math.max(...commands.map(c => stringWidth(c.name))) + 2
     for (const cmd of commands) {
-        print(`  ${Chalk.green(cmd.name)}`)
+        print(`  ${chalk.green(cmd.name)}`)
         if (cmd.description) {
             print(`${space(width, cmd.name)}${cmd.description}`)
         }

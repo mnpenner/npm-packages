@@ -8,6 +8,7 @@ import type {CliError} from './utils'
 import {createError, ErrorStyle, getErrorExitCode, getProcName, printError, sortBy} from './utils'
 import {printCommandHelp} from './print-command-help'
 import {printLn} from './utils'
+import {isColorMode, setAppColorMode, syncAppChalk} from './color'
 
 type InternalAppMetadata = AnyApp & {_version?: string}
 
@@ -58,6 +59,46 @@ function getRootCommands(app: AnyApp): readonly AnyCmd[] {
         versionCommand as unknown as AnyCmd,
         helpCommand as unknown as AnyCmd,
     ] as const
+}
+
+function preprocessGlobalColor(app: AnyApp, argv: readonly string[]): string[] {
+    const nextArgv: string[] = []
+    let parseFlags = true
+    let colorMode: import('./color').ColorMode = 'auto'
+
+    for(let i = 0; i < argv.length; ++i) {
+        const token = argv[i]
+
+        if(parseFlags && token === '--') {
+            parseFlags = false
+            nextArgv.push(token)
+            continue
+        }
+
+        if(parseFlags && token === '--no-color') {
+            colorMode = 'never'
+            continue
+        }
+
+        if(parseFlags && token === '--color') {
+            colorMode = 'always'
+            continue
+        }
+
+        if(parseFlags && token.startsWith('--color=')) {
+            const value = token.slice('--color='.length).trim().toLowerCase()
+            if(!isColorMode(value)) {
+                throw new Error(`Invalid value for option \`--color\`: ${value}`)
+            }
+            colorMode = value
+            continue
+        }
+
+        nextArgv.push(token)
+    }
+
+    setAppColorMode(app, colorMode)
+    return nextArgv
 }
 
 function unknownCommandResult(app: AnyApp, commandName: string): ExecutionResult {
@@ -140,9 +181,21 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
  * @returns The execution result, including any user-facing error text that should be printed.
  */
 export async function executeAppResult(app: AnyApp, argv: string[] = process.argv.slice(2)): Promise<ExecutionResult> {
+    let normalizedArgv: string[]
+    try {
+        normalizedArgv = preprocessGlobalColor(app, argv)
+    } catch(err) {
+        syncAppChalk(app)
+        const error = createError(err instanceof Error ? err.message : String(err), ErrorStyle.InvalidArg)
+        return {
+            code: getErrorExitCode(error),
+            error,
+        }
+    }
+    syncAppChalk(app)
     const rootCommands = getRootCommands(app)
 
-    if (argv.length === 0) {
+    if (normalizedArgv.length === 0) {
         if (isExecutable(app)) {
             return executeLeaf(app, app, [], [])
         }
@@ -150,9 +203,9 @@ export async function executeAppResult(app: AnyApp, argv: string[] = process.arg
         return {code: 0}
     }
 
-    if (argv.some(isHelpFlag)) {
+    if (normalizedArgv.some(isHelpFlag)) {
         if (hasSubCommands(app)) {
-            const filteredArgv = stripHelpFlags(argv)
+            const filteredArgv = stripHelpFlags(normalizedArgv)
             if (!filteredArgv.length) {
                 printHelp(app, rootCommands)
                 return {code: 0}
@@ -175,36 +228,36 @@ export async function executeAppResult(app: AnyApp, argv: string[] = process.arg
             return executeLeaf(
                 app,
                 resolved.command,
-                [...resolved.remainingArgv, ...argv.filter(isHelpFlag)],
+                [...resolved.remainingArgv, ...normalizedArgv.filter(isHelpFlag)],
                 resolved.path,
             )
         }
 
         if (isExecutable(app)) {
-            return executeLeaf(app, app, argv, [])
+            return executeLeaf(app, app, normalizedArgv, [])
         }
 
         printHelp(app, rootCommands)
         return {code: 0}
     }
 
-    if (isVersionFlag(argv[0])) {
+    if (isVersionFlag(normalizedArgv[0])) {
         printLn((app as InternalAppMetadata)._version)
         return {code: 0}
     }
 
     if (isExecutable(app) && !hasSubCommands(app)) {
-        const builtin = findSubCommand(argv[0], rootCommands)
+        const builtin = findSubCommand(normalizedArgv[0], rootCommands)
         if (builtin && isExecutable(builtin)) {
-            return executeLeaf(app, builtin, argv.slice(1), [builtin.name])
+            return executeLeaf(app, builtin, normalizedArgv.slice(1), [builtin.name])
         }
 
-        return executeLeaf(app, app, argv, [])
+        return executeLeaf(app, app, normalizedArgv, [])
     }
 
-    const resolved = resolveCommand(argv, rootCommands)
+    const resolved = resolveCommand(normalizedArgv, rootCommands)
     if (!resolved.command) {
-        return unknownCommandResult(app, argv[0])
+        return unknownCommandResult(app, normalizedArgv[0])
     }
 
     if (hasSubCommands(resolved.command)) {

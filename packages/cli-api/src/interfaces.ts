@@ -1,3 +1,6 @@
+import type {ChalkInstance} from 'chalk'
+import {getChalk} from './color'
+
 // union -> intersection
 type U2I<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never
 
@@ -506,6 +509,16 @@ export class App<
     _version?: string
     _author?: string
     _globalOptions?: Option[]
+    _chalk?: ChalkInstance
+
+    /**
+     * Gets the chalk instance configured for the current app execution.
+     *
+     * @returns The active chalk instance. During command execution this reflects built-in color flags such as `--color` and `--no-color`.
+     */
+    get chalk(): ChalkInstance {
+        return this._chalk ?? getChalk()
+    }
 
     /**
      * Applies metadata to the root app in one call.

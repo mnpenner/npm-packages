@@ -2,7 +2,7 @@ import type {AnyApp, AnyCmd} from './interfaces'
 import {OptType, hasSubCommands, isExecutable} from './interfaces'
 import {printAvailableCommands} from './app-help'
 import {getProcName, print, printLn, space, toArray} from './utils'
-import Chalk from 'chalk'
+import {COLOR_OPTION, getChalk} from './color'
 import {formatOption, getOptions, getOptName, getValuePlaceholder} from './options'
 import stringWidth from 'string-width'
 import type {Argument, Option} from './interfaces'
@@ -18,7 +18,7 @@ const HELP_OPTION: Option = {
 }
 
 function getCommandLabel(app: AnyApp, path: readonly string[]) {
-    const proc = Chalk.cyan(getProcName(app))
+    const proc = getChalk().cyan(getProcName(app))
     if (!path.length) {
         return proc
     }
@@ -26,24 +26,27 @@ function getCommandLabel(app: AnyApp, path: readonly string[]) {
 }
 
 function formatUsageOption(opt: Option): string {
-    const optionName = Chalk.green(getOptName(opt))
+    const chalk = getChalk()
+    const optionName = chalk.green(getOptName(opt))
     if (opt.type === OptType.BOOL) {
         return optionName
     }
 
-    const valuePlaceholder = Chalk.magenta(getValuePlaceholder(opt))
+    const valuePlaceholder = chalk.magenta(getValuePlaceholder(opt))
     if (opt.valueNotRequired) {
-        return `${optionName}${Chalk.grey('[')}=${valuePlaceholder}${Chalk.grey(']')}`
+        return `${optionName}${chalk.grey('[')}=${valuePlaceholder}${chalk.grey(']')}`
     }
     return `${optionName}=${valuePlaceholder}`
 }
 
 function formatUsageArgument(arg: Argument): string {
-    const argumentName = Chalk.magenta(arg.repeatable ? `${arg.name}...` : arg.name)
-    return `${Chalk.grey(arg.required ? '<' : '[')}${argumentName}${Chalk.grey(arg.required ? '>' : ']')}`
+    const chalk = getChalk()
+    const argumentName = chalk.magenta(arg.repeatable ? `${arg.name}...` : arg.name)
+    return `${chalk.grey(arg.required ? '<' : '[')}${argumentName}${chalk.grey(arg.required ? '>' : ']')}`
 }
 
 export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readonly string[] = []) {
+    const chalk = getChalk()
     if (cmd.description) {
         printLn(cmd.description)
         printLn()
@@ -56,11 +59,11 @@ export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readon
         }
     }
 
-    printLn(Chalk.yellow('Usage:'))
+    printLn(chalk.yellow('Usage:'))
     print(`  ${getCommandLabel(app, path)}`)
 
     if (hasSubCommands(cmd)) {
-        print(` ${Chalk.gray('<')}command${Chalk.gray('>')}`)
+        print(` ${chalk.gray('<')}command${chalk.gray('>')}`)
     }
 
     if (isExecutable(cmd)) {
@@ -75,24 +78,24 @@ export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readon
                 }
             }
             if (otherOptions) {
-                print(` ${Chalk.gray('[')}${Chalk.magenta('--options')}${Chalk.gray(']')}`)
+                print(` ${chalk.gray('[')}${chalk.magenta('--options')}${chalk.gray(']')}`)
             }
         }
         if (cmd.positonals?.length) {
-            print(` ${Chalk.grey('[')}--${Chalk.grey(']')}`)
+            print(` ${chalk.grey('[')}--${chalk.grey(']')}`)
             for (const arg of cmd.positonals) {
                 print(` ${formatUsageArgument(arg)}`)
             }
         }
     } else if (!hasSubCommands(cmd)) {
-        print(` ${Chalk.gray('[options] [positionals]')}`)
+        print(` ${chalk.gray('[options] [positionals]')}`)
     }
     printLn()
 
     if (isExecutable(cmd)) {
         const allOptions = getOptions(cmd)
         if (allOptions.length) {
-            printLn(Chalk.yellow('\nOptions:'))
+            printLn(chalk.yellow('\nOptions:'))
             const lines = allOptions.map(formatOption)
             const width = Math.max(...lines.map(l => stringWidth(l[0])))
             for (const line of lines) {
@@ -101,10 +104,10 @@ export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readon
         }
 
         if (cmd.positonals?.length) {
-            printLn(Chalk.yellow('\nArguments:'))
+            printLn(chalk.yellow('\nArguments:'))
             const width = Math.max(...cmd.positonals.map((arg: {name: string}) => stringWidth(arg.name)))
             for (const arg of cmd.positonals) {
-                print('  ' + Chalk.green(arg.name))
+                print('  ' + chalk.green(arg.name))
                 if (arg.description) {
                     print(space(width + 2, arg.name) + arg.description)
                 }
@@ -118,10 +121,10 @@ export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readon
         printAvailableCommands(cmd.subCommands, 'Sub-commands:')
     }
 
-    const globalOptions = [HELP_OPTION, ...(app.globalOptions ?? [])]
+    const globalOptions = [HELP_OPTION, COLOR_OPTION, ...(app.globalOptions ?? [])]
     if (globalOptions.length) {
         printLn()
-        printLn(Chalk.yellow('Global Options:'))
+        printLn(chalk.yellow('Global Options:'))
         const lines = globalOptions.map(formatOption)
         const width = Math.max(...lines.map(line => stringWidth(line[0])))
         for (const line of lines) {
@@ -131,10 +134,10 @@ export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readon
 
     if (cmd.alias) {
         const aliases = toArray(cmd.alias)
-        printLn(Chalk.yellow(`\nAlias${aliases.length !== 1 ? 'es' : ''}: `) + aliases.join(Chalk.gray(', ')))
+        printLn(chalk.yellow(`\nAlias${aliases.length !== 1 ? 'es' : ''}: `) + aliases.join(chalk.gray(', ')))
     }
     if (cmd.longDescription) {
-        printLn(Chalk.yellow('\nDescription:'))
+        printLn(chalk.yellow('\nDescription:'))
         printLn('  ' + cmd.longDescription)
     }
 }
