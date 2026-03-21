@@ -103,6 +103,39 @@ describe(executeAppResult.name, () => {
         })
     })
 
+    it('passes custom global options through to sub-command handlers', async () => {
+        let captured: Record<string, unknown> | undefined
+        const app = new App('hello')
+            .meta({bin: 'cli-api'})
+            .globalOpt('profile', {alias: 'p', required: true})
+            .command(new Command('world')
+                .run((args, opts) => {
+                    void args
+                    captured = opts
+                }))
+
+        const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['--profile', 'dev', 'world'])
+
+        expect(result).toEqual({code: null})
+        expect(captured).toMatchObject({profile: 'dev', color: 'auto'})
+    })
+
+    it('returns a misconfiguration error when a global option collides with a local option', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api'})
+            .globalOpt('profile', {alias: 'p'})
+            .command(new Command('world')
+                .opt('profile')
+                .run(() => {}))
+
+        const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['world'])
+
+        expect(result).toEqual({
+            code: 254,
+            error: createError('Config Error: Option token `--profile` collides with `--profile`', ErrorStyle.Misconfig),
+        })
+    })
+
     it('returns internal errors with the internal style and exit code', async () => {
         const app = new App('hello')
             .meta({bin: 'cli-api'})
@@ -263,6 +296,31 @@ describe(executeAppResult.name, () => {
         const output = result.stdout.toString()
         expect(output).toContain('--color[=WHEN]')
         expect(output).not.toContain('\u001B[')
+    })
+
+    it('shows custom global options in help text', () => {
+        const result = Bun.spawnSync({
+            cmd: [
+                process.execPath,
+                '--eval',
+                [
+                    "import {App, Command} from './src/interfaces'",
+                    "import {executeAppResult} from './src/run'",
+                    "const app = new App('hello')",
+                    "  .meta({bin: 'cli-api', description: 'Example app'})",
+                    "  .globalOpt('profile', {alias: 'p', description: 'Select a profile'})",
+                    "  .command(new Command('world').run(() => {}))",
+                    "await executeAppResult(app, ['world', '--help'])",
+                ].join('\n'),
+            ],
+            cwd: Path.resolve(import.meta.dir, '..'),
+            stdout: 'pipe',
+            stderr: 'pipe',
+        })
+
+        expect(result.exitCode).toBe(0)
+        expect(result.stderr.toString()).toBe('')
+        expect(result.stdout.toString()).toContain('--profile=PROFILE')
     })
 
     it('enables forced color output for help when requested', () => {

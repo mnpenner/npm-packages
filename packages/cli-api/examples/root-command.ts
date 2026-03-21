@@ -35,17 +35,17 @@ const app = new App('hello')
         repeatable: true,
         required: true,
     })
-    .run((args, kwargs) => {
-        if (kwargs.verbose) {
+    .run((args, opts) => {
+        if (opts.verbose) {
             console.log('Preparing greeting...')
         }
-        const greeting = kwargs.shout
-            ? `${kwargs.greet} ${kwargs.name}!`.toUpperCase()
-            : `${kwargs.greet} ${kwargs.name}.`
+        const greeting = opts.shout
+            ? `${opts.greet} ${opts.name}!`.toUpperCase()
+            : `${opts.greet} ${opts.name}.`
         console.log(greeting)
 
-        if(kwargs.disclaimer.length) {
-            console.log(`Disclaimer: ${kwargs.disclaimer.join(', ')}`)
+        if(opts.disclaimer.length) {
+            console.log(`Disclaimer: ${opts.disclaimer.join(', ')}`)
         }
         return 5
     })

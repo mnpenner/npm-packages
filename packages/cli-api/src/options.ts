@@ -208,6 +208,7 @@ export function getOptions(cmd: ParseableCommand): Option[] {
 export function validateCommandConfig(cmd: ParseableCommand): void {
     validatePositionalDefinitions(cmd)
 
+    const seenOptionTokens = new Map<string, string>()
     for(const opt of getOptions(cmd)) {
         if(typeof opt.repeatable === 'number') {
             assertValidCount(`\`${opt.name}\` option repeatable count`, opt.repeatable)
@@ -220,6 +221,27 @@ export function validateCommandConfig(cmd: ParseableCommand): void {
         }
         if(opt.noPrefix && opt.type !== OptType.BOOL && opt.valueIfNoPrefix === undefined) {
             throw new Error(`\`${getOptName(opt)}\` option must define valueIfNoPrefix when noPrefix is enabled`)
+        }
+
+        const tokens = new Set<string>([opt.name])
+        for(const alias of toArray(opt.alias)) {
+            tokens.add(alias)
+        }
+        if(opt.noPrefix) {
+            tokens.add(`no-${opt.name}`)
+        }
+
+        for(const token of tokens) {
+            const existing = seenOptionTokens.get(token)
+            if(existing !== undefined) {
+                const currentName = token.startsWith('no-') ? `--${token}` : getOptName(opt)
+                throw new Error(`Option token \`${currentName}\` collides with \`${existing}\``)
+            }
+
+            const displayName = token.startsWith('no-')
+                ? `--${token}`
+                : (token.length === 1 ? `-${token}` : `--${token}`)
+            seenOptionTokens.set(token, displayName)
         }
     }
 }

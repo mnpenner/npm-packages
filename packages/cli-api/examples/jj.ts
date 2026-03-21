@@ -20,8 +20,8 @@ type CommandSpec = {
 }
 
 function logRun(commandName: string) {
-    return (args: unknown[], kwargs: Record<string, unknown>) => {
-        console.log({command: commandName, args, kwargs})
+    return (args: unknown[], opts: Record<string, unknown>) => {
+        console.log({command: commandName, args, opts})
     }
 }
 
@@ -190,7 +190,7 @@ const rootLeafSpecs: CommandSpec[] = [
             '',
             'Note that you can create a merge commit by specifying multiple revisions as argument. For example, `jj new @ main` will create a new commit with the working copy and the `main` bookmark as parents.',
             '',
-            'This example only logs parsed arguments and keyword arguments.',
+            'This example only logs parsed arguments and options.',
         ].join('\n'),
         options: [
             {
@@ -264,13 +264,15 @@ const app = new App('jj')
         ].join('\n'),
     })
 
-app._globalOptions = globalOptions
-
 for(const spec of rootLeafSpecs) {
     app.command(leaf(spec))
 }
 
 app.command(fileCommand)
+
+for(const option of globalOptions) {
+    app.globalOpt(option.name, option)
+}
 
 if(import.meta.main) {
     await app.execute()

@@ -37,13 +37,13 @@ const ERROR_PRESENTATION: Record<ErrorStyle, {code: number, color: string}> = {
 function blockError(str: string, style: ErrorStyle, chalk: ChalkInstance) {
     const lines = str.split('\n')
     const width = Math.max(...lines.map(l => stringWidth(l))) + 4
-    const background = chalk.bgHex(ERROR_PRESENTATION[style].color).hex('#FEFBEC')
-    printLn(background(space(width)))
+    const colorize = chalk.bgHex(ERROR_PRESENTATION[style].color).hex('#FEFBEC')
+    printLn(colorize(space(width)))
     for(const line of lines) {
         const txt = `  ${line}`
-        printLn(background(txt + space(width, txt)))
+        printLn(colorize(txt + space(width, txt)))
     }
-    printLn(background(space(width)))
+    printLn(colorize(space(width)))
 }
 
 /**

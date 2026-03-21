@@ -95,7 +95,7 @@ export type ArgsOf<As extends readonly Argument[] | undefined> =
             : [..._ArgsFixed<As>, ..._ArgsTailRepeat<As>[]]
         : unknown[]
 
-export type KwargsOf<
+export type OptsOf<
     Opts extends readonly Option[] | undefined,
     Flags extends readonly Flag[] | undefined,
     As extends readonly Argument[] | undefined,
@@ -106,6 +106,13 @@ export type KwargsOf<
         Partial<MergeArgumentProps<OptionalArguments<As[number]>>>
     ) : {})
 >
+
+/** @deprecated Use {@link OptsOf} instead. */
+export type KwargsOf<
+    Opts extends readonly Option[] | undefined,
+    Flags extends readonly Flag[] | undefined,
+    As extends readonly Argument[] | undefined,
+> = OptsOf<Opts, Flags, As>
 
 export type MaybePromise<V> = V | PromiseLike<V>
 
@@ -136,7 +143,7 @@ interface ArgumentOrOptionOrFlag {
     description?: string
     /** Default value to display in help. */
     defaultValueText?: string
-    /** Property name to use in `run()` kwargs. */
+    /** Property name to use in `run()` opts. */
     key?: string
 }
 
@@ -223,7 +230,7 @@ export interface ExecutableInput<
     options?: Opts
     flags?: Flags
     positonals?: As
-    execute(this: AnyApp, kwargs: KwargsOf<Opts, Flags, As>, args: ArgsOf<As>): MaybePromise<number | void>
+    execute(this: AnyApp, opts: OptsOf<Opts, Flags, As>, args: ArgsOf<As>): MaybePromise<number | void>
 }
 
 export interface LeafCommandInput<
@@ -279,7 +286,7 @@ export interface AnyLeafCommand extends CommandBase {
     options?: readonly Option[] | undefined
     flags?: readonly Flag[] | undefined
     positonals?: readonly Argument[] | undefined
-    execute(this: AnyApp, kwargs: Record<string, any>, args: any[]): MaybePromise<number | void>
+    execute(this: AnyApp, opts: Record<string, any>, args: any[]): MaybePromise<number | void>
     subCommands?: never | undefined
 }
 
@@ -316,7 +323,7 @@ export type RunHandler<
     Opts extends readonly Option[] | undefined,
     Flags extends readonly Flag[] | undefined,
     As extends readonly Argument[] | undefined,
-> = (this: AnyApp, args: ArgsOf<As>, kwargs: KwargsOf<Opts, Flags, As>) => MaybePromise<number | void>
+> = (this: AnyApp, args: ArgsOf<As>, opts: OptsOf<Opts, Flags, As>) => MaybePromise<number | void>
 
 type ExecuteHandler<
     Opts extends readonly Option[] | undefined,
@@ -346,7 +353,7 @@ export class Command<
     private _options?: Option[]
     private _positonals?: Argument[]
     private _subCommands?: AnyCmd[]
-    private _handler?: ExecuteHandler<Opts, Flags, As>
+    protected _handler?: ExecuteHandler<Opts, Flags, As>
 
     constructor(name: string) {
         this._name = name
@@ -447,7 +454,7 @@ export class Command<
     /**
      * Adds a positional argument to this command.
      *
-     * @param name The positional argument name used in help output and inferred kwargs.
+     * @param name The positional argument name used in help output and inferred opts.
      * @param config Optional metadata such as coercion and requiredness.
      * @returns A fluent command builder whose inferred positional tuple includes the new argument.
      */
@@ -476,15 +483,15 @@ export class Command<
     /**
      * Marks this command as executable and registers the handler invoked after parsing.
      *
-     * @param handler The function that receives parsed positional arguments and keyword arguments.
+     * @param handler The function that receives parsed positional arguments and parsed option values.
      * @returns A fluent command builder that is now treated as executable.
      */
     run(
         this: Command<Opts, Flags, As, [], false>,
         handler: RunHandler<Opts, Flags, As>,
     ): Command<Opts, Flags, As, [], true> {
-        this._handler = function(this: AnyApp, kwargs: KwargsOf<Opts, Flags, As>, args: ArgsOf<As>) {
-            return handler.call(this as AnyApp, args, kwargs)
+        this._handler = function(this: AnyApp, opts: OptsOf<Opts, Flags, As>, args: ArgsOf<As>) {
+            return handler.call(this as AnyApp, args, opts)
         }
         return this as unknown as Command<Opts, Flags, As, [], true>
     }
@@ -497,10 +504,15 @@ export class App<
     Cs extends CommandChildren = [],
     Executable extends boolean = false,
 > extends Command<Opts, Flags, As, Cs, Executable> {
+    /** @internal */
     _bin?: string
+    /** @internal */
     _version?: string
+    /** @internal */
     _author?: string
+    /** @internal */
     _globalOptions?: Option[]
+    /** @internal */
     _chalk?: ChalkInstance
 
     constructor(name: string) {
@@ -625,9 +637,24 @@ export class App<
     }
 
     /**
+     * Adds a valued option that is available to the root app and every sub-command.
+     *
+     * @param name The CLI option name without leading dashes.
+     * @param config Optional metadata such as aliases, descriptions, and coercion rules.
+     * @returns A fluent app builder whose global option shape includes the new option.
+     */
+    globalOpt<const Name extends string, const Config extends OptionConfigInput | undefined = undefined>(
+        name: Name,
+        config?: Config,
+    ): this {
+        ;(this._globalOptions ??= []).push({name, ...(config ?? {})})
+        return this
+    }
+
+    /**
      * Adds a positional argument to the root app while preserving the `App` builder type.
      *
-     * @param name The positional argument name used in help output and inferred kwargs.
+     * @param name The positional argument name used in help output and inferred opts.
      * @param config Optional metadata such as coercion and requiredness.
      * @returns A fluent app builder whose inferred positional tuple includes the new argument.
      */
@@ -654,7 +681,7 @@ export class App<
     /**
      * Marks the root app as executable by registering the handler invoked after parsing.
      *
-     * @param handler The function that receives parsed positional arguments and keyword arguments.
+     * @param handler The function that receives parsed positional arguments and parsed option values, including custom global options.
      * @returns A fluent app builder that is now treated as executable.
      */
     override run(

@@ -17,11 +17,11 @@ const app = new App('hello')
                 description: 'Person you want to greet',
                 required: true,
             })
-            .run((args, kwargs) => {
-                if(kwargs.verbose) {
+            .run((args, opts) => {
+                if(opts.verbose) {
                     console.log(`Running greet ${pkg.version}`)
                 }
-                console.log(`Hello ${kwargs.name}`)
+                console.log(`Hello ${opts.name}`)
             })
         )
     )
