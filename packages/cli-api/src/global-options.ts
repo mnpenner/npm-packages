@@ -1,10 +1,5 @@
-import type {AnyApp, Option} from './interfaces'
+import type {App, Option} from './interfaces'
 import {OptType} from './interfaces'
-
-type InternalAppMetadata = AnyApp & {
-    globalOptions?: Option[]
-    _globalOptions?: Option[]
-}
 
 export const HELP_OPTION: Option = {
     name: 'help',
@@ -28,7 +23,6 @@ export const COLOR_OPTION: Option = {
     defaultValue: 'auto',
 }
 
-export function getGlobalOptions(app: AnyApp): Option[] {
-    const metadata = app as InternalAppMetadata
-    return [HELP_OPTION, COLOR_OPTION, ...(metadata._globalOptions ?? metadata.globalOptions ?? [])]
+export function getGlobalOptions(app: App<any, any, any, any, any>): Option[] {
+    return [HELP_OPTION, COLOR_OPTION, ...(app._globalOptions ?? [])]
 }

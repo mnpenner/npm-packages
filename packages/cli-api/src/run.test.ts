@@ -124,10 +124,12 @@ describe(executeAppResult.name, () => {
                 '--eval',
                 [
                     "process.env.FORCE_COLOR = '1'",
+                    "import {createChalk} from './src/color'",
                     "import {createError, ErrorStyle, printError} from './src/utils'",
-                    "printError(createError('invalid', ErrorStyle.InvalidArg))",
-                    "printError(createError('misconfig', ErrorStyle.Misconfig))",
-                    "printError(createError('internal', ErrorStyle.Internal))",
+                    "const chalk = createChalk('always')",
+                    "printError(createError('invalid', ErrorStyle.InvalidArg), chalk)",
+                    "printError(createError('misconfig', ErrorStyle.Misconfig), chalk)",
+                    "printError(createError('internal', ErrorStyle.Internal), chalk)",
                 ].join('\n'),
             ],
             cwd: Path.resolve(import.meta.dir, '..'),
@@ -199,10 +201,10 @@ describe(executeAppResult.name, () => {
         expect(result.stderr.toString()).toBe('')
 
         const output = result.stdout.toString()
-        expect(output).toContain('hello ver. 1.0.0')
-        expect(output).toContain('hello ver. 1.0.0\n\nExample app')
         expect(output).toContain('Example app')
-        expect(output).toContain('Commands:')
+        expect(output).toContain('Usage:')
+        expect(output).toContain('--name=NAME')
+        expect(output).toContain('Global Options:')
     })
 
     it('runs the sub-command example help without module export errors', () => {

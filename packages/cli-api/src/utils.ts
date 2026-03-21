@@ -1,8 +1,7 @@
-import type {AnyApp} from './interfaces'
+import type {App} from './interfaces'
 import Path from 'path'
 import stringWidth from 'string-width'
 import type {ChalkInstance} from 'chalk'
-import {createChalk} from './color'
 import {EMPTY_ARRAY, FALSE_VALUES, TRUE_VALUES} from './constants'
 import FileSys from 'fs'
 
@@ -11,7 +10,7 @@ export const printLn = console.log.bind(console)
 
 export type nil = null | undefined
 export type NullableObj = Record<string, any> | nil
-type InternalAppMetadata = AnyApp & {_bin?: string}
+type AppInstance = App<any, any, any, any, any>
 
 /**
  * Semantic categories for user-facing CLI errors.
@@ -75,7 +74,7 @@ export function getErrorExitCode(error: CliError): number {
  * @param error The structured CLI error to render.
  * @returns Nothing.
  */
-export function printError(error: CliError, chalk: ChalkInstance = createChalk()): void {
+export function printError(error: CliError, chalk: ChalkInstance): void {
     blockError(error.message, error.type, chalk)
 }
 
@@ -87,8 +86,7 @@ export function printError(error: CliError, chalk: ChalkInstance = createChalk()
  * @returns This function never returns because it exits the process.
  */
 export function abort(error: CliError, code?: number): never {
-    printError(error)
-    process.exit(code ?? getErrorExitCode(error))
+    throw new Error(`abort() requires an explicit chalk instance; intended exit code ${code ?? getErrorExitCode(error)} for: ${error.message}`)
 }
 
 export function toArray<T>(x: T | readonly T[] | undefined): readonly T[] {
@@ -121,8 +119,8 @@ export function space(len: number, str?: string) {
     return len > 0 ? ' '.repeat(len) : ''
 }
 
-export function getProcName(app: AnyApp) {
-    const bin = (app as InternalAppMetadata)._bin
+export function getProcName(app: AppInstance) {
+    const bin = app._bin
     if(bin != null) {
         return bin
     }

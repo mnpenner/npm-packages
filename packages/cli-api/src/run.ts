@@ -1,4 +1,4 @@
-import type {AnyApp, AnyCmd, AnyLeafCommand} from './interfaces'
+import type {App, AnyCmd, AnyLeafCommand} from './interfaces'
 import {getExecuteHandler, hasSubCommands, isExecutable} from './interfaces'
 import {helpCommand} from './commands/command-help'
 import {versionCommand} from './commands/version'
@@ -9,10 +9,26 @@ import type {CliError} from './utils'
 import {createError, ErrorStyle, getErrorExitCode, getProcName, printError, sortBy} from './utils'
 import {printCommandHelp} from './print-command-help'
 import {printLn} from './utils'
-import {ensureAppChalk, setAppColorMode} from './color'
+import {createChalk} from './color'
 import {getGlobalOptions} from './global-options'
 
-type InternalAppMetadata = AnyApp & {_version?: string}
+type AppInstance = App<any, any, any, any, any>
+
+function normalizeAppAsLeafCommand(app: AppInstance): AnyLeafCommand {
+    const handler = app.handler
+    if(handler === undefined) {
+        throw new Error('Command is not executable.')
+    }
+    return {
+        name: app.name,
+        ...(app.alias !== undefined ? {alias: app.alias} : {}),
+        ...(app.description !== undefined ? {description: app.description} : {}),
+        ...(app.longDescription !== undefined ? {longDescription: app.longDescription} : {}),
+        ...(app.options !== undefined ? {options: [...app.options]} : {}),
+        ...(app.positonals !== undefined ? {positonals: [...app.positonals]} : {}),
+        execute: handler,
+    }
+}
 
 function normalizeLeafCommand(cmd: AnyLeafCommand): AnyLeafCommand {
     const handler = getExecuteHandler(cmd)
@@ -43,7 +59,7 @@ export interface ExecutionResult {
     error?: CliError
 }
 
-function mergeCommandOptions(app: AnyApp, cmd: AnyLeafCommand): AnyLeafCommand {
+function mergeCommandOptions(app: AppInstance, cmd: AnyLeafCommand): AnyLeafCommand {
     const normalized = normalizeLeafCommand(cmd)
     return {
         ...normalized,
@@ -63,8 +79,8 @@ function getHelpValidationCommand(cmd: AnyLeafCommand): AnyLeafCommand {
     }
 }
 
-function getRootCommands(app: AnyApp): readonly AnyCmd[] {
-    const userCommands = hasSubCommands(app)
+function getRootCommands(app: AppInstance): readonly AnyCmd[] {
+    const userCommands = app.subCommands !== undefined
         ? sortBy(app.subCommands as readonly AnyCmd[], c => c.name)
         : []
 
@@ -75,11 +91,11 @@ function getRootCommands(app: AnyApp): readonly AnyCmd[] {
     ] as const
 }
 
-function applyParsedGlobalState(app: AnyApp, opts: Record<string, any>): void {
-    setAppColorMode(app, opts.color ?? 'auto')
+function applyParsedGlobalState(app: AppInstance, opts: Record<string, any>): void {
+    app._chalk = createChalk(opts.color ?? 'auto')
 }
 
-function createGlobalParseCommand(app: AnyApp): AnyLeafCommand {
+function createGlobalParseCommand(app: AppInstance): AnyLeafCommand {
     return {
         name: app.name,
         options: getGlobalOptions(app),
@@ -88,7 +104,7 @@ function createGlobalParseCommand(app: AnyApp): AnyLeafCommand {
     }
 }
 
-function parseGlobalOptions(app: AnyApp, argv: string[]): {opts?: Record<string, any>, result?: ExecutionResult} {
+function parseGlobalOptions(app: AppInstance, argv: string[]): {opts?: Record<string, any>, result?: ExecutionResult} {
     try {
         const [, opts] = parseArgs(getHelpValidationCommand(createGlobalParseCommand(app)), argv)
         return {opts}
@@ -198,7 +214,7 @@ function getFirstNonGlobalToken(argv: readonly string[], globalOptions: readonly
     return undefined
 }
 
-function unknownCommandResult(app: AnyApp, commandName: string): ExecutionResult {
+function unknownCommandResult(app: AppInstance, commandName: string): ExecutionResult {
     const error = createError(`${getProcName(app)}: unknown command '${commandName}'`, ErrorStyle.InvalidArg)
     return {
         code: getErrorExitCode(error),
@@ -206,7 +222,7 @@ function unknownCommandResult(app: AnyApp, commandName: string): ExecutionResult
     }
 }
 
-async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], path: readonly string[]): Promise<ExecutionResult> {
+async function executeLeaf(app: AppInstance, cmd: AnyLeafCommand, rawArgs: string[], path: readonly string[]): Promise<ExecutionResult> {
     try {
         validateCommandConfig(mergeCommandOptions(app, cmd))
     } catch (err) {
@@ -280,14 +296,13 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
  * @param argv The raw CLI arguments to parse. Defaults to `process.argv.slice(2)`.
  * @returns The execution result, including any user-facing error text that should be printed.
  */
-export async function executeAppResult(app: AnyApp, argv: string[] = process.argv.slice(2)): Promise<ExecutionResult> {
-    ensureAppChalk(app)
+export async function executeAppResult(app: AppInstance, argv: string[] = process.argv.slice(2)): Promise<ExecutionResult> {
     const rootCommands = getRootCommands(app)
     const globalOptions = getGlobalOptions(app)
 
     if (argv.length === 0) {
         if (isExecutable(app)) {
-            return executeLeaf(app, app, [], [])
+            return executeLeaf(app, normalizeAppAsLeafCommand(app), [], [])
         }
         printHelp(app, rootCommands)
         return {code: 0}
@@ -295,7 +310,7 @@ export async function executeAppResult(app: AnyApp, argv: string[] = process.arg
 
     if (isExecutable(app) && !hasSubCommands(app)) {
         if (isVersionFlag(argv[0])) {
-            printLn((app as InternalAppMetadata)._version)
+            printLn(app._version)
             return {code: 0}
         }
         const globalParse = parseGlobalOptions(app, argv)
@@ -306,13 +321,13 @@ export async function executeAppResult(app: AnyApp, argv: string[] = process.arg
             applyParsedGlobalState(app, globalParse.opts)
         }
         if(globalParse.opts?.help) {
-            return executeLeaf(app, app, argv, [])
+            return executeLeaf(app, normalizeAppAsLeafCommand(app), argv, [])
         }
         const builtin = findSubCommand(argv[0], rootCommands)
         if (builtin && isExecutable(builtin)) {
             return executeLeaf(app, builtin, argv.slice(1), [builtin.name])
         }
-        return executeLeaf(app, app, argv, [])
+        return executeLeaf(app, normalizeAppAsLeafCommand(app), argv, [])
     }
 
     const resolved = resolveCommandWithGlobalOptions(argv, rootCommands, globalOptions)
@@ -327,7 +342,7 @@ export async function executeAppResult(app: AnyApp, argv: string[] = process.arg
         if(firstNonGlobalToken === undefined) {
             if(globalOpts.help || !hasSubCommands(app)) {
                 if(isExecutable(app)) {
-                    return executeLeaf(app, app, argv, [])
+                    return executeLeaf(app, normalizeAppAsLeafCommand(app), argv, [])
                 }
                 printHelp(app, rootCommands)
                 return {code: 0}
@@ -371,10 +386,10 @@ export async function executeAppResult(app: AnyApp, argv: string[] = process.arg
  * @param argv The raw CLI arguments to parse. Defaults to `process.argv.slice(2)`.
  * @returns The process exit code for the CLI invocation.
  */
-export async function executeApp(app: AnyApp, argv: string[] = process.argv.slice(2)): Promise<number> {
+export async function executeApp(app: AppInstance, argv: string[] = process.argv.slice(2)): Promise<number> {
     const result = await executeAppResult(app, argv)
     if(result.error !== undefined) {
-        printError(result.error, ensureAppChalk(app))
+        printError(result.error, app.chalk)
     }
     return result.code ?? 0
 }

@@ -221,7 +221,7 @@ export interface ExecutableInput<
     options?: Opts
     flags?: Flags
     positonals?: As
-    execute(this: AnyApp, kwargs: KwargsOf<Opts, Flags, As>, args: ArgsOf<As>): MaybePromise<number | void>
+    execute(this: App<any, any, any, any, any>, kwargs: KwargsOf<Opts, Flags, As>, args: ArgsOf<As>): MaybePromise<number | void>
 }
 
 export interface LeafCommandInput<
@@ -277,7 +277,7 @@ export interface AnyLeafCommand extends CommandBase {
     options?: readonly Option[] | undefined
     flags?: readonly Flag[] | undefined
     positonals?: readonly Argument[] | undefined
-    execute(this: AnyApp, kwargs: Record<string, any>, args: any[]): MaybePromise<number | void>
+    execute(this: App<any, any, any, any, any>, kwargs: Record<string, any>, args: any[]): MaybePromise<number | void>
     subCommands?: never | undefined
 }
 
@@ -290,24 +290,6 @@ export interface AnyBranchCommand extends CommandBase {
 }
 
 export type AnyCmd = AnyLeafCommand | AnyBranchCommand
-
-export interface AnyLeafApp extends AppBase {
-    options?: readonly Option[] | undefined
-    flags?: readonly Flag[] | undefined
-    positonals?: readonly Argument[] | undefined
-    execute(this: AnyApp, kwargs: Record<string, any>, args: any[]): MaybePromise<number | void>
-    subCommands?: never | undefined
-}
-
-export interface AnyBranchApp extends AppBase {
-    subCommands: readonly AnyCmd[]
-    options?: never | undefined
-    flags?: never | undefined
-    positonals?: never | undefined
-    execute?: never | undefined
-}
-
-export type AnyApp = AnyLeafApp | AnyBranchApp
 
 type FlagConfigInput = Omit<Flag, 'name' | 'key' | 'valueNotRequired'> & { key?: string }
 type OptionConfigInput = Omit<Option, 'name' | 'key'> & { key?: string }
@@ -499,7 +481,7 @@ export class Command<
         this: Command<Opts, Flags, As, [], false>,
         handler: RunHandler<Opts, Flags, As>,
     ): Command<Opts, Flags, As, [], true> {
-        this._handler = function(this: AnyApp, kwargs: KwargsOf<Opts, Flags, As>, args: ArgsOf<As>) {
+        this._handler = function(this: App<any, any, any, any, any>, kwargs: KwargsOf<Opts, Flags, As>, args: ArgsOf<As>) {
             return handler.call(this as App<any, any, any, any, any>, args, kwargs)
         }
         return this as unknown as Command<Opts, Flags, As, [], true>
@@ -688,10 +670,10 @@ export class App<
      */
     async execute(args: string[] = process.argv.slice(2)): Promise<number> {
         const {executeAppResult} = await import('./run')
-        const result = await executeAppResult(this as unknown as AnyApp, args)
+        const result = await executeAppResult(this, args)
         if(result.error !== undefined) {
             const {printError} = await import('./utils')
-            printError(result.error)
+            printError(result.error, this.chalk)
         }
         if(result.code !== null) {
             process.exitCode = result.code
@@ -706,7 +688,7 @@ export class App<
  * @param value The command or app to inspect.
  * @returns `true` when the value has sub-commands.
  */
-export function hasSubCommands(value: AnyCmd | AnyApp): value is AnyBranchCommand | AnyBranchApp {
+export function hasSubCommands(value: {subCommands?: readonly AnyCmd[] | undefined}): value is {subCommands: readonly AnyCmd[]} {
     return Array.isArray((value as any).subCommands)
 }
 
@@ -716,7 +698,7 @@ export function hasSubCommands(value: AnyCmd | AnyApp): value is AnyBranchComman
  * @param value The command or app to inspect.
  * @returns `true` when the value has an executable handler.
  */
-export function isExecutable(value: AnyCmd | AnyApp): value is AnyLeafCommand | AnyLeafApp {
+export function isExecutable(value: {execute?: unknown, handler?: unknown}): value is AnyLeafCommand | App<any, any, any, any, any> {
     return typeof (value as any).handler === 'function' || Object.prototype.hasOwnProperty.call(value, 'execute')
 }
 
@@ -726,7 +708,7 @@ export function isExecutable(value: AnyCmd | AnyApp): value is AnyLeafCommand | 
  * @param value The command or app to inspect.
  * @returns The handler function when one exists, otherwise `undefined`.
  */
-export function getExecuteHandler(value: AnyCmd | AnyApp): AnyLeafCommand['execute'] | undefined {
+export function getExecuteHandler(value: {execute?: unknown, handler?: unknown}): AnyLeafCommand['execute'] | undefined {
     if(typeof (value as any).handler === 'function') {
         return (value as any).handler as AnyLeafCommand['execute']
     }

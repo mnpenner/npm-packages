@@ -280,61 +280,57 @@ describe(parseArgs.name, () => {
 
 describe(formatOption.name, () => {
     it('renders valueNotRequired options with bracketed optional values in help text', () => {
+        const chalk = createChalk('never')
         const [flags, description] = formatOption({
             alias: 's',
             description: 'Shout the greeting',
             name: 'shout',
             valueNotRequired: true,
-        })
-
-        const chalk = createChalk()
+        }, chalk)
 
         expect(flags).toBe(`${chalk.green('-s')}, ${chalk.green('--shout')}${chalk.grey('[')}=${chalk.magenta('SHOUT')}${chalk.grey(']')}`)
         expect(description).toBe('Shout the greeting')
     })
 
     it('renders required option values with = placeholders', () => {
+        const chalk = createChalk('never')
         const [flags, description] = formatOption({
             alias: 'n',
             description: 'Person you want to greet',
             name: 'name',
             valuePlaceholder: 'person',
-        })
-
-        const chalk = createChalk()
+        }, chalk)
 
         expect(flags).toBe(`${chalk.green('-n')}, ${chalk.green('--name')}=${chalk.magenta('person')}`)
         expect(description).toBe('Person you want to greet')
     })
 
     it('uppercases inferred placeholders when no explicit placeholder is provided', () => {
+        const chalk = createChalk('never')
         const [flags, description] = formatOption({
             alias: 'o',
             description: 'Output file',
             name: 'output',
-        })
-
-        const chalk = createChalk()
+        }, chalk)
 
         expect(flags).toBe(`${chalk.green('-o')}, ${chalk.green('--output')}=${chalk.magenta('OUTPUT')}`)
         expect(description).toBe('Output file')
     })
 
     it('indents aliasless long options so they align with aliased entries', () => {
+        const chalk = createChalk('never')
         const [flags, description] = formatOption({
             description: 'Shout the greeting',
             name: 'shout',
             valueNotRequired: true,
-        })
-
-        const chalk = createChalk()
+        }, chalk)
 
         expect(flags).toBe(`    ${chalk.green('--shout')}${chalk.grey('[')}=${chalk.magenta('SHOUT')}${chalk.grey(']')}`)
         expect(description).toBe('Shout the greeting')
     })
 
     it('renders noPrefix aliases separately and lists enum values in help text', () => {
-        const chalk = createChalk()
+        const chalk = createChalk('never')
         const [flags, description] = formatOption({
             description: 'Control ANSI color output.',
             enumValues: ['always', 'never', 'auto'],
@@ -343,7 +339,7 @@ describe(formatOption.name, () => {
             type: OptType.ENUM,
             valueNotRequired: true,
             valuePlaceholder: 'WHEN',
-        })
+        }, chalk)
 
         expect(flags).toBe(`    ${chalk.green('--color')}${chalk.grey('[')}=${chalk.magenta('WHEN')}${chalk.grey(']')}, ${chalk.green('--no-color')}`)
         expect(description).toBe('Control ANSI color output. [possible values: always, never, auto]')

@@ -138,7 +138,7 @@ function pushRepeatableValue(target: any[], value: any, itemName: string, maxCou
  * @param opt The option metadata to render.
  * @returns A tuple containing the formatted flag label and its description text.
  */
-export function formatOption(opt: Option, chalk: ChalkInstance = createChalk()): [string, string] {
+export function formatOption(opt: Option, chalk: ChalkInstance): [string, string] {
     const aliases: string[] = []
     if(opt.alias) {
         if(Array.isArray(opt.alias)) {

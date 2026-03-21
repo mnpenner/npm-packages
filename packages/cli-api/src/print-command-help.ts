@@ -1,14 +1,13 @@
-import type {AnyApp, AnyCmd} from './interfaces'
+import type {App, AnyCmd} from './interfaces'
 import {OptType, hasSubCommands, isExecutable} from './interfaces'
 import {printAvailableCommands} from './app-help'
 import {getProcName, print, printLn, space, toArray} from './utils'
-import {createChalk, ensureAppChalk} from './color'
 import {getGlobalOptions} from './global-options'
 import {formatOption, getOptions, getOptName, getValuePlaceholder} from './options'
 import stringWidth from 'string-width'
 import type {Argument, Option} from './interfaces'
 
-type InternalAppMetadata = AnyApp & {_author?: string}
+type AppInstance = App<any, any, any, any, any>
 
 const HELP_OPTION: Option = {
     name: 'help',
@@ -18,16 +17,15 @@ const HELP_OPTION: Option = {
     valueNotRequired: true,
 }
 
-function getCommandLabel(app: AnyApp, path: readonly string[]) {
-    const proc = ensureAppChalk(app).cyan(getProcName(app))
+function getCommandLabel(app: AppInstance, path: readonly string[]) {
+    const proc = app.chalk.cyan(getProcName(app))
     if (!path.length) {
         return proc
     }
     return `${proc} ${path.join(' ')}`
 }
 
-function formatUsageOption(opt: Option): string {
-    const chalk = createChalk()
+function formatUsageOption(opt: Option, chalk: AppInstance['chalk']): string {
     const optionName = chalk.green(getOptName(opt))
     if (opt.type === OptType.BOOL) {
         return optionName
@@ -40,20 +38,19 @@ function formatUsageOption(opt: Option): string {
     return `${optionName}=${valuePlaceholder}`
 }
 
-function formatUsageArgument(arg: Argument): string {
-    const chalk = createChalk()
+function formatUsageArgument(arg: Argument, chalk: AppInstance['chalk']): string {
     const argumentName = chalk.magenta(arg.repeatable ? `${arg.name}...` : arg.name)
     return `${chalk.grey(arg.required ? '<' : '[')}${argumentName}${chalk.grey(arg.required ? '>' : ']')}`
 }
 
-export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readonly string[] = []) {
-    const chalk = ensureAppChalk(app)
+export function printCommandHelp(app: AppInstance, cmd: AppInstance | AnyCmd, path: readonly string[] = []) {
+    const chalk = app.chalk
     if (cmd.description) {
         printLn(cmd.description)
         printLn()
     }
     if (cmd === app) {
-        const author = (app as InternalAppMetadata)._author
+        const author = app._author
         if (author) {
             printLn(`Author: ${author}`)
             printLn()
@@ -73,7 +70,7 @@ export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readon
             let otherOptions = 0
             for (const opt of allOptions) {
                 if (opt.required) {
-                    print(` ${formatUsageOption(opt)}`)
+                    print(` ${formatUsageOption(opt, chalk)}`)
                 } else {
                     ++otherOptions
                 }
@@ -85,7 +82,7 @@ export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readon
         if (cmd.positonals?.length) {
             print(` ${chalk.grey('[')}--${chalk.grey(']')}`)
             for (const arg of cmd.positonals) {
-                print(` ${formatUsageArgument(arg)}`)
+                print(` ${formatUsageArgument(arg, chalk)}`)
             }
         }
     } else if (!hasSubCommands(cmd)) {

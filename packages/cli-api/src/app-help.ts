@@ -1,23 +1,17 @@
-import type {AnyApp, AnyCmd, Option} from './interfaces'
+import type {App, AnyCmd} from './interfaces'
 import {hasSubCommands} from './interfaces'
 import {getProcName, print, printLn, space} from './utils'
 import type {ChalkInstance} from 'chalk'
-import {createChalk, ensureAppChalk} from './color'
 import {getGlobalOptions} from './global-options'
 import stringWidth from 'string-width'
 import {formatOption} from './options'
 
-type InternalAppMetadata = AnyApp & {
-    globalOptions?: Option[]
-    _version?: string
-    _author?: string
-    _globalOptions?: Option[]
-}
+type AppInstance = App<any, any, any, any, any>
 
-export function printHelp(app: AnyApp, commands: readonly AnyCmd[]) {
-    const chalk = ensureAppChalk(app)
+export function printHelp(app: AppInstance, commands: readonly AnyCmd[]) {
+    const chalk = app.chalk
     print(chalk.green(app.name))
-    const {_author: author, _version: version} = app as InternalAppMetadata
+    const {_author: author, _version: version} = app
     if (version) {
         print(` ver. ${chalk.yellow(version)}`)
     }
@@ -55,7 +49,7 @@ export function printHelp(app: AnyApp, commands: readonly AnyCmd[]) {
     }
 }
 
-export function printAvailableCommands(commands: readonly AnyCmd[], title: string = 'Commands:', chalk: ChalkInstance = createChalk()) {
+export function printAvailableCommands(commands: readonly AnyCmd[], title: string, chalk: ChalkInstance) {
     if (!commands.length) {
         return
     }
