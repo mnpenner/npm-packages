@@ -252,12 +252,11 @@ const rootLeafSpecs: CommandSpec[] = [
     {name: 'workspace', description: 'Commands for working with workspaces'},
 ]
 
-const app = new App('jj')
+const app = new App('Jujutsu (An experimental VCS)')
     .meta({
         bin: 'jj.exe',
+        version: '0.34.0-22900c9a9ba362efa442fed2dd4e6e1d5c22cc7a',
         description: [
-            'Jujutsu (An experimental VCS)',
-            '',
             'To get started, see the tutorial [`jj help -k tutorial`].',
             '',
             '[`jj help -k tutorial`]: https://jj-vcs.github.io/jj/latest/tutorial/',

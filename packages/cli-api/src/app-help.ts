@@ -27,7 +27,7 @@ export function printHelp(app: AnyApp, commands: readonly AnyCmd[]) {
     printLn(chalk.yellow('Usage:'))
     print(`  ${chalk.cyan(getProcName(app))}`)
     if (hasSubCommands(app)) {
-        print(` ${chalk.gray('[--global-options]')} ${chalk.gray('<')}command${chalk.gray('>')}`)
+        print(` ${chalk.gray('[')}--GLOBAL-OPTIONS${chalk.gray(']')} ${chalk.gray('<')}COMMAND${chalk.gray('>')}`)
     }
     printLn('\n')
 

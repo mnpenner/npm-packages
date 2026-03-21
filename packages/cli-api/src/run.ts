@@ -6,7 +6,7 @@ import {printHelp} from './app-help'
 import type {ResolvedCommand} from './options'
 import {findSubCommand, parseArgs, UnknownOptionError, validateCommandConfig} from './options'
 import type {CliError} from './utils'
-import {createError, ErrorStyle, getErrorExitCode, getProcName, printError, sortBy} from './utils'
+import {createError, ErrorCategory, getErrorExitCode, getProcName, printError, sortBy} from './utils'
 import {printCommandHelp} from './print-command-help'
 import {printLn} from './utils'
 import {createChalk} from './color'
@@ -110,7 +110,7 @@ function parseGlobalOptions(app: AnyApp, argv: string[]): {opts?: Record<string,
         if(err instanceof UnknownOptionError) {
             return {}
         }
-        const error = createError(err instanceof Error ? err.message : String(err), ErrorStyle.InvalidArg)
+        const error = createError(err instanceof Error ? err.message : String(err), ErrorCategory.InvalidArg)
         return {
             result: {
                 code: getErrorExitCode(error),
@@ -213,7 +213,7 @@ function getFirstNonGlobalToken(argv: readonly string[], globalOptions: readonly
 }
 
 function unknownCommandResult(app: AnyApp, commandName: string): ExecutionResult {
-    const error = createError(`${getProcName(app)}: unknown command '${commandName}'`, ErrorStyle.InvalidArg)
+    const error = createError(`${getProcName(app)}: unknown command '${commandName}'`, ErrorCategory.InvalidArg)
     return {
         code: getErrorExitCode(error),
         error,
@@ -224,7 +224,7 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
     try {
         validateCommandConfig(mergeCommandOptions(app, cmd))
     } catch (err) {
-        const error = createError(formatConfigError(err), ErrorStyle.Misconfig)
+        const error = createError(formatConfigError(err), ErrorCategory.Misconfig)
         return {
             code: getErrorExitCode(error),
             error,
@@ -250,13 +250,13 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
         applyParsedGlobalState(app, opts)
     } catch (err) {
         if(err instanceof UnknownOptionError) {
-            const error = createError(`${getProcName(app)}: ${err.message}`, ErrorStyle.InvalidArg)
+            const error = createError(`${getProcName(app)}: ${err.message}`, ErrorCategory.InvalidArg)
             return {
                 code: getErrorExitCode(error),
                 error,
             }
         }
-        const error = createError(err instanceof Error ? err.message : String(err), ErrorStyle.InvalidArg)
+        const error = createError(err instanceof Error ? err.message : String(err), ErrorCategory.InvalidArg)
         return {
             code: getErrorExitCode(error),
             error,
@@ -265,7 +265,7 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
 
     const handler = getExecuteHandler(cmd)
     if(handler === undefined) {
-        const error = createError('Command is not executable.', ErrorStyle.Internal)
+        const error = createError('Command is not executable.', ErrorCategory.Internal)
         return {
             code: getErrorExitCode(error),
             error,
@@ -279,7 +279,7 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
         }
         return {code}
     } catch (err) {
-        const error = createError(String((err as any)?.stack ?? err), ErrorStyle.Internal)
+        const error = createError(String((err as any)?.stack ?? err), ErrorCategory.Internal)
         return {
             code: getErrorExitCode(error),
             error,
@@ -367,7 +367,7 @@ export async function executeAppResult(app: AnyApp, argv: string[] = process.arg
     }
 
     if (!isExecutable(resolved.command)) {
-        const error = createError('Command is not executable.', ErrorStyle.Internal)
+        const error = createError('Command is not executable.', ErrorCategory.Internal)
         return {
             code: getErrorExitCode(error),
             error,

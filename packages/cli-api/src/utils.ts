@@ -14,7 +14,7 @@ export type NullableObj = Record<string, any> | nil
 /**
  * Semantic categories for user-facing CLI errors.
  */
-export enum ErrorStyle {
+export enum ErrorCategory {
     InvalidArg = 'invalid-arg',
     Misconfig = 'misconfig',
     Internal = 'internal',
@@ -25,16 +25,16 @@ export enum ErrorStyle {
  */
 export interface CliError {
     message: string
-    type: ErrorStyle
+    type: ErrorCategory
 }
 
-const ERROR_PRESENTATION: Record<ErrorStyle, {code: number, color: string}> = {
-    [ErrorStyle.InvalidArg]: {code: 2, color: '#D73737'},
-    [ErrorStyle.Misconfig]: {code: 254, color: '#B854D4'},
-    [ErrorStyle.Internal]: {code: 253, color: '#6684E1'},
+const ERROR_PRESENTATION: Record<ErrorCategory, {code: number, color: string}> = {
+    [ErrorCategory.InvalidArg]: {code: 2, color: '#D73737'},
+    [ErrorCategory.Misconfig]: {code: 254, color: '#B854D4'},
+    [ErrorCategory.Internal]: {code: 253, color: '#6684E1'},
 }
 
-function blockError(str: string, style: ErrorStyle, chalk: ChalkInstance) {
+function blockError(str: string, style: ErrorCategory, chalk: ChalkInstance) {
     const lines = str.split('\n')
     const width = Math.max(...lines.map(l => stringWidth(l))) + 4
     const colorize = chalk.bgHex(ERROR_PRESENTATION[style].color).hex('#FEFBEC')
@@ -53,7 +53,7 @@ function blockError(str: string, style: ErrorStyle, chalk: ChalkInstance) {
  * @param type The semantic error category used to determine presentation and exit code.
  * @returns A structured CLI error object.
  */
-export function createError(message: string, type: ErrorStyle): CliError {
+export function createError(message: string, type: ErrorCategory): CliError {
     return {message, type}
 }
 

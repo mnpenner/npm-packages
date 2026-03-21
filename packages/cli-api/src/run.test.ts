@@ -2,7 +2,7 @@ import {describe, expect, it} from 'bun:test'
 import Path from 'path'
 import {App, Command} from './interfaces'
 import {executeAppResult} from './run'
-import {createError, ErrorStyle} from './utils'
+import {createError, ErrorCategory} from './utils'
 
 function createMisconfiguredApp(): Parameters<typeof executeAppResult>[0] {
     return new App('hello')
@@ -22,7 +22,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 2,
-            error: createError("cli-api: unknown command 'bacon'", ErrorStyle.InvalidArg),
+            error: createError("cli-api: unknown command 'bacon'", ErrorCategory.InvalidArg),
         })
     })
 
@@ -37,7 +37,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 2,
-            error: createError("cli-api: unknown command 'bacon'", ErrorStyle.InvalidArg),
+            error: createError("cli-api: unknown command 'bacon'", ErrorCategory.InvalidArg),
         })
     })
 
@@ -52,7 +52,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 2,
-            error: createError("cli-api: unknown command 'bacon'", ErrorStyle.InvalidArg),
+            error: createError("cli-api: unknown command 'bacon'", ErrorCategory.InvalidArg),
         })
     })
 
@@ -66,7 +66,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 2,
-            error: createError('cli-api: option -a not recognized', ErrorStyle.InvalidArg),
+            error: createError('cli-api: option -a not recognized', ErrorCategory.InvalidArg),
         })
     })
 
@@ -81,7 +81,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 2,
-            error: createError('cli-api: option -a not recognized', ErrorStyle.InvalidArg),
+            error: createError('cli-api: option -a not recognized', ErrorCategory.InvalidArg),
         })
     })
 
@@ -90,7 +90,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 254,
-            error: createError('Config Error: Only the last positional can be repeatable', ErrorStyle.Misconfig),
+            error: createError('Config Error: Only the last positional can be repeatable', ErrorCategory.Misconfig),
         })
     })
 
@@ -99,7 +99,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 254,
-            error: createError('Config Error: Only the last positional can be repeatable', ErrorStyle.Misconfig),
+            error: createError('Config Error: Only the last positional can be repeatable', ErrorCategory.Misconfig),
         })
     })
 
@@ -132,7 +132,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 254,
-            error: createError('Config Error: Option token `--profile` collides with `--profile`', ErrorStyle.Misconfig),
+            error: createError('Config Error: Option token `--profile` collides with `--profile`', ErrorCategory.Misconfig),
         })
     })
 
@@ -146,7 +146,7 @@ describe(executeAppResult.name, () => {
         const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], [])
 
         expect(result.code).toBe(253)
-        expect(result.error?.type).toBe(ErrorStyle.Internal)
+        expect(result.error?.type).toBe(ErrorCategory.Internal)
         expect(result.error?.message).toContain('Error: kaboom')
     })
 
@@ -358,7 +358,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 2,
-            error: createError('Invalid value "rainbow" (expected one of: always, never, auto)', ErrorStyle.InvalidArg),
+            error: createError('Invalid value "rainbow" (expected one of: always, never, auto)', ErrorCategory.InvalidArg),
         })
     })
 })
