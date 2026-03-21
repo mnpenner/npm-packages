@@ -36,6 +36,18 @@ function stripHelpFlags(argv: readonly string[]): string[] {
     return argv.filter(arg => !isHelpFlag(arg))
 }
 
+function getHelpValidationArgs(argv: readonly string[]): string[] {
+    return stripHelpFlags(argv)
+}
+
+function getHelpValidationCommand(cmd: AnyLeafCommand): AnyLeafCommand {
+    return {
+        ...cmd,
+        options: cmd.options?.map(opt => ({...opt, required: false})),
+        positonals: cmd.positonals?.map(arg => ({...arg, required: false})),
+    }
+}
+
 function getRootCommands(app: AnyApp): readonly AnyCmd[] {
     const userCommands = hasSubCommands(app)
         ? sortBy(app.subCommands as readonly AnyCmd[], c => c.name)
@@ -67,18 +79,19 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
         }
     }
 
-    if (rawArgs.some(isHelpFlag)) {
-        if (cmd === app && !hasSubCommands(app)) {
-            printHelp(app, getRootCommands(app))
-            return {code: 0}
-        }
-        printCommandHelp(app, cmd, path)
-        return {code: 0}
-    }
-
     let args: any[]
     let opts: Record<string, any>
     try {
+        if (rawArgs.some(isHelpFlag)) {
+            parseArgs(getHelpValidationCommand(cmd), getHelpValidationArgs(rawArgs))
+            if (cmd === app && !hasSubCommands(app)) {
+                printHelp(app, getRootCommands(app))
+                return {code: 0}
+            }
+            printCommandHelp(app, cmd, path)
+            return {code: 0}
+        }
+
         ;[args, opts] = parseArgs(cmd, rawArgs)
     } catch (err) {
         if(err instanceof UnknownOptionError) {
@@ -147,24 +160,24 @@ export async function executeAppResult(app: AnyApp, argv: string[] = process.arg
 
             const resolved = resolveCommand(filteredArgv, rootCommands)
             if (!resolved.command) {
-                printHelp(app, rootCommands)
+                return unknownCommandResult(app, filteredArgv[0])
+            }
+
+            if (hasSubCommands(resolved.command)) {
+                if (resolved.remainingArgv.length) {
+                    return unknownCommandResult(app, resolved.remainingArgv[0])
+                }
+
+                printCommandHelp(app, resolved.command, resolved.path)
                 return {code: 0}
             }
 
-            if (isExecutable(resolved.command)) {
-                try {
-                    validateCommandConfig(resolved.command)
-                } catch (err) {
-                    const error = createError(formatConfigError(err), ErrorStyle.Misconfig)
-                    return {
-                        code: getErrorExitCode(error),
-                        error,
-                    }
-                }
-            }
-
-            printCommandHelp(app, resolved.command, resolved.path)
-            return {code: 0}
+            return executeLeaf(
+                app,
+                resolved.command,
+                [...resolved.remainingArgv, ...argv.filter(isHelpFlag)],
+                resolved.path,
+            )
         }
 
         if (isExecutable(app)) {

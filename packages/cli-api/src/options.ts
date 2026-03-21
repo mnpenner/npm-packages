@@ -172,7 +172,7 @@ export function validateCommandConfig(cmd: ParseableCommand): void {
 
     for(const opt of getOptions(cmd)) {
         if(typeof opt.repeatable === 'number') {
-            assertValidCount(`"${opt.name}" option repeatable count`, opt.repeatable)
+            assertValidCount(`\`${opt.name}\` option repeatable count`, opt.repeatable)
         }
     }
 }
@@ -242,7 +242,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
                     } else if(i < argv.length - 1) {
                         value = argv[++i]
                     } else {
-                        throw new Error(`Missing required value for option "${token}"`)
+                        throw new Error(`Missing required value for option \`${token}\``)
                     }
                 }
                 if(opt.type != null) value = coerceType(value, opt.type)
@@ -283,7 +283,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
                     let value: any
                     const remainder = cluster.slice(j + 1)
                     if(remainder.length && !hasInlineAssignment) value = remainder
-                    else if(remainder.length && hasInlineAssignment) throw new Error(`Missing required value for option "-${ch}"`)
+                    else if(remainder.length && hasInlineAssignment) throw new Error(`Missing required value for option \`-${ch}\``)
                     else if(inlineValue !== undefined && remainder.length === 0) value = inlineValue
                     else if(i < argv.length - 1) value = argv[++i]
                     else throw new Error(`Missing required value for option "-${ch}"`)
@@ -341,7 +341,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
                 if(opt.defaultValue !== undefined) {
                     opts[k] = resolve(opt.defaultValue)
                 } else if(opt.required) {
-                    throw new Error(`"${getOptName(opt)}" option is required`)
+                    throw new Error(`\`${getOptName(opt)}\` option is required`)
                 }
             }
         }
@@ -352,11 +352,11 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
             const a: any = cmd.positonals[i]
             const minRequired = getMinRequiredCount(a.required)
             if(minRequired > 0 && argIdx <= i && !isRepeatable(a.repeatable)) {
-                throw new Error(`"${a.name}" positional is required`)
+                throw new Error(`\`${a.name}\` positional is required`)
             }
             const k = a.key ?? a.name
             if(isRepeatable(a.repeatable) && ((opts[k] as any[] | undefined)?.length ?? 0) < minRequired) {
-                throw new Error(`"${a.name}" positional requires at least ${minRequired} value${minRequired === 1 ? '' : 's'}`)
+                throw new Error(`\`${a.name}\` positional requires at least ${minRequired} value${minRequired === 1 ? '' : 's'}`)
             }
             if(k && opts[k] === undefined && a.defaultValue !== undefined) {
                 opts[k] = resolve(a.defaultValue)

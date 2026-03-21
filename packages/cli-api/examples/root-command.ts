@@ -27,6 +27,7 @@ const app = new App('hello')
         description: 'Greeting to print',
         defaultValue: 'Hello',
         required: true,
+        // repeatable: true,
     })
     .arg('disclaimer', {
         description: 'Trailing text',

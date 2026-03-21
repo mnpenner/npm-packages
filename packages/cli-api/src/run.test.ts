@@ -41,6 +41,21 @@ describe(executeAppResult.name, () => {
         })
     })
 
+    it('returns exit code 2 for unknown nested commands even when help is provided', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api'})
+            .command(new Command('world')
+                .command(new Command('greet')
+                    .run(() => {})))
+
+        const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['-h', 'world', 'bacon'])
+
+        expect(result).toEqual({
+            code: 2,
+            error: createError("cli-api: unknown command 'bacon'", ErrorStyle.InvalidArg),
+        })
+    })
+
     it('returns exit code 2 for unknown options', async () => {
         const app = new App('hello')
             .meta({bin: 'cli-api'})
@@ -48,6 +63,21 @@ describe(executeAppResult.name, () => {
             .run(() => {})
 
         const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['-a'])
+
+        expect(result).toEqual({
+            code: 2,
+            error: createError('cli-api: option -a not recognized', ErrorStyle.InvalidArg),
+        })
+    })
+
+    it('returns exit code 2 for unknown options even when help is provided', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api'})
+            .command(new Command('world')
+                .opt('name', {alias: 'n', required: true})
+                .run(() => {}))
+
+        const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['world', '-h', '-a'])
 
         expect(result).toEqual({
             code: 2,
