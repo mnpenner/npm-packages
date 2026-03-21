@@ -2,7 +2,7 @@ import {describe, expect, it} from 'bun:test'
 import Path from 'path'
 import {App, Command} from './interfaces'
 import {executeAppResult} from './run'
-import {createError, ErrorType} from './utils'
+import {createError, ErrorStyle} from './utils'
 
 function createMisconfiguredApp(): Parameters<typeof executeAppResult>[0] {
     return new App('hello')
@@ -22,7 +22,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 2,
-            error: createError("cli-api: unknown command 'bacon'", ErrorType.InvalidArg),
+            error: createError("cli-api: unknown command 'bacon'", ErrorStyle.InvalidArg),
         })
     })
 
@@ -37,7 +37,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 2,
-            error: createError("cli-api: unknown command 'bacon'", ErrorType.InvalidArg),
+            error: createError("cli-api: unknown command 'bacon'", ErrorStyle.InvalidArg),
         })
     })
 
@@ -51,7 +51,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 2,
-            error: createError('cli-api: option -a not recognized', ErrorType.InvalidArg),
+            error: createError('cli-api: option -a not recognized', ErrorStyle.InvalidArg),
         })
     })
 
@@ -60,7 +60,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 254,
-            error: createError('Config Error: Only the last positional can be repeatable', ErrorType.Misconfig),
+            error: createError('Config Error: Only the last positional can be repeatable', ErrorStyle.Misconfig),
         })
     })
 
@@ -69,7 +69,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 254,
-            error: createError('Config Error: Only the last positional can be repeatable', ErrorType.Misconfig),
+            error: createError('Config Error: Only the last positional can be repeatable', ErrorStyle.Misconfig),
         })
     })
 
@@ -83,7 +83,7 @@ describe(executeAppResult.name, () => {
         const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], [])
 
         expect(result.code).toBe(253)
-        expect(result.error?.type).toBe(ErrorType.Internal)
+        expect(result.error?.type).toBe(ErrorStyle.Internal)
         expect(result.error?.message).toContain('Error: kaboom')
     })
 
@@ -94,10 +94,10 @@ describe(executeAppResult.name, () => {
                 '--eval',
                 [
                     "process.env.FORCE_COLOR = '1'",
-                    "import {createError, ErrorType, printError} from './src/utils'",
-                    "printError(createError('invalid', ErrorType.InvalidArg))",
-                    "printError(createError('misconfig', ErrorType.Misconfig))",
-                    "printError(createError('internal', ErrorType.Internal))",
+                    "import {createError, ErrorStyle, printError} from './src/utils'",
+                    "printError(createError('invalid', ErrorStyle.InvalidArg))",
+                    "printError(createError('misconfig', ErrorStyle.Misconfig))",
+                    "printError(createError('internal', ErrorStyle.Internal))",
                 ].join('\n'),
             ],
             cwd: Path.resolve(import.meta.dir, '..'),
@@ -139,7 +139,10 @@ describe(executeAppResult.name, () => {
 
         expect(result.exitCode).toBe(0)
         expect(result.stderr.toString()).toBe('')
-        expect(result.stdout.toString()).toContain('Author: Mark Penner')
+
+        const output = result.stdout.toString()
+        expect(output).toContain('hello ver. 1.0.0 by Mark Penner')
+        expect(output).toContain('hello ver. 1.0.0 by Mark Penner\n\nExample app')
     })
 
     it('prints app name, version, and description for executable root app help', () => {
@@ -166,7 +169,8 @@ describe(executeAppResult.name, () => {
         expect(result.stderr.toString()).toBe('')
 
         const output = result.stdout.toString()
-        expect(output).toContain('hello version 1.0.0')
+        expect(output).toContain('hello ver. 1.0.0')
+        expect(output).toContain('hello ver. 1.0.0\n\nExample app')
         expect(output).toContain('Example app')
         expect(output).toContain('Commands:')
     })
@@ -187,7 +191,8 @@ describe(executeAppResult.name, () => {
         expect(result.stderr.toString()).toBe('')
 
         const output = result.stdout.toString()
-        expect(output).toContain('hello version 0.2.0')
+        expect(output).toContain('hello ver. 0.2.0 by Mark Penner')
+        expect(output).toContain('hello ver. 0.2.0 by Mark Penner\n\nExample app')
         expect(output).toContain('Example app')
     })
 })

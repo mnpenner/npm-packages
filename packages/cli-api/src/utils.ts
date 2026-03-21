@@ -27,9 +27,6 @@ export enum ErrorStyle {
     Internal = 'internal',
 }
 
-/** Backwards-compatible alias for the semantic CLI error categories. */
-export const ErrorType = ErrorStyle
-
 /**
  * A user-facing CLI error with a semantic type.
  */
@@ -80,50 +77,33 @@ export function createError(message: string, type: ErrorStyle): CliError {
 /**
  * Gets the process exit code associated with a given CLI error.
  *
- * @param error The structured CLI error or semantic error style to map to a process exit code.
+ * @param error The structured CLI error to map to a process exit code.
  * @returns The default exit code used for that error type.
  */
-export function getErrorExitCode(error: CliError): number
-export function getErrorExitCode(error: ErrorStyle): number
-export function getErrorExitCode(error: CliError | ErrorStyle): number {
-    return ERROR_PRESENTATION[typeof error === 'string' ? error : error.type].code
+export function getErrorExitCode(error: CliError): number {
+    return ERROR_PRESENTATION[error.type].code
 }
 
 /**
  * Prints a user-facing CLI error block.
  *
- * @param error The structured CLI error or message to render.
- * @param style The semantic error style to use when `error` is a plain string.
+ * @param error The structured CLI error to render.
  * @returns Nothing.
  */
-export function printError(error: CliError): void
-export function printError(error: string, style?: ErrorStyle): void
-export function printError(error: CliError | string, style: ErrorStyle = ErrorStyle.InvalidArg): void {
-    if(typeof error === 'string') {
-        blockError(error, style)
-        return
-    }
+export function printError(error: CliError): void {
     blockError(error.message, error.type)
 }
 
 /**
  * Prints a user-facing CLI error block and exits the process.
  *
- * @param error The structured CLI error or message to render.
- * @param styleOrCode The semantic error style for string inputs, or an explicit exit code for structured errors.
- * @param code Optional explicit exit code override for string inputs.
+ * @param error The structured CLI error to render.
+ * @param code Optional explicit exit code override.
  * @returns This function never returns because it exits the process.
  */
-export function abort(error: CliError, code?: number): never
-export function abort(error: string, style?: ErrorStyle, code?: number): never
-export function abort(error: CliError | string, styleOrCode?: ErrorStyle | number, code?: number): never {
-    if(typeof error === 'string') {
-        const style = typeof styleOrCode === 'string' ? styleOrCode : ErrorStyle.InvalidArg
-        printError(error, style)
-        process.exit(code ?? (typeof styleOrCode === 'number' ? styleOrCode : getErrorExitCode(style)))
-    }
+export function abort(error: CliError, code?: number): never {
     printError(error)
-    process.exit(typeof styleOrCode === 'number' ? styleOrCode : getErrorExitCode(error))
+    process.exit(code ?? getErrorExitCode(error))
 }
 
 export function toArray<T>(x: T | readonly T[] | undefined): readonly T[] {

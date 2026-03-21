@@ -24,15 +24,16 @@ export function printHelp(app: AnyApp, commands: readonly AnyCmd[]) {
     print(Chalk.green(app.name))
     const {_author: author, _version: version} = app as InternalAppMetadata
     if (version) {
-        print(` version ${Chalk.yellow(version)}`)
+        print(` ver. ${Chalk.yellow(version)}`)
+    }
+    if (author) {
+        print(` by ${Chalk.cyan(author)}`)
     }
     printLn()
 
     if (app.description) {
+        printLn()
         printLn(app.description)
-    }
-    if (author) {
-        printLn(`Author: ${author}`)
     }
 
     printLn()
