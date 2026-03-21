@@ -12,12 +12,6 @@ export type nil = null | undefined
 export type NullableObj = Record<string, any> | nil
 type InternalAppMetadata = AnyApp & {_bin?: string}
 
-enum ErrorColor {
-    Red = 'red',
-    Magenta = 'magenta',
-    Blue = 'blue',
-}
-
 /**
  * Semantic categories for user-facing CLI errors.
  */
@@ -35,26 +29,16 @@ export interface CliError {
     type: ErrorStyle
 }
 
-const ERROR_PRESENTATION: Record<ErrorStyle, {code: number, color: ErrorColor}> = {
-    [ErrorStyle.InvalidArg]: {code: 2, color: ErrorColor.Red},
-    [ErrorStyle.Misconfig]: {code: 254, color: ErrorColor.Magenta},
-    [ErrorStyle.Internal]: {code: 253, color: ErrorColor.Blue},
-}
-
-function getErrorBackground(color: ErrorColor): typeof Chalk.bgRed {
-    if(color === ErrorColor.Magenta) {
-        return Chalk.bgMagenta
-    }
-    if(color === ErrorColor.Blue) {
-        return Chalk.bgBlue
-    }
-    return Chalk.bgRed
+const ERROR_PRESENTATION: Record<ErrorStyle, {code: number, format: typeof Chalk.bgRed}> = {
+    [ErrorStyle.InvalidArg]: {code: 2, format: Chalk.bgHex('#D73737').hex('#FEFBEC')},
+    [ErrorStyle.Misconfig]: {code: 254, format: Chalk.bgHex('#B854D4').hex('#FEFBEC')},
+    [ErrorStyle.Internal]: {code: 253, format: Chalk.bgHex('#6684E1').hex('#FEFBEC')},
 }
 
 function blockError(str: string, style: ErrorStyle) {
     const lines = str.split('\n')
     const width = Math.max(...lines.map(l => stringWidth(l))) + 4
-    const background = getErrorBackground(ERROR_PRESENTATION[style].color)
+    const background = ERROR_PRESENTATION[style].format
     printLn(background(space(width)))
     for(const line of lines) {
         const txt = `  ${line}`
