@@ -1,4 +1,4 @@
-import type {AnyCmd, App} from '../interfaces'
+import type {AnyApp, AnyCmd} from '../interfaces'
 import {Command, hasSubCommands} from '../interfaces'
 import {versionCommand} from './version'
 import {getCommand} from '../options'
@@ -13,7 +13,7 @@ export const helpCommand = new Command('help')
         repeatable: true,
     })
     .run(async function(commandPath: string[]) {
-        const app = this as App<any, any, any, any, any>
+        const app = this as AnyApp
         const rootCommands = [
             ...((app.subCommands !== undefined) ? sortBy(app.subCommands, c => c.name) : []),
             versionCommand as unknown as AnyCmd,

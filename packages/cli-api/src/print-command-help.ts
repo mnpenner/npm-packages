@@ -1,23 +1,14 @@
-import type {App, AnyCmd} from './interfaces'
+import type {AnyApp, AnyCmd} from './interfaces'
 import {OptType, hasSubCommands, isExecutable} from './interfaces'
 import {printAvailableCommands} from './app-help'
 import {getProcName, print, printLn, space, toArray} from './utils'
 import {getGlobalOptions} from './global-options'
 import {formatOption, getOptions, getOptName, getValuePlaceholder} from './options'
 import stringWidth from 'string-width'
+import type {ChalkInstance} from 'chalk'
 import type {Argument, Option} from './interfaces'
 
-type AppInstance = App<any, any, any, any, any>
-
-const HELP_OPTION: Option = {
-    name: 'help',
-    alias: 'h',
-    description: 'Show help text',
-    type: OptType.BOOL,
-    valueNotRequired: true,
-}
-
-function getCommandLabel(app: AppInstance, path: readonly string[]) {
+function getCommandLabel(app: AnyApp, path: readonly string[]) {
     const proc = app.chalk.cyan(getProcName(app))
     if (!path.length) {
         return proc
@@ -25,7 +16,7 @@ function getCommandLabel(app: AppInstance, path: readonly string[]) {
     return `${proc} ${path.join(' ')}`
 }
 
-function formatUsageOption(opt: Option, chalk: AppInstance['chalk']): string {
+function formatUsageOption(opt: Option, chalk: ChalkInstance): string {
     const optionName = chalk.green(getOptName(opt))
     if (opt.type === OptType.BOOL) {
         return optionName
@@ -38,12 +29,12 @@ function formatUsageOption(opt: Option, chalk: AppInstance['chalk']): string {
     return `${optionName}=${valuePlaceholder}`
 }
 
-function formatUsageArgument(arg: Argument, chalk: AppInstance['chalk']): string {
+function formatUsageArgument(arg: Argument, chalk: ChalkInstance): string {
     const argumentName = chalk.magenta(arg.repeatable ? `${arg.name}...` : arg.name)
     return `${chalk.grey(arg.required ? '<' : '[')}${argumentName}${chalk.grey(arg.required ? '>' : ']')}`
 }
 
-export function printCommandHelp(app: AppInstance, cmd: AppInstance | AnyCmd, path: readonly string[] = []) {
+export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readonly string[] = []) {
     const chalk = app.chalk
     if (cmd.description) {
         printLn(cmd.description)

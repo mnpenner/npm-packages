@@ -1,4 +1,4 @@
-import type {App, Option} from './interfaces'
+import type {AnyApp, Option} from './interfaces'
 import {OptType} from './interfaces'
 
 export const HELP_OPTION: Option = {
@@ -23,6 +23,6 @@ export const COLOR_OPTION: Option = {
     defaultValue: 'auto',
 }
 
-export function getGlobalOptions(app: App<any, any, any, any, any>): Option[] {
+export function getGlobalOptions(app: AnyApp): Option[] {
     return [HELP_OPTION, COLOR_OPTION, ...(app._globalOptions ?? [])]
 }

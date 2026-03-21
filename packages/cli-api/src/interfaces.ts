@@ -194,6 +194,8 @@ type AppBase = CommandBase & {
     globalOptions?: Option[]
 }
 
+export type AnyApp = App<any, any, any, any, any>
+
 export type LeafCommand<
     Opts extends readonly Option[] | undefined = undefined,
     Flags extends readonly Flag[] | undefined = undefined,
@@ -221,7 +223,7 @@ export interface ExecutableInput<
     options?: Opts
     flags?: Flags
     positonals?: As
-    execute(this: App<any, any, any, any, any>, kwargs: KwargsOf<Opts, Flags, As>, args: ArgsOf<As>): MaybePromise<number | void>
+    execute(this: AnyApp, kwargs: KwargsOf<Opts, Flags, As>, args: ArgsOf<As>): MaybePromise<number | void>
 }
 
 export interface LeafCommandInput<
@@ -277,7 +279,7 @@ export interface AnyLeafCommand extends CommandBase {
     options?: readonly Option[] | undefined
     flags?: readonly Flag[] | undefined
     positonals?: readonly Argument[] | undefined
-    execute(this: App<any, any, any, any, any>, kwargs: Record<string, any>, args: any[]): MaybePromise<number | void>
+    execute(this: AnyApp, kwargs: Record<string, any>, args: any[]): MaybePromise<number | void>
     subCommands?: never | undefined
 }
 
@@ -314,7 +316,7 @@ export type RunHandler<
     Opts extends readonly Option[] | undefined,
     Flags extends readonly Flag[] | undefined,
     As extends readonly Argument[] | undefined,
-> = (this: App<any, any, any, any, any>, args: ArgsOf<As>, kwargs: KwargsOf<Opts, Flags, As>) => MaybePromise<number | void>
+> = (this: AnyApp, args: ArgsOf<As>, kwargs: KwargsOf<Opts, Flags, As>) => MaybePromise<number | void>
 
 type ExecuteHandler<
     Opts extends readonly Option[] | undefined,
@@ -481,8 +483,8 @@ export class Command<
         this: Command<Opts, Flags, As, [], false>,
         handler: RunHandler<Opts, Flags, As>,
     ): Command<Opts, Flags, As, [], true> {
-        this._handler = function(this: App<any, any, any, any, any>, kwargs: KwargsOf<Opts, Flags, As>, args: ArgsOf<As>) {
-            return handler.call(this as App<any, any, any, any, any>, args, kwargs)
+        this._handler = function(this: AnyApp, kwargs: KwargsOf<Opts, Flags, As>, args: ArgsOf<As>) {
+            return handler.call(this as AnyApp, args, kwargs)
         }
         return this as unknown as Command<Opts, Flags, As, [], true>
     }
@@ -698,7 +700,7 @@ export function hasSubCommands(value: {subCommands?: readonly AnyCmd[] | undefin
  * @param value The command or app to inspect.
  * @returns `true` when the value has an executable handler.
  */
-export function isExecutable(value: {execute?: unknown, handler?: unknown}): value is AnyLeafCommand | App<any, any, any, any, any> {
+export function isExecutable(value: {execute?: unknown, handler?: unknown}): value is AnyLeafCommand | AnyApp {
     return typeof (value as any).handler === 'function' || Object.prototype.hasOwnProperty.call(value, 'execute')
 }
 

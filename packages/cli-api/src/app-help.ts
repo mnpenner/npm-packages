@@ -1,4 +1,4 @@
-import type {App, AnyCmd} from './interfaces'
+import type {AnyApp, AnyCmd} from './interfaces'
 import {hasSubCommands} from './interfaces'
 import {getProcName, print, printLn, space} from './utils'
 import type {ChalkInstance} from 'chalk'
@@ -6,9 +6,7 @@ import {getGlobalOptions} from './global-options'
 import stringWidth from 'string-width'
 import {formatOption} from './options'
 
-type AppInstance = App<any, any, any, any, any>
-
-export function printHelp(app: AppInstance, commands: readonly AnyCmd[]) {
+export function printHelp(app: AnyApp, commands: readonly AnyCmd[]) {
     const chalk = app.chalk
     print(chalk.green(app.name))
     const {_author: author, _version: version} = app

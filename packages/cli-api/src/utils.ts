@@ -1,4 +1,4 @@
-import type {App} from './interfaces'
+import type {AnyApp} from './interfaces'
 import Path from 'path'
 import stringWidth from 'string-width'
 import type {ChalkInstance} from 'chalk'
@@ -10,7 +10,6 @@ export const printLn = console.log.bind(console)
 
 export type nil = null | undefined
 export type NullableObj = Record<string, any> | nil
-type AppInstance = App<any, any, any, any, any>
 
 /**
  * Semantic categories for user-facing CLI errors.
@@ -78,17 +77,6 @@ export function printError(error: CliError, chalk: ChalkInstance): void {
     blockError(error.message, error.type, chalk)
 }
 
-/**
- * Prints a user-facing CLI error block and exits the process.
- *
- * @param error The structured CLI error to render.
- * @param code Optional explicit exit code override.
- * @returns This function never returns because it exits the process.
- */
-export function abort(error: CliError, code?: number): never {
-    throw new Error(`abort() requires an explicit chalk instance; intended exit code ${code ?? getErrorExitCode(error)} for: ${error.message}`)
-}
-
 export function toArray<T>(x: T | readonly T[] | undefined): readonly T[] {
     if(!x) return EMPTY_ARRAY
     if(Array.isArray(x)) return x
@@ -119,7 +107,7 @@ export function space(len: number, str?: string) {
     return len > 0 ? ' '.repeat(len) : ''
 }
 
-export function getProcName(app: AppInstance) {
+export function getProcName(app: AnyApp) {
     const bin = app._bin
     if(bin != null) {
         return bin
