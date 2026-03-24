@@ -1,4 +1,4 @@
-import type {ChalkInstance} from 'chalk'
+import type {ChalkInstance, ColorSupportLevel} from 'chalk'
 import {createChalk} from './color'
 
 // union -> intersection
@@ -527,6 +527,15 @@ export class App<
      */
     get chalk(): ChalkInstance {
         return this._chalk!
+    }
+
+    /**
+     * Gets the resolved color support level configured for the current app execution.
+     *
+     * @returns The active color level from `0` to `3`. During command execution this reflects built-in color flags such as `--color` and `--no-color`.
+     */
+    get colorLevel(): ColorSupportLevel {
+        return this._chalk!.level
     }
 
     /**

@@ -12,11 +12,18 @@ function createMisconfiguredApp(): Parameters<typeof executeAppResult>[0] {
         .run(() => {}) as Parameters<typeof executeAppResult>[0]
 }
 
-async function captureExecute(app: Parameters<typeof executeAppResult>[0], argv: string[]): Promise<{result: Awaited<ReturnType<typeof executeAppResult>>, output: string}> {
+async function captureExecute(
+    app: Parameters<typeof executeAppResult>[0],
+    argv: string[],
+    {color = false}: {color?: boolean} = {},
+): Promise<{result: Awaited<ReturnType<typeof executeAppResult>>, output: string}> {
     let output = ''
     const originalLog = console.log
     const originalWrite = process.stdout.write
     const originalArgv = process.argv
+    const effectiveArgv = color || argv.includes('--color=always') || argv.includes('--no-color')
+        ? argv
+        : [...argv, '--no-color']
 
     console.log = ((...args: unknown[]) => {
         output += args.join(' ') + '\n'
@@ -28,13 +35,19 @@ async function captureExecute(app: Parameters<typeof executeAppResult>[0], argv:
     process.argv = ['bun', 'test']
 
     try {
-        const result = await executeAppResult(app, argv)
+        const result = await executeAppResult(app, effectiveArgv)
         return {result, output}
     } finally {
         console.log = originalLog
         process.stdout.write = originalWrite
         process.argv = originalArgv
     }
+}
+
+function matchOutput(output: string, pattern: RegExp): string {
+    const match = output.match(pattern)
+    expect(match).not.toBeNull()
+    return match![0]
 }
 
 describe(executeAppResult.name, () => {
@@ -235,6 +248,21 @@ describe(executeAppResult.name, () => {
         expect(result).toEqual({code: null})
     })
 
+    it('exposes the resolved chalk color level to command handlers', async () => {
+        const levels: number[] = []
+        const app = new App('hello')
+            .meta({bin: 'cli-api'})
+            .run(function() {
+                levels.push(this.colorLevel)
+                expect(this.colorLevel).toBe(this.chalk.level)
+            })
+
+        expect(await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['--color=always'])).toEqual({code: null})
+        expect(await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['--no-color'])).toEqual({code: null})
+
+        expect(levels).toEqual([3, 0])
+    })
+
     it('shows the built-in color option in help text with an optional value placeholder', async () => {
         const app = new App('hello').meta({bin: 'cli-api', description: 'Example app'}).run(() => {})
 
@@ -265,9 +293,12 @@ describe(executeAppResult.name, () => {
         const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help'])
 
         expect(result).toEqual({code: 0})
-        expect(output).toContain('  world\n')
-        expect(output).toContain('\n          This description is intentionally long so it cannot fit on a single\n')
-        expect(output).toContain('\n          command listing line inside the default help renderer width.\n')
+        expect(matchOutput(output, /  world[\s\S]*?(?=\n  version)/))
+            .toEqualIgnoringWhitespace(`
+                world
+                This description is intentionally long so it cannot fit on a single
+                command listing line inside the default help renderer width.
+            `)
     })
 
     it('wraps long option descriptions onto indented lines in command help', async () => {
@@ -280,9 +311,12 @@ describe(executeAppResult.name, () => {
         const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['world', '--help'])
 
         expect(result).toEqual({code: 0})
-        expect(output).toContain('  -p, --profile=PROFILE\n')
-        expect(output).toContain('\n          This description is intentionally long so it cannot fit on a single\n')
-        expect(output).toContain('\n          option listing line inside the default help renderer width.\n')
+        expect(matchOutput(output, /  -p, --profile=PROFILE[\s\S]*?(?=\n\nGlobal Options:)/))
+            .toEqualIgnoringWhitespace(`
+                -p, --profile=PROFILE
+                This description is intentionally long so it cannot fit on a single
+                option listing line inside the default help renderer width.
+            `)
     })
 
     it('wraps every option in a section when one option needs wrapping and separates wrapped entries', async () => {
@@ -296,15 +330,21 @@ describe(executeAppResult.name, () => {
         const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['world', '--help'])
 
         expect(result).toEqual({code: 0})
-        expect(output).toContain('  -a, --alpha=ALPHA\n')
-        expect(output).toContain('\n          Short description.\n\n  -p, --profile=PROFILE\n')
-        expect(output).toContain('\n          This description is intentionally long so it cannot fit on a single\n')
+        expect(matchOutput(output, /  -a, --alpha=ALPHA[\s\S]*?(?=\n\nGlobal Options:)/))
+            .toEqualIgnoringWhitespace(`
+                -a, --alpha=ALPHA
+                Short description.
+
+                -p, --profile=PROFILE
+                This description is intentionally long so it cannot fit on a single
+                option listing line inside the default help renderer width.
+            `)
     })
 
     it('enables forced color output for help when requested', async () => {
         const app = new App('hello').meta({bin: 'cli-api', description: 'Example app'}).run(() => {})
 
-        const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help', '--color=always'])
+        const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help', '--color=always'], {color: true})
 
         expect(result).toEqual({code: 0})
         expect(output).toContain('\u001B[')
