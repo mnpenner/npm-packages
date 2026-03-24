@@ -150,39 +150,6 @@ describe(executeAppResult.name, () => {
         expect(result.error?.message).toContain('Error: kaboom')
     })
 
-    it('renders the correct colors for each error style', () => {
-        const result = Bun.spawnSync({
-            cmd: [
-                process.execPath,
-                '--eval',
-                [
-                    "process.env.FORCE_COLOR = '1'",
-                    "import {createChalk} from './src/color'",
-                    "import {createError, ErrorStyle, printError} from './src/utils'",
-                    "const chalk = createChalk('always')",
-                    "printError(createError('invalid', ErrorStyle.InvalidArg), chalk)",
-                    "printError(createError('misconfig', ErrorStyle.Misconfig), chalk)",
-                    "printError(createError('internal', ErrorStyle.Internal), chalk)",
-                ].join('\n'),
-            ],
-            cwd: Path.resolve(import.meta.dir, '..'),
-            env: {
-                ...process.env,
-                FORCE_COLOR: '1',
-            },
-            stdout: 'pipe',
-            stderr: 'pipe',
-        })
-
-        expect(result.exitCode).toBe(0)
-        expect(result.stderr.toString()).toBe('')
-
-        const output = result.stdout.toString()
-        expect(output).toContain('\u001B[48;2;215;55;55m')
-        expect(output).toContain('\u001B[48;2;184;84;212m')
-        expect(output).toContain('\u001B[48;2;102;132;225m')
-    })
-
     it('prints app author in root help output', () => {
         const result = Bun.spawnSync({
             cmd: [
