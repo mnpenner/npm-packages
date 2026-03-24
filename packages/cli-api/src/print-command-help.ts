@@ -90,6 +90,10 @@ export function printCommandHelp(context: ExecutionContext, cmd: AnyApp | AnyCmd
         printLn(cmd.description)
         printLn()
     }
+    if (cmd.longDescription) {
+        printLn(cmd.longDescription)
+        printLn()
+    }
     if (cmd === app) {
         const author = app._author
         if (author) {
@@ -127,7 +131,7 @@ export function printCommandHelp(context: ExecutionContext, cmd: AnyApp | AnyCmd
             }
         }
     } else if (!hasSubCommands(cmd)) {
-        print(` ${chalk.gray('[options] [positionals]')}`)
+        print(` ${chalk.gray('[options] [arguments]')}`)
     }
     printLn()
 
@@ -162,9 +166,5 @@ export function printCommandHelp(context: ExecutionContext, cmd: AnyApp | AnyCmd
     if (cmd.alias) {
         const aliases = toArray(cmd.alias)
         printLn(chalk.yellow(`\nAlias${aliases.length !== 1 ? 'es' : ''}: `) + aliases.join(chalk.gray(', ')))
-    }
-    if (cmd.longDescription) {
-        printLn(chalk.yellow('\nDescription:'))
-        printLn('  ' + cmd.longDescription)
     }
 }

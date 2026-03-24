@@ -128,7 +128,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 254,
-            error: createError('Config Error: Only the last positional can be repeatable', ErrorCategory.Misconfig),
+            error: createError('Config Error: Only the last argument can be repeatable', ErrorCategory.Misconfig),
         })
     })
 
@@ -137,7 +137,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 254,
-            error: createError('Config Error: Only the last positional can be repeatable', ErrorCategory.Misconfig),
+            error: createError('Config Error: Only the last argument can be repeatable', ErrorCategory.Misconfig),
         })
     })
 
@@ -351,6 +351,28 @@ describe(executeAppResult.name, () => {
                 This description is intentionally long so it cannot fit on a single
                 option listing line inside the default help renderer width.
             `)
+    })
+
+    it('prints the long description directly after the short description in command help', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api'})
+            .command(new Command('world')
+                .describe(
+                    'Abandon a revision',
+                    'Abandon a revision, rebasing descendants onto its parent(s).\nThe behavior is similar to `jj restore --changes-in`.',
+                )
+                .run(() => {}))
+
+        const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['world', '--help'])
+
+        expect(result).toEqual({code: 0})
+        expect(output).toContain(`Abandon a revision
+
+Abandon a revision, rebasing descendants onto its parent(s).
+The behavior is similar to \`jj restore --changes-in\`.
+
+Usage:`)
+        expect(output).not.toContain('Description:')
     })
 
     it('enables forced color output for help when requested', async () => {
