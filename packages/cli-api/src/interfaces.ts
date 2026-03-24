@@ -1,5 +1,5 @@
 import type {ChalkInstance, ColorSupportLevel} from 'chalk'
-import {createChalk} from './color'
+import {createChalk, type ColorMode} from './color'
 
 // union -> intersection
 type U2I<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never
@@ -230,7 +230,7 @@ export interface ExecutableInput<
     options?: Opts
     flags?: Flags
     positonals?: As
-    execute(this: AnyApp, opts: OptsOf<Opts, Flags, As>, args: ArgsOf<As>): MaybePromise<number | void>
+    execute(opts: OptsOf<Opts, Flags, As>, args: ArgsOf<As>, context: ExecutionContext): MaybePromise<number | void>
 }
 
 export interface LeafCommandInput<
@@ -266,6 +266,64 @@ export type AppShape<
     Cs extends CommandChildren = CommandChildren,
 > = LeafApp<Opts, Flags, As> | BranchApp<Cs>
 
+/**
+ * Per-invocation execution state exposed to command handlers.
+ */
+export class ExecutionContext {
+    private readonly _app: AnyApp
+    private readonly _path: readonly string[]
+    private readonly _chalk: ChalkInstance
+
+    /**
+     * Creates a context for a single CLI invocation.
+     *
+     * @param app The root app being executed.
+     * @param colorMode The resolved color mode for the current invocation.
+     * @param path The resolved command path for the current invocation.
+     */
+    constructor(app: AnyApp, colorMode: ColorMode = 'auto', path: readonly string[] = []) {
+        this._app = app
+        this._path = path
+        this._chalk = createChalk(colorMode)
+    }
+
+    /**
+     * Gets the root app for the current invocation.
+     *
+     * @returns The app definition being executed.
+     */
+    get app(): AnyApp {
+        return this._app
+    }
+
+    /**
+     * Gets the resolved command path for the current invocation.
+     *
+     * @returns The command names from the app root to the executing command.
+     */
+    get path(): readonly string[] {
+        return this._path
+    }
+
+    /**
+     * Gets the chalk instance configured for the current invocation.
+     *
+     * @returns The active chalk instance after built-in color flags such as `--color` and `--no-color` have been applied.
+     */
+    get chalk(): ChalkInstance {
+        return this._chalk
+    }
+
+    /**
+     * Gets the resolved color support level configured for the current invocation.
+     *
+     * @returns The active color level from `0` to `3`.
+     */
+    get colorLevel(): ColorSupportLevel {
+        return this._chalk.level
+    }
+}
+
 export interface LeafAppInput<
     Opts extends readonly Option[] | undefined,
     Flags extends readonly Flag[] | undefined,
@@ -286,7 +344,7 @@ export interface AnyLeafCommand extends CommandBase {
     options?: readonly Option[] | undefined
     flags?: readonly Flag[] | undefined
     positonals?: readonly Argument[] | undefined
-    execute(this: AnyApp, opts: Record<string, any>, args: any[]): MaybePromise<number | void>
+    execute(opts: Record<string, any>, args: any[], context: ExecutionContext): MaybePromise<number | void>
     subCommands?: never | undefined
 }
 
@@ -323,7 +381,7 @@ export type RunHandler<
     Opts extends readonly Option[] | undefined,
     Flags extends readonly Flag[] | undefined,
     As extends readonly Argument[] | undefined,
-> = (this: AnyApp, args: ArgsOf<As>, opts: OptsOf<Opts, Flags, As>) => MaybePromise<number | void>
+> = (args: ArgsOf<As>, opts: OptsOf<Opts, Flags, As>, context: ExecutionContext) => MaybePromise<number | void>
 
 type ExecuteHandler<
     Opts extends readonly Option[] | undefined,
@@ -483,15 +541,15 @@ export class Command<
     /**
      * Marks this command as executable and registers the handler invoked after parsing.
      *
-     * @param handler The function that receives parsed positional arguments and parsed option values.
+     * @param handler The function that receives parsed positional arguments, parsed option values, and the current [`ExecutionContext`]{@link ExecutionContext}.
      * @returns A fluent command builder that is now treated as executable.
      */
     run(
         this: Command<Opts, Flags, As, [], false>,
         handler: RunHandler<Opts, Flags, As>,
     ): Command<Opts, Flags, As, [], true> {
-        this._handler = function(this: AnyApp, opts: OptsOf<Opts, Flags, As>, args: ArgsOf<As>) {
-            return handler.call(this as AnyApp, args, opts)
+        this._handler = function(opts: OptsOf<Opts, Flags, As>, args: ArgsOf<As>, context: ExecutionContext) {
+            return handler(args, opts, context)
         }
         return this as unknown as Command<Opts, Flags, As, [], true>
     }
@@ -512,31 +570,6 @@ export class App<
     _author?: string
     /** @internal */
     _globalOptions?: Option[]
-    /** @internal */
-    _chalk?: ChalkInstance
-
-    constructor(name: string) {
-        super(name)
-        this._chalk = createChalk()
-    }
-
-    /**
-     * Gets the chalk instance configured for the current app execution.
-     *
-     * @returns The active chalk instance. During command execution this reflects built-in color flags such as `--color` and `--no-color`.
-     */
-    get chalk(): ChalkInstance {
-        return this._chalk!
-    }
-
-    /**
-     * Gets the resolved color support level configured for the current app execution.
-     *
-     * @returns The active color level from `0` to `3`. During command execution this reflects built-in color flags such as `--color` and `--no-color`.
-     */
-    get colorLevel(): ColorSupportLevel {
-        return this._chalk!.level
-    }
 
     /**
      * Applies metadata to the root app in one call.
@@ -690,7 +723,7 @@ export class App<
     /**
      * Marks the root app as executable by registering the handler invoked after parsing.
      *
-     * @param handler The function that receives parsed positional arguments and parsed option values, including custom global options.
+     * @param handler The function that receives parsed positional arguments, parsed option values including custom global options, and the current [`ExecutionContext`]{@link ExecutionContext}.
      * @returns A fluent app builder that is now treated as executable.
      */
     override run(
@@ -707,16 +740,10 @@ export class App<
      * @returns The numeric exit code returned by the resolved command handler, or `0` when the handler does not return one.
      */
     async execute(args: string[] = process.argv.slice(2)): Promise<number> {
-        const {executeAppResult} = await import('./run')
-        const result = await executeAppResult(this, args)
-        if(result.error !== undefined) {
-            const {printError} = await import('./utils')
-            printError(result.error, this.chalk)
-        }
-        if(result.code !== null) {
-            process.exitCode = result.code
-        }
-        return result.code ?? 0
+        const {executeApp} = await import('./run')
+        const code = await executeApp(this, args)
+        process.exitCode = code
+        return code
     }
 }
 

@@ -1,6 +1,5 @@
 import {describe, it} from 'bun:test'
-import type {ChalkInstance, ColorSupportLevel} from 'chalk'
-import {App, Command, OptType} from './interfaces'
+import {App, Command, ExecutionContext, OptType} from './interfaces'
 import {expectType, TypeEqual} from './testing/type-assert'
 
 describe(Command.name, () => {
@@ -9,12 +8,13 @@ describe(Command.name, () => {
             const greetCommand = new Command('greet')
                 .flag('loud')
                 .opt('target', {required: true})
-                .run((args, opts) => {
+                .run((args, opts, context) => {
                     expectType<TypeEqual<typeof args, []>>(true)
                     expectType<TypeEqual<typeof opts, {
                         target: string
                         loud?: boolean
                     }>>(true)
+                    expectType<TypeEqual<typeof context, ExecutionContext>>(true)
                 })
 
             const inspectCommand = new Command('inspect')
@@ -23,7 +23,7 @@ describe(Command.name, () => {
                 .opt('mode', {type: ['fast', 'slow'] as const})
                 .arg('input', {required: true})
                 .arg('rest', {repeatable: true})
-                .run((args, opts) => {
+                .run((args, opts, context) => {
                     expectType<TypeEqual<typeof args, [string, ...string[]]>>(true)
                     expectType<TypeEqual<typeof opts, {
                         count: number
@@ -32,17 +32,19 @@ describe(Command.name, () => {
                         input: string
                         rest: string[]
                     }>>(true)
+                    expectType<TypeEqual<typeof context, ExecutionContext>>(true)
                 })
 
             const boundedCommand = new Command('bounded')
                 .opt('tag', {repeatable: 2})
                 .arg('files', {repeatable: 3, required: 2})
-                .run((args, opts) => {
+                .run((args, opts, context) => {
                     expectType<TypeEqual<typeof args, string[]>>(true)
                     expectType<TypeEqual<typeof opts, {
                         tag: string[]
                         files: string[]
                     }>>(true)
+                    expectType<TypeEqual<typeof context, ExecutionContext>>(true)
                 })
 
             const fluentApp = new App('hello')
@@ -52,8 +54,6 @@ describe(Command.name, () => {
                 .command(boundedCommand)
 
             expectType<TypeEqual<typeof fluentApp.execute, (args?: string[]) => Promise<number>>>(true)
-            expectType<TypeEqual<typeof fluentApp.chalk, ChalkInstance>>(true)
-            expectType<TypeEqual<typeof fluentApp.colorLevel, ColorSupportLevel>>(true)
 
             void greetCommand
             void inspectCommand

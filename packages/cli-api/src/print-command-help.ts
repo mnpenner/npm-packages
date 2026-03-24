@@ -1,4 +1,4 @@
-import type {AnyApp, AnyCmd} from './interfaces'
+import type {AnyApp, AnyCmd, ExecutionContext} from './interfaces'
 import {OptType, hasSubCommands, isExecutable} from './interfaces'
 import {printAvailableCommands} from './app-help'
 import {getProcName, getTerminalWidth, print, printLn, space, toArray, wrapText} from './utils'
@@ -57,8 +57,8 @@ function printOptionEntries(entries: Array<[string, string]>) {
     })
 }
 
-function getCommandLabel(app: AnyApp, path: readonly string[]) {
-    const proc = app.chalk.cyan(getProcName(app))
+function getCommandLabel(context: ExecutionContext, path: readonly string[]) {
+    const proc = context.chalk.cyan(getProcName(context.app))
     if (!path.length) {
         return proc
     }
@@ -83,8 +83,9 @@ function formatUsageArgument(arg: Argument, chalk: ChalkInstance): string {
     return `${chalk.grey(arg.required ? '<' : '[')}${argumentName}${chalk.grey(arg.required ? '>' : ']')}`
 }
 
-export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readonly string[] = []) {
-    const chalk = app.chalk
+export function printCommandHelp(context: ExecutionContext, cmd: AnyApp | AnyCmd, path: readonly string[] = []) {
+    const app = context.app
+    const chalk = context.chalk
     if (cmd.description) {
         printLn(cmd.description)
         printLn()
@@ -98,7 +99,7 @@ export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readon
     }
 
     printLn(chalk.yellow('Usage:'))
-    print(`  ${getCommandLabel(app, path)}`)
+    print(`  ${getCommandLabel(context, path)}`)
 
     if (hasSubCommands(cmd)) {
         print(` ${chalk.gray('<')}command${chalk.gray('>')}`)

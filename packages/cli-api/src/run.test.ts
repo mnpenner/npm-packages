@@ -236,11 +236,11 @@ describe(executeAppResult.name, () => {
         expect(output).toContain('Example app')
     })
 
-    it('exposes the app chalk instance to command handlers', async () => {
+    it('exposes the execution context chalk instance to command handlers', async () => {
         const app = new App('hello')
             .meta({bin: 'cli-api'})
-            .run(function() {
-                expect(this.chalk.blue('blue')).toBe('\u001B[34mblue\u001B[39m')
+            .run((_, __, context) => {
+                expect(context.chalk.blue('blue')).toBe('\u001B[34mblue\u001B[39m')
             })
 
         const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['--color=always'])
@@ -248,19 +248,31 @@ describe(executeAppResult.name, () => {
         expect(result).toEqual({code: null})
     })
 
-    it('exposes the resolved chalk color level to command handlers', async () => {
+    it('exposes the resolved chalk color level on the execution context', async () => {
         const levels: number[] = []
         const app = new App('hello')
             .meta({bin: 'cli-api'})
-            .run(function() {
-                levels.push(this.colorLevel)
-                expect(this.colorLevel).toBe(this.chalk.level)
+            .run((_, __, context) => {
+                levels.push(context.colorLevel)
+                expect(context.colorLevel).toBe(context.chalk.level)
             })
 
         expect(await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['--color=always'])).toEqual({code: null})
         expect(await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['--no-color'])).toEqual({code: null})
 
         expect(levels).toEqual([3, 0])
+    })
+
+    it('passes the app and resolved command path through the execution context', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api'})
+            .command(new Command('world')
+                .run((_, __, context) => {
+                    expect(context.app).toBe(app)
+                    expect(context.path).toEqual(['world'])
+                }))
+
+        expect(await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['world', '--color=always'])).toEqual({code: null})
     })
 
     it('shows the built-in color option in help text with an optional value placeholder', async () => {
