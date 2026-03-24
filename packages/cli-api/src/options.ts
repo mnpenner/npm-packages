@@ -329,7 +329,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
                         throw new Error(`Missing required value for option \`${token}\``)
                     }
                 }
-                if(opt.type != null) value = coerceType(value, opt.type, getEnumValues(opt))
+                if(opt.type != null) value = coerceType(value, opt.type, `option \`${token}\``, getEnumValues(opt))
                 const k = opt.key ?? opt.name
                 if(isRepeatable(opt.repeatable)) {
                     pushRepeatableValue(opts[k] as any[], value, opt.name, getMaxRepeatCount(opt.repeatable), 'option')
@@ -373,7 +373,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
                     else if(i < argv.length - 1) value = argv[++i]
                     else throw new Error(`Missing required value for option "-${ch}"`)
 
-                    if(opt.type != null) value = coerceType(value, opt.type, getEnumValues(opt))
+                    if(opt.type != null) value = coerceType(value, opt.type, `option \`-${ch}\``, getEnumValues(opt))
                     const k = opt.key ?? opt.name
                     if(isRepeatable(opt.repeatable)) {
                         pushRepeatableValue(opts[k] as any[], value, opt.name, getMaxRepeatCount(opt.repeatable), 'option')
@@ -387,7 +387,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
             const def = cmd.positonals?.[argIdx]
 
             if(def) {
-                if(def.type != null) value = coerceType(value, def.type, getEnumValues(def))
+                if(def.type != null) value = coerceType(value, def.type, `positional \`${def.name}\``, getEnumValues(def))
 
                 const k = def.key ?? def.name
                 if(isRepeatable(def.repeatable)) {
@@ -403,7 +403,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
                             i -= 1
                             break
                         }
-                        if(def.type != null) v = coerceType(v, def.type, getEnumValues(def))
+                        if(def.type != null) v = coerceType(v, def.type, `positional \`${def.name}\``, getEnumValues(def))
                         pushRepeatableValue(arr, v, def.name, getMaxRepeatCount(def.repeatable), 'positional')
                     }
                     argIdx = isRepeatable(def.repeatable) && cmd.positonals ? cmd.positonals.length : argIdx
@@ -452,12 +452,13 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
     return [args, opts]
 }
 
-function coerceType(value: string, type: AnyOptType, enumValues?: readonly string[]) {
+function coerceType(value: string, type: AnyOptType, itemName?: string, enumValues?: readonly string[]) {
     const normalizedEnumValue = () => {
         const normalized = String(value).trim().toLowerCase()
         const allowedValues = enumValues ?? (Array.isArray(type) ? type : undefined)
         if(allowedValues !== undefined && !allowedValues.includes(normalized)) {
-            throw new Error(`Invalid value "${value}" (expected one of: ${allowedValues.join(', ')})`)
+            const itemText = itemName ? ` for ${itemName}` : ''
+            throw new Error(`Invalid value "${value}"${itemText} (expected one of: ${allowedValues.join(', ')})`)
         }
         return normalized
     }

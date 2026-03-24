@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import {App, Command, OptType, type AnyOptType, type Option} from '../src'
+import {App, Command, OptType, type AnyOptType, type Option, ExecutionContext} from '../src'
 
 type CommandSpec = {
     name: string
@@ -24,8 +24,11 @@ function lines(...parts: string[]): string {
 }
 
 function logRun(commandName: string) {
-    return (args: unknown[], opts: Record<string, unknown>) => {
-        console.log({command: commandName, args, opts})
+    return (args: unknown[], opts: Record<string, unknown>, ctx: ExecutionContext) => {
+        console.log({ args, opts,
+            commandPath: ctx.commandPath,
+            colorLevel: ctx.colorLevel,
+        })
     }
 }
 

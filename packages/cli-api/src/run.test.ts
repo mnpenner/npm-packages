@@ -269,7 +269,7 @@ describe(executeAppResult.name, () => {
             .command(new Command('world')
                 .run((_, __, context) => {
                     expect(context.app).toBe(app)
-                    expect(context.path).toEqual(['world'])
+                    expect(context.commandPath).toEqual(['world'])
                 }))
 
         expect(await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['world', '--color=always'])).toEqual({code: null})
@@ -371,7 +371,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 2,
-            error: createError('Invalid value "rainbow" (expected one of: always, never, auto)', ErrorCategory.InvalidArg),
+            error: createError('Invalid value "rainbow" for option `--color` (expected one of: always, never, auto)', ErrorCategory.InvalidArg),
         })
     })
 })

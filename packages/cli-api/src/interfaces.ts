@@ -271,7 +271,7 @@ export type AppShape<
  */
 export class ExecutionContext {
     private readonly _app: AnyApp
-    private readonly _path: readonly string[]
+    private readonly _commandPath: readonly string[]
     private readonly _chalk: ChalkInstance
 
     /**
@@ -283,7 +283,7 @@ export class ExecutionContext {
      */
     constructor(app: AnyApp, colorMode: ColorMode = 'auto', path: readonly string[] = []) {
         this._app = app
-        this._path = path
+        this._commandPath = path
         this._chalk = createChalk(colorMode)
     }
 
@@ -301,8 +301,8 @@ export class ExecutionContext {
      *
      * @returns The command names from the app root to the executing command.
      */
-    get path(): readonly string[] {
-        return this._path
+    get commandPath(): readonly string[] {
+        return this._commandPath
     }
 
     /**
