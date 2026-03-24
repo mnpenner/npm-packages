@@ -5,8 +5,13 @@ import type {ChalkInstance} from 'chalk'
 import {EMPTY_ARRAY, FALSE_VALUES, TRUE_VALUES} from './constants'
 import FileSys from 'fs'
 
-export const print = process.stdout.write.bind(process.stdout)
-export const printLn = console.log.bind(console)
+export function print(str = ''): boolean {
+    return process.stdout.write(str)
+}
+
+export function printLn(...args: unknown[]): void {
+    console.log(...args)
+}
 
 export type nil = null | undefined
 export type NullableObj = Record<string, any> | nil

@@ -12,6 +12,31 @@ function createMisconfiguredApp(): Parameters<typeof executeAppResult>[0] {
         .run(() => {}) as Parameters<typeof executeAppResult>[0]
 }
 
+async function captureExecute(app: Parameters<typeof executeAppResult>[0], argv: string[]): Promise<{result: Awaited<ReturnType<typeof executeAppResult>>, output: string}> {
+    let output = ''
+    const originalLog = console.log
+    const originalWrite = process.stdout.write
+    const originalArgv = process.argv
+
+    console.log = ((...args: unknown[]) => {
+        output += args.join(' ') + '\n'
+    }) as typeof console.log
+    process.stdout.write = ((chunk: string | Uint8Array) => {
+        output += String(chunk)
+        return true
+    }) as typeof process.stdout.write
+    process.argv = ['bun', 'test']
+
+    try {
+        const result = await executeAppResult(app, argv)
+        return {result, output}
+    } finally {
+        console.log = originalLog
+        process.stdout.write = originalWrite
+        process.argv = originalArgv
+    }
+}
+
 describe(executeAppResult.name, () => {
     it('returns exit code 2 for unknown root commands', async () => {
         const app = new App('hello')
@@ -150,57 +175,27 @@ describe(executeAppResult.name, () => {
         expect(result.error?.message).toContain('Error: kaboom')
     })
 
-    it('prints app author in root help output', () => {
-        const result = Bun.spawnSync({
-            cmd: [
-                process.execPath,
-                '--eval',
-                [
-                    "import {App, Command} from './src/interfaces'",
-                    "import {executeAppResult} from './src/run'",
-                    "const app = new App('hello')",
-                    "  .meta({bin: 'cli-api', version: '1.0.0', author: 'Mark Penner', description: 'Example app'})",
-                    "  .command(new Command('world'))",
-                    "await executeAppResult(app, ['--help'])",
-                ].join('\n'),
-            ],
-            cwd: Path.resolve(import.meta.dir, '..'),
-            stdout: 'pipe',
-            stderr: 'pipe',
-        })
+    it('prints app author in root help output', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api', version: '1.0.0', author: 'Mark Penner', description: 'Example app'})
+            .command(new Command('world'))
 
-        expect(result.exitCode).toBe(0)
-        expect(result.stderr.toString()).toBe('')
+        const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help'])
 
-        const output = result.stdout.toString()
+        expect(result).toEqual({code: 0})
         expect(output).toContain('hello ver. 1.0.0 by Mark Penner')
         expect(output).toContain('hello ver. 1.0.0 by Mark Penner\n\nExample app')
     })
 
-    it('prints app name, version, and description for executable root app help', () => {
-        const result = Bun.spawnSync({
-            cmd: [
-                process.execPath,
-                '--eval',
-                [
-                    "import {App} from './src/interfaces'",
-                    "import {executeAppResult} from './src/run'",
-                    "const app = new App('hello')",
-                    "  .meta({bin: 'cli-api', version: '1.0.0', description: 'Example app'})",
-                    "  .opt('name', {required: true})",
-                    "  .run(() => {})",
-                    "await executeAppResult(app, ['--help'])",
-                ].join('\n'),
-            ],
-            cwd: Path.resolve(import.meta.dir, '..'),
-            stdout: 'pipe',
-            stderr: 'pipe',
-        })
+    it('prints app name, version, and description for executable root app help', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api', version: '1.0.0', description: 'Example app'})
+            .opt('name', {required: true})
+            .run(() => {})
 
-        expect(result.exitCode).toBe(0)
-        expect(result.stderr.toString()).toBe('')
+        const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help'])
 
-        const output = result.stdout.toString()
+        expect(result).toEqual({code: 0})
         expect(output).toContain('Example app')
         expect(output).toContain('Usage:')
         expect(output).toContain('--name=NAME')
@@ -240,169 +235,79 @@ describe(executeAppResult.name, () => {
         expect(result).toEqual({code: null})
     })
 
-    it('shows the built-in color option in help text with an optional value placeholder', () => {
-        const result = Bun.spawnSync({
-            cmd: [
-                process.execPath,
-                '--eval',
-                [
-                    "import {App} from './src/interfaces'",
-                    "import {executeAppResult} from './src/run'",
-                    "const app = new App('hello').meta({bin: 'cli-api', description: 'Example app'}).run(() => {})",
-                    "await executeAppResult(app, ['--help', '--no-color'])",
-                ].join('\n'),
-            ],
-            cwd: Path.resolve(import.meta.dir, '..'),
-            stdout: 'pipe',
-            stderr: 'pipe',
-        })
+    it('shows the built-in color option in help text with an optional value placeholder', async () => {
+        const app = new App('hello').meta({bin: 'cli-api', description: 'Example app'}).run(() => {})
 
-        expect(result.exitCode).toBe(0)
-        expect(result.stderr.toString()).toBe('')
+        const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help', '--no-color'])
 
-        const output = result.stdout.toString()
+        expect(result).toEqual({code: 0})
         expect(output).toContain('--color[=WHEN]')
         expect(output).not.toContain('\u001B[')
     })
 
-    it('shows custom global options in help text', () => {
-        const result = Bun.spawnSync({
-            cmd: [
-                process.execPath,
-                '--eval',
-                [
-                    "import {App, Command} from './src/interfaces'",
-                    "import {executeAppResult} from './src/run'",
-                    "const app = new App('hello')",
-                    "  .meta({bin: 'cli-api', description: 'Example app'})",
-                    "  .globalOpt('profile', {alias: 'p', description: 'Select a profile'})",
-                    "  .command(new Command('world').run(() => {}))",
-                    "await executeAppResult(app, ['world', '--help'])",
-                ].join('\n'),
-            ],
-            cwd: Path.resolve(import.meta.dir, '..'),
-            stdout: 'pipe',
-            stderr: 'pipe',
-        })
+    it('shows custom global options in help text', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api', description: 'Example app'})
+            .globalOpt('profile', {alias: 'p', description: 'Select a profile'})
+            .command(new Command('world').run(() => {}))
 
-        expect(result.exitCode).toBe(0)
-        expect(result.stderr.toString()).toBe('')
-        expect(result.stdout.toString()).toContain('--profile=PROFILE')
+        const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['world', '--help'])
+
+        expect(result).toEqual({code: 0})
+        expect(output).toContain('--profile=PROFILE')
     })
 
-    it('wraps long command descriptions onto indented lines in root help', () => {
-        const result = Bun.spawnSync({
-            cmd: [
-                process.execPath,
-                '--eval',
-                [
-                    "import {App, Command} from './src/interfaces'",
-                    "import {executeAppResult} from './src/run'",
-                    "const app = new App('hello')",
-                    "  .meta({bin: 'cli-api', description: 'Example app'})",
-                    "  .command(new Command('world').describe('This description is intentionally long so it cannot fit on a single command listing line inside the default help renderer width.'))",
-                    "await executeAppResult(app, ['--help'])",
-                ].join('\n'),
-            ],
-            cwd: Path.resolve(import.meta.dir, '..'),
-            stdout: 'pipe',
-            stderr: 'pipe',
-        })
+    it('wraps long command descriptions onto indented lines in root help', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api', description: 'Example app'})
+            .command(new Command('world').describe('This description is intentionally long so it cannot fit on a single command listing line inside the default help renderer width.'))
 
-        expect(result.exitCode).toBe(0)
-        expect(result.stderr.toString()).toBe('')
+        const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help'])
 
-        const output = result.stdout.toString()
+        expect(result).toEqual({code: 0})
         expect(output).toContain('  world\n')
         expect(output).toContain('\n          This description is intentionally long so it cannot fit on a single\n')
         expect(output).toContain('\n          command listing line inside the default help renderer width.\n')
     })
 
-    it('wraps long option descriptions onto indented lines in command help', () => {
-        const result = Bun.spawnSync({
-            cmd: [
-                process.execPath,
-                '--eval',
-                [
-                    "import {App, Command} from './src/interfaces'",
-                    "import {executeAppResult} from './src/run'",
-                    "const app = new App('hello')",
-                    "  .meta({bin: 'cli-api', description: 'Example app'})",
-                    "  .command(new Command('world')",
-                    "    .opt('profile', {alias: 'p', description: 'This description is intentionally long so it cannot fit on a single option listing line inside the default help renderer width.'})",
-                    "    .run(() => {}))",
-                    "await executeAppResult(app, ['world', '--help'])",
-                ].join('\n'),
-            ],
-            cwd: Path.resolve(import.meta.dir, '..'),
-            stdout: 'pipe',
-            stderr: 'pipe',
-        })
+    it('wraps long option descriptions onto indented lines in command help', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api', description: 'Example app'})
+            .command(new Command('world')
+                .opt('profile', {alias: 'p', description: 'This description is intentionally long so it cannot fit on a single option listing line inside the default help renderer width.'})
+                .run(() => {}))
 
-        expect(result.exitCode).toBe(0)
-        expect(result.stderr.toString()).toBe('')
+        const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['world', '--help'])
 
-        const output = result.stdout.toString()
+        expect(result).toEqual({code: 0})
         expect(output).toContain('  -p, --profile=PROFILE\n')
         expect(output).toContain('\n          This description is intentionally long so it cannot fit on a single\n')
         expect(output).toContain('\n          option listing line inside the default help renderer width.\n')
     })
 
-    it('wraps every option in a section when one option needs wrapping and separates wrapped entries', () => {
-        const result = Bun.spawnSync({
-            cmd: [
-                process.execPath,
-                '--eval',
-                [
-                    "import {App, Command} from './src/interfaces'",
-                    "import {executeAppResult} from './src/run'",
-                    "const app = new App('hello')",
-                    "  .meta({bin: 'cli-api', description: 'Example app'})",
-                    "  .command(new Command('world')",
-                    "    .opt('alpha', {alias: 'a', description: 'Short description.'})",
-                    "    .opt('profile', {alias: 'p', description: 'This description is intentionally long so it cannot fit on a single option listing line inside the default help renderer width.'})",
-                    "    .run(() => {}))",
-                    "await executeAppResult(app, ['world', '--help'])",
-                ].join('\n'),
-            ],
-            cwd: Path.resolve(import.meta.dir, '..'),
-            stdout: 'pipe',
-            stderr: 'pipe',
-        })
+    it('wraps every option in a section when one option needs wrapping and separates wrapped entries', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api', description: 'Example app'})
+            .command(new Command('world')
+                .opt('alpha', {alias: 'a', description: 'Short description.'})
+                .opt('profile', {alias: 'p', description: 'This description is intentionally long so it cannot fit on a single option listing line inside the default help renderer width.'})
+                .run(() => {}))
 
-        expect(result.exitCode).toBe(0)
-        expect(result.stderr.toString()).toBe('')
+        const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['world', '--help'])
 
-        const output = result.stdout.toString()
+        expect(result).toEqual({code: 0})
         expect(output).toContain('  -a, --alpha=ALPHA\n')
         expect(output).toContain('\n          Short description.\n\n  -p, --profile=PROFILE\n')
         expect(output).toContain('\n          This description is intentionally long so it cannot fit on a single\n')
     })
 
-    it('enables forced color output for help when requested', () => {
-        const result = Bun.spawnSync({
-            cmd: [
-                process.execPath,
-                '--eval',
-                [
-                    "import {App} from './src/interfaces'",
-                    "import {executeAppResult} from './src/run'",
-                    "const app = new App('hello').meta({bin: 'cli-api', description: 'Example app'}).run(() => {})",
-                    "await executeAppResult(app, ['--help', '--color=always'])",
-                ].join('\n'),
-            ],
-            cwd: Path.resolve(import.meta.dir, '..'),
-            stdout: 'pipe',
-            stderr: 'pipe',
-            env: {
-                ...process.env,
-                FORCE_COLOR: '0',
-            },
-        })
+    it('enables forced color output for help when requested', async () => {
+        const app = new App('hello').meta({bin: 'cli-api', description: 'Example app'}).run(() => {})
 
-        expect(result.exitCode).toBe(0)
-        expect(result.stderr.toString()).toBe('')
-        expect(result.stdout.toString()).toContain('\u001B[')
+        const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help', '--color=always'])
+
+        expect(result).toEqual({code: 0})
+        expect(output).toContain('\u001B[')
     })
 
     it('returns an invalid-arg error for unsupported color values', async () => {
