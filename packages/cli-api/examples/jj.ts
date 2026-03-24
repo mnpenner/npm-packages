@@ -122,12 +122,6 @@ const globalOptions: Option[] = [
         description: 'Enable debug logging',
     },
     {
-        name: 'color',
-        valuePlaceholder: 'WHEN',
-        type: ['always', 'never', 'debug', 'auto'],
-        description: 'When to colorize output',
-    },
-    {
         name: 'quiet',
         type: OptType.BOOL,
         valueNotRequired: true,
