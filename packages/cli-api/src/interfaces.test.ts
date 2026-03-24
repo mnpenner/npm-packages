@@ -1,8 +1,17 @@
 import {describe, it} from 'bun:test'
 import {App, Command, ExecutionContext, OptType} from './interfaces'
+import type {AnyOptType} from './index'
 import {expectType, TypeEqual} from './testing/type-assert'
 
 describe(Command.name, () => {
+    describe('public exports', () => {
+        it('re-exports AnyOptType from the package entrypoint', () => {
+            const enumLikeType = ['fast', 'slow'] as const satisfies AnyOptType
+
+            expectType<TypeEqual<typeof enumLikeType, readonly ['fast', 'slow']>>(true)
+        })
+    })
+
     describe('run', () => {
         it('preserves public type inference for the fluent API', () => {
             const greetCommand = new Command('greet')

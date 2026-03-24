@@ -41,8 +41,9 @@
         "dev": "tsdown --watch",
         "test:tsc": "tsc --noEmit && echo \"tsc: no errors\"",
         "test:bun": "bun test",
-        "test": "bun run test:tsc && bun run test:bun",
-        "lint": "bun run --bun eslint --fix --"
+        "test": "bun run --parallel 'test:*'",
+        "lint": "bun run --bun eslint --fix --",
+        "prepublishOnly": "bun run --parallel build test"
     },
     "repository": {
         "type": "git",

@@ -107,13 +107,6 @@ export type OptsOf<
     ) : {})
 >
 
-/** @deprecated Use {@link OptsOf} instead. */
-export type KwargsOf<
-    Opts extends readonly Option[] | undefined,
-    Flags extends readonly Flag[] | undefined,
-    As extends readonly Argument[] | undefined,
-> = OptsOf<Opts, Flags, As>
-
 export type MaybePromise<V> = V | PromiseLike<V>
 
 export enum OptType {
