@@ -1,12 +1,61 @@
 import type {AnyApp, AnyCmd} from './interfaces'
 import {OptType, hasSubCommands, isExecutable} from './interfaces'
 import {printAvailableCommands} from './app-help'
-import {getProcName, print, printLn, space, toArray} from './utils'
+import {getProcName, getTerminalWidth, print, printLn, space, toArray, wrapText} from './utils'
 import {getGlobalOptions} from './global-options'
 import {formatOption, getOptions, getOptName, getValuePlaceholder} from './options'
 import stringWidth from 'string-width'
 import type {ChalkInstance} from 'chalk'
 import type {Argument, Option} from './interfaces'
+
+function shouldWrapHelpEntry(label: string, description: string | undefined, labelWidth: number): boolean {
+    if (!description) {
+        return false
+    }
+
+    const terminalWidth = getTerminalWidth()
+    const inlineIndent = labelWidth + 4
+    const inlineDescriptionWidth = Math.max(terminalWidth - inlineIndent, 1)
+    const inlineDescriptionLines = wrapText(description, inlineDescriptionWidth)
+    return description.includes('\n')
+        || inlineDescriptionLines.length > 1
+        || labelWidth + 4 + stringWidth(description) > terminalWidth
+}
+
+function printHelpEntry(label: string, description: string | undefined, labelWidth: number, forceWrap = false): boolean {
+    print(`  ${label}`)
+    if (!description) {
+        printLn()
+        return false
+    }
+
+    const shouldWrap = forceWrap || shouldWrapHelpEntry(label, description, labelWidth)
+
+    if (!shouldWrap) {
+        printLn(`${space(labelWidth + 2, label)}${description}`)
+        return false
+    }
+
+    printLn()
+    const terminalWidth = getTerminalWidth()
+    const descriptionIndent = ' '.repeat(10)
+    const wrappedDescription = wrapText(description, Math.max(terminalWidth - descriptionIndent.length, 1))
+    for (const line of wrappedDescription) {
+        printLn(line.length ? `${descriptionIndent}${line}` : '')
+    }
+    return true
+}
+
+function printOptionEntries(entries: Array<[string, string]>) {
+    const width = Math.max(...entries.map(line => stringWidth(line[0])))
+    const forceWrap = entries.some(([label, description]) => shouldWrapHelpEntry(label, description, width))
+    entries.forEach(([label, description], index) => {
+        const wrapped = printHelpEntry(label, description, width, forceWrap)
+        if (wrapped && index < entries.length - 1) {
+            printLn()
+        }
+    })
+}
 
 function getCommandLabel(app: AnyApp, path: readonly string[]) {
     const proc = app.chalk.cyan(getProcName(app))
@@ -85,22 +134,14 @@ export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readon
         const allOptions = getOptions(cmd)
         if (allOptions.length) {
             printLn(chalk.yellow('\nOptions:'))
-            const lines = allOptions.map(option => formatOption(option, chalk))
-            const width = Math.max(...lines.map(l => stringWidth(l[0])))
-            for (const line of lines) {
-                printLn('  ' + line[0] + space(width + 2, line[0]) + line[1])
-            }
+            printOptionEntries(allOptions.map(option => formatOption(option, chalk)))
         }
 
         if (cmd.positonals?.length) {
             printLn(chalk.yellow('\nArguments:'))
             const width = Math.max(...cmd.positonals.map((arg: {name: string}) => stringWidth(arg.name)))
             for (const arg of cmd.positonals) {
-                print('  ' + chalk.green(arg.name))
-                if (arg.description) {
-                    print(space(width + 2, arg.name) + arg.description)
-                }
-                printLn()
+                printHelpEntry(chalk.green(arg.name), arg.description, width)
             }
         }
     }
@@ -114,11 +155,7 @@ export function printCommandHelp(app: AnyApp, cmd: AnyApp | AnyCmd, path: readon
     if (globalOptions.length) {
         printLn()
         printLn(chalk.yellow('Global Options:'))
-        const lines = globalOptions.map(option => formatOption(option, chalk))
-        const width = Math.max(...lines.map(line => stringWidth(line[0])))
-        for (const line of lines) {
-            printLn('  ' + line[0] + space(width + 2, line[0]) + line[1])
-        }
+        printOptionEntries(globalOptions.map(option => formatOption(option, chalk)))
     }
 
     if (cmd.alias) {

@@ -107,6 +107,42 @@ export function space(len: number, str?: string) {
     return len > 0 ? ' '.repeat(len) : ''
 }
 
+export function getTerminalWidth(): number {
+    return process.stdout.columns && process.stdout.columns > 0 ? process.stdout.columns : 80
+}
+
+export function wrapText(text: string, width: number): string[] {
+    if(width <= 0) {
+        return text.split('\n')
+    }
+
+    const wrappedLines: string[] = []
+    for(const rawLine of text.split('\n')) {
+        if(rawLine.trim().length === 0) {
+            wrappedLines.push('')
+            continue
+        }
+
+        const words = rawLine.trim().split(/\s+/)
+        let currentLine = ''
+        for(const word of words) {
+            const candidate = currentLine.length === 0 ? word : `${currentLine} ${word}`
+            if(currentLine.length > 0 && stringWidth(candidate) > width) {
+                wrappedLines.push(currentLine)
+                currentLine = word
+            } else {
+                currentLine = candidate
+            }
+        }
+
+        if(currentLine.length > 0) {
+            wrappedLines.push(currentLine)
+        }
+    }
+
+    return wrappedLines
+}
+
 export function getProcName(app: AnyApp) {
     const bin = app._bin
     if(bin != null) {

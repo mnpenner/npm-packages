@@ -290,6 +290,95 @@ describe(executeAppResult.name, () => {
         expect(result.stdout.toString()).toContain('--profile=PROFILE')
     })
 
+    it('wraps long command descriptions onto indented lines in root help', () => {
+        const result = Bun.spawnSync({
+            cmd: [
+                process.execPath,
+                '--eval',
+                [
+                    "import {App, Command} from './src/interfaces'",
+                    "import {executeAppResult} from './src/run'",
+                    "const app = new App('hello')",
+                    "  .meta({bin: 'cli-api', description: 'Example app'})",
+                    "  .command(new Command('world').describe('This description is intentionally long so it cannot fit on a single command listing line inside the default help renderer width.'))",
+                    "await executeAppResult(app, ['--help'])",
+                ].join('\n'),
+            ],
+            cwd: Path.resolve(import.meta.dir, '..'),
+            stdout: 'pipe',
+            stderr: 'pipe',
+        })
+
+        expect(result.exitCode).toBe(0)
+        expect(result.stderr.toString()).toBe('')
+
+        const output = result.stdout.toString()
+        expect(output).toContain('  world\n')
+        expect(output).toContain('\n          This description is intentionally long so it cannot fit on a single\n')
+        expect(output).toContain('\n          command listing line inside the default help renderer width.\n')
+    })
+
+    it('wraps long option descriptions onto indented lines in command help', () => {
+        const result = Bun.spawnSync({
+            cmd: [
+                process.execPath,
+                '--eval',
+                [
+                    "import {App, Command} from './src/interfaces'",
+                    "import {executeAppResult} from './src/run'",
+                    "const app = new App('hello')",
+                    "  .meta({bin: 'cli-api', description: 'Example app'})",
+                    "  .command(new Command('world')",
+                    "    .opt('profile', {alias: 'p', description: 'This description is intentionally long so it cannot fit on a single option listing line inside the default help renderer width.'})",
+                    "    .run(() => {}))",
+                    "await executeAppResult(app, ['world', '--help'])",
+                ].join('\n'),
+            ],
+            cwd: Path.resolve(import.meta.dir, '..'),
+            stdout: 'pipe',
+            stderr: 'pipe',
+        })
+
+        expect(result.exitCode).toBe(0)
+        expect(result.stderr.toString()).toBe('')
+
+        const output = result.stdout.toString()
+        expect(output).toContain('  -p, --profile=PROFILE\n')
+        expect(output).toContain('\n          This description is intentionally long so it cannot fit on a single\n')
+        expect(output).toContain('\n          option listing line inside the default help renderer width.\n')
+    })
+
+    it('wraps every option in a section when one option needs wrapping and separates wrapped entries', () => {
+        const result = Bun.spawnSync({
+            cmd: [
+                process.execPath,
+                '--eval',
+                [
+                    "import {App, Command} from './src/interfaces'",
+                    "import {executeAppResult} from './src/run'",
+                    "const app = new App('hello')",
+                    "  .meta({bin: 'cli-api', description: 'Example app'})",
+                    "  .command(new Command('world')",
+                    "    .opt('alpha', {alias: 'a', description: 'Short description.'})",
+                    "    .opt('profile', {alias: 'p', description: 'This description is intentionally long so it cannot fit on a single option listing line inside the default help renderer width.'})",
+                    "    .run(() => {}))",
+                    "await executeAppResult(app, ['world', '--help'])",
+                ].join('\n'),
+            ],
+            cwd: Path.resolve(import.meta.dir, '..'),
+            stdout: 'pipe',
+            stderr: 'pipe',
+        })
+
+        expect(result.exitCode).toBe(0)
+        expect(result.stderr.toString()).toBe('')
+
+        const output = result.stdout.toString()
+        expect(output).toContain('  -a, --alpha=ALPHA\n')
+        expect(output).toContain('\n          Short description.\n\n  -p, --profile=PROFILE\n')
+        expect(output).toContain('\n          This description is intentionally long so it cannot fit on a single\n')
+    })
+
     it('enables forced color output for help when requested', () => {
         const result = Bun.spawnSync({
             cmd: [
