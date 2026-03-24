@@ -297,6 +297,35 @@ describe(executeAppResult.name, () => {
         expect(output).toContain('--profile=PROFILE')
     })
 
+    it('sorts command options in help text by option name', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api', description: 'Example app'})
+            .command(new Command('world')
+                .opt('zebra', {alias: 'z', description: 'Last alphabetically'})
+                .opt('alpha', {alias: 'a', description: 'First alphabetically'})
+                .run(() => {}))
+
+        const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['world', '--help'])
+
+        expect(result).toEqual({code: 0})
+        expect(output.indexOf('-a, --alpha=ALPHA')).toBeLessThan(output.indexOf('-z, --zebra=ZEBRA'))
+    })
+
+    it('sorts global options in help text by option name', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api', description: 'Example app'})
+            .globalOpt('zebra', {alias: 'z', description: 'Last alphabetically'})
+            .globalOpt('alpha', {alias: 'a', description: 'First alphabetically'})
+            .command(new Command('world').run(() => {}))
+
+        const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['world', '--help'])
+
+        expect(result).toEqual({code: 0})
+        expect(output.indexOf('--alpha=ALPHA')).toBeLessThan(output.indexOf('--color[=WHEN]'))
+        expect(output.indexOf('--color[=WHEN]')).toBeLessThan(output.indexOf('--help'))
+        expect(output.indexOf('--help')).toBeLessThan(output.indexOf('--zebra=ZEBRA'))
+    })
+
     it('wraps long command descriptions onto indented lines in root help', async () => {
         const app = new App('hello')
             .meta({bin: 'cli-api', description: 'Example app'})

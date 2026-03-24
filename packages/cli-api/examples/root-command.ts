@@ -17,7 +17,7 @@ const app = new App('hello')
         alias: 'n',
         description: 'Person you want to greet',
         required: true,
-        valuePlaceholder: 'PERSON',
+        valuePlaceholder: 'PeRsOn',
     })
     .opt('shout', {
         description: 'Shout the greeting',

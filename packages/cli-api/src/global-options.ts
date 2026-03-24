@@ -1,5 +1,6 @@
 import type {AnyApp, Option} from './interfaces'
 import {OptType} from './interfaces'
+import {sortOptions} from './options'
 
 export const HELP_OPTION: Option = {
     name: 'help',
@@ -24,5 +25,5 @@ export const COLOR_OPTION: Option = {
 }
 
 export function getGlobalOptions(app: AnyApp): Option[] {
-    return [HELP_OPTION, COLOR_OPTION, ...(app._globalOptions ?? [])]
+    return sortOptions([HELP_OPTION, COLOR_OPTION, ...(app._globalOptions ?? [])])
 }

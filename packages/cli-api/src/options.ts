@@ -1,7 +1,7 @@
 import type {AnyCmd, AnyLeafCommand, AnyOptType, Argument, Option} from './interfaces'
 import {OptType, hasSubCommands} from './interfaces'
 import type {NullableObj} from './utils'
-import {includes, resolve, statSync, toArray, toBool} from './utils'
+import {includes, resolve, sortBy, statSync, toArray, toBool} from './utils'
 import type {ChalkInstance} from 'chalk'
 import {createChalk} from './color'
 import Path from 'path'
@@ -195,8 +195,12 @@ export function getValuePlaceholder(opt: Option): string {
     }
 }
 
+export function sortOptions(options: readonly Option[]): Option[] {
+    return sortBy(options, option => option.name)
+}
+
 export function getOptions(cmd: ParseableCommand): Option[] {
-    return [...toArray(cmd.options)] as Option[]
+    return sortOptions(toArray(cmd.options) as Option[])
 }
 
 /**
