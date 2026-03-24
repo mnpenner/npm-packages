@@ -1,9 +1,0 @@
-{
-    "extends": "./tsconfig.json",
-    "files": [
-        "type-tests/interfaces.ts"
-    ],
-    "compilerOptions": {
-        "noEmit": true
-    }
-}
