@@ -36,7 +36,7 @@ function printHelpEntry(
     const shouldWrap = forceWrap || shouldWrapHelpEntry(label, description, labelWidth)
 
     if (!shouldWrap) {
-        printLn(`${space(labelWidth, label)}${description}`)
+        printLn(`${space(labelWidth + 2, label)}${description}`)
         return false
     }
 
@@ -105,7 +105,7 @@ export function printAvailableCommands(commands: readonly AnyCmd[], title: strin
     }
 
     printLn(chalk.yellow(title))
-    const width = Math.max(...commands.map(c => stringWidth(c.name))) + 2
+    const width = Math.max(...commands.map(c => stringWidth(c.name)))
     const forceWrap = commands.some(cmd => shouldWrapHelpEntry(cmd.name, cmd.description, width))
     for (const cmd of commands) {
         printHelpEntry(chalk.green(cmd.name), cmd.description, width, forceWrap, 4)

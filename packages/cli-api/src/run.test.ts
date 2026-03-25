@@ -6,6 +6,8 @@ import {createError, ErrorCategory} from './utils'
 import {OptType} from './interfaces'
 import {createChalk} from './color'
 
+const TEST_TERMINAL_WIDTH = 80
+
 function createMisconfiguredApp(): Parameters<typeof executeAppResult>[0] {
     return new App('hello')
         .meta({bin: 'cli-api'})
@@ -14,10 +16,26 @@ function createMisconfiguredApp(): Parameters<typeof executeAppResult>[0] {
         .run(() => {}) as Parameters<typeof executeAppResult>[0]
 }
 
+function setTerminalWidth(stdoutColumns: number, stderrColumns: number): {stdout: number | undefined, stderr: number | undefined} {
+    const originalColumns = {
+        stdout: process.stdout.columns,
+        stderr: process.stderr.columns,
+    }
+    Object.defineProperty(process.stdout, 'columns', {
+        configurable: true,
+        value: stdoutColumns,
+    })
+    Object.defineProperty(process.stderr, 'columns', {
+        configurable: true,
+        value: stderrColumns,
+    })
+    return originalColumns
+}
+
 async function captureExecute(
     app: Parameters<typeof executeAppResult>[0],
     argv: string[],
-    {color = false}: {color?: boolean} = {},
+    {color = false, terminalWidth = TEST_TERMINAL_WIDTH}: {color?: boolean, terminalWidth?: number} = {},
 ): Promise<{result: Awaited<ReturnType<typeof executeAppResult>>, stdout: string, stderr: string}> {
     let stdout = ''
     let stderr = ''
@@ -26,6 +44,7 @@ async function captureExecute(
     const originalWrite = process.stdout.write
     const originalErrWrite = process.stderr.write
     const originalArgv = process.argv
+    const originalColumns = setTerminalWidth(terminalWidth, terminalWidth)
     const effectiveArgv = color || argv.includes('--color=always') || argv.includes('--no-color')
         ? argv
         : [...argv, '--no-color']
@@ -54,6 +73,14 @@ async function captureExecute(
         console.error = originalError
         process.stdout.write = originalWrite
         process.stderr.write = originalErrWrite
+        Object.defineProperty(process.stdout, 'columns', {
+            configurable: true,
+            value: originalColumns.stdout,
+        })
+        Object.defineProperty(process.stderr, 'columns', {
+            configurable: true,
+            value: originalColumns.stderr,
+        })
         process.argv = originalArgv
     }
 }
@@ -61,7 +88,7 @@ async function captureExecute(
 async function captureExecuteWithPrintedErrors(
     app: Parameters<typeof executeAppResult>[0],
     argv: string[],
-    {color = false, stderrColumns}: {color?: boolean, stderrColumns?: number} = {},
+    {color = false, stderrColumns = TEST_TERMINAL_WIDTH}: {color?: boolean, stderrColumns?: number} = {},
 ): Promise<{code: number, stdout: string, stderr: string}> {
     let stdout = ''
     let stderr = ''
@@ -70,7 +97,7 @@ async function captureExecuteWithPrintedErrors(
     const originalWrite = process.stdout.write
     const originalErrWrite = process.stderr.write
     const originalArgv = process.argv
-    const originalColumns = process.stderr.columns
+    const originalColumns = setTerminalWidth(stderrColumns, stderrColumns)
     const effectiveArgv = color || argv.includes('--color=always') || argv.includes('--no-color')
         ? argv
         : [...argv, '--no-color']
@@ -89,12 +116,6 @@ async function captureExecuteWithPrintedErrors(
         stderr += String(chunk)
         return true
     }) as typeof process.stderr.write
-    if(stderrColumns !== undefined) {
-        Object.defineProperty(process.stderr, 'columns', {
-            configurable: true,
-            value: stderrColumns,
-        })
-    }
     process.argv = ['bun', 'test']
 
     try {
@@ -105,9 +126,13 @@ async function captureExecuteWithPrintedErrors(
         console.error = originalError
         process.stdout.write = originalWrite
         process.stderr.write = originalErrWrite
+        Object.defineProperty(process.stdout, 'columns', {
+            configurable: true,
+            value: originalColumns.stdout,
+        })
         Object.defineProperty(process.stderr, 'columns', {
             configurable: true,
-            value: originalColumns,
+            value: originalColumns.stderr,
         })
         process.argv = originalArgv
     }
