@@ -12,6 +12,12 @@ type BuiltinEntryConfig = {
     disableOption?: boolean
 }
 
+type BuiltinOptionConfig = {
+    name: string
+    alias?: string | string[]
+    disableOption?: boolean
+}
+
 const DEFAULT_HELP_CONFIG: BuiltinEntryConfig = {
     name: 'help',
     alias: 'h',
@@ -21,17 +27,8 @@ const DEFAULT_VERSION_CONFIG: BuiltinEntryConfig = {
     name: 'version',
 }
 
-export const COLOR_OPTION: Option = {
+const DEFAULT_COLOR_CONFIG: BuiltinOptionConfig = {
     name: 'color',
-    description: 'Control ANSI color output.',
-    type: OptType.ENUM,
-    enumValues: ['always', 'never', 'auto'] as const,
-    valuePlaceholder: 'WHEN',
-    valueNotRequired: true,
-    valueIfSet: 'always',
-    noPrefix: true,
-    valueIfNoPrefix: 'never',
-    defaultValue: 'auto',
 }
 
 function resolveBuiltinConfig(
@@ -50,6 +47,13 @@ export function getHelpConfig(app: AnyApp): BuiltinEntryConfig {
 
 export function getVersionConfig(app: AnyApp): BuiltinEntryConfig {
     return resolveBuiltinConfig(DEFAULT_VERSION_CONFIG, app._versionConfig)
+}
+
+export function getColorConfig(app: AnyApp): BuiltinOptionConfig {
+    return {
+        ...DEFAULT_COLOR_CONFIG,
+        ...(app._colorConfig ?? {}),
+    }
 }
 
 function createBuiltinOption(
@@ -134,9 +138,31 @@ export function getVersionOption(app: AnyApp): Option | undefined {
     return createBuiltinOption('version', getVersionConfig(app), 'Show current version')
 }
 
+export function getColorOption(app: AnyApp): Option | undefined {
+    const config = getColorConfig(app)
+    if(config.disableOption) {
+        return undefined
+    }
+
+    return {
+        name: config.name,
+        ...(config.alias !== undefined ? {alias: config.alias} : {}),
+        description: 'Control ANSI color output.',
+        key: 'color',
+        type: OptType.ENUM,
+        enumValues: ['always', 'never', 'auto'] as const,
+        valuePlaceholder: 'WHEN',
+        valueNotRequired: true,
+        valueIfSet: 'always',
+        noPrefix: true,
+        valueIfNoPrefix: 'never',
+        defaultValue: 'auto',
+    }
+}
+
 export function getGlobalOptions(app: AnyApp): Option[] {
     return sortOptions([
-        ...[getHelpOption(app), getVersionOption(app), COLOR_OPTION].filter((value): value is Option => value !== undefined),
+        ...[getHelpOption(app), getVersionOption(app), getColorOption(app)].filter((value): value is Option => value !== undefined),
         ...(app._globalOptions ?? []),
     ])
 }

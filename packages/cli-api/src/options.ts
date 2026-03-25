@@ -110,7 +110,7 @@ function describeItem(itemName?: string): string {
     return itemName ? ` for ${itemName}` : ''
 }
 
-function formatToken(value: string, chalk: ChalkInstance): string {
+export function formatToken(value: string, chalk: ChalkInstance): string {
     return chalk.level > 0 ? chalk.bold(value) : `\`${value}\``
 }
 

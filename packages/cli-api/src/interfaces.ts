@@ -401,6 +401,15 @@ interface BuiltinEntryConfig {
     disableOption?: boolean
 }
 
+interface BuiltinOptionConfig {
+    /** Override the built-in option name. */
+    name?: string
+    /** Override the built-in option aliases. */
+    alias?: string | string[]
+    /** Disable the built-in global option entry. */
+    disableOption?: boolean
+}
+
 export class Command<
     Opts extends readonly Option[] = [],
     Flags extends readonly Flag[] = [],
@@ -578,6 +587,8 @@ export class App<
     _helpConfig?: BuiltinEntryConfig
     /** @internal */
     _versionConfig?: BuiltinEntryConfig
+    /** @internal */
+    _colorConfig?: BuiltinOptionConfig
 
     /**
      * Applies metadata to the root app in one call.
@@ -650,6 +661,20 @@ export class App<
     help(config: BuiltinEntryConfig): this {
         this._helpConfig = {
             ...(this._helpConfig ?? {}),
+            ...config,
+        }
+        return this
+    }
+
+    /**
+     * Configures the built-in color global option.
+     *
+     * @param config Built-in color option settings such as the displayed name, aliases, and whether the option should be disabled.
+     * @returns The same fluent app builder with the color option configuration applied.
+     */
+    color(config: BuiltinOptionConfig): this {
+        this._colorConfig = {
+            ...(this._colorConfig ?? {}),
             ...config,
         }
         return this

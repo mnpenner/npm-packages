@@ -2,13 +2,14 @@ import type {AnyApp, AnyCmd, AnyLeafCommand} from './interfaces'
 import {ExecutionContext, getExecuteHandler, hasSubCommands, isExecutable} from './interfaces'
 import {printHelp} from './app-help'
 import type {ResolvedCommand} from './options'
-import {findSubCommand, parseArgs, UnknownOptionError, validateCommandConfig} from './options'
+import {findSubCommand, formatToken, parseArgs, UnknownOptionError, validateCommandConfig} from './options'
 import type {CliError} from './utils'
 import {createError, ErrorCategory, getErrorExitCode, getProcName, printError} from './utils'
 import {printCommandHelp} from './print-command-help'
 import {printLn} from './utils'
-import {getGlobalOptions, getRootCommands} from './builtins'
+import {getColorOption, getGlobalOptions, getRootCommands} from './builtins'
 import {createChalk, type ColorMode} from './color'
+import type {ChalkInstance} from 'chalk'
 
 function normalizeAppAsLeafCommand(app: AnyApp): AnyLeafCommand {
     const handler = app.handler
@@ -81,23 +82,57 @@ function createGlobalParseCommand(app: AnyApp): AnyLeafCommand {
     }
 }
 
-function getRequestedColorMode(argv: readonly string[]): ColorMode {
+function getRequestedColorMode(app: AnyApp, argv: readonly string[]): ColorMode {
+    const colorOption = getColorOption(app)
+    if(colorOption === undefined) {
+        return 'auto'
+    }
+
     let mode: ColorMode = 'auto'
-    for(const token of argv) {
-        if(token === '--color') {
-            mode = 'always'
-            continue
+    const shortNames = new Set<string>()
+    const longNames = new Set<string>([colorOption.name, ...(Array.isArray(colorOption.alias) ? colorOption.alias : (colorOption.alias !== undefined ? [colorOption.alias] : []))])
+
+    if(colorOption.name.length === 1) {
+        shortNames.add(colorOption.name)
+    }
+    for(const alias of longNames) {
+        if(alias.length === 1) {
+            shortNames.add(alias)
         }
-        if(token === '--no-color') {
+    }
+
+    for(const token of argv) {
+        if(token === `--no-${colorOption.name}`) {
             mode = 'never'
             continue
         }
-        if(token.startsWith('--color=')) {
-            const value = token.slice('--color='.length)
+        if(token.startsWith('--')) {
+            const body = token.slice(2)
+            const equalIndex = body.indexOf('=')
+            const name = equalIndex === -1 ? body : body.slice(0, equalIndex)
+            if(!longNames.has(name)) {
+                continue
+            }
+
+            if(equalIndex === -1) {
+                mode = 'always'
+                continue
+            }
+
+            const value = body.slice(equalIndex + 1)
             if(value === 'always' || value === 'never' || value === 'auto') {
                 mode = value
             } else {
                 mode = 'never'
+            }
+            continue
+        }
+
+        if(token.startsWith('-') && !token.startsWith('--')) {
+            const clusterText = token.slice(1)
+            const cluster = clusterText.includes('=') ? clusterText.slice(0, clusterText.indexOf('=')) : clusterText
+            if([...cluster].some(ch => shortNames.has(ch))) {
+                mode = 'always'
             }
         }
     }
@@ -105,7 +140,7 @@ function getRequestedColorMode(argv: readonly string[]): ColorMode {
 }
 
 function parseGlobalOptions(app: AnyApp, argv: string[]): {opts?: Record<string, any>, result?: ExecutionResult} {
-    const colorMode = getRequestedColorMode(argv)
+    const colorMode = getRequestedColorMode(app, argv)
     try {
         const [, opts] = parseArgs(
             createGlobalParseCommand(app),
@@ -240,12 +275,34 @@ function getFirstNonGlobalToken(argv: readonly string[], globalOptions: readonly
     return undefined
 }
 
-function unknownCommandResult(app: AnyApp, commandName: string): ExecutionResult {
-    const error = createError(`${getProcName(app)}: unknown command '${commandName}'`, ErrorCategory.InvalidArg)
+function unknownCommandResult(app: AnyApp, commandName: string, chalk: ChalkInstance): ExecutionResult {
+    const error = createError(`${getProcName(app)}: unknown command ${formatToken(commandName, chalk)}`, ErrorCategory.InvalidArg)
     return {
         code: getErrorExitCode(error),
         error,
     }
+}
+
+function isOptionLikeToken(token: string): boolean {
+    return token.length >= 2 && token.startsWith('-')
+}
+
+function unknownOptionResult(app: AnyApp, optionToken: string, chalk: ChalkInstance): ExecutionResult {
+    const error = createError(
+        `${getProcName(app)}: ${new UnknownOptionError(optionToken, formatToken(optionToken, chalk)).message}`,
+        ErrorCategory.InvalidArg,
+    )
+    return {
+        code: getErrorExitCode(error),
+        error,
+    }
+}
+
+function unknownTokenResult(app: AnyApp, token: string, chalk: ChalkInstance): ExecutionResult {
+    if(isOptionLikeToken(token)) {
+        return unknownOptionResult(app, token, chalk)
+    }
+    return unknownCommandResult(app, token, chalk)
 }
 
 async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], path: readonly string[]): Promise<ExecutionOutcome> {
@@ -399,7 +456,7 @@ async function executeAppDetailed(app: AnyApp, argv: string[] = process.argv.sli
             printHelp(context, rootCommands)
             return {result: {code: 0}, context}
         }
-        return {result: unknownCommandResult(app, firstNonGlobalToken), context}
+        return {result: unknownTokenResult(app, firstNonGlobalToken, context.chalk), context}
     }
 
     if (hasSubCommands(resolved.command)) {
@@ -418,7 +475,7 @@ async function executeAppDetailed(app: AnyApp, argv: string[] = process.argv.sli
             printCommandHelp(context, resolved.command, resolved.path)
             return {result: {code: 0}, context}
         }
-        return {result: unknownCommandResult(app, firstNonGlobalToken ?? resolved.remainingArgv[0]), context}
+        return {result: unknownTokenResult(app, firstNonGlobalToken ?? resolved.remainingArgv[0], context.chalk), context}
     }
 
     if (!isExecutable(resolved.command)) {

@@ -57,6 +57,7 @@ describe(Command.name, () => {
                 .meta({bin: 'hello', version: '1.0.0', author: 'Mark', description: 'Example app'})
                 .help({name: 'aide', alias: ['a'], disableCommand: true, disableOption: false})
                 .version({name: 'versión', alias: 'V', disableCommand: false, disableOption: true})
+                .color({name: 'colour', alias: 'C', disableOption: false})
                 .version('1.0.1')
                 .command(greetCommand)
                 .command(inspectCommand)

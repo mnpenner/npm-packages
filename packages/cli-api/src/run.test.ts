@@ -119,6 +119,10 @@ function matchOutput(output: string, pattern: RegExp): string {
     return match![0]
 }
 
+function stripAnsi(output: string): string {
+    return output.replace(/\u001B\[[0-9;]*m/g, '')
+}
+
 describe(executeAppResult.name, () => {
     const missingPath = Path.resolve('foo')
     const quotedMissingPath = `"${missingPath}"`
@@ -129,11 +133,11 @@ describe(executeAppResult.name, () => {
             .meta({bin: 'cli-api'})
             .command(new Command('world'))
 
-        const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['bacon'])
+        const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['bacon', '--no-color'])
 
         expect(result).toEqual({
             code: 2,
-            error: createError("cli-api: unknown command 'bacon'", ErrorCategory.InvalidArg),
+            error: createError('cli-api: unknown command `bacon`', ErrorCategory.InvalidArg),
         })
     })
 
@@ -144,11 +148,11 @@ describe(executeAppResult.name, () => {
                 .command(new Command('greet')
                     .run(() => {})))
 
-        const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['world', 'bacon'])
+        const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['world', 'bacon', '--no-color'])
 
         expect(result).toEqual({
             code: 2,
-            error: createError("cli-api: unknown command 'bacon'", ErrorCategory.InvalidArg),
+            error: createError('cli-api: unknown command `bacon`', ErrorCategory.InvalidArg),
         })
     })
 
@@ -159,11 +163,26 @@ describe(executeAppResult.name, () => {
                 .command(new Command('greet')
                     .run(() => {})))
 
-        const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['-h', 'world', 'bacon'])
+        const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['-h', 'world', 'bacon', '--no-color'])
 
         expect(result).toEqual({
             code: 2,
-            error: createError("cli-api: unknown command 'bacon'", ErrorCategory.InvalidArg),
+            error: createError('cli-api: unknown command `bacon`', ErrorCategory.InvalidArg),
+        })
+    })
+
+    it('returns an unknown option error for disabled built-in help flags on apps with sub-commands', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api'})
+            .help({disableCommand: true, disableOption: true})
+            .command(new Command('world')
+                .run(() => {}))
+
+        const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['-h', '--no-color'])
+
+        expect(result).toEqual({
+            code: 2,
+            error: createError('cli-api: option `-h` not recognized', ErrorCategory.InvalidArg),
         })
     })
 
@@ -173,7 +192,7 @@ describe(executeAppResult.name, () => {
             .opt('name', {alias: 'n', required: true})
             .run(() => {})
 
-        const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['-a'])
+        const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['-a', '--no-color'])
 
         expect(result).toEqual({
             code: 2,
@@ -188,7 +207,7 @@ describe(executeAppResult.name, () => {
                 .opt('name', {alias: 'n', required: true})
                 .run(() => {}))
 
-        const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['world', '-h', '-a'])
+        const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['world', '-h', '-a', '--no-color'])
 
         expect(result).toEqual({
             code: 2,
@@ -332,12 +351,11 @@ describe(executeAppResult.name, () => {
         expect(stdout).toContain('Global Options:')
     })
 
-    it('runs the sub-command example help without module export errors', () => {
+    it('runs the sub-command example root help without module export errors', () => {
         const result = Bun.spawnSync({
             cmd: [
                 process.execPath,
                 'examples/sub-commands.ts',
-                '-h',
             ],
             cwd: Path.resolve(import.meta.dir, '..'),
             stdout: 'pipe',
@@ -432,6 +450,41 @@ describe(executeAppResult.name, () => {
         expect(stdout).not.toContain('\u001B[')
     })
 
+    it('supports renaming the built-in color option and applies the renamed flag', async () => {
+        const levels: number[] = []
+        const app = new App('hello')
+            .meta({bin: 'cli-api', description: 'Example app'})
+            .color({name: 'colour', alias: 'C'})
+            .run((_, context) => {
+                levels.push(context.colorLevel)
+            })
+
+        const {result, stdout} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help'], {color: true})
+
+        expect(result).toEqual({code: 0})
+        expect(stripAnsi(stdout)).toContain('-C, --colour[=WHEN], --no-colour')
+        expect(stripAnsi(stdout)).not.toContain('--color[=WHEN]')
+        expect(await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['--colour=always'])).toEqual({code: null})
+        expect(await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['--no-colour'])).toEqual({code: null})
+        expect(levels).toEqual([3, 0])
+    })
+
+    it('supports disabling the built-in color option', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api', description: 'Example app'})
+            .color({disableOption: true})
+            .run(() => {})
+
+        const {result, stdout} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help'], {color: true})
+
+        expect(result).toEqual({code: 0})
+        expect(stripAnsi(stdout)).not.toContain('--color[=WHEN]')
+        const invalidColor = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['--color'])
+        expect(invalidColor.code).toBe(2)
+        expect(invalidColor.error?.type).toBe(ErrorCategory.InvalidArg)
+        expect(invalidColor.error?.message).toContain('--color')
+    })
+
     it('shows the built-in version option in help text', async () => {
         const app = new App('hello')
             .meta({bin: 'cli-api', version: '1.0.0', description: 'Example app'})
@@ -469,7 +522,7 @@ describe(executeAppResult.name, () => {
 
         const help = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--aide'])
         const version = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['V'])
-        const disabledHelpCommand = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['aide'])
+        const disabledHelpCommand = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['aide', '--no-color'])
 
         expect(help.result).toEqual({code: 0})
         expect(help.stdout).toContain('-a, --aide')
@@ -481,7 +534,7 @@ describe(executeAppResult.name, () => {
         expect(version.stdout).toBe('1.0.0\n')
         expect(disabledHelpCommand).toEqual({
             code: 2,
-            error: createError("cli-api: unknown command 'aide'", ErrorCategory.InvalidArg),
+            error: createError('cli-api: unknown command `aide`', ErrorCategory.InvalidArg),
         })
     })
 
