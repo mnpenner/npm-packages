@@ -1,5 +1,16 @@
-Propose an API to allow disabling the --help global option, help sub-command, --version global option and version subcommand.
+Make the global help and version options/commands configurable. Use an API similar to below
 
-Note that we're going to add a --color global option later too, but that won't be available as a sub-command.
-
-Also add an option to disable sorting of sub-commands and options.
+```ts
+app.help({
+    name: 'aide',
+    alias: ['a'],
+    disableCommand: true,
+    disableOption: false,
+})
+.version({
+    name: 'versión',
+    alias: 'V',
+    disableCommand: false,
+    disableOption: true,
+})
+```

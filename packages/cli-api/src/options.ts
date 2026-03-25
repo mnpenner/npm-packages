@@ -25,8 +25,8 @@ type Requirement = boolean | number | undefined
 export class UnknownOptionError extends Error {
     readonly option: string
 
-    constructor(option: string) {
-        super(`option ${option} not recognized`)
+    constructor(option: string, formattedOption = option) {
+        super(`option ${formattedOption} not recognized`)
         this.option = option
     }
 }
@@ -503,7 +503,7 @@ export function parseArgs(
                 }
                 const name = token.slice(2)
                 const match = findOpt(name)
-                if(!match) throw new UnknownOptionError(`--${name}`)
+                if(!match) throw new UnknownOptionError(`--${name}`, formatToken(`--${name}`, chalk))
                 const {opt, negated} = match
                 if(negated && inlineValue !== undefined) {
                     throw new Error(`Option ${formatToken(`--no-${opt.name}`, chalk)} does not take a value`)
@@ -535,14 +535,14 @@ export function parseArgs(
                 if(hasInlineAssignment) {
                     const unknownOption = getUnknownShortOption(cluster)
                     if(unknownOption !== undefined) {
-                        throw new UnknownOptionError(`-${unknownOption}`)
+                        throw new UnknownOptionError(`-${unknownOption}`, formatToken(`-${unknownOption}`, chalk))
                     }
                 }
                 let j = 0
                 while(j < cluster.length) {
                     const ch = cluster[j]
                     const match = findOpt(ch)
-                    if(!match) throw new UnknownOptionError(`-${ch}`)
+                    if(!match) throw new UnknownOptionError(`-${ch}`, formatToken(`-${ch}`, chalk))
                     const {opt} = match
 
                     if(opt.valueNotRequired) {

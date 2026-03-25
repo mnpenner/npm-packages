@@ -177,7 +177,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 2,
-            error: createError('cli-api: option -a not recognized', ErrorCategory.InvalidArg),
+            error: createError('cli-api: option `-a` not recognized', ErrorCategory.InvalidArg),
         })
     })
 
@@ -192,7 +192,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 2,
-            error: createError('cli-api: option -a not recognized', ErrorCategory.InvalidArg),
+            error: createError('cli-api: option `-a` not recognized', ErrorCategory.InvalidArg),
         })
     })
 
