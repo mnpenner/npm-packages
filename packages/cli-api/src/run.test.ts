@@ -569,6 +569,19 @@ describe(executeAppResult.name, () => {
         expect(stdout).toContain('\n    This description is intentionally long so it cannot fit on a single')
     })
 
+    it('prints inline command descriptions with a two-space gap after the widest command name column', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api', description: 'Example app'})
+            .command(new Command('annotate').describe('Update the annotations on a resource'))
+            .command(new Command('api-resources').describe('Print the supported API resources on the server'))
+
+        const {result, stdout} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help'])
+
+        expect(result).toEqual({code: 0})
+        expect(stdout).toContain('\n  annotate       Update the annotations on a resource\n')
+        expect(stdout).toContain('\n  api-resources  Print the supported API resources on the server\n')
+    })
+
     it('wraps every command in a section when one command needs wrapping', async () => {
         const app = new App('hello')
             .meta({bin: 'cli-api', description: 'Example app'})

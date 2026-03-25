@@ -36,7 +36,7 @@ function printHelpEntry(
     const shouldWrap = forceWrap || shouldWrapHelpEntry(label, description, labelWidth)
 
     if (!shouldWrap) {
-        printLn(`${space(labelWidth + 2, label)}${description}`)
+        printLn(`${space(labelWidth, label)}${description}`)
         return false
     }
 
