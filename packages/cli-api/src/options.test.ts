@@ -203,12 +203,26 @@ describe(parseArgs.name, () => {
         expect(() => parseArgs(cmd, ['--tag=a', '--tag=b', '--tag=c'])).toThrow(/"tag" option allows at most 2 values/i)
     })
 
-    it('throws when a repeatable positional is not last', () => {
+    it('parses repeatable positonals before required trailing positonals', () => {
+        const cmd = makeCommand()
+            .arg('alpha', {key: 'alpha', repeatable: true})
+            .arg('beta', {key: 'beta', required: true})
+
+        expect(parseArgs(cmd, ['tail'])[1]).toMatchObject({alpha: [], beta: 'tail'})
+
+        const [positionals, opts] = parseArgs(cmd, ['one', 'two', 'tail'])
+
+        expect(positionals).toEqual(['one', 'two', 'tail'])
+        expect(opts.alpha).toEqual(['one', 'two'])
+        expect(opts.beta).toBe('tail')
+    })
+
+    it('throws when a repeatable positional is followed by a non-fixed positional', () => {
         const cmd = makeCommand()
             .arg('files', {repeatable: true})
             .arg('dest')
 
-        expect(() => parseArgs(cmd, ['a.txt', 'b.txt'])).toThrow(/only the last argument can be repeatable/i)
+        expect(() => parseArgs(cmd, ['a.txt', 'b.txt'])).toThrow(/repeatable arguments can only be followed by required arguments with fixed counts/i)
     })
 
     it('throws when a required positional comes after an optional positional', () => {

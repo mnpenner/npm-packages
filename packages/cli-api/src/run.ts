@@ -74,14 +74,6 @@ function isVersionFlag(arg: string | undefined): boolean {
     return arg === '--version'
 }
 
-function getHelpValidationCommand(cmd: AnyLeafCommand): AnyLeafCommand {
-    return {
-        ...cmd,
-        options: cmd.options?.map(opt => ({...opt, required: false})),
-        positonals: cmd.positonals?.map(arg => ({...arg, required: false})),
-    }
-}
-
 function getRootCommands(app: AnyApp): readonly AnyCmd[] {
     const userCommands = app.subCommands !== undefined
         ? sortBy(app.subCommands as readonly AnyCmd[], c => c.name)
@@ -132,9 +124,13 @@ function parseGlobalOptions(app: AnyApp, argv: string[]): {opts?: Record<string,
     const colorMode = getRequestedColorMode(argv)
     try {
         const [, opts] = parseArgs(
-            getHelpValidationCommand(createGlobalParseCommand(app)),
+            createGlobalParseCommand(app),
             extractGlobalOptionArgv(argv, getGlobalOptions(app)),
             createChalk(colorMode),
+            {
+                skipRequiredOptions: true,
+                skipRequiredPositionals: true,
+            },
         )
         return {opts}
     } catch(err) {
@@ -293,7 +289,10 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
     const parseChalk = createChalk(globalParse.opts?.color ?? 'auto')
     try {
         const parseableCommand = mergeCommandOptions(app, cmd)
-        const [, provisionalOpts] = parseArgs(getHelpValidationCommand(parseableCommand), rawArgs, parseChalk)
+        const [, provisionalOpts] = parseArgs(parseableCommand, rawArgs, parseChalk, {
+            skipRequiredOptions: true,
+            skipRequiredPositionals: true,
+        })
         const provisionalContext = createExecutionContext(app, provisionalOpts, path)
         if(provisionalOpts.help) {
             if (cmd === app && !hasSubCommands(app)) {

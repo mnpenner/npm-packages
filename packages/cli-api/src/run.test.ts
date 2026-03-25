@@ -201,7 +201,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 254,
-            error: createError('Config Error: Only the last argument can be repeatable', ErrorCategory.Misconfig),
+            error: createError('Config Error: Repeatable arguments can only be followed by required arguments with fixed counts', ErrorCategory.Misconfig),
         })
     })
 
@@ -210,7 +210,7 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({
             code: 254,
-            error: createError('Config Error: Only the last argument can be repeatable', ErrorCategory.Misconfig),
+            error: createError('Config Error: Repeatable arguments can only be followed by required arguments with fixed counts', ErrorCategory.Misconfig),
         })
     })
 
@@ -244,6 +244,35 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({code: null})
         expect(captured).toMatchObject({name: 'Mark', rest: ['one', 'two'], color: 'auto'})
+    })
+
+    it('passes repeatable positional arguments through opts before a required trailing positional', async () => {
+        let captured: Record<string, unknown> | undefined
+        const app = new App('repeatable')
+            .meta({bin: 'cli-api'})
+            .arg('alpha', {repeatable: true})
+            .arg('beta', {required: true})
+            .run(opts => {
+                captured = opts
+            })
+
+        const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['one', 'two', 'tail'])
+
+        expect(result).toEqual({code: null})
+        expect(captured).toMatchObject({alpha: ['one', 'two'], beta: 'tail', color: 'auto'})
+    })
+
+    it('prints help for commands with a repeatable positional before a required trailing positional', async () => {
+        const app = new App('repeatable')
+            .meta({bin: 'cli-api'})
+            .arg('alpha', {repeatable: true})
+            .arg('beta', {required: true})
+            .run(() => {})
+
+        const {result, stdout} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help'])
+
+        expect(result).toEqual({code: 0})
+        expect(stdout).toContain('[alpha...] <beta>')
     })
 
     it('returns a misconfiguration error when a global option collides with a local option', async () => {
@@ -322,6 +351,36 @@ describe(executeAppResult.name, () => {
         expect(output).toContain('hello ver. 0.2.0 by Mark Penner')
         expect(output).toContain('hello ver. 0.2.0 by Mark Penner\n\nExample app')
         expect(output).toContain('Example app')
+    })
+
+    it('runs the option-types example help without module export errors', () => {
+        const result = Bun.spawnSync({
+            cmd: [
+                process.execPath,
+                'examples/option-types.ts',
+                '-h',
+            ],
+            cwd: Path.resolve(import.meta.dir, '..'),
+            stdout: 'pipe',
+            stderr: 'pipe',
+        })
+
+        expect(result.exitCode).toBe(0)
+        expect(result.stderr.toString()).toBe('')
+
+        const output = result.stdout.toString()
+        expect(output).toContain('Example app showcasing every built-in OptType.')
+        expect(output).toContain('Usage:')
+        expect(output).toContain('--text=TEXT')
+        expect(output).toContain('--enabled')
+        expect(output).toContain('--count=#')
+        expect(output).toContain('--ratio=#')
+        expect(output).toContain('--mode=FAST|SLOW')
+        expect(output).toContain('--input-file=FILE')
+        expect(output).toContain('--input-dir=DIR')
+        expect(output).toContain('--output-file=FILE')
+        expect(output).toContain('--output-dir=DIR')
+        expect(output).toContain('--scratch-dir=DIR')
     })
 
     it('exposes the execution context chalk instance to command handlers', async () => {

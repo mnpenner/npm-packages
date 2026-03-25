@@ -82,6 +82,30 @@ function getMinRequiredCount(value: Requirement): number {
     return 0
 }
 
+function getFixedPositionalCount(arg: Argument): number | undefined {
+    const minRequired = getMinRequiredCount(arg.required)
+    if(isRepeatable(arg.repeatable)) {
+        const maxRepeatCount = getMaxRepeatCount(arg.repeatable)
+        if(maxRepeatCount !== undefined && maxRepeatCount === minRequired) {
+            return minRequired
+        }
+        return undefined
+    }
+    return minRequired > 0 ? 1 : undefined
+}
+
+function getTrailingFixedRequiredCount(positonals: readonly Argument[], startIndex: number): number | undefined {
+    let total = 0
+    for(let i = startIndex; i < positonals.length; ++i) {
+        const fixedCount = getFixedPositionalCount(positonals[i])
+        if(fixedCount === undefined || fixedCount === 0) {
+            return undefined
+        }
+        total += fixedCount
+    }
+    return total
+}
+
 function describeItem(itemName?: string): string {
     return itemName ? ` for ${itemName}` : ''
 }
@@ -204,7 +228,9 @@ function validatePositionalDefinitions(cmd: ParseableCommand): void {
             assertValidCount(`"${arg.name}" argument repeatable count`, arg.repeatable)
         }
         if(repeatable && i < cmd.positonals.length - 1) {
-            throw new Error('Only the last argument can be repeatable')
+            if(getTrailingFixedRequiredCount(cmd.positonals, i + 1) === undefined) {
+                throw new Error('Repeatable arguments can only be followed by required arguments with fixed counts')
+            }
         }
         if(maxRepeatCount !== undefined && minRequired > maxRepeatCount) {
             throw new Error(`"${arg.name}" argument requires at least ${minRequired} values but allows at most ${maxRepeatCount}`)
@@ -212,7 +238,7 @@ function validatePositionalDefinitions(cmd: ParseableCommand): void {
         if(encounteredOptionalPositional && minRequired > 0) {
             throw new Error('Required arguments cannot come after optional arguments')
         }
-        if(minRequired === 0) {
+        if(minRequired === 0 && !repeatable) {
             encounteredOptionalPositional = true
         }
     }
@@ -343,9 +369,78 @@ export function validateCommandConfig(cmd: ParseableCommand): void {
     }
 }
 
-export function parseArgs(cmd: ParseableCommand, argv: string[], chalk: ChalkInstance): [any[], Record<string, any>] {
+interface ParseArgsConfig {
+    skipRequiredOptions?: boolean
+    skipRequiredPositionals?: boolean
+}
+
+function assignPositionalArguments(
+    positonals: readonly Argument[] | undefined,
+    rawArgs: readonly string[],
+    opts: Record<string, any>,
+    chalk: ChalkInstance,
+): any[] {
+    if(!positonals?.length) {
+        return [...rawArgs]
+    }
+
     const args: any[] = []
+    let rawArgIdx = 0
+
+    for(let i = 0; i < positonals.length; ++i) {
+        const def = positonals[i]
+        const k = def.key ?? def.name
+
+        if(isRepeatable(def.repeatable)) {
+            const trailingFixedRequiredCount = i < positonals.length - 1
+                ? (getTrailingFixedRequiredCount(positonals, i + 1) ?? 0)
+                : 0
+            const valueCount = Math.max(0, rawArgs.length - rawArgIdx - trailingFixedRequiredCount)
+            const maxRepeatCount = getMaxRepeatCount(def.repeatable)
+            const arr = (opts[k] ??= [])
+
+            if(maxRepeatCount !== undefined && valueCount > maxRepeatCount) {
+                throw new Error(`"${def.name}" argument allows at most ${maxRepeatCount} value${maxRepeatCount === 1 ? '' : 's'}`)
+            }
+
+            for(let j = 0; j < valueCount; ++j) {
+                let value: any = rawArgs[rawArgIdx++]
+                if(def.type != null) {
+                    value = coerceType(value, def.type, chalk, formatItem('argument', def.name, chalk), getEnumValues(def))
+                }
+                pushRepeatableValue(arr, value, def.name, maxRepeatCount, 'argument')
+                args.push(value)
+            }
+            continue
+        }
+
+        if(rawArgIdx >= rawArgs.length) {
+            continue
+        }
+
+        let value: any = rawArgs[rawArgIdx++]
+        if(def.type != null) {
+            value = coerceType(value, def.type, chalk, formatItem('argument', def.name, chalk), getEnumValues(def))
+        }
+        opts[k] = value
+        args.push(value)
+    }
+
+    if(rawArgIdx < rawArgs.length) {
+        args.push(...rawArgs.slice(rawArgIdx))
+    }
+
+    return args
+}
+
+export function parseArgs(
+    cmd: ParseableCommand,
+    argv: string[],
+    chalk: ChalkInstance,
+    {skipRequiredOptions = false, skipRequiredPositionals = false}: ParseArgsConfig = {},
+): [any[], Record<string, any>] {
     const opts: Record<string, any> = Object.create(null)
+    const rawArgs: string[] = []
     let parseFlags = true
 
     const allOptions = getOptions(cmd)
@@ -389,7 +484,6 @@ export function parseArgs(cmd: ParseableCommand, argv: string[], chalk: ChalkIns
         return undefined
     }
 
-    let argIdx = 0
     for(let i = 0; i < argv.length; ++i) {
         let token = argv[i]
 
@@ -480,41 +574,11 @@ export function parseArgs(cmd: ParseableCommand, argv: string[], chalk: ChalkIns
                 }
             }
         } else {
-            let value: any = token
-            const def = cmd.positonals?.[argIdx]
-
-            if(def) {
-                if(def.type != null) value = coerceType(value, def.type, chalk, formatItem('argument', def.name, chalk), getEnumValues(def))
-
-                const k = def.key ?? def.name
-                if(isRepeatable(def.repeatable)) {
-                    const arr = (opts[k] ??= [])
-                    pushRepeatableValue(arr, value, def.name, getMaxRepeatCount(def.repeatable), 'argument')
-                    for(i = i + 1; i < argv.length; ++i) {
-                        let v: any = argv[i]
-                        if(parseFlags && v === '--') {
-                            parseFlags = false
-                            continue
-                        }
-                        if(parseFlags && v.startsWith('-')) {
-                            i -= 1
-                            break
-                        }
-                        if(def.type != null) v = coerceType(v, def.type, chalk, formatItem('argument', def.name, chalk), getEnumValues(def))
-                        pushRepeatableValue(arr, v, def.name, getMaxRepeatCount(def.repeatable), 'argument')
-                    }
-                    argIdx = isRepeatable(def.repeatable) && cmd.positonals ? cmd.positonals.length : argIdx
-                    args.push(...arr)
-                    continue
-                } else {
-                    opts[k] = value
-                }
-            }
-
-            args.push(value)
-            ++argIdx
+            rawArgs.push(token)
         }
     }
+
+    const args = assignPositionalArguments(cmd.positonals, rawArgs, opts, chalk)
 
     if(allOptions.length) {
         for(const opt of allOptions) {
@@ -522,7 +586,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[], chalk: ChalkIns
             if(opts[k] === undefined) {
                 if(opt.defaultValue !== undefined) {
                     opts[k] = resolve(opt.defaultValue)
-                } else if(opt.required) {
+                } else if(opt.required && !skipRequiredOptions) {
                     throw new Error(`${formatToken(getOptName(opt), chalk)} option is required`)
                 }
             }
@@ -533,11 +597,11 @@ export function parseArgs(cmd: ParseableCommand, argv: string[], chalk: ChalkIns
         for(let i = 0; i < cmd.positonals.length; ++i) {
             const a: any = cmd.positonals[i]
             const minRequired = getMinRequiredCount(a.required)
-            if(minRequired > 0 && argIdx <= i && !isRepeatable(a.repeatable)) {
+            const k = a.key ?? a.name
+            if(!isRepeatable(a.repeatable) && minRequired > 0 && opts[k] === undefined && !skipRequiredPositionals) {
                 throw new Error(`${formatToken(a.name, chalk)} argument is required`)
             }
-            const k = a.key ?? a.name
-            if(isRepeatable(a.repeatable) && ((opts[k] as any[] | undefined)?.length ?? 0) < minRequired) {
+            if(isRepeatable(a.repeatable) && ((opts[k] as any[] | undefined)?.length ?? 0) < minRequired && !skipRequiredPositionals) {
                 throw new Error(`\`${a.name}\` argument requires at least ${minRequired} value${minRequired === 1 ? '' : 's'}`)
             }
             if(k && opts[k] === undefined && a.defaultValue !== undefined) {
