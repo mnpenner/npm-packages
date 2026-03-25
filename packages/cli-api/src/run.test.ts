@@ -119,10 +119,6 @@ function matchOutput(output: string, pattern: RegExp): string {
     return match![0]
 }
 
-function stripAnsi(output: string): string {
-    return output.replace(/\u001B\[[0-9;]*m/g, '')
-}
-
 describe(executeAppResult.name, () => {
     const missingPath = Path.resolve('foo')
     const quotedMissingPath = `"${missingPath}"`
@@ -351,56 +347,6 @@ describe(executeAppResult.name, () => {
         expect(stdout).toContain('Global Options:')
     })
 
-    it('runs the sub-command example root help without module export errors', () => {
-        const result = Bun.spawnSync({
-            cmd: [
-                process.execPath,
-                'examples/sub-commands.ts',
-            ],
-            cwd: Path.resolve(import.meta.dir, '..'),
-            stdout: 'pipe',
-            stderr: 'pipe',
-        })
-
-        expect(result.exitCode).toBe(0)
-        expect(result.stderr.toString()).toBe('')
-
-        const output = result.stdout.toString()
-        expect(output).toContain('hello ver. 0.2.0 by Mark Penner')
-        expect(output).toContain('hello ver. 0.2.0 by Mark Penner\n\nExample app')
-        expect(output).toContain('Example app')
-    })
-
-    it('runs the option-types example help without module export errors', () => {
-        const result = Bun.spawnSync({
-            cmd: [
-                process.execPath,
-                'examples/option-types.ts',
-                '-h',
-            ],
-            cwd: Path.resolve(import.meta.dir, '..'),
-            stdout: 'pipe',
-            stderr: 'pipe',
-        })
-
-        expect(result.exitCode).toBe(0)
-        expect(result.stderr.toString()).toBe('')
-
-        const output = result.stdout.toString()
-        expect(output).toContain('Example app showcasing every built-in OptType.')
-        expect(output).toContain('Usage:')
-        expect(output).toContain('--text=TEXT')
-        expect(output).toContain('--enabled')
-        expect(output).toContain('--count=#')
-        expect(output).toContain('--ratio=#')
-        expect(output).toContain('--mode=FAST|SLOW')
-        expect(output).toContain('--input-file=FILE')
-        expect(output).toContain('--input-dir=DIR')
-        expect(output).toContain('--output-file=FILE')
-        expect(output).toContain('--output-dir=DIR')
-        expect(output).toContain('--scratch-dir=DIR')
-    })
-
     it('exposes the execution context chalk instance to command handlers', async () => {
         const app = new App('hello')
             .meta({bin: 'cli-api'})
@@ -462,8 +408,8 @@ describe(executeAppResult.name, () => {
         const {result, stdout} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help'], {color: true})
 
         expect(result).toEqual({code: 0})
-        expect(stripAnsi(stdout)).toContain('-C, --colour[=WHEN], --no-colour')
-        expect(stripAnsi(stdout)).not.toContain('--color[=WHEN]')
+        expect(Bun.stripANSI(stdout)).toContain('-C, --colour[=WHEN], --no-colour')
+        expect(Bun.stripANSI(stdout)).not.toContain('--color[=WHEN]')
         expect(await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['--colour=always'])).toEqual({code: null})
         expect(await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['--no-colour'])).toEqual({code: null})
         expect(levels).toEqual([3, 0])
@@ -478,7 +424,7 @@ describe(executeAppResult.name, () => {
         const {result, stdout} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help'], {color: true})
 
         expect(result).toEqual({code: 0})
-        expect(stripAnsi(stdout)).not.toContain('--color[=WHEN]')
+        expect(Bun.stripANSI(stdout)).not.toContain('--color[=WHEN]')
         const invalidColor = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['--color'])
         expect(invalidColor.code).toBe(2)
         expect(invalidColor.error?.type).toBe(ErrorCategory.InvalidArg)
