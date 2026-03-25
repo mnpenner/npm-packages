@@ -1,9 +1,10 @@
 import {Chalk, type ChalkInstance, type ColorSupportLevel} from 'chalk'
-import supportsColor from './supports-color'
+import {createSupportsColor} from './supports-color'
 
 export type ColorMode = 'always' | 'auto' | 'never'
 
-const DEFAULT_COLOR_LEVEL: ColorSupportLevel = supportsColor.stdout ? supportsColor.stdout.level : 0
+const defaultColorSupport = createSupportsColor(process.stdout, {sniffFlags: false})
+const DEFAULT_COLOR_LEVEL: ColorSupportLevel = defaultColorSupport ? defaultColorSupport.level : 0
 
 export function getColorLevel(mode: ColorMode): ColorSupportLevel {
     if(mode === 'always') {

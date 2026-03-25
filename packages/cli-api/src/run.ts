@@ -4,7 +4,7 @@ import {helpCommand} from './commands/command-help'
 import {versionCommand} from './commands/version'
 import {printHelp} from './app-help'
 import type {ResolvedCommand} from './options'
-import {findSubCommand, parseArgs, parseArgsWithChalk, UnknownOptionError, validateCommandConfig} from './options'
+import {findSubCommand, parseArgs, UnknownOptionError, validateCommandConfig} from './options'
 import type {CliError} from './utils'
 import {createError, ErrorCategory, getErrorExitCode, getProcName, printError, sortBy} from './utils'
 import {printCommandHelp} from './print-command-help'
@@ -109,7 +109,11 @@ function createGlobalParseCommand(app: AnyApp): AnyLeafCommand {
 
 function parseGlobalOptions(app: AnyApp, argv: string[]): {opts?: Record<string, any>, result?: ExecutionResult} {
     try {
-        const [, opts] = parseArgs(getHelpValidationCommand(createGlobalParseCommand(app)), extractGlobalOptionArgv(argv, getGlobalOptions(app)))
+        const [, opts] = parseArgs(
+            getHelpValidationCommand(createGlobalParseCommand(app)),
+            extractGlobalOptionArgv(argv, getGlobalOptions(app)),
+            createChalk('never'),
+        )
         return {opts}
     } catch(err) {
         if(err instanceof UnknownOptionError) {
@@ -266,7 +270,7 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
     const parseChalk = createChalk(globalParse.opts?.color ?? 'auto')
     try {
         const parseableCommand = mergeCommandOptions(app, cmd)
-        const [, provisionalOpts] = parseArgsWithChalk(getHelpValidationCommand(parseableCommand), rawArgs, parseChalk)
+        const [, provisionalOpts] = parseArgs(getHelpValidationCommand(parseableCommand), rawArgs, parseChalk)
         const provisionalContext = createExecutionContext(app, provisionalOpts, path)
         if(provisionalOpts.help) {
             if (cmd === app && !hasSubCommands(app)) {
@@ -276,7 +280,7 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
             printCommandHelp(provisionalContext, cmd, path)
             return {result: {code: 0}, context: provisionalContext}
         }
-        ;[, opts] = parseArgsWithChalk(parseableCommand, rawArgs, parseChalk)
+        ;[, opts] = parseArgs(parseableCommand, rawArgs, parseChalk)
     } catch (err) {
         if(err instanceof UnknownOptionError) {
             const error = createError(`${getProcName(app)}: ${err.message}`, ErrorCategory.InvalidArg)

@@ -3,7 +3,6 @@ import {OptType, hasSubCommands} from './interfaces'
 import type {NullableObj} from './utils'
 import {includes, resolve, sortBy, statSync, toArray, toBool} from './utils'
 import type {ChalkInstance} from 'chalk'
-import {createChalk} from './color'
 import Path from 'path'
 import FileSys from 'fs'
 
@@ -250,11 +249,7 @@ export function validateCommandConfig(cmd: ParseableCommand): void {
     }
 }
 
-export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record<string, any>] {
-    return parseArgsWithChalk(cmd, argv)
-}
-
-export function parseArgsWithChalk(cmd: ParseableCommand, argv: string[], chalk: ChalkInstance = createChalk()): [any[], Record<string, any>] {
+export function parseArgs(cmd: ParseableCommand, argv: string[], chalk: ChalkInstance): [any[], Record<string, any>] {
     const args: any[] = []
     const opts: Record<string, any> = Object.create(null)
     let parseFlags = true
@@ -337,7 +332,7 @@ export function parseArgsWithChalk(cmd: ParseableCommand, argv: string[], chalk:
                         throw new Error(`Missing required value for option \`${token}\``)
                     }
                 }
-                if(opt.type != null) value = coerceType(value, opt.type, `option \`${token}\``, getEnumValues(opt), chalk)
+                if(opt.type != null) value = coerceType(value, opt.type, chalk, `option \`${token}\``, getEnumValues(opt))
                 const k = opt.key ?? opt.name
                 if(isRepeatable(opt.repeatable)) {
                     pushRepeatableValue(opts[k] as any[], value, opt.name, getMaxRepeatCount(opt.repeatable), 'option')
@@ -381,7 +376,7 @@ export function parseArgsWithChalk(cmd: ParseableCommand, argv: string[], chalk:
                     else if(i < argv.length - 1) value = argv[++i]
                     else throw new Error(`Missing required value for option "-${ch}"`)
 
-                    if(opt.type != null) value = coerceType(value, opt.type, `option \`-${ch}\``, getEnumValues(opt), chalk)
+                    if(opt.type != null) value = coerceType(value, opt.type, chalk, `option \`-${ch}\``, getEnumValues(opt))
                     const k = opt.key ?? opt.name
                     if(isRepeatable(opt.repeatable)) {
                         pushRepeatableValue(opts[k] as any[], value, opt.name, getMaxRepeatCount(opt.repeatable), 'option')
@@ -395,7 +390,7 @@ export function parseArgsWithChalk(cmd: ParseableCommand, argv: string[], chalk:
             const def = cmd.positonals?.[argIdx]
 
             if(def) {
-                if(def.type != null) value = coerceType(value, def.type, `argument \`${def.name}\``, getEnumValues(def), chalk)
+                if(def.type != null) value = coerceType(value, def.type, chalk, `argument \`${def.name}\``, getEnumValues(def))
 
                 const k = def.key ?? def.name
                 if(isRepeatable(def.repeatable)) {
@@ -411,7 +406,7 @@ export function parseArgsWithChalk(cmd: ParseableCommand, argv: string[], chalk:
                             i -= 1
                             break
                         }
-                        if(def.type != null) v = coerceType(v, def.type, `argument \`${def.name}\``, getEnumValues(def), chalk)
+                        if(def.type != null) v = coerceType(v, def.type, chalk, `argument \`${def.name}\``, getEnumValues(def))
                         pushRepeatableValue(arr, v, def.name, getMaxRepeatCount(def.repeatable), 'argument')
                     }
                     argIdx = isRepeatable(def.repeatable) && cmd.positonals ? cmd.positonals.length : argIdx
@@ -463,9 +458,9 @@ export function parseArgsWithChalk(cmd: ParseableCommand, argv: string[], chalk:
 function coerceType(
     value: string,
     type: AnyOptType,
+    chalk: ChalkInstance,
     itemName?: string,
     enumValues?: readonly string[],
-    chalk: ChalkInstance = createChalk(),
 ) {
     const normalizedEnumValue = () => {
         const normalized = String(value).trim().toLowerCase()

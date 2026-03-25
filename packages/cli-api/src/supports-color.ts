@@ -1,7 +1,7 @@
-// https://github.com/chalk/chalk/blob/aa06bb5ac3f14df9fda8cfb54274dfc165ddfdef/source/vendor/supports-color/index.js#L1
+// From https://github.com/chalk/chalk/blob/aa06bb5ac3f14df9fda8cfb54274dfc165ddfdef/source/vendor/supports-color/index.js
 import os from 'os'
 import process from 'process'
-import tty, {type WriteStream} from 'tty'
+import {type WriteStream} from 'tty'
 
 export type Options = {
     /**
@@ -226,10 +226,3 @@ export function createSupportsColor(stream?: StreamLike, options: Options = {}):
 
     return translateLevel(level)
 }
-
-const supportsColor = {
-    stdout: createSupportsColor(process.stdout),
-    stderr: createSupportsColor(process.stderr),
-}
-
-export default supportsColor

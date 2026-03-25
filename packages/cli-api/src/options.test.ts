@@ -1,10 +1,16 @@
 import { describe, expect, it } from 'bun:test'
 import {createChalk} from './color'
-import { formatOption, parseArgs } from './options'
+import { formatOption, parseArgs as parseArgsBase } from './options'
 import { Command, OptType } from './interfaces'
 
 function makeCommand() {
     return new Command('test')
+}
+
+const chalk = createChalk('never')
+
+function parseArgs(cmd: Parameters<typeof parseArgsBase>[0], argv: string[]) {
+    return parseArgsBase(cmd, argv, chalk)
 }
 
 describe(parseArgs.name, () => {
