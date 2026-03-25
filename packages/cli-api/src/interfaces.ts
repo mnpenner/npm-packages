@@ -223,7 +223,7 @@ export interface ExecutableInput<
     options?: Opts
     flags?: Flags
     positonals?: As
-    execute(opts: OptsOf<Opts, Flags, As>, args: ArgsOf<As>, context: ExecutionContext): MaybePromise<number | void>
+    execute(opts: OptsOf<Opts, Flags, As>, context: ExecutionContext): MaybePromise<number | void>
 }
 
 export interface LeafCommandInput<
@@ -337,7 +337,7 @@ export interface AnyLeafCommand extends CommandBase {
     options?: readonly Option[] | undefined
     flags?: readonly Flag[] | undefined
     positonals?: readonly Argument[] | undefined
-    execute(opts: Record<string, any>, args: any[], context: ExecutionContext): MaybePromise<number | void>
+    execute(opts: Record<string, any>, context: ExecutionContext): MaybePromise<number | void>
     subCommands?: never | undefined
 }
 
@@ -374,7 +374,7 @@ export type RunHandler<
     Opts extends readonly Option[] | undefined,
     Flags extends readonly Flag[] | undefined,
     As extends readonly Argument[] | undefined,
-> = (args: ArgsOf<As>, opts: OptsOf<Opts, Flags, As>, context: ExecutionContext) => MaybePromise<number | void>
+> = (opts: OptsOf<Opts, Flags, As>, context: ExecutionContext) => MaybePromise<number | void>
 
 type ExecuteHandler<
     Opts extends readonly Option[] | undefined,
@@ -534,15 +534,15 @@ export class Command<
     /**
      * Marks this command as executable and registers the handler invoked after parsing.
      *
-     * @param handler The function that receives parsed positional arguments, parsed option values, and the current [`ExecutionContext`]{@link ExecutionContext}.
+     * @param handler The function that receives parsed option values, including positional arguments by name, and the current [`ExecutionContext`]{@link ExecutionContext}.
      * @returns A fluent command builder that is now treated as executable.
      */
     run(
         this: Command<Opts, Flags, As, [], false>,
         handler: RunHandler<Opts, Flags, As>,
     ): Command<Opts, Flags, As, [], true> {
-        this._handler = function(opts: OptsOf<Opts, Flags, As>, args: ArgsOf<As>, context: ExecutionContext) {
-            return handler(args, opts, context)
+        this._handler = function(opts: OptsOf<Opts, Flags, As>, context: ExecutionContext) {
+            return handler(opts, context)
         }
         return this as unknown as Command<Opts, Flags, As, [], true>
     }
@@ -716,7 +716,7 @@ export class App<
     /**
      * Marks the root app as executable by registering the handler invoked after parsing.
      *
-     * @param handler The function that receives parsed positional arguments, parsed option values including custom global options, and the current [`ExecutionContext`]{@link ExecutionContext}.
+     * @param handler The function that receives parsed option values including custom global options and positional arguments by name, and the current [`ExecutionContext`]{@link ExecutionContext}.
      * @returns A fluent app builder that is now treated as executable.
      */
     override run(

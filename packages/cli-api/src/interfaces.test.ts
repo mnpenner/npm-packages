@@ -17,8 +17,7 @@ describe(Command.name, () => {
             const greetCommand = new Command('greet')
                 .flag('loud')
                 .opt('target', {required: true})
-                .run((args, opts, context) => {
-                    expectType<TypeEqual<typeof args, []>>(true)
+                .run((opts, context) => {
                     expectType<TypeEqual<typeof opts, {
                         target: string
                         loud?: boolean
@@ -32,8 +31,7 @@ describe(Command.name, () => {
                 .opt('mode', {type: ['fast', 'slow'] as const})
                 .arg('input', {required: true})
                 .arg('rest', {repeatable: true})
-                .run((args, opts, context) => {
-                    expectType<TypeEqual<typeof args, [string, ...string[]]>>(true)
+                .run((opts, context) => {
                     expectType<TypeEqual<typeof opts, {
                         count: number
                         verbose?: boolean
@@ -47,8 +45,7 @@ describe(Command.name, () => {
             const boundedCommand = new Command('bounded')
                 .opt('tag', {repeatable: 2})
                 .arg('files', {repeatable: 3, required: 2})
-                .run((args, opts, context) => {
-                    expectType<TypeEqual<typeof args, string[]>>(true)
+                .run((opts, context) => {
                     expectType<TypeEqual<typeof opts, {
                         tag: string[]
                         files: string[]

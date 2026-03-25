@@ -238,7 +238,6 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
         }
     }
 
-    let args: any[]
     let opts: Record<string, any>
     try {
         const parseableCommand = mergeCommandOptions(app, cmd)
@@ -252,8 +251,7 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
             printCommandHelp(provisionalContext, cmd, path)
             return {result: {code: 0}, context: provisionalContext}
         }
-
-        ;[args, opts] = parseArgs(parseableCommand, rawArgs)
+        ;[, opts] = parseArgs(parseableCommand, rawArgs)
     } catch (err) {
         if(err instanceof UnknownOptionError) {
             const error = createError(`${getProcName(app)}: ${err.message}`, ErrorCategory.InvalidArg)
@@ -289,7 +287,7 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
 
     try {
         const context = createExecutionContext(app, opts, path)
-        const code = await Promise.resolve(handler(opts as any, args as any, context))
+        const code = await Promise.resolve(handler(opts as any, context))
         if(code === undefined) {
             return {result: {code: null}, context}
         }

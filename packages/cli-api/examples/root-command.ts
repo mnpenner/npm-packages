@@ -35,19 +35,8 @@ const app = new App('hello')
         repeatable: true,
         required: true,
     })
-    .run((args, opts) => {
-        if (opts.verbose) {
-            console.log('Preparing greeting...')
-        }
-        const greeting = opts.shout
-            ? `${opts.greet} ${opts.name}!`.toUpperCase()
-            : `${opts.greet} ${opts.name}.`
-        console.log(greeting)
-
-        if(opts.disclaimer.length) {
-            console.log(`Disclaimer: ${opts.disclaimer.join(', ')}`)
-        }
-        return 5
+    .run(opts => {
+        console.log({opts})
     })
 
 if(import.meta.main) {

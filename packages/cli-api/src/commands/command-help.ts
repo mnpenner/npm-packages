@@ -12,7 +12,7 @@ export const helpCommand = new Command('help')
         description: 'The command path.',
         repeatable: true,
     })
-    .run(async (commandPath: string[], _, context) => {
+    .run(async ({command: commandPath = []}, context) => {
         const app = context.app
         const rootCommands = [
             ...((app.subCommands !== undefined) ? sortBy(app.subCommands, c => c.name) : []),
@@ -21,7 +21,7 @@ export const helpCommand = new Command('help')
         ] as const satisfies readonly AnyCmd[]
 
         if(commandPath.length) {
-            const {command, path} = getCommand(commandPath as string[], rootCommands)
+            const {command, path} = getCommand(commandPath, rootCommands)
             printCommandHelp(context, command, path)
         } else if(app.subCommands !== undefined) {
             printHelp(context, rootCommands)

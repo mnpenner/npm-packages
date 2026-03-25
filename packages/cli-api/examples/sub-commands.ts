@@ -17,7 +17,7 @@ const app = new App('hello')
                 description: 'Person you want to greet',
                 required: true,
             })
-            .run((args, opts) => {
+            .run(opts => {
                 if(opts.verbose) {
                     console.log(`Running greet ${pkg.version}`)
                 }

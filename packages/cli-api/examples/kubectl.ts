@@ -26,10 +26,9 @@ function lines(...parts: string[]): string {
 }
 
 function logRun(commandName: string) {
-    return (args: unknown[], opts: Record<string, unknown>, ctx: ExecutionContext) => {
+    return (opts: Record<string, unknown>, ctx: ExecutionContext) => {
         console.log({
             command: commandName,
-            args,
             opts,
             commandPath: ctx.commandPath,
             colorLevel: ctx.colorLevel,

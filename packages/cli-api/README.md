@@ -18,17 +18,20 @@ const world = new Command('world')
         description: 'Person you want to greet',
         required: true,
     })
-    .run((args, kwargs) => {
-        if (kwargs.verbose) {
+    .run(opts => {
+        if (opts.verbose) {
             console.log('Preparing greeting...')
         }
-        console.log(`Hello ${kwargs.name}`)
+        console.log(`Hello ${opts.name}`)
     })
 
-await new App('hello')
-    .meta({version: pkg.version, argv0: pkg.name})
+const app = new App('hello')
+    .meta({version: pkg.version, bin: pkg.name})
     .command(world)
-    .execute()
+
+if(import.meta.main) {
+    await app.execute()
+}
 ```
 
 ```shell

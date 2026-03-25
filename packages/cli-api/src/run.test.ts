@@ -147,8 +147,7 @@ describe(executeAppResult.name, () => {
             .meta({bin: 'cli-api'})
             .globalOpt('profile', {alias: 'p', required: true})
             .command(new Command('world')
-                .run((args, opts) => {
-                    void args
+                .run(opts => {
                     captured = opts
                 }))
 
@@ -156,6 +155,22 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({code: null})
         expect(captured).toMatchObject({profile: 'dev', color: 'auto'})
+    })
+
+    it('passes positional arguments through opts without a separate args parameter', async () => {
+        let captured: Record<string, unknown> | undefined
+        const app = new App('hello')
+            .meta({bin: 'cli-api'})
+            .arg('name', {required: true})
+            .arg('rest', {repeatable: true})
+            .run(opts => {
+                captured = opts
+            })
+
+        const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['Mark', 'one', 'two'])
+
+        expect(result).toEqual({code: null})
+        expect(captured).toMatchObject({name: 'Mark', rest: ['one', 'two'], color: 'auto'})
     })
 
     it('returns a misconfiguration error when a global option collides with a local option', async () => {
@@ -239,7 +254,7 @@ describe(executeAppResult.name, () => {
     it('exposes the execution context chalk instance to command handlers', async () => {
         const app = new App('hello')
             .meta({bin: 'cli-api'})
-            .run((_, __, context) => {
+            .run((_, context) => {
                 expect(context.chalk.blue('blue')).toBe('\u001B[34mblue\u001B[39m')
             })
 
@@ -252,7 +267,7 @@ describe(executeAppResult.name, () => {
         const levels: number[] = []
         const app = new App('hello')
             .meta({bin: 'cli-api'})
-            .run((_, __, context) => {
+            .run((_, context) => {
                 levels.push(context.colorLevel)
                 expect(context.colorLevel).toBe(context.chalk.level)
             })
@@ -267,7 +282,7 @@ describe(executeAppResult.name, () => {
         const app = new App('hello')
             .meta({bin: 'cli-api'})
             .command(new Command('world')
-                .run((_, __, context) => {
+                .run((_, context) => {
                     expect(context.app).toBe(app)
                     expect(context.commandPath).toEqual(['world'])
                 }))
