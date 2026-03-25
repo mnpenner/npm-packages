@@ -1,5 +1,5 @@
 import type {AnyApp, AnyCmd, ExecutionContext} from './interfaces'
-import {OptType, hasSubCommands, isExecutable} from './interfaces'
+import {getCommandArguments, getSubCommands, OptType, hasSubCommands, isExecutable} from './interfaces'
 import {printAvailableCommands} from './app-help'
 import {getProcName, getTerminalWidth, print, printLn, space, toArray, wrapText} from './utils'
 import {getGlobalOptions} from './builtins'
@@ -111,6 +111,7 @@ export function printCommandHelp(context: ExecutionContext, cmd: AnyApp | AnyCmd
 
     if (isExecutable(cmd)) {
         const allOptions = getOptions(cmd)
+        const arguments_ = getCommandArguments(cmd)
         if (allOptions.length) {
             let otherOptions = 0
             for (const opt of allOptions) {
@@ -124,9 +125,9 @@ export function printCommandHelp(context: ExecutionContext, cmd: AnyApp | AnyCmd
                 print(` ${chalk.gray('[')}${chalk.magenta('--options')}${chalk.gray(']')}`)
             }
         }
-        if (cmd.positonals?.length) {
+        if (arguments_?.length) {
             print(` ${chalk.grey('[')}--${chalk.grey(']')}`)
-            for (const arg of cmd.positonals) {
+            for (const arg of arguments_) {
                 print(` ${formatUsageArgument(arg, chalk)}`)
             }
         }
@@ -137,15 +138,16 @@ export function printCommandHelp(context: ExecutionContext, cmd: AnyApp | AnyCmd
 
     if (isExecutable(cmd)) {
         const allOptions = getOptions(cmd)
+        const arguments_ = getCommandArguments(cmd)
         if (allOptions.length) {
             printLn(chalk.yellow('\nOptions:'))
             printOptionEntries(allOptions.map(option => formatOption(option, chalk)))
         }
 
-        if (cmd.positonals?.length) {
+        if (arguments_?.length) {
             printLn(chalk.yellow('\nArguments:'))
-            const width = Math.max(...cmd.positonals.map((arg: {name: string}) => stringWidth(arg.name)))
-            for (const arg of cmd.positonals) {
+            const width = Math.max(...arguments_.map((arg: {name: string}) => stringWidth(arg.name)))
+            for (const arg of arguments_) {
                 printHelpEntry(chalk.green(arg.name), arg.description, width)
             }
         }
@@ -153,7 +155,7 @@ export function printCommandHelp(context: ExecutionContext, cmd: AnyApp | AnyCmd
 
     if (hasSubCommands(cmd)) {
         printLn()
-        printAvailableCommands(cmd.subCommands, 'Sub-commands:', chalk)
+        printAvailableCommands(getSubCommands(cmd) ?? [], 'Sub-commands:', chalk)
     }
 
     const globalOptions = getGlobalOptions(app)

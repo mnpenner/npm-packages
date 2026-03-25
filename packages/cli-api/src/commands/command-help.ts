@@ -1,5 +1,5 @@
 import type {AnyCmd} from '../interfaces'
-import {Command, hasSubCommands} from '../interfaces'
+import {Command, getSubCommands, hasSubCommands} from '../interfaces'
 import {versionCommand} from './version'
 import {getCommand} from '../options'
 import {printCommandHelp} from '../print-command-help'
@@ -15,7 +15,7 @@ export const helpCommand = new Command('help')
     .run(async ({command: commandPath = []}, context) => {
         const app = context.app
         const rootCommands = [
-            ...((app.subCommands !== undefined) ? sortBy(app.subCommands, c => c.name) : []),
+            ...((getSubCommands(app) !== undefined) ? sortBy(getSubCommands(app)!, c => c.name) : []),
             versionCommand as unknown as AnyCmd,
             helpCommand as unknown as AnyCmd,
         ] as const satisfies readonly AnyCmd[]
@@ -23,7 +23,7 @@ export const helpCommand = new Command('help')
         if(commandPath.length) {
             const {command, path} = getCommand(commandPath, rootCommands)
             printCommandHelp(context, command, path)
-        } else if(app.subCommands !== undefined) {
+        } else if(getSubCommands(app) !== undefined) {
             printHelp(context, rootCommands)
         } else {
             printCommandHelp(context, app, [])

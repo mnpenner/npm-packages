@@ -20,7 +20,7 @@ describe(Command.name, () => {
                 .run((opts, context) => {
                     expectType<TypeEqual<typeof opts, {
                         target: string
-                        loud?: boolean
+                        loud: boolean
                     }>>(true)
                     expectType<TypeEqual<typeof context, ExecutionContext>>(true)
                 })
@@ -34,7 +34,7 @@ describe(Command.name, () => {
                 .run((opts, context) => {
                     expectType<TypeEqual<typeof opts, {
                         count: number
-                        verbose?: boolean
+                        verbose: boolean
                         mode?: 'fast' | 'slow'
                         input: string
                         rest: string[]
@@ -53,6 +53,23 @@ describe(Command.name, () => {
                     expectType<TypeEqual<typeof context, ExecutionContext>>(true)
                 })
 
+            const bulkCommand = new Command('bulk')
+                .options([
+                    {name: 'enabled', type: OptType.BOOL},
+                    {name: 'count', propName: 'total', type: OptType.INT, required: true},
+                ] as const)
+                .arguments([
+                    {name: 'input', required: true},
+                ] as const)
+                .run((opts, context) => {
+                    expectType<TypeEqual<typeof opts, {
+                        enabled: boolean
+                        total: number
+                        input: string
+                    }>>(true)
+                    expectType<TypeEqual<typeof context, ExecutionContext>>(true)
+                })
+
             const fluentApp = new App('hello')
                 .meta({bin: 'hello', version: '1.0.0', author: 'Mark', description: 'Example app'})
                 .help({name: 'aide', alias: ['a'], disableCommand: true, disableOption: false})
@@ -62,13 +79,17 @@ describe(Command.name, () => {
                 .command(greetCommand)
                 .command(inspectCommand)
                 .command(boundedCommand)
+                .command(bulkCommand)
 
             expectType<TypeEqual<typeof fluentApp.execute, (args?: string[]) => Promise<number>>>(true)
 
             void greetCommand
             void inspectCommand
             void boundedCommand
+            void bulkCommand
             void fluentApp
         })
     })
 })
+
+

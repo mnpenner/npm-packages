@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import {App} from '../src'
+import {App, OptType} from '../src'
 import * as pkg from '../package.json'
 
 const app = new App('hello')
@@ -9,34 +9,49 @@ const app = new App('hello')
         author: 'Mark Penner',
         description: 'Example app',
     })
-    .flag('verbose', {
-        alias: 'v',
-        description: 'Prints more info',
-    })
-    .opt('name', {
-        alias: 'n',
-        description: 'Person you want to greet',
-        required: false,
-        valuePlaceholder: 'PeRsOn',
-    })
-    .opt('shout', {
-        description: 'Shout the greeting',
-        valueNotRequired: true,
-    })
-    .arg('greeting', {
-        description: 'Greeting to print',
-        key: 'greet',
-        defaultValue: 'Hello',
-        required: false,
-        // repeatable: true,
-    })
-    .arg('disclaimer', {
-        description: 'Trailing text',
-        repeatable: true,
-        required: false,
-    })
+    .options([
+        {
+            name: 'verbose',
+            alias: 'v',
+            type: OptType.BOOL,
+            description: 'Prints more info',
+        },
+        {
+            name: 'name',
+            alias: 'n',
+            description: 'Person you want to greet',
+            required: false,
+            valuePlaceholder: 'PeRsOn',
+        },
+        {
+            name: 'shout',
+            description: 'Shout the greeting',
+            valueNotRequired: true,
+        },
+        {
+            name: 'simpleopt',
+        },
+    ])
+    .arguments([
+        {
+            name: 'simplearg',
+        },
+        {
+            name: 'greeting',
+            description: 'Greeting to print',
+            propName: 'greet',
+            defaultValue: 'Hello',
+            required: false,
+        },
+        {
+            name: 'disclaimer',
+            description: 'Trailing text',
+            repeatable: true,
+            required: false,
+        },
+    ])
     .help({
-        disableOption: true,
+        disableOption: false,
     })
     .run(opts => {
         console.log(opts)
@@ -45,3 +60,5 @@ const app = new App('hello')
 if(import.meta.main) {
     await app.execute()
 }
+
+

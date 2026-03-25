@@ -1,5 +1,5 @@
 import type {AnyApp, AnyCmd, Option} from './interfaces'
-import {Command, OptType, hasSubCommands} from './interfaces'
+import {Command, getSubCommands, OptType, hasSubCommands} from './interfaces'
 import {sortOptions, getCommand} from './options'
 import {printHelp} from './app-help'
 import {printCommandHelp} from './print-command-help'
@@ -57,7 +57,7 @@ export function getColorConfig(app: AnyApp): BuiltinOptionConfig {
 }
 
 function createBuiltinOption(
-    key: 'help' | 'version',
+    propName: 'help' | 'version',
     config: BuiltinEntryConfig,
     description: string,
 ): Option | undefined {
@@ -68,7 +68,7 @@ function createBuiltinOption(
         name: config.name,
         ...(config.alias !== undefined ? {alias: config.alias} : {}),
         description,
-        key,
+        propName,
         type: OptType.BOOL,
         valueNotRequired: true,
         valueIfSet: true,
@@ -148,7 +148,7 @@ export function getColorOption(app: AnyApp): Option | undefined {
         name: config.name,
         ...(config.alias !== undefined ? {alias: config.alias} : {}),
         description: 'Control ANSI color output.',
-        key: 'color',
+        propName: 'color',
         type: OptType.ENUM,
         enumValues: ['always', 'never', 'auto'] as const,
         valuePlaceholder: 'WHEN',
@@ -168,8 +168,9 @@ export function getGlobalOptions(app: AnyApp): Option[] {
 }
 
 export function getRootCommands(app: AnyApp): readonly AnyCmd[] {
-    const userCommands = app.subCommands !== undefined
-        ? sortBy(app.subCommands as readonly AnyCmd[], c => c.name)
+    const subCommands = getSubCommands(app)
+    const userCommands = subCommands !== undefined
+        ? sortBy(subCommands as readonly AnyCmd[], c => c.name)
         : []
 
     return [

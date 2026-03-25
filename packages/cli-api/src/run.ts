@@ -1,5 +1,5 @@
 import type {AnyApp, AnyCmd, AnyLeafCommand} from './interfaces'
-import {ExecutionContext, getExecuteHandler, hasSubCommands, isExecutable} from './interfaces'
+import {ExecutionContext, getCommandArguments, getCommandOptions, getExecuteHandler, getSubCommands, hasSubCommands, isExecutable, OptType} from './interfaces'
 import {printHelp} from './app-help'
 import type {ResolvedCommand} from './options'
 import {findSubCommand, formatToken, parseArgs, UnknownOptionError, validateCommandConfig} from './options'
@@ -12,7 +12,7 @@ import {createChalk, type ColorMode} from './color'
 import type {ChalkInstance} from 'chalk'
 
 function normalizeAppAsLeafCommand(app: AnyApp): AnyLeafCommand {
-    const handler = app.handler
+    const handler = getExecuteHandler(app)
     if(handler === undefined) {
         throw new Error('Command is not executable.')
     }
@@ -21,8 +21,8 @@ function normalizeAppAsLeafCommand(app: AnyApp): AnyLeafCommand {
         ...(app.alias !== undefined ? {alias: app.alias} : {}),
         ...(app.description !== undefined ? {description: app.description} : {}),
         ...(app.longDescription !== undefined ? {longDescription: app.longDescription} : {}),
-        ...(app.options !== undefined ? {options: [...app.options]} : {}),
-        ...(app.positonals !== undefined ? {positonals: [...app.positonals]} : {}),
+        ...(getCommandOptions(app) !== undefined ? {options: [...getCommandOptions(app)!]} : {}),
+        ...(getCommandArguments(app) !== undefined ? {arguments: [...getCommandArguments(app)!]} : {}),
         execute: handler,
     }
 }
@@ -37,8 +37,8 @@ function normalizeLeafCommand(cmd: AnyLeafCommand): AnyLeafCommand {
         ...(cmd.alias !== undefined ? {alias: cmd.alias} : {}),
         ...(cmd.description !== undefined ? {description: cmd.description} : {}),
         ...(cmd.longDescription !== undefined ? {longDescription: cmd.longDescription} : {}),
-        ...(cmd.options !== undefined ? {options: [...cmd.options]} : {}),
-        ...(cmd.positonals !== undefined ? {positonals: [...cmd.positonals]} : {}),
+        ...(getCommandOptions(cmd) !== undefined ? {options: [...getCommandOptions(cmd)!]} : {}),
+        ...(getCommandArguments(cmd) !== undefined ? {arguments: [...getCommandArguments(cmd)!]} : {}),
         execute: handler,
     }
 }
@@ -77,7 +77,7 @@ function createGlobalParseCommand(app: AnyApp): AnyLeafCommand {
     return {
         name: app.name,
         options: getGlobalOptions(app),
-        positonals: [{name: 'argv', key: 'argv', repeatable: true}],
+        arguments: [{name: 'argv', propName: 'argv', repeatable: true}],
         execute() {},
     }
 }
@@ -148,7 +148,7 @@ function parseGlobalOptions(app: AnyApp, argv: string[]): {opts?: Record<string,
             createChalk(colorMode),
             {
                 skipRequiredOptions: true,
-                skipRequiredPositionals: true,
+                skipRequiredArguments: true,
             },
         )
         return {opts}
@@ -186,7 +186,7 @@ function getOptionTokenConsumption(argv: readonly string[], index: number, rawOp
         if(option === undefined) {
             return 0
         }
-        if(left !== token || option.valueNotRequired) {
+        if(left !== token || (option.valueNotRequired ?? option.type === OptType.BOOL)) {
             return 1
         }
         return index < argv.length - 1 ? 2 : 1
@@ -200,7 +200,7 @@ function getOptionTokenConsumption(argv: readonly string[], index: number, rawOp
         if(option === undefined) {
             return 0
         }
-        if(!option.valueNotRequired) {
+        if(!(option.valueNotRequired ?? option.type === OptType.BOOL)) {
             if(i < cluster.length - 1 || equalIndex !== -1) {
                 return 1
             }
@@ -253,7 +253,7 @@ function resolveCommandWithGlobalOptions(argv: readonly string[], subCommands: r
         if(!hasSubCommands(candidate)) {
             break
         }
-        current = candidate.subCommands
+        current = getSubCommands(candidate) ?? []
     }
 
     return {
@@ -332,14 +332,10 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
         const parseableCommand = mergeCommandOptions(app, cmd)
         const [, provisionalOpts] = parseArgs(parseableCommand, rawArgs, parseChalk, {
             skipRequiredOptions: true,
-            skipRequiredPositionals: true,
+            skipRequiredArguments: true,
         })
         const provisionalContext = createExecutionContext(app, provisionalOpts, path)
         if(provisionalOpts.help) {
-            if (cmd === app && !hasSubCommands(app)) {
-                printHelp(provisionalContext, getRootCommands(app))
-                return {result: {code: 0}, context: provisionalContext}
-            }
             printCommandHelp(provisionalContext, cmd, path)
             return {result: {code: 0}, context: provisionalContext}
         }

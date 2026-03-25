@@ -2,12 +2,16 @@
 import {App} from '../src'
 
 const app = new App('repeatable')
-    .arg('alpha', {
-        repeatable: true,
-    })
-    .arg('beta', {
-        required: true
-    })
+    .arguments([
+        {
+            name: 'alpha',
+            repeatable: true,
+        },
+        {
+            name: 'beta',
+            required: true,
+        },
+    ])
     .run(opts => {
         console.log({opts})
     })
@@ -15,3 +19,5 @@ const app = new App('repeatable')
 if(import.meta.main) {
     await app.execute()
 }
+
+

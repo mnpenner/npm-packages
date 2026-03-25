@@ -245,7 +245,7 @@ describe(executeAppResult.name, () => {
         expect(captured).toMatchObject({profile: 'dev', color: 'auto'})
     })
 
-    it('passes positional arguments through opts without a separate args parameter', async () => {
+    it('passes arguments through opts without a separate args parameter', async () => {
         let captured: Record<string, unknown> | undefined
         const app = new App('hello')
             .meta({bin: 'cli-api'})
@@ -261,7 +261,7 @@ describe(executeAppResult.name, () => {
         expect(captured).toMatchObject({name: 'Mark', rest: ['one', 'two'], color: 'auto'})
     })
 
-    it('passes repeatable positional arguments through opts before a required trailing positional', async () => {
+    it('passes repeatable arguments through opts before a required trailing argument', async () => {
         let captured: Record<string, unknown> | undefined
         const app = new App('repeatable')
             .meta({bin: 'cli-api'})
@@ -277,7 +277,7 @@ describe(executeAppResult.name, () => {
         expect(captured).toMatchObject({alpha: ['one', 'two'], beta: 'tail', color: 'auto'})
     })
 
-    it('prints help for commands with a repeatable positional before a required trailing positional', async () => {
+    it('prints help for commands with a repeatable argument before a required trailing argument', async () => {
         const app = new App('repeatable')
             .meta({bin: 'cli-api'})
             .arg('alpha', {repeatable: true})
@@ -288,6 +288,32 @@ describe(executeAppResult.name, () => {
 
         expect(result).toEqual({code: 0})
         expect(stdout).toContain('[alpha...] <beta>')
+    })
+
+    it('supports bulk command and global option builders', async () => {
+        let captured: Record<string, unknown> | undefined
+        const app = new App('hello')
+            .meta({bin: 'cli-api'})
+            .globalOptions([
+                {name: 'profile', propName: 'profile'},
+            ])
+            .commands([
+                new Command('world')
+                    .options([
+                        {name: 'verbose', type: OptType.BOOL},
+                    ])
+                    .arguments([
+                        {name: 'name', required: true},
+                    ])
+                    .run(opts => {
+                        captured = opts
+                    }),
+            ])
+
+        const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['--profile', 'dev', 'world', '--verbose', 'Mark'])
+
+        expect(result).toEqual({code: null})
+        expect(captured).toMatchObject({profile: 'dev', verbose: true, name: 'Mark', color: 'auto'})
     })
 
     it('returns a misconfiguration error when a global option collides with a local option', async () => {
@@ -776,3 +802,5 @@ Usage:`)
         })
     })
 })
+
+

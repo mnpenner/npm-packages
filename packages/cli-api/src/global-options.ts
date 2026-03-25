@@ -7,8 +7,8 @@ export const HELP_OPTION: Option = {
     alias: 'h',
     description: 'Show help text',
     type: OptType.BOOL,
-    valueNotRequired: true,
-    valueIfSet: true,
+    // valueNotRequired: true,
+    // valueIfSet: true,
 }
 
 export const COLOR_OPTION: Option = {

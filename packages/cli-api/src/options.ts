@@ -1,5 +1,5 @@
 import type {AnyCmd, AnyLeafCommand, AnyOptType, Argument, Option} from './interfaces'
-import {OptType, hasSubCommands} from './interfaces'
+import {getSubCommands, OptType, hasSubCommands} from './interfaces'
 import type {NullableObj} from './utils'
 import {includes, resolve, sortBy, statSync, toArray, toBool} from './utils'
 import type {ChalkInstance} from 'chalk'
@@ -12,7 +12,7 @@ export interface ResolvedCommand {
     remainingArgv: string[]
 }
 
-type ParseableCommand = Pick<AnyLeafCommand, 'name' | 'options' | 'positonals'>
+type ParseableCommand = {name: string}
 type Repeatability = boolean | number | undefined
 type Requirement = boolean | number | undefined
 
@@ -82,7 +82,7 @@ function getMinRequiredCount(value: Requirement): number {
     return 0
 }
 
-function getFixedPositionalCount(arg: Argument): number | undefined {
+function getFixedArgumentCount(arg: Argument): number | undefined {
     const minRequired = getMinRequiredCount(arg.required)
     if(isRepeatable(arg.repeatable)) {
         const maxRepeatCount = getMaxRepeatCount(arg.repeatable)
@@ -94,10 +94,10 @@ function getFixedPositionalCount(arg: Argument): number | undefined {
     return minRequired > 0 ? 1 : undefined
 }
 
-function getTrailingFixedRequiredCount(positonals: readonly Argument[], startIndex: number): number | undefined {
+function getTrailingFixedRequiredCount(arguments_: readonly Argument[], startIndex: number): number | undefined {
     let total = 0
-    for(let i = startIndex; i < positonals.length; ++i) {
-        const fixedCount = getFixedPositionalCount(positonals[i])
+    for(let i = startIndex; i < arguments_.length; ++i) {
+        const fixedCount = getFixedArgumentCount(arguments_[i])
         if(fixedCount === undefined || fixedCount === 0) {
             return undefined
         }
@@ -124,6 +124,20 @@ function formatPath(value: string, chalk: ChalkInstance): string {
         return `"${fullPath}"`
     }
     return chalk.underline(fullPath)
+}
+
+function isValueNotRequired(opt: Option): boolean {
+    return opt.valueNotRequired ?? opt.type === OptType.BOOL
+}
+
+function getArguments(cmd: ParseableCommand): readonly Argument[] | undefined {
+    if(Array.isArray((cmd as any).arguments)) {
+        return (cmd as any).arguments as readonly Argument[]
+    }
+    if(Array.isArray((cmd as any)._arguments)) {
+        return (cmd as any)._arguments as readonly Argument[]
+    }
+    return undefined
 }
 
 function describeOptionType(type: AnyOptType, enumValues?: readonly string[]): string {
@@ -206,14 +220,15 @@ function assertValidCount(name: string, value: number, {allowZero = false}: {all
     }
 }
 
-function validatePositionalDefinitions(cmd: ParseableCommand): void {
-    if(!cmd.positonals?.length) {
+function validateArgumentDefinitions(cmd: ParseableCommand): void {
+    const arguments_ = getArguments(cmd)
+    if(!arguments_?.length) {
         return
     }
 
-    let encounteredOptionalPositional = false
-    for(let i = 0; i < cmd.positonals.length; ++i) {
-        const arg = cmd.positonals[i]
+    let encounteredOptionalArgument = false
+    for(let i = 0; i < arguments_.length; ++i) {
+        const arg = arguments_[i]
         const repeatable = isRepeatable(arg.repeatable)
         const minRequired = getMinRequiredCount(arg.required)
         const maxRepeatCount = getMaxRepeatCount(arg.repeatable)
@@ -227,19 +242,19 @@ function validatePositionalDefinitions(cmd: ParseableCommand): void {
         if(typeof arg.repeatable === 'number') {
             assertValidCount(`"${arg.name}" argument repeatable count`, arg.repeatable)
         }
-        if(repeatable && i < cmd.positonals.length - 1) {
-            if(getTrailingFixedRequiredCount(cmd.positonals, i + 1) === undefined) {
+        if(repeatable && i < arguments_.length - 1) {
+            if(getTrailingFixedRequiredCount(arguments_, i + 1) === undefined) {
                 throw new Error('Repeatable arguments can only be followed by required arguments with fixed counts')
             }
         }
         if(maxRepeatCount !== undefined && minRequired > maxRepeatCount) {
             throw new Error(`"${arg.name}" argument requires at least ${minRequired} values but allows at most ${maxRepeatCount}`)
         }
-        if(encounteredOptionalPositional && minRequired > 0) {
+        if(encounteredOptionalArgument && minRequired > 0) {
             throw new Error('Required arguments cannot come after optional arguments')
         }
         if(minRequired === 0 && !repeatable) {
-            encounteredOptionalPositional = true
+            encounteredOptionalArgument = true
         }
     }
 }
@@ -272,7 +287,7 @@ export function formatOption(opt: Option, chalk: ChalkInstance): [string, string
     }
     if(opt.type !== OptType.BOOL) {
         const valuePlaceholder = chalk.magenta(getValuePlaceholder(opt))
-        flags += opt.valueNotRequired
+        flags += isValueNotRequired(opt)
             ? `${chalk.grey('[')}=${valuePlaceholder}${chalk.grey(']')}`
             : `=${valuePlaceholder}`
     }
@@ -281,7 +296,9 @@ export function formatOption(opt: Option, chalk: ChalkInstance): [string, string
     }
     let desc = opt.description ?? ''
     let defaultValueText = opt.defaultValueText
-    if(defaultValueText === undefined && opt.defaultValue !== undefined) {
+    if(defaultValueText === undefined && opt.type === OptType.BOOL) {
+        defaultValueText = JSON.stringify(opt.defaultValue ?? false)
+    } else if(defaultValueText === undefined && opt.defaultValue !== undefined) {
         defaultValueText = JSON.stringify(resolve(opt.defaultValue))
     }
     if(defaultValueText !== undefined) {
@@ -319,24 +336,29 @@ export function sortOptions(options: readonly Option[]): Option[] {
 }
 
 export function getOptions(cmd: ParseableCommand): Option[] {
-    return sortOptions(toArray(cmd.options) as Option[])
+    const options = Array.isArray((cmd as any).options)
+        ? (cmd as any).options
+        : Array.isArray((cmd as any)._options)
+            ? (cmd as any)._options
+            : undefined
+    return sortOptions(toArray(options) as Option[])
 }
 
 /**
- * Validates a command's static option and positional configuration before parsing argv.
+ * Validates a command's static option and argument configuration before parsing argv.
  *
  * @param cmd The command definition to validate.
  * @returns Nothing. Throws when the command configuration is internally inconsistent.
  */
 export function validateCommandConfig(cmd: ParseableCommand): void {
-    validatePositionalDefinitions(cmd)
+    validateArgumentDefinitions(cmd)
 
     const seenOptionTokens = new Map<string, string>()
     for(const opt of getOptions(cmd)) {
         if(typeof opt.repeatable === 'number') {
             assertValidCount(`\`${opt.name}\` option repeatable count`, opt.repeatable)
         }
-        if(opt.noPrefix && !opt.valueNotRequired) {
+        if(opt.noPrefix && !isValueNotRequired(opt)) {
             throw new Error(`\`${getOptName(opt)}\` option cannot enable noPrefix unless valueNotRequired is enabled`)
         }
         if(opt.type === OptType.ENUM && !getEnumValues(opt)?.length) {
@@ -371,29 +393,29 @@ export function validateCommandConfig(cmd: ParseableCommand): void {
 
 interface ParseArgsConfig {
     skipRequiredOptions?: boolean
-    skipRequiredPositionals?: boolean
+    skipRequiredArguments?: boolean
 }
 
-function assignPositionalArguments(
-    positonals: readonly Argument[] | undefined,
+function assignArguments(
+    arguments_: readonly Argument[] | undefined,
     rawArgs: readonly string[],
     opts: Record<string, any>,
     chalk: ChalkInstance,
 ): any[] {
-    if(!positonals?.length) {
+    if(!arguments_?.length) {
         return [...rawArgs]
     }
 
     const args: any[] = []
     let rawArgIdx = 0
 
-    for(let i = 0; i < positonals.length; ++i) {
-        const def = positonals[i]
-        const k = def.key ?? def.name
+    for(let i = 0; i < arguments_.length; ++i) {
+        const def = arguments_[i]
+        const k = def.propName ?? def.name
 
         if(isRepeatable(def.repeatable)) {
-            const trailingFixedRequiredCount = i < positonals.length - 1
-                ? (getTrailingFixedRequiredCount(positonals, i + 1) ?? 0)
+            const trailingFixedRequiredCount = i < arguments_.length - 1
+                ? (getTrailingFixedRequiredCount(arguments_, i + 1) ?? 0)
                 : 0
             const valueCount = Math.max(0, rawArgs.length - rawArgIdx - trailingFixedRequiredCount)
             const maxRepeatCount = getMaxRepeatCount(def.repeatable)
@@ -437,7 +459,7 @@ export function parseArgs(
     cmd: ParseableCommand,
     argv: string[],
     chalk: ChalkInstance,
-    {skipRequiredOptions = false, skipRequiredPositionals = false}: ParseArgsConfig = {},
+    {skipRequiredOptions = false, skipRequiredArguments = false}: ParseArgsConfig = {},
 ): [any[], Record<string, any>] {
     const opts: Record<string, any> = Object.create(null)
     const rawArgs: string[] = []
@@ -448,15 +470,16 @@ export function parseArgs(
 
     for(const opt of allOptions) {
         if(isRepeatable(opt.repeatable)) {
-            const k = opt.key ?? opt.name
+            const k = opt.propName ?? opt.name
             if(opts[k] === undefined) opts[k] = []
         }
     }
-    if(cmd.positonals?.length) {
-        for(let i = 0; i < cmd.positonals.length; ++i) {
-            const a: Argument = cmd.positonals[i]
+    const arguments_ = getArguments(cmd)
+    if(arguments_?.length) {
+        for(let i = 0; i < arguments_.length; ++i) {
+            const a: Argument = arguments_[i]
             if(isRepeatable(a.repeatable)) {
-                const k = a.key ?? a.name
+                const k = a.propName ?? a.name
                 if(k && opts[k] === undefined) opts[k] = []
             }
         }
@@ -512,7 +535,7 @@ export function parseArgs(
                 if(negated) {
                     value = getOptionNoPrefixValue(opt)
                 } else if(value === undefined) {
-                    if(opt.valueNotRequired) {
+                    if(isValueNotRequired(opt)) {
                         value = getOptionImplicitValue(opt)
                     } else if(i < argv.length - 1) {
                         value = argv[++i]
@@ -521,7 +544,7 @@ export function parseArgs(
                     }
                 }
                 if(opt.type != null) value = coerceType(value, opt.type, chalk, formatItem('option', token, chalk), getEnumValues(opt))
-                const k = opt.key ?? opt.name
+                const k = opt.propName ?? opt.name
                 if(isRepeatable(opt.repeatable)) {
                     pushRepeatableValue(opts[k] as any[], value, opt.name, getMaxRepeatCount(opt.repeatable), 'option')
                 }
@@ -545,8 +568,8 @@ export function parseArgs(
                     if(!match) throw new UnknownOptionError(`-${ch}`, formatToken(`-${ch}`, chalk))
                     const {opt} = match
 
-                    if(opt.valueNotRequired) {
-                        const k = opt.key ?? opt.name
+                    if(isValueNotRequired(opt)) {
+                        const k = opt.propName ?? opt.name
                         const v = getOptionImplicitValue(opt)
                         if(isRepeatable(opt.repeatable)) {
                             pushRepeatableValue(opts[k] as any[], v, opt.name, getMaxRepeatCount(opt.repeatable), 'option')
@@ -565,7 +588,7 @@ export function parseArgs(
                     else throw new Error(`Missing required value for option ${formatToken(`-${ch}`, chalk)}`)
 
                     if(opt.type != null) value = coerceType(value, opt.type, chalk, formatItem('option', `-${ch}`, chalk), getEnumValues(opt))
-                    const k = opt.key ?? opt.name
+                    const k = opt.propName ?? opt.name
                     if(isRepeatable(opt.repeatable)) {
                         pushRepeatableValue(opts[k] as any[], value, opt.name, getMaxRepeatCount(opt.repeatable), 'option')
                     }
@@ -578,14 +601,16 @@ export function parseArgs(
         }
     }
 
-    const args = assignPositionalArguments(cmd.positonals, rawArgs, opts, chalk)
+    const args = assignArguments(arguments_, rawArgs, opts, chalk)
 
     if(allOptions.length) {
         for(const opt of allOptions) {
-            const k = opt.key ?? opt.name
+            const k = opt.propName ?? opt.name
             if(opts[k] === undefined) {
                 if(opt.defaultValue !== undefined) {
                     opts[k] = resolve(opt.defaultValue)
+                } else if(opt.type === OptType.BOOL) {
+                    opts[k] = false
                 } else if(opt.required && !skipRequiredOptions) {
                     throw new Error(`${formatToken(getOptName(opt), chalk)} option is required`)
                 }
@@ -593,15 +618,15 @@ export function parseArgs(
         }
     }
 
-    if(cmd.positonals?.length) {
-        for(let i = 0; i < cmd.positonals.length; ++i) {
-            const a: any = cmd.positonals[i]
+    if(arguments_?.length) {
+        for(let i = 0; i < arguments_.length; ++i) {
+            const a: any = arguments_[i]
             const minRequired = getMinRequiredCount(a.required)
-            const k = a.key ?? a.name
-            if(!isRepeatable(a.repeatable) && minRequired > 0 && opts[k] === undefined && !skipRequiredPositionals) {
+            const k = a.propName ?? a.name
+            if(!isRepeatable(a.repeatable) && minRequired > 0 && opts[k] === undefined && !skipRequiredArguments) {
                 throw new Error(`${formatToken(a.name, chalk)} argument is required`)
             }
-            if(isRepeatable(a.repeatable) && ((opts[k] as any[] | undefined)?.length ?? 0) < minRequired && !skipRequiredPositionals) {
+            if(isRepeatable(a.repeatable) && ((opts[k] as any[] | undefined)?.length ?? 0) < minRequired && !skipRequiredArguments) {
                 throw new Error(`\`${a.name}\` argument requires at least ${minRequired} value${minRequired === 1 ? '' : 's'}`)
             }
             if(k && opts[k] === undefined && a.defaultValue !== undefined) {
@@ -766,7 +791,7 @@ export function resolveCommand(argv: readonly string[], subCommands: readonly An
         if(!hasSubCommands(candidate)) {
             break
         }
-        current = candidate.subCommands
+        current = getSubCommands(candidate) ?? []
     }
 
     return {
@@ -797,7 +822,7 @@ export function getCommand(path: readonly string[], subCommands: readonly AnyCmd
             if(!hasSubCommands(next)) {
                 throw new Error(`Command "${resolvedPath.join(' ')}" does not have subCommands.`)
             }
-            current = next.subCommands
+            current = getSubCommands(next) ?? []
         }
     }
 

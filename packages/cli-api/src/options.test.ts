@@ -15,23 +15,23 @@ function parseArgs(cmd: Parameters<typeof parseArgsBase>[0], argv: string[]) {
 
 describe(parseArgs.name, () => {
     it('parses long options with equals', () => {
-        const cmd = makeCommand().opt('name', {key: 'name'})
+        const cmd = makeCommand().opt('name', {propName: 'name'})
 
-        const [positionals, opts] = parseArgs(cmd, ['--name=mark'])
+        const [arguments_, opts] = parseArgs(cmd, ['--name=mark'])
 
-        expect(positionals).toEqual([])
+        expect(arguments_).toEqual([])
         expect(opts).toEqual({ name: 'mark' })
     })
 
     it('parses long options with a following value', () => {
-        const cmd = makeCommand().opt('out', {key: 'out'})
+        const cmd = makeCommand().opt('out', {propName: 'out'})
 
         const [, opts] = parseArgs(cmd, ['--out', 'file.txt'])
 
         expect(opts.out).toBe('file.txt')
     })
 
-    it('parses flags from the flags property and leaves missing flags undefined', () => {
+    it('parses flags from the flags property and defaults missing flags to false', () => {
         const cmd = makeCommand()
             .flag('verbose', {alias: 'v'})
             .flag('quiet', {alias: 'q'})
@@ -39,7 +39,7 @@ describe(parseArgs.name, () => {
         const [, opts] = parseArgs(cmd, ['-v'])
 
         expect(opts.verbose).toBe(true)
-        expect(opts.quiet).toBeUndefined()
+        expect(opts.quiet).toBe(false)
     })
 
     it('clusters short flags', () => {
@@ -50,11 +50,11 @@ describe(parseArgs.name, () => {
         expect(opts.a).toBe(true)
         expect(opts.b).toBe(true)
         expect(opts.c).toBe(true)
-        expect(opts.d).toBeUndefined()
+        expect(opts.d).toBe(false)
     })
 
     it('parses short options with inline and next-argv values', () => {
-        const cmd = makeCommand().opt('n', {key: 'n'})
+        const cmd = makeCommand().opt('n', {propName: 'n'})
 
         expect(parseArgs(cmd, ['-nfoo'])[1].n).toBe('foo')
         expect(parseArgs(cmd, ['-n', 'foo'])[1].n).toBe('foo')
@@ -63,7 +63,7 @@ describe(parseArgs.name, () => {
 
     it('does not treat clustered short options with = as a value for the first option', () => {
         const cmd = makeCommand()
-            .opt('n', {key: 'n'})
+            .opt('n', {propName: 'n'})
             .flag('a')
             .flag('m')
             .flag('e')
@@ -72,7 +72,7 @@ describe(parseArgs.name, () => {
     })
 
     it('reports an unknown short option before a missing value in a cluster with =', () => {
-        const cmd = makeCommand().opt('n', {key: 'n'})
+        const cmd = makeCommand().opt('n', {propName: 'n'})
 
         expect(() => parseArgs(cmd, ['-name=foo'])).toThrow('option `-a` not recognized')
     })
@@ -91,7 +91,7 @@ describe(parseArgs.name, () => {
     })
 
     it('uses a provided value for valueNotRequired options', () => {
-        const cmd = makeCommand().opt('mode', {key: 'mode', valueNotRequired: true, defaultValue: 'auto'})
+        const cmd = makeCommand().opt('mode', {propName: 'mode', valueNotRequired: true, defaultValue: 'auto'})
 
         const [, opts] = parseArgs(cmd, ['--mode=manual'])
 
@@ -100,9 +100,9 @@ describe(parseArgs.name, () => {
 
     it('stops a short-option cluster when an option consumes a value', () => {
         const cmd = makeCommand()
-            .opt('a', {key: 'a', valueNotRequired: true})
-            .opt('b', {key: 'b', valueNotRequired: true})
-            .opt('n', {key: 'n'})
+            .opt('a', {propName: 'a', valueNotRequired: true})
+            .opt('b', {propName: 'b', valueNotRequired: true})
+            .opt('n', {propName: 'n'})
 
         const [, opts] = parseArgs(cmd, ['-abnX'])
 
@@ -115,7 +115,7 @@ describe(parseArgs.name, () => {
         const cmd = makeCommand()
             .flag('a')
             .flag('b')
-            .opt('n', {key: 'n'})
+            .opt('n', {propName: 'n'})
 
         const [, opts] = parseArgs(cmd, ['-abn=foo'])
 
@@ -125,7 +125,7 @@ describe(parseArgs.name, () => {
     })
 
     it('collects repeatable option values', () => {
-        const cmd = makeCommand().opt('tag', {key: 'tags', alias: 't', repeatable: true})
+        const cmd = makeCommand().opt('tag', {propName: 'tags', alias: 't', repeatable: true})
 
         const [, opts] = parseArgs(cmd, ['--tag=a', '--tag', 'b', '-tc'])
 
@@ -133,98 +133,98 @@ describe(parseArgs.name, () => {
     })
 
     it('initializes missing repeatable options as empty arrays', () => {
-        const cmd = makeCommand().opt('tag', {key: 'tags', repeatable: true})
+        const cmd = makeCommand().opt('tag', {propName: 'tags', repeatable: true})
 
         const [, opts] = parseArgs(cmd, [])
 
         expect(opts.tags).toEqual([])
     })
 
-    it('treats tokens after -- as positonals', () => {
+    it('treats tokens after -- as arguments', () => {
         const cmd = makeCommand()
-            .opt('n', {key: 'n'})
-            .arg('file', {key: 'file'})
+            .opt('n', {propName: 'n'})
+            .arg('file', {propName: 'file'})
 
-        const [positionals, opts] = parseArgs(cmd, ['--', '-n', 'foo', 'readme.md'])
+        const [arguments_, opts] = parseArgs(cmd, ['--', '-n', 'foo', 'readme.md'])
 
-        expect(positionals).toEqual(['-n', 'foo', 'readme.md'])
+        expect(arguments_).toEqual(['-n', 'foo', 'readme.md'])
         expect(opts.file).toBe('-n')
         expect(opts.n).toBeUndefined()
     })
 
-    it('copies named positonals into opts', () => {
+    it('copies named arguments into opts', () => {
         const cmd = makeCommand()
-            .arg('input', {key: 'input'})
-            .arg('output', {key: 'output'})
+            .arg('input', {propName: 'input'})
+            .arg('output', {propName: 'output'})
 
-        const [positionals, opts] = parseArgs(cmd, ['in.txt', 'out.txt'])
+        const [arguments_, opts] = parseArgs(cmd, ['in.txt', 'out.txt'])
 
-        expect(positionals).toEqual(['in.txt', 'out.txt'])
+        expect(arguments_).toEqual(['in.txt', 'out.txt'])
         expect(opts.input).toBe('in.txt')
         expect(opts.output).toBe('out.txt')
     })
 
-    it('collects repeatable positonals', () => {
-        const cmd = makeCommand().arg('files', {key: 'files', repeatable: true})
+    it('collects repeatable arguments', () => {
+        const cmd = makeCommand().arg('files', {propName: 'files', repeatable: true})
 
-        const [positionals, opts] = parseArgs(cmd, ['a.js', 'b.js', 'c.js'])
+        const [arguments_, opts] = parseArgs(cmd, ['a.js', 'b.js', 'c.js'])
 
-        expect(positionals).toEqual(['a.js', 'b.js', 'c.js'])
+        expect(arguments_).toEqual(['a.js', 'b.js', 'c.js'])
         expect(opts.files).toEqual(['a.js', 'b.js', 'c.js'])
     })
 
-    it('initializes missing optional repeatable positonals as empty arrays', () => {
+    it('initializes missing optional repeatable arguments as empty arrays', () => {
         const cmd = makeCommand()
             .arg('input', {required: true})
-            .arg('files', {key: 'files', repeatable: true})
+            .arg('files', {propName: 'files', repeatable: true})
 
         const [, opts] = parseArgs(cmd, ['main.ts'])
 
         expect(opts.files).toEqual([])
     })
 
-    it('requires at least one value for required repeatable positonals', () => {
+    it('requires at least one value for required repeatable arguments', () => {
         const cmd = makeCommand()
             .arg('name', {required: true})
-            .arg('disclaimer', {key: 'disclaimer', repeatable: true, required: true})
+            .arg('disclaimer', {propName: 'disclaimer', repeatable: true, required: true})
 
         expect(() => parseArgs(cmd, ['tom'])).toThrow(/[`"]disclaimer[`"] argument requires at least 1 value/i)
     })
 
-    it('supports numeric minimum counts for repeatable positonals', () => {
-        const cmd = makeCommand().arg('files', {key: 'files', repeatable: true, required: 2})
+    it('supports numeric minimum counts for repeatable arguments', () => {
+        const cmd = makeCommand().arg('files', {propName: 'files', repeatable: true, required: 2})
 
         expect(() => parseArgs(cmd, ['a.txt'])).toThrow(/[`"]files[`"] argument requires at least 2 values/i)
         expect(parseArgs(cmd, ['a.txt', 'b.txt'])[1].files).toEqual(['a.txt', 'b.txt'])
     })
 
-    it('supports numeric maximum counts for repeatable positonals', () => {
-        const cmd = makeCommand().arg('files', {key: 'files', repeatable: 2})
+    it('supports numeric maximum counts for repeatable arguments', () => {
+        const cmd = makeCommand().arg('files', {propName: 'files', repeatable: 2})
 
         expect(() => parseArgs(cmd, ['a.txt', 'b.txt', 'c.txt'])).toThrow(/"files" argument allows at most 2 values/i)
     })
 
     it('supports numeric maximum counts for repeatable options', () => {
-        const cmd = makeCommand().opt('tag', {key: 'tags', repeatable: 2})
+        const cmd = makeCommand().opt('tag', {propName: 'tags', repeatable: 2})
 
         expect(() => parseArgs(cmd, ['--tag=a', '--tag=b', '--tag=c'])).toThrow(/"tag" option allows at most 2 values/i)
     })
 
-    it('parses repeatable positonals before required trailing positonals', () => {
+    it('parses repeatable arguments before required trailing arguments', () => {
         const cmd = makeCommand()
-            .arg('alpha', {key: 'alpha', repeatable: true})
-            .arg('beta', {key: 'beta', required: true})
+            .arg('alpha', {propName: 'alpha', repeatable: true})
+            .arg('beta', {propName: 'beta', required: true})
 
         expect(parseArgs(cmd, ['tail'])[1]).toMatchObject({alpha: [], beta: 'tail'})
 
-        const [positionals, opts] = parseArgs(cmd, ['one', 'two', 'tail'])
+        const [arguments_, opts] = parseArgs(cmd, ['one', 'two', 'tail'])
 
-        expect(positionals).toEqual(['one', 'two', 'tail'])
+        expect(arguments_).toEqual(['one', 'two', 'tail'])
         expect(opts.alpha).toEqual(['one', 'two'])
         expect(opts.beta).toBe('tail')
     })
 
-    it('throws when a repeatable positional is followed by a non-fixed positional', () => {
+    it('throws when a repeatable argument is followed by a non-fixed argument', () => {
         const cmd = makeCommand()
             .arg('files', {repeatable: true})
             .arg('dest')
@@ -232,7 +232,7 @@ describe(parseArgs.name, () => {
         expect(() => parseArgs(cmd, ['a.txt', 'b.txt'])).toThrow(/repeatable arguments can only be followed by required arguments with fixed counts/i)
     })
 
-    it('throws when a required positional comes after an optional positional', () => {
+    it('throws when a required argument comes after an optional argument', () => {
         const cmd = makeCommand()
             .arg('maybe')
             .arg('must', {required: true})
@@ -240,22 +240,22 @@ describe(parseArgs.name, () => {
         expect(() => parseArgs(cmd, ['value'])).toThrow(/required arguments cannot come after optional arguments/i)
     })
 
-    it('throws when a numeric required count is used on a non-repeatable positional', () => {
+    it('throws when a numeric required count is used on a non-repeatable argument', () => {
         const cmd = makeCommand().arg('files', {required: 2})
 
         expect(() => parseArgs(cmd, ['a.txt'])).toThrow(/cannot use a numeric required count unless it is repeatable/i)
     })
 
-    it('throws when a repeatable positional minimum exceeds its maximum', () => {
+    it('throws when a repeatable argument minimum exceeds its maximum', () => {
         const cmd = makeCommand().arg('files', {repeatable: 2, required: 3})
 
         expect(() => parseArgs(cmd, ['a.txt'])).toThrow(/requires at least 3 values but allows at most 2/i)
     })
 
-    it('fills defaults for missing options and positonals', () => {
+    it('fills defaults for missing options and arguments', () => {
         const cmd = makeCommand()
-            .opt('mode', {key: 'mode', defaultValue: 'fast'})
-            .arg('dst', {key: 'dst', defaultValue: 'out'})
+            .opt('mode', {propName: 'mode', defaultValue: 'fast'})
+            .arg('dst', {propName: 'dst', defaultValue: 'out'})
 
         const [, opts] = parseArgs(cmd, [])
 
@@ -269,22 +269,22 @@ describe(parseArgs.name, () => {
         expect(() => parseArgs(cmd, [])).toThrow(/option is required/i)
     })
 
-    it('throws on missing required positonals', () => {
+    it('throws on missing required arguments', () => {
         const cmd = makeCommand().arg('src', {required: true})
 
         expect(() => parseArgs(cmd, [])).toThrow(/argument is required/i)
     })
 
-    it('coerces option and positional types', () => {
+    it('coerces option and argument types', () => {
         const cmd = makeCommand()
-            .opt('count', {key: 'count', type: OptType.INT})
-            .arg('scale', {key: 'scale', type: OptType.FLOAT})
+            .opt('count', {propName: 'count', type: OptType.INT})
+            .arg('scale', {propName: 'scale', type: OptType.FLOAT})
 
-        const [positionals, opts] = parseArgs(cmd, ['--count', '3', '2.5'])
+        const [arguments_, opts] = parseArgs(cmd, ['--count', '3', '2.5'])
 
         expect(opts.count).toBe(3)
         expect(opts.scale).toBe(2.5)
-        expect(positionals).toEqual([2.5])
+        expect(arguments_).toEqual([2.5])
     })
 
     it('parses fluent builder commands with boolean flags and valued options', () => {
@@ -294,12 +294,48 @@ describe(parseArgs.name, () => {
             .arg('file', {required: true})
             .run(async () => {})
 
-        const [positionals, opts] = parseArgs(cmd, ['-v', '--name=mark', 'readme.md'])
+        const [arguments_, opts] = parseArgs(cmd, ['-v', '--name=mark', 'readme.md'])
 
-        expect(positionals).toEqual(['readme.md'])
+        expect(arguments_).toEqual(['readme.md'])
         expect(opts).toEqual({
             verbose: true,
             name: 'mark',
+            file: 'readme.md',
+        })
+    })
+
+    it('treats bool typed options as valueNotRequired when unspecified', () => {
+        const cmd = makeCommand().opt('enabled', {propName: 'enabled', type: OptType.BOOL})
+
+        const [, opts] = parseArgs(cmd, ['--enabled'])
+
+        expect(opts.enabled).toBe(true)
+    })
+
+    it('defaults missing bool typed options to false', () => {
+        const cmd = makeCommand().opt('enabled', {propName: 'enabled', type: OptType.BOOL})
+
+        const [, opts] = parseArgs(cmd, [])
+
+        expect(opts.enabled).toBe(false)
+    })
+
+    it('supports bulk option and argument builders', () => {
+        const cmd = makeCommand()
+            .options([
+                {name: 'verbose', alias: 'v', type: OptType.BOOL},
+                {name: 'count', propName: 'count', type: OptType.INT},
+            ] as const)
+            .arguments([
+                {name: 'file', required: true},
+            ] as const)
+
+        const [arguments_, opts] = parseArgs(cmd, ['-v', '--count', '3', 'readme.md'])
+
+        expect(arguments_).toEqual(['readme.md'])
+        expect(opts).toEqual({
+            verbose: true,
+            count: 3,
             file: 'readme.md',
         })
     })
@@ -372,3 +408,5 @@ describe(formatOption.name, () => {
         expect(description).toBe('Control ANSI color output. [possible values: always, never, auto]')
     })
 })
+
+

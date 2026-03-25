@@ -1,10 +1,9 @@
 #!/usr/bin/env bun
-import {App, Command} from '../src'
+import {App, Command, OptType} from '../src'
 import * as pkg from '../package.json'
 
-
 const app = new App('hello')
-    .meta({version: pkg.version, bin: pkg.name, description: 'Example app', author: "Mark Penner"})
+    .meta({version: pkg.version, bin: pkg.name, description: 'Example app', author: 'Mark Penner'})
     .help({
         disableCommand: true,
         disableOption: true,

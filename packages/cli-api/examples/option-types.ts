@@ -9,48 +9,59 @@ const app = new App('option-types')
         author: 'Mark Penner',
         description: 'Example app showcasing every built-in OptType.',
     })
-    .opt('text', {
-        type: OptType.STRING,
-        description: 'String value',
-    })
-    .opt('enabled', {
-        type: OptType.BOOL,
-        description: 'Boolean value',
-        valueNotRequired: true,
-    })
-    .opt('count', {
-        type: OptType.INT,
-        description: 'Integer value',
-    })
-    .opt('ratio', {
-        type: OptType.FLOAT,
-        description: 'Floating-point value',
-    })
-    .opt('mode', {
-        type: OptType.ENUM,
-        enumValues: ['fast', 'slow'],
-        description: 'Enumerated value',
-    })
-    .opt('input-file', {
-        type: OptType.INPUT_FILE,
-        description: 'Readable input file',
-    })
-    .opt('input-dir', {
-        type: OptType.INPUT_DIRECTORY,
-        description: 'Readable input directory',
-    })
-    .opt('output-file', {
-        type: OptType.OUTPUT_FILE,
-        description: 'Writable output file',
-    })
-    .opt('output-dir', {
-        type: OptType.OUTPUT_DIRECTORY,
-        description: 'Writable output directory',
-    })
-    .opt('scratch-dir', {
-        type: OptType.EMPTY_DIRECTORY,
-        description: 'Empty or non-existent directory',
-    })
+    .options([
+        {
+            name: 'text',
+            type: OptType.STRING,
+            description: 'String value',
+        },
+        {
+            name: 'enabled',
+            type: OptType.BOOL,
+            description: 'Boolean value',
+        },
+        {
+            name: 'count',
+            type: OptType.INT,
+            description: 'Integer value',
+        },
+        {
+            name: 'ratio',
+            type: OptType.FLOAT,
+            description: 'Floating-point value',
+        },
+        {
+            name: 'mode',
+            type: OptType.ENUM,
+            enumValues: ['fast', 'slow'],
+            description: 'Enumerated value',
+        },
+        {
+            name: 'input-file',
+            type: OptType.INPUT_FILE,
+            description: 'Readable input file',
+        },
+        {
+            name: 'input-dir',
+            type: OptType.INPUT_DIRECTORY,
+            description: 'Readable input directory',
+        },
+        {
+            name: 'output-file',
+            type: OptType.OUTPUT_FILE,
+            description: 'Writable output file',
+        },
+        {
+            name: 'output-dir',
+            type: OptType.OUTPUT_DIRECTORY,
+            description: 'Writable output directory',
+        },
+        {
+            name: 'scratch-dir',
+            type: OptType.EMPTY_DIRECTORY,
+            description: 'Empty or non-existent directory',
+        },
+    ])
     .run(opts => {
         console.log({opts})
     })
@@ -58,3 +69,5 @@ const app = new App('option-types')
 if(import.meta.main) {
     await app.execute()
 }
+
+

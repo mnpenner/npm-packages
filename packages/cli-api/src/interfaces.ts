@@ -28,9 +28,9 @@ type PrimitiveOfOptType<T extends AnyOptType | undefined> =
                         T extends readonly (infer L)[] ? (L extends string ? L : string) :
                             string
 
-// literal property key: prefer `key`, else `name`
+// literal property name: prefer `propName`, else `name`
 type KeyOfItem<I> =
-    I extends { key: infer K extends string } ? K :
+    I extends { propName: infer K extends string } ? K :
         I extends { name: infer N extends string } ? N :
             never
 
@@ -38,7 +38,11 @@ type KeyOfItem<I> =
 type TypeOfItem<I> = I extends { type: infer T extends AnyOptType } ? T : undefined
 type IsRepeatable<I> = I extends { repeatable: true | number } ? true : false
 type IsRequired<I> = I extends { required: true | number } ? true : false
-type IsAlwaysPresent<I> = IsRepeatable<I> extends true ? true : IsRequired<I>
+type IsAlwaysPresent<I> =
+    IsRepeatable<I> extends true ? true :
+        IsRequired<I> extends true ? true :
+            TypeOfItem<I> extends OptType.BOOL ? true :
+                false
 
 type ValueOfOption<O extends Option> =
     IsRepeatable<O> extends true
@@ -62,9 +66,9 @@ export type OptionsOf<
         MergeOptionProps<RequiredOptions<Opts[number]>> &
         Partial<MergeOptionProps<OptionalOptions<Opts[number]>>>
     ) : {}) &
-    (Flags extends readonly any[] ? Partial<MergeFlagProps<Flags[number]>> : {})
+    (Flags extends readonly any[] ? MergeFlagProps<Flags[number]> : {})
 
-// ----- positonals (never boolean) -----
+// ----- arguments (never boolean) -----
 type ValueOfArg<A extends Argument> =
     IsRepeatable<A> extends true
         ? PrimitiveOfOptType<TypeOfItem<A>>[]
@@ -137,7 +141,7 @@ interface ArgumentOrOptionOrFlag {
     /** Default value to display in help. */
     defaultValueText?: string
     /** Property name to use in `run()` opts. */
-    key?: string
+    propName?: string
 }
 
 export type AnyOptType = OptType | readonly string[]
@@ -147,9 +151,9 @@ export interface ArgumentOrOption extends ArgumentOrOptionOrFlag {
     type?: AnyOptType
     /** Allowed values for `OptType.ENUM`. */
     enumValues?: readonly string[]
-    /** Option or positional may be provided more than once. When set to a number, that number is the maximum count. */
+    /** Option or argument may be provided more than once. When set to a number, that number is the maximum count. */
     repeatable?: boolean | number
-    /** Option or positional is required. For repeatable positionals, a number means the minimum count required. */
+    /** Option or argument is required. For repeatable arguments, a number means the minimum count required. */
     required?: boolean | number
     /** Default value if not provided. */
     defaultValue?: any | (() => any)
@@ -162,7 +166,7 @@ export interface Flag extends ArgumentOrOptionOrFlag, OptionOrFlag {
     defaultValue?: boolean | (() => boolean)
 }
 
-/** Positional argument. */
+/** Argument. */
 export interface Argument extends ArgumentOrOption {
 }
 
@@ -222,7 +226,7 @@ export interface ExecutableInput<
 > {
     options?: Opts
     flags?: Flags
-    positonals?: As
+    arguments?: As
     execute(opts: OptsOf<Opts, Flags, As>, context: ExecutionContext): MaybePromise<number | void>
 }
 
@@ -238,7 +242,7 @@ export interface BranchCommandInput<Cs extends CommandChildren> extends CommandB
     subCommands: Cs
     options?: never
     flags?: never
-    positonals?: never
+    arguments?: never
     execute?: never
 }
 
@@ -329,14 +333,14 @@ export interface BranchAppInput<Cs extends CommandChildren> extends AppBase {
     subCommands: Cs
     options?: never
     flags?: never
-    positonals?: never
+    arguments?: never
     execute?: never
 }
 
 export interface AnyLeafCommand extends CommandBase {
     options?: readonly Option[] | undefined
     flags?: readonly Flag[] | undefined
-    positonals?: readonly Argument[] | undefined
+    arguments?: readonly Argument[] | undefined
     execute(opts: Record<string, any>, context: ExecutionContext): MaybePromise<number | void>
     subCommands?: never | undefined
 }
@@ -345,7 +349,7 @@ export interface AnyBranchCommand extends CommandBase {
     subCommands: readonly AnyCmd[]
     options?: never | undefined
     flags?: never | undefined
-    positonals?: never | undefined
+    arguments?: never | undefined
     execute?: never | undefined
 }
 
@@ -354,6 +358,17 @@ export type AnyCmd = AnyLeafCommand | AnyBranchCommand
 type FlagConfigInput = Omit<Flag, 'name' | 'valueNotRequired'>
 type OptionConfigInput = Omit<Option, 'name'>
 type ArgumentConfigInput = Omit<Argument, 'name'>
+
+function normalizeOptionDefinition<T extends Option>(option: T): T {
+    if(option.type === OptType.BOOL && (option.valueNotRequired === undefined || option.defaultValue === undefined)) {
+        return {
+            ...option,
+            ...(option.valueNotRequired === undefined ? {valueNotRequired: true} : {}),
+            ...(option.defaultValue === undefined ? {defaultValue: false} : {}),
+        }
+    }
+    return option
+}
 
 type BuildFlag<Name extends string, Config extends FlagConfigInput | undefined> = Flatten<
     { name: Name } &
@@ -417,53 +432,21 @@ export class Command<
     Cs extends CommandChildren = [],
     Executable extends boolean = false,
 > {
-    private readonly _name: string
-    private _alias?: string | string[]
-    private _description?: string
-    private _longDescription?: string
-    private _options?: Option[]
-    private _positonals?: Argument[]
-    private _subCommands?: AnyCmd[]
-    protected _handler?: ExecuteHandler<Opts, Flags, As>
+    readonly name: string
+    alias?: string | string[]
+    description?: string
+    longDescription?: string
+    _options?: Option[]
+    _arguments?: Argument[]
+    _subCommands?: AnyCmd[]
+    _handler?: ExecuteHandler<Opts, Flags, As>
 
     constructor(name: string) {
-        this._name = name
-    }
-
-    get name(): string {
-        return this._name
-    }
-
-    get alias(): string | string[] | undefined {
-        return this._alias
-    }
-
-    get description(): string | undefined {
-        return this._description
-    }
-
-    get longDescription(): string | undefined {
-        return this._longDescription
-    }
-
-    get options(): Option[] | undefined {
-        return this._options
-    }
-
-    get positonals(): Argument[] | undefined {
-        return this._positonals
-    }
-
-    get subCommands(): AnyCmd[] | undefined {
-        return this._subCommands
-    }
-
-    get handler(): ExecuteHandler<Opts, Flags, As> | undefined {
-        return this._handler
+        this.name = name
     }
 
     protected setLongDescription(longDescription: string): void {
-        this._longDescription = longDescription
+        this.longDescription = longDescription
     }
 
     /**
@@ -473,7 +456,7 @@ export class Command<
      * @returns The same fluent command builder with the aliases applied.
      */
     aliases(...aliases: string[]): this {
-        this._alias = aliases.length <= 1 ? aliases[0] : aliases
+        this.alias = aliases.length <= 1 ? aliases[0] : aliases
         return this
     }
 
@@ -485,9 +468,9 @@ export class Command<
      * @returns The same fluent command builder with updated descriptions.
      */
     describe(description: string, longDescription?: string): this {
-        this._description = description
+        this.description = description
         if(longDescription !== undefined) {
-            this._longDescription = longDescription
+            this.longDescription = longDescription
         }
         return this
     }
@@ -503,7 +486,7 @@ export class Command<
         name: Name,
         config?: Config,
     ): Command<Opts, [...Flags, BuildFlag<Name, Config>], As, Cs, Executable> {
-        ;(this._options ??= []).push({name, ...(config ?? {}), valueNotRequired: true, type: OptType.BOOL})
+        ;(this._options ??= []).push({name, ...(config ?? {}), valueNotRequired: true, defaultValue: false, type: OptType.BOOL})
         return this as unknown as Command<Opts, [...Flags, BuildFlag<Name, Config>], As, Cs, Executable>
     }
 
@@ -518,23 +501,49 @@ export class Command<
         name: Name,
         config?: Config,
     ): Command<[...Opts, BuildOption<Name, Config>], Flags, As, Cs, Executable> {
-        ;(this._options ??= []).push({name, ...(config ?? {})})
+        ;(this._options ??= []).push(normalizeOptionDefinition({name, ...(config ?? {})}))
         return this as unknown as Command<[...Opts, BuildOption<Name, Config>], Flags, As, Cs, Executable>
     }
 
     /**
-     * Adds a positional argument to this command.
+     * Adds multiple options to this command.
      *
-     * @param name The positional argument name used in help output and inferred opts.
+     * @param options The option definitions to register.
+     * @returns A fluent command builder whose inferred option shape includes the new options.
+     */
+    options<const Items extends readonly Option[]>(
+        items: Items,
+    ): Command<[...Opts, ...Items], Flags, As, Cs, Executable> {
+        ;(this._options ??= []).push(...items.map(option => normalizeOptionDefinition({...option})))
+        return this as unknown as Command<[...Opts, ...Items], Flags, As, Cs, Executable>
+    }
+
+    /**
+     * Adds an argument to this command.
+     *
+     * @param name The argument name used in help output and inferred opts.
      * @param config Optional metadata such as coercion and requiredness.
-     * @returns A fluent command builder whose inferred positional tuple includes the new argument.
+     * @returns A fluent command builder whose inferred argument tuple includes the new argument.
      */
     arg<const Name extends string, const Config extends ArgumentConfigInput | undefined = undefined>(
         name: Name,
         config?: Config,
     ): Command<Opts, Flags, [...As, BuildArgument<Name, Config>], Cs, Executable> {
-        ;(this._positonals ??= []).push({name, ...(config ?? {})})
+        ;(this._arguments ??= []).push({name, ...(config ?? {})})
         return this as unknown as Command<Opts, Flags, [...As, BuildArgument<Name, Config>], Cs, Executable>
+    }
+
+    /**
+     * Adds multiple arguments to this command.
+     *
+     * @param arguments The argument definitions to register.
+     * @returns A fluent command builder whose inferred argument tuple includes the new arguments.
+     */
+    arguments<const Items extends readonly Argument[]>(
+        items: Items,
+    ): Command<Opts, Flags, [...As, ...Items], Cs, Executable> {
+        ;(this._arguments ??= []).push(...items.map(argument => ({...argument})))
+        return this as unknown as Command<Opts, Flags, [...As, ...Items], Cs, Executable>
     }
 
     /**
@@ -552,9 +561,23 @@ export class Command<
     }
 
     /**
+     * Adds multiple nested sub-commands to this command.
+     *
+     * @param subCommands The child commands to register.
+     * @returns A fluent command builder that is now treated as a branch command.
+     */
+    commands(
+        this: Command<Opts, Flags, As, Cs, false>,
+        items: readonly (AnyCmd | Command<any, any, any, any, any>)[],
+    ): Command<Opts, Flags, As, CommandChildren, false> {
+        ;(this._subCommands ??= []).push(...items as readonly AnyCmd[])
+        return this as unknown as Command<Opts, Flags, As, CommandChildren, false>
+    }
+
+    /**
      * Marks this command as executable and registers the handler invoked after parsing.
      *
-     * @param handler The function that receives parsed option values, including positional arguments by name, and the current [`ExecutionContext`]{@link ExecutionContext}.
+     * @param handler The function that receives parsed option values, including arguments by name, and the current [`ExecutionContext`]{@link ExecutionContext}.
      * @returns A fluent command builder that is now treated as executable.
      */
     run(
@@ -741,6 +764,18 @@ export class App<
     }
 
     /**
+     * Adds multiple options to the root app while preserving the `App` builder type.
+     *
+     * @param options The option definitions to register.
+     * @returns A fluent app builder whose inferred option shape includes the new options.
+     */
+    override options<const Items extends readonly Option[]>(
+        items: Items,
+    ): App<[...Opts, ...Items], Flags, As, Cs, Executable> {
+        return super.options(items) as unknown as App<[...Opts, ...Items], Flags, As, Cs, Executable>
+    }
+
+    /**
      * Adds a valued option that is available to the root app and every sub-command.
      *
      * @param name The CLI option name without leading dashes.
@@ -751,22 +786,45 @@ export class App<
         name: Name,
         config?: Config,
     ): this {
-        ;(this._globalOptions ??= []).push({name, ...(config ?? {})})
+        ;(this._globalOptions ??= []).push(normalizeOptionDefinition({name, ...(config ?? {})}))
         return this
     }
 
     /**
-     * Adds a positional argument to the root app while preserving the `App` builder type.
+     * Adds multiple global options to the root app.
      *
-     * @param name The positional argument name used in help output and inferred opts.
+     * @param options The option definitions to register as globals.
+     * @returns The same fluent app builder with the global options applied.
+     */
+    globalOptions(items: readonly Option[]): this {
+        ;(this._globalOptions ??= []).push(...items.map(option => normalizeOptionDefinition({...option})))
+        return this
+    }
+
+    /**
+     * Adds an argument to the root app while preserving the `App` builder type.
+     *
+     * @param name The argument name used in help output and inferred opts.
      * @param config Optional metadata such as coercion and requiredness.
-     * @returns A fluent app builder whose inferred positional tuple includes the new argument.
+     * @returns A fluent app builder whose inferred argument tuple includes the new argument.
      */
     override arg<const Name extends string, const Config extends ArgumentConfigInput | undefined = undefined>(
         name: Name,
         config?: Config,
     ): App<Opts, Flags, [...As, BuildArgument<Name, Config>], Cs, Executable> {
         return super.arg(name, config) as unknown as App<Opts, Flags, [...As, BuildArgument<Name, Config>], Cs, Executable>
+    }
+
+    /**
+     * Adds multiple arguments to the root app while preserving the `App` builder type.
+     *
+     * @param arguments The argument definitions to register.
+     * @returns A fluent app builder whose inferred argument tuple includes the new arguments.
+     */
+    override arguments<const Items extends readonly Argument[]>(
+        items: Items,
+    ): App<Opts, Flags, [...As, ...Items], Cs, Executable> {
+        return super.arguments(items) as unknown as App<Opts, Flags, [...As, ...Items], Cs, Executable>
     }
 
     /**
@@ -783,9 +841,22 @@ export class App<
     }
 
     /**
+     * Adds multiple nested sub-commands to the root app while preserving the `App` builder type.
+     *
+     * @param subCommands The child commands to register.
+     * @returns A fluent app builder that is now treated as a branch app.
+     */
+    override commands(
+        this: App<Opts, Flags, As, Cs, false>,
+        items: readonly (AnyCmd | Command<any, any, any, any, any>)[],
+    ): App<Opts, Flags, As, CommandChildren, false> {
+        return super.commands(items) as unknown as App<Opts, Flags, As, CommandChildren, false>
+    }
+
+    /**
      * Marks the root app as executable by registering the handler invoked after parsing.
      *
-     * @param handler The function that receives parsed option values including custom global options and positional arguments by name, and the current [`ExecutionContext`]{@link ExecutionContext}.
+     * @param handler The function that receives parsed option values including custom global options and arguments by name, and the current [`ExecutionContext`]{@link ExecutionContext}.
      * @returns A fluent app builder that is now treated as executable.
      */
     override run(
@@ -815,8 +886,8 @@ export class App<
  * @param value The command or app to inspect.
  * @returns `true` when the value has sub-commands.
  */
-export function hasSubCommands(value: {subCommands?: readonly AnyCmd[] | undefined}): value is {subCommands: readonly AnyCmd[]} {
-    return Array.isArray((value as any).subCommands)
+export function hasSubCommands(value: unknown): value is {subCommands: readonly AnyCmd[]} | {_subCommands: readonly AnyCmd[]} {
+    return Array.isArray((value as any)?.subCommands) || Array.isArray((value as any)?._subCommands)
 }
 
 /**
@@ -825,8 +896,10 @@ export function hasSubCommands(value: {subCommands?: readonly AnyCmd[] | undefin
  * @param value The command or app to inspect.
  * @returns `true` when the value has an executable handler.
  */
-export function isExecutable(value: {execute?: unknown, handler?: unknown}): value is AnyLeafCommand | AnyApp {
-    return typeof (value as any).handler === 'function' || Object.prototype.hasOwnProperty.call(value, 'execute')
+export function isExecutable(value: unknown): value is AnyLeafCommand | AnyApp {
+    return typeof (value as any)?.handler === 'function'
+        || typeof (value as any)?._handler === 'function'
+        || Object.prototype.hasOwnProperty.call(value as object, 'execute')
 }
 
 /**
@@ -835,14 +908,48 @@ export function isExecutable(value: {execute?: unknown, handler?: unknown}): val
  * @param value The command or app to inspect.
  * @returns The handler function when one exists, otherwise `undefined`.
  */
-export function getExecuteHandler(value: {execute?: unknown, handler?: unknown}): AnyLeafCommand['execute'] | undefined {
-    if(typeof (value as any).handler === 'function') {
+export function getExecuteHandler(value: unknown): AnyLeafCommand['execute'] | undefined {
+    if(typeof (value as any)?.handler === 'function') {
         return (value as any).handler as AnyLeafCommand['execute']
     }
 
-    if(Object.prototype.hasOwnProperty.call(value, 'execute')) {
+    if(typeof (value as any)?._handler === 'function') {
+        return (value as any)._handler as AnyLeafCommand['execute']
+    }
+
+    if(Object.prototype.hasOwnProperty.call(value as object, 'execute')) {
         return (value as any).execute as AnyLeafCommand['execute']
     }
 
+    return undefined
+}
+
+export function getCommandOptions(value: unknown): readonly Option[] | undefined {
+    if(Array.isArray((value as any)?.options)) {
+        return (value as any).options as readonly Option[]
+    }
+    if(Array.isArray((value as any)?._options)) {
+        return (value as any)._options as readonly Option[]
+    }
+    return undefined
+}
+
+export function getCommandArguments(value: unknown): readonly Argument[] | undefined {
+    if(Array.isArray((value as any)?.arguments)) {
+        return (value as any).arguments as readonly Argument[]
+    }
+    if(Array.isArray((value as any)?._arguments)) {
+        return (value as any)._arguments as readonly Argument[]
+    }
+    return undefined
+}
+
+export function getSubCommands(value: unknown): readonly AnyCmd[] | undefined {
+    if(Array.isArray((value as any)?.subCommands)) {
+        return (value as any).subCommands as readonly AnyCmd[]
+    }
+    if(Array.isArray((value as any)?._subCommands)) {
+        return (value as any)._subCommands as readonly AnyCmd[]
+    }
     return undefined
 }

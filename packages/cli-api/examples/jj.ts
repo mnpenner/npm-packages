@@ -19,6 +19,11 @@ type CommandSpec = {
     }>
 }
 
+type CommandBuilder = Command & {
+    options(items: readonly Option[]): Command
+    arguments(items: NonNullable<CommandSpec['arguments']>): Command
+}
+
 function lines(...parts: string[]): string {
     return parts.join('\n')
 }
@@ -33,24 +38,16 @@ function logRun(commandName: string) {
 }
 
 function applySpec(command: Command, spec: CommandSpec): Command {
+    const builder = command as CommandBuilder
+
     if(spec.aliases?.length) {
-        command.aliases(...spec.aliases)
+        builder.aliases(...spec.aliases)
     }
-    command.describe(spec.description, spec.longDescription)
+    builder.describe(spec.description, spec.longDescription)
+    builder.options(spec.options ?? [])
+    builder.arguments(spec.arguments ?? [])
 
-    for(const option of spec.options ?? []) {
-        if(option.type === OptType.BOOL) {
-            command.flag(option.name, option)
-            continue
-        }
-        command.opt(option.name, option)
-    }
-
-    for(const arg of spec.arguments ?? []) {
-        command.arg(arg.name, arg)
-    }
-
-    return command.run(logRun(spec.name))
+    return builder.run(logRun(spec.name))
 }
 
 function leaf(spec: CommandSpec): Command {
@@ -72,7 +69,6 @@ const globalOptions: Option[] = [
     {
         name: 'ignore-working-copy',
         type: OptType.BOOL,
-        valueNotRequired: true,
         description: lines(
             "Don't snapshot the working copy, and don't update it",
             '',
@@ -87,7 +83,6 @@ const globalOptions: Option[] = [
     {
         name: 'ignore-immutable',
         type: OptType.BOOL,
-        valueNotRequired: true,
         description: lines(
             'Allow rewriting immutable commits',
             '',
@@ -122,13 +117,11 @@ const globalOptions: Option[] = [
     {
         name: 'debug',
         type: OptType.BOOL,
-        valueNotRequired: true,
         description: 'Enable debug logging',
     },
     {
         name: 'quiet',
         type: OptType.BOOL,
-        valueNotRequired: true,
         description: lines(
             'Silence non-primary command output',
             '',
@@ -141,7 +134,6 @@ const globalOptions: Option[] = [
     {
         name: 'no-pager',
         type: OptType.BOOL,
-        valueNotRequired: true,
         description: 'Disable the pager',
     },
     {
@@ -166,57 +158,59 @@ const globalOptions: Option[] = [
 
 const fileCommand = new Command('file')
     .describe('File operations')
-    .command(leaf({
-        name: 'annotate',
-        description: 'Show the source change for each line of the target file',
-    }))
-    .command(leaf({
-        name: 'chmod',
-        description: 'Sets or removes the executable bit for paths in the repo',
-    }))
-    .command(leaf({
-        name: 'list',
-        description: 'List files in a revision',
-    }))
-    .command(leaf({
-        name: 'show',
-        description: 'Print contents of files in a revision',
-        longDescription: lines(
-            'If the given path is a directory, files in the directory will be visited recursively.',
-        ),
-        options: [
-            {
-                name: 'revision',
-                alias: 'r',
-                valuePlaceholder: 'REVSET',
-                description: 'The revision to get the file contents from',
-                defaultValue: '@',
-                defaultValueText: '@',
-            },
-            {
-                name: 'template',
-                alias: 'T',
-                valuePlaceholder: 'TEMPLATE',
-                description: 'Render each file metadata using the given template',
-            },
-        ],
-        arguments: [
-            {
-                name: 'filesets',
-                description: 'Paths to print',
-                repeatable: true,
-                required: true,
-            },
-        ],
-    }))
-    .command(leaf({
-        name: 'track',
-        description: 'Start tracking specified paths in the working copy',
-    }))
-    .command(leaf({
-        name: 'untrack',
-        description: 'Stop tracking specified paths in the working copy',
-    }))
+    .commands([
+        leaf({
+            name: 'annotate',
+            description: 'Show the source change for each line of the target file',
+        }),
+        leaf({
+            name: 'chmod',
+            description: 'Sets or removes the executable bit for paths in the repo',
+        }),
+        leaf({
+            name: 'list',
+            description: 'List files in a revision',
+        }),
+        leaf({
+            name: 'show',
+            description: 'Print contents of files in a revision',
+            longDescription: lines(
+                'If the given path is a directory, files in the directory will be visited recursively.',
+            ),
+            options: [
+                {
+                    name: 'revision',
+                    alias: 'r',
+                    valuePlaceholder: 'REVSET',
+                    description: 'The revision to get the file contents from',
+                    defaultValue: '@',
+                    defaultValueText: '@',
+                },
+                {
+                    name: 'template',
+                    alias: 'T',
+                    valuePlaceholder: 'TEMPLATE',
+                    description: 'Render each file metadata using the given template',
+                },
+            ],
+            arguments: [
+                {
+                    name: 'filesets',
+                    description: 'Paths to print',
+                    repeatable: true,
+                    required: true,
+                },
+            ],
+        }),
+        leaf({
+            name: 'track',
+            description: 'Start tracking specified paths in the working copy',
+        }),
+        leaf({
+            name: 'untrack',
+            description: 'Stop tracking specified paths in the working copy',
+        }),
+    ])
 
 const rootLeafSpecs: CommandSpec[] = [
     {
@@ -442,7 +436,6 @@ const rootLeafSpecs: CommandSpec[] = [
             {
                 name: 'no-edit',
                 type: OptType.BOOL,
-                valueNotRequired: true,
                 description: 'Do not edit the newly created change',
             },
             {
@@ -685,17 +678,15 @@ const app = new App('Jujutsu (An experimental VCS)')
             '[`jj help -k tutorial`]: https://jj-vcs.github.io/jj/latest/tutorial/',
         ].join('\n'),
     })
-
-for(const spec of rootLeafSpecs) {
-    app.command(leaf(spec))
-}
-
-app.command(fileCommand)
-
-for(const option of globalOptions) {
-    app.globalOpt(option.name, option)
-}
+    .commands([
+        ...rootLeafSpecs.map(leaf),
+        fileCommand,
+    ])
+    .globalOptions(globalOptions)
 
 if(import.meta.main) {
     await app.execute()
 }
+
+
+
