@@ -86,8 +86,16 @@ function describeItem(itemName?: string): string {
     return itemName ? ` for ${itemName}` : ''
 }
 
+function formatToken(value: string, chalk: ChalkInstance): string {
+    return chalk.level > 0 ? chalk.bold(value) : `\`${value}\``
+}
+
+function formatItem(kind: 'option' | 'argument', value: string, chalk: ChalkInstance): string {
+    return `${kind} ${formatToken(value, chalk)}`
+}
+
 function formatPath(value: string, chalk: ChalkInstance): string {
-    const fullPath = Path.resolve(Path.normalize(value))
+    const fullPath = Path.resolve(value)
     if(chalk.level === 0) {
         return `"${fullPath}"`
     }
@@ -404,7 +412,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[], chalk: ChalkIns
                 if(!match) throw new UnknownOptionError(`--${name}`)
                 const {opt, negated} = match
                 if(negated && inlineValue !== undefined) {
-                    throw new Error(`Option \`--no-${opt.name}\` does not take a value`)
+                    throw new Error(`Option ${formatToken(`--no-${opt.name}`, chalk)} does not take a value`)
                 }
                 let value = inlineValue
                 if(negated) {
@@ -415,10 +423,10 @@ export function parseArgs(cmd: ParseableCommand, argv: string[], chalk: ChalkIns
                     } else if(i < argv.length - 1) {
                         value = argv[++i]
                     } else {
-                        throw new Error(`Missing required value for option \`${token}\``)
+                        throw new Error(`Missing required value for option ${formatToken(token, chalk)}`)
                     }
                 }
-                if(opt.type != null) value = coerceType(value, opt.type, chalk, `option \`${token}\``, getEnumValues(opt))
+                if(opt.type != null) value = coerceType(value, opt.type, chalk, formatItem('option', token, chalk), getEnumValues(opt))
                 const k = opt.key ?? opt.name
                 if(isRepeatable(opt.repeatable)) {
                     pushRepeatableValue(opts[k] as any[], value, opt.name, getMaxRepeatCount(opt.repeatable), 'option')
@@ -457,12 +465,12 @@ export function parseArgs(cmd: ParseableCommand, argv: string[], chalk: ChalkIns
                     let value: any
                     const remainder = cluster.slice(j + 1)
                     if(remainder.length && !hasInlineAssignment) value = remainder
-                    else if(remainder.length && hasInlineAssignment) throw new Error(`Missing required value for option \`-${ch}\``)
+                    else if(remainder.length && hasInlineAssignment) throw new Error(`Missing required value for option ${formatToken(`-${ch}`, chalk)}`)
                     else if(inlineValue !== undefined && remainder.length === 0) value = inlineValue
                     else if(i < argv.length - 1) value = argv[++i]
-                    else throw new Error(`Missing required value for option "-${ch}"`)
+                    else throw new Error(`Missing required value for option ${formatToken(`-${ch}`, chalk)}`)
 
-                    if(opt.type != null) value = coerceType(value, opt.type, chalk, `option \`-${ch}\``, getEnumValues(opt))
+                    if(opt.type != null) value = coerceType(value, opt.type, chalk, formatItem('option', `-${ch}`, chalk), getEnumValues(opt))
                     const k = opt.key ?? opt.name
                     if(isRepeatable(opt.repeatable)) {
                         pushRepeatableValue(opts[k] as any[], value, opt.name, getMaxRepeatCount(opt.repeatable), 'option')
@@ -476,7 +484,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[], chalk: ChalkIns
             const def = cmd.positonals?.[argIdx]
 
             if(def) {
-                if(def.type != null) value = coerceType(value, def.type, chalk, `argument \`${def.name}\``, getEnumValues(def))
+                if(def.type != null) value = coerceType(value, def.type, chalk, formatItem('argument', def.name, chalk), getEnumValues(def))
 
                 const k = def.key ?? def.name
                 if(isRepeatable(def.repeatable)) {
@@ -492,7 +500,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[], chalk: ChalkIns
                             i -= 1
                             break
                         }
-                        if(def.type != null) v = coerceType(v, def.type, chalk, `argument \`${def.name}\``, getEnumValues(def))
+                        if(def.type != null) v = coerceType(v, def.type, chalk, formatItem('argument', def.name, chalk), getEnumValues(def))
                         pushRepeatableValue(arr, v, def.name, getMaxRepeatCount(def.repeatable), 'argument')
                     }
                     argIdx = isRepeatable(def.repeatable) && cmd.positonals ? cmd.positonals.length : argIdx
@@ -515,7 +523,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[], chalk: ChalkIns
                 if(opt.defaultValue !== undefined) {
                     opts[k] = resolve(opt.defaultValue)
                 } else if(opt.required) {
-                    throw new Error(`\`${getOptName(opt)}\` option is required`)
+                    throw new Error(`${formatToken(getOptName(opt), chalk)} option is required`)
                 }
             }
         }
@@ -526,7 +534,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[], chalk: ChalkIns
             const a: any = cmd.positonals[i]
             const minRequired = getMinRequiredCount(a.required)
             if(minRequired > 0 && argIdx <= i && !isRepeatable(a.repeatable)) {
-                throw new Error(`\`${a.name}\` argument is required`)
+                throw new Error(`${formatToken(a.name, chalk)} argument is required`)
             }
             const k = a.key ?? a.name
             if(isRepeatable(a.repeatable) && ((opts[k] as any[] | undefined)?.length ?? 0) < minRequired) {

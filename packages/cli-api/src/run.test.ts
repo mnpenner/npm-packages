@@ -4,6 +4,7 @@ import {App, Command} from './interfaces'
 import {executeApp, executeAppResult} from './run'
 import {createError, ErrorCategory} from './utils'
 import {OptType} from './interfaces'
+import {createChalk} from './color'
 
 function createMisconfiguredApp(): Parameters<typeof executeAppResult>[0] {
     return new App('hello')
@@ -60,7 +61,7 @@ async function captureExecute(
 async function captureExecuteWithPrintedErrors(
     app: Parameters<typeof executeAppResult>[0],
     argv: string[],
-    {color = false}: {color?: boolean} = {},
+    {color = false, stderrColumns}: {color?: boolean, stderrColumns?: number} = {},
 ): Promise<{code: number, stdout: string, stderr: string}> {
     let stdout = ''
     let stderr = ''
@@ -69,6 +70,7 @@ async function captureExecuteWithPrintedErrors(
     const originalWrite = process.stdout.write
     const originalErrWrite = process.stderr.write
     const originalArgv = process.argv
+    const originalColumns = process.stderr.columns
     const effectiveArgv = color || argv.includes('--color=always') || argv.includes('--no-color')
         ? argv
         : [...argv, '--no-color']
@@ -87,6 +89,12 @@ async function captureExecuteWithPrintedErrors(
         stderr += String(chunk)
         return true
     }) as typeof process.stderr.write
+    if(stderrColumns !== undefined) {
+        Object.defineProperty(process.stderr, 'columns', {
+            configurable: true,
+            value: stderrColumns,
+        })
+    }
     process.argv = ['bun', 'test']
 
     try {
@@ -97,6 +105,10 @@ async function captureExecuteWithPrintedErrors(
         console.error = originalError
         process.stdout.write = originalWrite
         process.stderr.write = originalErrWrite
+        Object.defineProperty(process.stderr, 'columns', {
+            configurable: true,
+            value: originalColumns,
+        })
         process.argv = originalArgv
     }
 }
@@ -110,6 +122,7 @@ function matchOutput(output: string, pattern: RegExp): string {
 describe(executeAppResult.name, () => {
     const missingPath = Path.resolve('foo')
     const quotedMissingPath = `"${missingPath}"`
+    const colorChalk = createChalk('always')
 
     it('returns exit code 2 for unknown root commands', async () => {
         const app = new App('hello')
@@ -532,7 +545,7 @@ Usage:`)
 
         expect(code).toBe(2)
         expect(stdout).toBe('')
-        expect(stderr).toBe(`  File ${quotedMissingPath} does not exist for option \`--kubeconfig\`\n`)
+        expect(stderr).toBe(`File ${quotedMissingPath} does not exist for option \`--kubeconfig\`\n`)
     })
 
     it('respects color mode for global option validation errors', async () => {
@@ -543,7 +556,7 @@ Usage:`)
 
         expect(await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['--kubeconfig=foo', '--color=always'])).toEqual({
             code: 2,
-            error: createError(`File \u001B[4m${missingPath}\u001B[24m does not exist for option \`--kubeconfig\``, ErrorCategory.InvalidArg),
+            error: createError(`File ${colorChalk.underline(missingPath)} does not exist for option ${colorChalk.bold('--kubeconfig')}`, ErrorCategory.InvalidArg),
         })
 
         const {code, stdout, stderr} = await captureExecuteWithPrintedErrors(
@@ -553,7 +566,7 @@ Usage:`)
 
         expect(code).toBe(2)
         expect(stdout).toBe('')
-        expect(stderr).toBe(`  File ${quotedMissingPath} does not exist for option \`--kubeconfig\`\n`)
+        expect(stderr).toBe(`File ${quotedMissingPath} does not exist for option \`--kubeconfig\`\n`)
     })
 
     it('returns friendly directory validation errors with the triggering option name', async () => {
@@ -579,7 +592,28 @@ Usage:`)
         const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['--kubeconfig=foo', '--color=always'])
 
         expect(result.code).toBe(2)
-        expect(result.error).toEqual(createError(`File \u001B[4m${missingPath}\u001B[24m does not exist for option \`--kubeconfig\``, ErrorCategory.InvalidArg))
+        expect(result.error).toEqual(createError(`File ${colorChalk.underline(missingPath)} does not exist for option ${colorChalk.bold('--kubeconfig')}`, ErrorCategory.InvalidArg))
+    })
+
+    it('wraps colored block errors to the terminal width', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api'})
+            .opt('kubeconfig', {type: OptType.INPUT_FILE, required: true})
+            .run(() => {})
+
+        const {code, stderr} = await captureExecuteWithPrintedErrors(
+            app as Parameters<typeof executeAppResult>[0],
+            ['--kubeconfig=foo', '--color=always'],
+            {color: true, stderrColumns: 40},
+        )
+
+        expect(code).toBe(2)
+        expect(stderr).toContain('\u001B[')
+        expect(stderr).toContain('  File')
+        expect(stderr).toContain(`  ${colorChalk.underline(missingPath)}`)
+        expect(stderr).toContain('  does not exist for option')
+        expect(stderr).toContain(`  ${colorChalk.bold('--kubeconfig')}`)
+        expect(stderr.split('\n').filter(Boolean).length).toBeGreaterThanOrEqual(4)
     })
 
     it('returns friendly primitive coercion errors with the triggering option name', async () => {

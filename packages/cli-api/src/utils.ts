@@ -44,8 +44,9 @@ const ERROR_PRESENTATION: Record<ErrorCategory, {code: number, color: string}> =
 }
 
 function blockError(str: string, style: ErrorCategory, chalk: ChalkInstance) {
-    const lines = str.split('\n')
-    const width = Math.max(...lines.map(l => stringWidth(l))) + 4
+    const maxContentWidth = Math.max(getTerminalWidth() - 4, 1)
+    const lines = wrapText(str, maxContentWidth)
+    const width = Math.max(...lines.map(l => stringWidth(l)), 0) + 4
     const colorize = chalk.bgHex(ERROR_PRESENTATION[style].color).hex('#FEFBEC')
     printErrLn(colorize(space(width)))
     for(const line of lines) {
@@ -56,7 +57,7 @@ function blockError(str: string, style: ErrorCategory, chalk: ChalkInstance) {
 }
 
 function inlineError(str: string) {
-    printErrLn(`  ${str}`)
+    printErrLn(str)
 }
 
 /**
@@ -125,7 +126,9 @@ export function space(len: number, str?: string) {
 }
 
 export function getTerminalWidth(): number {
-    return process.stdout.columns && process.stdout.columns > 0 ? process.stdout.columns : 80
+    return process.stderr.columns && process.stderr.columns > 0
+        ? process.stderr.columns
+        : (process.stdout.columns && process.stdout.columns > 0 ? process.stdout.columns : 80)
 }
 
 export function wrapText(text: string, width: number): string[] {
