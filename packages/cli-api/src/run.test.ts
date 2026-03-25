@@ -17,30 +17,42 @@ async function captureExecute(
     app: Parameters<typeof executeAppResult>[0],
     argv: string[],
     {color = false}: {color?: boolean} = {},
-): Promise<{result: Awaited<ReturnType<typeof executeAppResult>>, output: string}> {
-    let output = ''
+): Promise<{result: Awaited<ReturnType<typeof executeAppResult>>, stdout: string, stderr: string}> {
+    let stdout = ''
+    let stderr = ''
     const originalLog = console.log
+    const originalError = console.error
     const originalWrite = process.stdout.write
+    const originalErrWrite = process.stderr.write
     const originalArgv = process.argv
     const effectiveArgv = color || argv.includes('--color=always') || argv.includes('--no-color')
         ? argv
         : [...argv, '--no-color']
 
     console.log = ((...args: unknown[]) => {
-        output += args.join(' ') + '\n'
+        stdout += args.join(' ') + '\n'
     }) as typeof console.log
+    console.error = ((...args: unknown[]) => {
+        stderr += args.join(' ') + '\n'
+    }) as typeof console.error
     process.stdout.write = ((chunk: string | Uint8Array) => {
-        output += String(chunk)
+        stdout += String(chunk)
         return true
     }) as typeof process.stdout.write
+    process.stderr.write = ((chunk: string | Uint8Array) => {
+        stderr += String(chunk)
+        return true
+    }) as typeof process.stderr.write
     process.argv = ['bun', 'test']
 
     try {
         const result = await executeAppResult(app, effectiveArgv)
-        return {result, output}
+        return {result, stdout, stderr}
     } finally {
         console.log = originalLog
+        console.error = originalError
         process.stdout.write = originalWrite
+        process.stderr.write = originalErrWrite
         process.argv = originalArgv
     }
 }
@@ -49,30 +61,42 @@ async function captureExecuteWithPrintedErrors(
     app: Parameters<typeof executeAppResult>[0],
     argv: string[],
     {color = false}: {color?: boolean} = {},
-): Promise<{code: number, output: string}> {
-    let output = ''
+): Promise<{code: number, stdout: string, stderr: string}> {
+    let stdout = ''
+    let stderr = ''
     const originalLog = console.log
+    const originalError = console.error
     const originalWrite = process.stdout.write
+    const originalErrWrite = process.stderr.write
     const originalArgv = process.argv
     const effectiveArgv = color || argv.includes('--color=always') || argv.includes('--no-color')
         ? argv
         : [...argv, '--no-color']
 
     console.log = ((...args: unknown[]) => {
-        output += args.join(' ') + '\n'
+        stdout += args.join(' ') + '\n'
     }) as typeof console.log
+    console.error = ((...args: unknown[]) => {
+        stderr += args.join(' ') + '\n'
+    }) as typeof console.error
     process.stdout.write = ((chunk: string | Uint8Array) => {
-        output += String(chunk)
+        stdout += String(chunk)
         return true
     }) as typeof process.stdout.write
+    process.stderr.write = ((chunk: string | Uint8Array) => {
+        stderr += String(chunk)
+        return true
+    }) as typeof process.stderr.write
     process.argv = ['bun', 'test']
 
     try {
         const code = await executeApp(app, effectiveArgv)
-        return {code, output}
+        return {code, stdout, stderr}
     } finally {
         console.log = originalLog
+        console.error = originalError
         process.stdout.write = originalWrite
+        process.stderr.write = originalErrWrite
         process.argv = originalArgv
     }
 }
@@ -84,6 +108,9 @@ function matchOutput(output: string, pattern: RegExp): string {
 }
 
 describe(executeAppResult.name, () => {
+    const missingPath = Path.resolve('foo')
+    const quotedMissingPath = `"${missingPath}"`
+
     it('returns exit code 2 for unknown root commands', async () => {
         const app = new App('hello')
             .meta({bin: 'cli-api'})
@@ -241,11 +268,11 @@ describe(executeAppResult.name, () => {
             .meta({bin: 'cli-api', version: '1.0.0', author: 'Mark Penner', description: 'Example app'})
             .command(new Command('world'))
 
-        const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help'])
+        const {result, stdout} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help'])
 
         expect(result).toEqual({code: 0})
-        expect(output).toContain('hello ver. 1.0.0 by Mark Penner')
-        expect(output).toContain('hello ver. 1.0.0 by Mark Penner\n\nExample app')
+        expect(stdout).toContain('hello ver. 1.0.0 by Mark Penner')
+        expect(stdout).toContain('hello ver. 1.0.0 by Mark Penner\n\nExample app')
     })
 
     it('prints app name, version, and description for executable root app help', async () => {
@@ -254,13 +281,13 @@ describe(executeAppResult.name, () => {
             .opt('name', {required: true})
             .run(() => {})
 
-        const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help'])
+        const {result, stdout} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help'])
 
         expect(result).toEqual({code: 0})
-        expect(output).toContain('Example app')
-        expect(output).toContain('Usage:')
-        expect(output).toContain('--name=NAME')
-        expect(output).toContain('Global Options:')
+        expect(stdout).toContain('Example app')
+        expect(stdout).toContain('Usage:')
+        expect(stdout).toContain('--name=NAME')
+        expect(stdout).toContain('Global Options:')
     })
 
     it('runs the sub-command example help without module export errors', () => {
@@ -326,11 +353,11 @@ describe(executeAppResult.name, () => {
     it('shows the built-in color option in help text with an optional value placeholder', async () => {
         const app = new App('hello').meta({bin: 'cli-api', description: 'Example app'}).run(() => {})
 
-        const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help', '--no-color'])
+        const {result, stdout} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help', '--no-color'])
 
         expect(result).toEqual({code: 0})
-        expect(output).toContain('--color[=WHEN]')
-        expect(output).not.toContain('\u001B[')
+        expect(stdout).toContain('--color[=WHEN]')
+        expect(stdout).not.toContain('\u001B[')
     })
 
     it('shows custom global options in help text', async () => {
@@ -339,10 +366,10 @@ describe(executeAppResult.name, () => {
             .globalOpt('profile', {alias: 'p', description: 'Select a profile'})
             .command(new Command('world').run(() => {}))
 
-        const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['world', '--help'])
+        const {result, stdout} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['world', '--help'])
 
         expect(result).toEqual({code: 0})
-        expect(output).toContain('--profile=PROFILE')
+        expect(stdout).toContain('--profile=PROFILE')
     })
 
     it('sorts command options in help text by option name', async () => {
@@ -353,10 +380,10 @@ describe(executeAppResult.name, () => {
                 .opt('alpha', {alias: 'a', description: 'First alphabetically'})
                 .run(() => {}))
 
-        const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['world', '--help'])
+        const {result, stdout} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['world', '--help'])
 
         expect(result).toEqual({code: 0})
-        expect(output.indexOf('-a, --alpha=ALPHA')).toBeLessThan(output.indexOf('-z, --zebra=ZEBRA'))
+        expect(stdout.indexOf('-a, --alpha=ALPHA')).toBeLessThan(stdout.indexOf('-z, --zebra=ZEBRA'))
     })
 
     it('sorts global options in help text by option name', async () => {
@@ -366,12 +393,12 @@ describe(executeAppResult.name, () => {
             .globalOpt('alpha', {alias: 'a', description: 'First alphabetically'})
             .command(new Command('world').run(() => {}))
 
-        const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['world', '--help'])
+        const {result, stdout} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['world', '--help'])
 
         expect(result).toEqual({code: 0})
-        expect(output.indexOf('--alpha=ALPHA')).toBeLessThan(output.indexOf('--color[=WHEN]'))
-        expect(output.indexOf('--color[=WHEN]')).toBeLessThan(output.indexOf('--help'))
-        expect(output.indexOf('--help')).toBeLessThan(output.indexOf('--zebra=ZEBRA'))
+        expect(stdout.indexOf('--alpha=ALPHA')).toBeLessThan(stdout.indexOf('--color[=WHEN]'))
+        expect(stdout.indexOf('--color[=WHEN]')).toBeLessThan(stdout.indexOf('--help'))
+        expect(stdout.indexOf('--help')).toBeLessThan(stdout.indexOf('--zebra=ZEBRA'))
     })
 
     it('wraps long command descriptions onto indented lines in root help', async () => {
@@ -379,10 +406,10 @@ describe(executeAppResult.name, () => {
             .meta({bin: 'cli-api', description: 'Example app'})
             .command(new Command('world').describe('This description is intentionally long so it cannot fit on a single command listing line inside the default help renderer width.'))
 
-        const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help'])
+        const {result, stdout} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help'])
 
         expect(result).toEqual({code: 0})
-        expect(matchOutput(output, /  world[\s\S]*?(?=\n  version)/))
+        expect(matchOutput(stdout, /  world[\s\S]*?(?=\n  version)/))
             .toEqualIgnoringWhitespace(`
                 world
                 This description is intentionally long so it cannot fit on a single
@@ -397,10 +424,10 @@ describe(executeAppResult.name, () => {
                 .opt('profile', {alias: 'p', description: 'This description is intentionally long so it cannot fit on a single option listing line inside the default help renderer width.'})
                 .run(() => {}))
 
-        const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['world', '--help'])
+        const {result, stdout} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['world', '--help'])
 
         expect(result).toEqual({code: 0})
-        expect(matchOutput(output, /  -p, --profile=PROFILE[\s\S]*?(?=\n\nGlobal Options:)/))
+        expect(matchOutput(stdout, /  -p, --profile=PROFILE[\s\S]*?(?=\n\nGlobal Options:)/))
             .toEqualIgnoringWhitespace(`
                 -p, --profile=PROFILE
                 This description is intentionally long so it cannot fit on a single
@@ -416,10 +443,10 @@ describe(executeAppResult.name, () => {
                 .opt('profile', {alias: 'p', description: 'This description is intentionally long so it cannot fit on a single option listing line inside the default help renderer width.'})
                 .run(() => {}))
 
-        const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['world', '--help'])
+        const {result, stdout} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['world', '--help'])
 
         expect(result).toEqual({code: 0})
-        expect(matchOutput(output, /  -a, --alpha=ALPHA[\s\S]*?(?=\n\nGlobal Options:)/))
+        expect(matchOutput(stdout, /  -a, --alpha=ALPHA[\s\S]*?(?=\n\nGlobal Options:)/))
             .toEqualIgnoringWhitespace(`
                 -a, --alpha=ALPHA
                 Short description.
@@ -440,25 +467,25 @@ describe(executeAppResult.name, () => {
                 )
                 .run(() => {}))
 
-        const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['world', '--help'])
+        const {result, stdout} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['world', '--help'])
 
         expect(result).toEqual({code: 0})
-        expect(output).toContain(`Abandon a revision
+        expect(stdout).toContain(`Abandon a revision
 
 Abandon a revision, rebasing descendants onto its parent(s).
 The behavior is similar to \`jj restore --changes-in\`.
 
 Usage:`)
-        expect(output).not.toContain('Description:')
+        expect(stdout).not.toContain('Description:')
     })
 
     it('enables forced color output for help when requested', async () => {
         const app = new App('hello').meta({bin: 'cli-api', description: 'Example app'}).run(() => {})
 
-        const {result, output} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help', '--color=always'], {color: true})
+        const {result, stdout} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help', '--color=always'], {color: true})
 
         expect(result).toEqual({code: 0})
-        expect(output).toContain('\u001B[')
+        expect(stdout).toContain('\u001B[')
     })
 
     it('returns an invalid-arg error for unsupported color values', async () => {
@@ -480,14 +507,126 @@ Usage:`)
             .opt('kubeconfig', {type: OptType.INPUT_FILE, required: true})
             .run(() => {})
 
-        const {code, output} = await captureExecuteWithPrintedErrors(
+        const {code, stdout, stderr} = await captureExecuteWithPrintedErrors(
             app as Parameters<typeof executeAppResult>[0],
             ['--kubeconfig=foo', '--color=always'],
             {color: false},
         )
 
         expect(code).toBe(2)
-        expect(output).toContain('\u001B[')
-        expect(output).toContain('does not exist')
+        expect(stdout).toBe('')
+        expect(stderr).toContain('\u001B[')
+        expect(stderr).toContain('does not exist')
+    })
+
+    it('prints invalid argument errors inline to stderr when color is disabled', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api'})
+            .opt('kubeconfig', {type: OptType.INPUT_FILE, required: true})
+            .run(() => {})
+
+        const {code, stdout, stderr} = await captureExecuteWithPrintedErrors(
+            app as Parameters<typeof executeAppResult>[0],
+            ['--kubeconfig=foo', '--no-color'],
+        )
+
+        expect(code).toBe(2)
+        expect(stdout).toBe('')
+        expect(stderr).toBe(`  File ${quotedMissingPath} does not exist for option \`--kubeconfig\`\n`)
+    })
+
+    it('respects color mode for global option validation errors', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api'})
+            .globalOpt('kubeconfig', {type: OptType.INPUT_FILE})
+            .command(new Command('world').run(() => {}))
+
+        expect(await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['--kubeconfig=foo', '--color=always'])).toEqual({
+            code: 2,
+            error: createError(`File \u001B[4m${missingPath}\u001B[24m does not exist for option \`--kubeconfig\``, ErrorCategory.InvalidArg),
+        })
+
+        const {code, stdout, stderr} = await captureExecuteWithPrintedErrors(
+            app as Parameters<typeof executeAppResult>[0],
+            ['--kubeconfig=foo', '--no-color'],
+        )
+
+        expect(code).toBe(2)
+        expect(stdout).toBe('')
+        expect(stderr).toBe(`  File ${quotedMissingPath} does not exist for option \`--kubeconfig\`\n`)
+    })
+
+    it('returns friendly directory validation errors with the triggering option name', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api'})
+            .opt('repo', {alias: 'R', type: OptType.INPUT_DIRECTORY, required: true})
+            .run(() => {})
+
+        const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['-R', 'foo', '--no-color'])
+
+        expect(result).toEqual({
+            code: 2,
+            error: createError(`Directory ${quotedMissingPath} does not exist for option \`-R\``, ErrorCategory.InvalidArg),
+        })
+    })
+
+    it('keeps underlined paths in invalid-arg messages when color is enabled', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api'})
+            .opt('kubeconfig', {type: OptType.INPUT_FILE, required: true})
+            .run(() => {})
+
+        const result = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['--kubeconfig=foo', '--color=always'])
+
+        expect(result.code).toBe(2)
+        expect(result.error).toEqual(createError(`File \u001B[4m${missingPath}\u001B[24m does not exist for option \`--kubeconfig\``, ErrorCategory.InvalidArg))
+    })
+
+    it('returns friendly primitive coercion errors with the triggering option name', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api'})
+            .opt('count', {type: OptType.INT, required: true})
+            .opt('ratio', {type: OptType.FLOAT})
+            .opt('enabled', {type: OptType.BOOL})
+            .run(() => {})
+
+        expect(await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['--count=abc', '--no-color'])).toEqual({
+            code: 2,
+            error: createError('Invalid value "abc" for option `--count` (expected an integer)', ErrorCategory.InvalidArg),
+        })
+
+        expect(await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['--count=1', '--ratio=abc', '--no-color'])).toEqual({
+            code: 2,
+            error: createError('Invalid value "abc" for option `--ratio` (expected a number)', ErrorCategory.InvalidArg),
+        })
+
+        expect(await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['--count=1', '--enabled=maybe', '--no-color'])).toEqual({
+            code: 2,
+            error: createError('Invalid value "maybe" for option `--enabled` (expected a boolean)', ErrorCategory.InvalidArg),
+        })
+    })
+
+    it('returns friendly filesystem option errors with the triggering option name', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api'})
+            .opt('output', {type: OptType.OUTPUT_FILE})
+            .opt('target-dir', {type: OptType.OUTPUT_DIRECTORY})
+            .opt('scratch-dir', {type: OptType.EMPTY_DIRECTORY})
+            .run(() => {})
+
+        expect(await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['--output=foo\\bar.txt', '--no-color'])).toEqual({
+            code: 2,
+            error: createError(`Directory ${quotedMissingPath} does not exist for option \`--output\``, ErrorCategory.InvalidArg),
+        })
+
+        expect(await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['--target-dir=foo', '--no-color'])).toEqual({
+            code: 2,
+            error: createError(`Directory ${quotedMissingPath} does not exist for option \`--target-dir\``, ErrorCategory.InvalidArg),
+        })
+
+        expect(await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['--scratch-dir=foo\\bar', '--no-color'])).toEqual({
+            code: 2,
+            error: createError(`Directory ${quotedMissingPath} does not exist for option \`--scratch-dir\``, ErrorCategory.InvalidArg),
+        })
     })
 })

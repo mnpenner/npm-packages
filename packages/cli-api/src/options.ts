@@ -82,6 +82,92 @@ function getMinRequiredCount(value: Requirement): number {
     return 0
 }
 
+function describeItem(itemName?: string): string {
+    return itemName ? ` for ${itemName}` : ''
+}
+
+function formatPath(value: string, chalk: ChalkInstance): string {
+    const fullPath = Path.resolve(Path.normalize(value))
+    if(chalk.level === 0) {
+        return `"${fullPath}"`
+    }
+    return chalk.underline(fullPath)
+}
+
+function describeOptionType(type: AnyOptType, enumValues?: readonly string[]): string {
+    if(Array.isArray(type) || type === OptType.ENUM) {
+        return `one of: ${(enumValues ?? (Array.isArray(type) ? type : [])).join(', ')}`
+    }
+    switch(type) {
+        case OptType.BOOL:
+            return 'a boolean'
+        case OptType.INT:
+            return 'an integer'
+        case OptType.FLOAT:
+            return 'a number'
+        case OptType.STRING:
+            return 'a string'
+        case OptType.INPUT_FILE:
+            return 'a readable file path'
+        case OptType.INPUT_DIRECTORY:
+            return 'a readable directory path'
+        case OptType.OUTPUT_FILE:
+            return 'a writable file path'
+        case OptType.OUTPUT_DIRECTORY:
+            return 'a writable directory path'
+        case OptType.EMPTY_DIRECTORY:
+            return 'an empty directory path'
+    }
+    return 'a valid value'
+}
+
+function ensureFiniteNumber(value: string, numericValue: number, type: AnyOptType, itemName?: string): number {
+    if(Number.isNaN(numericValue) || !Number.isFinite(numericValue)) {
+        throw new Error(`Invalid value "${value}"${describeItem(itemName)} (expected ${describeOptionType(type)})`)
+    }
+    return numericValue
+}
+
+function createPathError(kind: 'File' | 'Directory', path: string, message: string, itemName?: string): Error {
+    return new Error(`${kind} ${path} ${message}${describeItem(itemName)}`)
+}
+
+function ensureInputDirectory(dir: string, chalk: ChalkInstance, itemName?: string): string {
+    const normalizedDir = Path.normalize(dir)
+    const fullPath = formatPath(normalizedDir, chalk)
+    const stat = statSync(normalizedDir)
+    if(!stat) {
+        throw createPathError('Directory', fullPath, 'does not exist', itemName)
+    }
+    if(!stat.isDirectory()) {
+        throw createPathError('Directory', fullPath, 'is not a directory', itemName)
+    }
+    try {
+        FileSys.accessSync(normalizedDir, FileSys.constants.R_OK | FileSys.constants.X_OK)
+    } catch {
+        throw createPathError('Directory', fullPath, 'is not readable', itemName)
+    }
+    return normalizedDir
+}
+
+function ensureOutputDirectory(dir: string, chalk: ChalkInstance, itemName?: string): string {
+    const normalizedDir = Path.normalize(dir)
+    const fullPath = formatPath(normalizedDir, chalk)
+    const stat = statSync(normalizedDir)
+    if(!stat) {
+        throw createPathError('Directory', fullPath, 'does not exist', itemName)
+    }
+    if(!stat.isDirectory()) {
+        throw createPathError('Directory', fullPath, 'is not a directory', itemName)
+    }
+    try {
+        FileSys.accessSync(normalizedDir, FileSys.constants.W_OK)
+    } catch {
+        throw createPathError('Directory', fullPath, 'is not writable', itemName)
+    }
+    return normalizedDir
+}
+
 function assertValidCount(name: string, value: number, {allowZero = false}: {allowZero?: boolean} = {}): void {
     if(!Number.isInteger(value) || value < 0 || (!allowZero && value === 0)) {
         throw new Error(`${name} must be ${allowZero ? 'a non-negative' : 'a positive'} integer`)
@@ -466,8 +552,7 @@ function coerceType(
         const normalized = String(value).trim().toLowerCase()
         const allowedValues = enumValues ?? (Array.isArray(type) ? type : undefined)
         if(allowedValues !== undefined && !allowedValues.includes(normalized)) {
-            const itemText = itemName ? ` for ${itemName}` : ''
-            throw new Error(`Invalid value "${value}"${itemText} (expected one of: ${allowedValues.join(', ')})`)
+            throw new Error(`Invalid value "${value}"${describeItem(itemName)} (expected one of: ${allowedValues.join(', ')})`)
         }
         return normalized
     }
@@ -476,11 +561,15 @@ function coerceType(
     }
     switch(type) {
         case OptType.BOOL:
-            return toBool(value)
+            try {
+                return toBool(value)
+            } catch {
+                throw new Error(`Invalid value "${value}"${describeItem(itemName)} (expected ${describeOptionType(type)})`)
+            }
         case OptType.INT:
-            return Math.trunc(Number(value))
+            return Math.trunc(ensureFiniteNumber(value, Number(value), type, itemName))
         case OptType.FLOAT:
-            return Number(value)
+            return ensureFiniteNumber(value, Number(value), type, itemName)
         case OptType.ENUM:
             return normalizedEnumValue()
         case OptType.STRING:
@@ -488,58 +577,87 @@ function coerceType(
         case OptType.INPUT_FILE: {
             if(value === '-') return '/dev/stdin'
             const file = Path.normalize(value)
-            const fullPath = Path.resolve(file)
+            const fullPath = formatPath(file, chalk)
             const stat = statSync(file)
             if(!stat) {
-                throw new Error(`File ${chalk.underline(fullPath)} does not exist`)
+                throw createPathError('File', fullPath, 'does not exist', itemName)
             }
             if(!stat.isFile()) {
-                throw new Error(`${chalk.underline(fullPath)} is not a file`)
+                throw createPathError('File', fullPath, 'is not a file', itemName)
             }
             try {
                 FileSys.accessSync(file, FileSys.constants.R_OK)
-            } catch(err) {
-                throw new Error(`${chalk.underline(fullPath)} is not readable`)
+            } catch {
+                throw createPathError('File', fullPath, 'is not readable', itemName)
             }
             return file
         }
         case OptType.INPUT_DIRECTORY: {
-            const dir = Path.normalize(value)
-            FileSys.accessSync(dir, FileSys.constants.X_OK)
-            return dir
+            return ensureInputDirectory(value, chalk, itemName)
         }
         case OptType.OUTPUT_FILE: {
             if(value === '-') return '/dev/stdout'
             const file = Path.normalize(value)
+            const fullPath = formatPath(file, chalk)
             const stat = statSync(file)
             if(stat) {
                 if(!stat.isFile()) {
-                    throw new Error(`'${file}' is not a file`)
+                    throw createPathError('File', fullPath, 'is not a file', itemName)
                 }
-                FileSys.accessSync(file, FileSys.constants.W_OK)
+                try {
+                    FileSys.accessSync(file, FileSys.constants.W_OK)
+                } catch {
+                    throw createPathError('File', fullPath, 'is not writable', itemName)
+                }
             } else {
-                FileSys.accessSync(Path.dirname(file), FileSys.constants.W_OK)
+                const parentDir = Path.dirname(file)
+                const fullParentDir = formatPath(parentDir, chalk)
+                const parentStat = statSync(parentDir)
+                if(!parentStat) {
+                    throw createPathError('Directory', fullParentDir, 'does not exist', itemName)
+                }
+                if(!parentStat.isDirectory()) {
+                    throw createPathError('Directory', fullParentDir, 'is not a directory', itemName)
+                }
+                try {
+                    FileSys.accessSync(parentDir, FileSys.constants.W_OK)
+                } catch {
+                    throw createPathError('Directory', fullParentDir, 'is not writable', itemName)
+                }
             }
             return file
         }
         case OptType.OUTPUT_DIRECTORY: {
-            FileSys.accessSync(value, FileSys.constants.W_OK)
-            return Path.normalize(value)
+            return ensureOutputDirectory(value, chalk, itemName)
         }
         case OptType.EMPTY_DIRECTORY: {
             const dir = Path.normalize(value)
+            const fullPath = formatPath(dir, chalk)
             let files = []
             try {
                 files = FileSys.readdirSync(dir)
             } catch(err) {
                 if((err as NullableObj)?.code === 'ENOENT') {
-                    FileSys.accessSync(Path.dirname(dir), FileSys.constants.W_OK)
+                    const parentDir = Path.dirname(dir)
+                    const fullParentDir = formatPath(parentDir, chalk)
+                    const parentStat = statSync(parentDir)
+                    if(!parentStat) {
+                        throw createPathError('Directory', fullParentDir, 'does not exist', itemName)
+                    }
+                    if(!parentStat.isDirectory()) {
+                        throw createPathError('Directory', fullParentDir, 'is not a directory', itemName)
+                    }
+                    try {
+                        FileSys.accessSync(parentDir, FileSys.constants.W_OK)
+                    } catch {
+                        throw createPathError('Directory', fullParentDir, 'is not writable', itemName)
+                    }
                 } else {
-                    throw err
+                    throw createPathError('Directory', fullPath, 'is not readable', itemName)
                 }
             }
             if(files.length) {
-                throw new Error(`${chalk.underline(dir)} is not empty`)
+                throw createPathError('Directory', fullPath, 'is not empty', itemName)
             }
             return dir
         }

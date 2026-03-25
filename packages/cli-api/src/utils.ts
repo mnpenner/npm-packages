@@ -13,6 +13,10 @@ export function printLn(...args: unknown[]): void {
     console.log(...args)
 }
 
+export function printErrLn(...args: unknown[]): void {
+    process.stderr.write(args.map(String).join(' ') + '\n')
+}
+
 export type nil = null | undefined
 export type NullableObj = Record<string, any> | nil
 
@@ -43,12 +47,16 @@ function blockError(str: string, style: ErrorCategory, chalk: ChalkInstance) {
     const lines = str.split('\n')
     const width = Math.max(...lines.map(l => stringWidth(l))) + 4
     const colorize = chalk.bgHex(ERROR_PRESENTATION[style].color).hex('#FEFBEC')
-    printLn(colorize(space(width)))
+    printErrLn(colorize(space(width)))
     for(const line of lines) {
         const txt = `  ${line}`
-        printLn(colorize(txt + space(width, txt)))
+        printErrLn(colorize(txt + space(width, txt)))
     }
-    printLn(colorize(space(width)))
+    printErrLn(colorize(space(width)))
+}
+
+function inlineError(str: string) {
+    printErrLn(`  ${str}`)
 }
 
 /**
@@ -79,7 +87,11 @@ export function getErrorExitCode(error: CliError): number {
  * @returns Nothing.
  */
 export function printError(error: CliError, chalk: ChalkInstance): void {
-    blockError(error.message, error.type, chalk)
+    if(chalk.level > 0) {
+        blockError(error.message, error.type, chalk)
+        return
+    }
+    inlineError(error.message)
 }
 
 export function toArray<T>(x: T | readonly T[] | undefined): readonly T[] {

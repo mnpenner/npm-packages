@@ -10,7 +10,7 @@ import {createError, ErrorCategory, getErrorExitCode, getProcName, printError, s
 import {printCommandHelp} from './print-command-help'
 import {printLn} from './utils'
 import {getGlobalOptions} from './global-options'
-import {createChalk} from './color'
+import {createChalk, type ColorMode} from './color'
 
 function normalizeAppAsLeafCommand(app: AnyApp): AnyLeafCommand {
     const handler = app.handler
@@ -107,12 +107,34 @@ function createGlobalParseCommand(app: AnyApp): AnyLeafCommand {
     }
 }
 
+function getRequestedColorMode(argv: readonly string[]): ColorMode {
+    let mode: ColorMode = 'auto'
+    for(const token of argv) {
+        if(token === '--color') {
+            mode = 'always'
+            continue
+        }
+        if(token === '--no-color') {
+            mode = 'never'
+            continue
+        }
+        if(token.startsWith('--color=')) {
+            const value = token.slice('--color='.length)
+            if(value === 'always' || value === 'never' || value === 'auto') {
+                mode = value
+            }
+        }
+    }
+    return mode
+}
+
 function parseGlobalOptions(app: AnyApp, argv: string[]): {opts?: Record<string, any>, result?: ExecutionResult} {
+    const colorMode = getRequestedColorMode(argv)
     try {
         const [, opts] = parseArgs(
             getHelpValidationCommand(createGlobalParseCommand(app)),
             extractGlobalOptionArgv(argv, getGlobalOptions(app)),
-            createChalk('never'),
+            createChalk(colorMode),
         )
         return {opts}
     } catch(err) {
@@ -121,6 +143,7 @@ function parseGlobalOptions(app: AnyApp, argv: string[]): {opts?: Record<string,
         }
         const error = createError(err instanceof Error ? err.message : String(err), ErrorCategory.InvalidArg)
         return {
+            opts: {color: colorMode},
             result: {
                 code: getErrorExitCode(error),
                 error,
@@ -353,7 +376,7 @@ async function executeAppDetailed(app: AnyApp, argv: string[] = process.argv.sli
         }
         const globalParse = parseGlobalOptions(app, argv)
         if(globalParse.result !== undefined) {
-            return {result: globalParse.result, context: rootContext}
+            return {result: globalParse.result, context: createExecutionContext(app, globalParse.opts)}
         }
         if(globalParse.opts?.help) {
             return executeLeaf(app, normalizeAppAsLeafCommand(app), argv, [])
@@ -369,7 +392,7 @@ async function executeAppDetailed(app: AnyApp, argv: string[] = process.argv.sli
     if (!resolved.command) {
         const globalParse = parseGlobalOptions(app, argv)
         if(globalParse.result !== undefined) {
-            return {result: globalParse.result, context: rootContext}
+            return {result: globalParse.result, context: createExecutionContext(app, globalParse.opts)}
         }
         const globalOpts = globalParse.opts ?? {}
         const context = createExecutionContext(app, globalOpts)
@@ -391,7 +414,7 @@ async function executeAppDetailed(app: AnyApp, argv: string[] = process.argv.sli
     if (hasSubCommands(resolved.command)) {
         const globalParse = parseGlobalOptions(app, resolved.remainingArgv)
         if(globalParse.result !== undefined) {
-            return {result: globalParse.result, context: rootContext}
+            return {result: globalParse.result, context: createExecutionContext(app, globalParse.opts, resolved.path)}
         }
         const branchOpts = globalParse.opts ?? {}
         const context = createExecutionContext(app, branchOpts, resolved.path)
