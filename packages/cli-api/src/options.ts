@@ -251,6 +251,10 @@ export function validateCommandConfig(cmd: ParseableCommand): void {
 }
 
 export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record<string, any>] {
+    return parseArgsWithChalk(cmd, argv)
+}
+
+export function parseArgsWithChalk(cmd: ParseableCommand, argv: string[], chalk: ChalkInstance = createChalk()): [any[], Record<string, any>] {
     const args: any[] = []
     const opts: Record<string, any> = Object.create(null)
     let parseFlags = true
@@ -333,7 +337,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
                         throw new Error(`Missing required value for option \`${token}\``)
                     }
                 }
-                if(opt.type != null) value = coerceType(value, opt.type, `option \`${token}\``, getEnumValues(opt))
+                if(opt.type != null) value = coerceType(value, opt.type, `option \`${token}\``, getEnumValues(opt), chalk)
                 const k = opt.key ?? opt.name
                 if(isRepeatable(opt.repeatable)) {
                     pushRepeatableValue(opts[k] as any[], value, opt.name, getMaxRepeatCount(opt.repeatable), 'option')
@@ -377,7 +381,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
                     else if(i < argv.length - 1) value = argv[++i]
                     else throw new Error(`Missing required value for option "-${ch}"`)
 
-                    if(opt.type != null) value = coerceType(value, opt.type, `option \`-${ch}\``, getEnumValues(opt))
+                    if(opt.type != null) value = coerceType(value, opt.type, `option \`-${ch}\``, getEnumValues(opt), chalk)
                     const k = opt.key ?? opt.name
                     if(isRepeatable(opt.repeatable)) {
                         pushRepeatableValue(opts[k] as any[], value, opt.name, getMaxRepeatCount(opt.repeatable), 'option')
@@ -391,7 +395,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
             const def = cmd.positonals?.[argIdx]
 
             if(def) {
-                if(def.type != null) value = coerceType(value, def.type, `argument \`${def.name}\``, getEnumValues(def))
+                if(def.type != null) value = coerceType(value, def.type, `argument \`${def.name}\``, getEnumValues(def), chalk)
 
                 const k = def.key ?? def.name
                 if(isRepeatable(def.repeatable)) {
@@ -407,7 +411,7 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
                             i -= 1
                             break
                         }
-                        if(def.type != null) v = coerceType(v, def.type, `argument \`${def.name}\``, getEnumValues(def))
+                        if(def.type != null) v = coerceType(v, def.type, `argument \`${def.name}\``, getEnumValues(def), chalk)
                         pushRepeatableValue(arr, v, def.name, getMaxRepeatCount(def.repeatable), 'argument')
                     }
                     argIdx = isRepeatable(def.repeatable) && cmd.positonals ? cmd.positonals.length : argIdx
@@ -456,7 +460,13 @@ export function parseArgs(cmd: ParseableCommand, argv: string[]): [any[], Record
     return [args, opts]
 }
 
-function coerceType(value: string, type: AnyOptType, itemName?: string, enumValues?: readonly string[]) {
+function coerceType(
+    value: string,
+    type: AnyOptType,
+    itemName?: string,
+    enumValues?: readonly string[],
+    chalk: ChalkInstance = createChalk(),
+) {
     const normalizedEnumValue = () => {
         const normalized = String(value).trim().toLowerCase()
         const allowedValues = enumValues ?? (Array.isArray(type) ? type : undefined)
@@ -486,15 +496,15 @@ function coerceType(value: string, type: AnyOptType, itemName?: string, enumValu
             const fullPath = Path.resolve(file)
             const stat = statSync(file)
             if(!stat) {
-                throw new Error(`File ${createChalk().underline(fullPath)} does not exist`)
+                throw new Error(`File ${chalk.underline(fullPath)} does not exist`)
             }
             if(!stat.isFile()) {
-                throw new Error(`${createChalk().underline(fullPath)} is not a file`)
+                throw new Error(`${chalk.underline(fullPath)} is not a file`)
             }
             try {
                 FileSys.accessSync(file, FileSys.constants.R_OK)
             } catch(err) {
-                throw new Error(`${createChalk().underline(fullPath)} is not readable`)
+                throw new Error(`${chalk.underline(fullPath)} is not readable`)
             }
             return file
         }
@@ -534,7 +544,7 @@ function coerceType(value: string, type: AnyOptType, itemName?: string, enumValu
                 }
             }
             if(files.length) {
-                throw new Error(`${createChalk().underline(dir)} is not empty`)
+                throw new Error(`${chalk.underline(dir)} is not empty`)
             }
             return dir
         }

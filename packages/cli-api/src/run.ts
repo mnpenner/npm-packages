@@ -4,12 +4,13 @@ import {helpCommand} from './commands/command-help'
 import {versionCommand} from './commands/version'
 import {printHelp} from './app-help'
 import type {ResolvedCommand} from './options'
-import {findSubCommand, parseArgs, UnknownOptionError, validateCommandConfig} from './options'
+import {findSubCommand, parseArgs, parseArgsWithChalk, UnknownOptionError, validateCommandConfig} from './options'
 import type {CliError} from './utils'
 import {createError, ErrorCategory, getErrorExitCode, getProcName, printError, sortBy} from './utils'
 import {printCommandHelp} from './print-command-help'
 import {printLn} from './utils'
 import {getGlobalOptions} from './global-options'
+import {createChalk} from './color'
 
 function normalizeAppAsLeafCommand(app: AnyApp): AnyLeafCommand {
     const handler = app.handler
@@ -108,7 +109,7 @@ function createGlobalParseCommand(app: AnyApp): AnyLeafCommand {
 
 function parseGlobalOptions(app: AnyApp, argv: string[]): {opts?: Record<string, any>, result?: ExecutionResult} {
     try {
-        const [, opts] = parseArgs(getHelpValidationCommand(createGlobalParseCommand(app)), argv)
+        const [, opts] = parseArgs(getHelpValidationCommand(createGlobalParseCommand(app)), extractGlobalOptionArgv(argv, getGlobalOptions(app)))
         return {opts}
     } catch(err) {
         if(err instanceof UnknownOptionError) {
@@ -165,6 +166,22 @@ function getOptionTokenConsumption(argv: readonly string[], index: number, rawOp
         }
     }
     return 1
+}
+
+function extractGlobalOptionArgv(argv: readonly string[], globalOptions: readonly import('./interfaces').Option[]): string[] {
+    const extracted: string[] = []
+
+    for(let index = 0; index < argv.length;) {
+        const consumed = getOptionTokenConsumption(argv, index, globalOptions)
+        if(consumed > 0) {
+            extracted.push(...argv.slice(index, index + consumed))
+            index += consumed
+            continue
+        }
+        index += 1
+    }
+
+    return extracted
 }
 
 function resolveCommandWithGlobalOptions(argv: readonly string[], subCommands: readonly AnyCmd[], globalOptions: readonly import('./interfaces').Option[]): ResolvedCommand {
@@ -239,9 +256,17 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
     }
 
     let opts: Record<string, any>
+    const globalParse = parseGlobalOptions(app, rawArgs)
+    if(globalParse.result !== undefined) {
+        return {
+            result: globalParse.result,
+            context: createExecutionContext(app, globalParse.opts, path),
+        }
+    }
+    const parseChalk = createChalk(globalParse.opts?.color ?? 'auto')
     try {
         const parseableCommand = mergeCommandOptions(app, cmd)
-        const [, provisionalOpts] = parseArgs(getHelpValidationCommand(parseableCommand), rawArgs)
+        const [, provisionalOpts] = parseArgsWithChalk(getHelpValidationCommand(parseableCommand), rawArgs, parseChalk)
         const provisionalContext = createExecutionContext(app, provisionalOpts, path)
         if(provisionalOpts.help) {
             if (cmd === app && !hasSubCommands(app)) {
@@ -251,7 +276,7 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
             printCommandHelp(provisionalContext, cmd, path)
             return {result: {code: 0}, context: provisionalContext}
         }
-        ;[, opts] = parseArgs(parseableCommand, rawArgs)
+        ;[, opts] = parseArgsWithChalk(parseableCommand, rawArgs, parseChalk)
     } catch (err) {
         if(err instanceof UnknownOptionError) {
             const error = createError(`${getProcName(app)}: ${err.message}`, ErrorCategory.InvalidArg)
@@ -260,7 +285,7 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
                     code: getErrorExitCode(error),
                     error,
                 },
-                context: createExecutionContext(app, undefined, path),
+                context: createExecutionContext(app, globalParse.opts, path),
             }
         }
         const error = createError(err instanceof Error ? err.message : String(err), ErrorCategory.InvalidArg)
@@ -269,7 +294,7 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
                 code: getErrorExitCode(error),
                 error,
             },
-            context: createExecutionContext(app, undefined, path),
+            context: createExecutionContext(app, globalParse.opts, path),
         }
     }
 

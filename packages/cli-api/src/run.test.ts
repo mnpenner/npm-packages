@@ -1,8 +1,9 @@
 import {describe, expect, it} from 'bun:test'
 import Path from 'path'
 import {App, Command} from './interfaces'
-import {executeAppResult} from './run'
+import {executeApp, executeAppResult} from './run'
 import {createError, ErrorCategory} from './utils'
+import {OptType} from './interfaces'
 
 function createMisconfiguredApp(): Parameters<typeof executeAppResult>[0] {
     return new App('hello')
@@ -37,6 +38,38 @@ async function captureExecute(
     try {
         const result = await executeAppResult(app, effectiveArgv)
         return {result, output}
+    } finally {
+        console.log = originalLog
+        process.stdout.write = originalWrite
+        process.argv = originalArgv
+    }
+}
+
+async function captureExecuteWithPrintedErrors(
+    app: Parameters<typeof executeAppResult>[0],
+    argv: string[],
+    {color = false}: {color?: boolean} = {},
+): Promise<{code: number, output: string}> {
+    let output = ''
+    const originalLog = console.log
+    const originalWrite = process.stdout.write
+    const originalArgv = process.argv
+    const effectiveArgv = color || argv.includes('--color=always') || argv.includes('--no-color')
+        ? argv
+        : [...argv, '--no-color']
+
+    console.log = ((...args: unknown[]) => {
+        output += args.join(' ') + '\n'
+    }) as typeof console.log
+    process.stdout.write = ((chunk: string | Uint8Array) => {
+        output += String(chunk)
+        return true
+    }) as typeof process.stdout.write
+    process.argv = ['bun', 'test']
+
+    try {
+        const code = await executeApp(app, effectiveArgv)
+        return {code, output}
     } finally {
         console.log = originalLog
         process.stdout.write = originalWrite
@@ -439,5 +472,22 @@ Usage:`)
             code: 2,
             error: createError('Invalid value "rainbow" for option `--color` (expected one of: always, never, auto)', ErrorCategory.InvalidArg),
         })
+    })
+
+    it('uses the parsed color mode for coercion errors instead of process argv sniffing', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api'})
+            .opt('kubeconfig', {type: OptType.INPUT_FILE, required: true})
+            .run(() => {})
+
+        const {code, output} = await captureExecuteWithPrintedErrors(
+            app as Parameters<typeof executeAppResult>[0],
+            ['--kubeconfig=foo', '--color=always'],
+            {color: false},
+        )
+
+        expect(code).toBe(2)
+        expect(output).toContain('\u001B[')
+        expect(output).toContain('does not exist')
     })
 })
