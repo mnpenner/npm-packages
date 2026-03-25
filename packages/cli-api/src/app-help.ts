@@ -20,7 +20,13 @@ function shouldWrapHelpEntry(label: string, description: string | undefined, lab
         || labelWidth + 4 + stringWidth(description) > terminalWidth
 }
 
-function printHelpEntry(label: string, description: string | undefined, labelWidth: number, forceWrap = false): boolean {
+function printHelpEntry(
+    label: string,
+    description: string | undefined,
+    labelWidth: number,
+    forceWrap = false,
+    wrappedDescriptionIndent = 10,
+): boolean {
     print(`  ${label}`)
     if (!description) {
         printLn()
@@ -36,7 +42,7 @@ function printHelpEntry(label: string, description: string | undefined, labelWid
 
     printLn()
     const terminalWidth = getTerminalWidth()
-    const descriptionIndent = ' '.repeat(10)
+    const descriptionIndent = ' '.repeat(wrappedDescriptionIndent)
     const wrappedDescription = wrapText(description, Math.max(terminalWidth - descriptionIndent.length, 1))
     for (const line of wrappedDescription) {
         printLn(line.length ? `${descriptionIndent}${line}` : '')
@@ -100,7 +106,8 @@ export function printAvailableCommands(commands: readonly AnyCmd[], title: strin
 
     printLn(chalk.yellow(title))
     const width = Math.max(...commands.map(c => stringWidth(c.name))) + 2
+    const forceWrap = commands.some(cmd => shouldWrapHelpEntry(cmd.name, cmd.description, width))
     for (const cmd of commands) {
-        printHelpEntry(chalk.green(cmd.name), cmd.description, width)
+        printHelpEntry(chalk.green(cmd.name), cmd.description, width, forceWrap, 4)
     }
 }

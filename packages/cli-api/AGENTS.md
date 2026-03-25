@@ -15,4 +15,4 @@
 - Prefix private props with _
 - All tests should be in a `describe(func.name, () => ...` block. Class methods should be in a `describe(Class.name,`
   block with the methods nested underneath.
-- Don't delete files that aren't under version control. Use `hg rm` to delete files that are.
+- Don't delete files that aren't under version control. Use `hg rm` to delete files that are. `hg add` new files.

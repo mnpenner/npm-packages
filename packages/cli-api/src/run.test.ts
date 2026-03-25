@@ -566,6 +566,27 @@ describe(executeAppResult.name, () => {
                 This description is intentionally long so it cannot fit on a single
                 command listing line inside the default help renderer width.
             `)
+        expect(stdout).toContain('\n    This description is intentionally long so it cannot fit on a single')
+    })
+
+    it('wraps every command in a section when one command needs wrapping', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api', description: 'Example app'})
+            .command(new Command('alpha').describe('Short description.'))
+            .command(new Command('world').describe('This description is intentionally long so it cannot fit on a single command listing line inside the default help renderer width.'))
+
+        const {result, stdout} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help'])
+
+        expect(result).toEqual({code: 0})
+        expect(matchOutput(stdout, /  alpha[\s\S]*?(?=\n  version)/))
+            .toEqualIgnoringWhitespace(`
+                alpha
+                Short description.
+
+                world
+                This description is intentionally long so it cannot fit on a single
+                command listing line inside the default help renderer width.
+            `)
     })
 
     it('wraps long option descriptions onto indented lines in command help', async () => {
@@ -584,6 +605,7 @@ describe(executeAppResult.name, () => {
                 This description is intentionally long so it cannot fit on a single
                 option listing line inside the default help renderer width.
             `)
+        expect(stdout).toContain('\n          This description is intentionally long so it cannot fit on a single')
     })
 
     it('wraps every option in a section when one option needs wrapping and separates wrapped entries', async () => {
