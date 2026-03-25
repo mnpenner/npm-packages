@@ -114,6 +114,8 @@ function getRequestedColorMode(argv: readonly string[]): ColorMode {
             const value = token.slice('--color='.length)
             if(value === 'always' || value === 'never' || value === 'auto') {
                 mode = value
+            } else {
+                mode = 'never'
             }
         }
     }
