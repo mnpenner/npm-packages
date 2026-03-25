@@ -390,6 +390,17 @@ type AppMetaConfig = {
     longDescription?: string
 }
 
+interface BuiltinEntryConfig {
+    /** Override the built-in command and option name. */
+    name?: string
+    /** Override the built-in command and option aliases. */
+    alias?: string | string[]
+    /** Disable the built-in command entry. */
+    disableCommand?: boolean
+    /** Disable the built-in global option entry. */
+    disableOption?: boolean
+}
+
 export class Command<
     Opts extends readonly Option[] = [],
     Flags extends readonly Flag[] = [],
@@ -563,6 +574,10 @@ export class App<
     _author?: string
     /** @internal */
     _globalOptions?: Option[]
+    /** @internal */
+    _helpConfig?: BuiltinEntryConfig
+    /** @internal */
+    _versionConfig?: BuiltinEntryConfig
 
     /**
      * Applies metadata to the root app in one call.
@@ -601,13 +616,42 @@ export class App<
     }
 
     /**
-     * Sets the application version surfaced by the built-in version command.
+     * Sets the application version surfaced by the built-in version command and option.
      *
      * @param version The version string to display.
-     * @returns The same fluent app builder with the version applied.
+     * @returns The same fluent app builder with the version text applied.
      */
-    version(version: string): this {
-        this._version = version
+    version(version: string): this
+    /**
+     * Configures the built-in version command and global option.
+     *
+     * @param config Built-in version settings such as the displayed name, aliases, and whether the command or option should be disabled.
+     * @returns The same fluent app builder with the version command and option configuration applied.
+     */
+    version(config: BuiltinEntryConfig): this
+    version(versionOrConfig: string | BuiltinEntryConfig): this {
+        if(typeof versionOrConfig === 'string') {
+            this._version = versionOrConfig
+            return this
+        }
+        this._versionConfig = {
+            ...(this._versionConfig ?? {}),
+            ...versionOrConfig,
+        }
+        return this
+    }
+
+    /**
+     * Configures the built-in help command and global option.
+     *
+     * @param config Built-in help settings such as the displayed name, aliases, and whether the command or option should be disabled.
+     * @returns The same fluent app builder with the help command and option configuration applied.
+     */
+    help(config: BuiltinEntryConfig): this {
+        this._helpConfig = {
+            ...(this._helpConfig ?? {}),
+            ...config,
+        }
         return this
     }
 

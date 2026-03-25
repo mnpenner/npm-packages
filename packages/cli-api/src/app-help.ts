@@ -2,7 +2,7 @@ import type {AnyCmd, ExecutionContext} from './interfaces'
 import {hasSubCommands} from './interfaces'
 import {getProcName, getTerminalWidth, print, printLn, space, wrapText} from './utils'
 import type {ChalkInstance} from 'chalk'
-import {getGlobalOptions} from './global-options'
+import {getGlobalOptions} from './builtins'
 import stringWidth from 'string-width'
 import {formatOption} from './options'
 

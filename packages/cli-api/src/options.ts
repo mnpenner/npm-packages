@@ -742,8 +742,11 @@ export function getOptName(opt: Option) {
 }
 
 export function findSubCommand(name: string, subCommands: readonly AnyCmd[]): AnyCmd | undefined {
-    const cmdName = String(name).trim().replace(/^-{1,2}/, '').toLowerCase()
-    return subCommands.find(c => c.name === cmdName || includes(cmdName, c.alias))
+    const cmdName = String(name).trim().toLowerCase()
+    return subCommands.find(c =>
+        c.name.toLowerCase() === cmdName
+        || toArray(c.alias).some(alias => alias.toLowerCase() === cmdName),
+    )
 }
 
 export function resolveCommand(argv: readonly string[], subCommands: readonly AnyCmd[]): ResolvedCommand {

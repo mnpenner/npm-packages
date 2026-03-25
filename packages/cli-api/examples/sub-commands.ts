@@ -5,6 +5,10 @@ import * as pkg from '../package.json'
 
 const app = new App('hello')
     .meta({version: pkg.version, bin: pkg.name, description: 'Example app', author: "Mark Penner"})
+    .help({
+        disableCommand: true,
+        disableOption: true,
+    })
     .command(new Command('world')
         .describe('World-related commands.')
         .command(new Command('greet')

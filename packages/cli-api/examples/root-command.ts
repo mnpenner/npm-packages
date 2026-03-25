@@ -16,7 +16,7 @@ const app = new App('hello')
     .opt('name', {
         alias: 'n',
         description: 'Person you want to greet',
-        required: true,
+        required: false,
         valuePlaceholder: 'PeRsOn',
     })
     .opt('shout', {
@@ -27,16 +27,19 @@ const app = new App('hello')
         description: 'Greeting to print',
         key: 'greet',
         defaultValue: 'Hello',
-        required: true,
+        required: false,
         // repeatable: true,
     })
     .arg('disclaimer', {
         description: 'Trailing text',
         repeatable: true,
-        required: true,
+        required: false,
+    })
+    .help({
+        disableOption: true,
     })
     .run(opts => {
-        console.log({opts})
+        console.log(opts)
     })
 
 if(import.meta.main) {

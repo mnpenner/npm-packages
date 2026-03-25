@@ -55,6 +55,9 @@ describe(Command.name, () => {
 
             const fluentApp = new App('hello')
                 .meta({bin: 'hello', version: '1.0.0', author: 'Mark', description: 'Example app'})
+                .help({name: 'aide', alias: ['a'], disableCommand: true, disableOption: false})
+                .version({name: 'versión', alias: 'V', disableCommand: false, disableOption: true})
+                .version('1.0.1')
                 .command(greetCommand)
                 .command(inspectCommand)
                 .command(boundedCommand)

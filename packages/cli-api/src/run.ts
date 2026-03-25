@@ -1,15 +1,13 @@
 import type {AnyApp, AnyCmd, AnyLeafCommand} from './interfaces'
 import {ExecutionContext, getExecuteHandler, hasSubCommands, isExecutable} from './interfaces'
-import {helpCommand} from './commands/command-help'
-import {versionCommand} from './commands/version'
 import {printHelp} from './app-help'
 import type {ResolvedCommand} from './options'
 import {findSubCommand, parseArgs, UnknownOptionError, validateCommandConfig} from './options'
 import type {CliError} from './utils'
-import {createError, ErrorCategory, getErrorExitCode, getProcName, printError, sortBy} from './utils'
+import {createError, ErrorCategory, getErrorExitCode, getProcName, printError} from './utils'
 import {printCommandHelp} from './print-command-help'
 import {printLn} from './utils'
-import {getGlobalOptions} from './global-options'
+import {getGlobalOptions, getRootCommands} from './builtins'
 import {createChalk, type ColorMode} from './color'
 
 function normalizeAppAsLeafCommand(app: AnyApp): AnyLeafCommand {
@@ -68,22 +66,6 @@ function mergeCommandOptions(app: AnyApp, cmd: AnyLeafCommand): AnyLeafCommand {
         ...normalized,
         options: [...getGlobalOptions(app), ...(normalized.options ?? [])],
     }
-}
-
-function isVersionFlag(arg: string | undefined): boolean {
-    return arg === '--version'
-}
-
-function getRootCommands(app: AnyApp): readonly AnyCmd[] {
-    const userCommands = app.subCommands !== undefined
-        ? sortBy(app.subCommands as readonly AnyCmd[], c => c.name)
-        : []
-
-    return [
-        ...userCommands,
-        versionCommand as unknown as AnyCmd,
-        helpCommand as unknown as AnyCmd,
-    ] as const
 }
 
 function createExecutionContext(app: AnyApp, opts?: Record<string, any>, path: readonly string[] = []): ExecutionContext {
@@ -304,6 +286,10 @@ async function executeLeaf(app: AnyApp, cmd: AnyLeafCommand, rawArgs: string[], 
             printCommandHelp(provisionalContext, cmd, path)
             return {result: {code: 0}, context: provisionalContext}
         }
+        if(provisionalOpts.version) {
+            printLn(app._version)
+            return {result: {code: 0}, context: provisionalContext}
+        }
         ;[, opts] = parseArgs(parseableCommand, rawArgs, parseChalk)
     } catch (err) {
         if(err instanceof UnknownOptionError) {
@@ -371,13 +357,13 @@ async function executeAppDetailed(app: AnyApp, argv: string[] = process.argv.sli
     }
 
     if (isExecutable(app) && !hasSubCommands(app)) {
-        if (isVersionFlag(argv[0])) {
-            printLn(app._version)
-            return {result: {code: 0}, context: rootContext}
-        }
         const globalParse = parseGlobalOptions(app, argv)
         if(globalParse.result !== undefined) {
             return {result: globalParse.result, context: createExecutionContext(app, globalParse.opts)}
+        }
+        if(globalParse.opts?.version) {
+            printLn(app._version)
+            return {result: {code: 0}, context: createExecutionContext(app, globalParse.opts)}
         }
         if(globalParse.opts?.help) {
             return executeLeaf(app, normalizeAppAsLeafCommand(app), argv, [])
@@ -397,6 +383,10 @@ async function executeAppDetailed(app: AnyApp, argv: string[] = process.argv.sli
         }
         const globalOpts = globalParse.opts ?? {}
         const context = createExecutionContext(app, globalOpts)
+        if(globalOpts.version) {
+            printLn(app._version)
+            return {result: {code: 0}, context}
+        }
         const firstNonGlobalToken = getFirstNonGlobalToken(argv, globalOptions)
         if(firstNonGlobalToken === undefined) {
             if(globalOpts.help || !hasSubCommands(app)) {
@@ -419,6 +409,10 @@ async function executeAppDetailed(app: AnyApp, argv: string[] = process.argv.sli
         }
         const branchOpts = globalParse.opts ?? {}
         const context = createExecutionContext(app, branchOpts, resolved.path)
+        if(branchOpts.version) {
+            printLn(app._version)
+            return {result: {code: 0}, context}
+        }
         const firstNonGlobalToken = getFirstNonGlobalToken(resolved.remainingArgv, globalOptions)
         if (!resolved.remainingArgv.length || (branchOpts.help && firstNonGlobalToken === undefined)) {
             printCommandHelp(context, resolved.command, resolved.path)

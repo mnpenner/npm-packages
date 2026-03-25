@@ -432,6 +432,59 @@ describe(executeAppResult.name, () => {
         expect(stdout).not.toContain('\u001B[')
     })
 
+    it('shows the built-in version option in help text', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api', version: '1.0.0', description: 'Example app'})
+            .run(() => {})
+
+        const {result, stdout} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help', '--no-color'])
+
+        expect(result).toEqual({code: 0})
+        expect(stdout).toContain('--version')
+    })
+
+    it('supports renaming the built-in version option independently of the version command', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api', version: '1.0.0', description: 'Example app'})
+            .version({name: 'versión', alias: 'V', disableCommand: true})
+            .run(() => {})
+
+        const version = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['-V'])
+        const help = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help', '--no-color'])
+
+        expect(version.result).toEqual({code: 0})
+        expect(version.stdout).toBe('1.0.0\n')
+        expect(help.result).toEqual({code: 0})
+        expect(help.stdout).toContain('-V, --versión')
+        expect(help.stdout).not.toContain('--version')
+        expect(help.stdout).not.toContain('\n  version')
+    })
+
+    it('supports renaming and disabling built-in help and version entries independently', async () => {
+        const app = new App('hello')
+            .meta({bin: 'cli-api', version: '1.0.0', description: 'Example app'})
+            .help({name: 'aide', alias: ['a'], disableCommand: true, disableOption: false})
+            .version({name: 'versión', alias: 'V', disableCommand: false, disableOption: true})
+            .command(new Command('world').run(() => {}))
+
+        const help = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--aide'])
+        const version = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['V'])
+        const disabledHelpCommand = await executeAppResult(app as Parameters<typeof executeAppResult>[0], ['aide'])
+
+        expect(help.result).toEqual({code: 0})
+        expect(help.stdout).toContain('-a, --aide')
+        expect(help.stdout).not.toContain('--help')
+        expect(help.stdout).not.toContain('--version')
+        expect(help.stdout).toContain('  versión')
+        expect(help.stdout).not.toContain('  help')
+        expect(version.result).toEqual({code: 0})
+        expect(version.stdout).toBe('1.0.0\n')
+        expect(disabledHelpCommand).toEqual({
+            code: 2,
+            error: createError("cli-api: unknown command 'aide'", ErrorCategory.InvalidArg),
+        })
+    })
+
     it('shows custom global options in help text', async () => {
         const app = new App('hello')
             .meta({bin: 'cli-api', description: 'Example app'})
@@ -470,7 +523,8 @@ describe(executeAppResult.name, () => {
         expect(result).toEqual({code: 0})
         expect(stdout.indexOf('--alpha=ALPHA')).toBeLessThan(stdout.indexOf('--color[=WHEN]'))
         expect(stdout.indexOf('--color[=WHEN]')).toBeLessThan(stdout.indexOf('--help'))
-        expect(stdout.indexOf('--help')).toBeLessThan(stdout.indexOf('--zebra=ZEBRA'))
+        expect(stdout.indexOf('--help')).toBeLessThan(stdout.indexOf('--version'))
+        expect(stdout.indexOf('--version')).toBeLessThan(stdout.indexOf('--zebra=ZEBRA'))
     })
 
     it('wraps long command descriptions onto indented lines in root help', async () => {
