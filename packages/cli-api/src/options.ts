@@ -266,10 +266,18 @@ function pushRepeatableValue(target: any[], value: any, itemName: string, maxCou
     target.push(value)
 }
 
+function stringifyDefaultValue(value: any) {
+    if(typeof value === 'string') {
+        return `"${value}"`
+    }
+    return JSON.stringify(value)
+}
+
 /**
  * Formats an option definition for display in help output.
  *
  * @param opt The option metadata to render.
+ * @param chalk
  * @returns A tuple containing the formatted flag label and its description text.
  */
 export function formatOption(opt: Option, chalk: ChalkInstance): [string, string] {
@@ -296,17 +304,17 @@ export function formatOption(opt: Option, chalk: ChalkInstance): [string, string
     }
     let desc = opt.description ?? ''
     let defaultValueText = opt.defaultValueText
-    if(defaultValueText === undefined && opt.type === OptType.BOOL) {
-        defaultValueText = JSON.stringify(opt.defaultValue ?? false)
+    if(defaultValueText === undefined && opt.type === OptType.BOOL && opt.defaultValue !== undefined) {
+        defaultValueText = stringifyDefaultValue(opt.defaultValue ?? false)
     } else if(defaultValueText === undefined && opt.defaultValue !== undefined) {
-        defaultValueText = JSON.stringify(resolve(opt.defaultValue))
+        defaultValueText = stringifyDefaultValue(resolve(opt.defaultValue))
     }
     if(defaultValueText !== undefined) {
         desc += chalk.yellow(` [default: ${defaultValueText}]`)
     }
     const enumValues = getEnumValues(opt)
     if(enumValues?.length) {
-        desc += ` [possible values: ${enumValues.join(', ')}]`
+        desc += ` [possible values: ${enumValues.map(v => chalk.magenta(v)).join(', ')}]`
     }
     return [flags, desc]
 }

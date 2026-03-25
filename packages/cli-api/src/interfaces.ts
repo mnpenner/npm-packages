@@ -360,11 +360,10 @@ type OptionConfigInput = Omit<Option, 'name'>
 type ArgumentConfigInput = Omit<Argument, 'name'>
 
 function normalizeOptionDefinition<T extends Option>(option: T): T {
-    if(option.type === OptType.BOOL && (option.valueNotRequired === undefined || option.defaultValue === undefined)) {
+    if(option.type === OptType.BOOL && option.valueNotRequired === undefined) {
         return {
             ...option,
             ...(option.valueNotRequired === undefined ? {valueNotRequired: true} : {}),
-            ...(option.defaultValue === undefined ? {defaultValue: false} : {}),
         }
     }
     return option

@@ -407,6 +407,18 @@ describe(formatOption.name, () => {
         expect(flags).toBe(`    ${chalk.green('--color')}${chalk.grey('[')}=${chalk.magenta('WHEN')}${chalk.grey(']')}, ${chalk.green('--no-color')}`)
         expect(description).toBe('Control ANSI color output. [possible values: always, never, auto]')
     })
+
+    it('does not render an implicit default for bool options', () => {
+        const chalk = createChalk('never')
+        const [flags, description] = formatOption({
+            description: 'Enable verbose output',
+            name: 'verbose',
+            type: OptType.BOOL,
+        }, chalk)
+
+        expect(flags).toBe(`    ${chalk.green('--verbose')}`)
+        expect(description).toBe('Enable verbose output')
+    })
 })
 
 

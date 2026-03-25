@@ -95,7 +95,7 @@ const globalOptions: Option[] = [
     {
         name: 'cache-dir',
         valuePlaceholder: 'DIR',
-        defaultValueText: '\'C:\\Users\\Mark\\.kube\\cache\'',
+        // defaultValueText: '\'C:\\Users\\Mark\\.kube\\cache\'',
         defaultValue: 'C:\\Users\\Mark\\.kube\\cache',
         description: 'Default cache directory',
     },
