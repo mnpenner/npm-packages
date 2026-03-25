@@ -66,7 +66,7 @@ function passthroughLeaf(name: string, description: string, longDescription?: st
     return leaf({
         name,
         description,
-        longDescription,
+        ...(longDescription === undefined ? {} : {longDescription}),
         arguments: [
             {
                 name: 'args',
@@ -106,18 +106,21 @@ const globalOptions: Option[] = [
     },
     {
         name: 'certificate-authority',
+        type: OptType.INPUT_FILE,
         valuePlaceholder: 'FILE',
         defaultValueText: '\'\'',
         description: 'Path to a cert file for the certificate authority',
     },
     {
         name: 'client-certificate',
+        type: OptType.INPUT_FILE,
         valuePlaceholder: 'FILE',
         defaultValueText: '\'\'',
         description: 'Path to a client certificate file for TLS',
     },
     {
         name: 'client-key',
+        type: OptType.INPUT_FILE,
         valuePlaceholder: 'FILE',
         defaultValueText: '\'\'',
         description: 'Path to a client key file for TLS',
@@ -152,12 +155,14 @@ const globalOptions: Option[] = [
     },
     {
         name: 'kubeconfig',
+        type: OptType.INPUT_FILE,
         valuePlaceholder: 'FILE',
         defaultValueText: '\'\'',
         description: 'Path to the kubeconfig file to use for CLI requests.',
     },
     {
         name: 'kuberc',
+        type: OptType.INPUT_FILE,
         valuePlaceholder: 'FILE',
         defaultValueText: '\'\'',
         description: 'Path to the kuberc file to use for preferences. This can be disabled by exporting KUBECTL_KUBERC=false feature gate or turning off the feature KUBERC=off.',
@@ -201,6 +206,7 @@ const globalOptions: Option[] = [
     },
     {
         name: 'profile-output',
+        type: OptType.OUTPUT_FILE,
         valuePlaceholder: 'FILE',
         defaultValueText: '\'profile.pprof\'',
         defaultValue: 'profile.pprof',
@@ -247,9 +253,10 @@ const globalOptions: Option[] = [
     {
         name: 'v',
         alias: 'v',
+        type: OptType.INT,
         valuePlaceholder: 'LEVEL',
         defaultValueText: '0',
-        defaultValue: '0',
+        defaultValue: 0,
         description: 'number for the log level verbosity',
     },
     {
@@ -288,9 +295,10 @@ const getOptions: Option[] = [
     },
     {
         name: 'chunk-size',
+        type: OptType.INT,
         valuePlaceholder: 'SIZE',
         defaultValueText: '500',
-        defaultValue: '500',
+        defaultValue: 500,
         description: 'Return large lists in chunks rather than all at once. Pass 0 to disable. This flag is beta and may change in the future.',
     },
     {
@@ -318,6 +326,7 @@ const getOptions: Option[] = [
     {
         name: 'kustomize',
         alias: 'k',
+        type: OptType.INPUT_DIRECTORY,
         valuePlaceholder: 'DIR',
         defaultValueText: '\'\'',
         description: 'Process the kustomization directory. This flag can\'t be used together with -f or -R.',
@@ -477,9 +486,11 @@ const configCommand = new Command('config')
             {
                 name: 'output',
                 alias: 'o',
+                type: OptType.ENUM,
+                enumValues: ['name'],
                 valuePlaceholder: 'FORMAT',
                 defaultValueText: '\'\'',
-                description: 'Output format. One of: (name).',
+                description: 'Output format.',
             },
         ],
         arguments: [

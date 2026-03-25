@@ -61,6 +61,7 @@ const globalOptions: Option[] = [
     {
         name: 'repository',
         alias: 'R',
+        type: OptType.INPUT_DIRECTORY,
         valuePlaceholder: 'REPOSITORY',
         description: lines(
             'Path to repository to operate on',
@@ -156,6 +157,7 @@ const globalOptions: Option[] = [
     },
     {
         name: 'config-file',
+        type: OptType.INPUT_FILE,
         repeatable: true,
         valuePlaceholder: 'PATH',
         description: 'Additional configuration files (can be repeated)',
