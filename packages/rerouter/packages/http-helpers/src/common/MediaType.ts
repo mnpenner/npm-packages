@@ -3,6 +3,7 @@
  */
 export const enum MediaType {
     JSON = 'application/json',
+    YAML = 'application/yaml',
     HTML = 'text/html',
     PLAIN_TEXT = 'text/plain',
     OCTET_STREAM = 'application/octet-stream',
