@@ -1,6 +1,6 @@
 import {CommonContentTypes, HttpMethod, HttpStatus} from '@mpen/http-helpers'
 import {Router, type ContextMiddleware} from '../src'
-import {ValidationError, zodRoute} from '../src/helpers/zod'
+import {ValidationError, ZodRouteFactory} from '../src/helpers/zod'
 import {z} from 'zod'
 
 type StructuredBody = Record<string, unknown> | unknown[]
@@ -66,7 +66,24 @@ const structuredResponse: ContextMiddleware = async (ctx, next) => {
 export const router = new Router()
     .use(structuredResponse)
 
-router.add(zodRoute({
+const factory = new ZodRouteFactory({
+    validationError(component, error) {
+        const componentName = component === ValidationError.REQUEST_BODY
+            ? 'request_body'
+            : component === ValidationError.URL_PATH
+                ? 'url_path'
+                : 'query_parameters'
+        return {
+            status: HttpStatus.BAD_REQUEST,
+            body: {
+                component: componentName,
+                message: z.prettifyError(error),
+            },
+        }
+    },
+})
+
+router.add(factory.route({
     name: 'widgets.byId',
     path: '/widgets/:id',
     method: HttpMethod.POST,
@@ -92,28 +109,14 @@ router.add(zodRoute({
             },
         },
     },
-    validationError(component, error) {
-        const componentName = component === ValidationError.REQUEST_BODY
-            ? 'request_body'
-            : component === ValidationError.URL_PATH
-                ? 'url_path'
-                : 'query_parameters'
-        return {
-            status: HttpStatus.BAD_REQUEST,
-            body: {
-                component: componentName,
-                message: z.prettifyError(error),
-            },
-        }
-    },
-    handler: ({pathParams, query, body}) => ({
-        id: pathParams.id,
-        name: body.name,
-        view: query.view,
-        tags: body.tags,
-        summary: query.view === 'full'
-            ? `Widget ${pathParams.id}: ${body.name} (${body.tags.length} tag(s))`
-            : body.name,
+    handler: ({params}) => ({
+        id: params.path.id,
+        name: params.body.name,
+        view: params.query.view,
+        tags: params.body.tags,
+        summary: params.query.view === 'full'
+            ? `Widget ${params.path.id}: ${params.body.name} (${params.body.tags.length} tag(s))`
+            : params.body.name,
     }),
 }))
 

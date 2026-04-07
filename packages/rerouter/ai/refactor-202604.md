@@ -54,6 +54,9 @@ Refactor packages/server-router/src/bin/gen-api-client.ts. It should NOT try to 
 
 Create packages/server-router/example3/router.ts. In this example, I want to have a fully typed route (request w/ query, path, body) and response with OK body and validation error body. The handler should return the data and then I want to use a middleware to send back either JSON or YAML based on the client's "Accept" header.
 
+---
+
+Note that Handler (from packages/server-router/src/types.ts) can be much more loosely typed now. The TReqBody, TReqPath etc can all be moved to the schema. We just need the Ctx to properly type the handler func. Zod handlers, however, will need those extra types to type the handler func properly.
 
 ---
 
@@ -63,11 +66,6 @@ Let's define 3 sorts of things, and organize the src/ code accordingly:
 - middleware: can be added in the router. They run before or after the handler. They can add things into the context or modify the response. e.g. csrf, loggers, body transformers.
 - plugins: similar to middelware, but can add brand new routes by introspecting other routes. e.g. openapi/swagger.
   - note: if when used like `handler: openapi({...})` that would be an "addon".
-
-
----
-
-Note that Handler (from packages/server-router/src/types.ts) can be much more loosely typed now. The TReqBody, TReqPath etc can all be moved to the schema. We just need the Ctx to properly type the handler func. Zod handlers, however, will need those extra types to type the handler func properly.
 
 ---
 

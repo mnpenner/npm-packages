@@ -2,6 +2,11 @@
   "name": "@mpen/server-router",
   "exports": {
     ".": "./dist/index.mjs",
+    "./helpers/zod": "./dist/helpers/zod.mjs",
+    "./middleware": "./dist/middleware.mjs",
+    "./plugins/openapi": "./dist/plugins/openapi.mjs",
+    "./response": "./dist/response.mjs",
+    "./routes": "./dist/routes.mjs",
     "./package.json": "./package.json"
   },
   "bin": {

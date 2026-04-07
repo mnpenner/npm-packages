@@ -4,7 +4,7 @@ import {HttpMethod, HttpStatus} from '@mpen/http-helpers'
 import {z} from 'zod'
 import {Router} from '../router'
 import {expectType} from '@mpen/server-router/testing/type-assert'
-import {ValidationError, zodHandler, zodPartial, zodRoute} from '../helpers/zod'
+import {ValidationError, ZodRouteFactory, zodHandler, zodPartial, zodRoute} from '../helpers/zod'
 
 describe('zodHandler', () => {
     it('parses and supplies validated inputs to the handler', async () => {
@@ -25,12 +25,16 @@ describe('zodHandler', () => {
                     },
                 },
             },
-            handler: ({req, pathParams, query, body}) => {
+            handler: ({req, params}) => {
                 expectType<Request>(req)
-                expectType<{id: string}>(pathParams)
-                expectType<{verbose: 'yes' | 'no'}>(query)
-                expectType<{name: string}>(body)
-                return new Response(JSON.stringify({pathParams, query, body}), {
+                expectType<{id: string}>(params.path)
+                expectType<{verbose: 'yes' | 'no'}>(params.query)
+                expectType<{name: string}>(params.body)
+                return new Response(JSON.stringify({
+                    pathParams: params.path,
+                    query: params.query,
+                    body: params.body,
+                }), {
                     headers: {'content-type': 'application/json'},
                 })
             },
@@ -64,6 +68,7 @@ describe('zodHandler', () => {
                     body: z.object({name: z.string()}),
                 },
             },
+            validateResponse: false,
             handler: () => new Response('ok'),
         })
         const router = new Router().add({
@@ -90,6 +95,7 @@ describe('zodHandler', () => {
                     path: z.object({id: z.string().uuid()}),
                 },
             },
+            validateResponse: false,
             handler: () => new Response('ok'),
             validationError: (component, error) => {
                 expect(component).toBe(ValidationError.URL_PATH)
@@ -106,6 +112,53 @@ describe('zodHandler', () => {
         const response = await router.fetch(new Request('https://example.com/users/not-a-uuid'))
 
         expect(response.status).toBe(HttpStatus.UNPROCESSABLE_ENTITY)
+    })
+
+    it('validates responses when enabled', async () => {
+        const router = new Router().add({
+            path: '/validate',
+            method: HttpMethod.GET,
+            handler: zodHandler({
+                schema: {
+                    response: {
+                        body: {
+                            200: z.object({ok: z.boolean()}),
+                        },
+                    },
+                },
+                validateResponse: true,
+                handler: () => ({ok: 'nope'} as any),
+            }),
+        })
+
+        const response = await router.fetch(new Request('https://example.com/validate'))
+
+        expect(response.status).toBe(HttpStatus.INTERNAL_SERVER_ERROR)
+    })
+
+    it('skips response validation when disabled', async () => {
+        const router = new Router().add({
+            path: '/skip',
+            method: HttpMethod.GET,
+            handler: zodHandler({
+                schema: {
+                    response: {
+                        body: {
+                            200: z.object({ok: z.boolean()}),
+                        },
+                    },
+                },
+                validateResponse: false,
+                handler: () => new Response(JSON.stringify({ok: 'nope'}), {
+                    headers: {'content-type': 'application/json'},
+                }),
+            }),
+        })
+
+        const response = await router.fetch(new Request('https://example.com/skip'))
+
+        expect(response.status).toBe(HttpStatus.OK)
+        expect(await response.json()).toEqual({ok: 'nope'})
     })
 })
 
@@ -125,6 +178,7 @@ describe('zodPartial', () => {
                     },
                 },
             },
+            validateResponse: false,
             handler: () => new Response('ok'),
         })
 
@@ -195,7 +249,8 @@ describe('zodRoute', () => {
                     },
                 },
             },
-            handler: ({pathParams}) => new Response(pathParams.id),
+            validateResponse: false,
+            handler: ({params}) => new Response(params.path.id),
         })
 
         expect(route.path).toBe('/users/:id')
@@ -207,5 +262,59 @@ describe('zodRoute', () => {
             required: ['id'],
             additionalProperties: false,
         })
+    })
+})
+
+describe('ZodRouteFactory', () => {
+    it('applies factory defaults and allows per-route overrides', async () => {
+        const factory = new ZodRouteFactory({
+            validateResponse: false,
+            validationError: () => new Response('factory bad input', {status: HttpStatus.UNPROCESSABLE_ENTITY}),
+        })
+
+        const router = new Router()
+        router.add(factory.route({
+            path: '/factory/:id',
+            method: HttpMethod.GET,
+            schema: {
+                request: {
+                    path: z.object({id: z.string().uuid()}),
+                },
+                response: {
+                    body: {
+                        200: z.object({ok: z.boolean()}),
+                    },
+                },
+            },
+            handler: () => new Response(JSON.stringify({ok: 'still allowed'}), {
+                headers: {'content-type': 'application/json'},
+            }),
+        }))
+        router.add(factory.route({
+            path: '/factory-override',
+            method: HttpMethod.GET,
+            schema: {
+                response: {
+                    body: {
+                        200: z.object({ok: z.boolean()}),
+                    },
+                },
+            },
+            validateResponse: true,
+            handler: () => new Response(JSON.stringify({ok: 'invalid'}), {
+                headers: {'content-type': 'application/json'},
+            }),
+        }))
+
+        const invalidPathResponse = await router.fetch(new Request('https://example.com/factory/not-a-uuid'))
+        expect(invalidPathResponse.status).toBe(HttpStatus.UNPROCESSABLE_ENTITY)
+        expect(await invalidPathResponse.text()).toBe('factory bad input')
+
+        const relaxedResponse = await router.fetch(new Request('https://example.com/factory/00000000-0000-0000-0000-000000000000'))
+        expect(relaxedResponse.status).toBe(HttpStatus.OK)
+        expect(await relaxedResponse.json()).toEqual({ok: 'still allowed'})
+
+        const strictResponse = await router.fetch(new Request('https://example.com/factory-override'))
+        expect(strictResponse.status).toBe(HttpStatus.INTERNAL_SERVER_ERROR)
     })
 })

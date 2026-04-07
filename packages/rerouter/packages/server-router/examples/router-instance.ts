@@ -80,10 +80,10 @@ router.add(zodRoute({
             },
         },
     },
-    handler: ({pathParams, body}) => jsonResponse({
-        id: pathParams.id,
-        title: body.title,
-        author: body.author,
+    handler: ({params}) => jsonResponse({
+        id: params.path.id,
+        title: params.body.title,
+        author: params.body.author,
     }),
 }))
 
@@ -115,7 +115,7 @@ router.add(zodRoute({
             },
         },
     },
-    handler: ({body}) => jsonResponse({ok: true, tag: body.tag}),
+    handler: ({params}) => jsonResponse({ok: true, tag: params.body.tag}),
 }))
 
 router.get('/health', () => new Response('ok'))

@@ -24,6 +24,7 @@ describe('openapi', () => {
                     },
                 },
             },
+            validateResponse: false,
             handler: () => new Response('ok'),
         }))
 
