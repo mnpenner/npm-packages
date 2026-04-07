@@ -1,73 +1,121 @@
 import {Router} from '../src/index'
-import {zodRoute} from '../src/routes/zod'
+import {zodRoute} from '../src/helpers/zod'
 import {jsonResponse} from '../src/response/simple'
 import {z} from 'zod'
 import {CommonHeaders, CommonContentTypes, HttpMethod, HttpStatus} from '@mpen/http-helpers'
 
-const router = new Router()
+export const router = new Router()
+const helloResponseSchema = z.object({message: z.string()})
 
 router.add(zodRoute({
-    pattern: '/',
-    handler: () => new Response(JSON.stringify({message: 'Hello World!'}), {
-        headers: {[CommonHeaders.CONTENT_TYPE]: CommonContentTypes.JSON},
-    }),
+    path: '/',
     method: HttpMethod.GET,
+    schema: {
+        response: {
+            body: {
+                200: helloResponseSchema,
+            },
+        },
+    },
+    handler: () => jsonResponse({message: 'Hello World!'}),
 }))
 
 router.add(zodRoute({
     name: 'namedRoute',
-    pattern: '/name/bar',
-    handler: () => new Response(JSON.stringify({message: 'Hello World!'}), {
-        headers: {[CommonHeaders.CONTENT_TYPE]: CommonContentTypes.JSON},
-    }),
+    path: '/name/bar',
     method: HttpMethod.GET,
+    schema: {
+        response: {
+            body: {
+                200: helloResponseSchema,
+            },
+        },
+    },
+    handler: () => jsonResponse({message: 'Hello World!'}),
 }))
 
 router.add(zodRoute({
     name: 'namedRoute',
-    pattern: '/name/bar',
-    handler: () => new Response(JSON.stringify({message: 'Hello World!'}), {
-        headers: {[CommonHeaders.CONTENT_TYPE]: CommonContentTypes.JSON},
-    }),
+    path: '/name/bar',
     method: HttpMethod.POST,
+    schema: {
+        response: {
+            body: {
+                200: helloResponseSchema,
+            },
+        },
+    },
+    handler: () => jsonResponse({message: 'Hello World!'}),
 }))
 
 router.add(zodRoute({
     name: 'foo.bar',
-    pattern: '/foo/bar',
-    handler: () => new Response(JSON.stringify({message: 'Hello World!'}), {
-        headers: {[CommonHeaders.CONTENT_TYPE]: CommonContentTypes.JSON},
-    }),
+    path: '/foo/bar',
     method: HttpMethod.POST,
+    schema: {
+        response: {
+            body: {
+                200: helloResponseSchema,
+            },
+        },
+    },
+    handler: () => jsonResponse({message: 'Hello World!'}),
 }))
 
 router.add(zodRoute({
-    pattern: '/books/:id',
-    pathParams: z.object({id: z.coerce.number().int()}),
-    body: z.object({title: z.string(), author: z.string()}),
-    handler: ({pathParams, body}) => new Response(JSON.stringify({
+    path: '/books/:id',
+    method: HttpMethod.POST,
+    schema: {
+        request: {
+            path: z.object({id: z.coerce.number().int()}),
+            body: z.object({title: z.string(), author: z.string()}),
+        },
+        response: {
+            body: {
+                200: z.object({
+                    id: z.number().int(),
+                    title: z.string(),
+                    author: z.string(),
+                }),
+            },
+        },
+    },
+    handler: ({pathParams, body}) => jsonResponse({
         id: pathParams.id,
         title: body.title,
         author: body.author,
-    }), {
-        headers: {[CommonHeaders.CONTENT_TYPE]: CommonContentTypes.JSON},
     }),
-    method: HttpMethod.POST,
 }))
 
-router.add({
+router.add(zodRoute({
     name: 'jsonHelper',
-    pattern: '/json-helper',
-    handler: () => jsonResponse({message: 'Hello Json Helper!'}),
+    path: '/json-helper',
     method: HttpMethod.GET,
-})
+    schema: {
+        response: {
+            body: {
+                200: z.object({message: z.string()}),
+            },
+        },
+    },
+    handler: () => jsonResponse({message: 'Hello Json Helper!'}),
+}))
 
 router.add(zodRoute({
     name: 'jsonHelperZod',
-    pattern: '/json-helper-zod',
-    body: z.object({tag: z.string()}),
-    handler: ({body}) => jsonResponse({ok: true, tag: body.tag}),
+    path: '/json-helper-zod',
     method: HttpMethod.POST,
+    schema: {
+        request: {
+            body: z.object({tag: z.string()}),
+        },
+        response: {
+            body: {
+                200: z.object({ok: z.boolean(), tag: z.string()}),
+            },
+        },
+    },
+    handler: ({body}) => jsonResponse({ok: true, tag: body.tag}),
 }))
 
 router.get('/health', () => new Response('ok'))
@@ -87,7 +135,7 @@ function sleep(ms: number): Promise<void> {
 }
 
 router.add({
-    pattern: '/gen',
+    path: '/gen',
     // method: HttpMethod.GET,
     handler: async function* () {
         // console.log('start')
@@ -107,7 +155,7 @@ router.add({
 })
 
 if(import.meta.main) {
-    console.log(router)
+    console.dir(router.getRoutes(),{depth: 10})
 }
 
 export default router

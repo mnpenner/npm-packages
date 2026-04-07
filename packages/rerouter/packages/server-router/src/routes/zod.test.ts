@@ -3,30 +3,44 @@ import {describe, expect, it} from 'bun:test'
 import {HttpMethod, HttpStatus} from '@mpen/http-helpers'
 import {z} from 'zod'
 import {Router} from '../router'
-import {ValidationError, zodRoute} from './zod'
 import {expectType, type TypeEqual} from '@mpen/server-router/testing/type-assert'
-import {JsonSchemaTarget} from '@mpen/server-router/lib/json-schema'
+import {ValidationError, zodHandler, zodPartial, zodRoute} from '../helpers/zod'
 
-describe('zodRoute', () => {
+describe('zodHandler', () => {
     it('parses and supplies validated inputs to the handler', async () => {
-        const route = zodRoute({
-            pattern: '/users/:id',
-            method: HttpMethod.POST,
-            pathParams: z.object({id: z.string()}),
-            query: z.object({verbose: z.enum(['yes', 'no'])}),
-            body: z.object({name: z.string()}),
+        const handler = zodHandler({
+            schema: {
+                request: {
+                    path: z.object({id: z.string()}),
+                    query: z.object({verbose: z.enum(['yes', 'no'])}),
+                    body: z.object({name: z.string()}),
+                },
+                response: {
+                    body: {
+                        200: z.object({
+                            pathParams: z.object({id: z.string()}),
+                            query: z.object({verbose: z.enum(['yes', 'no'])}),
+                            body: z.object({name: z.string()}),
+                        }),
+                    },
+                },
+            },
             handler: ({req, pathParams, query, body}) => {
-                expectType<TypeEqual<typeof req, Request>>(true);
-                expectType<TypeEqual<typeof pathParams, {id:string}>>(true);
-                expectType<TypeEqual<typeof query, {verbose:'yes'|'no'}>>(true);
-                expectType<TypeEqual<typeof body, {name:string}>>(true);
+                expectType<TypeEqual<typeof req, Request>>(true)
+                expectType<TypeEqual<typeof pathParams, {id: string}>>(true)
+                expectType<TypeEqual<typeof query, {verbose: 'yes' | 'no'}>>(true)
+                expectType<TypeEqual<typeof body, {name: string}>>(true)
                 return new Response(JSON.stringify({pathParams, query, body}), {
                     headers: {'content-type': 'application/json'},
                 })
             },
         })
 
-        const router = new Router().add(route)
+        const router = new Router().add({
+            path: '/users/:id',
+            method: HttpMethod.POST,
+            handler,
+        })
 
         const response = await router.fetch(new Request('https://example.com/users/123?verbose=yes', {
             method: HttpMethod.POST,
@@ -43,14 +57,20 @@ describe('zodRoute', () => {
     })
 
     it('returns a default validation error response when parsing fails', async () => {
-        const route = zodRoute({
-            pattern: '/users/:id',
-            method: HttpMethod.POST,
-            pathParams: z.object({id: z.string()}),
-            body: z.object({name: z.string()}),
+        const handler = zodHandler({
+            schema: {
+                request: {
+                    path: z.object({id: z.string()}),
+                    body: z.object({name: z.string()}),
+                },
+            },
             handler: () => new Response('ok'),
         })
-        const router = new Router().add(route)
+        const router = new Router().add({
+            path: '/users/:id',
+            method: HttpMethod.POST,
+            handler,
+        })
 
         const response = await router.fetch(new Request('https://example.com/users/123', {
             method: HttpMethod.POST,
@@ -64,10 +84,12 @@ describe('zodRoute', () => {
     })
 
     it('uses a custom validation error handler when provided', async () => {
-        const route = zodRoute({
-            pattern: '/users/:id',
-            method: HttpMethod.GET,
-            pathParams: z.object({id: z.string().uuid()}),
+        const handler = zodHandler({
+            schema: {
+                request: {
+                    path: z.object({id: z.string().uuid()}),
+                },
+            },
             handler: () => new Response('ok'),
             validationError: (component, error) => {
                 expect(component).toBe(ValidationError.URL_PATH)
@@ -75,52 +97,115 @@ describe('zodRoute', () => {
                 return new Response('bad input', {status: HttpStatus.UNPROCESSABLE_ENTITY})
             },
         })
-        const router = new Router().add(route)
+        const router = new Router().add({
+            path: '/users/:id',
+            method: HttpMethod.GET,
+            handler,
+        })
 
         const response = await router.fetch(new Request('https://example.com/users/not-a-uuid'))
 
         expect(response.status).toBe(HttpStatus.UNPROCESSABLE_ENTITY)
     })
+})
 
-    it('generates OpenAPI requestBody and parameters from schemas', () => {
-        const route = zodRoute({
-            pattern: '/users/:id',
-            method: HttpMethod.POST,
-            pathParams: z.object({id: z.string()}),
-            query: z.object({verbose: z.boolean().optional()}),
-            body: z.object({name: z.string()}),
-            handler: () => new Response('ok'),
-        })
-
-        const openapi = route.meta?.[JsonSchemaTarget.OPENAPI_3_0] as any
-
-        expect(openapi.requestBody.content['application/json'].schema.type).toBe('object')
-        expect(openapi.parameters).toEqual([
-            {name: 'verbose', in: 'query', required: false, schema: {type: 'boolean'}},
-            {name: 'id', in: 'path', required: true, schema: {type: 'string'}},
-        ])
-    })
-
-    it('merges generated OpenAPI metadata with existing entries', () => {
-        const route = zodRoute({
-            pattern: '/users/:id',
-            method: HttpMethod.GET,
-            pathParams: z.object({id: z.string()}),
-            meta: {
-                [JsonSchemaTarget.OPENAPI_3_0]: {
-                    summary: 'Get user',
-                    parameters: [{name: 'include', in: 'query', schema: {type: 'string'}}],
+describe('zodPartial', () => {
+    it('returns a handler and generated route schema', () => {
+        const partial = zodPartial({
+            schema: {
+                request: {
+                    path: z.object({id: z.string()}),
+                    query: z.object({verbose: z.boolean().optional()}),
+                    body: z.object({name: z.string()}),
+                },
+                response: {
+                    body: {
+                        200: z.object({id: z.string(), name: z.string()}),
+                        400: z.object({message: z.string()}),
+                    },
                 },
             },
             handler: () => new Response('ok'),
         })
 
-        const openapi = route.meta?.[JsonSchemaTarget.OPENAPI_3_0] as any
+        expect(typeof partial.handler).toBe('function')
+        expect(partial.schema).toEqual({
+            request: {
+                path: {
+                    type: 'object',
+                    properties: {
+                        id: {type: 'string'},
+                    },
+                    required: ['id'],
+                    additionalProperties: false,
+                },
+                query: {
+                    type: 'object',
+                    properties: {
+                        verbose: {type: 'boolean'},
+                    },
+                    additionalProperties: false,
+                },
+                body: {
+                    type: 'object',
+                    properties: {
+                        name: {type: 'string'},
+                    },
+                    required: ['name'],
+                    additionalProperties: false,
+                },
+            },
+            response: {
+                body: {
+                    200: {
+                        type: 'object',
+                        properties: {
+                            id: {type: 'string'},
+                            name: {type: 'string'},
+                        },
+                        required: ['id', 'name'],
+                        additionalProperties: false,
+                    },
+                    400: {
+                        type: 'object',
+                        properties: {
+                            message: {type: 'string'},
+                        },
+                        required: ['message'],
+                        additionalProperties: false,
+                    },
+                },
+            },
+        })
+    })
+})
 
-        expect(openapi.summary).toBe('Get user')
-        expect(openapi.parameters).toEqual([
-            {name: 'include', in: 'query', schema: {type: 'string'}},
-            {name: 'id', in: 'path', required: true, schema: {type: 'string'}},
-        ])
+describe('zodRoute', () => {
+    it('returns a full route with a validated handler and generated schema', () => {
+        const route = zodRoute({
+            path: '/users/:id',
+            method: HttpMethod.GET,
+            schema: {
+                request: {
+                    path: z.object({id: z.string()}),
+                },
+                response: {
+                    body: {
+                        200: z.object({id: z.string()}),
+                    },
+                },
+            },
+            handler: ({pathParams}) => new Response(pathParams.id),
+        })
+
+        expect(route.path).toBe('/users/:id')
+        expect(route.schema?.request?.path).toEqual({
+            type: 'object',
+            properties: {
+                id: {type: 'string'},
+            },
+            required: ['id'],
+            additionalProperties: false,
+        })
     })
 })

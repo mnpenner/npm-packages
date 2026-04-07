@@ -24,9 +24,15 @@ type RouteEntry =
 
 type MatchResult = {
     route: NormalizedRoute<any>
-    match: URLPatternResult
+    match: URLPatternResult | null
     middleware: ContextMiddleware<any, any>[]
     router: Router<any>
+}
+
+type MatchAttempt = {
+    match: MatchResult | null
+    notAcceptable: MatchResult | null
+    methodNotAllowed: boolean
 }
 
 type MiddlewareEntry<Ctx extends object> = ContextMiddleware<any, Ctx> | null | undefined | false
@@ -53,7 +59,7 @@ function normalizeMiddlewareList<Ctx extends object>(
  * @example
  * ```ts
  * const router = new Router()
- * router.add({method: HttpMethod.GET, pattern: '/', handler: async ({req}) => new Response(req.url)})
+ * router.add({method: HttpMethod.GET, path: '/', handler: async ({req}) => new Response(req.url)})
  * ```
  */
 export class Router<Ctx extends object = AnyContext> implements SimpleServerInterface {
@@ -213,7 +219,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
      * @example
      * ```ts
      * router.group([auth(), logging()], groupRouter => {
-     *   groupRouter.add({pattern: '/items', handler: () => new Response('ok')})
+     *   groupRouter.add({path: '/items', handler: () => new Response('ok')})
      * })
      * ```
      *
@@ -231,7 +237,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
      * @example
      * ```ts
      * router.group([auth(), logging()], groupRouter => {
-     *   groupRouter.add({pattern: '/items', handler: () => new Response('ok')})
+     *   groupRouter.add({path: '/items', handler: () => new Response('ok')})
      * })
      * ```
      *
@@ -293,7 +299,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
      *
      * @example
      * ```ts
-     * router.add({method: HttpMethod.POST, pattern: '/items', handler: ({req}) => new Response(req.url)})
+     * router.add({method: HttpMethod.POST, path: '/items', handler: ({req}) => new Response(req.url)})
      * ```
      *
      * @param route - Route definition to normalize and register.
@@ -307,67 +313,67 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
     /**
      * Add a GET route definition to this router.
      *
-     * @param pattern - URL pattern to match.
+     * @param path - URL path pattern to match.
      * @param handler - Handler invoked when the route matches.
      * @returns The router instance for chaining.
      */
-    get(pattern: Route<Ctx>['pattern'], handler: Handler<any, any, any, any, any, Ctx>): this {
-        return this.add({pattern, handler, method: HttpMethod.GET})
+    get(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, any, any, any, any, Ctx>): this {
+        return this.add({path, handler, method: HttpMethod.GET})
     }
 
     /**
      * Add a HEAD route definition to this router.
      *
-     * @param pattern - URL pattern to match.
+     * @param path - URL path pattern to match.
      * @param handler - Handler invoked when the route matches.
      * @returns The router instance for chaining.
      */
-    head(pattern: Route<Ctx>['pattern'], handler: Handler<any, any, any, any, any, Ctx>): this {
-        return this.add({pattern, handler, method: HttpMethod.HEAD})
+    head(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, any, any, any, any, Ctx>): this {
+        return this.add({path, handler, method: HttpMethod.HEAD})
     }
 
     /**
      * Add a POST route definition to this router.
      *
-     * @param pattern - URL pattern to match.
+     * @param path - URL path pattern to match.
      * @param handler - Handler invoked when the route matches.
      * @returns The router instance for chaining.
      */
-    post(pattern: Route<Ctx>['pattern'], handler: Handler<any, any, any, any, any, Ctx>): this {
-        return this.add({pattern, handler, method: HttpMethod.POST})
+    post(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, any, any, any, any, Ctx>): this {
+        return this.add({path, handler, method: HttpMethod.POST})
     }
 
     /**
      * Add a PUT route definition to this router.
      *
-     * @param pattern - URL pattern to match.
+     * @param path - URL path pattern to match.
      * @param handler - Handler invoked when the route matches.
      * @returns The router instance for chaining.
      */
-    put(pattern: Route<Ctx>['pattern'], handler: Handler<any, any, any, any, any, Ctx>): this {
-        return this.add({pattern, handler, method: HttpMethod.PUT})
+    put(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, any, any, any, any, Ctx>): this {
+        return this.add({path, handler, method: HttpMethod.PUT})
     }
 
     /**
      * Add a DELETE route definition to this router.
      *
-     * @param pattern - URL pattern to match.
+     * @param path - URL path pattern to match.
      * @param handler - Handler invoked when the route matches.
      * @returns The router instance for chaining.
      */
-    delete(pattern: Route<Ctx>['pattern'], handler: Handler<any, any, any, any, any, Ctx>): this {
-        return this.add({pattern, handler, method: HttpMethod.DELETE})
+    delete(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, any, any, any, any, Ctx>): this {
+        return this.add({path, handler, method: HttpMethod.DELETE})
     }
 
     /**
      * Add a PATCH route definition to this router.
      *
-     * @param pattern - URL pattern to match.
+     * @param path - URL path pattern to match.
      * @param handler - Handler invoked when the route matches.
      * @returns The router instance for chaining.
      */
-    patch(pattern: Route<Ctx>['pattern'], handler: Handler<any, any, any, any, any, Ctx>): this {
-        return this.add({pattern, handler, method: HttpMethod.PATCH})
+    patch(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, any, any, any, any, Ctx>): this {
+        return this.add({path, handler, method: HttpMethod.PATCH})
     }
 
     /**
@@ -394,36 +400,45 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
                     continue
                 }
 
-                const pattern = new URLPattern({
-                    pathname: joinPrefixPathname(entry.prefix, subRoute.pattern.pathname),
+                const path = new URLPattern({
+                    pathname: joinPrefixPathname(entry.prefix, subRoute.path.pathname),
                 })
                 routes.push({
                     ...subRoute,
-                    pattern,
+                    path,
                 })
             }
         }
         return routes
     }
 
-    private _match(method: HttpMethod, url: URL): MatchResult | 'not_allowed' | null {
+    private _match(
+        request: Request,
+        method: HttpMethod,
+        url: URL
+    ): MatchResult | 'not_allowed' | {kind: 'not_acceptable'; found: MatchResult} | null {
         const isHead = method === HttpMethod.HEAD
         if (isHead) {
             const headOnly = this._matchWithMethodCheck(
+                request,
                 url,
                 routeMethod => this._methodMatches(routeMethod, HttpMethod.HEAD)
             )
             if (headOnly.match) return headOnly.match
             const getOnly = this._matchWithMethodCheck(
+                request,
                 url,
                 routeMethod => this._methodMatches(routeMethod, HttpMethod.GET)
             )
             if (getOnly.match) return getOnly.match
+            if (headOnly.notAcceptable) return {kind: 'not_acceptable', found: headOnly.notAcceptable}
+            if (getOnly.notAcceptable) return {kind: 'not_acceptable', found: getOnly.notAcceptable}
             if (headOnly.methodNotAllowed || getOnly.methodNotAllowed) return 'not_allowed'
             return null
         }
-        const match = this._matchWithMethodCheck(url, routeMethod => this._methodMatches(routeMethod, method))
+        const match = this._matchWithMethodCheck(request, url, routeMethod => this._methodMatches(routeMethod, method))
         if (match.match) return match.match
+        if (match.notAcceptable) return {kind: 'not_acceptable', found: match.notAcceptable}
         return match.methodNotAllowed ? 'not_allowed' : null
     }
 
@@ -439,7 +454,8 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         function visit(entries: RouteEntry[], currentUrl: URL) {
             for (const entry of entries) {
                 if (entry.kind === 'route') {
-                    if (!entry.route.pattern.exec(currentUrl)) continue
+                    if (entry.route.match) continue
+                    if (!entry.route.path.exec(currentUrl)) continue
                     addMethods(entry.route.method)
                     continue
                 }
@@ -457,6 +473,15 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         }
         visit(this._entries, url)
         return methods
+    }
+
+    private _acceptMatches(route: NormalizedRoute<any>, request: Request): boolean {
+        if (!route.accept || route.accept.length === 0) return true
+        const contentTypeHeader = request.headers.get('content-type')
+        if (!contentTypeHeader) return false
+        const contentType = parseMediaType(contentTypeHeader)
+        if (!contentType) return false
+        return route.accept.some(accept => mediaTypeMatches(accept, contentType))
     }
 
     private _formatAllowMethods(methods: Set<HttpMethod>): string {
@@ -508,7 +533,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         if (this._isBodyChunk(result) || result instanceof ReadableStream) {
             return new Response(this._toResponseBody(result))
         }
-        return await Promise.resolve(result)
+        throw new TypeError('Handler returned a non-Response value that was not converted by middleware')
     }
 
     private async _tryCustomHandler(
@@ -549,37 +574,23 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         return simpleStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     }
 
-    private async _handleMatch(found: MatchResult, request: Request, url: URL): Promise<Response> {
-        const rawPathParams = found.match.pathname.groups ?? {}
+    private async _handleNotAcceptable(found: MatchResult, request: Request, url: URL): Promise<Response> {
+        const rawPathParams = found.match?.pathname.groups ?? {}
         const pathParams = Object.fromEntries(
             Object.entries(rawPathParams).filter(([, value]) => value !== undefined)
         ) as Record<string, string>
         const handlerCtx = this._buildHandlerContext(request, url, pathParams)
+        const custom = await this._tryCustomHandler(found.router._notAcceptableHandler, handlerCtx, found.router, request)
+        if (custom) return custom
+        return simpleStatus(HttpStatus.NOT_ACCEPTABLE)
+    }
 
-        if (found.route.accept && found.route.accept.length > 0) {
-            const contentTypeHeader = request.headers.get('content-type')
-            if (!contentTypeHeader) {
-                const custom = await this._tryCustomHandler(
-                    found.router._notAcceptableHandler,
-                    handlerCtx,
-                    found.router,
-                    request
-                )
-                if (custom) return custom
-                return simpleStatus(HttpStatus.NOT_ACCEPTABLE)
-            }
-            const contentType = parseMediaType(contentTypeHeader)
-            if (!contentType || !found.route.accept.some(accept => mediaTypeMatches(accept, contentType))) {
-                const custom = await this._tryCustomHandler(
-                    found.router._notAcceptableHandler,
-                    handlerCtx,
-                    found.router,
-                    request
-                )
-                if (custom) return custom
-                return simpleStatus(HttpStatus.NOT_ACCEPTABLE)
-            }
-        }
+    private async _handleMatch(found: MatchResult, request: Request, url: URL): Promise<Response> {
+        const rawPathParams = found.match?.pathname.groups ?? {}
+        const pathParams = Object.fromEntries(
+            Object.entries(rawPathParams).filter(([, value]) => value !== undefined)
+        ) as Record<string, string>
+        const handlerCtx = this._buildHandlerContext(request, url, pathParams)
 
         try {
             return await this._executeHandler(found.route.handler, found.middleware, handlerCtx, found.router, request)
@@ -595,20 +606,38 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
     }
 
     private _matchWithMethodCheck(
+        request: Request,
         url: URL,
         methodCheck: (routeMethod?: HttpMethod | HttpMethod[]) => boolean
-    ): {match: MatchResult | null; methodNotAllowed: boolean} {
+    ): MatchAttempt {
         let methodNotAllowed = false
+        let notAcceptable: MatchResult | null = null
         for (const entry of this._entries) {
             if (entry.kind === 'route') {
                 const route = entry.route
-                const match = route.pattern.exec(url)
-                if (!match) continue
+                const pathMatch = route.path.exec(url)
+                if (route.match) {
+                    if (!route.match(request)) continue
+                    return {
+                        match: { route, match: pathMatch, middleware: [...this._middleware], router: this },
+                        notAcceptable,
+                        methodNotAllowed,
+                    }
+                }
+                if (!pathMatch) continue
                 if (!methodCheck(route.method)) {
                     methodNotAllowed = true
                     continue
                 }
-                return { match: { route, match, middleware: [...this._middleware], router: this }, methodNotAllowed }
+                if (!this._acceptMatches(route, request)) {
+                    notAcceptable ??= { route, match: pathMatch, middleware: [...this._middleware], router: this }
+                    continue
+                }
+                return {
+                    match: { route, match: pathMatch, middleware: [...this._middleware], router: this },
+                    notAcceptable,
+                    methodNotAllowed,
+                }
             }
 
             if (entry.prefix) {
@@ -616,32 +645,46 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
                 if (subPathname == null) continue
                 const subUrl = new URL(url.toString())
                 subUrl.pathname = subPathname
-                const subMatch = entry.router._matchWithMethodCheck(subUrl, methodCheck)
+                const subMatch = entry.router._matchWithMethodCheck(request, subUrl, methodCheck)
                 if (subMatch.match) {
                     return {
                         match: {
                             ...subMatch.match,
                             middleware: [...this._middleware, ...subMatch.match.middleware],
                         },
+                        notAcceptable,
                         methodNotAllowed,
+                    }
+                }
+                if (subMatch.notAcceptable && !notAcceptable) {
+                    notAcceptable = {
+                        ...subMatch.notAcceptable,
+                        middleware: [...this._middleware, ...subMatch.notAcceptable.middleware],
                     }
                 }
                 if (subMatch.methodNotAllowed) methodNotAllowed = true
             } else {
-                const subMatch = entry.router._matchWithMethodCheck(url, methodCheck)
+                const subMatch = entry.router._matchWithMethodCheck(request, url, methodCheck)
                 if (subMatch.match) {
                     return {
                         match: {
                             ...subMatch.match,
                             middleware: [...this._middleware, ...subMatch.match.middleware],
                         },
+                        notAcceptable,
                         methodNotAllowed,
+                    }
+                }
+                if (subMatch.notAcceptable && !notAcceptable) {
+                    notAcceptable = {
+                        ...subMatch.notAcceptable,
+                        middleware: [...this._middleware, ...subMatch.notAcceptable.middleware],
                     }
                 }
                 if (subMatch.methodNotAllowed) methodNotAllowed = true
             }
         }
-        return { match: null, methodNotAllowed }
+        return { match: null, notAcceptable, methodNotAllowed }
     }
 
     private _run(
@@ -875,9 +918,12 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         const method = request.method.toUpperCase() as HttpMethod
 
         if (method === HttpMethod.OPTIONS) {
-            const explicit = this._match(method, url)
-            if (explicit && explicit !== 'not_allowed') {
+            const explicit = this._match(request, method, url)
+            if (explicit && explicit !== 'not_allowed' && !('kind' in explicit)) {
                 return await this._handleMatch(explicit, request, url)
+            }
+            if (explicit && explicit !== 'not_allowed' && 'kind' in explicit && explicit.kind === 'not_acceptable') {
+                return await this._handleNotAcceptable(explicit.found, request, url)
             }
             const allowedMethods = this._collectAllowedMethods(url)
             if (allowedMethods.size === 0) {
@@ -893,12 +939,15 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
             })
         }
 
-        const found = this._match(method, url)
+        const found = this._match(request, method, url)
         if (!found) {
             return await this._handleNotFound(request, url)
         }
         if (found === 'not_allowed') {
             return await this._handleMethodNotAllowed(request, url)
+        }
+        if ('kind' in found) {
+            return await this._handleNotAcceptable(found.found, request, url)
         }
         return await this._handleMatch(found, request, url)
     }

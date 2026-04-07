@@ -6,11 +6,11 @@ import {pattToName, sanitizeNameParts, splitNameString} from './route-names'
 function normalizeRouteName(
     name: Route['name'],
     method: HttpMethod | HttpMethod[] | undefined,
-    pattern: URLPattern
+    path: URLPattern
 ): string[] {
     const methodName = Array.isArray(method) ? method[0] : method
     if (!name) {
-        return pattToName(methodName ?? 'ANY', pattern)
+        return pattToName(methodName ?? 'ANY', path)
     }
     if (typeof name === 'string') {
         return sanitizeNameParts(splitNameString(name))
@@ -19,9 +19,13 @@ function normalizeRouteName(
 }
 
 export function normalizeRoute<Ctx extends object = AnyContext>(route: Route<Ctx>): NormalizedRoute<Ctx> {
-    const pattern = typeof route.pattern === 'string'
-        ? new URLPattern({ pathname: route.pattern })
-        : route.pattern
+    const routePath = route.path ?? route.pattern
+    if (!routePath) {
+        throw new Error('Route is missing a path')
+    }
+    const path = typeof routePath === 'string'
+        ? new URLPattern({ pathname: routePath })
+        : routePath
     const method = route.method
     const accept = route.accept
     let normalizedAccept: MediaType[] | undefined
@@ -42,10 +46,12 @@ export function normalizeRoute<Ctx extends object = AnyContext>(route: Route<Ctx
         }
     }
     return {
-        name: normalizeRouteName(route.name, route.method, pattern),
-        pattern,
+        name: normalizeRouteName(route.name, route.method, path),
+        path,
         handler: route.handler,
+        ...(route.match === undefined ? {} : {match: route.match}),
         ...(route.meta === undefined ? {} : {meta: route.meta}),
+        ...(route.schema === undefined ? {} : {schema: route.schema}),
         ...(method === undefined ? {} : {method}),
         ...(normalizedAccept === undefined ? {} : {accept: normalizedAccept}),
     }

@@ -1,21 +1,19 @@
 #!/usr/bin/env -S bun
-import * as ts from 'typescript'
 import path from 'node:path'
 import fs from 'node:fs'
+import {pathToFileURL} from 'node:url'
 import {parseArgs} from 'util'
 import {$} from 'bun'
+import {compile} from 'json-schema-to-typescript'
 import {HttpMethod} from '@mpen/http-helpers'
-import {pattToName, sanitizeNameParts, splitNameString} from '../route-names'
+import type {JsonSchema, NormalizedRoute, RouteSchema} from '../types'
 
 type ExtractedRouteMeta = {
     name: string[]
     method: HttpMethod
-    pattern: string
-    bodyType: string
-    pathType: string
-    queryType: string
-    successType: string
-    errorType: string
+    path: string
+    requestSchema?: RouteSchema['request']
+    responseBodySchemas?: Record<number, JsonSchema>
 }
 
 type ProcessedRouteMeta = ExtractedRouteMeta & {
@@ -28,569 +26,39 @@ type RouteNode = {
     children: Map<string, RouteNode>
 }
 
-function findUp(startDir: string, fileName: string): string {
-    let dir = startDir
-    for (let i = 0; i < 20; i++) {
-        const candidate = path.join(dir, fileName)
-        if (fs.existsSync(candidate)) return candidate
-        const parent = path.dirname(dir)
-        if (parent === dir) break
-        dir = parent
-    }
-    throw new Error(`Unable to find ${fileName} from ${startDir}`)
+type ImportType = {
+    names: string[]
+    module: string
 }
 
-function getProgramFromTsConfig(tsconfigPath: string, extraRoot?: string): ts.Program {
-    const configFile = ts.readConfigFile(tsconfigPath, ts.sys.readFile)
-    if (configFile.error) {
-        throw new Error(`Failed to read tsconfig: ${configFile.error.messageText}`)
-    }
-    const parsed = ts.parseJsonConfigFileContent(configFile.config, ts.sys, path.dirname(tsconfigPath))
-    const rootNames = parsed.fileNames.includes(extraRoot ?? '')
-        ? parsed.fileNames
-        : extraRoot
-            ? [...parsed.fileNames, extraRoot]
-            : parsed.fileNames
-    return ts.createProgram(rootNames, parsed.options)
+type BuildOptions = {
+    clientName: string
+    responseType: string
+    importTypes: ImportType[]
+    commandText: string
 }
 
-function getHandlerTypeArguments(type: ts.Type): readonly ts.Type[] | undefined {
-    const ref = type as ts.TypeReference
-    if (ref.typeArguments && ref.typeArguments.length >= 4) {
-        return ref.typeArguments
-    }
-    const aliasArgs = (type as any).aliasTypeArguments as readonly ts.Type[] | undefined
-    if (aliasArgs && aliasArgs.length >= 4) {
-        return aliasArgs
-    }
-    if (type.isUnion()) {
-        for (const t of type.types) {
-            const found = getHandlerTypeArguments(t)
-            if (found) return found
-        }
-    }
-    const bases = type.getBaseTypes()
-    if (bases) {
-        for (const base of bases) {
-            const found = getHandlerTypeArguments(base)
-            if (found) return found
-        }
-    }
-    return undefined
+type GeneratedRouteTypes = {
+    route: ProcessedRouteMeta
+    pathTypeSource?: string
+    queryTypeSource?: string
+    requestTypeSource?: string
+    responseTypesByStatusSource?: string
+    responseTypeSources: string[]
 }
 
-function getHandlerErrorType(type: ts.Type, checker: ts.TypeChecker): ts.Type | undefined {
-    const signatures = type.getCallSignatures()
-    for (const sig of signatures) {
-        const ret = checker.getReturnTypeOfSignature(sig)
-        const ref = ret as ts.TypeReference
-        const typeArgs = (ref.typeArguments ?? (ret as any).aliasTypeArguments) as ts.Type[] | undefined
-        if (typeArgs && typeArgs.length >= 2) {
-            return typeArgs[1]
-        }
-        if (ret.isUnion()) {
-            for (const t of ret.types) {
-                const inner = getHandlerErrorType(t, checker)
-                if (inner) return inner
-            }
-        }
-    }
-    return undefined
-}
-
-function typeText(type: ts.Type, checker: ts.TypeChecker, node?: ts.Node): string {
-    const flags =
-        ts.TypeFormatFlags.NoTruncation
-        | ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope
-        | ts.TypeFormatFlags.UseFullyQualifiedType
-    return node
-        ? checker.typeToString(type, node, flags)
-        : checker.typeToString(type, undefined as any, flags)
-}
-
-function getProp(node: ts.ObjectLiteralExpression, propName: string): ts.Expression | undefined {
-    for (const prop of node.properties) {
-        if (ts.isPropertyAssignment(prop) && prop.name.getText() === propName) {
-            return prop.initializer
-        }
-    }
-    return undefined
-}
-
-function unwrapExpression(expr: ts.Expression): ts.Expression {
-    let current = expr
-    while (
-        ts.isParenthesizedExpression(current)
-        || ts.isAsExpression(current)
-        || ts.isTypeAssertionExpression(current)
-        || ts.isNonNullExpression(current)
-    ) {
-        current = current.expression
-    }
-    return current
-}
-
-function getContextualHandlerType(node: ts.Expression, checker: ts.TypeChecker): ts.Type | undefined {
-    if (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) {
-        const contextual = checker.getContextualType(node)
-        if (contextual) return contextual
-    }
-    return checker.getTypeAtLocation(node)
-}
-
-function getZodOutputType(type: ts.Type): ts.Type | undefined {
-    const ref = type as ts.TypeReference
-    if (ref.typeArguments && ref.typeArguments.length >= 1 && type.symbol?.getName() === 'ZodType') {
-        return ref.typeArguments[0]
-    }
-    const aliasArgs = (type as any).aliasTypeArguments as ts.Type[] | undefined
-    if (aliasArgs && aliasArgs.length >= 1 && type.aliasSymbol?.getName() === 'ZodType') {
-        return aliasArgs[0]
-    }
-    const bases = type.getBaseTypes()
-    if (bases) {
-        for (const base of bases) {
-            const found = getZodOutputType(base)
-            if (found) return found
-        }
-    }
-    return undefined
-}
-
-function getZodOutputTypeText(
-    expr: ts.Expression | undefined,
-    checker: ts.TypeChecker,
-    fallbackNode?: ts.Node,
-): string | undefined {
-    if (!expr) return undefined
-    const schemaType = checker.getTypeAtLocation(expr)
-    const outputType = getZodOutputType(schemaType)
-    if (!outputType) return undefined
-    const text = typeText(outputType, checker, fallbackNode ?? expr)
-    return isUnknown(text) ? undefined : text
-}
-
-function getJsonPayloadExpression(expr: ts.Expression): ts.Expression | undefined {
-    const current = unwrapExpression(expr)
-    if (ts.isCallExpression(current)) {
-        const callee = current.expression
-        if (ts.isPropertyAccessExpression(callee) && callee.name.text === 'json') {
-            const receiver = unwrapExpression(callee.expression)
-            if (ts.isIdentifier(receiver) && receiver.text === 'Response') {
-                return current.arguments[0]
-            }
-        }
-        if (ts.isIdentifier(callee) && callee.text === 'jsonResponse') {
-            return current.arguments[0]
-        }
-        if (ts.isPropertyAccessExpression(callee) && callee.name.text === 'jsonResponse') {
-            return current.arguments[0]
-        }
-    }
-    if (ts.isNewExpression(current)) {
-        const callee = current.expression
-        if (ts.isIdentifier(callee) && callee.text === 'Response') {
-            const [bodyArg] = current.arguments ?? []
-            if (bodyArg && ts.isCallExpression(bodyArg)) {
-                const stringifyCall = bodyArg.expression
-                if (ts.isPropertyAccessExpression(stringifyCall) && stringifyCall.name.text === 'stringify') {
-                    const receiver = unwrapExpression(stringifyCall.expression)
-                    if (ts.isIdentifier(receiver) && receiver.text === 'JSON') {
-                        return bodyArg.arguments[0]
-                    }
-                }
-            }
-        }
-    }
-    return undefined
-}
-
-function getHandlerJsonReturnType(node: ts.Expression, checker: ts.TypeChecker): ts.Type | undefined {
-    if (!ts.isArrowFunction(node) && !ts.isFunctionExpression(node)) return undefined
-    const payloadTypes: ts.Type[] = []
-    const visitReturn = (expr: ts.Expression | undefined) => {
-        if (!expr) return
-        const payloadExpr = getJsonPayloadExpression(expr)
-        if (!payloadExpr) return
-        const payloadType = checker.getTypeAtLocation(payloadExpr)
-        payloadTypes.push(payloadType)
-    }
-
-    if (ts.isBlock(node.body)) {
-        const visitNode = (child: ts.Node) => {
-            if (ts.isReturnStatement(child)) {
-                visitReturn(child.expression)
-                return
-            }
-            ts.forEachChild(child, visitNode)
-        }
-        ts.forEachChild(node.body, visitNode)
-    } else {
-        visitReturn(node.body)
-    }
-
-    if (payloadTypes.length === 0) return undefined
-    if (payloadTypes.length === 1) return payloadTypes[0]
-    return payloadTypes[0]
-}
-
-function resolveRouteOptionsExpression(
-    expr: ts.Expression,
-    checker: ts.TypeChecker,
-    visited: Set<ts.Symbol> = new Set()
-): ts.ObjectLiteralExpression | undefined {
-    const current = unwrapExpression(expr)
-    if (ts.isObjectLiteralExpression(current)) return current
-    if (ts.isCallExpression(current)) {
-        const [firstArg] = current.arguments
-        return firstArg ? resolveRouteOptionsExpression(firstArg, checker, visited) : undefined
-    }
-    if (ts.isIdentifier(current) || ts.isPropertyAccessExpression(current)) {
-        const symbol = getSymbolFromExpression(current, checker)
-        if (!symbol || visited.has(symbol)) return undefined
-        visited.add(symbol)
-        for (const decl of symbol.declarations ?? []) {
-            if (ts.isVariableDeclaration(decl) && decl.initializer) {
-                const found = resolveRouteOptionsExpression(decl.initializer, checker, visited)
-                if (found) return found
-            }
-            if (ts.isPropertyAssignment(decl) && decl.initializer) {
-                const found = resolveRouteOptionsExpression(decl.initializer, checker, visited)
-                if (found) return found
-            }
-            if (ts.isPropertyDeclaration(decl) && decl.initializer) {
-                const found = resolveRouteOptionsExpression(decl.initializer, checker, visited)
-                if (found) return found
-            }
-        }
-    }
-    return undefined
-}
-
-function readHttpMethod(expr: ts.Expression | undefined): HttpMethod | undefined {
-    if (!expr) return undefined
-    const current = unwrapExpression(expr)
-    if (ts.isStringLiteralLike(current)) return current.text as HttpMethod
-    if (ts.isPropertyAccessExpression(current)) return current.name.text as HttpMethod
-    if (ts.isIdentifier(current)) return current.text as HttpMethod
-    return undefined
-}
-
-function getPathParamNames(pattern: string): string[] {
-    const matches = pattern.match(/:([a-zA-Z0-9_]+)/g) ?? []
-    return matches.map(m => m.slice(1))
-}
-
-function getTypeTextOrFallback(type: ts.Type | undefined, checker: ts.TypeChecker, node?: ts.Node): string | undefined {
-    if (!type) return undefined
-    const text = typeText(type, checker, node)
-    return isUnknown(text) ? undefined : text
-}
-
-function parseNameNode(nameNode: ts.Expression): string[] | undefined {
-    if (ts.isStringLiteralLike(nameNode)) {
-        return splitNameString(nameNode.text)
-    }
-    if (ts.isArrayLiteralExpression(nameNode)) {
-        const parts: string[] = []
-        for (const element of nameNode.elements) {
-            if (ts.isStringLiteralLike(element)) {
-                parts.push(element.text)
-            } else {
-                return undefined
-            }
-        }
-        return parts
-    }
-    return undefined
-}
-
-function joinPrefixPathname(prefix: string, pathname: string): string {
-    if (!prefix) return pathname
-    if (!prefix.startsWith('/')) prefix = '/' + prefix
-    if (prefix.endsWith('/')) prefix = prefix.slice(0, -1)
-    if (pathname === '/') return prefix || '/'
-    if (!pathname.startsWith('/')) pathname = '/' + pathname
-    return (prefix + pathname) || '/'
-}
-
-function canonicalSymbol(symbol: ts.Symbol, checker: ts.TypeChecker): ts.Symbol {
-    return (symbol.flags & ts.SymbolFlags.Alias) !== 0 ? checker.getAliasedSymbol(symbol) : symbol
-}
-
-function getSymbolFromExpression(expr: ts.Expression, checker: ts.TypeChecker): ts.Symbol | undefined {
-    const sym = checker.getSymbolAtLocation(expr)
-    return sym ? canonicalSymbol(sym, checker) : undefined
-}
-
-function extractRoutesFromRouterSymbol(
-    routerSymbol: ts.Symbol,
-    checker: ts.TypeChecker,
-    prefix: string,
-    visited: Map<ts.Symbol, Set<string>>,
-): ExtractedRouteMeta[] {
-    const routes: ExtractedRouteMeta[] = []
-
-    const already = visited.get(routerSymbol)
-    if (already?.has(prefix)) return routes
-    if (already) already.add(prefix)
-    else visited.set(routerSymbol, new Set([prefix]))
-
-    const declarations = routerSymbol.declarations ?? []
-    const sourceFiles = new Set<ts.SourceFile>()
-    for (const decl of declarations) {
-        sourceFiles.add(decl.getSourceFile())
-    }
-
-    const visit = (node: ts.Node, sourceFile: ts.SourceFile): void => {
-        if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression)) {
-            const methodName = node.expression.name.text
-            const receiverSym = getSymbolFromExpression(node.expression.expression, checker)
-            if (!receiverSym || receiverSym !== routerSymbol) {
-                ts.forEachChild(node, child => visit(child, sourceFile))
-                return
-            }
-
-            const verbMethodMap: Record<string, HttpMethod> = {
-                get: HttpMethod.GET,
-                head: HttpMethod.HEAD,
-                post: HttpMethod.POST,
-                put: HttpMethod.PUT,
-                delete: HttpMethod.DELETE,
-                patch: HttpMethod.PATCH,
-            }
-            const verbMethod = verbMethodMap[methodName]
-
-            if (methodName === 'add') {
-                const [arg] = node.arguments
-                const routeOptions = arg ? resolveRouteOptionsExpression(arg, checker) : undefined
-                if (routeOptions) {
-                    const methodNode = getProp(routeOptions, 'method')
-                    const patternNode = getProp(routeOptions, 'pattern')
-                    const nameNode = getProp(routeOptions, 'name')
-                    const handlerNode = getProp(routeOptions, 'handler')
-                    const bodySchemaNode = getProp(routeOptions, 'body')
-                    const pathSchemaNode = getProp(routeOptions, 'pathParams')
-                    const querySchemaNode = getProp(routeOptions, 'query')
-
-                    const method = readHttpMethod(methodNode) ?? HttpMethod.GET
-                    const localPattern = patternNode && ts.isStringLiteralLike(patternNode) ? patternNode.text : '/'
-                    const pattern = joinPrefixPathname(prefix, localPattern)
-
-                    const handlerType = handlerNode ? getContextualHandlerType(handlerNode, checker) : undefined
-                    const typeArgs = handlerType ? getHandlerTypeArguments(handlerType) : undefined
-                    const [bodyType, pathType, queryType, successType, errorTypeArg] = typeArgs ?? []
-                    const errorType = errorTypeArg ?? (handlerType ? getHandlerErrorType(handlerType, checker) : undefined)
-                    const handlerJsonReturnType = handlerNode ? getHandlerJsonReturnType(handlerNode, checker) : undefined
-
-                    const explicitName = nameNode ? parseNameNode(nameNode) : undefined
-                    const name = explicitName
-                        ? sanitizeNameParts(explicitName)
-                        : pattToName(method, { pathname: pattern } as any)
-
-                    const bodyTypeText =
-                        getTypeTextOrFallback(bodyType, checker, handlerNode)
-                        ?? getZodOutputTypeText(bodySchemaNode, checker, routeOptions)
-                        ?? 'unknown'
-                    const pathTypeText =
-                        getTypeTextOrFallback(pathType, checker, handlerNode)
-                        ?? getZodOutputTypeText(pathSchemaNode, checker, routeOptions)
-                        ?? 'unknown'
-                    const queryTypeText =
-                        getTypeTextOrFallback(queryType, checker, handlerNode)
-                        ?? getZodOutputTypeText(querySchemaNode, checker, routeOptions)
-                        ?? 'unknown'
-                    const successTypeText =
-                        getTypeTextOrFallback(successType, checker, handlerNode)
-                        ?? getTypeTextOrFallback(handlerJsonReturnType, checker, handlerNode)
-                        ?? 'unknown'
-                    const errorTypeText = getTypeTextOrFallback(errorType, checker, handlerNode) ?? 'unknown'
-
-                    routes.push({
-                        name,
-                        method,
-                        pattern,
-                        bodyType: bodyTypeText,
-                        pathType: pathTypeText,
-                        queryType: queryTypeText,
-                        successType: successTypeText,
-                        errorType: errorTypeText,
-                    })
-                }
-            } else if (verbMethod) {
-                const [patternArg, handlerArg] = node.arguments
-                const routeOptions = patternArg ? resolveRouteOptionsExpression(patternArg, checker) : undefined
-                if (routeOptions) {
-                    const patternNode = getProp(routeOptions, 'pattern')
-                    const nameNode = getProp(routeOptions, 'name')
-                    const handlerNode = getProp(routeOptions, 'handler')
-                    const bodySchemaNode = getProp(routeOptions, 'body')
-                    const pathSchemaNode = getProp(routeOptions, 'pathParams')
-                    const querySchemaNode = getProp(routeOptions, 'query')
-
-                    const localPattern = patternNode && ts.isStringLiteralLike(patternNode) ? patternNode.text : '/'
-                    const pattern = joinPrefixPathname(prefix, localPattern)
-
-                    const handlerType = handlerNode ? getContextualHandlerType(handlerNode, checker) : undefined
-                    const typeArgs = handlerType ? getHandlerTypeArguments(handlerType) : undefined
-                    const [bodyType, pathType, queryType, successType, errorTypeArg] = typeArgs ?? []
-                    const errorType = errorTypeArg ?? (handlerType ? getHandlerErrorType(handlerType, checker) : undefined)
-                    const handlerJsonReturnType = handlerNode ? getHandlerJsonReturnType(handlerNode, checker) : undefined
-
-                    const explicitName = nameNode ? parseNameNode(nameNode) : undefined
-                    const name = explicitName
-                        ? sanitizeNameParts(explicitName)
-                        : pattToName(verbMethod, { pathname: pattern } as any)
-
-                    const bodyTypeText =
-                        getTypeTextOrFallback(bodyType, checker, handlerNode)
-                        ?? getZodOutputTypeText(bodySchemaNode, checker, routeOptions)
-                        ?? 'unknown'
-                    const pathTypeText =
-                        getTypeTextOrFallback(pathType, checker, handlerNode)
-                        ?? getZodOutputTypeText(pathSchemaNode, checker, routeOptions)
-                        ?? 'unknown'
-                    const queryTypeText =
-                        getTypeTextOrFallback(queryType, checker, handlerNode)
-                        ?? getZodOutputTypeText(querySchemaNode, checker, routeOptions)
-                        ?? 'unknown'
-                    const successTypeText =
-                        getTypeTextOrFallback(successType, checker, handlerNode)
-                        ?? getTypeTextOrFallback(handlerJsonReturnType, checker, handlerNode)
-                        ?? 'unknown'
-                    const errorTypeText = getTypeTextOrFallback(errorType, checker, handlerNode) ?? 'unknown'
-
-                    routes.push({
-                        name,
-                        method: verbMethod,
-                        pattern,
-                        bodyType: bodyTypeText,
-                        pathType: pathTypeText,
-                        queryType: queryTypeText,
-                        successType: successTypeText,
-                        errorType: errorTypeText,
-                    })
-                } else if (patternArg) {
-                    const localPattern = ts.isStringLiteralLike(patternArg) ? patternArg.text : '/'
-                    const pattern = joinPrefixPathname(prefix, localPattern)
-                    const handlerNode = handlerArg
-
-                    const handlerType = handlerNode ? getContextualHandlerType(handlerNode, checker) : undefined
-                    const typeArgs = handlerType ? getHandlerTypeArguments(handlerType) : undefined
-                    const [bodyType, pathType, queryType, successType, errorTypeArg] = typeArgs ?? []
-                    const errorType = errorTypeArg ?? (handlerType ? getHandlerErrorType(handlerType, checker) : undefined)
-                    const handlerJsonReturnType = handlerNode ? getHandlerJsonReturnType(handlerNode, checker) : undefined
-
-                    const name = pattToName(verbMethod, { pathname: pattern } as any)
-
-                    const bodyTypeText = getTypeTextOrFallback(bodyType, checker, handlerNode) ?? 'unknown'
-                    const pathTypeText = getTypeTextOrFallback(pathType, checker, handlerNode) ?? 'unknown'
-                    const queryTypeText = getTypeTextOrFallback(queryType, checker, handlerNode) ?? 'unknown'
-                    const successTypeText =
-                        getTypeTextOrFallback(successType, checker, handlerNode)
-                        ?? getTypeTextOrFallback(handlerJsonReturnType, checker, handlerNode)
-                        ?? 'unknown'
-                    const errorTypeText = getTypeTextOrFallback(errorType, checker, handlerNode) ?? 'unknown'
-
-                    routes.push({
-                        name,
-                        method: verbMethod,
-                        pattern,
-                        bodyType: bodyTypeText,
-                        pathType: pathTypeText,
-                        queryType: queryTypeText,
-                        successType: successTypeText,
-                        errorType: errorTypeText,
-                    })
-                }
-            } else if (methodName === 'mount' || methodName === 'use') {
-                const args = node.arguments
-                const hasPrefix = methodName === 'mount' && args.length === 2 && ts.isStringLiteralLike(args[0]!)
-                const childPrefix = hasPrefix ? (args[0] as ts.StringLiteralLike).text : ''
-                const routerArg = methodName === 'mount'
-                    ? (hasPrefix ? args[1] : args[0])
-                    : (args.length >= 2 ? args[1] : undefined)
-
-                if (routerArg) {
-                    const childSym = getSymbolFromExpression(routerArg, checker)
-                    if (childSym) {
-                        routes.push(...extractRoutesFromRouterSymbol(
-                            childSym,
-                            checker,
-                            joinPrefixPathname(prefix, childPrefix),
-                            visited
-                        ))
-                    }
-                }
-            }
-        }
-
-        ts.forEachChild(node, child => visit(child, sourceFile))
-    }
-
-    for (const sf of sourceFiles) {
-        visit(sf, sf)
-    }
-
-    return routes
-}
-
-function findDefaultExportSymbol(sourceFile: ts.SourceFile, checker: ts.TypeChecker): ts.Symbol | undefined {
-    for (const statement of sourceFile.statements) {
-        if (!ts.isExportAssignment(statement) || statement.isExportEquals) continue
-        const expr = unwrapExpression(statement.expression)
-        if (ts.isIdentifier(expr) || ts.isPropertyAccessExpression(expr)) {
-            const sym = getSymbolFromExpression(expr, checker)
-            if (sym) return sym
-        }
-    }
-    return undefined
-}
-
-function extractRoutesFromEntryFile(
-    sourceFile: ts.SourceFile,
-    checker: ts.TypeChecker,
-    rootRouterName: string,
-): ExtractedRouteMeta[] {
-    let rootSymbol = findDefaultExportSymbol(sourceFile, checker)
-
-    if (!rootSymbol) {
-        const findRoot = (node: ts.Node) => {
-            if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === rootRouterName) {
-                const sym = checker.getSymbolAtLocation(node.name)
-                if (sym) rootSymbol = canonicalSymbol(sym, checker)
-            }
-            if (!rootSymbol) ts.forEachChild(node, findRoot)
-        }
-        findRoot(sourceFile)
-    }
-
-    if (!rootSymbol) {
-        throw new Error(`Unable to find router default export (or "${rootRouterName}") in ${sourceFile.fileName}`)
-    }
-
-    return extractRoutesFromRouterSymbol(rootSymbol, checker, '', new Map())
-}
-
-function patternToUrlTemplate(pattern: string, pathVar = 'path'): string {
-    const templated = pattern.replace(/:([a-zA-Z0-9_]+)/g, `\${${pathVar}.$1}`)
-    if (templated.includes('${')) {
-        return '`' + templated + '`'
-    }
-    return `"${pattern}"`
-}
-
-function isUnknown(text: string): boolean {
-    return text === 'unknown' || text === 'any'
-}
-
-function upperFirst(str: string): string {
-    return str.slice(0, 1).toUpperCase() + str.slice(1)
+type RoutableModule = {
+    getRoutes(): NormalizedRoute<any>[]
 }
 
 function routeTypeBaseName(route: ExtractedRouteMeta): string {
     const parts = route.name.length > 0 ? route.name : ['index']
     return upperFirst(route.method.toLowerCase()) + parts.map(upperFirst).join('')
+}
+
+function getPathParamNames(routePath: string): string[] {
+    const matches = routePath.match(/:([a-zA-Z0-9_]+)/g) ?? []
+    return matches.map(match => match.slice(1))
 }
 
 function buildRouteTree(routes: ProcessedRouteMeta[]): RouteNode {
@@ -613,18 +81,6 @@ function classNameForParts(parts: string[], baseName: string): string {
     return `${baseName}_${parts.map(upperFirst).join('_')}`
 }
 
-type ImportType = {
-    names: string[]
-    module: string
-}
-
-type BuildOptions = {
-    clientName: string
-    responseType: string
-    importTypes: ImportType[]
-    commandText: string
-}
-
 function parseImportTypeOption(value: string): ImportType {
     const colonIdx = value.indexOf(':')
     if (colonIdx === -1) {
@@ -632,7 +88,7 @@ function parseImportTypeOption(value: string): ImportType {
     }
     const names = value.slice(0, colonIdx)
     const module = value.slice(colonIdx + 1).trim()
-    const parsedNames = names.split(',').map(n => n.trim()).filter(Boolean)
+    const parsedNames = names.split(',').map(name => name.trim()).filter(Boolean)
     if (parsedNames.length === 0 || module.length === 0) {
         throw new Error(`Invalid --import-type value: "${value}"`)
     }
@@ -641,16 +97,128 @@ function parseImportTypeOption(value: string): ImportType {
 
 function normalizeClientName(name: string | undefined): string {
     if (!name) return 'ApiClient'
-    const [cleaned] = sanitizeNameParts([name])
-    return cleaned ?? 'ApiClient'
+    return name
+        .replace(/[^A-Za-z0-9]+/g, ' ')
+        .trim()
+        .split(/\s+/)
+        .map(upperFirst)
+        .join('') || 'ApiClient'
+}
+
+function upperFirst(str: string): string {
+    return str.slice(0, 1).toUpperCase() + str.slice(1)
+}
+
+function patternToUrlTemplate(routePath: string, pathVar = 'path'): string {
+    const templated = routePath.replace(/:([a-zA-Z0-9_]+)/g, `\${${pathVar}.$1}`)
+    if (templated.includes('${')) {
+        return '`' + templated + '`'
+    }
+    return `"${routePath}"`
+}
+
+function isUnknown(text: string): boolean {
+    return text === 'unknown' || text === 'any'
+}
+
+function normalizeMethod(routeMethod: NormalizedRoute<any>['method']): HttpMethod[] {
+    if (!routeMethod) return [HttpMethod.GET]
+    return Array.isArray(routeMethod) ? routeMethod : [routeMethod]
+}
+
+function extractRoutes(routes: NormalizedRoute<any>[]): ExtractedRouteMeta[] {
+    const extracted: ExtractedRouteMeta[] = []
+    for (const route of routes) {
+        for (const method of normalizeMethod(route.method)) {
+            extracted.push({
+                name: route.name,
+                method,
+                path: route.path.pathname,
+                ...(route.schema?.request ? {requestSchema: route.schema.request} : {}),
+                ...(route.schema?.response?.body ? {responseBodySchemas: route.schema.response.body} : {}),
+            })
+        }
+    }
+    return extracted
+}
+
+function resolveRouterModule(module: Record<string, unknown>): RoutableModule {
+    const candidates = [
+        module.default,
+        module.router,
+        ...Object.values(module),
+    ]
+    for (const candidate of candidates) {
+        if (candidate && typeof candidate === 'object' && typeof (candidate as RoutableModule).getRoutes === 'function') {
+            return candidate as RoutableModule
+        }
+    }
+    throw new Error('Unable to find an exported router with a getRoutes() method')
+}
+
+async function loadRuntimeRoutes(routerPath: string): Promise<NormalizedRoute<any>[]> {
+    const moduleUrl = pathToFileURL(routerPath).href
+    const module = await import(moduleUrl)
+    const router = resolveRouterModule(module as Record<string, unknown>)
+    return router.getRoutes()
+}
+
+async function compileSchemaType(name: string, schema: JsonSchema): Promise<string> {
+    return (await compile(schema as Record<string, unknown>, name, {
+        bannerComment: '',
+        style: {
+            singleQuote: true,
+        },
+    })).trim()
+}
+
+function responseStatusAlias(typeBase: string, status: string): string {
+    return `${typeBase}Response${status}`
+}
+
+async function generateRouteTypes(route: ProcessedRouteMeta): Promise<GeneratedRouteTypes> {
+    const generated: GeneratedRouteTypes = {
+        route,
+        responseTypeSources: [],
+    }
+
+    if (route.requestSchema?.path) {
+        generated.pathTypeSource = await compileSchemaType(`${route.typeBase}PathParams`, route.requestSchema.path)
+    }
+    if (route.requestSchema?.query) {
+        generated.queryTypeSource = await compileSchemaType(`${route.typeBase}Query`, route.requestSchema.query)
+    }
+    if (route.requestSchema?.body !== undefined) {
+        generated.requestTypeSource = await compileSchemaType(`${route.typeBase}Request`, route.requestSchema.body)
+    }
+
+    if (route.responseBodySchemas && Object.keys(route.responseBodySchemas).length > 0) {
+        const responseTypesByStatus: string[] = []
+        for (const [status, responseSchema] of Object.entries(route.responseBodySchemas)) {
+            const alias = responseStatusAlias(route.typeBase, status)
+            generated.responseTypeSources.push(await compileSchemaType(alias, responseSchema))
+            responseTypesByStatus.push(`    ${JSON.stringify(status)}: ${alias}`)
+        }
+        generated.responseTypesByStatusSource = [
+            `export interface ${route.typeBase}ResponsesByStatus {`,
+            ...responseTypesByStatus,
+            `}`,
+            `export type ${route.typeBase}Response = ${route.typeBase}ResponsesByStatus[keyof ${route.typeBase}ResponsesByStatus]`,
+        ].join('\n')
+    } else {
+        const fallback = route.method === HttpMethod.HEAD ? 'never' : 'unknown'
+        generated.responseTypesByStatusSource = `export type ${route.typeBase}Response = ${fallback}`
+    }
+
+    return generated
 }
 
 function buildMethodLines(route: ProcessedRouteMeta, options: BuildOptions, indent: string): string[] {
     const lines: string[] = []
     const methodName = route.method.toLowerCase()
-    const pathType = !isUnknown(route.pathType) ? `${route.typeBase}PathParams` : undefined
-    const bodyType = !isUnknown(route.bodyType) ? `${route.typeBase}Request` : undefined
-    const queryType = !isUnknown(route.queryType) ? route.queryType : undefined
+    const pathType = route.requestSchema?.path ? `${route.typeBase}PathParams` : undefined
+    const bodyType = route.requestSchema?.body !== undefined ? `${route.typeBase}Request` : undefined
+    const queryType = route.requestSchema?.query ? `${route.typeBase}Query` : undefined
     const hasPathParams = route.pathParams.length > 0
     const hasSinglePathParam = route.pathParams.length === 1
     let pathVar = 'path'
@@ -674,8 +242,9 @@ function buildMethodLines(route: ProcessedRouteMeta, options: BuildOptions, inde
     if (hasSinglePathParam) {
         lines.push(`${indent}    const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { ${route.pathParams[0]}: path } as any`)
     }
-    const urlExpr = patternToUrlTemplate(route.pattern, pathVar)
-    lines.push(`${indent}    return this.fetcher.fetch(${urlExpr}, {`)
+    const urlExpr = patternToUrlTemplate(route.path, pathVar)
+    const finalUrlExpr = queryType ? `withQuery(${urlExpr}, query)` : urlExpr
+    lines.push(`${indent}    return this.fetcher.fetch(${finalUrlExpr}, {`)
     lines.push(`${indent}        method: "${route.method}",`)
     if (bodyType) {
         lines.push(`${indent}        headers: { "content-type": "application/json" },`)
@@ -724,14 +293,15 @@ function emitClass(node: RouteNode, parts: string[], options: BuildOptions, line
     }
 }
 
-function buildApiClientSource(routes: ExtractedRouteMeta[], options: BuildOptions): string {
+async function buildApiClientSource(routes: ExtractedRouteMeta[], options: BuildOptions): Promise<string> {
     const processedRoutes: ProcessedRouteMeta[] = routes.map(route => ({
         ...route,
-        successType: route.method === HttpMethod.HEAD ? 'never' : route.successType,
         typeBase: routeTypeBaseName(route),
-        pathParams: getPathParamNames(route.pattern),
+        pathParams: getPathParamNames(route.path),
     }))
     const needsSinglePathHelper = processedRoutes.some(route => route.pathParams.length === 1)
+    const needsQueryHelper = processedRoutes.some(route => route.requestSchema?.query)
+    const generatedTypes = await Promise.all(processedRoutes.map(generateRouteTypes))
 
     const lines: string[] = []
     lines.push(`// Do not modify this file. It was auto-generated with the following command:`)
@@ -762,12 +332,34 @@ function buildApiClientSource(routes: ExtractedRouteMeta[], options: BuildOption
         lines.push(`type SinglePathParam<TParams, TKey extends string> = TParams extends { [K in TKey]: infer V } ? V : unknown`)
     }
 
-    lines.push(``)
-    for (const route of processedRoutes) {
-        if (!isUnknown(route.pathType)) lines.push(`export type ${route.typeBase}PathParams = ${route.pathType}`)
-        if (!isUnknown(route.bodyType)) lines.push(`export type ${route.typeBase}Request = ${route.bodyType}`)
-        lines.push(`export type ${route.typeBase}Response = ${route.successType}`)
+    if (needsQueryHelper) {
         lines.push(``)
+        lines.push(`function withQuery(url: string, query: Record<string, unknown>): string {`)
+        lines.push(`    const searchParams = new URLSearchParams()`)
+        lines.push(`    for (const [key, value] of Object.entries(query)) {`)
+        lines.push(`        if (value == null) continue`)
+        lines.push(`        if (Array.isArray(value)) {`)
+        lines.push(`            for (const item of value) {`)
+        lines.push(`                if (item != null) searchParams.append(key, typeof item === 'object' ? JSON.stringify(item) : String(item))`)
+        lines.push(`            }`)
+        lines.push(`            continue`)
+        lines.push(`        }`)
+        lines.push(`        searchParams.append(key, typeof value === 'object' ? JSON.stringify(value) : String(value))`)
+        lines.push(`    }`)
+        lines.push(`    const search = searchParams.toString()`)
+        lines.push(`    return search.length > 0 ? \`\${url}?\${search}\` : url`)
+        lines.push(`}`)
+    }
+
+    lines.push(``)
+    for (const generated of generatedTypes) {
+        if (generated.pathTypeSource && !isUnknown(generated.pathTypeSource)) lines.push(generated.pathTypeSource, ``)
+        if (generated.queryTypeSource && !isUnknown(generated.queryTypeSource)) lines.push(generated.queryTypeSource, ``)
+        if (generated.requestTypeSource && !isUnknown(generated.requestTypeSource)) lines.push(generated.requestTypeSource, ``)
+        for (const responseTypeSource of generated.responseTypeSources) {
+            if (!isUnknown(responseTypeSource)) lines.push(responseTypeSource, ``)
+        }
+        if (generated.responseTypesByStatusSource) lines.push(generated.responseTypesByStatusSource, ``)
     }
 
     const tree = buildRouteTree(processedRoutes)
@@ -801,29 +393,19 @@ export async function main(argv: string[] = Bun.argv) {
         process.exit(1)
     }
 
-    const clientName = normalizeClientName((values as any)['client-name'])
-    const responseType = ((values as any)['response-type'] as string | undefined)?.trim() || 'PromisedResponse'
-    const importTypes = ((values as any)['import-type'] as string[] | undefined)?.map(parseImportTypeOption) ?? []
+    const clientName = normalizeClientName((values as Record<string, string | string[] | undefined>)['client-name'] as string | undefined)
+    const responseType = ((values as Record<string, string | string[] | undefined>)['response-type'] as string | undefined)?.trim() || 'PromisedResponse'
+    const importTypes = ((values as Record<string, string | string[] | undefined>)['import-type'] as string[] | undefined)?.map(parseImportTypeOption) ?? []
 
     const routerPath = path.resolve(routerPathArg)
-    const tsconfigPath = findUp(import.meta.dir, 'tsconfig.json')
-    const program = getProgramFromTsConfig(tsconfigPath, routerPath)
-    const sourceFile =
-        program.getSourceFile(routerPath)
-        ?? program.getSourceFiles().find(sf => path.resolve(sf.fileName) === routerPath)
-    if (!sourceFile) {
-        throw new Error(`Unable to load source file: ${routerPath}`)
-    }
-
-    const routes = extractRoutesFromEntryFile(sourceFile, program.getTypeChecker(), 'router')
+    const routes = extractRoutes(await loadRuntimeRoutes(routerPath))
     const rawArgs = argv.slice(1)
     if (rawArgs[0] && path.isAbsolute(rawArgs[0])) {
         rawArgs[0] = path.relative(process.cwd(), rawArgs[0]).replace(/\\/g, '/')
     }
-    // const normalizedArgs = rawArgs.map(arg => arg.replace(/\\/g, '/'))
     const commandText = ['bun', ...rawArgs.map(arg => $.escape(arg))].join(' ')
 
-    const client = buildApiClientSource(routes, {
+    const client = await buildApiClientSource(routes, {
         clientName,
         responseType,
         importTypes,

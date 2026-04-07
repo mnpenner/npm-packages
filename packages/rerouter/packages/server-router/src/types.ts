@@ -3,6 +3,83 @@ import type {Router} from './router'
 
 export type OneOrMany<T> = T | T[]
 export type MaybePromise<T> = T | Promise<T>
+export type RoutePath = string | URLPattern
+
+/**
+ * JSON Schema value used for runtime request and response metadata.
+ */
+export type JsonSchema = boolean | Record<string, unknown>
+
+/**
+ * JSON Schema object used for path and query parameter declarations.
+ */
+export type JsonObjectSchema = Record<string, unknown>
+
+/**
+ * Schema metadata used to describe route request inputs and response bodies.
+ *
+ * @example
+ * ```ts
+ * const schema: RouteSchema = {
+ *   request: {
+ *     query: {
+ *       type: 'object',
+ *       properties: {
+ *         page: {type: 'integer'},
+ *       },
+ *     },
+ *     path: {
+ *       type: 'object',
+ *       properties: {
+ *         id: {type: 'string'},
+ *       },
+ *       required: ['id'],
+ *     },
+ *     body: {
+ *       type: 'object',
+ *       properties: {
+ *         name: {type: 'string'},
+ *       },
+ *       required: ['name'],
+ *     },
+ *   },
+ *   response: {
+ *     body: {
+ *       200: {
+ *         type: 'object',
+ *         properties: {
+ *           ok: {type: 'boolean'},
+ *         },
+ *         required: ['ok'],
+ *       },
+ *     },
+ *   },
+ * }
+ * ```
+ */
+export interface RouteSchema {
+    request?: {
+        query?: JsonObjectSchema
+        path?: JsonObjectSchema
+        body?: JsonSchema
+    }
+    response?: {
+        body?: Record<number, JsonSchema>
+    }
+}
+
+/**
+ * Custom request matcher used when a route needs logic beyond pathname, method, or `accept`.
+ *
+ * @example
+ * ```ts
+ * const match: RouteMatch = req => req.headers.get('x-internal') === 'true'
+ * ```
+ *
+ * @param request - Incoming request to test.
+ * @returns `true` when the route should handle the request.
+ */
+export type RouteMatch = (request: Request) => boolean
 
 /**
  * Route metadata used by tooling like OpenAPI generation.
@@ -23,23 +100,34 @@ export interface RouteMeta {
  * const route: Route = {
  *   name: 'user.detail',
  *   method: HttpMethod.GET,
- *   pattern: '/users/:id',
+ *   path: '/users/:id',
  *   handler: async ({req}) => new Response(await req.text()),
  * }
  * ```
  */
 export interface Route<Ctx extends object = AnyContext> {
     name?: OneOrMany<string>
-    pattern: string | URLPattern
+    /**
+     * Path pattern matched by the default route matcher.
+     */
+    path?: RoutePath
+    /**
+     * Deprecated alias for [`Route.path`]{@link Route#path}.
+     */
+    pattern?: RoutePath
     handler: Handler<any, any, any, any, any, Ctx>
     method?: OneOrMany<HttpMethod>
+    /**
+     * Optional custom matcher. When omitted, the router matches using `path`, `method`, and `accept`.
+     */
+    match?: RouteMatch
     /**
      * Arbitrary metadata attached to the route.
      *
      * @example
      * ```ts
      * const route: Route = {
-     *   pattern: '/pets',
+     *   path: '/pets',
      *   method: HttpMethod.GET,
      *   meta: {
      *     openapi: {
@@ -61,7 +149,7 @@ export interface Route<Ctx extends object = AnyContext> {
      * @example
      * ```ts
      * const route: Route = {
-     *   pattern: '/upload',
+     *   path: '/upload',
      *   method: HttpMethod.POST,
      *   accept: ['multipart/form-data', {type: 'application/json'}],
      *   handler: async () => new Response('ok'),
@@ -69,6 +157,10 @@ export interface Route<Ctx extends object = AnyContext> {
      * ```
      */
     accept?: OneOrMany<string | MediaType>
+    /**
+     * Runtime request and response schemas used by tooling such as OpenAPI generation and API client codegen.
+     */
+    schema?: RouteSchema
 }
 
 /**
@@ -79,18 +171,20 @@ export interface Route<Ctx extends object = AnyContext> {
  * const route: NormalizedRoute = {
  *   name: ['user', 'detail'],
  *   method: HttpMethod.GET,
- *   pattern: new URLPattern({pathname: '/users/:id'}),
+ *   path: new URLPattern({pathname: '/users/:id'}),
  *   handler: async ({req}) => new Response(await req.text()),
  * }
  * ```
  */
 export interface NormalizedRoute<Ctx extends object = AnyContext> {
     name: string[]
-    pattern: URLPattern
+    path: URLPattern
     handler: Handler<any, any, any, any, any, Ctx>
     method?: HttpMethod | HttpMethod[]
     accept?: MediaType[]
+    match?: RouteMatch
     meta?: RouteMeta
+    schema?: RouteSchema
 }
 
 /**
@@ -217,8 +311,9 @@ export type HandlerBody = Buffer | Uint8Array | ReadableStream | string
  */
 export type HandlerResult<TOkRes = unknown> =
     | ResponseWithData<TOkRes>
+    | TOkRes
     | HandlerBody
-    | Promise<ResponseWithData<TOkRes> | HandlerBody | AsyncGenerator<HandlerYield, HandlerBody>>
+    | Promise<ResponseWithData<TOkRes> | TOkRes | HandlerBody | AsyncGenerator<HandlerYield, HandlerBody>>
     | AsyncGenerator<HandlerYield, HandlerBody>
 
 /**
@@ -226,15 +321,15 @@ export type HandlerResult<TOkRes = unknown> =
  *
  * @example
  * ```ts
- * const handler: Handler<unknown, {id: string}, unknown, string> = ({req}) => {
- *   return new Response(`id=${new URL(req.url).pathname}`)
+ * const handler: Handler<unknown, {id: string}, unknown, {id: string}> = ({pathParams}) => {
+ *   return {id: pathParams.id}
  * }
  * ```
  *
  * The handler is invoked with `this` bound to the active [`Router`]{@link Router}.
  *
  * @param ctx - Handler context containing the incoming [`Request`]{@link Request}, parsed [`URL`]{@link URL}, path parameters, and middleware extensions.
- * @returns A response or streaming generator that yields response metadata.
+ * @returns A response, a serializable value handled by middleware, or a streaming generator that yields response metadata.
  */
 export type Handler<
     TReqBody=unknown,  // FIXME: remove unused params..?

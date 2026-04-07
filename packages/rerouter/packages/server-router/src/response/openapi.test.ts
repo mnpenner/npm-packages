@@ -2,33 +2,41 @@
 import {describe, expect, it} from 'bun:test'
 import {HttpMethod} from '@mpen/http-helpers'
 import {Router} from '../router'
-import {openapi} from './openapi'
-import {JsonSchemaTarget} from '@mpen/server-router/lib/json-schema'
+import {openapi} from '../plugins/openapi'
 
 describe('openapi', () => {
-    it('builds OpenAPI paths from routes and meta', async () => {
+    it('builds OpenAPI paths from route schemas and metadata', async () => {
         const router = new Router()
         router.add({
-            pattern: '/users/:id',
+            path: '/users/:id',
             method: HttpMethod.GET,
-            meta: {
-                [JsonSchemaTarget.OPENAPI_3_0]: {
-                    summary: 'Get user',
-                    parameters: [{
-                        name: 'id',
-                        in: 'path',
-                        required: true,
-                        schema: {type: 'string'},
-                    }],
-                    responses: {
-                        200: {
-                            description: 'OK',
-                            content: {
-                                'application/json': {
-                                    schema: {$ref: '#/components/schemas/User'},
-                                },
-                            },
+            schema: {
+                request: {
+                    path: {
+                        type: 'object',
+                        properties: {
+                            id: {type: 'string'},
                         },
+                        required: ['id'],
+                    },
+                },
+                response: {
+                    body: {
+                        200: {
+                            type: 'object',
+                            properties: {
+                                id: {type: 'string'},
+                                email: {type: 'string', format: 'email'},
+                            },
+                            required: ['id', 'email'],
+                        },
+                    },
+                },
+            },
+            meta: {
+                openapi: {
+                    summary: 'Get user',
+                    responses: {
                         404: {description: 'Not found'},
                     },
                 },
@@ -37,7 +45,7 @@ describe('openapi', () => {
         })
 
         router.add({
-            pattern: '/swagger.json',
+            path: '/swagger.json',
             method: HttpMethod.GET,
             handler: openapi({
                 info: {
@@ -74,6 +82,14 @@ describe('openapi', () => {
         expect(document.servers).toEqual([{url: 'https://api.example.com'}])
         expect(document.paths['/users/{id}'].get.summary).toBe('Get user')
         expect(document.paths['/users/{id}'].get.responses['200'].description).toBe('OK')
+        expect(document.paths['/users/{id}'].get.parameters).toEqual([
+            {
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: {type: 'string'},
+            },
+        ])
         expect(document.components.schemas.User.properties.email.format).toBe('email')
         expect(document.security).toEqual([{bearerAuth: []}])
     })

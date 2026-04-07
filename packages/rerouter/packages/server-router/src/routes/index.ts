@@ -1,2 +1,1 @@
-export {zodRoute, ValidationError} from './zod'
-export type {ZodRouteDefinition, ZodRouteHandler, ZodRouteOptions} from './zod'
+export type {Route, RouteMatch, RouteMeta, RouteSchema} from '../types'

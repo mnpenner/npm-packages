@@ -10,22 +10,84 @@ export type PromisedResponse<T> = Promise<TypedResponse<T>>
 
 type SinglePathParam<TParams, TKey extends string> = TParams extends { [K in TKey]: infer V } ? V : unknown
 
-export type GetIndexResponse = { message: string; }
+export interface GetIndexResponse200 {
+  message: string;
+}
 
-export type GetNamedRouteResponse = { message: string; }
+export interface GetIndexResponsesByStatus {
+    "200": GetIndexResponse200
+}
+export type GetIndexResponse = GetIndexResponsesByStatus[keyof GetIndexResponsesByStatus]
 
-export type PostNamedRouteResponse = { message: string; }
+export interface GetNamedRouteResponse200 {
+  message: string;
+}
 
-export type PostFooBarResponse = { message: string; }
+export interface GetNamedRouteResponsesByStatus {
+    "200": GetNamedRouteResponse200
+}
+export type GetNamedRouteResponse = GetNamedRouteResponsesByStatus[keyof GetNamedRouteResponsesByStatus]
 
-export type PostBooksByIdPathParams = { id: number; }
-export type PostBooksByIdRequest = { title: string; author: string; }
-export type PostBooksByIdResponse = { id: number; title: string; author: string; }
+export interface PostNamedRouteResponse200 {
+  message: string;
+}
 
-export type GetJsonHelperResponse = { message: string; }
+export interface PostNamedRouteResponsesByStatus {
+    "200": PostNamedRouteResponse200
+}
+export type PostNamedRouteResponse = PostNamedRouteResponsesByStatus[keyof PostNamedRouteResponsesByStatus]
 
-export type PostJsonHelperZodRequest = { tag: string; }
-export type PostJsonHelperZodResponse = { ok: boolean; tag: string; }
+export interface PostFooBarResponse200 {
+  message: string;
+}
+
+export interface PostFooBarResponsesByStatus {
+    "200": PostFooBarResponse200
+}
+export type PostFooBarResponse = PostFooBarResponsesByStatus[keyof PostFooBarResponsesByStatus]
+
+export interface PostBooksByIdPathParams {
+  id: number;
+}
+
+export interface PostBooksByIdRequest {
+  title: string;
+  author: string;
+}
+
+export interface PostBooksByIdResponse200 {
+  id: number;
+  title: string;
+  author: string;
+}
+
+export interface PostBooksByIdResponsesByStatus {
+    "200": PostBooksByIdResponse200
+}
+export type PostBooksByIdResponse = PostBooksByIdResponsesByStatus[keyof PostBooksByIdResponsesByStatus]
+
+export interface GetJsonHelperResponse200 {
+  message: string;
+}
+
+export interface GetJsonHelperResponsesByStatus {
+    "200": GetJsonHelperResponse200
+}
+export type GetJsonHelperResponse = GetJsonHelperResponsesByStatus[keyof GetJsonHelperResponsesByStatus]
+
+export interface PostJsonHelperZodRequest {
+  tag: string;
+}
+
+export interface PostJsonHelperZodResponse200 {
+  ok: boolean;
+  tag: string;
+}
+
+export interface PostJsonHelperZodResponsesByStatus {
+    "200": PostJsonHelperZodResponse200
+}
+export type PostJsonHelperZodResponse = PostJsonHelperZodResponsesByStatus[keyof PostJsonHelperZodResponsesByStatus]
 
 export type GetHealthResponse = unknown
 

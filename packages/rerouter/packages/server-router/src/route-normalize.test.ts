@@ -7,13 +7,13 @@ describe('normalizeRoute', function () {
     it('builds a URLPattern and default name', function () {
         const route = normalizeRoute({
             method: HttpMethod.GET,
-            pattern: '/users/:id',
+            path: '/users/:id',
             handler: function () {
                 return new Response('ok')
             },
         })
 
-        expect(route.pattern).toBeInstanceOf(URLPattern)
+        expect(route.path).toBeInstanceOf(URLPattern)
         expect(route.name).toEqual(['usersById'])
         expect(route.method).toBe(HttpMethod.GET)
     })
@@ -21,7 +21,7 @@ describe('normalizeRoute', function () {
     it('normalizes accept entries into media types', function () {
         const route = normalizeRoute({
             method: HttpMethod.POST,
-            pattern: '/upload',
+            path: '/upload',
             accept: ['Application/JSON; charset=UTF-8', {type: 'text/plain'}],
             handler: function () {
                 return new Response('ok')
