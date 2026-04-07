@@ -29,42 +29,8 @@ function isYamlPreferred(request: Request): boolean {
     return accept.includes(CommonContentTypes.YAML) || accept.includes('application/yaml') || accept.includes('text/yaml')
 }
 
-function formatYamlScalar(value: unknown): string {
-    if (value === null) return 'null'
-    if (typeof value === 'string') {
-        return /^[A-Za-z0-9 _./:()!-]+$/.test(value) ? value : JSON.stringify(value)
-    }
-    if (typeof value === 'number' || typeof value === 'boolean') {
-        return String(value)
-    }
-    return JSON.stringify(value)
-}
-
-function toYaml(value: unknown, indent = 0): string {
-    const prefix = ' '.repeat(indent)
-    if (Array.isArray(value)) {
-        if (value.length === 0) return `${prefix}[]`
-        return value.map(item => {
-            if (item === null || typeof item !== 'object' || Array.isArray(item) === false && Object.keys(item as object).length === 0) {
-                return `${prefix}- ${formatYamlScalar(item)}`
-            }
-            return `${prefix}-\n${toYaml(item, indent + 2)}`
-        }).join('\n')
-    }
-    if (value && typeof value === 'object') {
-        const entries = Object.entries(value)
-        if (entries.length === 0) return `${prefix}{}`
-        return entries.map(([key, child]) => {
-            if (child === null || typeof child !== 'object') {
-                return `${prefix}${key}: ${formatYamlScalar(child)}`
-            }
-            if (Array.isArray(child) && child.length === 0) {
-                return `${prefix}${key}: []`
-            }
-            return `${prefix}${key}:\n${toYaml(child, indent + 2)}`
-        }).join('\n')
-    }
-    return `${prefix}${formatYamlScalar(value)}`
+function toYaml(value: unknown): string {
+    return Bun.YAML.stringify(value, null, 2)
 }
 
 const structuredResponse: ContextMiddleware = async (ctx, next) => {

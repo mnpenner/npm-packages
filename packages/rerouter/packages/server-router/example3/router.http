@@ -1,0 +1,8 @@
+POST http://localhost:3000/widgets/123?view=full
+Accept: application/yaml
+Content-Type: application/json
+
+{
+    "name": "Mark",
+    "tags": ["Human","Male"]
+}
