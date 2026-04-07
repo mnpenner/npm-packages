@@ -67,6 +67,13 @@ export const router = new Router()
     .use(structuredResponse)
 
 const factory = new ZodRouteFactory({
+    schema: {
+        response: {
+            body: {
+                [HttpStatus.BAD_REQUEST]: validationErrorSchema,
+            },
+        },
+    },
     validationError(component, error) {
         const componentName = component === ValidationError.REQUEST_BODY
             ? 'request_body'
@@ -105,7 +112,6 @@ router.add(factory.route({
                     tags: z.array(z.string()),
                     summary: z.string(),
                 }),
-                [HttpStatus.BAD_REQUEST]: validationErrorSchema,
             },
         },
     },

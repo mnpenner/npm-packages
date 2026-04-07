@@ -119,6 +119,11 @@ export type ValidationErrorHandler = (component: ValidationError, error: z.ZodEr
  */
 export type ZodRouteHelperDefaults = {
     /**
+     * Route schema fragments that should be merged into every factory-built route.
+     * Route-level schemas override matching request fields and response status codes.
+     */
+    schema?: ZodRouteSchemaInput<any, any, any, any>
+    /**
      * Whether to validate handler responses against `schema.response.body`.
      * Defaults to `process.env.NODE_ENV !== 'production'`.
      */

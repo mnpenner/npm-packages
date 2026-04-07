@@ -269,6 +269,13 @@ describe('ZodRouteFactory', () => {
     it('applies factory defaults and allows per-route overrides', async () => {
         const factory = new ZodRouteFactory({
             validateResponse: false,
+            schema: {
+                response: {
+                    body: {
+                        [HttpStatus.BAD_REQUEST]: z.object({message: z.string()}),
+                    },
+                },
+            },
             validationError: () => new Response('factory bad input', {status: HttpStatus.UNPROCESSABLE_ENTITY}),
         })
 
@@ -316,5 +323,50 @@ describe('ZodRouteFactory', () => {
 
         const strictResponse = await router.fetch(new Request('https://example.com/factory-override'))
         expect(strictResponse.status).toBe(HttpStatus.INTERNAL_SERVER_ERROR)
+    })
+
+    it('merges default schemas into generated route schemas', () => {
+        const factory = new ZodRouteFactory({
+            schema: {
+                response: {
+                    body: {
+                        [HttpStatus.BAD_REQUEST]: z.object({message: z.string()}),
+                    },
+                },
+            },
+        })
+
+        const route = factory.route({
+            path: '/factory-schema',
+            method: HttpMethod.GET,
+            schema: {
+                response: {
+                    body: {
+                        [HttpStatus.OK]: z.object({ok: z.boolean()}),
+                    },
+                },
+            },
+            validateResponse: false,
+            handler: () => new Response('ok'),
+        })
+
+        expect(route.schema?.response?.body).toEqual({
+            200: {
+                type: 'object',
+                properties: {
+                    ok: {type: 'boolean'},
+                },
+                required: ['ok'],
+                additionalProperties: false,
+            },
+            400: {
+                type: 'object',
+                properties: {
+                    message: {type: 'string'},
+                },
+                required: ['message'],
+                additionalProperties: false,
+            },
+        })
     })
 })
