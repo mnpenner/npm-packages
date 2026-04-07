@@ -85,7 +85,8 @@ type ZodHandlerContext<
     PathSchema extends ZodSchema,
     QuerySchema extends ZodSchema,
     Ctx extends object,
-> = HandlerContext<InferSchema<PathSchema>, Ctx> & {
+> = Omit<HandlerContext<Ctx>, 'pathParams'> & {
+    pathParams: InferSchema<PathSchema>
     body: InferSchema<BodySchema>
     query: InferSchema<QuerySchema>
 }
@@ -265,77 +266,71 @@ function buildRouteSchema(schema?: ZodRouteSchemaInput<any, any, any, any>): Rou
 export function zodHandler<
     Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
     Ctx extends object = AnyContext,
->(options: ZodHandlerOptions<Schema, Ctx>): Handler<
-    InferSchema<ExtractBodySchema<Schema>>,
-    InferSchema<ExtractPathSchema<Schema>>,
-    InferSchema<ExtractQuerySchema<Schema>>,
-    InferResponseBody<ExtractResponseBodySchemas<Schema>>,
-    unknown,
-    Ctx
-> {
+>(options: ZodHandlerOptions<Schema, Ctx>): Handler<InferResponseBody<ExtractResponseBodySchemas<Schema>>, Ctx> {
     const validationHandler = options.validationError ?? createValidationResponse
 
-    return async function (this: Router<any>, ctx: HandlerContext<InferSchema<ExtractPathSchema<Schema>>, Ctx>) {
+    return async function (this: Router<any>, ctx: HandlerContext<Ctx>) {
         const run = async (): Promise<HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>> => {
-        const bodySchema = options.schema?.request?.body
-        const pathSchema = options.schema?.request?.path
-        const querySchema = options.schema?.request?.query
-        const queryParams = readQueryParams(ctx.url.searchParams)
+            const bodySchema = options.schema?.request?.body
+            const pathSchema = options.schema?.request?.path
+            const querySchema = options.schema?.request?.query
+            const queryParams = readQueryParams(ctx.url.searchParams)
 
-        const handlerContext = {
-            ...ctx,
-            body: undefined as InferSchema<ExtractBodySchema<Schema>>,
-            query: undefined as InferSchema<ExtractQuerySchema<Schema>>,
-        } as ZodHandlerContext<
-            ExtractBodySchema<Schema>,
-            ExtractPathSchema<Schema>,
-            ExtractQuerySchema<Schema>,
-            Ctx
-        >
+            const handlerContext = {
+                ...ctx,
+                pathParams: ctx.pathParams as InferSchema<ExtractPathSchema<Schema>>,
+                body: undefined as InferSchema<ExtractBodySchema<Schema>>,
+                query: undefined as InferSchema<ExtractQuerySchema<Schema>>,
+            } as ZodHandlerContext<
+                ExtractBodySchema<Schema>,
+                ExtractPathSchema<Schema>,
+                ExtractQuerySchema<Schema>,
+                Ctx
+            >
 
-        if (querySchema) {
-            const queryResult = querySchema.safeParse(queryParams)
-            if (!queryResult.success) {
-                return validationHandler(
-                    ValidationError.QUERY_PARAMETERS,
-                    queryResult.error
-                ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>
+            if (querySchema) {
+                const queryResult = querySchema.safeParse(queryParams)
+                if (!queryResult.success) {
+                    return validationHandler(
+                        ValidationError.QUERY_PARAMETERS,
+                        queryResult.error
+                    ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>
+                }
+                handlerContext.query = queryResult.data as InferSchema<ExtractQuerySchema<Schema>>
             }
-            handlerContext.query = queryResult.data as InferSchema<ExtractQuerySchema<Schema>>
-        }
 
-        if (bodySchema) {
-            let rawBody: unknown
-            try {
-                rawBody = await readRequestBody(ctx.req)
-            } catch (err) {
-                return validationHandler(
-                    ValidationError.REQUEST_BODY,
-                    zodErrorFromThrowable(err)
-                ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>
+            if (bodySchema) {
+                let rawBody: unknown
+                try {
+                    rawBody = await readRequestBody(ctx.req)
+                } catch (err) {
+                    return validationHandler(
+                        ValidationError.REQUEST_BODY,
+                        zodErrorFromThrowable(err)
+                    ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>
+                }
+                const bodyResult = bodySchema.safeParse(rawBody)
+                if (!bodyResult.success) {
+                    return validationHandler(
+                        ValidationError.REQUEST_BODY,
+                        bodyResult.error
+                    ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>
+                }
+                handlerContext.body = bodyResult.data as InferSchema<ExtractBodySchema<Schema>>
             }
-            const bodyResult = bodySchema.safeParse(rawBody)
-            if (!bodyResult.success) {
-                return validationHandler(
-                    ValidationError.REQUEST_BODY,
-                    bodyResult.error
-                ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>
-            }
-            handlerContext.body = bodyResult.data as InferSchema<ExtractBodySchema<Schema>>
-        }
 
-        if (pathSchema) {
-            const pathResult = pathSchema.safeParse(ctx.pathParams)
-            if (!pathResult.success) {
-                return validationHandler(
-                    ValidationError.URL_PATH,
-                    pathResult.error
-                ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>
+            if (pathSchema) {
+                const pathResult = pathSchema.safeParse(ctx.pathParams)
+                if (!pathResult.success) {
+                    return validationHandler(
+                        ValidationError.URL_PATH,
+                        pathResult.error
+                    ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>
+                }
+                handlerContext.pathParams = pathResult.data as InferSchema<ExtractPathSchema<Schema>>
             }
-            handlerContext.pathParams = pathResult.data as InferSchema<ExtractPathSchema<Schema>>
-        }
 
-        return await options.handler.call(this, handlerContext)
+            return await options.handler.call(this, handlerContext)
         }
 
         return await run()
@@ -352,14 +347,7 @@ export function zodPartial<
     Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
     Ctx extends object = AnyContext,
 >(options: ZodHandlerOptions<Schema, Ctx>): {
-    handler: Handler<
-        InferSchema<ExtractBodySchema<Schema>>,
-        InferSchema<ExtractPathSchema<Schema>>,
-        InferSchema<ExtractQuerySchema<Schema>>,
-        InferResponseBody<ExtractResponseBodySchemas<Schema>>,
-        unknown,
-        Ctx
-    >
+    handler: Handler<InferResponseBody<ExtractResponseBodySchemas<Schema>>, Ctx>
     schema?: RouteSchema
 } {
     const schema = buildRouteSchema(options.schema)

@@ -26,7 +26,10 @@ function isResultEnvelope(value: unknown): value is {status: number; body: Struc
 
 function isYamlPreferred(request: Request): boolean {
     const accept = request.headers.get('accept') ?? '*/*'
-    return accept.includes(CommonContentTypes.YAML) || accept.includes('application/yaml') || accept.includes('text/yaml')
+    return accept.includes(CommonContentTypes.YAML)
+        || accept.includes('application/yaml')
+        || accept.includes('application/x-yaml')
+        || accept.includes('text/yaml')
 }
 
 function toYaml(value: unknown): string {
@@ -78,14 +81,14 @@ router.add(zodRoute({
         },
         response: {
             body: {
-                200: z.object({
+                [HttpStatus.OK]: z.object({
                     id: z.number().int(),
                     name: z.string(),
                     view: z.enum(['summary', 'full']),
                     tags: z.array(z.string()),
                     summary: z.string(),
                 }),
-                400: validationErrorSchema,
+                [HttpStatus.BAD_REQUEST]: validationErrorSchema,
             },
         },
     },

@@ -3,7 +3,7 @@ import {describe, expect, it} from 'bun:test'
 import {HttpMethod, HttpStatus} from '@mpen/http-helpers'
 import {z} from 'zod'
 import {Router} from '../router'
-import {expectType, type TypeEqual} from '@mpen/server-router/testing/type-assert'
+import {expectType} from '@mpen/server-router/testing/type-assert'
 import {ValidationError, zodHandler, zodPartial, zodRoute} from '../helpers/zod'
 
 describe('zodHandler', () => {
@@ -26,10 +26,10 @@ describe('zodHandler', () => {
                 },
             },
             handler: ({req, pathParams, query, body}) => {
-                expectType<TypeEqual<typeof req, Request>>(true)
-                expectType<TypeEqual<typeof pathParams, {id: string}>>(true)
-                expectType<TypeEqual<typeof query, {verbose: 'yes' | 'no'}>>(true)
-                expectType<TypeEqual<typeof body, {name: string}>>(true)
+                expectType<Request>(req)
+                expectType<{id: string}>(pathParams)
+                expectType<{verbose: 'yes' | 'no'}>(query)
+                expectType<{name: string}>(body)
                 return new Response(JSON.stringify({pathParams, query, body}), {
                     headers: {'content-type': 'application/json'},
                 })

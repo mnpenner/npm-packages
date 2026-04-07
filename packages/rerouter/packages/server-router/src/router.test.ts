@@ -56,7 +56,7 @@ describe('Router', () => {
         router.add({
             method: HttpMethod.GET,
             pattern: '/users/:id',
-            handler: ({pathParams}) => new Response(pathParams.id),
+            handler: ({pathParams}) => new Response((pathParams as {id: string}).id),
         })
 
         const response = await router.fetch(makeRequest('/users/42'))
@@ -67,7 +67,7 @@ describe('Router', () => {
     it('handles HEAD requests for streaming handlers', async () => {
         const beforeHeader = mock()
         const afterHeader = mock()
-        const handler: Handler<unknown, unknown, unknown, unknown> = async function* () {
+        const handler: Handler = async function* () {
             yield 201
             beforeHeader()
             yield new Headers({'x-stream': 'true'})
@@ -93,7 +93,7 @@ describe('Router', () => {
 
     it('defaults to 200 when headers are yielded before status', async () => {
         const {resolve: resume, promise: deferred} = Promise.withResolvers()
-        const handler: Handler<unknown, unknown, unknown, unknown> = async function* () {
+        const handler: Handler = async function* () {
             yield new Headers({'x-stream': 'true'})
             yield 499  // ignored
             await deferred

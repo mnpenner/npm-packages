@@ -121,13 +121,7 @@ export function createZodNeverjectHandler<
     PathSchema extends ZodType | undefined,
     Success,
     Error = RawError,
->(options: CreateZodHandlerOptions<QuerySchema, BodySchema, PathSchema, Success, Error>): Handler<
-    BodySchema extends ZodType ? z.infer<BodySchema> : unknown,
-    PathSchema extends ZodType ? z.infer<PathSchema> : unknown,
-    QuerySchema extends ZodType ? z.infer<QuerySchema> : unknown,
-    Success,
-    Error
-> {
+>(options: CreateZodHandlerOptions<QuerySchema, BodySchema, PathSchema, Success, Error>): Handler<Success> {
     return async (ctx: RequestContext) => {
         const queryParams: unknown = ctx.queryParams
         const pathParams: unknown = ctx.pathParams

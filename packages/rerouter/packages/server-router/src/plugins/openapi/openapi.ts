@@ -249,7 +249,7 @@ function buildOperation(route: NormalizedRoute<any>): OpenApiOperation {
  * @param options - OpenAPI document options for info, servers, and optional components/security.
  * @returns A route handler that returns the generated OpenAPI JSON document.
  */
-export function openapi(options: OpenApiOptions): Handler<unknown, unknown, unknown, OpenApiDocument> {
+export function openapi(options: OpenApiOptions): Handler<OpenApiDocument> {
     return function openapiHandler(this: Router<any>): Response {
         const routes = this.getRoutes()
         const paths: OpenApiPaths = {}

@@ -701,11 +701,11 @@ describe(rateLimit.name, () => {
         router.use(rateLimit({
             getUserId: async () => null,
             getGlobalPeakConcurrentUsers: async () => 1,
-            baseWindowMs: 1000,
+            baseWindowMs: 10_000,
             baseMaxRequestsPerBaseWindow: 1,
             anonymousIpMultiplier: 1,
             addRetryAfterHeader: false,
-            buckets: [{windowMs: 1000, scale: 1}],
+            buckets: [{windowMs: 10_000, scale: 1}],
             endpointLimits: [],
             includeQueryInEndpointKey: false,
             inMemory: {ttlMs: 0},

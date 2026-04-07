@@ -65,10 +65,10 @@ function normalizeMiddlewareList<Ctx extends object>(
 export class Router<Ctx extends object = AnyContext> implements SimpleServerInterface {
     private _entries: RouteEntry[] = []
     private _middleware: ContextMiddleware<any, any>[] = []
-    private _notFoundHandler?: Handler<any, Record<string, string>, any, any, any, Ctx>
-    private _methodNotAllowedHandler?: Handler<any, Record<string, string>, any, any, any, Ctx>
-    private _notAcceptableHandler?: Handler<any, Record<string, string>, any, any, any, Ctx>
-    private _internalErrorHandler?: Handler<any, Record<string, string>, any, any, any, Ctx>
+    private _notFoundHandler?: Handler<any, Ctx>
+    private _methodNotAllowedHandler?: Handler<any, Ctx>
+    private _notAcceptableHandler?: Handler<any, Ctx>
+    private _internalErrorHandler?: Handler<any, Ctx>
 
     /**
      * Create a new router instance.
@@ -86,7 +86,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
      * @param handler - Handler invoked when no route matches.
      * @returns The router instance for chaining.
      */
-    notFound(handler: Handler<any, Record<string, string>, any, any, any, Ctx>): this {
+    notFound(handler: Handler<any, Ctx>): this {
         this._notFoundHandler = handler
         return this
     }
@@ -102,7 +102,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
      * @param handler - Handler invoked when a route exists but the method does not match.
      * @returns The router instance for chaining.
      */
-    methodNotAllowed(handler: Handler<any, Record<string, string>, any, any, any, Ctx>): this {
+    methodNotAllowed(handler: Handler<any, Ctx>): this {
         this._methodNotAllowedHandler = handler
         return this
     }
@@ -118,7 +118,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
      * @param handler - Handler invoked when the incoming `Content-Type` is not accepted.
      * @returns The router instance for chaining.
      */
-    notAcceptable(handler: Handler<any, Record<string, string>, any, any, any, Ctx>): this {
+    notAcceptable(handler: Handler<any, Ctx>): this {
         this._notAcceptableHandler = handler
         return this
     }
@@ -134,7 +134,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
      * @param handler - Handler invoked when a route handler throws.
      * @returns The router instance for chaining.
      */
-    internalError(handler: Handler<any, Record<string, string>, any, any, any, Ctx>): this {
+    internalError(handler: Handler<any, Ctx>): this {
         this._internalErrorHandler = handler
         return this
     }
@@ -317,7 +317,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
      * @param handler - Handler invoked when the route matches.
      * @returns The router instance for chaining.
      */
-    get(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, any, any, any, any, Ctx>): this {
+    get(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, Ctx>): this {
         return this.add({path, handler, method: HttpMethod.GET})
     }
 
@@ -328,7 +328,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
      * @param handler - Handler invoked when the route matches.
      * @returns The router instance for chaining.
      */
-    head(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, any, any, any, any, Ctx>): this {
+    head(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, Ctx>): this {
         return this.add({path, handler, method: HttpMethod.HEAD})
     }
 
@@ -339,7 +339,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
      * @param handler - Handler invoked when the route matches.
      * @returns The router instance for chaining.
      */
-    post(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, any, any, any, any, Ctx>): this {
+    post(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, Ctx>): this {
         return this.add({path, handler, method: HttpMethod.POST})
     }
 
@@ -350,7 +350,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
      * @param handler - Handler invoked when the route matches.
      * @returns The router instance for chaining.
      */
-    put(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, any, any, any, any, Ctx>): this {
+    put(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, Ctx>): this {
         return this.add({path, handler, method: HttpMethod.PUT})
     }
 
@@ -361,7 +361,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
      * @param handler - Handler invoked when the route matches.
      * @returns The router instance for chaining.
      */
-    delete(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, any, any, any, any, Ctx>): this {
+    delete(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, Ctx>): this {
         return this.add({path, handler, method: HttpMethod.DELETE})
     }
 
@@ -372,7 +372,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
      * @param handler - Handler invoked when the route matches.
      * @returns The router instance for chaining.
      */
-    patch(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, any, any, any, any, Ctx>): this {
+    patch(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, Ctx>): this {
         return this.add({path, handler, method: HttpMethod.PATCH})
     }
 
@@ -506,18 +506,18 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         request: Request,
         url: URL,
         pathParams: Record<string, string>
-    ): HandlerContext<Record<string, string>, Ctx> {
+    ): HandlerContext<Ctx> {
         return {
             req: request,
             url,
             pathParams,
-        } as HandlerContext<Record<string, string>, Ctx>
+        } as HandlerContext<Ctx>
     }
 
     private async _executeHandler(
-        handler: Handler<any, any, any, any, any, any>,
+        handler: Handler<any, any>,
         middleware: ContextMiddleware<any, any>[],
-        ctx: HandlerContext<any, any>,
+        ctx: HandlerContext<any>,
         router: Router<any>,
         request: Request
     ): Promise<Response> {
@@ -537,8 +537,8 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
     }
 
     private async _tryCustomHandler(
-        handler: Handler<any, any, any, any, any, any> | undefined,
-        ctx: HandlerContext<any, any>,
+        handler: Handler<any, any> | undefined,
+        ctx: HandlerContext<any>,
         router: Router<any>,
         request: Request
     ): Promise<Response | null> {
@@ -566,7 +566,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
 
     private async _handleInternalError(
         router: Router<any>,
-        ctx: HandlerContext<any, any>,
+        ctx: HandlerContext<any>,
         request: Request
     ): Promise<Response> {
         const custom = await this._tryCustomHandler(router._internalErrorHandler, ctx, router, request)
@@ -688,9 +688,9 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
     }
 
     private _run(
-        handler: Handler<any, any, any, any, any, any>,
+        handler: Handler<any, any>,
         middleware: ContextMiddleware<any, any>[],
-        ctx: HandlerContext<any, Ctx>,
+        ctx: HandlerContext<Ctx>,
         router: Router<any>
     ): Promise<HandlerResult> {
         let idx = -1

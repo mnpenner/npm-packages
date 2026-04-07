@@ -115,7 +115,7 @@ export interface Route<Ctx extends object = AnyContext> {
      * Deprecated alias for [`Route.path`]{@link Route#path}.
      */
     pattern?: RoutePath
-    handler: Handler<any, any, any, any, any, Ctx>
+    handler: Handler<any, Ctx>
     method?: OneOrMany<HttpMethod>
     /**
      * Optional custom matcher. When omitted, the router matches using `path`, `method`, and `accept`.
@@ -179,7 +179,7 @@ export interface Route<Ctx extends object = AnyContext> {
 export interface NormalizedRoute<Ctx extends object = AnyContext> {
     name: string[]
     path: URLPattern
-    handler: Handler<any, any, any, any, any, Ctx>
+    handler: Handler<any, Ctx>
     method?: HttpMethod | HttpMethod[]
     accept?: MediaType[]
     match?: RouteMatch
@@ -237,14 +237,14 @@ export type RequestContext<Ctx extends object = AnyContext> = {
  *
  * @example
  * ```ts
- * const handler: HandlerContext<{id: string}> = {
+ * const handler: HandlerContext = {
  *   req: new Request('https://example.com/users/123'),
  *   url: new URL('https://example.com/users/123'),
  *   pathParams: {id: '123'},
  * }
  * ```
  */
-export type HandlerContext<TReqPath = unknown, Ctx extends object = AnyContext> = RequestContext<Ctx> & {
+export type HandlerContext<Ctx extends object = AnyContext> = RequestContext<Ctx> & {
     /**
      * Parsed request URL for convenience.
      */
@@ -252,7 +252,7 @@ export type HandlerContext<TReqPath = unknown, Ctx extends object = AnyContext> 
     /**
      * Route path parameters extracted from the matched URL pattern.
      */
-    pathParams: TReqPath
+    pathParams: unknown
 }
 
 /**
@@ -321,8 +321,8 @@ export type HandlerResult<TOkRes = unknown> =
  *
  * @example
  * ```ts
- * const handler: Handler<unknown, {id: string}, unknown, {id: string}> = ({pathParams}) => {
- *   return {id: pathParams.id}
+ * const handler: Handler = ({pathParams}) => {
+ *   return JSON.stringify(pathParams)
  * }
  * ```
  *
@@ -332,13 +332,9 @@ export type HandlerResult<TOkRes = unknown> =
  * @returns A response, a serializable value handled by middleware, or a streaming generator that yields response metadata.
  */
 export type Handler<
-    TReqBody=unknown,  // FIXME: remove unused params..?
-    TReqPath=unknown,  // how is it that TReqPath is used?
-    TReqQuery=unknown,
     TOkRes=unknown,
-    TErr = unknown,
     Ctx extends object = AnyContext,
-> = (this: Router<any>, ctx: HandlerContext<TReqPath, Ctx>) => HandlerResult<TOkRes>
+> = (this: Router<any>, ctx: HandlerContext<Ctx>) => HandlerResult<TOkRes>
 
 /**
  * Middleware that can intercept requests, responses, and extend context.
