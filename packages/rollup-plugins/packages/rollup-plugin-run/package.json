@@ -1,30 +1,37 @@
 {
-    "name": "@mpen/rollup-plugin-run",
-    "version": "0.1.9",
-    "main": "dist/rollup-plugin-run.js",
-    "module": "dist/rollup-plugin-run.mjs",
-    "types": "dist/rollup-plugin-run.d.ts",
-    "scripts": {
-        "prebuild": "rm -rf dist",
-        "build": "rollup -c",
-        "prepack": "npm run build"
+  "name": "@mpen/rollup-plugin-run",
+  "version": "0.1.9",
+  "main": "dist/rollup-plugin-run.js",
+  "module": "dist/rollup-plugin-run.mjs",
+  "types": "dist/rollup-plugin-run.d.ts",
+  "scripts": {
+    "prebuild": "rm -rf dist",
+    "build": "rollup -c",
+    "prepack": "npm run build"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "chalk": "^4.1.0",
+    "rollup-plugin-typescript2": "^0.29.0"
+  },
+  "devDependencies": {
+    "rollup": "^2.39.0",
+    "typescript": "^4.1.5"
+  },
+  "peerDependencies": {
+    "rollup": "^2.39.0",
+    "typescript": "^4.1.5"
+  },
+  "repository": {
+    "url": "https://github.com/mnpenner/rollup-plugins/tree/default/packages/rollup-plugin-run"
+  },
+  "exports": {
+    ".": {
+      "bun": "./rollup-plugin-run.ts",
+      "default": "dist/rollup-plugin-run.mjs"
     },
-    "publishConfig": {
-        "access": "public"
-    },
-    "dependencies": {
-        "chalk": "^4.1.0",
-        "rollup-plugin-typescript2": "^0.29.0"
-    },
-    "devDependencies": {
-        "rollup": "^2.39.0",
-        "typescript": "^4.1.5"
-    },
-    "peerDependencies": {
-        "rollup": "^2.39.0",
-        "typescript": "^4.1.5"
-    },
-    "repository": {
-        "url": "https://github.com/mnpenner/rollup-plugins/tree/default/packages/rollup-plugin-run"
-    }
+    "./package.json": "./package.json"
+  }
 }

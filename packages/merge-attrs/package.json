@@ -42,5 +42,12 @@
       "tsx",
       "js"
     ]
+  },
+  "exports": {
+    ".": {
+      "bun": "./src/index.ts",
+      "default": "node"
+    },
+    "./package.json": "./package.json"
   }
 }

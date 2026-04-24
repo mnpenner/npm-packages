@@ -1,0 +1,146 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "allowJs": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "customConditions": [
+      "bun"
+    ],
+    "paths": {
+      "@mpen/base50": [
+        "packages/base50/src/bundle.ts"
+      ],
+      "@mpen/http-helpers": [
+        "packages/http-helpers/src/index.ts"
+      ],
+      "@mpen/imut-utils": [
+        "packages/imut-utils/src/index.ts"
+      ],
+      "@mpen/is-type": [
+        "packages/is-type/src/index.ts"
+      ],
+      "@mpen/jsxhtml": [
+        "packages/jsxhtml/src/index.ts"
+      ],
+      "@mpen/react-basic-inputs": [
+        "packages/react-basic-inputs/src/bundle.ts"
+      ],
+      "@mpen/react-router": [
+        "packages/react-router/src/index.ts"
+      ],
+      "@mpen/rerouter": [
+        "packages/rerouter/src/index.ts"
+      ],
+      "@mpen/rollup-plugin-clean": [
+        "packages/rollup-plugins/packages/rollup-plugin-clean/rollup-plugin-clean.ts"
+      ],
+      "@mpen/rollup-plugin-executable": [
+        "packages/rollup-plugins/packages/rollup-plugin-executable/rollup-plugin-executable.ts"
+      ],
+      "@mpen/rollup-plugin-node-resolve": [
+        "packages/rollup-plugins/packages/rollup-plugin-node-resolve/rollup-plugin-node-resolve.ts"
+      ],
+      "@mpen/rollup-plugin-package": [
+        "packages/rollup-plugins/packages/rollup-plugin-package/rollup-plugin-package.ts"
+      ],
+      "@mpen/rollup-plugin-pug": [
+        "packages/rollup-plugins/packages/rollup-plugin-pug/rollup-plugin-pug.ts"
+      ],
+      "@mpen/rollup-plugin-run": [
+        "packages/rollup-plugins/packages/rollup-plugin-run/rollup-plugin-run.ts"
+      ],
+      "@mpen/rollup-preset-tsapp": [
+        "packages/rollup-plugins/packages/rollup-preset-tsapp/rollup-preset-tsapp.ts"
+      ],
+      "@mpen/rollup-preset-tslib": [
+        "packages/rollup-plugins/packages/rollup-preset-tslib/rollup-preset-tslib.ts"
+      ],
+      "@mpen/server-router": [
+        "packages/server-router/src/index.ts"
+      ],
+      "@mpen/server-router-zod-neverject": [
+        "packages/rerouter/experimental/server-router-zod-neverject/src/index.ts"
+      ],
+      "@mpen/uri-template": [
+        "packages/uri-template/src/index.ts"
+      ],
+      "bun-plugin-react-compiler": [
+        "packages/bun-plugin-react-compiler/src/react-compiler.ts"
+      ],
+      "bun-server": [
+        "packages/bun-server/server/bun-server.ts"
+      ],
+      "child-spawn": [
+        "packages/child-spawn/src/index.ts"
+      ],
+      "cli-api": [
+        "packages/cli-api/src/index.ts"
+      ],
+      "crap-app": [
+        "packages/crap-app/index.js"
+      ],
+      "ctslib": [
+        "packages/create-tslib/index.js"
+      ],
+      "js-serialize": [
+        "packages/js-serialize/src/index.ts"
+      ],
+      "jtilz": [
+        "packages/jtilz/src/index.node.ts"
+      ],
+      "merge-attrs": [
+        "packages/merge-attrs/src/index.ts"
+      ],
+      "mysql3": [
+        "packages/mysql3/src/index.ts"
+      ],
+      "neverject": [
+        "packages/neverject/src/index.ts"
+      ],
+      "onemig": [
+        "packages/onemig/src/main.ts"
+      ],
+      "ouid": [
+        "packages/ouid/src/index.ts"
+      ],
+      "packdb": [
+        "packages/packdb/PackDB.js"
+      ],
+      "podman": [
+        "packages/podman/src/index.ts"
+      ],
+      "react-ajax-loader": [
+        "packages/react-ajax-loader/src/index.js"
+      ],
+      "react-combobox": [
+        "packages/react-combobox/src/index.tsx"
+      ],
+      "register-pretty-error": [
+        "packages/register-pretty-error/src/index.ts"
+      ],
+      "svg-to-react-webpack-loader": [
+        "packages/svg-to-react-webpack-loader/loader.js"
+      ],
+      "svg2fonts": [
+        "packages/svg2fonts/bin.js"
+      ],
+      "yamake": [
+        "packages/yamake/src/index.ts"
+      ]
+    }
+  },
+  "include": [
+    "packages/**/*.ts",
+    "packages/**/*.tsx",
+    "packages/**/*.js"
+  ],
+  "exclude": [
+    "**/node_modules/**",
+    "**/dist/**"
+  ]
+}

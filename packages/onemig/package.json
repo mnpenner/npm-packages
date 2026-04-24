@@ -51,5 +51,12 @@
     "prepack": "bun run build",
     "start": "./dist/cli",
     "check:types": "bunx tsc --noEmit"
+  },
+  "exports": {
+    ".": {
+      "bun": "./src/main.ts",
+      "default": "./src/main.ts"
+    },
+    "./package.json": "./package.json"
   }
 }

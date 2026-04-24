@@ -22,5 +22,12 @@
     "esbuild": "^0.14.13",
     "ts-node": "^10.4.0",
     "typescript": "^4.5.5"
+  },
+  "exports": {
+    ".": {
+      "bun": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./package.json": "./package.json"
   }
 }

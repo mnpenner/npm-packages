@@ -1,24 +1,31 @@
 {
-    "name": "@mpen/rollup-plugin-clean",
-    "version": "0.1.9",
-    "main": "dist/rollup-plugin-clean.js",
-    "module": "dist/rollup-plugin-clean.mjs",
-    "types": "dist/rollup-plugin-clean.d.ts",
-    "scripts": {
-        "prebuild": "rimraf dist",
-        "build": "rollup -c",
-        "prepack": "npm run build"
+  "name": "@mpen/rollup-plugin-clean",
+  "version": "0.1.9",
+  "main": "dist/rollup-plugin-clean.js",
+  "module": "dist/rollup-plugin-clean.mjs",
+  "types": "dist/rollup-plugin-clean.d.ts",
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "build": "rollup -c",
+    "prepack": "npm run build"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "rimraf": "^3.0.2",
+    "rollup": "^2.39.0",
+    "rollup-plugin-typescript2": "^0.29.0",
+    "typescript": "^4.1.5"
+  },
+  "repository": {
+    "url": "https://github.com/mnpenner/rollup-plugins/tree/default/packages/rollup-plugin-clean"
+  },
+  "exports": {
+    ".": {
+      "bun": "./rollup-plugin-clean.ts",
+      "default": "dist/rollup-plugin-clean.mjs"
     },
-    "publishConfig": {
-        "access": "public"
-    },
-    "devDependencies": {
-        "rimraf": "^3.0.2",
-        "rollup": "^2.39.0",
-        "rollup-plugin-typescript2": "^0.29.0",
-        "typescript": "^4.1.5"
-    },
-    "repository": {
-        "url": "https://github.com/mnpenner/rollup-plugins/tree/default/packages/rollup-plugin-clean"
-    }
+    "./package.json": "./package.json"
+  }
 }

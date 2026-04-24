@@ -2,7 +2,10 @@
   "name": "@mpen/react-router",
   "module": "./dist/index.js",
   "exports": {
-    ".": "./dist/index.js",
+    ".": {
+      "bun": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
     "./hooks": "./dist/hooks.js",
     "./package.json": "./package.json"
   },

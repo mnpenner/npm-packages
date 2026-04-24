@@ -4,10 +4,12 @@
   "packageManager": "bun@1.2.10",
   "exports": {
     ".": {
+      "bun": "./src/bundle.ts",
       "types": "./dist/bundle.d.ts",
       "import": "./dist/bundle.mjs",
       "require": "./dist/bundle.cjs"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "type": "module",
   "files": [

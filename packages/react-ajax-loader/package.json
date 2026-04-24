@@ -26,5 +26,12 @@
   },
   "peerDependencies": {
     "react": "^16.2.0"
+  },
+  "exports": {
+    ".": {
+      "bun": "./src/index.js",
+      "default": "./src/index.js"
+    },
+    "./package.json": "./package.json"
   }
 }

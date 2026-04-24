@@ -2,7 +2,13 @@
   "name": "child-spawn",
   "version": "0.1.2",
   "packageManager": "yarn@3.3.1",
-  "exports": "./dist/index.cjs",
+  "exports": {
+    ".": {
+      "bun": "./src/index.ts",
+      "default": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
   "module": "./dist/index.mjs",
   "type": "module",
   "types": "dist/index.d.mts",

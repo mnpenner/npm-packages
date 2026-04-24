@@ -18,5 +18,12 @@
   "repository": {
     "type": "hg",
     "url": "https://bitbucket.org/mnpenner/crap"
+  },
+  "exports": {
+    ".": {
+      "bun": "./index.js",
+      "default": "./index.js"
+    },
+    "./package.json": "./package.json"
   }
 }

@@ -28,7 +28,10 @@
   },
   "main": "./dist/index.js",
   "exports": {
-    ".": "./dist/index.js",
+    ".": {
+      "bun": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
     "./aggregate": "./dist/aggregate.js",
     "./invoke": "./dist/invoke.js",
     "./result": "./dist/result.js",

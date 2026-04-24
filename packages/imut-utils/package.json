@@ -4,10 +4,12 @@
   "packageManager": "yarn@3.3.1",
   "exports": {
     ".": {
+      "bun": "./src/index.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs",
       "types": "./dist/index.d.ts"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "type": "module",
   "files": [

@@ -10,5 +10,12 @@
   },
   "engines": {
     "node": ">=12"
+  },
+  "exports": {
+    ".": {
+      "bun": "./index.js",
+      "default": "./index.js"
+    },
+    "./package.json": "./package.json"
   }
 }

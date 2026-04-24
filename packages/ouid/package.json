@@ -4,6 +4,7 @@
   "description": "Ordered UUIDs for Node & Bun",
   "exports": {
     ".": {
+      "bun": "./src/index.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },

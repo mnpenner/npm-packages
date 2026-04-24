@@ -34,5 +34,12 @@
       "<rootDir>/src/**/__tests__/**/*.(ts|js)"
     ]
   },
-  "dependencies": {}
+  "dependencies": {},
+  "exports": {
+    ".": {
+      "bun": "./src/index.node.ts",
+      "default": "node/index.node"
+    },
+    "./package.json": "./package.json"
+  }
 }

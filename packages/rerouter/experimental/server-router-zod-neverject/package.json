@@ -2,16 +2,20 @@
   "name": "@mpen/server-router-zod-neverject",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "bun": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./package.json": "./package.json"
   },
   "module": "src/index.ts",
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
-    "@mpen/http-helpers": "*",
-    "@mpen/server-router": "*",
-    "neverject": "^0.2.3",
+    "@mpen/http-helpers": "workspace:*",
+    "@mpen/server-router": "workspace:*",
+    "neverject": "workspace:*",
     "zod": "^4.1.13"
   }
 }

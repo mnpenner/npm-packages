@@ -3,7 +3,13 @@
   "version": "0.1.9",
   "packageManager": "bun",
   "type": "module",
-  "exports": "./dist/bundle.cjs",
+  "exports": {
+    ".": {
+      "bun": "./src/index.ts",
+      "default": "./dist/bundle.cjs"
+    },
+    "./package.json": "./package.json"
+  },
   "module": "./dist/bundle.mjs",
   "types": "./dist/bundle.d.ts",
   "files": [

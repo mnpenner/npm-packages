@@ -24,5 +24,12 @@
   "bin": "bin.js",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
+  },
+  "exports": {
+    ".": {
+      "bun": "./bin.js",
+      "default": "./bin.js"
+    },
+    "./package.json": "./package.json"
   }
 }

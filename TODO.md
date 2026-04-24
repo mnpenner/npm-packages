@@ -1,0 +1,2 @@
+- Convert all packages that are using a package manager other than bun to bun (e.g. pnpm, yarn or npm)
+- Convert packages that are compiled with something other than tsdown to use the latest version of tsdown. Make sure `exports: true` is set (this will fix the export paths in package.json)

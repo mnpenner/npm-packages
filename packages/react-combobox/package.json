@@ -22,7 +22,15 @@
   "dependencies": {
     "downshift": "^2.1.4",
     "emotion": "^9.2.6",
-    "js-serialize": "^0.1.10",
+    "js-serialize": "workspace:*",
     "react-emotion": "^9.2.6"
+  },
+  "name": "react-combobox",
+  "exports": {
+    ".": {
+      "bun": "./src/index.tsx",
+      "default": "./src/index.tsx"
+    },
+    "./package.json": "./package.json"
   }
 }
