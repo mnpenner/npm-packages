@@ -1,0 +1,30 @@
+{
+  "name": "react-ajax-loader",
+  "version": "0.1.5",
+  "description": "React HOC to asynchronously load data into your component",
+  "browser": "src/index.js",
+  "scripts": {
+    "build": "bundilio",
+    "publish": "cd dist && npm publish"
+  },
+  "author": "NucleusLabs Information Technologies Inc.",
+  "license": "MIT",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
+  "repository": {
+    "type": "hg",
+    "url": "https://bitbucket.org/nucleuslabs/react-ajax-loader"
+  },
+  "dependencies": {
+    "lru-cache": "^4.1.1",
+    "object-hash": "^1.2.0",
+    "shallowequal": "^1.0.2"
+  },
+  "devDependencies": {
+    "bundilio": "^0.4.5"
+  },
+  "peerDependencies": {
+    "react": "^16.2.0"
+  }
+}
