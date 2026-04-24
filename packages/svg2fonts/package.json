@@ -1,0 +1,28 @@
+{
+  "name": "svg2fonts",
+  "version": "0.3.2",
+  "dependencies": {
+    "argparse": "^2.0.1",
+    "cssesc": "^3.0.0",
+    "he": "^1",
+    "lodash": "^4",
+    "mkdirp": "^1.0.4",
+    "sanitize-filename": "^1.6",
+    "svg2ttf": "^5.0.0",
+    "svgicons2svgfont": "^9",
+    "ttf2eot": "^2",
+    "ttf2woff": "^2",
+    "ttf2woff2": "^4.0.1"
+  },
+  "scripts": {
+    "test": "node bin.js test/icons -o test/out -n FontAwesome -f fontawesome -p fa-",
+    "serve": "npx http-server test/out"
+  },
+  "repository": "https://github.com/mnpenner/svg2fonts",
+  "author": "Mark Penner <npm@mpen.ca>",
+  "license": "MIT",
+  "bin": "bin.js",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  }
+}
