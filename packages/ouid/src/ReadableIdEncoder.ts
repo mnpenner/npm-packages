@@ -28,7 +28,7 @@ export class ReadableIdEncoder {
         randomBytes[6] = id[13]
         randomBytes[7] = id[14] & 0xF0
 
-        return `${typeTag.toString(16).toUpperCase()}.${time.toString(36)}.${randomBytes.toString('base64url').slice(0, -1)}`
+        return `${typeTag.toString(16).toUpperCase()}.${time.toString(36)}.${randomBytes.toString('base64url')}`
     }
 
     decode(encoded: string): Buffer {

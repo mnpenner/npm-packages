@@ -5,7 +5,8 @@ import type { AnyContext,
     RequestContext,
     RequestMiddleware
 } from './run-handler-types';
-import {assumeType} from '#shared/types/assert'
+
+function assumeType<T>(_value: unknown): asserts _value is T {}
 
 
 

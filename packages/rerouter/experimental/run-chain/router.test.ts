@@ -5,12 +5,42 @@ import {describe, it, expect} from "bun:test"
 import {Router} from "./router"
 import type {RequestHandler, RequestMiddleware, RequestContext, MatchedPath} from './run-handler-types'
 import {ANY_PATH} from "./constants"
-import {timeout} from '../middleware/timeout'
-import {sleep} from '#shared/misc'
-import {addAccept} from '../middleware/add-accept'
-import {convertStdResponse} from '../middleware/convert-std-response'
-import {ErrorCode} from '../std-response'
-import {HttpStatus} from '#shared/enums'
+
+const enum HttpStatus {
+    GATEWAY_TIMEOUT = 504,
+}
+
+const enum ErrorCode {
+    TIMEOUT = 'TIMEOUT',
+}
+
+function sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+const addAccept: RequestMiddleware = (_ctx, next) => next()
+const convertStdResponse: RequestMiddleware = (_ctx, next) => next()
+
+function timeout(ms: number): RequestMiddleware {
+    return async (ctx, next) => {
+        let timer: ReturnType<typeof setTimeout>
+        const timeoutResponse = new Promise<Response>((resolve) => {
+            timer = setTimeout(() => {
+                ;(ctx as any).aborted = true
+                resolve(Response.json({
+                    ok: false,
+                    code: ErrorCode.TIMEOUT,
+                    userMessage: "Response timed out.",
+                }, {status: HttpStatus.GATEWAY_TIMEOUT}))
+            }, ms)
+        })
+
+        return await Promise.race([
+            Promise.resolve(next()).finally(() => clearTimeout(timer)),
+            timeoutResponse,
+        ])
+    }
+}
 
 
 // --- Test Context & User Types ---

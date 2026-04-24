@@ -2,4 +2,5 @@ syntax: rootglob
 
 .idea/
 **/node_modules/
+**/dist/
 scratch/

@@ -1,7 +1,4 @@
 import {runHandler} from './run-handler'
-import type {ConstructorArgs, NonFalsy} from '#shared/types/util-types'
-import {forceArray, setAddMany} from '#shared/collection'
-import type {DiscriminatedUnion} from '#shared/types/discriminated-union'
 import type {
     AnyHandler,
     AnyMiddleware,
@@ -16,7 +13,21 @@ import type {
     RequestMethod
 } from './run-handler-types'
 import {ANY_METHOD, ANY_PATH} from './constants'
-import {assumeType} from '#shared/types/assert'
+
+type ConstructorArgs<T extends abstract new (...args: any) => any> = ConstructorParameters<T>
+type NonFalsy<T> = T extends false | 0 | '' | null | undefined ? never : T
+
+function forceArray<T>(value: T | T[]): T[] {
+    return Array.isArray(value) ? value : [value]
+}
+
+function setAddMany<T>(set: Set<T>, values: Iterable<T>): void {
+    for(const value of values) {
+        set.add(value)
+    }
+}
+
+function assumeType<T>(_value: unknown): asserts _value is T {}
 
 // type PathHandler<Ctx extends object = {}> = [path: AnyPathMatcher, handlers: Middleware<Ctx>[]];
 
@@ -57,7 +68,7 @@ const SERVER_ERROR_RESPONSE = Object.freeze(new Response('Internal Server Error'
 //     router: Router
 // }>
 
-type RouteEntry<Ctx extends object = AnyContext> = DiscriminatedUnion<{kind:string},{
+type RouteEntry<Ctx extends object = AnyContext> = {
     kind: 'route',
     method: RequestMethod,
     path: Path,
@@ -66,7 +77,7 @@ type RouteEntry<Ctx extends object = AnyContext> = DiscriminatedUnion<{kind:stri
     kind: 'router',
     prefix?: string,
     router: Router<Ctx>
-}>
+}
 
 type AnyRouter =
     | Router<any>
