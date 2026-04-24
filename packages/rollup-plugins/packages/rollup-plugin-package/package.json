@@ -1,0 +1,27 @@
+{
+    "name": "@mpen/rollup-plugin-package",
+    "version": "0.1.9",
+    "main": "dist/rollup-plugin-package.js",
+    "module": "dist/rollup-plugin-package.mjs",
+    "types": "dist/rollup-plugin-package.d.ts",
+    "scripts": {
+        "prebuild": "rimraf dist",
+        "build": "rollup -c",
+        "prepack": "npm run build"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "devDependencies": {
+        "rimraf": "^3.0.2",
+        "rollup": "^2.39.0",
+        "rollup-plugin-typescript2": "^0.29.0",
+        "typescript": "^4.1.5"
+    },
+    "dependencies": {
+        "pkg-up": "^3.1.0"
+    },
+    "repository": {
+        "url": "https://github.com/mnpenner/rollup-plugins/tree/default/packages/rollup-plugin-package"
+    }
+}
