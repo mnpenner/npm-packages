@@ -12,32 +12,45 @@ const PARSE_CONFIG = {
 } satisfies ParseArgsConfig
 
 async function main(_options: Options, positionals: Positionals): Promise<number | void> {
-    if(positionals.length < 1) {
-        console.error("Usage: import-repo <path-to-hg-repo>")
+    if(positionals.length !== 1) {
+        console.error("Usage: import-repo <path-to-repo>")
         return 1
     }
 
-    const repoPath = resolve(positionals[0])
+    const repoPath = resolve(positionals[0].replace(/[\\/]+$/, ""))
     const name = basename(repoPath)
+    const packagePath = `packages/${name}`
 
-    // temp dir
     const tmp = mkdtempSync(join(tmpdir(), "hg-import-"))
     const filemapPath = join(tmp, `${name}.filemap`)
     const convertedPath = join(tmp, `${name}-converted`)
 
+    console.log(`Source repo:      ${repoPath}`)
+    console.log(`Package path:     ${packagePath}`)
+    console.log(`Temp dir:         ${tmp}`)
+
     try {
-        // filemap
-        writeFileSync(filemapPath, `rename . packages/${name}\n`)
+        console.log(`\nWriting filemap...`)
+        writeFileSync(filemapPath, `rename . ${packagePath}\n`)
 
-        // convert
-        await $`hg --config extensions.convert= convert --filemap ${filemapPath} ${repoPath} ${convertedPath}`
+        console.log(`\nConverting repo into package subdir...`)
+        await $`hg --config extensions.convert= convert \
+            --filemap ${filemapPath} \
+            ${repoPath} \
+            ${convertedPath}`
 
-        // pull into current repo
+        console.log(`\nPulling converted history into current repo...`)
         await $`hg pull -f ${convertedPath}`
-        await $`hg update`
 
+        console.log(`\nMerging imported head...`)
+        await $`hg merge -r tip`
+
+        console.log(`\nCommitting merge...`)
+        await $`hg commit -m ${`Import ${name} into ${packagePath}`}`
+
+        console.log(`\nImported ${name} into ${packagePath}`)
     } finally {
-        // cleanup
+        console.log(`\nCleaning up temp dir...`)
         rmSync(tmp, {recursive: true, force: true})
     }
 }
