@@ -1,0 +1,55 @@
+{
+  "name": "onemig",
+  "version": "0.2.3",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "bin": {
+    "onemig": "dist/cli"
+  },
+  "devDependencies": {
+    "@crustjs/core": "latest",
+    "@crustjs/crust": "latest",
+    "@crustjs/plugins": "latest",
+    "@sinclair/typebox-codegen": "^0.8.13",
+    "@types/bun": "latest",
+    "@types/inflection": "^1.5.28",
+    "@types/js-yaml": "^4.0.0",
+    "@types/lodash": "^4.14.172",
+    "@types/node": "^14.14.34",
+    "@types/tar-stream": "^2.2.0",
+    "ts-json-schema-generator": "^0.84.0",
+    "typescript": "^5",
+    "typescript-json-schema": "^0.48.0"
+  },
+  "dependencies": {
+    "@crustjs/style": "^0.0.5",
+    "@mnpenner/is-type": "^0.1.7",
+    "@sinclair/typebox": "^0.31.28",
+    "chalk": "^4.1.0",
+    "cli-highlight": "^2.1.10",
+    "csv-parse": "^4.15.1",
+    "inflection": "^1.13.1",
+    "js-yaml": "^4.0.0",
+    "json5": "^2.2.0",
+    "lodash": "^4.17.21",
+    "mysql2": "^3.19.1",
+    "ora": "^5.3.0",
+    "string-width": "^4.2.0",
+    "tar-stream": "^2.2.0",
+    "tslib": "^2.1.0"
+  },
+  "engines": {
+    "node": ">=12"
+  },
+  "scripts": {
+    "dev": "bun run src/cli.ts",
+    "build": "crust build",
+    "prepack": "bun run build",
+    "start": "./dist/cli",
+    "check:types": "bunx tsc --noEmit"
+  }
+}

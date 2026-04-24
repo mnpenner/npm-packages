@@ -1,0 +1,103 @@
+// https://github.com/trekhleb/javascript-algorithms/tree/master/src/algorithms/string/longest-common-substring
+
+
+export function longestCommonSubstring(string1: string, string2: string) {
+    // Convert strings to arrays to treat unicode symbols length correctly.
+    // For example:
+    // '𐌵'.length === 2
+    // [...'𐌵'].length === 1
+    const s1 = [...string1];
+    const s2 = [...string2];
+
+    // Init the matrix of all substring lengths to use Dynamic Programming approach.
+    const substringMatrix = Array(s2.length + 1).fill(null).map(() => {
+        return Array(s1.length + 1).fill(null);
+    });
+
+    // Fill the first row and first column with zeros to provide initial values.
+    for (let columnIndex = 0; columnIndex <= s1.length; columnIndex += 1) {
+        substringMatrix[0][columnIndex] = 0;
+    }
+
+    for (let rowIndex = 0; rowIndex <= s2.length; rowIndex += 1) {
+        substringMatrix[rowIndex][0] = 0;
+    }
+
+    // Build the matrix of all substring lengths to use Dynamic Programming approach.
+    let longestSubstringLength = 0;
+    let longestSubstringColumn = 0;
+    let longestSubstringRow = 0;
+
+    for (let rowIndex = 1; rowIndex <= s2.length; rowIndex += 1) {
+        for (let columnIndex = 1; columnIndex <= s1.length; columnIndex += 1) {
+            if (s1[columnIndex - 1] === s2[rowIndex - 1]) {
+                substringMatrix[rowIndex][columnIndex] = substringMatrix[rowIndex - 1][columnIndex - 1] + 1;
+            } else {
+                substringMatrix[rowIndex][columnIndex] = 0;
+            }
+
+            // Try to find the biggest length of all common substring lengths
+            // and to memorize its last character position (indices)
+            if (substringMatrix[rowIndex][columnIndex] > longestSubstringLength) {
+                longestSubstringLength = substringMatrix[rowIndex][columnIndex];
+                longestSubstringColumn = columnIndex;
+                longestSubstringRow = rowIndex;
+            }
+        }
+    }
+
+    if (longestSubstringLength === 0) {
+        // Longest common substring has not been found.
+        return '';
+    }
+
+    // Detect the longest substring from the matrix.
+    let longestSubstring = '';
+
+    while (substringMatrix[longestSubstringRow][longestSubstringColumn] > 0) {
+        longestSubstring = s1[longestSubstringColumn - 1] + longestSubstring;
+        longestSubstringRow -= 1;
+        longestSubstringColumn -= 1;
+    }
+
+    return longestSubstring;
+}
+
+export function lcsMulti(strings: string[]) {
+    // FIXME: this is wrong..
+    // https://web.cs.ucdavis.edu/~gusfield/cs224f09/commonsubstrings.pdf
+    if(!strings.length) throw new Error("need at least 1 string")
+    if(strings.length === 1) return strings[0]
+
+    let lcs = longestCommonSubstring(strings[0],strings[1]);
+    for(let i=2; i<strings.length; ++i) {
+        // console.log(lcs)
+        lcs = longestCommonSubstring(lcs,strings[i])
+    }
+    // console.log(strings,lcs)
+    return lcs
+}
+
+export function longestCommonPrefix(strs: string[]) {
+    let prefix = strs.reduce((acc, str) => str.length < acc.length ? str : acc);
+
+    for (const str of strs) {
+        while (!str.startsWith(prefix)) {
+            prefix = prefix.slice(0, -1);
+        }
+    }
+
+    return prefix;
+}
+
+export function longestCommonSuffix(strs: string[]) {
+    let suffix = strs.reduce((acc, str) => str.length < acc.length ? str : acc);
+
+    for (const str of strs) {
+        while (!str.endsWith(suffix)) {
+            suffix = suffix.slice(1);
+        }
+    }
+
+    return suffix;
+}
