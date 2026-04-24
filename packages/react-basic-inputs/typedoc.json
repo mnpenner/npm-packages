@@ -8,5 +8,5 @@
   "skipErrorChecking": true,
   // https://github.com/TypeStrong/TypeDoc/issues/2109
   "kindSortOrder": ["Function","Class","Method","Interface","TypeAlias","Module"],
-//  "sort": [ "static-first","kind", "instance-first", "alphabetical" ]
+  "sourceLinkTemplate": "https://github.com/mnpenner/npm-packages/blob/main/packages/react-basic-inputs/{path}#L{line}"
 }
