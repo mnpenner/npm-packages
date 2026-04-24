@@ -12,7 +12,7 @@
     "svgicons2svgfont": "^9",
     "ttf2eot": "^2",
     "ttf2woff": "^2",
-    "ttf2woff2": "^4.0.1"
+    "ttf2woff2": "^8.0.1"
   },
   "scripts": {
     "test": "node bin.js test/icons -o test/out -n FontAwesome -f fontawesome -p fa-",
