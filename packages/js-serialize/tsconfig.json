@@ -1,0 +1,27 @@
+{
+    /* Visit https://aka.ms/tsconfig.json to read more about this file */
+    "compilerOptions": {
+        "composite": true,
+        "target": "ES2022",
+        "module": "ESNext",
+        "rootDir": "src/",
+        "declaration": true,
+        "declarationDir": "./dist",
+        "noEmitOnError": false,
+        "emitDeclarationOnly": true,
+        "outDir": "dist/",
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "moduleResolution": "bundler",
+        "strict": true,
+        "skipLibCheck": true,
+        "noImplicitAny": false,
+        "types": ["bun-types"]
+    },
+    "include": [
+        "src/"
+    ],
+    "files": [
+        "src/index.ts"
+    ]
+}
