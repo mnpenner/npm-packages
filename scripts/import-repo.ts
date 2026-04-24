@@ -12,8 +12,8 @@ const PARSE_CONFIG = {
 } satisfies ParseArgsConfig
 
 async function main(_options: Options, positionals: Positionals): Promise<number | void> {
-    if(positionals.length !== 1) {
-        console.error("Usage: import-repo <path-to-repo>")
+    if(positionals.length < 1 || positionals.length > 2) {
+        console.error("Usage: import-repo <path-to-repo> [package-dir-name]")
         return 1
     }
 
@@ -26,12 +26,18 @@ async function main(_options: Options, positionals: Positionals): Promise<number
     }
 
     const repoPath = resolve(positionals[0].replace(/[\\/]+$/, ""))
-    const name = basename(repoPath)
-    const packagePath = `packages/${name}`
+    const sourceName = basename(repoPath)
+    const packageName = positionals[1] ?? sourceName
+    if(packageName.length === 0 || packageName === "." || packageName === ".." || /[\\/]/.test(packageName)) {
+        console.error("Package dir name must be a single directory name")
+        return 1
+    }
+
+    const packagePath = `packages/${packageName}`
 
     const tmp = mkdtempSync(join(tmpdir(), "hg-import-"))
-    const filemapPath = join(tmp, `${name}.filemap`)
-    const convertedPath = join(tmp, `${name}-converted`)
+    const filemapPath = join(tmp, `${packageName}.filemap`)
+    const convertedPath = join(tmp, `${packageName}-converted`)
 
     console.log(`Source repo:      ${repoPath}`)
     console.log(`Package path:     ${packagePath}`)
@@ -54,9 +60,9 @@ async function main(_options: Options, positionals: Positionals): Promise<number
         await $`hg merge -r tip`
 
         console.log(`\nCommitting merge...`)
-        await $`hg commit -m ${`Import ${name} into ${packagePath}`}`
+        await $`hg commit -m ${`Import ${sourceName} into ${packagePath}`}`
 
-        console.log(`\nImported ${name} into ${packagePath}`)
+        console.log(`\nImported ${sourceName} into ${packagePath}`)
     } finally {
         console.log(`\nCleaning up temp dir...`)
         rmSync(tmp, {recursive: true, force: true})
