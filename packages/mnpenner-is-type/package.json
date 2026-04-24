@@ -1,0 +1,32 @@
+{
+  "name": "@mnpenner/is-type",
+  "version": "0.2.0",
+  "packageManager": "bun@1.3.6",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "type": "module",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "homepage": "https://github.com/mnpenner/npm-packages/tree/main/packages/is-type",
+  "scripts": {
+    "build": "bun run --bun tsdown",
+    "release": "npm publish --access=public"
+  },
+  "dependencies": {
+    "@mpen/is-type": "^0.1.15"
+  },
+  "devDependencies": {
+    "tsdown": "^0.21.9",
+    "typescript": "^6.0.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mnpenner/npm-packages.git",
+    "directory": "packages/mnpenner-is-type"
+  },
+  "types": "./dist/index.d.mts"
+}

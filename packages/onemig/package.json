@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@crustjs/style": "^0.0.5",
-    "@mnpenner/is-type": "^0.1.7",
+    "@mpen/is-type": "^0.1.15",
     "@sinclair/typebox": "^0.31.28",
     "chalk": "^4.1.0",
     "cli-highlight": "^2.1.10",

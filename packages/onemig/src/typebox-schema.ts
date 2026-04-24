@@ -4,7 +4,7 @@ import * as FileSys from 'fs'
 import { TypeCompiler } from '@sinclair/typebox/compiler'
 import * as Yaml from 'js-yaml'
 import pkgJson from '../package.json'
-import {isPojo} from '@mnpenner/is-type'
+import {isPojo} from '@mpen/is-type'
 
 // type StringEnumOptions = Omit<UnsafeOptions, 'type' | 'enum'>
 

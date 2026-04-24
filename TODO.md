@@ -3,4 +3,12 @@
 - Upgrade all packages to typescript 6
 - Add eslint to root; remove eslint from packages
 - Add prettier
-- Repoint `@mnpenner/imut-utils` to `@mpen/imut-utils`
+- [x] Repoint `@mnpenner/imut-utils` to `@mpen/imut-utils`
+- [x] Repoint `@mnpenner/is-type` to `@mpen/is-type`
+- Redirect https://github.com/mnpenner/child-spawn to https://github.com/mnpenner/npm-packages/tree/main/packages/child-spawn
+- Redirect https://github.com/mnpenner/imut-utils to https://github.com/mnpenner/npm-packages/tree/main/packages/imut-utils 
+- Redirect https://github.com/mnpenner/is-type to https://github.com/mnpenner/npm-packages/tree/main/packages/is-type
+- Freshen `@mpen/is-type`
+- Start `ts-types` package; include `ts-expect` and my fav helpers like `Override`, `assumeType`
+  - Have a `react/` subdir for `OverrideProps` et al
+  - 
