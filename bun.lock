@@ -143,7 +143,7 @@
     },
     "packages/imut-utils": {
       "name": "@mpen/imut-utils",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "devDependencies": {
         "@types/bun": "latest",
         "npm-run-all": "^4.1.5",
@@ -236,28 +236,6 @@
       "devDependencies": {
         "@types/bun": "latest",
         "npm-run-all": "^4.1.5",
-        "tsdown": "^0.21.9",
-        "typescript": "^6.0.2",
-      },
-    },
-    "packages/mnpenner-imut-utils": {
-      "name": "@mnpenner/imut-utils",
-      "version": "0.2.0",
-      "dependencies": {
-        "@mpen/imut-utils": "^0.2.0",
-      },
-      "devDependencies": {
-        "tsdown": "^0.21.9",
-        "typescript": "^6.0.2",
-      },
-    },
-    "packages/mnpenner-is-type": {
-      "name": "@mnpenner/is-type",
-      "version": "0.2.0",
-      "dependencies": {
-        "@mpen/is-type": "^0.1.15",
-      },
-      "devDependencies": {
         "tsdown": "^0.21.9",
         "typescript": "^6.0.2",
       },
@@ -1056,10 +1034,6 @@
     "@microsoft/tsdoc": ["@microsoft/tsdoc@0.14.2", "", {}, "sha512-9b8mPpKrfeGRuhFH5iO1iwCLeIIsV6+H1sRfxbkoGXIyQE2BTsPd9zqSqQJ+pv5sJ/hT5M1zvOFL02MnEezFug=="],
 
     "@microsoft/tsdoc-config": ["@microsoft/tsdoc-config@0.16.2", "", { "dependencies": { "@microsoft/tsdoc": "0.14.2", "ajv": "~6.12.6", "jju": "~1.4.0", "resolve": "~1.19.0" } }, "sha512-OGiIzzoBLgWWR0UdRJX98oYO+XKGf7tiK4Zk6tQ/E4IJqGCe7dvkTvgDZV5cFJUzLGDOjeAXrnZoA6QkVySuxw=="],
-
-    "@mnpenner/imut-utils": ["@mnpenner/imut-utils@workspace:packages/mnpenner-imut-utils"],
-
-    "@mnpenner/is-type": ["@mnpenner/is-type@workspace:packages/mnpenner-is-type"],
 
     "@mpen/base50": ["@mpen/base50@workspace:packages/base50"],
 
@@ -4210,10 +4184,6 @@
     "@microsoft/tsdoc-config/ajv": ["ajv@6.12.6", "", { "dependencies": { "fast-deep-equal": "^3.1.1", "fast-json-stable-stringify": "^2.0.0", "json-schema-traverse": "^0.4.1", "uri-js": "^4.2.2" } }, "sha512-j3fVLgvTo527anyYyJOGTYJbG+vnnQYvE0m5mmkc1TK+nxAppkCLMIL0aZ4dblVCNoGShhm+kzE4ZUykBoMg4g=="],
 
     "@microsoft/tsdoc-config/resolve": ["resolve@1.19.0", "", { "dependencies": { "is-core-module": "^2.1.0", "path-parse": "^1.0.6" } }, "sha512-rArEXAgsBG4UgRGcynxWIWKFvh/XZCcS8UJdHhwy91zwAvCZIbcs+vAbflgBnNjYMs/i/i+/Ux6IZhML1yPvxg=="],
-
-    "@mnpenner/imut-utils/typescript": ["typescript@6.0.2", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-bGdAIrZ0wiGDo5l8c++HWtbaNCWTS4UTv7RaTH/ThVIgjkveJt83m74bBHMJkuCbslY8ixgLBVZJIOiQlQTjfQ=="],
-
-    "@mnpenner/is-type/typescript": ["typescript@6.0.2", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-bGdAIrZ0wiGDo5l8c++HWtbaNCWTS4UTv7RaTH/ThVIgjkveJt83m74bBHMJkuCbslY8ixgLBVZJIOiQlQTjfQ=="],
 
     "@mpen/classcat/typescript": ["typescript@6.0.2", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-bGdAIrZ0wiGDo5l8c++HWtbaNCWTS4UTv7RaTH/ThVIgjkveJt83m74bBHMJkuCbslY8ixgLBVZJIOiQlQTjfQ=="],
 

@@ -1,6 +1,6 @@
 {
     "name": "podman",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "description": "Utilities for starting a Podman machine from Bun/Node.",
     "author": "Mark Penner <npm@mpen.ca>",
     "module": "index.ts",
@@ -23,9 +23,11 @@
         "node": ">=18",
         "bun": ">=1.0"
     },
+    "homepage": "https://github.com/mnpenner/npm-packages/tree/main/packages/podman",
     "repository": {
         "type": "git",
-        "url": "https://github.com/mnpenner/docker-imagestree/master/podman"
+        "url": "https://github.com/mnpenner/npm-packages.git",
+        "directory": "packages/podman"
     },
     "scripts": {
         "build": "bun run build.ts && tsc -p tsconfig.build.json"
