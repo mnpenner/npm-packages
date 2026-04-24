@@ -1,0 +1,14 @@
+{
+  "name": "ctslib",
+  "version": "0.1.5",
+  "license": "MIT",
+  "bin": "index.js",
+  "dependencies": {
+    "chalk": "^3",
+    "inquirer": "^7",
+    "validate-npm-package-name": "^3"
+  },
+  "engines": {
+    "node": ">=12"
+  }
+}
