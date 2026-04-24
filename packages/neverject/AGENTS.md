@@ -1,0 +1,7 @@
+- Run `bun run test` after making changes and fix any errors.
+- Use `expectType<TypeEqual<typeof VALUE, EXPECTED_TYPE>>(true)` to assert exact types in tests.
+- Add detailed JSDoc comments including @example blocks, @param and @returns to all public APIs, including all function overloads
+  - The public API is the `entry` point shown in `tsdown.config.ts` 
+  - Link to other functions and classes using this syntax: [`NeverjectPromise`]{@link NeverjectPromise} 
+  - Link to methods using this syntax: [`Err.valueOr`]{@link Err#valueOr} 
+- Run `bun run build` to rebuild `dist/` and refresh `exports` in `package.json`.

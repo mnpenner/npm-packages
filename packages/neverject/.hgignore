@@ -1,0 +1,8 @@
+^\.idea/
+^\.tmp/
+^ai/
+^reference/
+^dist/
+^node_modules/
+\.log$
+^tsconfig.tsbuildinfo$
