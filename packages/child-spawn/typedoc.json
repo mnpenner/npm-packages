@@ -1,0 +1,8 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["./src/index.ts", "./src/secondary-entry.ts"],
+  "out": "docs",
+  "basePath": ".",
+  "plugin": ["typedoc-plugin-missing-exports"],
+  "excludeExternals": true
+}
