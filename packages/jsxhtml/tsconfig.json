@@ -1,0 +1,23 @@
+{
+    // Visit https://aka.ms/tsconfig to read more about this file
+    "compilerOptions": {
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "baseUrl": ".",
+        "declaration": true,
+        "declarationDir": "./dist",
+        "emitDeclarationOnly": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
+        "exactOptionalPropertyTypes": true,
+        "skipLibCheck": true,
+        "resolveJsonModule": true,
+        "lib": ["ESNext", "DOM"],
+        "types": ["bun-types"],
+        "jsx": "react-jsx",
+        "jsxImportSource": "src",
+        "outDir": "./dist"
+    }
+}
