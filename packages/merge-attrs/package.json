@@ -1,0 +1,46 @@
+{
+  "name": "merge-attrs",
+  "version": "0.1.4",
+  "description": "Merge HTML attributes",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "merge",
+    "html",
+    "attributes",
+    "react"
+  ],
+  "author": "Mark Penner <merge-attrs@mpen.ca>",
+  "license": "MIT",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
+  "dependencies": {
+    "classnames": "^2.2.5"
+  },
+  "devDependencies": {
+    "@types/jest": "^20.0.2",
+    "@types/classnames": "^2.2.0",
+    "jest": "^20.0.4",
+    "ts-jest": "^20.0.6",
+    "typescript": "^2.4.1"
+  },
+  "repository": {
+    "type": "hg",
+    "url": "https://bitbucket.org/mnpenner/merge-attrs"
+  },
+  "browser": "web",
+  "main": "node",
+  "jest": {
+    "transform": {
+      ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    },
+    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ]
+  }
+}

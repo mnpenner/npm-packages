@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "importHelpers": false,
+    "removeComments": true,
+    "preserveConstEnums": false,
+    "sourceMap": true,
+    "inlineSources": true,
+    "noEmitOnError": true,
+    "pretty": true,
+    "outDir": "dist/node",
+    "target": "es2017",
+    "downlevelIteration": false,
+    "lib": ["esnext","dom"],
+    "moduleResolution": "node",
+    "declaration": true,
+    "module": "commonjs",
+    "types" : []
+  },
+  "files": [
+    "src/index.ts"
+  ]
+}
