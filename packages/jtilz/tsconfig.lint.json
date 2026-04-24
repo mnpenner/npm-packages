@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "removeComments": false,
+    "preserveConstEnums": false,
+    "pretty": true,
+    "noEmit": true,
+    "target": "es2017",
+    "downlevelIteration": false,
+    "lib": ["esnext","dom"],
+    "moduleResolution": "node",
+    "declaration": true,
+    "module": "commonjs",
+    "types" : ["node"]
+  },
+  "files": [
+    "src/index.node.ts",
+    "src/index.web.ts"
+  ]
+}

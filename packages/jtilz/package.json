@@ -1,0 +1,38 @@
+{
+  "name": "jtilz",
+  "version": "0.3.8",
+  "description": "",
+  "author": "Mark Penner <jtilz@mpen.ca>",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^20.0.1",
+    "@types/node": "^7.0.31",
+    "jest": "^20.0.4",
+    "typescript": "^2.3.4"
+  },
+  "browser": "web/index.web",
+  "main": "node/index.node",
+  "repository": {
+    "type": "hg",
+    "url": "https://bitbucket.org/mnpenner/jtilz"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "ts",
+      "js"
+    ],
+    "transform": {
+      "\\.ts$": "<rootDir>/preprocessor.js"
+    },
+    "testMatch": [
+      "<rootDir>/tests/**/*.(ts|js)",
+      "<rootDir>/src/**/*.test.(ts|js)",
+      "<rootDir>/src/**/__test__.(ts|js)",
+      "<rootDir>/src/**/__tests__/**/*.(ts|js)"
+    ]
+  },
+  "dependencies": {}
+}
