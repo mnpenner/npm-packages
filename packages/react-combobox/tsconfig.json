@@ -1,0 +1,33 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "importHelpers": false,
+        "inlineSources": true,
+        "noEmitOnError": true,
+        "pretty": true,
+        "module": "ES6",
+        "noImplicitAny": true,
+        "suppressImplicitAnyIndexErrors": false,
+        "removeComments": true,
+        "preserveConstEnums": false,
+        "sourceMap": true,
+        "lib": ["es2018","dom"],
+        "skipLibCheck": true,
+        "outDir": "dist",
+        "target": "es2018",
+        "declaration": true,
+        "resolveJsonModule": false,
+        "esModuleInterop": false,
+        "jsx": "react",
+        "moduleResolution": "node"
+    },
+    "files": [
+        "src/index.tsx"
+    ],
+    "include": [
+        "src/types/**/*.d.ts"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}
