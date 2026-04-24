@@ -2,3 +2,4 @@ syntax: rootglob
 
 .idea/
 **/node_modules/
+scratch/
