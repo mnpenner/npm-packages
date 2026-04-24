@@ -1,8 +1,8 @@
 // https://github.com/jorgebucaran/classcat/blob/b4aa45aae2f026071164981dd065efc42e805023/index.js
 // https://github.com/lukeed/clsx/blob/925494cf31bcd97d3337aacd34e659e80cae7fe2/src/index.js
 export type ClassValue = string | number | boolean | null | undefined | ClassArray | ClassObject
-export type ClassArray = ClassValue[]
-export type ClassObject = Record<string, unknown>
+export interface ClassArray extends Array<ClassValue> {}
+export type ClassObject = Record<string, any>
 
 function appendClass(out: string, value: ClassValue): string {
     if(typeof value === "string") {

@@ -1,34 +1,9 @@
-export type ClassNamePrimitive = string | number | bigint
-export type ClassNameDictionary = Record<string, unknown>
-export type ClassNameValue = ClassNamePrimitive | ClassNameDictionary | ClassNameValue[] | null | undefined | boolean
-export type ClassNames = ClassNameValue
+import {cc, type ClassArray, type ClassObject, type ClassValue} from '@mpen/classcat'
 
-function pushClassNames(value: ClassNameValue, classes: string[]) {
-    if(value == null || value === false || value === true) return
-
-    if(typeof value === 'string') {
-        if(value) classes.push(value)
-        return
-    }
-
-    if(typeof value === 'number' || typeof value === 'bigint') {
-        classes.push(String(value))
-        return
-    }
-
-    if(Array.isArray(value)) {
-        for(const item of value) {
-            pushClassNames(item, classes)
-        }
-        return
-    }
-
-    for(const key of Object.keys(value)) {
-        if((value as ClassNameDictionary)[key]) {
-            classes.push(key)
-        }
-    }
-}
+export type ClassNamePrimitive = string | number
+export type ClassNameDictionary = ClassObject
+export type ClassNameValue = ClassValue
+export type ClassNames = ClassArray | ClassNameValue
 
 /**
  * Build a class string from strings, numbers, arrays, and objects.
@@ -37,9 +12,5 @@ function pushClassNames(value: ClassNameValue, classes: string[]) {
  * @returns Space-separated class string.
  */
 export function classCat(...values: ClassNameValue[]): string {
-    const classes: string[] = []
-    for(const value of values) {
-        pushClassNames(value, classes)
-    }
-    return classes.join(' ')
+    return cc(...values)
 }

@@ -1,4 +1,4 @@
-import ReactDOM from 'react-dom';
-import DateTimeDialog from '../components/DateTimeDialog';
+import {createRoot} from 'react-dom/client';
+import DateTimeDialog from '../components/DateTimeDialog.jsx';
 
-ReactDOM.render(<DateTimeDialog timezone="America/Vancouver"/>, document.getElementById('react-root'));
+createRoot(document.getElementById('react-root')).render(<DateTimeDialog timezone="America/Vancouver"/>);

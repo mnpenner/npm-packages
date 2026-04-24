@@ -2,8 +2,16 @@
   "name": "merge-attrs",
   "version": "0.1.4",
   "description": "Merge HTML attributes",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "bun run --bun tsdown",
+    "test": "bun test",
+    "prepublishOnly": "run-s build test"
   },
   "keywords": [
     "merge",
@@ -17,37 +25,21 @@
     "registry": "https://registry.npmjs.org"
   },
   "dependencies": {
-    "classnames": "^2.2.5"
+    "@mpen/classcat": "workspace:*"
   },
   "devDependencies": {
-    "@types/jest": "^20.0.2",
-    "@types/classnames": "^2.2.0",
-    "jest": "^20.0.4",
-    "ts-jest": "^20.0.6",
-    "typescript": "^2.4.1"
+    "@types/bun": "latest",
+    "npm-run-all": "^4.1.5",
+    "tsdown": "^0.21.9",
+    "typescript": "^6.0.2"
   },
   "repository": {
     "type": "hg",
     "url": "https://bitbucket.org/mnpenner/merge-attrs"
   },
-  "browser": "web",
-  "main": "node",
-  "jest": {
-    "transform": {
-      ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
-    },
-    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js"
-    ]
-  },
+  "types": "./dist/index.d.mts",
   "exports": {
-    ".": {
-      "bun": "./src/index.ts",
-      "default": "node"
-    },
+    ".": "./dist/index.mjs",
     "./package.json": "./package.json"
   }
 }

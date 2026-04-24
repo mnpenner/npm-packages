@@ -1,21 +1,14 @@
 {
   "compilerOptions": {
     "strict": true,
-    "importHelpers": false,
-    "removeComments": true,
-    "preserveConstEnums": false,
-    "sourceMap": true,
-    "inlineSources": true,
-    "noEmitOnError": true,
-    "pretty": true,
-    "outDir": "dist/node",
-    "target": "es2017",
-    "downlevelIteration": false,
-    "lib": ["esnext","dom"],
-    "moduleResolution": "node",
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ESNext", "DOM"],
+    "types": ["bun"],
     "declaration": true,
-    "module": "commonjs",
-    "types" : []
+    "noEmit": true,
+    "skipLibCheck": true
   },
   "files": [
     "src/index.ts"

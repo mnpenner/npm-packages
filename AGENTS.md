@@ -1,4 +1,4 @@
 - Use bun as a package manager and test runner
-- Use tsdown w/ `{exports: true, dts: true, format: ['esm']}` to build
+- Use tsdown w/ `{exports: true, dts: true, format: 'esm'}` to build
 - Use typescript 6
-- Target esnext
+- Target esnext/bundler/module

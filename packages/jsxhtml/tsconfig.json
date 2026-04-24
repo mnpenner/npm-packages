@@ -5,6 +5,7 @@
         "module": "ESNext",
         "moduleResolution": "bundler",
         "baseUrl": ".",
+        "rootDir": ".",
         "declaration": true,
         "declarationDir": "./dist",
         "emitDeclarationOnly": true,

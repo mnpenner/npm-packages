@@ -1,4 +1,4 @@
-import classNames from 'classnames';
+import {cc} from '@mpen/classcat';
 
 export interface ClassArray extends Array<ClassValue> { }
 
@@ -82,7 +82,7 @@ function mergeAttrs(...attrDicts: IAttrs[]): IAttrs {
     }
 
     if(classes.length) {
-        merged.className = classNames(classes);
+        merged.className = cc(classes);
     }
 
     for(let attr of Object.keys(eventHandlers)) {

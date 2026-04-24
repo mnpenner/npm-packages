@@ -95,5 +95,7 @@
       "optional": false
     }
   },
-  "dependencies": {}
+  "dependencies": {
+    "@mpen/classcat": "workspace:*"
+  }
 }
