@@ -4,17 +4,29 @@ export type ClassValue = string | number | boolean | null | undefined | ClassArr
 export type ClassArray = ClassValue[]
 export type ClassObject = Record<string, unknown>
 
-function toClass(value: ClassValue): string {
-    if(typeof value === "string") return value
-    if(typeof value === "number") return String(value)
-    if(value == null || typeof value === "boolean") return ""
-
-    if(Array.isArray(value)) {
-        return arrayToClass(value)
+function appendClass(out: string, value: ClassValue): string {
+    if(typeof value === "string") {
+        return value === "" ? out : out + (out && " ") + value
     }
 
-    let out = ""
-    for(const [key, enabled] of Object.entries(value)) {
+    if(typeof value === "number") {
+        return out + (out && " ") + value
+    }
+
+    if(value == null || typeof value === "boolean") return out
+
+    if(Array.isArray(value)) {
+        for(let i = 0; i < value.length; ++i) {
+            out = appendClass(out, value[i])
+        }
+
+        return out
+    }
+
+    for(const key in value) {
+        if(!Object.hasOwn(value, key)) continue
+
+        const enabled = value[key]
         if(enabled) out += (out && " ") + key
     }
 
@@ -24,11 +36,8 @@ function toClass(value: ClassValue): string {
 function arrayToClass(values: ClassArray): string {
     let out = ""
 
-    for(const value of values) {
-        const className = toClass(value)
-        if(className !== "") {
-            out += (out && " ") + className
-        }
+    for(let i = 0; i < values.length; ++i) {
+        out = appendClass(out, values[i])
     }
 
     return out

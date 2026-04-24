@@ -1,16 +1,7 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "Preserve",
-    "moduleResolution": "Bundler",
-    "strict": true,
-    "skipLibCheck": true,
-    "allowJs": true,
-    "jsx": "react-jsx",
     "baseUrl": ".",
-    "customConditions": [
-      "bun"
-    ],
     "paths": {
       "@mpen/base50": [
         "packages/base50/src/bundle.ts"

@@ -34,7 +34,7 @@ async function main(options: Options, positionals: Positionals): Promise<number 
     ]
 
     summary(() => {
-        group('classcat', () => {
+        group('cc', () => {
             bench('strings', () => {
                 cc(...simpleStrings)
             })
