@@ -16,6 +16,7 @@ npm install @mpen/react-basic-inputs
 
 ## Links
 
+- Docs: https://mnpenner.github.io/npm-packages/react-basic-inputs/
 - Npm: https://www.npmjs.com/package/@mpen/react-basic-inputs
   - https://www.npmjs.com/package/@mpen/react-basic-inputs?activeTab=code
 - Npmx: https://npmx.dev/package/@mpen/react-basic-inputs

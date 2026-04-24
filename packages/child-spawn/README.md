@@ -29,5 +29,5 @@ main(process.argv.slice(process.argv.findIndex(f => f === __filename) + 1))
     })
 ```
 
-- Docs: https://mnpenner.github.io/child-spawn/
-- Examples: https://github.com/mnpenner/child-spawn/blob/default/src/test.ts
+- Docs: https://mnpenner.github.io/npm-packages/child-spawn/
+- Examples: https://github.com/mnpenner/npm-packages/blob/main/packages/child-spawn/src/test.ts

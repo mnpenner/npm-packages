@@ -3,4 +3,4 @@
 Check if an object is a particular type (with TypeScript definitions).
 
 
-- Docs: https://mnpenner.github.io/is-type/
+- Docs: https://mnpenner.github.io/npm-packages/is-type/

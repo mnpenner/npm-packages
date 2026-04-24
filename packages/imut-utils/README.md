@@ -14,15 +14,15 @@ bun add @mpen/imut-utils
 
 ## Links
 
-- Docs: https://mnpenner.github.io/imut-utils
-- Repo: https://github.com/mnpenner/imut-utils
-  - Code: https://github.com/mnpenner/imut-utils/tree/default/src
-  - Issues: https://github.com/mnpenner/imut-utils/issues
-- Npm: https://www.npmjs.com/package/@mnpenner/imut-utils
-- Yarn: https://yarnpkg.com/package/@mnpenner/imut-utils
-- Bundlephobia: https://bundlephobia.com/package/@mnpenner/imut-utils
-- Unpkg: https://unpkg.com/@mnpenner/imut-utils
-- jsDelivr: https://cdn.jsdelivr.net/npm/@mnpenner/imut-utils
+- Docs: https://mnpenner.github.io/npm-packages/imut-utils/
+- Repo: https://github.com/mnpenner/npm-packages/tree/main/packages/imut-utils
+  - Code: https://github.com/mnpenner/npm-packages/tree/main/packages/imut-utils/src
+  - Issues: https://github.com/mnpenner/npm-packages/issues
+- Npm: https://www.npmjs.com/package/@mpen/imut-utils
+- Yarn: https://yarnpkg.com/package/@mpen/imut-utils
+- Bundlephobia: https://bundlephobia.com/package/@mpen/imut-utils
+- Unpkg: https://unpkg.com/@mpen/imut-utils
+- jsDelivr: https://cdn.jsdelivr.net/npm/@mpen/imut-utils
 
 ## Quick Start
 
@@ -85,7 +85,7 @@ Want to extend this lib? Just add a new function to your project, there's nothin
 
 ## How big is it?
 
-[1.4 kB minified+gzipped](https://bundlephobia.com/package/@mnpenner/imut-utils@0.1.23), but it's tree-shakeable; the output is ES modules. You shouldn't pay for what you don't use when bundled.
+[1.4 kB minified+gzipped](https://bundlephobia.com/package/@mpen/imut-utils), but it's tree-shakeable; the output is ES modules. You shouldn't pay for what you don't use when bundled.
 
 ## Dependencies?
 
@@ -95,7 +95,7 @@ None. That's a feature.
 
 No. You should pin against a *minor* or *patch* version until this reaches 1.0. I will try to make API breaks *minor* bumps (until 1.0, then *majors* are breaks, per [semver](https://semver.org/#spec-item-4)). Note that `^` does exactly this, so you probably don't have to do anything.
 
-Or just copy the functions you like out of [the src](https://github.com/mnpenner/imut-utils/tree/default/src). If you prefer JS and don't want to build this package yourself, just copy from [Unpkg](https://unpkg.com/@mnpenner/imut-utils).
+Or just copy the functions you like out of [the src](https://github.com/mnpenner/npm-packages/tree/main/packages/imut-utils/src). If you prefer JS and don't want to build this package yourself, just copy from [Unpkg](https://unpkg.com/@mpen/imut-utils).
 
 ## Naming
 
@@ -103,7 +103,7 @@ Or just copy the functions you like out of [the src](https://github.com/mnpenner
 
 ## Contributions
 
-[Open a ticket](https://github.com/mnpenner/imut-utils/issues) and we'll talk.
+[Open a ticket](https://github.com/mnpenner/npm-packages/issues) and we'll talk.
 
 ## License
 

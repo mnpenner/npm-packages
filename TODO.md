@@ -3,3 +3,4 @@
 - Upgrade all packages to typescript 6
 - Add eslint to root; remove eslint from packages
 - Add prettier
+- Repoint `@mnpenner/imut-utils` to `@mpen/imut-utils`

@@ -36,6 +36,14 @@ jobs:
       - name: Build all docs
         run: |
           mkdir -p public
+          
+          # Create a mock hg command to prevent scripts from failing in CI
+          # (package scripts often include 'hg addremove' which isn't needed here)
+          mkdir -p "$GITHUB_WORKSPACE/bin"
+          printf '#!/bin/bash\necho "Mock hg: ignoring $*"\nexit 0\n' > "$GITHUB_WORKSPACE/bin/hg"
+          chmod +x "$GITHUB_WORKSPACE/bin/hg"
+          export PATH="$GITHUB_WORKSPACE/bin:$PATH"
+          
           # Loop through all packages in the packages directory
           for dir in packages/*; do
             if [ -d "$dir" ] && [ -f "$dir/package.json" ]; then
@@ -45,19 +53,21 @@ jobs:
               has_docs=$(node -p "const s=require('./$dir/package.json').scripts; !!(s && (s.docs || s['build:docs']))")
               
               if [ "$has_docs" = "true" ]; then
-                echo "---------------------------------------------------"
-                echo "Building docs for $pkg_name ($dir)..."
-                echo "---------------------------------------------------"
+                echo ""
+                echo "==================================================="
+                echo " Building docs for $pkg_name ($pkg_basename)"
+                echo "==================================================="
                 
                 # Try 'docs' first, then 'build:docs'
-                if bun run --filter "$pkg_name" docs || bun run --filter "$pkg_name" build:docs; then
-                  if [ -d "$dir/docs" ]; then
-                    echo "Copying docs to public/$pkg_basename"
-                    mkdir -p "public/$pkg_basename"
-                    cp -r "$dir/docs/"* "public/$pkg_basename/"
-                  fi
+                # We use || true just in case, but rely on the folder check
+                bun run --filter "$pkg_name" docs || bun run --filter "$pkg_name" build:docs || echo "Build script returned non-zero"
+                
+                if [ -d "$dir/docs" ]; then
+                  echo "Success: Copying docs to public/$pkg_basename"
+                  mkdir -p "public/$pkg_basename"
+                  cp -r "$dir/docs/"* "public/$pkg_basename/"
                 else
-                  echo "Warning: Failed to build docs for $pkg_name"
+                  echo "Error: $dir/docs directory not found after build!"
                 fi
               fi
             fi
@@ -79,7 +89,7 @@ jobs:
                   h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem; color: #0f172a; }
                   p { color: #64748b; margin-bottom: 2rem; }
                   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
-                  .card { background: var(--card); border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; text-decoration: none; color: inherit; transition: all 0.2s ease; display: flex; flex-direction: column; }
+                  .card { background: var(--card); border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; text-decoration: none; color: inherit; transition: all 0.2s ease; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
                   .card:hover { transform: translateY(-4px); border-color: var(--primary); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
                   .card h2 { margin: 0; font-size: 1.25rem; color: var(--primary); }
                   .card .path { font-family: monospace; font-size: 0.875rem; color: #94a3b8; margin-top: 0.5rem; }
@@ -93,8 +103,9 @@ jobs:
           EOF
           
           # Add links for each package in public/
-          for dir in public/*/; do
-            if [ -d "$dir" ]; then
+          # We sort them alphabetically
+          for dir in $(find public -maxdepth 1 -type d | sort); do
+            if [ "$dir" != "public" ]; then
               name=$(basename "$dir")
               real_name=$(node -p "try { require('./packages/$name/package.json').name } catch(e) { '$name' }")
               echo "            <a href='$name/' class='card'><h2>$real_name</h2><span class='path'>packages/$name</span></a>" >> public/index.html
