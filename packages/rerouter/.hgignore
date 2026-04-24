@@ -1,0 +1,23 @@
+syntax: regexp
+
+# Dirs and filenames
+(^|/)node_modules$
+(^|/)\.idea$
+(^|/)dist$
+(^|/)\.te?mp$
+(^|/)Thumbs\.db$
+(^|/)\.git(attributes|ignore)$
+(^|/)\.env$
+
+# Suffixes
+~$
+\.log$
+\.zip$
+\.gz$
+\.mmdb$
+\.csv$
+\.tsbuildinfo$
+
+# All dotfiles except *ignore and *rc files
+(^|/)\.(?![^/]+(ignore|rc)$)
+^coverage/

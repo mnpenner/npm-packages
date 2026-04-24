@@ -1,0 +1,112 @@
+{
+    "Level 1 Examples" :
+    {
+        "level": 1,
+        "variables": {
+            "var"   : "value",
+            "hello" : "Hello World!"
+        },
+        "testcases" : [
+            ["{var}", "value"],
+            ["{hello}", "Hello%20World%21"]
+        ]
+    },
+    "Level 2 Examples" :
+    {
+        "level": 2,
+        "variables": {
+            "var"   : "value",
+            "hello" : "Hello World!",
+            "path"  : "/foo/bar"
+        },
+        "testcases" : [
+            ["{+var}", "value"],
+            ["{+hello}", "Hello%20World!"],
+            ["{+path}/here", "/foo/bar/here"],
+            ["here?ref={+path}", "here?ref=/foo/bar"]
+        ]
+    },
+    "Level 3 Examples" :
+    {
+        "level": 3,
+        "variables": {
+            "var"   : "value",
+            "hello" : "Hello World!",
+            "empty" : "",
+            "null" : null,
+            "path"  : "/foo/bar",
+            "x"     : "1024",
+            "y"     : "768"
+        },
+        "testcases" : [
+            ["map?{x,y}", "map?1024,768"],
+            ["{x,hello,y}", "1024,Hello%20World%21,768"],
+            ["{+x,hello,y}", "1024,Hello%20World!,768"],
+            ["{+path,x}/here", "/foo/bar,1024/here"],
+            ["{#x,hello,y}", "#1024,Hello%20World!,768"],
+            ["{#path,x}/here", "#/foo/bar,1024/here"],
+            ["X{.var}", "X.value"],
+            ["X{.x,y}", "X.1024.768"],
+            ["{/var}", "/value"],
+            ["{/var,x}/here", "/value/1024/here"],
+            ["{;x,y}", ";x=1024;y=768"],
+            ["{;x,y,null}", ";x=1024;y=768;null"],
+            ["{?x,y}", "?x=1024&y=768"],
+            ["{?x,y,empty}", "?x=1024&y=768&empty="],
+            ["?fixed=yes{&x}", "?fixed=yes&x=1024"],
+            ["{&x,y,empty}", "&x=1024&y=768&empty="]
+        ]
+    },
+    "Level 4 Examples" :
+    {
+        "level": 4,
+        "variables": {
+            "var": "value",
+            "hello": "Hello World!",
+            "path": "/foo/bar",
+            "list": ["red", "green", "blue"],
+            "keys": {"semi": ";", "dot": ".", "comma":","}
+        },
+        "testcases": [
+            ["{var:5}", "value"],
+            ["{list*}", "red,green,blue"],
+            ["{+path:8}/here", "/foo/bar/here"],
+            ["{+list*}", "red,green,blue"],
+            ["{#path:8}/here", "#/foo/bar/here"],
+            ["{#list*}", "#red,green,blue"],
+            ["X{.var:5}", "X.value"],
+            ["X{.list*}", "X.red.green.blue"],
+            ["{/var:1,var}", "/v/value"],
+            ["{/list*}", "/red/green/blue"],
+            ["{/list*,path}", "/red/green/blue/%2Ffoo%2Fbar"],
+            ["{/list*,path:8}", "/red/green/blue/%2Ffoo%2Fbar"],
+            ["{;hello:12}", ";hello=Hello World!"],
+            ["{;keys*}", [
+                ";comma=%2C;dot=.;semi=%3B",
+                ";comma=%2C;semi=%3B;dot=.",
+                ";dot=.;comma=%2C;semi=%3B",
+                ";dot=.;semi=%3B;comma=%2C",
+                ";semi=%3B;comma=%2C;dot=.",
+                ";semi=%3B;dot=.;comma=%2C"
+            ]],
+            ["{?var:5}", "?var=value"],
+            ["{?keys*}", [
+                "?comma=%2C&dot=.&semi=%3B",
+                "?comma=%2C&semi=%3B&dot=.",
+                "?dot=.&comma=%2C&semi=%3B",
+                "?dot=.&semi=%3B&comma=%2C",
+                "?semi=%3B&comma=%2C&dot=.",
+                "?semi=%3B&dot=.&comma=%2C"
+            ]],
+            ["{&var:5}", "&var=value"],
+            ["{&keys*}", [
+                "&comma=%2C&dot=.&semi=%3B",
+                "&comma=%2C&semi=%3B&dot=.",
+                "&dot=.&comma=%2C&semi=%3B",
+                "&dot=.&semi=%3B&comma=%2C",
+                "&semi=%3B&comma=%2C&dot=.",
+                "&semi=%3B&dot=.&comma=%2C"
+            ]]
+        ]
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "extends": "./tsconfig.base.json",
+    "files": [],
+    "references": [
+        { "path": "./packages/http-helpers" },
+        { "path": "./packages/react-router" },
+        { "path": "./packages/server-router" },
+        { "path": "./experimental/server-router-zod-neverject"},
+        { "path": "./packages/uri-template" }
+    ]
+}

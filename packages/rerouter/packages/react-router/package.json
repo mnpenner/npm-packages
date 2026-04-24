@@ -1,0 +1,33 @@
+{
+  "name": "@mpen/react-router",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./hooks": "./dist/hooks.js",
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "react-router-gen-routes": "./src/bin/gen-routes.ts"
+  },
+  "type": "module",
+  "dependencies": {
+    "path-to-regexp": "^8.3.0"
+  },
+  "peerDependencies": {
+    "react": "^19",
+    "typescript": "^5"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "@types/react-dom": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "tsdown": "^0.18.1"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "gen": "bun ./src/bin/gen-routes.ts ./examples/routes.tsx -o ./examples/routes.gen.ts && bun ./src/bin/gen-routes.ts ./examples/routes.tsx -o ./examples/routes-options.gen.ts --wildcard-delimiter \",\" --encode-function encodeURI",
+    "dev": "bun --hot examples/index.html"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts"
+}

@@ -1,0 +1,17 @@
+{
+  "name": "@mpen/server-router-zod-neverject",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "module": "src/index.ts",
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@mpen/http-helpers": "*",
+    "@mpen/server-router": "*",
+    "neverject": "^0.2.3",
+    "zod": "^4.1.13"
+  }
+}
