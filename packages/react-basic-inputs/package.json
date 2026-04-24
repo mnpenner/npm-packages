@@ -1,0 +1,56 @@
+{
+  "name": "@mpen/react-basic-inputs",
+  "private": false,
+  "version": "0.4.0",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/react-basic-inputs.js",
+      "require": "./dist/react-basic-inputs.umd.cjs",
+      "types": "./dist/react-basic-inputs.d.ts"
+    }
+  },
+  "scripts": {
+    "dev": "bun run --bun vite",
+    "build": "run-p 'build:*'",
+    "build:libs": "bun run --bun vite build",
+    "build:docs": "typedoc && hg addremove docs",
+    "lint": "run-s 'lint:*'",
+    "lint:ts": "bun run --bun tsc",
+    "lint:es": "bun run --bun eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --fix",
+    "preview": "bun run --bun vite preview",
+    "_prepublishOnly": "bun run --bun build",
+    "_publish": "npm publish --access=public",
+    "bump": "npm version patch && bun run build && npm publish"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "devDependencies": {
+    "@mpen/is-type": "^0.1.11",
+    "@types/bun": "^1.1.2",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@typescript-eslint/eslint-plugin": "^7.2.0",
+    "@typescript-eslint/parser": "^7.2.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react-compiler": "^19.1.0-rc.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.6",
+    "eslint-plugin-unused-imports": "^4.3.0",
+    "npm-run-all": "^4.1.5",
+    "react": "^19",
+    "react-dom": "^19",
+    "react-use": "^17.5.0",
+    "sass": "^1.77.2",
+    "typedoc": "^0.26.6",
+    "typedoc-plugin-missing-exports": "^3.0.0",
+    "typescript": "^5.9.3",
+    "vite": "^5.2.0",
+    "vite-plugin-dts": "^3.9.1"
+  }
+}

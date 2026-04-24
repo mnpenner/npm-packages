@@ -1,0 +1,12 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["./src/bundle.ts"],
+  "out": "docs",
+  "basePath": ".",
+  "plugin": ["typedoc-plugin-missing-exports"],
+  "excludeExternals": true,
+  "skipErrorChecking": true,
+  // https://github.com/TypeStrong/TypeDoc/issues/2109
+  "kindSortOrder": ["Function","Class","Method","Interface","TypeAlias","Module"],
+//  "sort": [ "static-first","kind", "instance-first", "alphabetical" ]
+}

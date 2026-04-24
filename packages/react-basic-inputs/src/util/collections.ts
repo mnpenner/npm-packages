@@ -1,0 +1,89 @@
+import {sameValueZero} from './compare.ts'
+
+/**
+ * Filter-map. Map over any iterable and filter out `undefined` return values.
+ */
+export function fmap<T, R>(iter: Iterable<T>, fn: (el: T, idx: number) => R): R[] {
+    const out: R[] = []
+    let i = 0
+    for(const x of iter) {
+        const v = fn(x, i++)
+        if(v !== undefined) {
+            out.push(v)
+        }
+    }
+    return out
+}
+
+export function shallowArrayEqual(a: readonly any[], b: readonly any[]): boolean {
+    if(a.length !== b.length) {
+        return false
+    }
+    for(let i = 0; i < a.length; ++i) {
+        if(!sameValueZero(a[i], b[i])) {
+            return false
+        }
+    }
+    return true
+}
+
+export function deepEqual(a: any, b: any): boolean {
+    if(sameValueZero(a, b)) {
+        return true
+    }
+
+    if(typeof a !== 'object' || a === null || typeof b !== 'object' || b === null) {
+        return false
+    }
+
+    if(Array.isArray(a)) {
+        if(!Array.isArray(b)) return false
+        if(a.length !== b.length) return false
+        for(let i = 0; i < a.length; ++i) {
+            if(!deepEqual(a[i], b[i])) return false
+        }
+        return true
+    } else if(Array.isArray(b)) {
+        return false
+    }
+
+    if(a instanceof Date) {
+        if(!(b instanceof Date)) return false
+        return a.valueOf() === b.valueOf()
+    } else if(b instanceof Date) {
+        return false
+    }
+
+    if(a instanceof Map) {
+        if(!(b instanceof Map)) return false
+        if(a.size !== b.size) return false
+        for(const k of a.keys()) {
+            if(!b.has(k) || !deepEqual(a.get(k), b.get(k))) return false
+        }
+        return true
+    } else if(b instanceof Map) {
+        return false
+    }
+
+    if(a instanceof Set) {
+        if(!(b instanceof Set)) return false
+        if(a.size !== b.size) return false
+        for(const k of a.keys()) {
+            if(!b.has(k)) return false
+        }
+        return true
+    } else if(b instanceof Set) {
+        return false
+    }
+
+    const keysA = Object.keys(a)
+    const keysB = Object.keys(b)
+
+    if(keysA.length !== keysB.length) return false
+
+    for(const key of keysA) {
+        if(!keysB.includes(key) || !deepEqual(a[key], b[key])) return false
+    }
+
+    return true
+}
