@@ -1,0 +1,36 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "importHelpers": false,
+        "inlineSources": true,
+        "noEmitOnError": true,
+        "pretty": true,
+        "module": "esnext",
+        "noImplicitAny": true,
+        "suppressImplicitAnyIndexErrors": false,
+        "removeComments": false,
+        "preserveConstEnums": false,
+        "sourceMap": true,
+        "lib": ["es2018","dom"],
+        "skipLibCheck": false,
+        "outDir": "dist",
+        "target": "es2018",
+        "declaration": false,
+        "resolveJsonModule": false,
+        "esModuleInterop": false,
+        "jsx": "preserve",
+        "moduleResolution": "node",
+        "allowSyntheticDefaultImports": true,
+        "baseUrl": ".",
+        "noEmit": true
+    },
+    "paths": {
+        "@/*": ["src/*"]
+    },
+    "files": [
+        "src/index.tsx"
+    ],
+    "include": [
+        "src/**/*.d.ts"
+    ]
+}

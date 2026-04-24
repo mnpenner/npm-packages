@@ -1,0 +1,38 @@
+{
+    "plugins": [
+        "@babel/plugin-syntax-dynamic-import",
+        ["@babel/plugin-proposal-class-properties", { "loose": true }],
+        ["@babel/plugin-proposal-nullish-coalescing-operator",{"loose": true}],
+        ["@babel/plugin-proposal-optional-chaining",{"loose": true}]
+    ],
+    "presets": [
+        "@babel/preset-typescript",
+        ["@babel/preset-env", {
+            "useBuiltIns": "usage",
+            "shippedProposals":  true,
+            "corejs": "3",
+            "modules": false
+        }]
+    ],
+    "env": {
+        "development": {
+            "plugins": [
+                ["babel-plugin-styled-components", { "displayName": true,  "minify": false }],
+                "webpack-chunkname",
+                "react-hot-loader/babel"
+            ],
+            "presets": [
+                ["@babel/preset-react", {"development":  true}]
+            ]
+        },
+        "production": {
+            "plugins": [
+                ["babel-plugin-styled-components", { "displayName": false, "minify": true, "pure": true }],
+                "@babel/plugin-transform-react-constant-elements"
+            ],
+            "presets": [
+                ["@babel/preset-react", {"development":  false}]
+            ]
+        }
+    }
+}

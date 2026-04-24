@@ -1,0 +1,22 @@
+{
+  "name": "crap-app",
+  "version": "0.3.4",
+  "license": "MIT",
+  "bin": "index.js",
+  "description": "Creating React apps sucks. This makes it a little bit easier.",
+  "dependencies": {
+    "chalk": "^2.4.1",
+    "inquirer": "^7",
+    "validate-npm-package-name": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=10"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
+  "repository": {
+    "type": "hg",
+    "url": "https://bitbucket.org/mnpenner/crap"
+  }
+}
