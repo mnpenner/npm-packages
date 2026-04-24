@@ -5,11 +5,38 @@
       "bun": "./src/index.ts",
       "default": "./dist/index.mjs"
     },
-    "./helpers/zod": "./dist/helpers/zod.mjs",
-    "./middleware": "./dist/middleware.mjs",
-    "./plugins/openapi": "./dist/plugins/openapi.mjs",
-    "./response": "./dist/response.mjs",
-    "./routes": "./dist/routes.mjs",
+    "./helpers/zod": {
+      "bun": "./src/helpers/zod/index.ts",
+      "default": "./dist/helpers/zod.mjs"
+    },
+    "./lib/collections": {
+      "bun": "./src/lib/collections.ts",
+      "default": "./dist/lib/collections.mjs"
+    },
+    "./middleware": {
+      "bun": "./src/middleware/index.ts",
+      "default": "./dist/middleware.mjs"
+    },
+    "./plugins/openapi": {
+      "bun": "./src/plugins/openapi/index.ts",
+      "default": "./dist/plugins/openapi.mjs"
+    },
+    "./response": {
+      "bun": "./src/response/index.ts",
+      "default": "./dist/response.mjs"
+    },
+    "./response/simple": {
+      "bun": "./src/response/simple.ts",
+      "default": "./dist/response/simple.mjs"
+    },
+    "./routes": {
+      "bun": "./src/routes/index.ts",
+      "default": "./dist/routes.mjs"
+    },
+    "./testing/type-assert": {
+      "bun": "./src/testing/type-assert.ts",
+      "default": "./dist/testing/type-assert.mjs"
+    },
     "./package.json": "./package.json"
   },
   "bin": {

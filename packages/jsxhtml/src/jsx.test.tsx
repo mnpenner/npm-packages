@@ -1,3 +1,4 @@
+/** @jsxImportSource @mpen/jsxhtml */
 import {expect, it} from 'bun:test'
 import {C, DocType} from './custom-components'
 import {InputMode} from './htmlspec/attributes/GlobalAttributes'
@@ -16,7 +17,7 @@ it('handles basic inputs', () => {
 
 it('supports custom types', () => {
     expect(String(<C>some comment</C>)).toEqual(process.env.NODE_ENV === 'production' ? '' : '<!-- some comment -->')
-    expect(String(<DocType html />)).toEqual('<!DOCTYPE html>')
+    expect(String(<DocType html />)).toEqual(process.env.NODE_ENV === 'production' ? '<!DOCTYPE html>' : '<!--<DocType>--><!DOCTYPE html><!--</DocType>-->')
 })
 
 it('builds class strings', () => {

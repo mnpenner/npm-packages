@@ -4,7 +4,11 @@ import {Readable} from 'node:stream'
 
 const decoder = new TextDecoder()
 
-const SHELL = process.env.SHELL ?? '/bin/sh'
+const isWindows = process.platform === 'win32'
+
+function bunEval(script: string): [string, ...string[]] {
+    return [process.execPath, '-e', script]
+}
 
 async function readStream(stream: Readable): Promise<string> {
     const chunks: Buffer[] = []
@@ -20,11 +24,19 @@ async function readStream(stream: Readable): Promise<string> {
 }
 
 async function readStdinLink(mode: StreamIn): Promise<string> {
-    const proc = Process.spawn([
-        SHELL,
-        '-c',
-        'if [ -e /proc/self/fd/0 ]; then readlink /proc/self/fd/0; else echo "no-proc"; fi',
-    ], {
+    if(isWindows) {
+        return 'no-proc'
+    }
+
+    const proc = Process.spawn(bunEval(`
+        const proc = await import('node:process')
+        const fs = await import('node:fs')
+        if(fs.existsSync('/proc/self/fd/0')) {
+            console.log(fs.readlinkSync('/proc/self/fd/0'))
+        } else {
+            console.log('no-proc')
+        }
+    `), {
         stdin: mode,
         stdout: StreamOut.PIPE,
     })
@@ -36,7 +48,7 @@ async function readStdinLink(mode: StreamIn): Promise<string> {
 
 describe('Process', () => {
     test('spawns and captures stdout/stderr with data events', async () => {
-        const proc = Process.spawn([SHELL, '-c', 'echo out; echo err 1>&2'], {
+        const proc = Process.spawn(bunEval("process.stdout.write('out\\n'); process.stderr.write('err\\n')"), {
             stdout: StreamOut.PIPE,
             stderr: StreamOut.PIPE,
         })
@@ -59,7 +71,7 @@ describe('Process', () => {
     })
 
     test('stdin pipe writes through to the child process', async () => {
-        const proc = Process.spawn([SHELL, '-c', 'read -r line; printf "%s" "$line"'], {
+        const proc = Process.spawn(bunEval("const input = await Bun.stdin.text(); process.stdout.write(input.replace(/\\r?\\n$/, ''))"), {
             stdin: StreamIn.PIPE,
             stdout: StreamOut.PIPE,
             stderr: StreamOut.PIPE,
@@ -76,7 +88,7 @@ describe('Process', () => {
     })
 
     test('StreamIn.EMPTY attaches /dev/null to stdin', async () => {
-        const proc = Process.spawn([SHELL, '-c', 'if read -r line; then echo "read:$line"; else echo "eof"; fi'], {
+        const proc = Process.spawn(bunEval("const input = await Bun.stdin.text(); process.stdout.write(input.length ? `read:${input.trimEnd()}\\n` : 'eof\\n')"), {
             stdin: StreamIn.EMPTY,
             stdout: StreamOut.PIPE,
         })
@@ -108,11 +120,7 @@ describe('Process', () => {
         const previous = process.env.PROC_TEST_PARENT
         process.env.PROC_TEST_PARENT = 'present'
         try {
-            const proc = Process.spawn([
-                SHELL,
-                '-c',
-                'printf "%s|%s" "$FOO" "$PROC_TEST_PARENT"',
-            ], {
+            const proc = Process.spawn(bunEval("process.stdout.write(`${process.env.FOO ?? ''}|${process.env.PROC_TEST_PARENT ?? ''}`)"), {
                 stdout: StreamOut.PIPE,
                 env: {FOO: 'bar'},
             })
@@ -132,27 +140,27 @@ describe('Process', () => {
     })
 
     test('waitOrThrow resolves with void on success', async () => {
-        const proc = Process.spawn([SHELL, '-c', 'exit 0'])
+        const proc = Process.spawn(bunEval('process.exit(0)'))
 
         const result = await proc.waitOrThrow()
         expect(result).toBeUndefined()
     })
 
     test('waitOrThrow rejects on non-zero exit codes', async () => {
-        const proc = Process.spawn([SHELL, '-c', 'exit 3'])
+        const proc = Process.spawn(bunEval('process.exit(3)'))
 
         expect(proc.waitOrThrow()).rejects.toThrow('process exited with code 3')
     })
 
     test('wait timeout kills the process', async () => {
-        const proc = Process.spawn([SHELL, '-c', 'sleep 5'])
+        const proc = Process.spawn(bunEval('await new Promise(resolve => setTimeout(resolve, 5000))'))
 
         const code = await proc.wait(50)
         expect(code).not.toBe(0)
     })
 
     test('StreamOut.DISCARD produces no data', async () => {
-        const proc = Process.spawn([SHELL, '-c', 'echo discard'], {
+        const proc = Process.spawn(bunEval("console.log('discard')"), {
             stdout: StreamOut.DISCARD,
         })
 
@@ -167,7 +175,7 @@ describe('Process', () => {
     })
 
     test('StreamOut.CLOSE closes the parent read end for stdout', async () => {
-        const proc = Process.spawn([SHELL, '-c', 'printf "x"'], {
+        const proc = Process.spawn(bunEval("process.stdout.write('x')"), {
             stdout: StreamOut.CLOSE,
         })
 
@@ -184,7 +192,7 @@ describe('Process', () => {
     })
 
     test('StreamOut.CLOSE closes the parent read end for stderr', async () => {
-        const proc = Process.spawn([SHELL, '-c', 'printf "x" 1>&2'], {
+        const proc = Process.spawn(bunEval("process.stderr.write('x')"), {
             stderr: StreamOut.CLOSE,
         })
 

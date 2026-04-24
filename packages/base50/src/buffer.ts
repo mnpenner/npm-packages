@@ -28,21 +28,23 @@ function rightAlignedMask(N: number) {
 
 export function bufToBase50(buf: Iterable<number>): string {
     let out = '';
-    let carry = 0;
-    const divisor = 15;
+    let carry: number | null = null;
 
     for (const sex of chunk6bits(buf)) {
-        const val = sex + carry;
-        if (val < 50) {
-            out += numToChar(val);
-            carry = 0;
+        if(carry != null) {
+            out += numToChar(carry)
+            carry = null
+        }
+
+        if (sex < 49) {
+            out += numToChar(sex);
         } else {
             out += numToChar(49);
-            carry = val - 49;
+            carry = sex - 49;
         }
     }
 
-    if (carry > 0) {
+    if (carry != null) {
         out += numToChar(carry);
     }
 

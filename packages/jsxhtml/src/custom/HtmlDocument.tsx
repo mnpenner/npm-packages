@@ -1,3 +1,4 @@
+/** @jsxImportSource @mpen/jsxhtml */
 import type {HtmlAttributes} from '../htmlspec/elements'
 import {DocType} from './DocType'
 

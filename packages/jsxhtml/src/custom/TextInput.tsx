@@ -1,3 +1,4 @@
+/** @jsxImportSource @mpen/jsxhtml */
 import type {InputAttributes} from '../htmlspec/elements'
 
 /**

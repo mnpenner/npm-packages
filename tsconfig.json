@@ -63,6 +63,15 @@
       "@mpen/server-router": [
         "packages/server-router/src/index.ts"
       ],
+      "@mpen/server-router/lib/collections": [
+        "packages/server-router/src/lib/collections.ts"
+      ],
+      "@mpen/server-router/response/simple": [
+        "packages/server-router/src/response/simple.ts"
+      ],
+      "@mpen/server-router/testing/type-assert": [
+        "packages/server-router/src/testing/type-assert.ts"
+      ],
       "@mpen/server-router-zod-neverject": [
         "packages/rerouter/experimental/server-router-zod-neverject/src/index.ts"
       ],
