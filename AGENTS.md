@@ -2,3 +2,4 @@
 - Use tsdown w/ `{exports: true, dts: true, format: 'esm'}` to build
 - Use typescript 6
 - Target esnext/bundler/module
+- This is a Mercurial repo that is also pushed to GitHub via Hg-Git

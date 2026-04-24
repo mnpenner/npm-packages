@@ -3,4 +3,5 @@ syntax: rootglob
 .idea/
 **/node_modules/
 **/dist/
+packages/react-datepicker/public/bundle.js
 scratch/
