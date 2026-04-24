@@ -17,6 +17,14 @@ async function main(_options: Options, positionals: Positionals): Promise<number
         return 1
     }
 
+    const status = (await $`hg status`.text()).trim()
+
+    if(status.length > 0) {
+        console.error("Working tree has uncommitted changes. Commit or shelve them first:")
+        console.error(status)
+        return 1
+    }
+
     const repoPath = resolve(positionals[0].replace(/[\\/]+$/, ""))
     const name = basename(repoPath)
     const packagePath = `packages/${name}`
