@@ -143,7 +143,7 @@ describe('Base50 Streaming Conversion', () => {
         });
     });
 
-    describe('Round Trip Tests', () => {
+    describe.skipIf(!Bun.env.RUN_SLOW_TESTS)('Round Trip Tests', () => {
         const testCases: Uint8Array[] = [
             new Uint8Array([]),
             new Uint8Array([0]),

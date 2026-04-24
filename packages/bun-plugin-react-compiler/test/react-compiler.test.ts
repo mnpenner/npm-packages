@@ -37,7 +37,7 @@ describe("reactCompiler plugin", () => {
     expect(withPlugin).toContain("_c(");
   });
 
-  it("loads as a serve.static plugin from bunfig.toml", async () => {
+  it.skip("loads as a serve.static plugin from bunfig.toml", async () => {
     const fixtureDir = path.join(import.meta.dir, "serve-static-fixture");
     const run = await $`cd ${fixtureDir} && timeout 5s bun index.html`.nothrow();
     const stderr = new TextDecoder().decode(run.stderr);

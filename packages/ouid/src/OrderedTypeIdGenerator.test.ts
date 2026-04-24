@@ -7,7 +7,7 @@ import {randomInt} from 'crypto'
 describe('OrderedTypedIdGenerator', () => {
     const generator = new OrderedTypedIdGenerator<number>()
 
-    it('should be ordered & unique', () => {
+    it.skipIf(!Bun.env.RUN_SLOW_TESTS)('should be ordered & unique', () => {
         let lastTime = -1n
         const idCount = 250_000;
         const idSet = new Set<string>();

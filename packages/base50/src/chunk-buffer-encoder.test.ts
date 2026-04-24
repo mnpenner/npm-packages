@@ -144,7 +144,7 @@ describe(ChunkedBufferEncoder, () => {
             }
         )
 
-        it('random bytes', () => {
+        it.skipIf(!Bun.env.RUN_SLOW_TESTS)('random bytes', () => {
             for(const encoder of [base64Encoder, base3encoder, base7encoder, emojiEncoder, ascii85Encoder]) {
                 for(let i = 0; i < NUM_TESTS; i++) {
                     const buf = randomUint8Array(MIN_BYTES, MAX_BYTES)
@@ -155,7 +155,7 @@ describe(ChunkedBufferEncoder, () => {
             }
         })
 
-        it.skip('all encoders, all chunk sizes', () => {
+        it.skipIf(!Bun.env.RUN_SLOW_TESTS)('all encoders, all chunk sizes', () => {
             for(let b=2;b<=256;++b) {
                 const alpha = BASE2048.slice(0, b)
                 // console.log(`Base ${b} | ${alpha}`)
