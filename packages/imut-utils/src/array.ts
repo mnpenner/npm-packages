@@ -1,5 +1,5 @@
 import type {nil} from './types'
-import {binarySearch, assert} from './extra'
+import {assert, binarySearch} from './extra'
 import {Resolvable, resolveValue} from './resolvable'
 
 /**
@@ -223,7 +223,7 @@ export function arraySortStrings(array: string[] | nil, options: CollatorOptions
  * @param replaceWith
  * @returns Array with `value` removed
  */
-export function arraySplice<T>(array: T[]|nil, index: number, count = 1, ...replaceWith: T[]): T[] {
+export function arraySplice<T>(array: T[] | nil, index: number, count = 1, ...replaceWith: T[]): T[] {
     array ??= []
     return [
         ...array.slice(0, index),
@@ -233,20 +233,20 @@ export function arraySplice<T>(array: T[]|nil, index: number, count = 1, ...repl
 }
 
 export function fpArraySplice<T>(index: number, count = 1, ...replaceWith: T[]) {
-    return (a: T[]|nil) => arraySplice(a, index, count, ...replaceWith)
+    return (a: T[] | nil) => arraySplice(a, index, count, ...replaceWith)
 }
 
 type ArrayPredicate<T> = (v: T, i: number) => boolean
-type ArrayElementResolvable<T> = Resolvable<T,[T,number]>
+type ArrayElementResolvable<T> = Resolvable<T, [T, number]>
 
 export function arrayFindAndReplace<T>(array: T[], predicate: ArrayPredicate<T>, replaceWith: ArrayElementResolvable<T>): T[] {
     const idx = array.findIndex(predicate)
     if(idx < 0) return array
-    return arraySplice(array, idx, 1, resolveValue(replaceWith,array[idx],idx))
+    return arraySplice(array, idx, 1, resolveValue(replaceWith, array[idx], idx))
 }
 
 export function fpArrayFindAndReplace<T>(predicate: ArrayPredicate<T>, replaceWith: ArrayElementResolvable<T>) {
-    return (a: T[]|nil) => arrayFindAndReplace(a ?? [], predicate, replaceWith)
+    return (a: T[] | nil) => arrayFindAndReplace(a ?? [], predicate, replaceWith)
 }
 
 /**
@@ -257,10 +257,10 @@ export function fpArrayFindAndReplace<T>(predicate: ArrayPredicate<T>, replaceWi
  * @param indexB Index of second element
  */
 export function arraySwap<T>(array: T[], indexA: number, indexB: number): T[] {
-    if (indexA === indexB) return array; // No swap needed
+    if(indexA === indexB) return array // No swap needed
     const copy = [...array]; // Create a shallow copy
-    [copy[indexA], copy[indexB]] = [copy[indexB], copy[indexA]]; // Swap elements
-    return copy;
+    [copy[indexA], copy[indexB]] = [copy[indexB], copy[indexA]] // Swap elements
+    return copy
 }
 
 /**

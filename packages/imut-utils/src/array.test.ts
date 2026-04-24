@@ -1,16 +1,19 @@
+import {describe, expect, it, test} from 'bun:test'
 import {
-    fpArrayDeleteIndex,
-    fpArraySelect,
-    fpArrayPush,
-    fpArrayReject,
-    fpArrayDeleteOneValue,
-    fpArrayUnshift,
     arraySortNumbers,
     arraySortStrings,
+    fpArrayDeleteIndex,
+    fpArrayDeleteOneValue,
+    fpArrayDeleteValue,
+    fpArrayFindAndReplace,
     fpArrayInsert,
-    arrayInsertSorted,
     fpArrayInsertSorted,
-    fpArrayPop, fpArrayDeleteValue, fpArrayFindAndReplace, fpArraySplice
+    fpArrayPop,
+    fpArrayPush,
+    fpArrayReject,
+    fpArraySelect,
+    fpArraySplice,
+    fpArrayUnshift
 } from './array'
 
 
@@ -179,7 +182,7 @@ describe(arraySortStrings.name, () => {
 test(fpArrayFindAndReplace.name, () => {
     expect(fpArrayFindAndReplace<number>(x => x === 5, 3)([1, 2, 5, 4])).toEqual([1, 2, 3, 4])
     expect(fpArrayFindAndReplace<number>(x => x === 6, 3)([1, 2, 5, 4])).toEqual([1, 2, 5, 4])
-    expect(fpArrayFindAndReplace<number>(x => x === 5, x => x*2)([1, 2, 5, 4])).toEqual([1, 2, 10, 4])
+    expect(fpArrayFindAndReplace<number>(x => x === 5, x => x * 2)([1, 2, 5, 4])).toEqual([1, 2, 10, 4])
 })
 
 test(fpArraySplice.name, () => {

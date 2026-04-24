@@ -1,20 +1,25 @@
 {
-  // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
-    "target": "ES2022",
+    "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "node",
-    "declaration": true,
-    "outDir": "./dist",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "bundler",
+    "lib": [
+      "ESNext"
+    ],
+    "types": [
+      "bun"
+    ],
     "strict": true,
     "exactOptionalPropertyTypes": true,
+    "declaration": true,
+    "noEmit": true,
     "skipLibCheck": true
   },
-  "files": [
-    "src/index.ts",
-    // This file is being dropped for some reason. Include it explicitly. Won't work if it's a d.ts
-    "src/types.ts"
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules"
   ]
 }

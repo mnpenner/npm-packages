@@ -14,19 +14,19 @@ export function setCheck<T>(set: Set<T> | nil, value: T, add: boolean): Set<T> {
 }
 
 export function fpSetCheck<T>(value: T, add: boolean): ID<Set<T>> {
-    return (set: Set<T>|nil) => setCheck(set, value, add)
+    return (set: Set<T> | nil) => setCheck(set, value, add)
 }
 
 
 /**
  * Adds one or more values to a set.
  */
-export function setAdd<T>(set: Set<T>|nil, ...values: T[]): Set<T> {
-    return new Set([...set??[], ...values])
+export function setAdd<T>(set: Set<T> | nil, ...values: T[]): Set<T> {
+    return new Set([...set ?? [], ...values])
 }
 
 export function fpSetAdd<T>(...values: T[]): ID<Set<T>> {
-    return (set: Set<T>|nil) => setAdd(set, ...values)
+    return (set: Set<T> | nil) => setAdd(set, ...values)
 }
 
 /**
@@ -41,7 +41,7 @@ export function setRemove<T>(set: Set<T> | nil, ...values: T[]): Set<T> {
 }
 
 export function fpSetRemove<T>(...values: T[]): ID<Set<T>> {
-    return (set: Set<T>|nil) => setRemove(set, ...values)
+    return (set: Set<T> | nil) => setRemove(set, ...values)
 }
 
 /**
@@ -51,7 +51,7 @@ export function setUnion<T>(...sets: Iterable<T>[]): Set<T> {
     return new Set(sets.flatMap(a => Array.from(a)))
 }
 
-export function setIntersection<T>(a: Set<T>, b:Set<T>): Set<T> {
+export function setIntersection<T>(a: Set<T>, b: Set<T>): Set<T> {
     const out = new Set<T>()
     for(let v of a) {
         if(b.has(v)) {
@@ -61,7 +61,7 @@ export function setIntersection<T>(a: Set<T>, b:Set<T>): Set<T> {
     return out
 }
 
-export function setSymmetricDifference<T>(a: Set<T>, b:Set<T>): Set<T> {
+export function setSymmetricDifference<T>(a: Set<T>, b: Set<T>): Set<T> {
     const out = new Set<T>()
     for(let v of a) {
         if(!b.has(v)) {

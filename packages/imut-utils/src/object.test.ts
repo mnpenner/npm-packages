@@ -1,3 +1,4 @@
+import {describe, expect, it} from 'bun:test'
 import {fpObjSet, fpRelaxedMerge, fpShallowMerge} from './object'
 import {fpMapSet} from './map'
 import {Next} from './resolvable'

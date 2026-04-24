@@ -1,10 +1,11 @@
+import {expect, test} from 'bun:test'
 import {add, div, fpAdd, fpDiv, fpMult, fpSub, mult, sub} from './number'
 
 
 test(add.name, () => {
-    expect(add(1,2)).toBe(3)
-    expect(add(null,2)).toBe(2)
-    expect(add(undefined,3)).toBe(3)
+    expect(add(1, 2)).toBe(3)
+    expect(add(null, 2)).toBe(2)
+    expect(add(undefined, 3)).toBe(3)
 })
 
 test(fpAdd.name, () => {
@@ -14,9 +15,9 @@ test(fpAdd.name, () => {
 })
 
 test(sub.name, () => {
-    expect(sub(1,2)).toBe(-1)
-    expect(sub(null,2)).toBe(-2)
-    expect(sub(undefined,3)).toBe(-3)
+    expect(sub(1, 2)).toBe(-1)
+    expect(sub(null, 2)).toBe(-2)
+    expect(sub(undefined, 3)).toBe(-3)
 })
 
 test(fpSub.name, () => {
@@ -26,8 +27,8 @@ test(fpSub.name, () => {
 })
 
 test(mult.name, () => {
-    expect(mult(2,6)).toBe(12)
-    expect(mult(undefined,2)).toBe(0)
+    expect(mult(2, 6)).toBe(12)
+    expect(mult(undefined, 2)).toBe(0)
 })
 
 test(fpMult.name, () => {
@@ -36,8 +37,8 @@ test(fpMult.name, () => {
 })
 
 test(div.name, () => {
-    expect(div(6,2)).toBe(3)
-    expect(div(null,2)).toBe(0)
+    expect(div(6, 2)).toBe(3)
+    expect(div(null, 2)).toBe(0)
 })
 
 test(fpDiv.name, () => {
