@@ -1,0 +1,37 @@
+{
+  "name": "bun-plugin-react-compiler",
+  "version": "0.3.2",
+  "description": "Bun plugin for React Compiler.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mnpenner/bun-plugin-react-compiler.git"
+  },
+  "author": "Mark Penner <git@mpen.ca>",
+  "module": "./dist/react-compiler.js",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "@types/babel__core": "^7.20.5",
+    "@types/bun": "latest",
+    "react": "^19.2.4",
+    "typescript": "^5"
+  },
+  "peerDependencies": {
+    "@babel/core": "^7.29.0",
+    "babel-plugin-react-compiler": "^1.0.0"
+  },
+  "scripts": {
+    "build": "bun run build.ts && tsc -p tsconfig.build.json",
+    "test:types": "tsc -p tsconfig.typecheck.json",
+    "test:impl": "bun test",
+    "test": "bun run --parallel 'test:*'"
+  },
+  "main": "./dist/react-compiler.js",
+  "exports": {
+    ".": "./dist/react-compiler.js",
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/react-compiler.d.ts"
+}
