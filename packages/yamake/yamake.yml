@@ -1,0 +1,70 @@
+rules:
+  default:
+    deps: build
+  pnpm-lock.yaml:
+    input: package.json
+    output: pnpm-lock.yaml
+    cmd: [ pnpm, install, --lockfile-only ]
+  node_modules:
+    input: pnpm-lock.yaml  # TODO: should automatically trigger pnpm-lock.yaml?
+    output: node_modules/.modules.yaml
+    cmd: [ pnpm, install, --frozen-lockfile ]
+  node_modules.bak:
+    input: package.json
+    output:
+      - pnpm-lock.yaml
+      - node_modules/.modules.yaml
+    cmd: [ pnpm, install, --color ]
+  build:
+    input:
+      - src/index.ts  # TODO: support globs
+    auxInput:
+      - node_modules/.modules.yaml
+      - tsconfig.json
+      - package.json
+      - pnpm-lock.yaml
+    output: dist/index.js
+    mkdir: dist
+    deps:
+    - node_modules
+    - dist/package.json
+    - dist/README.md
+    suppressOutput: false
+    cmd: [ npx, esbuild, --bundle, src/index.ts, --outdir=dist, --platform=node, --target=node14 ]
+  dist/package.json:
+    input: package.json
+    output: dist/package.json
+    mkdir: dist
+    shell: sh
+    cmd: jq 'del(.devDependencies,.private,.scripts)' $< > $@
+    stdoutFile: true
+  dist/README.md:
+    input: README.md
+    output: dist/README.md  # TODO: support dist/%
+    mkdir: dist
+    cmd: cp $< $@
+  versioni:
+    interactive: true  # TODO: implement
+    cmd: yarn version
+  version:
+    cmd: npm version patch
+  publish:
+    odeps: [version, build]
+    cwd: dist
+    cmd: npm publish
+  run:
+    deps: build
+    node: [ dist/index.js, build ]
+    nodeOptions:
+      enableSourceMaps: true
+      maxOldSpaceSize: 16384
+files:  # TODO:
+  - input: [ README.md, pnpm-lock.yaml ]
+    output: dist/%  # or maybe we should do regex capture groups, in case input is in src/
+    cmd: cp $< dist/
+  - input: package.json
+    output: dist/package.json
+    cmd: jq 'del(.devDependencies,.private,.scripts)' $< > $@
+#  dist/README.md:  # TODO: need a way to take advantage of `cp [OPTION]... SOURCE... DIRECTORY` syntax; i.e. $? from https://www.gnu.org/software/make/manual/html_node/Automatic-Variables.html
+#    input: README.md
+#    cmd: cp $< $@
