@@ -1,45 +1,4 @@
 
-export function isFunction(obj:any): obj is Function {
-    return typeof obj === 'function';
-}
-
-export function isString(obj:any): obj is string {
-    return typeof obj === 'string'
-}
-
-export function isStringLike(obj:any): obj is string|String {
-    return typeof obj === 'string' || obj instanceof String;
-}
-
-
-export function isNumberLike(obj:any) : obj is number|Number {
-    return typeof obj === 'number' || obj instanceof Number;
-}
-
-export function isBigInt(obj: any): obj is bigint {
-    return typeof obj === 'bigint';
-}
-
-export function isBoolean(obj: any): obj is boolean {
-    return obj === true || obj === false;
-}
-
-export function isRegExp(obj: any): obj is RegExp {
-    return obj instanceof RegExp;
-}
-
-export function isArray(obj: any): obj is any[] {
-    return Array.isArray(obj);
-}
-
-export function isObject(obj: any): obj is object {
-    return obj !== null && typeof obj === 'object';
-}
-
-export function isSymbol(obj: any): obj is symbol {
-    return Object.prototype.toString.call(obj) === '[object Symbol]';
-}
-
 /**
  * Recursively searches (BFS) through `lib` (an object/module) to find the fully-qualified name of `fn`.
  * 

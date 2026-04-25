@@ -174,7 +174,10 @@
     },
     "packages/js-serialize": {
       "name": "js-serialize",
-      "version": "0.7.0",
+      "version": "0.7.3",
+      "dependencies": {
+        "@mpen/is-type": "workspace:*",
+      },
       "devDependencies": {
         "bun-types": "^1.3.3",
         "npm-run-all": "^4.1.5",
@@ -354,7 +357,7 @@
     },
     "packages/podman": {
       "name": "podman",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "peerDependencies": {
         "typescript": "^5.9.3",
       },

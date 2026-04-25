@@ -1,4 +1,5 @@
-import * as util from './util'
+import { isArray, isBigInt, isBoolean, isFunction, isNumberLike, isObject, isRegExp, isString, isStringLike, isSymbol } from '@mpen/is-type'
+import { findFunction } from './util'
 
 let nativeFuncs = new Map<Function,string>()
 const isRaw = Symbol('isRaw')
@@ -88,12 +89,12 @@ function referenceCount(object: any): Map<any,number> {
             m.set(o,c+1)
             return
         }
-        if(util.isArray(o) || o instanceof Set) {
+        if(isArray(o) || o instanceof Set) {
             m.set(o,1)
             for(const v of o) {
                 r(v)
             }
-        } else if(util.isString(o)) {
+        } else if(isString(o)) {
             if(o.length >= STRING_REF_MIN_LENGTH) {  // TODO: make this part of the "compact" option
                 m.set(o,1)
             }
@@ -102,9 +103,9 @@ function referenceCount(object: any): Map<any,number> {
             for(const v of o.values()) {
                 r(v)
             }
-        } else if(util.isRegExp(o) || o instanceof Date || util.isSymbol(o) || util.isFunction(o)) {
+        } else if(isRegExp(o) || o instanceof Date || isSymbol(o) || isFunction(o)) {
             m.set(o,1)
-        } else if(util.isObject(o)) {  // process object last because it'll get caught by some of the above stuff
+        } else if(isObject(o)) {  // process object last because it'll get caught by some of the above stuff
             m.set(o,1)
             for(const k of Reflect.ownKeys(o)) {
                 // @ts-ignore
@@ -228,7 +229,7 @@ function serializeAnySymbol(obj: symbol, ctx: Context) {
         wellKnownSymbols = new Map(
             Object.getOwnPropertyNames(Symbol)
                 // @ts-ignore
-                .filter(k => util.isSymbol(Symbol[k]))
+                .filter(k => isSymbol(Symbol[k]))
                 // @ts-ignore
                 .map(k => [Symbol[k], k])
         )
@@ -247,7 +248,7 @@ function serializeNativeFunction(obj: Function, ctx: Context) {
         return cachedPath
     }
 
-    const foundPath = util.findFunction(global, obj)
+    const foundPath = findFunction(global, obj)
 
     if(foundPath === null) {
         throw new Error(`Could not determine fully-qualified name of native function '${obj.name}'`)
@@ -326,7 +327,7 @@ function serializeAny(obj: any, ctx: Context): string {
     if(ctx.seen.has(obj) && ctx.refs.has(obj)) {
         return ctx.refs.get(obj)!
     }
-    if(util.isArray(obj)) {
+    if(isArray(obj)) {
         ctx.seen.add(obj)
         return serializeArray(obj, ctx);
     }
@@ -341,25 +342,25 @@ function serializeAny(obj: any, ctx: Context): string {
     if(obj instanceof Date) {
         return wrapSimpleRef(serializeDate)(obj, ctx);
     }
-    if(util.isSymbol(obj)) {
+    if(isSymbol(obj)) {
         return wrapSimpleRef(serializeAnySymbol)(obj, ctx);
     }
-    if(util.isFunction(obj)) {
+    if(isFunction(obj)) {
         return wrapSimpleRef(serializeAnyFunction)(obj, ctx);
     }
-    if(util.isRegExp(obj)) {
+    if(isRegExp(obj)) {
         return wrapSimpleRef(serializeRegExp)(obj, ctx);
     }
-    if(util.isNumberLike(obj)) {
+    if(isNumberLike(obj)) {
         return serializeNumberLike(obj, ctx)
     }
-    if(util.isBigInt(obj)) {
+    if(isBigInt(obj)) {
         return serializeBigInt(obj, ctx)
     }
-    if(util.isBoolean(obj)) {
+    if(isBoolean(obj)) {
         return serializeBoolean(obj, ctx)
     }
-    if(util.isStringLike(obj)) {
+    if(isStringLike(obj)) {
         return serializeStringLike(obj, ctx)
     }
     if(obj === undefined) {
@@ -368,7 +369,7 @@ function serializeAny(obj: any, ctx: Context): string {
     if(obj === null) {
         return serializeNull(obj, ctx)
     }
-    if(util.isObject(obj)) {
+    if(isObject(obj)) {
         ctx.seen.add(obj)
         return serializeAnyObject(obj, ctx)
     }
@@ -505,10 +506,10 @@ function serializeObject(obj: any, ctx: Context) {
     if(obj[isRaw]) {
         return obj.value
     }
-    if(util.isFunction(obj.toSource)) { // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toSource
+    if(isFunction(obj.toSource)) { // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toSource
         return obj.toSource()
     }
-    if(util.isFunction(obj.toJSON)) {
+    if(isFunction(obj.toJSON)) {
         return serializeAny(obj.toJSON(), ctx)
     }
     return serializePlainObject(obj, ctx);
@@ -551,10 +552,10 @@ function isSafePropName(name: string, ctx: Context) {
 }
 
 function serializePropertyName(name: PropertyKey, ctx: Context) {
-    if(util.isSymbol(name)) {
+    if(isSymbol(name)) {
         return '[' + serializeSymbol(name, ctx) + ']'
     }
-    if(util.isStringLike(name)) {
+    if(isStringLike(name)) {
         if(isSafePropName(name, ctx)) {
             return name
         }
