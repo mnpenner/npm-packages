@@ -99,9 +99,9 @@ describe('numbers', () => {
 })
 
 it('serializes regexes', () => {
-    expect(jsSerialize(/foo/i)).toEqual('/foo/i')
-    expect(jsSerialize(new RegExp('bar', 'myu'))).toEqual('/bar/muy')
-    expect(jsSerialize(/foo\nbar/)).toEqual('/foo\\nbar/')
+    expect(jsSerialize(/foo/i)).toEqual('new RegExp("foo","i")')
+    expect(jsSerialize(new RegExp('bar', 'myu'))).toEqual('new RegExp("bar","muy")')
+    expect(jsSerialize(/foo\nbar/)).toEqual('new RegExp("foo\\\\nbar","")')
 })
 
 it('serializes sets', () => {
@@ -126,8 +126,21 @@ it('serializes dates', () => {
 })
 
 it('serializes scripts', () => {
-    expect(jsSerialize('<script>alert("injection")</script>')).toEqual('"<script>alert(\\"injection\\")<\\/script>"')
+    expect(jsSerialize('<script>alert("injection")</script>')).toEqual('"\\x3cscript\\x3ealert(\\"injection\\")\\x3c/script\\x3e"')
     expect(jsSerialize(() => document.write('</ScRiPt >'))).toEqual('() => document.write("<\\/ScRiPt >")')
+})
+
+it('escapes HTML tags to prevent script data double escaped state vulnerabilities', () => {
+    // This test ensures the serializer is patched to encode HTML-sensitive characters
+    // like `<` and `>` to prevent state-machine manipulation in the HTML parser.
+    const output = jsSerialize('<!--<script>');
+    expect(output).not.toContain('<');
+    expect(output).not.toContain('>');
+
+    // When safe is false, it uses relaxed escaping:
+    expect(jsSerialize('<!--<script>', { safe: false })).toEqual('"\\x3c!--\\x3cscript>"')
+    expect(jsSerialize('</script>', { safe: false })).toEqual('"<\\/script>"')
+    expect(jsSerialize('<div></div>', { safe: false })).toEqual('"<div></div>"')
 })
 
 it('serializes arrays', () => {

@@ -276,9 +276,17 @@ function serializeBoolean(obj: boolean, ctx: Context) {
     return ctx.opts.compact ? '!1' : 'false'
 }
 
+function escapeUnsafeHtml(str: string) {
+    return str.replace(/<!--/g, '\\x3c!--')
+              .replace(/<script/gi, '\\x3cscript')
+              .replace(/-->/g, '--\\x3e')
+}
+
 function serializeRegExp(obj: RegExp, ctx: Context) {
-    // return `/${obj.source}/${obj.flags}`;
-    return obj.toString()
+    if (ctx.opts.safe) {
+        return `new RegExp(${serializeString(obj.source, ctx)},${serializeString(obj.flags, ctx)})`
+    }
+    return escapeUnsafeHtml(obj.toString())
 }
 
 function serializeUndefined(obj: undefined, ctx: Context) {
@@ -440,7 +448,7 @@ function doSerializeStringLike(obj: string | String, ctx: Context) {
 }
 
 function serializeString(obj: string, ctx: Context) {
-    return '"' + Array.from(obj).map(ch => {
+    let result = '"' + Array.from(obj).map(ch => {
         const cp = ch.codePointAt(0)!
         switch(cp) {
             case 0x08:
@@ -460,6 +468,10 @@ function serializeString(obj: string, ctx: Context) {
                 return '\\"'
             case 0x5C:
                 return '\\\\'
+            case 0x3C:
+                return ctx.opts.safe ? '\\x3c' : '<'
+            case 0x3E:
+                return ctx.opts.safe ? '\\x3e' : '>'
         }
         if(cp >= 32 && cp <= 126) {
             return ch
@@ -472,6 +484,11 @@ function serializeString(obj: string, ctx: Context) {
         }
         return '\\u{' + cp.toString(16) + '}'
     }).join('') + '"'
+
+    if (!ctx.opts.safe) {
+        result = escapeUnsafeHtml(result)
+    }
+    return result
 }
 
 function serializeObject(obj: any, ctx: Context) {
