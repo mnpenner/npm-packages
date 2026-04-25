@@ -6,3 +6,4 @@ syntax: rootglob
 **/coverage/
 packages/react-datepicker/public/bundle.js
 scratch/
+**.tsbuildinfo

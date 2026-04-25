@@ -1,10 +1,9 @@
 {
+    "extends": "../../tsconfig.json",
     /* Visit https://aka.ms/tsconfig.json to read more about this file */
     "compilerOptions": {
-        "composite": true,
+        "lib": ["ESNext", "DOM"],
         "target": "ES2022",
-        "module": "ESNext",
-        "rootDir": "src/",
         "declaration": true,
         "declarationDir": "./dist",
         "noEmitOnError": false,
@@ -19,9 +18,6 @@
         "types": ["bun-types"]
     },
     "include": [
-        "src/"
-    ],
-    "files": [
-        "src/index.ts"
+        "src/**/*.ts"
     ]
 }

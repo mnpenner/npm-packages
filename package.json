@@ -13,7 +13,8 @@
       "react": "^19",
       "react-dom": "^19",
       "typescript": "^6",
-      "eslint": "^10"
+      "eslint": "^10",
+      "tsdown": "^0.21"
     }
   },
   "devDependencies": {
