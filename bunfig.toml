@@ -1,2 +1,5 @@
 [install]
 linkWorkspacePackages = true
+
+[test]
+coverageSkip = ["**/*.test.ts", "**/*.spec.ts", "**/*.test.tsx", "**/*.spec.tsx", "**/node_modules/**"]
