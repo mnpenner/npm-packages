@@ -17,10 +17,31 @@ async function main(options: Options, positionals: Positionals): Promise<number 
         .filter(dirent => dirent.isDirectory())
         .map(dirent => dirent.name)
 
-    const results: Array<{ name: string; funcs: number | null; lines: number | null }> = []
+    const results: Array<{ 
+        dirName: string; 
+        displayName: string; 
+        version: string;
+        hasDocs: boolean;
+        funcs: number | null; 
+        lines: number | null 
+    }> = []
 
     for (const pkg of packages) {
         process.stdout.write(`Checking coverage for ${pkg}... `)
+        
+        let displayName = pkg
+        let version = "—"
+        let hasDocs = false
+        try {
+            const pkgJson = JSON.parse(await readFile(join(packagesDir, pkg, "package.json"), "utf-8"))
+            displayName = pkgJson.name || pkg
+            version = pkgJson.version || "—"
+            const s = pkgJson.scripts || {}
+            hasDocs = !!(s.docs || s['build:docs'])
+        } catch (e) {
+            // No package.json or invalid
+        }
+
         try {
             const { stdout, stderr } = await $`bun test --coverage`.cwd(join(packagesDir, pkg)).nothrow().quiet()
             const output = stdout.toString() + stderr.toString()
@@ -29,31 +50,34 @@ async function main(options: Options, positionals: Positionals): Promise<number 
             if (match) {
                 const funcs = parseFloat(match[1])
                 const lines = parseFloat(match[2])
-                results.push({ name: pkg, funcs, lines })
+                results.push({ dirName: pkg, displayName, version, hasDocs, funcs, lines })
                 console.log(`F:${funcs}% L:${lines}%`)
             } else {
-                results.push({ name: pkg, funcs: null, lines: null })
-                console.log("N/A")
+                results.push({ dirName: pkg, displayName, version, hasDocs, funcs: null, lines: null })
+                console.log("—")
             }
         } catch (e) {
-            results.push({ name: pkg, funcs: null, lines: null })
+            results.push({ dirName: pkg, displayName, version, hasDocs, funcs: null, lines: null })
             console.log("Error")
         }
     }
 
-    results.sort((a, b) => a.name.localeCompare(b.name))
+    results.sort((a, b) => a.displayName.localeCompare(b.displayName))
 
-    let table = "| Package | % Funcs | % Lines |\n| :--- | :--- | :--- |\n"
-    for (const { name, funcs, lines } of results) {
-        const funcsStr = funcs === null ? "N/A" : `${funcs.toFixed(2)}%`
-        const linesStr = lines === null ? "N/A" : `${lines.toFixed(2)}%`
-        table += `| [\`${name}\`](https://github.com/mnpenner/npm-packages/tree/main/packages/${name}) | ${funcsStr} | ${linesStr} |\n`
+    let table = "| Package | Version | Directory | Cov. % Funcs | Cov. % Lines | Documentation |\n"
+    table += "| :--- | :--- | :--- | :--- | :--- | :--- |\n"
+    for (const { dirName, displayName, version, hasDocs, funcs, lines } of results) {
+        const funcsStr = funcs === null ? "—" : `${funcs.toFixed(2)}%`
+        const linesStr = lines === null ? "—" : `${lines.toFixed(2)}%`
+        const dirLink = `[${dirName}](https://github.com/mnpenner/npm-packages/tree/main/packages/${dirName})`
+        const docsLink = hasDocs ? `[Docs](https://mnpenner.github.io/npm-packages/${dirName}/)` : "—"
+        table += `| \`${displayName}\` | ${version} | ${dirLink} | ${funcsStr} | ${linesStr} | ${docsLink} |\n`
     }
 
     const readmePath = "README.md"
     let readme = await readFile(readmePath, "utf-8")
-    const startMarker = "<!-- test coverage start -->"
-    const endMarker = "<!-- test coverage end -->"
+    const startMarker = "<!-- packages-table start -->"
+    const endMarker = "<!-- packages-table end -->"
 
     const startIndex = readme.indexOf(startMarker)
     const endIndex = readme.indexOf(endMarker)
