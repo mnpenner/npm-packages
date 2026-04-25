@@ -32,8 +32,9 @@ async function main(options: Options, positionals: Positionals): Promise<number 
         let displayName = pkg
         let version = "—"
         let hasDocs = false
+        const pkgPath = join(packagesDir, pkg)
         try {
-            const pkgJson = JSON.parse(await readFile(join(packagesDir, pkg, "package.json"), "utf-8"))
+            const pkgJson = JSON.parse(await readFile(join(pkgPath, "package.json"), "utf-8"))
             displayName = pkgJson.name || pkg
             version = pkgJson.version || "—"
             const s = pkgJson.scripts || {}
@@ -43,7 +44,7 @@ async function main(options: Options, positionals: Positionals): Promise<number 
         }
 
         try {
-            const { stdout, stderr } = await $`bun test --coverage`.cwd(join(packagesDir, pkg)).nothrow().quiet()
+            const { stdout, stderr } = await $`bun test --coverage`.cwd(pkgPath).nothrow().quiet()
             const output = stdout.toString() + stderr.toString()
             // Look for "All files                         |   XX.XX |   YY.YY |"
             const match = output.match(/All files\s+\|\s+([\d.]+)\s+\|\s+([\d.]+)\s+\|/)
@@ -64,14 +65,16 @@ async function main(options: Options, positionals: Positionals): Promise<number 
 
     results.sort((a, b) => a.displayName.localeCompare(b.displayName))
 
-    let table = "| Package | Version | Directory | Cov. % Funcs | Cov. % Lines | Documentation |\n"
+    let table = "| Package | Version | Directory | Size | Coverage | Documentation |\n"
     table += "| :--- | :--- | :--- | :--- | :--- | :--- |\n"
     for (const { dirName, displayName, version, hasDocs, funcs, lines } of results) {
-        const funcsStr = funcs === null ? "—" : `${funcs.toFixed(2)}%`
-        const linesStr = lines === null ? "—" : `${lines.toFixed(2)}%`
+        const funcsStr = funcs === null ? "—" : `${funcs.toFixed(0)}% 𝑓`
+        const linesStr = lines === null ? "—" : `${lines.toFixed(0)}% L`
+        const coverageStr = (funcs === null && lines === null) ? "—" : `${funcsStr} / ${linesStr}`
         const dirLink = `[${dirName}](https://github.com/mnpenner/npm-packages/tree/main/packages/${dirName})`
-        const docsLink = hasDocs ? `[Docs](https://mnpenner.github.io/npm-packages/${dirName}/)` : "—"
-        table += `| \`${displayName}\` | ${version} | ${dirLink} | ${funcsStr} | ${linesStr} | ${docsLink} |\n`
+        const docsLink = hasDocs ? `[Docs](https://mnpenner.github.io/npm-packages/${dirName}/) ` : "—"
+        const sizeLink = `[Size](https://pkg-size.dev/${displayName})`
+        table += `| \`${displayName}\` | ${version} | ${dirLink} | ${sizeLink} | ${coverageStr} | ${docsLink} |\n`
     }
 
     const readmePath = "README.md"
