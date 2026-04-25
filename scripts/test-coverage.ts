@@ -47,7 +47,7 @@ async function main(options: Options, positionals: Positionals): Promise<number 
     for (const { name, funcs, lines } of results) {
         const funcsStr = funcs === null ? "N/A" : `${funcs.toFixed(2)}%`
         const linesStr = lines === null ? "N/A" : `${lines.toFixed(2)}%`
-        table += `| \`${name}\` | ${funcsStr} | ${linesStr} |\n`
+        table += `| [\`${name}\`](https://github.com/mnpenner/npm-packages/tree/main/packages/${name}) | ${funcsStr} | ${linesStr} |\n`
     }
 
     const readmePath = "README.md"

@@ -4,6 +4,14 @@ Creates a React app w/ [TypeScript](https://www.typescriptlang.org/), [emotion](
 
 Unlike [CRA](https://github.com/facebook/create-react-app) (which is great BTW), this app will be immediately "ejected", i.e., after your project is created, you're on your own.
 
+## Unmaintained
+
+Use [Vite](https://vite.dev) instead:
+
+```sh
+bun create vite my-app --template react-ts
+```
+
 ## Installation
 
 ```sh
