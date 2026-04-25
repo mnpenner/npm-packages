@@ -1,3 +1,4 @@
+import { test, expect, describe, it } from 'bun:test'
 import * as lib from './index'
 import {isTruthy} from './index'
 
@@ -506,6 +507,7 @@ describe(lib.isPojo.name, () => {
         expect(lib.isPojo(Object.create(Foo))).toBe(false)
         expect(lib.isPojo({__proto__:{a:1}})).toBe(false)
         expect(lib.isPojo({__proto__:Foo})).toBe(false)
+        expect(lib.isPojo(new (Foo as any)(1))).toBe(false)
     })
 
     it('should return `false` for built-ins', function() {
@@ -767,6 +769,25 @@ test(lib.isString.name, () => {
     expect(lib.isString(new Date)).toBe(false)
     expect(lib.isString(new Set())).toBe(false)
     expect(lib.isString(new Map())).toBe(false)
+})
+
+test(lib.isStringLike.name, () => {
+    expect(lib.isStringLike('str')).toBe(true)
+    expect(lib.isStringLike(new String('str'))).toBe(true)
+
+    expect(lib.isStringLike(null)).toBe(false)
+    expect(lib.isStringLike(undefined)).toBe(false)
+    expect(lib.isStringLike(false)).toBe(false)
+    expect(lib.isStringLike(true)).toBe(false)
+    expect(lib.isStringLike(3.14)).toBe(false)
+    expect(lib.isStringLike(Symbol())).toBe(false)
+    expect(lib.isStringLike(/re/)).toBe(false)
+    expect(lib.isStringLike([])).toBe(false)
+    expect(lib.isStringLike({})).toBe(false)
+    expect(lib.isStringLike(Object.create(null))).toBe(false)
+    expect(lib.isStringLike(new Date)).toBe(false)
+    expect(lib.isStringLike(new Set())).toBe(false)
+    expect(lib.isStringLike(new Map())).toBe(false)
 })
 
 test(lib.isNumberLike.name, () => {

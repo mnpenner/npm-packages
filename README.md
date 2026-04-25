@@ -14,8 +14,8 @@ These are of varying quality. Use at your own risk.
 | `@mpen/classcat` | 0.1.0 | [classcat](https://github.com/mnpenner/npm-packages/tree/main/packages/classcat) | 1.45KB / 3.19KB | 100% 𝑓 / 100% L | — |
 | `@mpen/http-helpers` | — | [http-helpers](https://github.com/mnpenner/npm-packages/tree/main/packages/http-helpers) | — | — | — |
 | `@mpen/imut-utils` | 0.2.1 | [imut-utils](https://github.com/mnpenner/npm-packages/tree/main/packages/imut-utils) | 7.86KB / 29.00KB | 95% 𝑓 / 99% L | [Docs](https://mnpenner.github.io/npm-packages/imut-utils/)  |
-| `@mpen/is-type` | 0.1.15 | [is-type](https://github.com/mnpenner/npm-packages/tree/main/packages/is-type) | 4.25KB / 16.31KB | 72% 𝑓 / 99% L | [Docs](https://mnpenner.github.io/npm-packages/is-type/)  |
-| `@mpen/jsxhtml` | 0.5.2 | [jsxhtml](https://github.com/mnpenner/npm-packages/tree/main/packages/jsxhtml) | 3.14KB / 7.53KB | 50% 𝑓 / 56% L | — |
+| `@mpen/is-type` | 0.2.0 | [is-type](https://github.com/mnpenner/npm-packages/tree/main/packages/is-type) | 3.97KB / 13.80KB | 74% 𝑓 / 100% L | [Docs](https://mnpenner.github.io/npm-packages/is-type/)  |
+| `@mpen/jsxhtml` | 0.5.2 | [jsxhtml](https://github.com/mnpenner/npm-packages/tree/main/packages/jsxhtml) | 3.15KB / 7.53KB | 49% 𝑓 / 55% L | — |
 | `@mpen/react-basic-inputs` | 0.4.0 | [react-basic-inputs](https://github.com/mnpenner/npm-packages/tree/main/packages/react-basic-inputs) | 1.46KB / 3.38KB | 68% 𝑓 / 86% L | [Docs](https://mnpenner.github.io/npm-packages/react-basic-inputs/)  |
 | `@mpen/react-router` | — | [react-router](https://github.com/mnpenner/npm-packages/tree/main/packages/react-router) | — | 90% 𝑓 / 91% L | — |
 | `@mpen/rerouter` | — | [rerouter](https://github.com/mnpenner/npm-packages/tree/main/packages/rerouter) | — | 93% 𝑓 / 99% L | — |

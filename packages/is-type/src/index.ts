@@ -266,13 +266,13 @@ export function isError(obj: any): obj is Error {
  * Object is a NodeJS Buffer.
  */
 export function isBuffer(obj: any): obj is Buffer {
-    return typeof globalThis.Buffer?.isBuffer === 'function' && globalThis.Buffer.isBuffer(obj)
+    return typeof (globalThis as any).Buffer?.isBuffer === 'function' && (globalThis as any).Buffer.isBuffer(obj)
 }
 
 /**
  * Object is an ArrayBufferView, like Uint8Array.
  */
 export function isArrayBufferView(obj: any): obj is ArrayBufferView {
-    return typeof globalThis.ArrayBuffer?.isView === 'function' && globalThis.ArrayBuffer.isView(obj)
+    return typeof (globalThis as any).ArrayBuffer?.isView === 'function' && (globalThis as any).ArrayBuffer.isView(obj)
 }
 

@@ -1,9 +1,8 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "entryPoints": ["./src/index.ts", "./src/secondary-entry.ts"],
+  "entryPoints": ["./src/index.ts"],
   "out": "docs",
   "basePath": ".",
-  "plugin": ["typedoc-plugin-missing-exports"],
   "excludeExternals": true,
   "sourceLinkTemplate": "https://github.com/mnpenner/npm-packages/blob/main/packages/is-type/{path}#L{line}"
 }
