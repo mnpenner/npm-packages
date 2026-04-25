@@ -116,9 +116,6 @@ function referenceCount(object: any): Map<any,number> {
     return m
 }
 
-function pathToStr(path: string[], ctx: Context) {
-    return path.map(p => util.isStringLike(p) && isSafePropName(p, ctx) ? `.${p}` : `[${serializeAny(p, ctx)}]`).join('')
-}
 
 function isNegativeZero(value: number) {
     // https://stackoverflow.com/a/39280486/65387
@@ -387,6 +384,8 @@ function serializeNumber(obj: number, ctx: Context) {
             return 'Math.LN2'
         case Math.LN10:
             return 'Math.LN10'
+        case Math.LOG10E:
+            return 'Math.LOG10E'
         case Math.LOG2E:
             return 'Math.LOG2E'
         case Math.PI:

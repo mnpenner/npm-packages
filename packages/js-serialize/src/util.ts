@@ -1,6 +1,3 @@
-export function isNativeFunction(obj: any): obj is Function {
-    return isFunction(obj) && obj.toString().endsWith('{ [native code] }');
-}
 
 export function isFunction(obj:any): obj is Function {
     return typeof obj === 'function';
@@ -14,9 +11,6 @@ export function isStringLike(obj:any): obj is string|String {
     return typeof obj === 'string' || obj instanceof String;
 }
 
-export function isNumber(obj:any) : obj is number {
-    return typeof obj === 'number';
-}
 
 export function isNumberLike(obj:any) : obj is number|Number {
     return typeof obj === 'number' || obj instanceof Number;
@@ -38,20 +32,8 @@ export function isArray(obj: any): obj is any[] {
     return Array.isArray(obj);
 }
 
-export function isNull(obj: any): obj is null {
-    return obj === null;
-}
-
 export function isObject(obj: any): obj is object {
     return obj !== null && typeof obj === 'object';
-}
-
-export function isPlainObject(obj: any): obj is object {
-    return isObject(obj)
-        && !isStringLike(obj)
-        && !isNumberLike(obj)
-        && !isRegExp(obj)
-        && !isArray(obj);
 }
 
 export function isSymbol(obj: any): obj is symbol {

@@ -86,6 +86,16 @@ describe('numbers', () => {
         expect(jsSerialize(0n)).toEqual('0n')
         expect(jsSerialize(1000000000000n,{compact:true})).toEqual('0xe8d4a51000n')
     })
+
+    it('serializes Math constants', () => {
+        expect(jsSerialize(Math.E)).toEqual('Math.E')
+        expect(jsSerialize(Math.LN2)).toEqual('Math.LN2')
+        expect(jsSerialize(Math.LN10)).toEqual('Math.LN10')
+        expect(jsSerialize(Math.LOG2E)).toEqual('Math.LOG2E')
+        expect(jsSerialize(Math.LOG10E)).toEqual('Math.LOG10E')
+        expect(jsSerialize(Math.SQRT1_2)).toEqual('Math.SQRT1_2')
+        expect(jsSerialize(Math.SQRT2)).toEqual('Math.SQRT2')
+    })
 })
 
 it('serializes regexes', () => {
@@ -172,6 +182,19 @@ describe('functions', () => {
         expect(jsSerialize(function mult(x, y) {
             return x * y
         })).toWse("function mult(x, y) { return x * y; }")
+    })
+
+    it('caches native functions', () => {
+        // We call this twice to exercise the internal cache hit path for code coverage.
+        // The first call populates the cache, the second call returns from it.
+        expect(jsSerialize(Math.sin)).toEqual('Math.sin')
+        expect(jsSerialize(Math.sin)).toEqual('Math.sin')
+    })
+
+    it('throws on unknown native functions', () => {
+        const fn = function unknown() {}
+        fn.toString = () => 'function unknown() { [native code] }'
+        expect(() => jsSerialize(fn)).toThrow("Could not determine fully-qualified name of native function 'unknown'")
     })
 })
 
@@ -359,5 +382,12 @@ describe('references', () => {
     it('symbol references', () => {
         const s = Symbol()
         expect(jsSerialize([s,s])).toEqual("($0=>[$0=Symbol(),$0])()")
+    })
+})
+
+describe('test helpers', () => {
+    it('toWse fails on non-strings', () => {
+        // @ts-ignore
+        expect(() => expect(123).toWse('foo')).toThrow()
     })
 })
