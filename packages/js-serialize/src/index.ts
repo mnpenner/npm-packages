@@ -448,7 +448,17 @@ function doSerializeStringLike(obj: string | String, ctx: Context) {
 }
 
 function serializeString(obj: string, ctx: Context) {
-    let result = '"' + Array.from(obj).map(ch => {
+    let numDouble = 0
+    let numSingle = 0
+    for(let i=0; i<obj.length; i++) {
+        if (obj[i] === '"') ++numDouble
+        else if (obj[i] === "'") ++numSingle
+    }
+    const useSingle = numDouble > numSingle
+    const quote = useSingle ? "'" : '"'
+    const quoteCode = useSingle ? 0x27 : 0x22
+
+    let result = quote + Array.from(obj).map(ch => {
         const cp = ch.codePointAt(0)!
         switch(cp) {
             case 0x08:
@@ -464,8 +474,8 @@ function serializeString(obj: string, ctx: Context) {
             case 0x0B:
                 return ctx.opts.safe ? '\\x0B' : '\\v' // IE < 9 doesn't support \v
             // case 0x00: return '\\0'; // causes problems if the next character is a digit
-            case 0x22:
-                return '\\"'
+            case quoteCode:
+                return '\\' + ch
             case 0x5C:
                 return '\\\\'
             case 0x3C:
@@ -483,7 +493,7 @@ function serializeString(obj: string, ctx: Context) {
             return '\\u' + cp.toString(16).padStart(4, '0')
         }
         return '\\u{' + cp.toString(16) + '}'
-    }).join('') + '"'
+    }).join('') + quote
 
     if (!ctx.opts.safe) {
         result = escapeUnsafeHtml(result)

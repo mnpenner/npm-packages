@@ -15,7 +15,7 @@ These are of varying quality. Use at your own risk.
 | `@mpen/http-helpers` | — | [http-helpers](https://github.com/mnpenner/npm-packages/tree/main/packages/http-helpers) | — | — | — |
 | `@mpen/imut-utils` | 0.2.1 | [imut-utils](https://github.com/mnpenner/npm-packages/tree/main/packages/imut-utils) | 7.86KB / 29.00KB | 95% 𝑓 / 99% L | [Docs](https://mnpenner.github.io/npm-packages/imut-utils/)  |
 | `@mpen/is-type` | 0.1.15 | [is-type](https://github.com/mnpenner/npm-packages/tree/main/packages/is-type) | 1.45KB / 2.52KB | 72% 𝑓 / 99% L | [Docs](https://mnpenner.github.io/npm-packages/is-type/)  |
-| `@mpen/jsxhtml` | 0.5.2 | [jsxhtml](https://github.com/mnpenner/npm-packages/tree/main/packages/jsxhtml) | 3.14KB / 7.53KB | 50% 𝑓 / 55% L | — |
+| `@mpen/jsxhtml` | 0.5.2 | [jsxhtml](https://github.com/mnpenner/npm-packages/tree/main/packages/jsxhtml) | 3.14KB / 7.53KB | 50% 𝑓 / 56% L | — |
 | `@mpen/react-basic-inputs` | 0.4.0 | [react-basic-inputs](https://github.com/mnpenner/npm-packages/tree/main/packages/react-basic-inputs) | 1.46KB / 3.38KB | 68% 𝑓 / 86% L | [Docs](https://mnpenner.github.io/npm-packages/react-basic-inputs/)  |
 | `@mpen/react-router` | — | [react-router](https://github.com/mnpenner/npm-packages/tree/main/packages/react-router) | — | 90% 𝑓 / 91% L | — |
 | `@mpen/rerouter` | — | [rerouter](https://github.com/mnpenner/npm-packages/tree/main/packages/rerouter) | — | 93% 𝑓 / 99% L | — |
@@ -27,7 +27,7 @@ These are of varying quality. Use at your own risk.
 | `cli-api` | 0.3.0 | [cli-api](https://github.com/mnpenner/npm-packages/tree/main/packages/cli-api) | 1.1KB / 2.14KB | 87% 𝑓 / 87% L | — |
 | `crap-app` | 0.3.4 | [crap-app](https://github.com/mnpenner/npm-packages/tree/main/packages/crap-app) | 68.92KB / 101.31KB | — | — |
 | `ctslib` | 0.1.5 | [create-tslib](https://github.com/mnpenner/npm-packages/tree/main/packages/create-tslib) | 5.79KB / 14.50KB | — | — |
-| `js-serialize` | 0.7.0 | [js-serialize](https://github.com/mnpenner/npm-packages/tree/main/packages/js-serialize) | 1.0KB / 2.21KB | 97% 𝑓 / 99% L | — |
+| `js-serialize` | 0.7.2 | [js-serialize](https://github.com/mnpenner/npm-packages/tree/main/packages/js-serialize) | 5.37KB / 29.31KB | 97% 𝑓 / 99% L | — |
 | `jtilz` | 0.3.8 | [jtilz](https://github.com/mnpenner/npm-packages/tree/main/packages/jtilz) | 0.99KB / 1.72KB | 66% 𝑓 / 91% L | — |
 | `merge-attrs` | 0.1.4 | [merge-attrs](https://github.com/mnpenner/npm-packages/tree/main/packages/merge-attrs) | 1.97KB / 4.69KB | 97% 𝑓 / 98% L | — |
 | `mysql3` | 0.7.5 | [mysql3](https://github.com/mnpenner/npm-packages/tree/main/packages/mysql3) | 5.71KB / 16.34KB | 94% 𝑓 / 95% L | — |

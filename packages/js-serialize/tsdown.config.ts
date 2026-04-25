@@ -6,4 +6,6 @@ export default defineConfig({
     platform: 'neutral',
     format: ['esm', 'cjs'],
     exports: true,
+    clean: true,
+    dts: true,
 })

@@ -36,15 +36,26 @@ describe('strings', () => {
         expect(jsSerialize('\u303a')).toEqual('"\\u303a"')
         expect(jsSerialize('\u{12345}')).toEqual('"\\u{12345}"')
         expect(jsSerialize('\x1F\x7F')).toEqual('"\\x1f\\x7f"')
-        expect(jsSerialize('he"l\\lo')).toEqual('"he\\"l\\\\lo"')
+        expect(jsSerialize('he"l\\lo')).toEqual("'he\"l\\\\lo'")
         expect(jsSerialize('0\u12345')).toEqual('"0\\u12345"')
         expect(jsSerialize('\x001')).toEqual('"\\x001"') // \01 would be incorrect!
         expect(jsSerialize('\u{1f469}')).toEqual('"\\u{1f469}"')
     })
 
     it('uses single-character escape sequences', () => {
-        expect(jsSerialize('\b\f\n\r\t\v"\\', {safe: false})).toEqual('"\\b\\f\\n\\r\\t\\v\\"\\\\"')
-        expect(jsSerialize('\b\f\n\r\t\v"\\', {safe: true})).toEqual('"\\b\\f\\n\\r\\t\\x0B\\"\\\\"')
+        expect(jsSerialize('\b\f\n\r\t\v"\\', {safe: false})).toEqual("'\\b\\f\\n\\r\\t\\v\"\\\\'")
+        expect(jsSerialize('\b\f\n\r\t\v"\\', {safe: true})).toEqual("'\\b\\f\\n\\r\\t\\x0B\"\\\\'")
+    })
+
+    it('chooses the optimal quote character', () => {
+        // More double quotes than single quotes: uses single quotes
+        expect(jsSerialize('he"l"l\'o')).toEqual("'he\"l\"l\\'o'")
+        // More single quotes than double quotes: uses double quotes
+        expect(jsSerialize("he'l'l\"o")).toEqual('"he\'l\'l\\"o"')
+        // Equal number of quotes: defaults to double quotes
+        expect(jsSerialize("he'l\"lo")).toEqual('"he\'l\\"lo"')
+        // No quotes: defaults to double quotes
+        expect(jsSerialize("hello")).toEqual('"hello"')
     })
 })
 
@@ -126,7 +137,7 @@ it('serializes dates', () => {
 })
 
 it('serializes scripts', () => {
-    expect(jsSerialize('<script>alert("injection")</script>')).toEqual('"\\x3cscript\\x3ealert(\\"injection\\")\\x3c/script\\x3e"')
+    expect(jsSerialize('<script>alert("injection")</script>')).toEqual("'\\x3cscript\\x3ealert(\"injection\")\\x3c/script\\x3e'")
     expect(jsSerialize(() => document.write('</ScRiPt >'))).toEqual('() => document.write("<\\/ScRiPt >")')
 })
 
