@@ -440,6 +440,28 @@ test(lib.isArray.name, () => {
     expect(lib.isArray(new Map())).toBe(false)
 })
 
+test(lib.isObjectLike.name, () => {
+    expect(lib.isObjectLike(/re/)).toBe(true)
+    expect(lib.isObjectLike([])).toBe(true)
+    expect(lib.isObjectLike({})).toBe(true)
+    expect(lib.isObjectLike(Object.create(null))).toBe(true)
+    expect(lib.isObjectLike(new Date)).toBe(true)
+    expect(lib.isObjectLike(new Set())).toBe(true)
+    expect(lib.isObjectLike(new Map())).toBe(true)
+    expect(lib.isObjectLike(Math)).toBe(true)
+    expect(lib.isObjectLike(Error)).toBe(true)
+
+    expect(lib.isObjectLike(() => {})).toBe(true)
+
+    expect(lib.isObjectLike(null)).toBe(false)
+    expect(lib.isObjectLike(undefined)).toBe(false)
+    expect(lib.isObjectLike(false)).toBe(false)
+    expect(lib.isObjectLike(true)).toBe(false)
+    expect(lib.isObjectLike('str')).toBe(false)
+    expect(lib.isObjectLike(3.14)).toBe(false)
+    expect(lib.isObjectLike(Symbol())).toBe(false)
+})
+
 test(lib.isObject.name, () => {
     expect(lib.isObject(/re/)).toBe(true)
     expect(lib.isObject([])).toBe(true)
@@ -449,9 +471,9 @@ test(lib.isObject.name, () => {
     expect(lib.isObject(new Set())).toBe(true)
     expect(lib.isObject(new Map())).toBe(true)
     expect(lib.isObject(Math)).toBe(true)
-    expect(lib.isObject(Error)).toBe(true)
+    expect(lib.isObject(Error)).toBe(false)
 
-    expect(lib.isObject(() => {})).toBe(true)
+    expect(lib.isObject(() => {})).toBe(false)
 
     expect(lib.isObject(null)).toBe(false)
     expect(lib.isObject(undefined)).toBe(false)
@@ -460,28 +482,6 @@ test(lib.isObject.name, () => {
     expect(lib.isObject('str')).toBe(false)
     expect(lib.isObject(3.14)).toBe(false)
     expect(lib.isObject(Symbol())).toBe(false)
-})
-
-test(lib.isObjectLike.name, () => {
-    expect(lib.isObjectLike(/re/)).toBe(true)
-    expect(lib.isObjectLike([])).toBe(true)
-    expect(lib.isObjectLike({})).toBe(true)
-    expect(lib.isObjectLike(Object.create(null))).toBe(true)
-    expect(lib.isObjectLike(new Date)).toBe(true)
-    expect(lib.isObjectLike(new Set())).toBe(true)
-    expect(lib.isObjectLike(new Map())).toBe(true)
-    expect(lib.isObject(Math)).toBe(true)
-    expect(lib.isObject(Error)).toBe(true)
-
-    expect(lib.isObjectLike(() => {})).toBe(false)
-
-    expect(lib.isObjectLike(null)).toBe(false)
-    expect(lib.isObjectLike(undefined)).toBe(false)
-    expect(lib.isObjectLike(false)).toBe(false)
-    expect(lib.isObjectLike(true)).toBe(false)
-    expect(lib.isObjectLike('str')).toBe(false)
-    expect(lib.isObjectLike(3.14)).toBe(false)
-    expect(lib.isObjectLike(Symbol())).toBe(false)
 })
 
 describe(lib.isPojo.name, () => {

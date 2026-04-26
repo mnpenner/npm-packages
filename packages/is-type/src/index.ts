@@ -144,17 +144,17 @@ function getStringTag(value: any): string {
 }
 
 /**
- * Value is a non-null and non-function object.
+ * Value is an object or function (which also act like objects).
  */
-export function isObjectLike(obj: any): obj is object {
-    return typeof obj === 'object' && obj !== null
+export function isObjectLike(obj: any): obj is (object|UnknownFunction) {
+    return obj != null && (typeof obj === 'object' || typeof obj === 'function')
 }
 
 /**
- * Value is an object or function (which also act like objects).
+ * Value is a non-null and non-function object.
  */
-export function isObject(obj: any): obj is (object|UnknownFunction) {
-    return obj != null && (typeof obj === 'object' || typeof obj === 'function')
+export function isObject(obj: any): obj is object {
+    return typeof obj === 'object' && obj !== null
 }
 
 /**
