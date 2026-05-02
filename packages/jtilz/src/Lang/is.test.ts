@@ -15,6 +15,7 @@ test(Type.isFloat.name, () => {
     expect(Type.isFloat(Math.PI)).toBe(true);
     expect(Type.isFloat(Number.MIN_VALUE)).toBe(true);
     expect(Type.isFloat(Number.EPSILON)).toBe(true);
+    // eslint-disable-next-line no-loss-of-precision
     expect(Type.isFloat(999999.00000000001)).toBe(false);
 })
 

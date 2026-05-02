@@ -1,5 +1,5 @@
 import {
-    __skip__, filterMap, filterMapAsync, flatMap, groupBy, mapArray, reduceArray, toArray, toArrayStrict,
+    SKIP, filterMap, filterMapAsync, flatMap, groupBy, mapArray, reduceArray, toArray, toArrayStrict,
     toSet
 } from './index';
 import {isIterable} from '../Lang/is';
@@ -41,7 +41,7 @@ test(filterMap.name, () => {
     expect(filterMap(numbers, x => x * 2)).toEqual([2, 4, 6, 8, 10]);
     expect(filterMap(numbers, x => {
         if(x % 2 === 0) {
-            return __skip__;
+            return SKIP;
         }
         return x * 2;
     })).toEqual([2, 6, 10]);
@@ -49,9 +49,9 @@ test(filterMap.name, () => {
 
 test(filterMapAsync.name, async () => {
     await expect(filterMapAsync(numbers, x => x * 2)).resolves.toEqual([2, 4, 6, 8, 10]);
-    await expect(filterMapAsync(numbers, x => new Promise((resolve, reject) => {
+    await expect(filterMapAsync(numbers, x => new Promise((resolve) => {
         if(x % 2 === 0) {
-            process.nextTick(() => resolve(__skip__));
+            process.nextTick(() => resolve(SKIP));
         } else {
             resolve(x * 2);
         }
@@ -64,6 +64,7 @@ test(filterMapAsync.name, async () => {
         }
     }))).resolves.toEqual([2, 6, 10]);
 });
+
 
 
 test(flatMap.name, () => {

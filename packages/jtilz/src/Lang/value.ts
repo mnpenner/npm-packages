@@ -1,19 +1,22 @@
-/**
- * Identity function. Returns whatever it's given as-is.
- * 
- * @param arg
- * @returns {Type}
- */
-
-
 import * as Type from './is';
 
+/**
+ * Identity function. Returns whatever it's given as-is.
+
+ * @param arg - The value to return.
+ * @returns The same value.
+ */
 export function identity<T>(arg: T): T {
     return arg;
 }
 
 /**
- * Unwraps a value. If passed a function, evaluates that function with the provided args. Otherwise, returns the value as-is.
+ * Unwraps a value. If passed a function, evaluates that function with the 
+ * provided args. Otherwise, returns the value as-is.
+ * @param this - The context to use if calling a function.
+ * @param functionOrValue - The function or value to unwrap.
+ * @param args - Arguments to pass to the function if applicable.
+ * @returns The unwrapped value.
  */
 export function value<T>(this: any, functionOrValue: ((...args: any[]) => T)|T, ...args: any[]): T {
     return Type.isFunction(functionOrValue) ? functionOrValue.call(this, ...args) : functionOrValue;
@@ -26,18 +29,18 @@ export function noop() {}
 
 /**
  * An immutable empty array.
- * @type {ReadonlyArray<void>}
  */
 export const EMPTY_ARRAY = Object.freeze([]);
 
 /**
  * An immutable empty object.
- * @type {Readonly<object>}
  */
 export const EMPTY_OBJECT = Object.freeze(Object.create(null));
 
 /**
  * Returns a new object without a prototype from an array of entries.
+ * @param entries - Optional array of [key, value] pairs.
+ * @returns A new object.
  */
 export function obj<T>(entries?: [T,PropertyKey][]) {
     const o = Object.create(null);
@@ -59,6 +62,8 @@ export function obj<T>(entries?: [T,PropertyKey][]) {
  * - Empty arrays, Sets and Maps
  * - Invalid Dates
  * Returns `false` for everything else.
+ * @param value - The value to check.
+ * @returns True if empty.
  */
 export function isEmpty(value: any): boolean {
     if(value === null || value === undefined || value !== value) {
@@ -79,25 +84,30 @@ export function isEmpty(value: any): boolean {
     return false;
 }
 
+/**
+ * Creates a shallow clone of the value.
+ * @param value - The value to clone.
+ * @returns A clone of the value.
+ */
 export function clone<T>(value: T): T {
     if(Type.isArray(value)) {
-        return [...value]; // FIXME: value.map(clone)
+        return [...value] as unknown as T; // FIXME: value.map(clone)
     }
     if(Type.isDate(value)) {
-        return Object.assign(new Date(value.valueOf()),value);
+        return Object.assign(new Date(value.valueOf()),value) as unknown as T;
     }
     if(Type.isMap(value) || Type.isSet(value)) {
-        return Object.assign(new value.constructor(value),value);
+        return Object.assign(new (value.constructor as any)(value),value) as unknown as T;
     }
     if(Type.isNumber(value) || Type.isString(value) || Type.isNullish(value) || Type.isBoolean(value) || Type.isSymbol(value)) {
         return value; // these types are immutable. no clone necessary
     }
     if(Type.isRegExp(value)) {
-        return Object.assign(new RegExp(value.source, value.flags),value);
+        return Object.assign(new RegExp(value.source, value.flags),value) as unknown as T;
     }
     if(Type.isObject(value)) {
         // FIXME: this should do a deep clone, no?
-        return Object.assign(Object.create(Object.getPrototypeOf(value)), value);
+        return Object.assign(Object.create(Object.getPrototypeOf(value)), value) as unknown as T;
     }
     if(Type.isFunction(value)) {
         if(Type.isNativeFunction(value)) {
@@ -105,7 +115,7 @@ export function clone<T>(value: T): T {
         }
         const fn = new Function(`return ${value.toString()}`)();
         Object.assign(fn,value);
-        return fn;
+        return fn as unknown as T;
     }
     throw new Error(`Could not clone value`);
 }

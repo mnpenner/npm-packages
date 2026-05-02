@@ -1,6 +1,13 @@
 import {decToHex} from '../Nbr';
 
 
+/**
+ * Replaces all occurrences of a string with another string.
+ * @param this - The source string.
+ * @param search - The string to search for.
+ * @param replacement - The string to replace with.
+ * @returns The new string.
+ */
 export function replaceAll(this: string, search: string, replacement: string): string {
     return this.split(search).join(replacement);
 }
@@ -8,7 +15,8 @@ export function replaceAll(this: string, search: string, replacement: string): s
 /**
  * Percent-encodes a character.
  * 
- * @param char A single character
+ * @param char - A single character.
+ * @returns The percent-encoded string.
  */
 export function percentEncode(char: string): string {
     const codePoint = char.codePointAt(0);

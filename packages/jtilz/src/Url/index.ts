@@ -1,8 +1,10 @@
-import {__skip__, filterMap} from '../Col';
+import {SKIP, filterMap} from '../Col';
 import {isArray} from '../Lang/is';
 
 /**
  * Encodes a value for use in a URI.
+ * @param x - The value to encode.
+ * @returns The encoded string.
  */
 export function encodeParam(x: string|number|boolean|undefined|null): string {
     if(x === true) {
@@ -18,7 +20,10 @@ export function encodeParam(x: string|number|boolean|undefined|null): string {
 }
 
 /**
- * Joins URLs together with /. Leaves leading and trailing slashes alone. Does not duplicate internal slashes.
+ * Joins URLs together with /. Leaves leading and trailing slashes alone. 
+ * Does not duplicate internal slashes.
+ * @param urls - The URL parts to join.
+ * @returns The joined URL string.
  */
 export function joinUrlPaths(...urls: string[]): string {
     return urls.map((u,i) => {
@@ -34,11 +39,13 @@ export function joinUrlPaths(...urls: string[]): string {
 
 /**
  * Encodes an object as a query string.
+ * @param params - The object to encode.
+ * @returns The query string.
  */
 export function queryParams(params: {[key: string]: any}): string {
     return filterMap(Object.keys(params), k => {
         if(params[k] === undefined) {
-            return __skip__;
+            return SKIP;
         }
         if(isArray(params[k])) {
             return params[k]

@@ -1,7 +1,8 @@
-import Util = require('util');
+import * as Util from 'node:util';
 import {isString} from '../Lang/is';
 
 // TODO: should we export this...? as what?
+/** @internal */
 function format(...args: any[]) {
     if(args.length === 1 && isString(args[0])) {
         return args[0];
@@ -9,6 +10,14 @@ function format(...args: any[]) {
     return args.map(o => Util.inspect(o, {colors: true, depth: 10, showHidden: false})).join(' ');
 }
 
+/**
+ * Logs values to the console with formatting.
+ * @param args - The values to log.
+ * @example
+ * ```ts
+ * log({ foo: 'bar' });
+ * ```
+ */
 export function log(...args: any[]) {
     return console.log(format(...args));
 }

@@ -7,7 +7,8 @@ import {allSettled, FULFILLED} from '../Lang/promise';
 import {flatten} from '../Arr';
 
 
-export const __skip__ = Symbol('skip');
+/** @internal */
+export const SKIP = Symbol('skip');
 
 /**
  * Converts any object to an array. In most cases this means
@@ -16,6 +17,15 @@ export const __skip__ = Symbol('skip');
  * `null`, `undefined` and `NaN` will return an empty array.
  * Arrays will be returned as-is to avoid a shallow copy.
  * Strings and non-iterable objects will become one-element arrays.
+ * 
+ * @param obj - The value to convert.
+ * @returns An array.
+ * @example
+ * ```ts
+ * toArray(1); // [1]
+ * toArray([1]); // [1]
+ * toArray(null); // []
+ * ```
  */
 export function toArray(obj: any): any[] {
     if(isNullish(obj)) {
@@ -33,6 +43,12 @@ export function toArray(obj: any): any[] {
     return [obj];
 }
 
+/**
+ * Converts an iterable to an array. Throws if not iterable.
+ * @param obj - The iterable to convert.
+ * @returns An array.
+ * @throws Error if not iterable.
+ */
 export function toArrayStrict<T>(obj: Iterable<T>): T[] {
     if(obj) {
         if(isArray(obj)) {
@@ -45,6 +61,11 @@ export function toArrayStrict<T>(obj: Iterable<T>): T[] {
     throw new Error(`Cannot convert ${getType(obj)} to array; it is not iterable.`);
 }
 
+/**
+ * Converts a value to a Set.
+ * @param obj - The value to convert.
+ * @returns A Set.
+ */
 export function toSet(obj: any) {
     if(obj instanceof Set) {
         return obj;
@@ -53,11 +74,14 @@ export function toSet(obj: any) {
 }
 
 /**
- * Like `Array.prototype.map`, but you may omit entries by returning `__skip__`.
+ * Like `Array.prototype.map`, but you may omit entries by returning `SKIP`.
+ * @param obj - The collection to map.
+ * @param callback - The mapping function.
+ * @returns The mapped collection.
  */
 export function filterMap<TVal,TRet>(dict: IDictionary<TVal>, callback: (v: TVal, k: string, d: IDictionary<TVal>) => TRet|symbol): IDictionary<TRet>; 
 export function filterMap<TVal,TRet>(iter: Iterable<TVal>, callback: (v: TVal, k: number, i: Iterable<TVal>) => TRet|symbol): TRet[];
-export function filterMap<TVal,TRet>(obj: any, callback: Function): any {
+export function filterMap<TVal,TRet>(obj: any, callback: (...args: any[]) => any): any {
     
     if(isPlainObject(obj)) {
         const accum = Object.create(null);
@@ -67,7 +91,7 @@ export function filterMap<TVal,TRet>(obj: any, callback: Function): any {
         // And the callback takes (value,key) instead of [key,value]
         for(const [k,v] of Object.entries(obj)) {
             const y = callback(v,k,obj);
-            if(y !== __skip__) {
+            if(y !== SKIP) {
                 accum[k] = y as TRet;
             }
         }
@@ -79,7 +103,7 @@ export function filterMap<TVal,TRet>(obj: any, callback: Function): any {
         let i = 0;
         for(const x of obj as Iterable<TVal>) {
             const y = callback(x, i++, obj);
-            if(y !== __skip__) {
+            if(y !== SKIP) {
                 accum.push(y as TRet);
             }
         }
@@ -88,6 +112,7 @@ export function filterMap<TVal,TRet>(obj: any, callback: Function): any {
     }
 }
 
+/** @internal */
 export const fmap = chain(filterMap);
 
 
@@ -110,6 +135,12 @@ export function mapArray<TVal,TRet>(iterable: Iterable<TVal>, callback: MapCallb
     return out;
 }
 
+/**
+ * Filters an iterable into an array.
+ * @param iterable - The iterable to filter.
+ * @param callback - The filter function.
+ * @returns The filtered array.
+ */
 export function filterArray<TVal>(iterable: Iterable<TVal>, callback: (value: TVal, index: number, iterable: Iterable<TVal>) => boolean): TVal[] {
     const out = [];
     let i = 0;
@@ -121,21 +152,37 @@ export function filterArray<TVal>(iterable: Iterable<TVal>, callback: (value: TV
     return out;
 }
 
+/**
+ * Asynchronously filters an iterable.
+ * @param iterable - The iterable to filter.
+ * @param mapCb - Async mapping function.
+ * @param filterCb - Sync filter function.
+ * @returns Promise resolving to filtered array.
+ */
 export function filterAsync<TInput,TResult>(iterable: Iterable<TInput>, mapCb: MapCallback<TInput,Promise<TResult>>, filterCb: (el: TResult) => boolean = identity): Promise<TInput[]> {
     return Promise.all(mapArray(iterable,mapCb))
         .then(results => filterArray(iterable,(_, i) => filterCb(results[i])));
 }
 
+/**
+ * Asynchronously maps and filters an iterable.
+ * @param iterable - The iterable to map.
+ * @param callback - Async mapping function.
+ * @returns Promise resolving to filtered array.
+ */
 export function filterMapAsync<TVal,TRet>(
     iterable: Iterable<TVal>, 
     callback: MapCallback<TVal,Promise<TRet>|TRet>
 ) {
     return allSettled(mapArray(iterable, callback))
-        .then(array => filterMap(array, r => r.state === FULFILLED ? r.value : __skip__))
+        .then(array => filterMap(array, r => r.state === FULFILLED ? r.value : SKIP))
 }
 
 /**
- * Map and flatten
+ * Map and flatten.
+ * @param iterable - The iterable to map.
+ * @param callback - The mapping function.
+ * @returns The flattened array.
  */
 export function flatMap<TVal,TRet>(
     iterable: Iterable<TVal>, 
@@ -147,6 +194,9 @@ export function flatMap<TVal,TRet>(
 export type ReduceCallback<TVal,TAcc> 
     = (accumulator: TAcc, currentValue: TVal, currentIndex: number, array: TVal[]) => TAcc
 
+/**
+ * Reduces an iterable into a single value.
+ */
 export function reduceArray<TVal>(
     iterable: Iterable<TVal>,
     callback: (accumulator: TVal, currentValue: TVal, currentIndex: number, array: TVal[]) => TVal,
@@ -175,6 +225,12 @@ export function reduceArray<TVal>(
 }
 
 
+/**
+ * Groups an iterable by a key.
+ * @param iterable - The iterable to group.
+ * @param grouper - The grouping function.
+ * @returns A dictionary of groups.
+ */
 export function groupBy<T>(
     iterable: Iterable<T>, 
     grouper: (val: T, idx: number, iter: Iterable<T>) => PropertyKey

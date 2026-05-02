@@ -1,13 +1,17 @@
-import {__skip__, filterMap} from '../Col';
+import {SKIP, filterMap} from '../Col';
 import {isFunction} from './is';
 import type {IDictionary} from '../interfaces';
 
 /**
- * Decorates all the functions in module.
+ * Decorates all the functions in a module.
  *
- * @param module Object containing methods.
- * @param wrapFn Accepts a function, returns a new function.
+ * @param module - Object containing methods.
+ * @param wrapFn - Accepts a function, returns a new function.
+ * @returns A new object with wrapped methods.
  */
-export function wrapMethods(module: IDictionary<any>, wrapFn: (fn: Function) => Function): IDictionary<Function> {
-    return filterMap(module, v => isFunction(v) ? wrapFn(v) : __skip__);
+export function wrapMethods(
+    module: IDictionary<any>, 
+    wrapFn: (fn: (...args: any[]) => any) => (...args: any[]) => any
+): IDictionary<(...args: any[]) => any> {
+    return filterMap(module, v => isFunction(v) ? wrapFn(v) : SKIP);
 }

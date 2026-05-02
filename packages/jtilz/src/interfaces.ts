@@ -1,9 +1,15 @@
+/**
+ * A dictionary of values.
+ */
 export interface IDictionary<TValue> {
     [key: string]: TValue // TS1023 prevents us from allowing arbitrary keys (symbols)
 }
 
 // TS2461: Type 'Iterable' is not an array type.
 // https://github.com/Microsoft/TypeScript/issues/4130
+/**
+ * Interface representing the console.
+ */
 export interface Console {
     assert(test?: boolean, message?: string, ...optionalParams: any[]): void;
     clear(): void;
@@ -30,14 +36,23 @@ export interface Console {
 }
 
 // http://json.org/
-export interface JsonArray extends Array<JsonValue> {}
+/**
+ * JSON array type.
+ */
+export type JsonArray = JsonValue[];
+/**
+ * JSON object type.
+ */
 export interface JsonObject {
     [id: string]: JsonValue;
 }
+/**
+ * JSON value type.
+ */
 export type JsonValue = string|number|JsonObject|JsonArray|boolean|null;
 
 /**
  * A decorator is a function that takes in a function and returns a new function that accepts the same args,
  * but adds some extra functionality.
  */
-// export type Decorator<F extends Function> = (fn: F) => F;
+// export type Decorator<F extends (...args: any[]) => any> = (fn: F) => F;

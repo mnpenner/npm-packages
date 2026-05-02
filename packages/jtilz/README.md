@@ -1,30 +1,54 @@
 # Jtilz
 
-JavaScript utility methods for node and web.
+JavaScript utility methods for Node.js, Bun, and Web.
+
+## Features
+
+- **Multi-environment**: Dedicated entry points for Node.js/Bun and Web.
+- **Modern**: Built with TypeScript and optimized for modern runtimes.
+- **Tree-shakable**: ESM-first design for minimal bundle sizes.
 
 ## Usage
 
-### Node.js
+### Node.js / Bun
 
-Currently targeting Node 6. Will be updated for Node 8 when it becomes LTS.
+Supports modern Node.js and Bun runtimes.
 
-```
-const {getFiles} = 'jtilz';
+```ts
+import {getFiles} from 'jtilz';
 
-getFiles(`${__dirname}/dir`).then(console.log);
+const files = await getFiles('./src');
+console.log(files);
 ```
 
 ### Web
 
-The "web" version is only compatible with [webpack 2](https://webpack.js.org/). It uses ES6 modules (`export`) so that tree-shaking should work. Otherwise, you do not need to run Babel over the source; it is precompiled for IE8.
+Compatible with modern bundlers like Vite and Webpack.
 
+```ts
+import {encodeParam} from 'jtilz';
+
+const output = encodeParam('foo💩bar/../baz');
 ```
-import Jtilz from 'jtilz';
 
-let input = 'foo💩bar/../baz';
-let output = Jtilz.encodeParam(input);
+## Development
+
+This package uses [Bun](https://bun.sh) for development.
+
+### Build
+
+```bash
+bun run build
 ```
 
-## API
+### Test
 
-See [docs/index.html](https://htmlpreview.github.io/?https://bitbucket.org/mnpenner/jtilz/raw/typescript/docs/index.html).
+```bash
+bun test
+```
+
+### Lint
+
+```bash
+bun run lint
+```
