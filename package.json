@@ -25,21 +25,23 @@
       "tsdown": "^0.21",
       "typedoc": "^0.28",
       "npm-run-all": "^4",
-      "typescript-eslint": "^8"
+      "typescript-eslint": "^8",
+      "chalk": "^5",
+      "@types/bun": "latest"
     }
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
-    "@types/bun": "latest",
-    "chalk": "^5.6.2",
+    "@types/bun": "catalog:",
+    "chalk": "catalog:",
     "eslint": "catalog:",
     "eslint-plugin-react-compiler": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
     "eslint-plugin-react-refresh": "catalog:",
     "eslint-plugin-unused-imports": "catalog:",
     "globals": "catalog:",
-    "npm-run-all": "^4.1.5",
-    "typescript": "^5.9.3",
+    "npm-run-all": "catalog:",
+    "typescript": "catalog:",
     "typescript-eslint": "catalog:"
   },
   "overrides": {
@@ -53,6 +55,6 @@
     "fix:lint": "bun scripts/eslint-fix.ts",
     "fix": "bun scripts/fix.ts",
     "static-analysis": "run-p -c -s lint typecheck",
-    "check": "run-p -c -s test lint typecheck"
+    "check": "bun scripts/check.ts"
   }
 }
