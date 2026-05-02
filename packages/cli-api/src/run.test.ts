@@ -721,7 +721,7 @@ Usage:`)
         const {code, stdout, stderr} = await captureExecuteWithPrintedErrors(
             app as Parameters<typeof executeAppResult>[0],
             ['--kubeconfig=foo', '--color=always'],
-            {color: false},
+            {color: false, stderrColumns: 120},
         )
 
         expect(code).toBe(2)

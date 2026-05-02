@@ -29,7 +29,7 @@ declare module 'bun:test' {
 
 /**
  * Wrap frag in parentheses, convert to string and eval.
- * 
+ *
  * Parentheses are necessary to avoid misinterpreting objects as code blocks.
  *
  * @param frag
