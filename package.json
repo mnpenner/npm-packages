@@ -47,6 +47,6 @@
     "test:unit": "bun test --isolate --parallel",
     "lint": "bun run --bun eslint --format ./scripts/eslint-relative-formatter.ts --",
     "fix:lint": "bun scripts/eslint-fix.ts",
-    "fix": "run-p -c 'fix:*'"
+    "fix": "bun scripts/fix.ts"
   }
 }

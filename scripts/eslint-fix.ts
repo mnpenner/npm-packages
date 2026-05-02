@@ -9,7 +9,7 @@ function formatCount(word: string, count: number): string {
     return `${count} ${word}${count === 1 ? "" : "s"}`
 }
 
-const files = Bun.argv.slice(1)
+const files = Bun.argv.slice(2)
 const eslint = new ESLint({
     fix: true,
 })
