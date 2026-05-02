@@ -98,7 +98,8 @@ async function main(options: Options, positionals: Positionals): Promise<number 
         const coverageStr = (funcs === null && lines === null) ? "—" : `${funcsStr} / ${linesStr}`
         const dirLink = `[${dirName}](https://github.com/mnpenner/npm-packages/tree/main/packages/${dirName})`
         const docsLink = hasDocs ? `[Docs](https://mnpenner.github.io/npm-packages/${dirName}/) ` : "—"
-        table += `| \`${displayName}\` | ${version} | ${dirLink} | ${packSize} | ${coverageStr} | ${docsLink} |\n`
+        const pkgLink = `[\`${displayName}\`](https:/npmx.dev/package/${displayName})`
+        table += `| ${pkgLink} | ${version} | ${dirLink} | ${packSize} | ${coverageStr} | ${docsLink} |\n`
     }
 
     const readmePath = "README.md"

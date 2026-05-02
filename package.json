@@ -45,8 +45,8 @@
     "zod-validation-error": "^4"
   },
   "scripts": {
-    "test": "run-p -c 'test:*'",
-    "test:unit": "bun scripts/test.ts --isolate --parallel",
+    "test": "run-p -c -s 'test:*'",
+    "test:unit": "bun run --silent scripts/test.ts",
     "lint": "bun run --bun eslint --format ./scripts/eslint-relative-formatter.ts --",
     "typecheck": "bun scripts/typecheck.ts",
     "fix:lint": "bun scripts/eslint-fix.ts",
