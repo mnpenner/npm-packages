@@ -3,9 +3,14 @@ import {parseArgs, type ParseArgsConfig} from "node:util"
 import {$} from 'bun'
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
+import chalk from "chalk";
 
 const PARSE_CONFIG = {
-    options: {},
+    options: {
+        coverage: {
+            type: 'boolean',
+        },
+    },
     strict: false,
     allowPositionals: true,
 } satisfies ParseArgsConfig
@@ -13,7 +18,7 @@ const PARSE_CONFIG = {
 /**
  * Run tests for all packages and display a summary of passes/failures/skips.
  */
-async function main(_options: Options, _positionals: Positionals): Promise<number | void> {
+async function main(options: Options, _positionals: Positionals): Promise<number | void> {
     const packagesDir = "packages";
     const packageDirs = (await readdir(packagesDir, { withFileTypes: true }))
         .filter(dirent => dirent.isDirectory())
@@ -32,7 +37,7 @@ async function main(_options: Options, _positionals: Positionals): Promise<numbe
     // Pass other args (flags like -t, --watch, etc.) to bun test
     const bunTestArgs = rawArgs.filter(arg => !packageDirs.includes(arg));
 
-    console.log(`\x1b[1mRunning tests for ${targetPackages.length} packages...\x1b[0m\n`);
+    console.log(chalk.bold(`Running tests for ${targetPackages.length} packages...\n`));
 
     const results: Array<{
         pkg: string;
@@ -67,6 +72,7 @@ async function main(_options: Options, _positionals: Positionals): Promise<numbe
             let passCount = 0;
             let failCount = 0;
             let skipCount = 0;
+            let coverage: number | null = null;
             
             // Bun summary matches: "930 pass", "23 skip", "1 fail"
             const passMatch = output.match(/(\d+) pass/);
@@ -76,6 +82,17 @@ async function main(_options: Options, _positionals: Positionals): Promise<numbe
             if (passMatch) passCount = parseInt(passMatch[1], 10);
             if (skipMatch) skipCount = parseInt(skipMatch[1], 10);
             if (failMatch) failCount = parseInt(failMatch[1], 10);
+
+            if (options.coverage) {
+                // Strip ANSI codes for easier parsing
+                const cleanOutput = output.replace(/\x1b\[[0-9;]*m/g, '');
+                // Look for "All files                         |   XX.XX |   YY.YY |"
+                // The second column is usually line coverage
+                const covMatch = cleanOutput.match(/All files\s+\|\s+[\d.]+\s+\|\s+([\d.]+)\s+\|/);
+                if (covMatch) {
+                    coverage = parseFloat(covMatch[1]);
+                }
+            }
 
             let status: 'pass' | 'fail' | 'skip' | 'none';
             if (exitCode !== 0 || failCount > 0) {
@@ -90,19 +107,28 @@ async function main(_options: Options, _positionals: Positionals): Promise<numbe
             
             results.push({ pkg, status, passCount, failCount, skipCount, output });
             
-            const TICK = '\x1b[32m✓\x1b[0m';
-            const CROSS = '\x1b[31m✗\x1b[0m';
-            const SKIP = '\x1b[33m»\x1b[0m';
-            const NONE = '\x1b[90m∅\x1b[0m';
+            const TICK = chalk.green('✓');
+            const CROSS = chalk.red('✗');
+            const SKIP = chalk.yellow('»');
+            const NONE = chalk.gray('∅');
             
             const icon = status === 'pass' ? TICK : 
                          status === 'fail' ? CROSS : 
                          status === 'skip' ? SKIP : NONE;
 
             const stats = [];
-            if (passCount > 0) stats.push(`\x1b[32m${passCount} pass\x1b[0m`);
-            if (failCount > 0) stats.push(`\x1b[31m${failCount} fail\x1b[0m`);
-            if (skipCount > 0) stats.push(`\x1b[33m${skipCount} skip\x1b[0m`);
+            if (passCount > 0) stats.push(chalk.green(`${passCount} pass`));
+            if (failCount > 0) stats.push(chalk.red(`${failCount} fail`));
+            if (skipCount > 0) stats.push(chalk.yellow(`${skipCount} skip`));
+            
+            if (coverage !== null) {
+                const covStr = `${coverage.toFixed(0)}% cov`;
+                if (coverage === 100) stats.push(chalk.green.underline(covStr));
+                else if (coverage >= 90) stats.push(chalk.green(covStr));
+                else if (coverage >= 76) stats.push(chalk.cyan(covStr));
+                else if (coverage >= 50) stats.push(chalk.yellow(covStr));
+                else stats.push(chalk.red(covStr));
+            }
             
             const statsStr = stats.length > 0 ? ` (${stats.join(', ')})` : '';
             console.log(`${icon} ${pkg}${statsStr}`);
@@ -110,7 +136,6 @@ async function main(_options: Options, _positionals: Positionals): Promise<numbe
             if (status === 'fail') {
                 const lines = output.split('\n');
                 // Capture the specific failing tests from the output
-                // Support both icons and text-based (fail) markers
                 const failingTests = lines
                     .filter(line => {
                         const l = line.trim();
@@ -121,7 +146,6 @@ async function main(_options: Options, _positionals: Positionals): Promise<numbe
                     })
                     .map(line => {
                         let l = line.trim();
-                        // Clean up formatting if it's (fail) test-name
                         l = l.replace(/^\(fail\)\s+/, '✗ ');
                         return l;
                     });
@@ -132,26 +156,24 @@ async function main(_options: Options, _positionals: Positionals): Promise<numbe
                         console.log(`  ${fail}`);
                     }
                     if (uniqueFailing.length > 5) {
-                        console.log(`  \x1b[90m... and ${uniqueFailing.length - 5} more failing tests\x1b[0m`);
+                        console.log(chalk.gray(`  ... and ${uniqueFailing.length - 5} more failing tests`));
                     }
                 } else if (exitCode !== 0) {
-                    // Fallback for other types of errors (e.g. compilation errors)
                     const errorLines = lines.filter(l => l.toLowerCase().includes('error:') || l.includes('EPIPE'));
                     if (errorLines.length > 0) {
                         for (const err of errorLines.slice(0, 3)) {
-                            console.log(`  \x1b[31m! ${err.trim()}\x1b[0m`);
+                            console.log(chalk.red(`  ! ${err.trim()}`));
                         }
                     } else {
-                        // Just show last few non-empty lines
                         const lastLines = lines.filter(l => l.trim()).slice(-3);
                         for (const line of lastLines) {
-                            console.log(`  \x1b[90m${line.trim()}\x1b[0m`);
+                            console.log(chalk.gray(`  ${line.trim()}`));
                         }
                     }
                 }
             }
         } catch (e) {
-            console.error(`\x1b[31m✗\x1b[0m ${pkg} (Error: ${String(e).split('\n')[0]})`);
+            console.error(`${chalk.red('✗')} ${pkg} (Error: ${String(e).split('\n')[0]})`);
             results.push({ pkg, status: 'fail', passCount: 0, failCount: 1, skipCount: 0, output: String(e) });
         }
 
@@ -162,16 +184,16 @@ async function main(_options: Options, _positionals: Positionals): Promise<numbe
     await Promise.all(workers);
 
     // Final summary
-    console.log(`\n\x1b[1mSummary:\x1b[0m`);
+    console.log(chalk.bold(`\nSummary:`));
     const totalPass = results.filter(r => r.status === 'pass').length;
     const totalFail = results.filter(r => r.status === 'fail').length;
     const totalSkip = results.filter(r => r.status === 'skip').length;
     const totalNone = results.filter(r => r.status === 'none').length;
     
-    if (totalPass > 0) console.log(`  \x1b[32m✓ ${totalPass} packages passed\x1b[0m`);
-    if (totalFail > 0) console.log(`  \x1b[31m✗ ${totalFail} packages failed\x1b[0m`);
-    if (totalSkip > 0) console.log(`  \x1b[33m» ${totalSkip} packages skipped\x1b[0m`);
-    if (totalNone > 0) console.log(`  \x1b[90m∅ ${totalNone} packages with no tests\x1b[0m`);
+    if (totalPass > 0) console.log(chalk.green(`  ✓ ${totalPass} packages passed`));
+    if (totalFail > 0) console.log(chalk.red(`  ✗ ${totalFail} packages failed`));
+    if (totalSkip > 0) console.log(chalk.yellow(`  » ${totalSkip} packages skipped`));
+    if (totalNone > 0) console.log(chalk.gray(`  ∅ ${totalNone} packages with no tests`));
 
     if (totalFail > 0) {
         return 1;
