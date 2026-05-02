@@ -45,8 +45,8 @@
   "scripts": {
     "test": "run-p -c 'test:*'",
     "test:unit": "bun test --isolate --parallel",
-    "lint": "bun run --bun eslint --",
-    "fix:lint": "bun run --bun eslint --fix --quiet --",
+    "lint": "bun run --bun eslint --format ./scripts/eslint-relative-formatter.ts --",
+    "fix:lint": "bun run --bun eslint --format ./scripts/eslint-relative-formatter.ts --fix --quiet --",
     "fix": "run-p -c 'fix:*'"
   }
 }
