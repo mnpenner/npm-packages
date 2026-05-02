@@ -11,3 +11,4 @@
     - Link to methods using this syntax: [`Class.method`]{@link Class#method}
     - Put an empty line between the description and the `@tags`
     - Mark items that are `export`ed but not public as `@internal`
+- Use `templates/script-template.ts` for new scripts
