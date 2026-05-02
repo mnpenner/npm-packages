@@ -5,7 +5,7 @@ export const HEX_UPPER = '0123456789ABCDEF'
  * Designed to be conveniently and accurately transmitted between humans and computer systems
  * @see https://www.crockford.com/base32.html
  */
-export const CROCKFORD32 = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
+export const BASE32_CROCKFORD = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
 
 /**
  * @see https://datatracker.ietf.org/doc/html/rfc4648#section-6

@@ -1,7 +1,7 @@
 - Convert all packages that are using a package manager other than bun to bun (e.g. pnpm, yarn or npm)
 - Convert packages that are compiled with something other than tsdown to use the latest version of tsdown. Make sure `exports: true` is set (this will fix the export paths in package.json)
 - Upgrade all packages to typescript 6
-- Add eslint to root; remove eslint from packages
+- [x] Add eslint to root; remove eslint from packages
 - Add prettier
 - [x] Repoint `@mnpenner/imut-utils` to `@mpen/imut-utils`
 - [x] Repoint `@mnpenner/is-type` to `@mpen/is-type`
@@ -14,3 +14,6 @@
 - Create `logger` package (extract from server-router and bookmarks)
 - Create `progressbar` package (extract from scrubber)
 - Create `process` package (extract from `podman`)
+- Uplevel all the `packages/rollup-plugins/packages` packages
+- Create script to bump versions and publish any packages if it passes all tests and has been modified since last release
+- Add `resolveValue` to `jtilz` or `ts-types`...? Already exists as `value` in `packages/jtilz/src/Lang/value.ts`
