@@ -88,6 +88,7 @@ export function isEmpty(value: any): boolean {
  * Creates a shallow clone of the value.
  * @param value - The value to clone.
  * @returns A clone of the value.
+ * @deprecated Use [`structuredClone`]{@link https://developer.mozilla.org/en-US/docs/Web/API/Window/structuredClone} instead.
  */
 export function clone<T>(value: T): T {
     if(Type.isArray(value)) {
@@ -99,9 +100,10 @@ export function clone<T>(value: T): T {
     if(Type.isMap(value) || Type.isSet(value)) {
         return Object.assign(new (value.constructor as any)(value),value) as unknown as T;
     }
-    if(Type.isNumber(value) || Type.isString(value) || Type.isNullish(value) || Type.isBoolean(value) || Type.isSymbol(value)) {
+    if(Type.isNumber(value) || Type.isString(value) || Type.isNil(value) || Type.isBoolean(value) || Type.isSymbol(value)) {
         return value; // these types are immutable. no clone necessary
     }
+
     if(Type.isRegExp(value)) {
         return Object.assign(new RegExp(value.source, value.flags),value) as unknown as T;
     }

@@ -144,7 +144,7 @@ test(lib.isIterable.name, () => {
     expect(lib.isIterable(true)).toBe(false)
     expect(lib.isIterable(/re/)).toBe(false)
     expect(lib.isIterable(() => {})).toBe(false)
-    expect(lib.isIterable('str')).toBe(false)
+    expect(lib.isIterable('str')).toBe(true)
     expect(lib.isIterable(3.14)).toBe(false)
     expect(lib.isIterable(Symbol())).toBe(false)
     expect(lib.isIterable(new Date)).toBe(false)

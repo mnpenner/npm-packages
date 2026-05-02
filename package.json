@@ -13,6 +13,8 @@
       "@eslint/js": "^10",
       "react": "^19",
       "react-dom": "^19",
+      "@types/react": "^19",
+      "@types/react-dom": "^19",
       "typescript": "^6",
       "eslint": "^10",
       "eslint-plugin-react-compiler": "^19.1.0-rc.2",

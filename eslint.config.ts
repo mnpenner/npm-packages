@@ -32,6 +32,7 @@ const reactPackageFiles = [
     "packages/react-datepicker/**/*.{js,jsx,ts,tsx}",
     "packages/react-global-state/**/*.{js,jsx,ts,tsx}",
     "packages/react-router/**/*.{js,jsx,ts,tsx}",
+    "packages/ts-types/src/react.ts",
 ]
 
 const serverPackageFiles = [

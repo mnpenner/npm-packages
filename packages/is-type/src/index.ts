@@ -23,6 +23,14 @@ export function isFunction(obj: any): obj is UnknownFunction {
 }
 
 /**
+ * Object is a native function.
+ */
+export function isNativeFunction(obj: any): obj is UnknownFunction {
+    return isFunction(obj) && obj.toString().endsWith('{ [native code] }')
+}
+
+
+/**
  * Object is a generator function (`function*`)
  */
 export function isGeneratorFunction(obj: any): obj is UnknownGeneratorFunction {
@@ -35,6 +43,22 @@ export function isGeneratorFunction(obj: any): obj is UnknownGeneratorFunction {
 export function isAsyncFunction(obj: any): obj is UnknownAsyncFunction {
     return isFunction(obj) && Object.prototype.toString.call(obj) === "[object AsyncFunction]";
 }
+
+/**
+ * Object is a promise.
+ */
+export function isPromise(obj: any): obj is Promise<unknown> {
+    return obj instanceof Promise
+}
+
+/**
+ * Object is a promise or thenable.
+ */
+export function isPromiseLike(obj: any): obj is PromiseLike<unknown> {
+    return isObjectLike(obj) && isFunction((obj as any).then)
+}
+
+
 
 /**
  * Object is a Date, possibly invalid.
@@ -55,8 +79,9 @@ export function isValidDate(obj: any): obj is Date {
  * N.B. Plain objects can be used in for-in but not for-of, so this function will return false for them.
  */
 export function isIterable(obj: any): obj is Iterable<unknown> {
-    return isObjectLike(obj) && isFunction((obj as any)[Symbol.iterator])
+    return obj != null && isFunction((obj as any)[Symbol.iterator])
 }
+
 
 /**
  * Object is a number, possibly Infinity or NaN.
@@ -122,6 +147,21 @@ export function isMap(obj: any): obj is Map<unknown,unknown> {
 }
 
 /**
+ * Object is a WeakMap.
+ */
+export function isWeakMap(obj: any): obj is WeakMap<object, unknown> {
+    return obj instanceof WeakMap
+}
+
+/**
+ * Object is a WeakSet.
+ */
+export function isWeakSet(obj: any): obj is WeakSet<object> {
+    return obj instanceof WeakSet
+}
+
+
+/**
  * Object is an Array.
  */
 export function isArray(obj: any): obj is Array<unknown> {
@@ -166,10 +206,14 @@ export function isPlainObject(obj: any): obj is Record<PropertyKey,unknown> {
     return proto === null || proto === Object.prototype
 }
 
+
+
 /**
  * Alias of {@link isPlainObject}. Stands for "is plain old JavaScript object".
+ * @deprecated Use {@link isPlainObject} instead.
  */
 export const isPojo = isPlainObject
+
 
 /**
  * Object is `null`.
@@ -188,9 +232,27 @@ export function isUndefined(obj: any): obj is undefined {
 /**
  * Object is `null` or `undefined`.
  */
+export function isNil(obj: any): obj is null|undefined {
+    return obj == null
+}
+
+/**
+ * Object is `null`, `undefined`, or `NaN`.
+ */
+export function isNilOrNaN(obj: any): obj is null|undefined|number {
+    return obj == null || Number.isNaN(obj)
+}
+
+
+
+/**
+ * Object is `null` or `undefined`.
+ * @deprecated Use {@link isNil} instead.
+ */
 export function isNullish(obj: any): obj is null|undefined {
     return obj == null
 }
+
 
 /**
  * Object is treated as `true` when used in a conditional.
@@ -205,6 +267,14 @@ export function isTruthy(obj: any): obj is Truthy {
 export function isFalsy(obj: any): obj is Falsy {
     return !obj
 }
+
+/**
+ * Object is `NaN`.
+ */
+export function isNaN(obj: any): obj is number {
+    return Number.isNaN(obj)
+}
+
 
 /**
  * Object is a symbol.

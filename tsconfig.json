@@ -135,6 +135,12 @@
       "svg2fonts": [
         "packages/svg2fonts/bin.js"
       ],
+      "@mpen/ts-types": [
+        "packages/ts-types/src/index.ts"
+      ],
+      "@mpen/ts-types/react": [
+        "packages/ts-types/src/react.ts"
+      ],
       "yamake": [
         "packages/yamake/src/index.ts"
       ]
