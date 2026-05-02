@@ -96,9 +96,13 @@ export function createReactStore<T>(
 ): ReactStore<T> {
     const store = createStore(initialValue, options) as ReactStore<T>
 
-    store.use = <S = T,>(selector?: Selector<T, S>, useOptions?: UseStoreOptions<S>) => {
+    function useReactStore(): T
+    function useReactStore<S>(selector: Selector<T, S>, useOptions?: UseStoreOptions<S>): S
+    function useReactStore<S = T>(selector?: Selector<T, S>, useOptions?: UseStoreOptions<S>) {
         return useStore(store, selector ?? identity as Selector<T, S>, useOptions)
     }
+
+    store.use = useReactStore
 
     return store
 }

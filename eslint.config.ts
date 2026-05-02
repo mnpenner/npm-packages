@@ -86,6 +86,8 @@ export default defineConfig([
         "**/.*",
         "**/dist/",
         "**/docs/",
+        "**/example/",
+        "**/examples/",
         "**/node_modules/",
         "**/*.gen.*",
         "eslint-examples/",
