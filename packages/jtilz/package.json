@@ -13,6 +13,7 @@
     "build": "bun run --bun tsdown",
     "dev": "bun run --bun tsdown --watch",
     "test": "bun test src",
+    "typecheck": "bun x tsc --noEmit",
     "lint": "bun run --bun eslint .",
     "fix:lint": "bun run --bun eslint . --fix"
   },
