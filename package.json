@@ -27,7 +27,8 @@
       "npm-run-all": "^4",
       "typescript-eslint": "^8",
       "chalk": "^5",
-      "@types/bun": "latest"
+      "@types/bun": "latest",
+      "bun-types": "latest"
     }
   },
   "devDependencies": {
