@@ -2,7 +2,7 @@ import {
     createContext as createReactContext,
     useContext,
     useMemo,
-    useRef,
+    useState,
     useSyncExternalStore,
 } from 'react'
 import type {ReactNode} from 'react'
@@ -120,18 +120,16 @@ export function createStoreContext<T>(
     }
 
     function Provider({children, initialValue}: StoreProviderProps<T>) {
-        const storeRef = useRef<Store<T> | null>(null)
-
-        if(storeRef.current === null) {
+        const [store] = useState(() => {
             const resolvedDefaultValue = resolveInitializer(defaultValue)
             const resolvedInitialValue = initialValue === undefined
                 ? resolvedDefaultValue
                 : resolveStateUpdater(initialValue, resolvedDefaultValue)
-            storeRef.current = new Store(resolvedInitialValue, options)
-        }
+            return new Store(resolvedInitialValue, options)
+        })
 
         return (
-            <Context.Provider value={storeRef.current}>
+            <Context.Provider value={store}>
                 {children}
             </Context.Provider>
         )
