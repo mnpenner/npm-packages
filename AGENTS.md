@@ -9,3 +9,5 @@
     - The public API is the `entry` point(s) listed in `tsdown.config.ts`
     - Link to other functions and classes using this syntax: [`exampleFunc`]{@link exampleFunc}
     - Link to methods using this syntax: [`Class.method`]{@link Class#method}
+    - Put an empty line between the description and the `@tags`
+    - Mark items that are `export`ed but not public as `@internal`

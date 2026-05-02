@@ -88,11 +88,10 @@ export function isEmpty(value: any): boolean {
  * Creates a shallow clone of the value.
  * @param value - The value to clone.
  * @returns A clone of the value.
- * @deprecated Use [`structuredClone`]{@link https://developer.mozilla.org/en-US/docs/Web/API/Window/structuredClone} instead.
  */
-export function clone<T>(value: T): T {
+export function shallowClone<T>(value: T): T {
     if(Type.isArray(value)) {
-        return [...value] as unknown as T; // FIXME: value.map(clone)
+        return [...value] as unknown as T;
     }
     if(Type.isDate(value)) {
         return Object.assign(new Date(value.valueOf()),value) as unknown as T;
@@ -100,7 +99,7 @@ export function clone<T>(value: T): T {
     if(Type.isMap(value) || Type.isSet(value)) {
         return Object.assign(new (value.constructor as any)(value),value) as unknown as T;
     }
-    if(Type.isNumber(value) || Type.isString(value) || Type.isNil(value) || Type.isBoolean(value) || Type.isSymbol(value)) {
+    if(Type.isNumber(value) || Type.isString(value) || Type.isNil(value) || Type.isBoolean(value) || Type.isSymbol(value) || Type.isBigInt(value)) {
         return value; // these types are immutable. no clone necessary
     }
 
@@ -108,16 +107,25 @@ export function clone<T>(value: T): T {
         return Object.assign(new RegExp(value.source, value.flags),value) as unknown as T;
     }
     if(Type.isObject(value)) {
-        // FIXME: this should do a deep clone, no?
         return Object.assign(Object.create(Object.getPrototypeOf(value)), value) as unknown as T;
     }
     if(Type.isFunction(value)) {
         if(Type.isNativeFunction(value)) {
             throw new Error(`Cannot clone native functions`);
         }
-        const fn = new Function(`return ${value.toString()}`)();
+        const fn = new Function(`return ${(value as any).toString()}`)();
         Object.assign(fn,value);
         return fn as unknown as T;
     }
+
     throw new Error(`Could not clone value`);
 }
+
+/**
+ * Creates a shallow clone of the value.
+ * @param value - The value to clone.
+ * @returns A clone of the value.
+ * @deprecated Use {@link shallowClone} instead.
+ */
+export const clone = shallowClone;
+

@@ -1,5 +1,6 @@
+#!/usr/bun/env bun test
 import {test, expect, describe, it} from 'bun:test';
-import {isEmpty, clone} from './value';
+import {isEmpty, shallowClone} from './value';
 
 test(isEmpty.name, () => {
     expect(isEmpty('')).toBe(true);
@@ -24,17 +25,17 @@ test(isEmpty.name, () => {
     expect(isEmpty(false)).toBe(false); // hmm...
 })
 
-describe(clone.name, () => {
+describe(shallowClone.name, () => {
     it('copies arrays', () => {
         const orig = [1,2,3];
-        const copy = clone(orig);
+        const copy = shallowClone(orig);
         expect(copy).toEqual(orig);
         expect(copy).not.toBe(orig);
     });
     
     it('clones objects', () => {
         const orig = {foo:'bar',baz:{}};
-        const copy = clone(orig);
+        const copy = shallowClone(orig);
         expect(copy).toEqual(orig);
         expect(copy).not.toBe(orig);
         expect(copy.baz).toBe(orig.baz);
@@ -43,7 +44,7 @@ describe(clone.name, () => {
 
     it('clones objects w/out prototypes', () => {
         const orig = Object.create(null);
-        const copy = clone(orig);
+        const copy = shallowClone(orig);
         expect(copy).toEqual(orig);
         expect(copy).not.toBe(orig);
         expect(copy.constructor).toBe(orig.constructor);
@@ -61,7 +62,7 @@ describe(clone.name, () => {
         }
         const name = 'shape1';
         const orig = new Shape(name);
-        const copy = clone(orig);
+        const copy = shallowClone(orig);
         expect(copy).toEqual(orig);
         expect(copy).not.toBe(orig);
         expect(copy.getName()).toBe(name);
@@ -70,7 +71,7 @@ describe(clone.name, () => {
     it('clones dates', () => {
         const orig = new Date;
         orig.x = {};
-        const copy = clone(orig);
+        const copy = shallowClone(orig);
         expect(copy).toEqual(orig);
         expect(copy).not.toBe(orig);
         expect(copy.x).toBe(orig.x);
@@ -79,7 +80,7 @@ describe(clone.name, () => {
     it('clones sets', () => {
         const orig = new Set([3,1,1,2]);
         orig.x = {};
-        const copy = clone(orig);
+        const copy = shallowClone(orig);
         expect(copy).toEqual(orig);
         expect(copy).not.toBe(orig);
         expect(copy.x).toBe(orig.x);
@@ -88,7 +89,7 @@ describe(clone.name, () => {
     it('clones maps', () => {
         const orig = new Map([['A',1],['B',2]]);
         orig.x = {};
-        const copy = clone(orig);
+        const copy = shallowClone(orig);
         expect(copy).toEqual(orig);
         expect(copy).not.toBe(orig);
         expect(copy.x).toBe(orig.x);
@@ -96,38 +97,38 @@ describe(clone.name, () => {
 
     it('clones null', () => {
         const orig = null;
-        const copy = clone(orig);
-        expect(copy).toBe(orig);
+        const copy = shallowClone(orig);
+        expect(copy).toBe(null);
     });
 
     it('clones undefined', () => {
         const orig = undefined;
-        const copy = clone(orig);
+        const copy = shallowClone(orig);
         expect(copy).toBe(orig);
     });
 
     it('clones numbers', () => {
         const orig = 0;
-        const copy = clone(orig);
+        const copy = shallowClone(orig);
         expect(copy).toBe(orig);
     });
 
     it('clones NaN', () => {
         const orig = NaN;
-        const copy = clone(orig);
+        const copy = shallowClone(orig);
         expect(copy).toEqual(orig);
     });
 
     it('clones booleans', () => {
         const orig = false;
-        const copy = clone(orig);
+        const copy = shallowClone(orig);
         expect(copy).toBe(orig);
     });
 
     it('clones regexes', () => {
         const orig = /foo/i;
         orig.x = {};
-        const copy = clone(orig);
+        const copy = shallowClone(orig);
         expect(copy).toEqual(orig);
         expect(copy).not.toBe(orig);
         expect(copy.x).toBe(orig.x);
@@ -136,7 +137,7 @@ describe(clone.name, () => {
     it('clones functions', () => {
         function orig(x) { return x*3 };
         orig.x = {};
-        const copy = clone(orig);
+        const copy = shallowClone(orig);
         expect(copy.name).toBe(orig.name);
         expect(copy(2)).toBe(6);
         expect(copy).not.toBe(orig);
@@ -147,7 +148,7 @@ describe(clone.name, () => {
     //     function fn(x) { return this*x };
     //     const orig = fn.bind(3);
     //     orig.x = {};
-    //     const copy = clone(orig);
+    //     const copy = shallowClone(orig);
     //     expect(copy.name).toBe(orig.name);
     //     expect(copy(2)).toBe(6);
     //     // expect(copy).not.toBe(orig);
@@ -155,7 +156,7 @@ describe(clone.name, () => {
     // });
     //
     // it('clones native functions', () => {
-    //     const copy = clone(Math.floor);
+    //     const copy = shallowClone(Math.floor);
     //     expect(copy.name).toBe(Math.floor.name);
     //     expect(copy(3.14)).toBe(3);
     //     // expect(copy).not.toBe(orig);
@@ -163,7 +164,7 @@ describe(clone.name, () => {
 
     it('clones symbols', () => {
         const orig = Symbol.for('foo');
-        const copy = clone(orig);
+        const copy = shallowClone(orig);
         expect(copy).toEqual(orig);
         // expect(copy).not.toBe(orig);
     });
