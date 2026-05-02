@@ -46,7 +46,7 @@
   },
   "scripts": {
     "test": "run-p -c 'test:*'",
-    "test:unit": "bun test --isolate --parallel",
+    "test:unit": "bun scripts/test.ts --isolate --parallel",
     "lint": "bun run --bun eslint --format ./scripts/eslint-relative-formatter.ts --",
     "typecheck": "bun scripts/typecheck.ts",
     "fix:lint": "bun scripts/eslint-fix.ts",
