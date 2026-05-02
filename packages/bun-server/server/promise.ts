@@ -1,4 +1,3 @@
-import {AnyFn, UnkFn} from './util'
 
 
 export enum PromiseStatus {

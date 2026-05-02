@@ -282,7 +282,7 @@ describe('objects', () => {
     it('serializes toJSON', () => {
         // https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#toJSON()_behavior
 
-        var obj = {
+        let obj = {
             foo: 'foo',
             toJSON: function() {
                 return 'bar'

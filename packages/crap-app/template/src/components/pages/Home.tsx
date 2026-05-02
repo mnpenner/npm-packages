@@ -1,4 +1,4 @@
-import React, {lazy, useState} from 'react';
+import React, { useState} from 'react';
 import imgSrc from '@/images/dog-2617517_640.jpg';
 import ExternalLink from '../ExternalLink';
 import styled from 'styled-components';

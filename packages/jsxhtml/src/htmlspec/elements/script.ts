@@ -1,6 +1,5 @@
 import type {CommonAttributes, CrossOrigin} from '../attributes/ElementAttributes'
 import type {ElementForTag} from './element-types'
-import type {JsFrag} from '../../template-strings'
 
 /**
  * All valid properties for a <script> HTML element.

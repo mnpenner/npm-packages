@@ -46,6 +46,7 @@
     "test": "run-p -c 'test:*'",
     "test:unit": "bun test --isolate --parallel",
     "lint": "bun run --bun eslint --",
-    "fix": "bun run --bun eslint --fix --quiet --"
+    "fix:lint": "bun run --bun eslint --fix --quiet --",
+    "fix": "run-p -c 'fix:*'"
   }
 }

@@ -1,10 +1,11 @@
 
 import * as React from 'react';
-import Downshift, {ControllerStateAndHelpers, DownshiftState, GetItemPropsOptions, StateChangeOptions} from 'downshift'
+import type {ControllerStateAndHelpers, DownshiftState, GetItemPropsOptions, StateChangeOptions} from 'downshift';
+import Downshift from 'downshift'
 import styled, {keyframes, css} from 'react-emotion';
 import EndOfBody from './EndOfBody';
 import SearchIcon from './SearchIcon';
-import {ReactNode} from 'react';
+import type {ReactNode} from 'react';
 import Apple from './icons/apple';
 import Banana from './icons/banana';
 import Grapes from './icons/grapes';

@@ -1,4 +1,4 @@
-import {ErrorInfo, ReactNode} from 'react';
+import type {ErrorInfo, ReactNode} from 'react';
 import styled from 'styled-components';
 
 export interface Props {

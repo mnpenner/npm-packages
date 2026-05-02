@@ -1,6 +1,6 @@
 import {HttpMethod, HttpStatus, StatusText} from '@mpen/http-helpers'
 import type {Router} from '../../router'
-import type {Handler, JsonObjectSchema, JsonSchema, NormalizedRoute, RouteMeta, RouteSchema} from '../../types'
+import type {Handler, JsonObjectSchema, JsonSchema, NormalizedRoute, RouteMeta} from '../../types'
 
 /**
  * OpenAPI document `info` section.

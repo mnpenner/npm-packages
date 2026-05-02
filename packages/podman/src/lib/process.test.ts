@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'bun:test'
 import {Process, StreamIn, StreamOut} from './process.ts'
-import {Readable} from 'node:stream'
+import type {Readable} from 'node:stream'
 
 const decoder = new TextDecoder()
 

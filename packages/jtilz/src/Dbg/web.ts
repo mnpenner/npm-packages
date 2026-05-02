@@ -1,5 +1,5 @@
 import * as T from '../Lang/is';
-import {Console} from '../interfaces';
+import type {Console} from '../interfaces';
 
 
 export function log(...args: any[]) {

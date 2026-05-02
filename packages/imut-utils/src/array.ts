@@ -1,6 +1,7 @@
 import type {nil} from './types'
 import {assert, binarySearch} from './extra'
-import {Resolvable, resolveValue} from './resolvable'
+import type {Resolvable} from './resolvable';
+import { resolveValue} from './resolvable'
 
 /**
  * Appends elements onto the end of the array.

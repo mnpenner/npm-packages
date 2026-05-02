@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {base36ToBigInt, fromBase64Url, toBase64Url} from './util'
+import {base36ToBigInt, fromBase64Url} from './util'
 
 export class ReadableIdEncoder {
     encode(id: Buffer): string {

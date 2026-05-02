@@ -2,7 +2,6 @@ import {CommonHeaders, HttpStatus, HttpMethod} from '@mpen/http-helpers'
 import type {
     AnyContext,
     HandlerBody,
-    HandlerResult,
     HandlerYield,
     MaybePromise,
     Middleware,

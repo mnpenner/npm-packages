@@ -1,5 +1,5 @@
-import {HttpRequestMethod} from './server-api'
-import {UriParams} from '@mpen/rerouter'
+import type {HttpRequestMethod} from './server-api'
+import type {UriParams} from '@mpen/rerouter'
 
 
 

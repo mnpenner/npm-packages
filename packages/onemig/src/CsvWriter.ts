@@ -1,5 +1,4 @@
 import * as fs from 'fs'
-import type {WriteStream} from "fs";
 
 export default class CsvWriter {
     private stream: NodeJS.WritableStream;

@@ -1,7 +1,6 @@
 import fs from 'fs/promises'
 import Path from 'path'
 import {access, escapeRegExp, promiseMap} from './util'
-import {logJson} from './json'
 
 const envPathArray = process.env.PATH ? process.env.PATH.split(';') : []  // FIXME: this isn't technically correct: https://stackoverflow.com/questions/5114985/echo-path-on-separate-lines#comment5746924_5115119
 const envPathExtArray = process.env.PATHEXT ? process.env.PATHEXT.toLowerCase().split(';') : ['.com','.exe','.bat','.cmd'];

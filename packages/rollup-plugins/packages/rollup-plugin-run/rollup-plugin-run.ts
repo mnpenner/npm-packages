@@ -1,7 +1,7 @@
-import type {ForkOptions} from 'child_process'
-import {ChildProcess, exec} from 'child_process'
+import type {ForkOptions,ChildProcess} from 'child_process'
+import { exec} from 'child_process'
 import * as path from 'path'
-import {Plugin, RenderedChunk} from 'rollup'
+import type {Plugin, RenderedChunk} from 'rollup'
 import Readline from 'readline'
 import Chalk from 'chalk'
 

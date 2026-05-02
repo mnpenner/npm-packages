@@ -1,4 +1,4 @@
-import {awk, escBash, json, nl, txt, split0, escDash} from './index'
+import {awk, json, nl, txt, split0, escDash} from './index'
 
 async function main(args: string[]): Promise<number | void> {
     const text = await txt`echo ${"foo\nbar"}`

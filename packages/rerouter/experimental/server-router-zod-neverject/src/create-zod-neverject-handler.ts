@@ -1,6 +1,6 @@
 import type {Result} from 'neverject'
 import {isResult} from 'neverject/result'
-import {ZodType, z} from 'zod'
+import {type ZodType, z} from 'zod'
 import {HttpStatus} from '@mpen/http-helpers'
 import type {Handler, RequestContext} from '@mpen/server-router'
 

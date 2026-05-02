@@ -223,4 +223,11 @@ export default defineConfig([
             ],
         },
     },
+    {
+        name: "packages/is-type/merged-config",
+        files: ["packages/is-type/**/*.{ts,tsx}"],
+        rules: {
+            "@typescript-eslint/no-wrapper-object-types": "off",
+        },
+    },
 ])

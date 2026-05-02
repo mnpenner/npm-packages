@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
-import {App, Command, ExecutionContext, OptType, type AnyOptType, type Option} from '../src'
+import type { ExecutionContext} from '../src';
+import {App, Command, OptType, type AnyOptType, type Option} from '../src'
 
 type ArgumentSpec = {
     name: string

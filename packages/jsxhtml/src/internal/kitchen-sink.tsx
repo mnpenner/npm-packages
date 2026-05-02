@@ -9,7 +9,7 @@ import {
     NumberInput,
     PasswordInput, RadioButton, SearchInput, TelephoneInput, TimeInput, UrlInput, WeekInput
 } from '../custom'
-import {css, js} from '../template-strings'
+import {css} from '../template-strings'
 import Path from 'path'
 
 const tagLine = 'Kitchen Sink'

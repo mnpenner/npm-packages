@@ -585,7 +585,7 @@ describe(executeAppResult.name, () => {
         const {result, stdout} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help'])
 
         expect(result).toEqual({code: 0})
-        expect(matchOutput(stdout, /  world[\s\S]*?(?=\n  version)/))
+        expect(matchOutput(stdout, / {2}world[\s\S]*?(?=\n {2}version)/))
             .toEqualIgnoringWhitespace(`
                 world
                 This description is intentionally long so it cannot fit on a single
@@ -616,7 +616,7 @@ describe(executeAppResult.name, () => {
         const {result, stdout} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['--help'])
 
         expect(result).toEqual({code: 0})
-        expect(matchOutput(stdout, /  alpha[\s\S]*?(?=\n  version)/))
+        expect(matchOutput(stdout, / {2}alpha[\s\S]*?(?=\n {2}version)/))
             .toEqualIgnoringWhitespace(`
                 alpha
                 Short description.
@@ -637,7 +637,7 @@ describe(executeAppResult.name, () => {
         const {result, stdout} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['world', '--help'])
 
         expect(result).toEqual({code: 0})
-        expect(matchOutput(stdout, /  -p, --profile=PROFILE[\s\S]*?(?=\n\nGlobal Options:)/))
+        expect(matchOutput(stdout, / {2}-p, --profile=PROFILE[\s\S]*?(?=\n\nGlobal Options:)/))
             .toEqualIgnoringWhitespace(`
                 -p, --profile=PROFILE
                 This description is intentionally long so it cannot fit on a single
@@ -657,7 +657,7 @@ describe(executeAppResult.name, () => {
         const {result, stdout} = await captureExecute(app as Parameters<typeof executeAppResult>[0], ['world', '--help'])
 
         expect(result).toEqual({code: 0})
-        expect(matchOutput(stdout, /  -a, --alpha=ALPHA[\s\S]*?(?=\n\nGlobal Options:)/))
+        expect(matchOutput(stdout, / {2}-a, --alpha=ALPHA[\s\S]*?(?=\n\nGlobal Options:)/))
             .toEqualIgnoringWhitespace(`
                 -a, --alpha=ALPHA
                 Short description.

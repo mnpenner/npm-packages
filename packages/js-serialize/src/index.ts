@@ -376,7 +376,7 @@ function serializeAny(obj: any, ctx: Context): string {
     throw new Error('Could not serialize unknown type')
 }
 
-function serializeNumberLike(obj: number | Number, ctx: Context) {
+function serializeNumberLike(obj: number | number, ctx: Context) {
     const tmp = serializeNumber(Number(obj), ctx)
     if(obj instanceof Number) {
         return `new Number(${tmp})`
@@ -428,7 +428,7 @@ function serializeBigInt(obj: bigint, ctx: Context) {
     return `${obj}n`
 }
 
-function serializeStringLike(obj: string | String, ctx: Context) {
+function serializeStringLike(obj: string | string, ctx: Context) {
     const js = doSerializeStringLike(obj, ctx)
     if(obj.length >= STRING_REF_MIN_LENGTH) {
         const varName = ctx.refs.get(obj)
@@ -440,7 +440,7 @@ function serializeStringLike(obj: string | String, ctx: Context) {
     return js
 }
 
-function doSerializeStringLike(obj: string | String, ctx: Context) {
+function doSerializeStringLike(obj: string | string, ctx: Context) {
     const tmp = serializeString(String(obj), ctx)
     if(obj instanceof String) {
         return `new String(${tmp})`

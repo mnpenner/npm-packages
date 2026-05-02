@@ -1,4 +1,5 @@
-import React, {ReactNode, Suspense, SuspenseProps} from 'react';
+import type { SuspenseProps} from 'react';
+import React, { Suspense} from 'react';
 import ErrorBoundary from "./ErrorBoundary";
 import Spinner from "./Spinner";
 

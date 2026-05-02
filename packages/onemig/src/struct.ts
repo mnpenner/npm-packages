@@ -1,6 +1,7 @@
-import {ConnectionPool, sql} from "./mysql.ts";
+import type {ConnectionPool} from "./mysql.ts";
+import { sql} from "./mysql.ts";
 import {parallel, sortBy, splitValues} from "./util";
-import {DbColumn, DbColumnType, DbFkMap, DbForeignKey, DbIndex, DbIndexMap, DbTable, DbTrigger} from "./dbtypes";
+import type {DbColumn, DbColumnType, DbFkMap, DbForeignKey, DbIndex, DbIndexMap, DbTable, DbTrigger} from "./dbtypes";
 import * as Yaml from 'js-yaml'
 import CsvWriter from './CsvWriter'
 import {promises as fs} from 'fs'

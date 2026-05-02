@@ -1,6 +1,6 @@
 import {__skip__, filterMap} from '../Col';
 import {isFunction} from './is';
-import {IDictionary} from '../interfaces';
+import type {IDictionary} from '../interfaces';
 
 /**
  * Decorates all the functions in module.

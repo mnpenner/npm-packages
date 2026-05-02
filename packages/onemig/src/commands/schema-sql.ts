@@ -1,7 +1,7 @@
 import highlight from "cli-highlight";
 import { promises as fs } from "fs";
 import * as yaml from "js-yaml";
-import { DbColumn, DbIndex } from "../dbtypes";
+import type { DbColumn, DbIndex } from "../dbtypes";
 import { app } from "../app.ts";
 import * as sql from "../utils/sql";
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import {App, Command, OptType} from '../src'
+import {App, Command} from '../src'
 import * as pkg from '../package.json'
 
 const app = new App('hello')

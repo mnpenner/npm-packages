@@ -2,7 +2,7 @@
 import * as yaml from 'js-yaml'
 import * as fs from 'fs/promises'
 import * as childProc from 'child_process'
-import {SpawnOptionsWithoutStdio} from 'child_process'
+import type {SpawnOptionsWithoutStdio} from 'child_process'
 import * as Path from 'path'
 import Chalk from 'chalk'
 import {hrtime} from 'process'

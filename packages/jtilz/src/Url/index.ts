@@ -1,6 +1,5 @@
 import {__skip__, filterMap} from '../Col';
-import {isArray, isNumber} from '../Lang/is';
-import {IDictionary} from '../interfaces';
+import {isArray} from '../Lang/is';
 
 /**
  * Encodes a value for use in a URI.

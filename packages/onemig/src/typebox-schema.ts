@@ -1,5 +1,5 @@
-import {ArrayOptions, SchemaOptions, Type, UnsafeOptions, TLiteral, TUnion, TEnum, TEnumKey} from '@sinclair/typebox'
-import { Value } from '@sinclair/typebox/value'
+import type {ArrayOptions, SchemaOptions} from '@sinclair/typebox';
+import { Type} from '@sinclair/typebox'
 import * as FileSys from 'fs'
 import { TypeCompiler } from '@sinclair/typebox/compiler'
 import * as Yaml from 'js-yaml'

@@ -1,7 +1,7 @@
-import {isArray, isFunction, isIterable, isNullish, isPlainObject, isString} from '../Lang/is';
+import {isArray, isIterable, isNullish, isPlainObject, isString} from '../Lang/is';
 import {getType} from '../Dbg/shared';
 import chain from '../Seq';
-import {IDictionary} from '../interfaces';
+import type {IDictionary} from '../interfaces';
 import {identity} from '../Lang/value';
 import {allSettled, FULFILLED} from '../Lang/promise';
 import {flatten} from '../Arr';

@@ -1,4 +1,5 @@
-import {Resolvable, resolveValue} from './resolvable'
+import type {Resolvable} from './resolvable';
+import { resolveValue} from './resolvable'
 import type {AnyFn, nil} from './types'
 
 const ownKeys: <T extends object>(o: T) => Array<keyof T> = Reflect.ownKeys as AnyFn

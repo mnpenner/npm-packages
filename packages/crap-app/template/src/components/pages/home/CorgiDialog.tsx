@@ -1,4 +1,5 @@
-import ModalDialog, {Props} from "../../ModalDialog";
+import type {Props} from "../../ModalDialog";
+import ModalDialog from "../../ModalDialog";
 import React,{lazy} from "react";
 
 const CorgiInfo = lazy(() => import(/* webpackPrefetch: true */ './CorgiInfo'));

@@ -1,4 +1,5 @@
-import {Resolvable, resolveValue} from './resolvable'
+import type {Resolvable} from './resolvable';
+import { resolveValue} from './resolvable'
 import type {nil} from './types'
 
 /**

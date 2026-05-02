@@ -1,5 +1,5 @@
 import type {AnyCmd} from '../interfaces'
-import {Command, getSubCommands, hasSubCommands} from '../interfaces'
+import {Command, getSubCommands} from '../interfaces'
 import {versionCommand} from './version'
 import {getCommand} from '../options'
 import {printCommandHelp} from '../print-command-help'

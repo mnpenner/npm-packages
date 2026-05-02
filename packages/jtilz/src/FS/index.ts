@@ -1,11 +1,11 @@
-import {URL} from 'url';
+import type {URL} from 'url';
 import FileSystem = require('fs');
 import Path = require('path');
 import {flatten} from '../Arr';
 import {promisify} from '../Lang/promise';
 import {filterAsync} from '../Col';
-import {Stats} from 'fs';
-import {JsonValue} from '../interfaces';
+import type {Stats} from 'fs';
+import type {JsonValue} from '../interfaces';
 
 
 export interface ReadOptions {

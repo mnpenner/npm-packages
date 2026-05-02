@@ -2,7 +2,7 @@ import type {Plugin} from 'rollup'
 import Path, {dirname} from 'path'
 import {constants as FSC, promises as FileSys} from 'fs'
 import builtinModules from 'builtin-modules'
-import {ResolveIdResult} from 'rollup'
+import type {ResolveIdResult} from 'rollup'
 
 export interface RollupPluginNodeResolveOptions {
     rootDir?: string

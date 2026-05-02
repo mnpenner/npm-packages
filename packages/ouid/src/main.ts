@@ -3,7 +3,7 @@ import {randomBytes} from 'node:crypto'
 import {OrderedTypedIdGenerator} from './OrderedTypedIdGenerator'
 import {EncryptedIdEncoder} from './EncryptedIdEncoder'
 import {ReadableIdEncoder} from './ReadableIdEncoder'
-import {shuffleString, toBase64Url, toHex} from './util'
+import {shuffleString} from './util'
 
 const enum IdType {
     USER,

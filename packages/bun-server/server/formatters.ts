@@ -1,5 +1,5 @@
 import Chalk from 'chalk'
-import {nil} from './util'
+import type {nil} from './util'
 import {humanFileSize} from './file-size'
 
 function logResponse(reqId: number, elapsed: number, res: Response) {

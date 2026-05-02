@@ -1,8 +1,7 @@
 import {ReadWriteStream} from './read-write-stream'
 import {Deferred} from './promise'
-import {Chunkable} from './server-api'
+import type {Chunkable} from './server-api'
 import assert from 'assert'
-import {byteSize, fullWide} from './util'
 
 type ResponseOptions = Omit<ResponseInit,'statusText'>
 

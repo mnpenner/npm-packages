@@ -1,11 +1,12 @@
-import {
+import type {
     Handler,
     MethodHandlers,
     NamedRoute,
     PatternRouteMap,
     TemplateInterface
 } from './server-api'
-import {UriMatch, UriParams, UriTemplate} from '@mpen/rerouter'
+import type {UriMatch, UriParams} from '@mpen/rerouter';
+import { UriTemplate} from '@mpen/rerouter'
 import {resolveUrl} from './url-resolve'
 
 type MatchResult = { route: NamedRoute, match: UriMatch<UriParams> }

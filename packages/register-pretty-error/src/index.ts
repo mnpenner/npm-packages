@@ -22,7 +22,7 @@ process.on('uncaughtException', async err => {
     const errStr = String(err.stack);
 
 
-    const match = errStr.match(/^    at (?:(?<func>.+?) \((?<file>.+?):(?<line>\d+):(?<col>\d+)\)|(?<file2>.+?):(?<line2>\d+):(?<col2>\d+))$/m);
+    const match = errStr.match(/^ {4}at (?:(?<func>.+?) \((?<file>.+?):(?<line>\d+):(?<col>\d+)\)|(?<file2>.+?):(?<line2>\d+):(?<col2>\d+))$/m);
 
     // console.log(match);
 
@@ -63,7 +63,7 @@ process.on('uncaughtException', async err => {
     }
 
 
-    const stackTrace = Array.from(stackStr.matchAll(/^    at (?:(?<func>.+?) \((?<file>.+?):(?<line>\d+):(?<col>\d+)\)|(?<file2>.+?):(?<line2>\d+):(?<col2>\d+))$/mg));
+    const stackTrace = Array.from(stackStr.matchAll(/^ {4}at (?:(?<func>.+?) \((?<file>.+?):(?<line>\d+):(?<col>\d+)\)|(?<file2>.+?):(?<line2>\d+):(?<col2>\d+))$/mg));
     let lineCount = stackTrace.length;
     const width = String(lineCount - 1).length;
     // lines.reverse();

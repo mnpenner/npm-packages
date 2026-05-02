@@ -1,4 +1,4 @@
-import {nil} from './types'
+import type {nil} from './types'
 
 /**
  * Adds 2 numbers. `prev` defaults to 0 if undefined.

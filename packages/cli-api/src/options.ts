@@ -1,4 +1,4 @@
-import type {AnyCmd, AnyLeafCommand, AnyOptType, Argument, Option} from './interfaces'
+import type {AnyCmd, AnyOptType, Argument, Option} from './interfaces'
 import {getSubCommands, OptType, hasSubCommands} from './interfaces'
 import type {NullableObj} from './utils'
 import {includes, resolve, sortBy, statSync, toArray, toBool} from './utils'

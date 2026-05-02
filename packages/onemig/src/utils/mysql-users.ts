@@ -1,4 +1,5 @@
-import {ConnectionPool, sql} from '../mysql.ts'
+import type {ConnectionPool} from '../mysql.ts';
+import { sql} from '../mysql.ts'
 import {groupBy, toBool} from './utils'
 
 

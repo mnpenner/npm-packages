@@ -1,5 +1,4 @@
-import React from 'react';
-import {css} from 'styled-components';
+import type {css} from 'styled-components';
 
 declare global {
     const React: typeof React

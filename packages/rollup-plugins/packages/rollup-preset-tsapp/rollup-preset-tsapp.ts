@@ -1,4 +1,5 @@
-import {babel, RollupBabelInputPluginOptions} from '@rollup/plugin-babel'
+import type { RollupBabelInputPluginOptions} from '@rollup/plugin-babel';
+import {babel} from '@rollup/plugin-babel'
 // import {nodeResolve} from '@rollup/plugin-node-resolve'
 import nodeResolve from '@mpen/rollup-plugin-node-resolve'
 import nodeExternals from 'rollup-plugin-node-externals'
@@ -9,7 +10,8 @@ import {readFileSync} from 'fs'
 import packagePlugin from '@mpen/rollup-plugin-package'
 import cleanPlugin from '@mpen/rollup-plugin-clean'
 import runPlugin from '@mpen/rollup-plugin-run'
-import execPlugin, {RollupPluginExecutableOptions} from '@mpen/rollup-plugin-executable'
+import type {RollupPluginExecutableOptions} from '@mpen/rollup-plugin-executable';
+import execPlugin from '@mpen/rollup-plugin-executable'
 // import renameNodeModules from 'rollup-plugin-rename-node-modules'
 import type {RollupOptions, WatcherOptions} from 'rollup'
 import replace from '@rollup/plugin-replace';

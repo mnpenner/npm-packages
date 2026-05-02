@@ -1,4 +1,5 @@
-import {Resolvable, resolveValue} from './resolvable'
+import type {Resolvable} from './resolvable';
+import { resolveValue} from './resolvable'
 
 /**
  * Create a new array of specified length. Initialize all elements with the given value.

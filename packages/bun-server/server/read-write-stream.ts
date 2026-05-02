@@ -1,5 +1,6 @@
-import {Chunkable} from './server-api'
-import {byteSize, VoidFn} from './util'
+import type {Chunkable} from './server-api'
+import type { VoidFn} from './util';
+import {byteSize} from './util'
 
 export class ReadWriteStream<Chunk extends Chunkable = Chunkable> {
     // controller!: ReadableStreamController<R>

@@ -1,12 +1,10 @@
-import {lazy, ReactNode} from 'react'
+import {lazy} from 'react'
 import {hot} from 'react-hot-loader/root'
 import styled, {css} from 'styled-components';
 // import {BrowserRouter, Switch, Route, Link, RouteProps, RouteComponentProps} from 'react-router-dom';
-import {Router, Link, Match, MatchRenderFn, MatchRenderProps, RouteComponentProps} from "@reach/router";
+import type { MatchRenderProps, RouteComponentProps} from "@reach/router";
+import {Router, Link, Match} from "@reach/router";
 import Container from './Container';
-import ErrorBoundary from './ErrorBoundary';
-import Home from './pages/Home';
-import About from './pages/About';
 import Boundary from "./Boundary";
 // import ScrollTop from './helpers/scrollTop';
 

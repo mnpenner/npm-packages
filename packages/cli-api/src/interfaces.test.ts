@@ -1,7 +1,9 @@
 import {describe, it} from 'bun:test'
-import {App, Command, ExecutionContext, OptType} from './interfaces'
+import type { ExecutionContext} from './interfaces';
+import {App, Command, OptType} from './interfaces'
 import type {AnyOptType} from './index'
-import {expectType, TypeEqual} from './testing/type-assert'
+import type { TypeEqual} from './testing/type-assert';
+import {expectType} from './testing/type-assert'
 
 describe(Command.name, () => {
     describe('public exports', () => {

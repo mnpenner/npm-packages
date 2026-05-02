@@ -1,8 +1,8 @@
 import {exec} from 'node:child_process'
 import chalk from 'chalk'
-import {logJson, varDump} from './debug'
+import { varDump} from './debug'
 import {ErrPromise} from './promise'
-import {ExecException} from 'child_process'
+import type {ExecException} from 'child_process'
 import assert from 'node:assert'
 
 type CommandArg = string | number | CommandArg[]

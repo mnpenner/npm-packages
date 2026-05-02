@@ -1,8 +1,7 @@
-import type {UriTemplate, UrlParamValue, UriMatch, UriParams} from '@mpen/rerouter'
-import {AnyFn, PartialRecord} from './util'
+import type {UriTemplate, UriParams} from '@mpen/rerouter'
 
-import {HybridResponse} from './hybrid-response'
-import {BunRequest} from './bun-request'
+import type {HybridResponse} from './hybrid-response'
+import type {BunRequest} from './bun-request'
 
 
 export type Chunkable = string | ArrayBufferLike | TypedArray
