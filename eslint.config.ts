@@ -1,4 +1,5 @@
 import js from "@eslint/js"
+import type {ESLint as ESLintTypes} from "eslint"
 import globals from "globals"
 import {defineConfig, globalIgnores} from "eslint/config"
 import reactCompiler from "eslint-plugin-react-compiler"
@@ -77,6 +78,8 @@ const bunGlobals = {
     HTMLRewriter: "readonly",
     "HTMLRewriterTypes": "readonly",
 }
+
+const reactHooksPlugin = reactHooks as unknown as ESLintTypes.Plugin
 
 export default defineConfig([
     globalIgnores([
@@ -195,7 +198,7 @@ export default defineConfig([
         files: reactPackageFiles,
         plugins: {
             "react-compiler": reactCompiler,
-            "react-hooks": reactHooks,
+            "react-hooks": reactHooksPlugin,
             "react-refresh": reactRefresh,
         },
         rules: {
