@@ -1,5 +1,5 @@
 import {expect, test} from 'bun:test'
-import {css, js} from './template-strings'
+import {css, js, type JsFrag} from './template-strings'
 
 expect.extend({
     toStrEq(received: unknown, expected: string) {
@@ -27,12 +27,27 @@ declare module 'bun:test' {
     }
 }
 
+/**
+ * Wrap frag in parentheses, convert to string and eval.
+ * 
+ * Parentheses are necessary to avoid misinterpreting objects as code blocks.
+ *
+ * @param frag
+ */
+function evalFrag(frag: JsFrag) {
+    return eval(`(${frag})`)
+}
+
 test('js', () => {
     expect(js`hello`).toStrEq('hello')
     expect(js`hello ${"world"}`).toStrEq('hello "world"')
     expect(js`hello ${42}`).toStrEq('hello 42')
-    expect(js`hello ${"</script>"}`).toStrEq('hello "<\\/script>"')
+    
     expect(js`const obj=${{foo: 'bar'}};\nconst arr=${['baz', null, Math.PI]};`).toStrEq("const obj={foo:\"bar\"};\nconst arr=[\"baz\",null,Math.PI];")
+
+    const closeScript = "</script>"
+    expect(js`hello ${closeScript}`).toStrEq("hello \"\\x3c/script\\x3e\"")
+    expect(evalFrag(js`({inject:${closeScript}})`)).toEqual({inject:closeScript})
 })
 
 test('css', () => {
