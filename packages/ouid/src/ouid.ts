@@ -10,7 +10,7 @@ const start = BigInt(now) * 1000000n - hrt;
  */
 export function ouid() {
     const time = start + process.hrtime.bigint();
-    let buf = Buffer.allocUnsafe(16);
+    const buf = Buffer.allocUnsafe(16);
     buf.writeBigUInt64BE(time, 0);
     crypto.randomFillSync(buf, 8, 8);
     return buf;

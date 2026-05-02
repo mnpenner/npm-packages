@@ -31,8 +31,8 @@ const TOK = {
 
 // https://github.com/Microsoft/TypeScript/issues/16552
 function cc(strings: any, ...keys: any[]): string[] {
-    let str = [];
-    let style = [];
+    const str = [];
+    const style = [];
 
     if(!Array.isArray(strings)) {
         if(!keys.length) {
@@ -45,7 +45,7 @@ function cc(strings: any, ...keys: any[]): string[] {
         str.push(strings[i].replace(/%/g,'%%'));
         if(i < keys.length) {
             if(Array.isArray(keys[i])) {
-                let [a, ...b] = keys[i];
+                const [a, ...b] = keys[i];
                 str.push(a);
                 style.push(...b);
             } else {
@@ -59,9 +59,9 @@ function cc(strings: any, ...keys: any[]): string[] {
 }
 
 function join(arrays: Array<Array<string>>,sep=','): string[] {
-    let str = [];
-    let style = [];
-    for(let [a,...b] of arrays) {
+    const str = [];
+    const style = [];
+    for(const [a,...b] of arrays) {
         str.push(a);
         style.push(...b);
     }
@@ -70,15 +70,15 @@ function join(arrays: Array<Array<string>>,sep=','): string[] {
 
 function fdt(obj: any, depth: number): string[] {
     // TODO: circular references
-    let start = '\n' + '  '.repeat(depth+1);
-    let sep = ',\n' + '  '.repeat(depth+1);
-    let end = '\n' + '  '.repeat(depth);
+    const start = '\n' + '  '.repeat(depth+1);
+    const sep = ',\n' + '  '.repeat(depth+1);
+    const end = '\n' + '  '.repeat(depth);
 
     if(T.isArray(obj)) {
         if(obj.length === 0) {
             return cc`${TOK.bracket}[]`;
         }
-        let sb = [];
+        const sb = [];
         let hasProp = false;
         for(let i=0; i<obj.length; ++i) {
             if(obj.hasOwnProperty(i)) {
@@ -156,8 +156,8 @@ function fdt(obj: any, depth: number): string[] {
             return fdt((obj as any).toJSON(),depth+1);
         }
         // TODO: circular reference support
-        let tmp = [];
-        for(let key of Reflect.ownKeys(obj)) {
+        const tmp = [];
+        for(const key of Reflect.ownKeys(obj)) {
             tmp.push(cc`${serializePropertyName(key)}${TOK.punc}: ${fdt((obj as any)[key],depth+1)}`);
         }
         return cc`${TOK.bracket}\{${cc(start)}${join(tmp,sep)}${TOK.bracket}${cc(end)}\}`;
@@ -168,9 +168,9 @@ function fdt(obj: any, depth: number): string[] {
 
 
 function serializeSymbol(sym: symbol) {
-    let key = Symbol.keyFor(sym);
+    const key = Symbol.keyFor(sym);
     if(key === undefined) {
-        let m = sym.toString().match(/^Symbol\((.+)\)$/);
+        const m = sym.toString().match(/^Symbol\((.+)\)$/);
         if(m) {
             return cc`${TOK.className}Symbol${TOK.bracket}(${formatDevTools(m[1])}${TOK.bracket})`;
         }

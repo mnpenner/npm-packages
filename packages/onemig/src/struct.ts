@@ -24,7 +24,7 @@ const TYPE_ALIASES = {
 }
 
 let defaultStorageEngine: string
-let dbCollationMap: Record<string,string> = {}
+const dbCollationMap: Record<string,string> = {}
 
 export async function getColumns(conn: ConnectionPool, dbName: string, tblName:string): Promise<Record<string,Omit<DbColumn,'name'>>> {
     const struct = await getStruct(conn,dbName,tblName)
@@ -188,7 +188,7 @@ export async function getStruct(conn: ConnectionPool, dbName: string, tblName:st
                             order by ORDINAL_POSITION`);
 
             for await(const col of colStream) {
-                let colDef: DbColumn = {
+                const colDef: DbColumn = {
                     name: col.name,
                     type: col.columnType,
                 };
@@ -233,7 +233,7 @@ export async function getStruct(conn: ConnectionPool, dbName: string, tblName:st
                 switch(col.dataType) {
                     case 'enum':
                     case 'set': {
-                        let [match, type, values] = /^(\w+)\((.*)\)$/.exec(col.columnType)!;
+                        const [match, type, values] = /^(\w+)\((.*)\)$/.exec(col.columnType)!;
                         if(!match) {
                             throw new Error(`Unexpected ${col.dataType} format: ${col.columnType}`);
                         }
@@ -249,7 +249,7 @@ export async function getStruct(conn: ConnectionPool, dbName: string, tblName:st
                     case 'mediumint':
                     case 'int':
                     case 'bigint': {
-                        let [match, type, width, unsigned, zerofill] = /^(\w+)\((\d+)\)( unsigned)?( zerofill)?$/.exec(col.columnType)!;
+                        const [match, type, width, unsigned, zerofill] = /^(\w+)\((\d+)\)( unsigned)?( zerofill)?$/.exec(col.columnType)!;
                         if(!match) {
                             throw new Error(`Unexpected integer format: ${col.columnType}`);
                         }
@@ -279,7 +279,7 @@ export async function getStruct(conn: ConnectionPool, dbName: string, tblName:st
                     case 'decimal':
                     case 'double': {
                         // http://www.java2s.com/Tutorial/MySQL/0200__Data-Types/FLOATMDUNSIGNEDZEROFILL.htm
-                        let [match, type, m, d, unsigned, zerofill] = /^(\w+)(?:\((\d+)(?:,(\d+))?\))?( unsigned)?( zerofill)?$/.exec(col.columnType)!;
+                        const [match, type, m, d, unsigned, zerofill] = /^(\w+)(?:\((\d+)(?:,(\d+))?\))?( unsigned)?( zerofill)?$/.exec(col.columnType)!;
                         if(!match) {
                             throw new Error(`Unexpected float format: ${col.columnType}`);
                         }
@@ -310,14 +310,14 @@ export async function getStruct(conn: ConnectionPool, dbName: string, tblName:st
                     case 'bit':
                     case 'binary':
                     case 'varbinary': {
-                        let [match, type, length] = /^(\w+)\((\d+)\)$/.exec(col.columnType)!;
+                        const [match, type, length] = /^(\w+)\((\d+)\)$/.exec(col.columnType)!;
                         if(!match) {
                             throw new Error(`Unexpected string format: ${col.columnType}`);
                         }
                         if(type !== col.dataType) {
                             throw new Error(`Data type (${col.dataType}) does not match column type (${type})`);
                         }
-                        let len = parseInt(length, 10);
+                        const len = parseInt(length, 10);
                         colDef.type = type as DbColumnType
                         if(type === 'bit' && len === 1) {
                             //
@@ -327,7 +327,7 @@ export async function getStruct(conn: ConnectionPool, dbName: string, tblName:st
                     }
                         break;
                     case 'year':
-                        let [match, type, width] = /^(\w+)\((\d+)\)$/.exec(col.columnType)!;
+                        const [match, type, width] = /^(\w+)\((\d+)\)$/.exec(col.columnType)!;
                         if(!match) {
                             throw new Error(`Unexpected year format: ${col.columnType}`);
                         }
@@ -405,7 +405,7 @@ export async function getStruct(conn: ConnectionPool, dbName: string, tblName:st
                 }
 
                 if(!idxMap.hasOwnProperty(idx.name)) {
-                    let idxDef: Partial<DbIndex> = (idxMap[idx.name] as any) = {
+                    const idxDef: Partial<DbIndex> = (idxMap[idx.name] as any) = {
                         name: idx.name,
                     };
 
@@ -475,7 +475,7 @@ export async function getStruct(conn: ConnectionPool, dbName: string, tblName:st
             for await(const fk of fkStream) {
                 // console.log(fk)
                 if(!fkMap.hasOwnProperty(fk.constraintName)) {
-                    let fkDef: DbForeignKey = fkMap[fk.constraintName] = {
+                    const fkDef: DbForeignKey = fkMap[fk.constraintName] = {
                         name: fk.constraintName,
                         columns: [fk.columnName],
                         // refDatabase: fk.refDatabase,

@@ -107,12 +107,12 @@ export default class DateTimeDialog extends React.Component {
         if(year >= 0 && year < 100) {
             const now = new Date();
             const fullYear = now.getFullYear();
-            let shortYear = fullYear % 100;
-            let m1 = fullYear - shortYear;
-            let m2 = m1 - 100;
+            const shortYear = fullYear % 100;
+            const m1 = fullYear - shortYear;
+            const m2 = m1 - 100;
 
-            let opt1 = year + m1;
-            let opt2 = year + m2;
+            const opt1 = year + m1;
+            const opt2 = year + m2;
 
             year = Math.abs(fullYear - opt1) < Math.abs(fullYear - opt2) ? opt1 : opt2;
         }
@@ -181,7 +181,7 @@ export default class DateTimeDialog extends React.Component {
         let dow = firstDay.getDay();
         const lastDayNumber = lastDay.getDate();
 
-        let rows = [];
+        const rows = [];
         let row = [];
         if(dow > 0) {
             row.push(<td key="pre" colSpan={dow}/>);
@@ -201,19 +201,19 @@ export default class DateTimeDialog extends React.Component {
             rows.push(row);
         }
 
-        let startOfDay = new Date(this.state.year, this.state.month, this.state.day, 0, 0, 0);
-        let noon = new Date(this.state.year, this.state.month, this.state.day, 12, 0, 0);
-        let endOfDay = new Date(this.state.year, this.state.month, this.state.day, 23, 59, 59, 999);
-        let sunTimes = SunCalc.getTimes(noon, this.props.latitude, this.props.longitude);
+        const startOfDay = new Date(this.state.year, this.state.month, this.state.day, 0, 0, 0);
+        const noon = new Date(this.state.year, this.state.month, this.state.day, 12, 0, 0);
+        const endOfDay = new Date(this.state.year, this.state.month, this.state.day, 23, 59, 59, 999);
+        const sunTimes = SunCalc.getTimes(noon, this.props.latitude, this.props.longitude);
         // let startPos = SunCalc.getPosition(startOfDay, this.props.latitude, this.props.longitude);
         // let endPos = SunCalc.getPosition(startOfDay, this.props.latitude, this.props.longitude);
 
-        let amRange = noon.getTime() - startOfDay.getTime();
-        let pmRange = endOfDay.getTime() - noon.getTime();
+        const amRange = noon.getTime() - startOfDay.getTime();
+        const pmRange = endOfDay.getTime() - noon.getTime();
 
-        let startOfHour = new Date(this.state.year, this.state.month, this.state.day, this.state.hour, 0, 0);
-        let endOfHour = new Date(this.state.year, this.state.month, this.state.day, this.state.hour, 59, 59, 999);
-        let hourRange = endOfHour.getTime() - startOfHour.getTime();
+        const startOfHour = new Date(this.state.year, this.state.month, this.state.day, this.state.hour, 0, 0);
+        const endOfHour = new Date(this.state.year, this.state.month, this.state.day, this.state.hour, 59, 59, 999);
+        const hourRange = endOfHour.getTime() - startOfHour.getTime();
 
         // console.log('pmRange',pmRange);
         // let nadirPercent = (sunTimes.nadir.getTime() - startOfDay.getTime())/amRange*100;
@@ -225,27 +225,27 @@ export default class DateTimeDialog extends React.Component {
         // console.log(nadirPercent, nightEndPercent, nauticalDawnPercent, dawnPercent, noonPercent);
         // console.log('xxx',SunCalc.getTimes(new Date(2017,5,21,12,0,0),49.1,-122.8));
 
-        let amGradient = [];
-        let pmGradient = [];
-        let minGradient = [];
+        const amGradient = [];
+        const pmGradient = [];
+        const minGradient = [];
         // console.log('noon',noon);
         for(let i=0; i<5; ++i) {
-            let at = sunTimes[`am${i}`].getTime();
+            const at = sunTimes[`am${i}`].getTime();
             if(!isNaN(at)) {
-                let pc = (at - startOfDay.getTime()) / amRange;
+                const pc = (at - startOfDay.getTime()) / amRange;
                 amGradient.push(`${skyColors[i]} ${pc * 100}%`);
                 if(this.state.hour < 12) {
-                    let pc = (at - startOfHour.getTime()) / hourRange;
+                    const pc = (at - startOfHour.getTime()) / hourRange;
                     minGradient.push(`${skyColors[i]} ${pc * 100}%`);
                 }
             }
 
-            let pt = sunTimes[`pm${i}`].getTime();
+            const pt = sunTimes[`pm${i}`].getTime();
             if(!isNaN(pt)) {
-                let pc = (pt - noon.getTime())/pmRange;
+                const pc = (pt - noon.getTime())/pmRange;
                 pmGradient.push(`${skyColors[4-i]} ${pc*100}%`);
                 if(this.state.hour >= 12) {
-                    let pc = (pt - startOfHour.getTime()) / hourRange;
+                    const pc = (pt - startOfHour.getTime()) / hourRange;
                     minGradient.push(`${skyColors[4-i]} ${pc*100}%`);
                 }
             }
@@ -265,7 +265,7 @@ export default class DateTimeDialog extends React.Component {
         // let darkest = -0.687470273549926
         // let lightest = 0.740826542700143
 
-        let minuteValues = lo.range(0, 60, this.props.minuteInterval);
+        const minuteValues = lo.range(0, 60, this.props.minuteInterval);
         if(this.props.lastMinute && lo.tail(minuteValues) !== 59) {
             minuteValues.push(59);
         }
@@ -317,7 +317,7 @@ export default class DateTimeDialog extends React.Component {
                                 <tbody>
                                     {lo.times(12, i => {
                                         // TODO: DST switches (23 or 25-hour days) e.g. 2017-03-12T03:00:00-07:00
-                                        let disp = i === 0 ? '12' : String(i);
+                                        const disp = i === 0 ? '12' : String(i);
                                         return (
                                             <tr key={i}>
                                                 <td className={classnames(cn.hourCell,{[cn.timeSelected]:this.state.hour===i})}>
@@ -339,7 +339,7 @@ export default class DateTimeDialog extends React.Component {
                         <table className={cn.minTable} onWheel={this.wheelMinute}>
                             <tbody>
                                 {minuteValues.map(i => {
-                                    let disp = i < 10 ? `0${i}` : String(i);
+                                    const disp = i < 10 ? `0${i}` : String(i);
                                     return (
                                         <tr key={i}>
                                             <td className={classnames(cn.minCell,{[cn.timeSelected]:this.state.minute===i,[cn.halfHour]: i % 30 === 0 || i === 59, [cn.quarterHour]: i % 15 === 0 || i === 59})}>

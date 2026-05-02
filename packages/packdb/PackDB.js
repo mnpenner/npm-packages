@@ -25,7 +25,7 @@ class PackDB {
         let obj = Object.create(null);
 
         try {
-            let buf = FS.readFileSync(path);
+            const buf = FS.readFileSync(path);
             if(buf.length > 0) {
                 obj = this[OPT].deserialize(buf);
             }
@@ -61,7 +61,7 @@ class PackDB {
 
     [WRITE]() {
         return new Promise((resolve, reject) => {
-            let buf = this[OPT].serialize(this[DATA]);
+            const buf = this[OPT].serialize(this[DATA]);
             FS.writeFile(this[PATH], buf, err => {
                 if(err) return reject(err);
                 // console.log('wrote',this[PATH]);

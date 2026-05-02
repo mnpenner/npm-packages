@@ -141,7 +141,7 @@ export function arraySelect<T>(array: T[] | nil, predicate: (v: T, i: number) =>
         return array.filter((v, i) => predicate(v, i))
     }
     if(limit <= 0) return []
-    let selected: T[] = []
+    const selected: T[] = []
     for(const [i, v] of array.entries()) {
         if(predicate(v, i)) {
             selected.push(v)
@@ -165,7 +165,7 @@ export function arrayReject<T>(array: T[] | nil, predicate: (v: T, i: number) =>
         return array.filter((v, i) => !predicate(v, i))
     }
     if(limit <= 0) return array
-    let selected: T[] = []
+    const selected: T[] = []
     let rejected = 0
     for(const [i, v] of array.entries()) {
         if(rejected < limit && predicate(v, i)) {

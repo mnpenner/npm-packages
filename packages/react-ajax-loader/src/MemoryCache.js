@@ -32,11 +32,11 @@ const OBJECT_ESTIMATE = 50;
 
 // https://stackoverflow.com/questions/1248302/how-to-get-the-size-of-a-javascript-object
 function sizeof(obj) {
-    let stack = [obj];
+    const stack = [obj];
     let bytes = 0;
 
     while(stack.length) {
-        let value = stack.pop();
+        const value = stack.pop();
 
         bytes += 2; // variable type
         if(value == null || typeof value === 'boolean') {
@@ -47,7 +47,7 @@ function sizeof(obj) {
             if(Array.isArray(value)) {
                 bytes += 8; // length
                 if(value.length <= ARRAY_ESTIMATE) {
-                    for(let x of value) {
+                    for(const x of value) {
                         stack.push(x);
                     }
                 } else {
@@ -60,9 +60,9 @@ function sizeof(obj) {
                 }
             } else {
                 bytes += 12; // meta-data
-                let keys = Object.keys(value);
+                const keys = Object.keys(value);
                 if(keys.length <= OBJECT_ESTIMATE) {
-                    for(let key of keys) {
+                    for(const key of keys) {
                         stack.push(key);
                         stack.push(value[key]);
                     }

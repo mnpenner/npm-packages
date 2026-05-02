@@ -20,7 +20,7 @@ function promisify(nodeFunction) {
 
 function readDirDeep(dir) {
     return readDir(dir).then(files => files.map(file => {
-        let path = Path.join(dir, file);
+        const path = Path.join(dir, file);
         return fileStat(path).then(stat => stat.isDirectory() ? readDirDeep(path) : path);
     }))
         .then(result => Promise.all(result))

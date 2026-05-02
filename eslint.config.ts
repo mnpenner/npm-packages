@@ -34,7 +34,9 @@ const reactPackageFiles = [
 ]
 
 const serverPackageFiles = [
+    "*.config.{js,cjs,mjs,ts,cts,mts}",
     "packages/base50/**/*.{js,jsx,ts,tsx}",
+    "packages/base50/**/*.{cjs,mjs,cts,mts}",
     "packages/bun-plugin-react-compiler/**/*.{js,jsx,ts,tsx}",
     "packages/bun-server/**/*.{js,jsx,ts,tsx}",
     "packages/child-spawn/**/*.{js,jsx,ts,tsx}",
@@ -65,7 +67,9 @@ const serverPackageFiles = [
     "packages/svg2fonts/**/*.{js,jsx,ts,tsx}",
     "packages/ts-types/**/*.{js,jsx,ts,tsx}",
     "packages/uri-template/**/*.{js,jsx,ts,tsx}",
+    "packages/uri-template/**/*.{cjs,mjs,cts,mts}",
     "packages/yamake/**/*.{js,jsx,ts,tsx}",
+    "scripts/**/*.{js,cjs,mjs,ts,cts,mts}",
 ]
 
 const bunGlobals = {

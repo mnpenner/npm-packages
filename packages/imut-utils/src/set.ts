@@ -53,7 +53,7 @@ export function setUnion<T>(...sets: Iterable<T>[]): Set<T> {
 
 export function setIntersection<T>(a: Set<T>, b: Set<T>): Set<T> {
     const out = new Set<T>()
-    for(let v of a) {
+    for(const v of a) {
         if(b.has(v)) {
             out.add(v)
         }
@@ -63,12 +63,12 @@ export function setIntersection<T>(a: Set<T>, b: Set<T>): Set<T> {
 
 export function setSymmetricDifference<T>(a: Set<T>, b: Set<T>): Set<T> {
     const out = new Set<T>()
-    for(let v of a) {
+    for(const v of a) {
         if(!b.has(v)) {
             out.add(v)
         }
     }
-    for(let v of b) {
+    for(const v of b) {
         if(!a.has(v)) {
             out.add(v)
         }

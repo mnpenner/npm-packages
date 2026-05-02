@@ -48,8 +48,8 @@ export function uint8ArrayToBase50Streaming(buffer: Uint8Array): string {
         // Long division: Divide digits256 by BASE (50)
         for(let i = 0; i < digits256.length; i++) {
             // Bring down the next digit (effectively multiplying remainder by 256)
-            let accumulator = digits256[i] + remainder * 256
-            let digit = Math.floor(accumulator / BASE)
+            const accumulator = digits256[i] + remainder * 256
+            const digit = Math.floor(accumulator / BASE)
             remainder = accumulator % BASE
 
             // Add the new quotient digit if it's non-zero or if we have already
@@ -118,8 +118,8 @@ export function base50ToUint8ArrayStreaming(str: string): Uint8Array {
         // Long division: Divide digits50 by 256
         for(let i = 0; i < digits50.length; i++) {
             // Bring down the next digit (effectively multiplying remainder by BASE=50)
-            let accumulator = digits50[i] + remainder * BASE
-            let digit = Math.floor(accumulator / 256)
+            const accumulator = digits50[i] + remainder * BASE
+            const digit = Math.floor(accumulator / 256)
             remainder = accumulator % 256
 
             // Add the new quotient digit if non-zero or if we have seen non-zeros

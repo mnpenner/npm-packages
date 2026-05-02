@@ -28,12 +28,12 @@ export function splitValues(subject: string): string[] {
     if (!subject) {
         return [];
     }
-    let terms = [];
+    const terms = [];
     let term = '';
     let quoted = false;
     const q = "'";
     for (let i = 0; i < subject.length;) {
-        let ch = subject[i];
+        const ch = subject[i];
         if (ch === q) {
             if (!quoted) {
                 quoted = true;

@@ -4,12 +4,12 @@ import {css, js} from '../template-strings'
 import Path from 'path'
 
 
-let inject = '<b>  i\'nj\ne"ct   </b>'
-let hack = '</script>'
-let safe = js`"not escaped"`
-let obj = {bar: 'baz', quux: [1, 2]}
+const inject = '<b>  i\'nj\ne"ct   </b>'
+const hack = '</script>'
+const safe = js`"not escaped"`
+const obj = {bar: 'baz', quux: [1, 2]}
 
-let list = ['foo', 'bar', 'baz']
+const list = ['foo', 'bar', 'baz']
 const one = 1
 const two = 2
 const three = 3

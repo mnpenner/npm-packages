@@ -14,7 +14,7 @@ describe('OrderedTypedIdGenerator', () => {
         for(let i = 0; i < idCount; ++i) {
             const type = randomInt(0, 0x1000)
             const id = generator.generate(type)
-            let time = generator.extractTimeNs(id)
+            const time = generator.extractTimeNs(id)
             expect(time).toBeGreaterThan(lastTime)
             lastTime = time
             expect(generator.extractType(id)).toBe(type)

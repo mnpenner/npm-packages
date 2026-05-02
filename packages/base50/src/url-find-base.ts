@@ -5,7 +5,7 @@ function byteLen(str: string) {
     return new TextEncoder().encode(str).length
 }
 
-let found: string[] = [];
+const found: string[] = [];
 
 for(let i=0; i<256; ++i) {
     const ch = String.fromCodePoint(i)

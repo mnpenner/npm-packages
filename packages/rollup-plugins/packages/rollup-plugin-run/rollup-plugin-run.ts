@@ -21,7 +21,7 @@ export default function run(opts: RollupRunOptions = {}): Plugin {
     const forkOptions = opts.options || opts
     delete (forkOptions as RollupRunOptions).args
 
-    let firstRun = true
+    const firstRun = true
     const rl = Readline.createInterface({
         input: process.stdin,
         output: process.stdout,

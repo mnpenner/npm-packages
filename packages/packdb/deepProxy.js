@@ -18,7 +18,7 @@ function createDeepProxy(target, handler) {
             deleteProperty(target, key) {
                 if(Reflect.has(target, key)) {
                     unproxy(target, key);
-                    let deleted = Reflect.deleteProperty(target, key);
+                    const deleted = Reflect.deleteProperty(target, key);
                     if(deleted && handler.deleteProperty) {
                         handler.deleteProperty(target, [...path, key]);
                     }
@@ -36,7 +36,7 @@ function createDeepProxy(target, handler) {
             preproxy.delete(obj[key]);
         }
         
-        for(let k of Object.keys(obj[key])) {
+        for(const k of Object.keys(obj[key])) {
             if(typeof obj[key][k] === 'object') {
                 unproxy(obj[key], k);
             }
@@ -45,12 +45,12 @@ function createDeepProxy(target, handler) {
     }
     
     function proxify(obj, path) {
-        for(let key of Object.keys(obj)) {
+        for(const key of Object.keys(obj)) {
             if(typeof obj[key] === 'object') {
                 obj[key] = proxify(obj[key], [...path, key]);
             }
         }
-        let p = new Proxy(obj, makeHandler(path));
+        const p = new Proxy(obj, makeHandler(path));
         preproxy.set(p, obj);
         return p;
     }

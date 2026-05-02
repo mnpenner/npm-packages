@@ -54,7 +54,7 @@ export default class AjaxLoader {
     hoc(...requests) {
         const loader = this;
         
-        for(let req of requests) {
+        for(const req of requests) {
             setDefaults(req, {
                 equalityCheck: this.options.defaultEqualityCheck,
                 handler: this.options.defaultHandler,
@@ -85,14 +85,14 @@ export default class AjaxLoader {
                 }
                 
                 componentWillMount() {
-                    let requests = this.requests.reduce((acc,req) => {
-                        let data = resolveValue.call(this, req.initialData, this.props);
+                    const requests = this.requests.reduce((acc,req) => {
+                        const data = resolveValue.call(this, req.initialData, this.props);
 
                         if(data !== undefined) {
                             success(req, data);
                         } else {
                             if(typeof req.data === 'function') {
-                                let data = req.data.call(this, this.props);
+                                const data = req.data.call(this, this.props);
                                 this.lastData[req._id] = data;
                                 req = {...req, data};
                             }
@@ -109,9 +109,9 @@ export default class AjaxLoader {
                 }
 
                 componentWillReceiveProps(nextProps) {
-                    let updated = this.requests.reduce((acc, req) => {
+                    const updated = this.requests.reduce((acc, req) => {
                         if(typeof req.data === 'function') {
-                            let data = req.data.call(this, nextProps);
+                            const data = req.data.call(this, nextProps);
                             if(!req.equalityCheck(this.lastData[req._id], data)) {
                                 this.lastData[req._id] = data;
                                 acc.push({...req, data});
@@ -126,8 +126,8 @@ export default class AjaxLoader {
                 }
 
                 render() {
-                    let props = {...this.props, ...this.state};
-                    let refreshFuncs = [];
+                    const props = {...this.props, ...this.state};
+                    const refreshFuncs = [];
                     for(let req of this.requests) {
                         const refresh = () => {
                             req = {...req, _noCache: true};
@@ -145,7 +145,7 @@ export default class AjaxLoader {
                     }
                     if(loader.options.refreshAllProp) {
                         props[loader.options.refreshAllProp] = () => {
-                            for(let fn of refreshFuncs) {
+                            for(const fn of refreshFuncs) {
                                 fn();
                             }
                         };
@@ -159,12 +159,12 @@ export default class AjaxLoader {
     }
 
     _push = requests => {
-        for(let req of requests) {
+        for(const req of requests) {
             let cacheHit = false;
-            let key = this.options.hash([req.route,req.data]);
+            const key = this.options.hash([req.route,req.data]);
             
             if(this.options.cache && req.fetchPolicy !== FP.NetworkOnly && !req._noCache) {
-                let res = this.options.cache.get(key);
+                const res = this.options.cache.get(key);
                 if(res !== undefined) {
                     success(req, res.payload);
                     if(req.fetchPolicy !== FP.CacheAndNetwork) {
@@ -204,7 +204,7 @@ export default class AjaxLoader {
             //     // }
             // });
             
-            let entry = this.batch.get(key);
+            const entry = this.batch.get(key);
             if(entry) {
                 entry.push(req);
             } else {
@@ -224,7 +224,7 @@ export default class AjaxLoader {
             this._run();
         } else if(this.start) {
             // if the timer has been started...
-            let elapsed = performance.now() - this.start;
+            const elapsed = performance.now() - this.start;
             if(elapsed >= this.options.maxDelay) {
                 // if max delay is exceeded, send the batch immediately
                 this._run();
@@ -250,10 +250,10 @@ export default class AjaxLoader {
 
     _send = () => {
         let batchIdx = 0;
-        let batch = [];
-        let reqData = [];
-        let keyLookup = Object.create(null);
-        let rank = ++this.rankCounter;
+        const batch = [];
+        const reqData = [];
+        const keyLookup = Object.create(null);
+        const rank = ++this.rankCounter;
         
         this.batch.forEach((reqs,key) => {
             if(!reqs.length) {
@@ -263,7 +263,7 @@ export default class AjaxLoader {
             batch[batchIdx] = reqs;
             keyLookup[batchIdx] = key;
             
-            for(let req of reqs) {
+            for(const req of reqs) {
                 this.rankLookup[req._id] = rank;
             }
             
@@ -293,7 +293,7 @@ export default class AjaxLoader {
         
         // console.log(reqData);
         
-        let {headers, ...options} = resolveValue(this.options.fetchOptions) || {};
+        const {headers, ...options} = resolveValue(this.options.fetchOptions) || {};
         
         // console.log('send',this.endpoint,reqData);
         
@@ -322,7 +322,7 @@ export default class AjaxLoader {
                     throw new Error(`Server error: response length (${responses.length}) does not match request length (${reqData.length})`);
                 }
                 for(let i = 0; i < responses.length; ++i) {
-                    let res = responses[i];
+                    const res = responses[i];
                     
                     if(this.options.cache && res.type === 'success') {
                         this.options.cache.set(keyLookup[i], {
@@ -331,8 +331,8 @@ export default class AjaxLoader {
                         });
                     }
                     
-                    for(let req of batch[i]) {
-                        let expectedRank = this.rankLookup[req._id];
+                    for(const req of batch[i]) {
+                        const expectedRank = this.rankLookup[req._id];
                         
                         if(!resRank || resRank == expectedRank) {
                             switch(res.type) {
@@ -384,7 +384,7 @@ export default class AjaxLoader {
 }
 
 function success(req, payload) {
-    let newState = req.handler.call(req._component, payload, req);
+    const newState = req.handler.call(req._component, payload, req);
     if(newState !== undefined) {
         // console.log('newState', req, res);
         req._component.setState(newState);
@@ -392,7 +392,7 @@ function success(req, payload) {
 }
 
 function setDefaults(obj, defaults, overwrite) {
-    for(let key of Object.keys(defaults)) {
+    for(const key of Object.keys(defaults)) {
         if(obj[key] === undefined) {
             obj[key] = defaults[key];
         }

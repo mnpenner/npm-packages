@@ -22,7 +22,7 @@ module.exports = function(content) {
             if(attrs.hasOwnProperty('style')) {
                 throw new Error(`Sorry, "style" attributes are not presently supported (requires parsing CSS)`)
             }
-            for(let attrName of Object.keys(attrs)) {
+            for(const attrName of Object.keys(attrs)) {
                 if(stdAttrs.hasOwnProperty(attrName) && attrName !== stdAttrs[attrName]) {
                     if(attrs.hasOwnProperty(stdAttrs[attrName])) {
                         loader.emitWarning(new Error(`<${tagName}> has both "${attrName}" and "${stdAttrs[attrName]}" attributes`));

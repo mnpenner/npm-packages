@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* eslint-env node */
-/* eslint-disable no-sync */
+ 
 'use strict';
 
 const SVGIcons2SVGFontStream = require('svgicons2svgfont');
@@ -189,9 +189,9 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
 `.trimLeft();
 
 
-    let cssIcons = [];
-    let htmlIcons = [];
-    let iconMap = {};
+    const cssIcons = [];
+    const htmlIcons = [];
+    const iconMap = {};
     let codePointMap = {};
 
     try {
@@ -205,17 +205,17 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
         }
     }
 
-    for(let icon of icons) {
-        let glyph = fs.createReadStream(icon);
+    for(const icon of icons) {
+        const glyph = fs.createReadStream(icon);
 
-        let relPath = path.relative(inputDir, icon);
-        let iconName = relPath.slice(0, -4).replace(/[\/\\]+/g, args.directory_separator);
+        const relPath = path.relative(inputDir, icon);
+        const iconName = relPath.slice(0, -4).replace(/[\/\\]+/g, args.directory_separator);
 
         if(!codePointMap[relPath]) {
             codePointMap[relPath] = codePointCounter++;
         }
 
-        let iconChar = String.fromCodePoint(codePointMap[relPath]);
+        const iconChar = String.fromCodePoint(codePointMap[relPath]);
 
         glyph.metadata = {
             unicode: [iconChar],
@@ -224,7 +224,7 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
         fontStream.write(glyph);
 
 
-        let className = `${cssPrefix}${iconName}`;
+        const className = `${cssPrefix}${iconName}`;
 
         let cssSelector = `.${cssId(className)}`;
         if(!cssPrefix) {
@@ -263,7 +263,7 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
         console.log(`Wrote ${codePointFile}`);
     });
 
-    let html = `
+    const html = `
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -351,12 +351,12 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
 });
 
 function createFonts() {
-    let svgString = fs.readFileSync(svgFontFile, {encoding: 'utf8'});
+    const svgString = fs.readFileSync(svgFontFile, {encoding: 'utf8'});
     const ttf = svg2ttf(svgString, {});
     fs.writeFileSync(ttfFontFile, ttf.buffer);
     console.log(`Wrote ${ttfFontFile}`);
 
-    let ttfBuffer = fs.readFileSync(ttfFontFile);
+    const ttfBuffer = fs.readFileSync(ttfFontFile);
     const woff = ttf2woff(ttfBuffer, {});
     fs.writeFileSync(woffFontFile, woff.buffer);
     console.log(`Wrote ${woffFontFile}`);

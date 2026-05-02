@@ -40,11 +40,11 @@ export const EMPTY_OBJECT = Object.freeze(Object.create(null));
  * Returns a new object without a prototype from an array of entries.
  */
 export function obj<T>(entries?: [T,PropertyKey][]) {
-    let o = Object.create(null);
+    const o = Object.create(null);
     if(!entries || !entries.length) {
         return o;
     }
-    for(let [k,v] of entries) {
+    for(const [k,v] of entries) {
         o[k] = v;
     }
     return o;

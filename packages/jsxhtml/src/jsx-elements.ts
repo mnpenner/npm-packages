@@ -26,9 +26,9 @@ export class JsxElement extends JsxNode {
 
     toString(): string {
         const normalizedTagName = String(this.tag).trim().toLowerCase()
-        let tag = esc.tagName(this.tag)
+        const tag = esc.tagName(this.tag)
         const {children, ...props} = this.props
-        let attrs = esc.attrs(props)
+        const attrs = esc.attrs(props)
         if(voidElements.has(this.tag)) {
             return `<${tag}${attrs}>`
         }

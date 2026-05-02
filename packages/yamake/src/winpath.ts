@@ -27,7 +27,7 @@ async function buildExeMap() {
 }
 
 let exeMap: null | Map<string, string> = null
-let cache = new Map<string, string>()
+const cache = new Map<string, string>()
 
 export async function resolveExe(cmd: string): Promise<string> {
     const key = Path.normalize(cmd).toLowerCase()

@@ -159,7 +159,7 @@ it('serializes arrays', () => {
     expect(jsSerialize([3, 1, 2])).toEqual('[3,1,2]')
     expect(jsSerialize(new Array(4))).toEqual('new Array(4)')
     expect(jsSerialize([undefined, undefined, undefined, undefined])).toEqual('[undefined,undefined,undefined,undefined]')
-    let a = new Array(4)
+    const a = new Array(4)
     a[1] = 4
     expect(jsSerialize(a)).toEqual('[,4,,,]')
 })
@@ -175,7 +175,7 @@ describe('symbols', () => {
 
     it('serializes well-known symbols', () => {
         const wellKnownSymbols = ["hasInstance", "isConcatSpreadable", "iterator", "match", "replace", "search", "species", "split", "toPrimitive", "toStringTag", "unscopables"]
-        for(let wks of wellKnownSymbols) {
+        for(const wks of wellKnownSymbols) {
             expect(jsSerialize(Symbol[wks])).toEqual(`Symbol.${wks}`)
         }
     })
@@ -242,7 +242,7 @@ describe('objects', () => {
         expect(jsSerialize({})).toEqual('{}')
         expect(jsSerialize({foo: 'bar', baz: 9})).toEqual('{foo:"bar",baz:9}')
         expect(jsSerialize({'foo bar': 'baz', corge: 'Waldo'})).toEqual('{"foo bar":"baz",corge:"Waldo"}')
-        let foo = Symbol.for('Foo')
+        const foo = Symbol.for('Foo')
         expect(jsSerialize({[foo]: 'bar'})).toEqual(`{[Symbol.for("Foo")]:"bar"}`)
     })
 
@@ -274,7 +274,7 @@ describe('objects', () => {
             }
         }
 
-        let joe = new Person('Joe')
+        const joe = new Person('Joe')
 
         expect(jsSerialize(joe)).toEqual(`new Person("Joe")`)
     })
@@ -282,7 +282,7 @@ describe('objects', () => {
     it('serializes toJSON', () => {
         // https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#toJSON()_behavior
 
-        let obj = {
+        const obj = {
             foo: 'foo',
             toJSON: function() {
                 return 'bar'
@@ -300,13 +300,13 @@ describe('recursion', () => {
     })
 
     it('serializes recursive sets', () => {
-        let s = new Set()
+        const s = new Set()
         // let rs = {s}
         s.add(s)
         expect(jsSerialize(s,{safe:false})).toEqual('($0=>($0=new Set,$0.add($0)))()');
 
 
-        let o: any = {a: 'perfect'}
+        const o: any = {a: 'perfect'}
         o.circle = o
         const b = [o, 1, o]
         const input = {
@@ -319,10 +319,10 @@ describe('recursion', () => {
     })
 
     it('serializes recursive objects', () => {
-        let foo = {foo: 1}
+        const foo = {foo: 1}
         expect(jsSerialize({a: foo, b: foo}, {safe: false})).toEqual("($0=>({a:($0={},Object.assign($0,{foo:1})),b:$0}))()") // shorter: (($0)=>({a:$0,b:$0}))({foo:1})
 
-        let o: any = {a: 'perfect'}
+        const o: any = {a: 'perfect'}
         o.circle = o
         expect(jsSerialize({apc: o}, {safe: false})).toEqual('($0=>({apc:($0={},Object.assign($0,{a:"perfect",circle:$0}))}))()')
         // expect(jsSerialize(o, {safe: false})).toEqual('(o=>(o={a:"perfect"},o.circle=o,o))()')
@@ -385,7 +385,7 @@ describe('references', () => {
     })
 
     it('serializes object recursive sealed references', () => {
-        let o: any = {}
+        const o: any = {}
         o.ref = o
         Object.seal(o)
         expect(jsSerialize([o,o])).toEqual("($0=>[($0={},Object.seal(Object.assign($0,{ref:$0}))),$0])()")
@@ -398,7 +398,7 @@ describe('references', () => {
         const b = new Array(5)
         expect(jsSerialize([b,b])).toEqual("($0=>[$0=new Array(5),$0])()")
 
-        let c = new Array(4)
+        const c = new Array(4)
         c[1] = 4
         expect(jsSerialize([c,c])).toEqual("($0=>[($0=new Array(4),$0[1]=4,$0),$0])()")
     })

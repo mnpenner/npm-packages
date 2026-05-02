@@ -1,6 +1,6 @@
 const PackDB = require('../PackDB');
 
-let db = new PackDB(`${__dirname}/db.json`);
+const db = new PackDB(`${__dirname}/db.json`);
 
 const baz = {
     baz: 9, 

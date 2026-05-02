@@ -49,18 +49,18 @@ function mergeAttrs(...attrDicts: IAttrs[]): IAttrs {
     if(attrDicts.length === 0) {
         return {};
     }
-    let eventHandlers: {[attr:string]: Array<EventHandler|RefCallback>} = {};
-    let classes = [];
-    let merged = attrDicts[0];
+    const eventHandlers: {[attr:string]: Array<EventHandler|RefCallback>} = {};
+    const classes = [];
+    const merged = attrDicts[0];
     
-    for(let k of Object.keys(merged)) {
+    for(const k of Object.keys(merged)) {
         if(merged[k] === undefined) {
             delete merged[k];
         }
     }
 
-    for(let attrs of attrDicts) {
-        for(let attr of Object.keys(attrs)) {
+    for(const attrs of attrDicts) {
+        for(const attr of Object.keys(attrs)) {
             const value = attrs[attr];
             
             if(value === undefined) {
@@ -85,7 +85,7 @@ function mergeAttrs(...attrDicts: IAttrs[]): IAttrs {
         merged.className = cc(classes);
     }
 
-    for(let attr of Object.keys(eventHandlers)) {
+    for(const attr of Object.keys(eventHandlers)) {
         const funcs = eventHandlers[attr];
         
         if(funcs.length === 1) {
@@ -93,8 +93,8 @@ function mergeAttrs(...attrDicts: IAttrs[]): IAttrs {
         } else {
             merged[attr] = (...args: any[]) => {
                 let result = undefined;
-                for(let func of funcs) {
-                    let params: any[] = result === undefined ? args : [...args, result];
+                for(const func of funcs) {
+                    const params: any[] = result === undefined ? args : [...args, result];
                     result = (func as Function)(...params);
                 }
                 return result;

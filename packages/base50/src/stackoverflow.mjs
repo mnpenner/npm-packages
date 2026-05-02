@@ -32,7 +32,7 @@ class ChunkedBufferEncoder {
      */
     _encodToChars(val, nChars) {
         let str = '';
-        let base = BigInt(this.base);
+        const base = BigInt(this.base);
         for (let i = 0; i < nChars; ++i) {
             str = this.alphabet[val % base] + str;
             val = val / base;
@@ -47,19 +47,19 @@ class ChunkedBufferEncoder {
         let result = '';
         let i;
         for (i = 0; i + this.bytesPerChunk <= data.length; i += this.bytesPerChunk) {
-            let val = this._getBigInt(data, i, i + this.bytesPerChunk);
+            const val = this._getBigInt(data, i, i + this.bytesPerChunk);
             result += this._encodToChars(val, this.charsPerChunk);
         }
-        let remNumBytes = data.length - i;
-        let remNumChars = this._getNumOfChars(remNumBytes);
-        let val = this._getBigInt(data, i, i + remNumBytes);
+        const remNumBytes = data.length - i;
+        const remNumChars = this._getNumOfChars(remNumBytes);
+        const val = this._getBigInt(data, i, i + remNumBytes);
         result += this._encodToChars(val, remNumChars);
         return result;
     }
 
     _decodeToBigInt(code, start, end) {
         let val = 0n;
-        let base = BigInt(this.base);
+        const base = BigInt(this.base);
         for (let i = start; i < end; ++i) {
             val = val * base + BigInt(this.reverse.get(code[i]));
         }
@@ -74,17 +74,17 @@ class ChunkedBufferEncoder {
     }
 
     decode(code) {
-        let numBytes = Math.floor(code.length / this.coef);
-        let data = new Uint8Array(numBytes);
+        const numBytes = Math.floor(code.length / this.coef);
+        const data = new Uint8Array(numBytes);
         let i, k = 0;
         for (i = 0; i + this.charsPerChunk <= code.length; i += this.charsPerChunk) {
-            let val = this._decodeToBigInt(code, i, i + this.charsPerChunk);
+            const val = this._decodeToBigInt(code, i, i + this.charsPerChunk);
             this._writeValueToData(data, k, k + this.bytesPerChunk, val);
             k += this.bytesPerChunk;
         }
-        let remNumChars = code.length - i;
-        let remNumBytes = Math.floor(remNumChars / this.coef);
-        let val = this._decodeToBigInt(code, i, i + remNumChars);
+        const remNumChars = code.length - i;
+        const remNumBytes = Math.floor(remNumChars / this.coef);
+        const val = this._decodeToBigInt(code, i, i + remNumChars);
         this._writeValueToData(data, k, k + remNumBytes, val);
         return data;
     }

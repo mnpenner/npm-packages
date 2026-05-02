@@ -38,7 +38,7 @@ export function assert(condition: any): void | never {
 
 // TODO: take in a "compare" func so this works on more than just numbers.
 export function binarySearch(nums: number[], target: number): number {
-    let left: number = 0
+    let left = 0
     let right: number = nums.length - 1
 
     while(left <= right) {

@@ -1,7 +1,7 @@
 import { isArray, isBigInt, isBoolean, isFunction, isNumberLike, isObject, isRegExp, isString, isStringLike, isSymbol } from '@mpen/is-type'
 import { findFunction } from './util'
 
-let nativeFuncs = new Map<Function,string>()
+const nativeFuncs = new Map<Function,string>()
 const isRaw = Symbol('isRaw')
 let wellKnownSymbols: Map<symbol,string>
 const EMPTY_ARRAY = Object.freeze<any>([])
@@ -9,9 +9,9 @@ const EMPTY_ARRAY = Object.freeze<any>([])
 
 
 function merge<T extends {}>(target: T, ...sources: Array<undefined | Partial<T>>): T {
-    for(let obj of sources) {
+    for(const obj of sources) {
         if(obj) {
-            for(let key of Object.keys(obj)) {
+            for(const key of Object.keys(obj)) {
                 // @ts-ignore
                 if(obj[key] !== undefined) {
                     // @ts-ignore
@@ -54,7 +54,7 @@ function startSerialize(object: any, options?: Partial<Options>): string {
     const refs = new Map(dupes)
     // console.log(refs)
 
-    let ctx: Context = {
+    const ctx: Context = {
         seen: new Set,
         refs,
         opts: Object.freeze(merge<Options>({
@@ -84,7 +84,7 @@ const STRING_REF_MIN_LENGTH = 12
 function referenceCount(object: any): Map<any,number> {
     const m = new Map
     function r(o: any) {
-        let c = m.get(o)
+        const c = m.get(o)
         if(c)  {
             m.set(o,c+1)
             return
@@ -130,7 +130,7 @@ function serializeArray(obj: any[], ctx: Context) {
     if(obj.length === 0) {
         return `${assign}[]`
     }
-    let sb: string[] = []
+    const sb: string[] = []
     let hasProp = false
     let isSparse = false
     for(let i = 0; i < obj.length; ++i) {
@@ -152,7 +152,7 @@ function serializeArray(obj: any[], ctx: Context) {
     if(varName) {
         if(isSparse) {
             // FIXME: this is re-doing work done in the above loop...optimize this
-            let sb=[`(${varName}=new Array(${obj.length})`]
+            const sb=[`(${varName}=new Array(${obj.length})`]
             for(let i = 0; i < obj.length; ++i) {
                 if(obj.hasOwnProperty(i)) {
                     sb.push(`${varName}[${i}]=${serializeAny(obj[i], ctx)}`)
@@ -234,7 +234,7 @@ function serializeAnySymbol(obj: symbol, ctx: Context) {
                 .map(k => [Symbol[k], k])
         )
     }
-    let symbolName = wellKnownSymbols.get(obj)
+    const symbolName = wellKnownSymbols.get(obj)
     if(symbolName) {
         return `Symbol.${symbolName}`
     }
@@ -242,7 +242,7 @@ function serializeAnySymbol(obj: symbol, ctx: Context) {
 }
 
 function serializeNativeFunction(obj: Function, ctx: Context) {
-    let cachedPath = nativeFuncs.get(obj)
+    const cachedPath = nativeFuncs.get(obj)
 
     if(cachedPath !== undefined) {
         return cachedPath
@@ -516,8 +516,8 @@ function serializeObject(obj: any, ctx: Context) {
 }
 
 function serializePlainObject(obj: any,  ctx: Context) {
-    let tmp: string[] = []
-    for(let key of Reflect.ownKeys(obj)) {
+    const tmp: string[] = []
+    for(const key of Reflect.ownKeys(obj)) {
         tmp.push(serializePropertyName(key, ctx) + ':' + serializeAny(obj[key], ctx))
     }
     return '{' + tmp.join(',') + '}'
@@ -531,9 +531,9 @@ jsSerialize.raw = function raw(jsCode: string) {
 }
 
 function serializeSymbol(sym: symbol, ctx: Context) {
-    let key = Symbol.keyFor(sym)
+    const key = Symbol.keyFor(sym)
     if(key === undefined) {
-        let m = sym.toString().match(/^Symbol\((.+)\)$/)
+        const m = sym.toString().match(/^Symbol\((.+)\)$/)
         if(m) {
             return `Symbol(${serializeString(m[1], ctx)})`
         }

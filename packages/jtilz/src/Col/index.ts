@@ -60,13 +60,13 @@ export function filterMap<TVal,TRet>(iter: Iterable<TVal>, callback: (v: TVal, k
 export function filterMap<TVal,TRet>(obj: any, callback: Function): any {
     
     if(isPlainObject(obj)) {
-        let accum = Object.create(null);
+        const accum = Object.create(null);
 
         // There's lots of ways to iterate an object, hopefully this was a good choice
         // You can't remap the keys with this
         // And the callback takes (value,key) instead of [key,value]
-        for(let [k,v] of Object.entries(obj)) {
-            let y = callback(v,k,obj);
+        for(const [k,v] of Object.entries(obj)) {
+            const y = callback(v,k,obj);
             if(y !== __skip__) {
                 accum[k] = y as TRet;
             }
@@ -74,11 +74,11 @@ export function filterMap<TVal,TRet>(obj: any, callback: Function): any {
 
         return accum;
     } else {
-        let accum = [];
+        const accum = [];
 
         let i = 0;
-        for(let x of obj as Iterable<TVal>) {
-            let y = callback(x, i++, obj);
+        for(const x of obj as Iterable<TVal>) {
+            const y = callback(x, i++, obj);
             if(y !== __skip__) {
                 accum.push(y as TRet);
             }
@@ -102,18 +102,18 @@ export type MapCallback<TVal,TRet> = (value: TVal, index: number, iterable: Iter
  * @param callback Function that produces an element of the new Array, taking one argument: the current element being processed.
  */
 export function mapArray<TVal,TRet>(iterable: Iterable<TVal>, callback: MapCallback<TVal,TRet>): TRet[] {
-    let out = [];
+    const out = [];
     let i = 0;
-    for(let x of iterable) {
+    for(const x of iterable) {
         out.push(callback(x, i++, iterable));
     }
     return out;
 }
 
 export function filterArray<TVal>(iterable: Iterable<TVal>, callback: (value: TVal, index: number, iterable: Iterable<TVal>) => boolean): TVal[] {
-    let out = [];
+    const out = [];
     let i = 0;
-    for(let x of iterable) {
+    for(const x of iterable) {
         if(callback(x, i++, iterable)) {
             out.push(x);
         }
@@ -167,7 +167,7 @@ export function reduceArray<TVal>(
     // because if `initialValue` is not provided, we have to treat
     // the first element specially. For simplicity, just convert
     // to an array! N.B. strings will be split into chars.
-    let arr = toArrayStrict(iterable);
+    const arr = toArrayStrict(iterable);
     if(initialValue === undefined) {
         return arr.reduce(callback); // `initialValue` arg has to be fully omitted
     }
@@ -180,7 +180,7 @@ export function groupBy<T>(
     grouper: (val: T, idx: number, iter: Iterable<T>) => PropertyKey
 ): IDictionary<T[]> {
     return reduceArray<T,IDictionary<T[]>>(iterable, (acc, val, idx) => {
-        let key = grouper(val, idx, iterable);
+        const key = grouper(val, idx, iterable);
         if (acc[key]) {
             acc[key].push(val);
         } else {

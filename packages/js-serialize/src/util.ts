@@ -10,9 +10,9 @@
  * @returns {null|Array.<string>}
  */
 export function findFunction(lib: any, fn: Function, maxDepth:number=3):null|string[] {
-    let queue: [path:string[],lib:any][] = [];
+    const queue: [path:string[],lib:any][] = [];
     let path: string[] = [];
-    let seen = new Set();
+    const seen = new Set();
     --maxDepth;
     for(;;) {
         if(lib[fn.name] === fn) {
@@ -20,7 +20,7 @@ export function findFunction(lib: any, fn: Function, maxDepth:number=3):null|str
         }
         seen.add(lib);
         if(path.length < maxDepth) {
-            for(let n of Object.getOwnPropertyNames(lib)) {
+            for(const n of Object.getOwnPropertyNames(lib)) {
                 if(n[0] !== '_' && n !== 'prototype' && lib[n] && !seen.has(lib[n])) {
                     queue.push([[...path, n], lib[n]]);
                 }

@@ -109,21 +109,21 @@ describe(mergeAttrs.name, () => {
     })
 
     it(`doesn't mutate styles`, () => {
-        let style = {foo: 'bar'}
-        let result = mergeAttrs({style}, {style: {baz: 99}})
+        const style = {foo: 'bar'}
+        const result = mergeAttrs({style}, {style: {baz: 99}})
         expect(style).toEqual({foo: 'bar'})
     })
 
     it('merges event handlers', () => {
         const noop = () => {
         }
-        let result1 = mergeAttrs({onClick: noop}, {onClick: undefined})
+        const result1 = mergeAttrs({onClick: noop}, {onClick: undefined})
         expect(result1.onClick).toBe(noop)
 
         const val = Symbol('mock')
         const handler1 = jest.fn(() => val)
         const handler2 = jest.fn()
-        let result2 = mergeAttrs({onClick: handler1}, {onClick: handler2})
+        const result2 = mergeAttrs({onClick: handler1}, {onClick: handler2})
         const ev = {}
         result2.onClick(ev)
         expect(handler1).toBeCalledWith(ev)
@@ -134,7 +134,7 @@ describe(mergeAttrs.name, () => {
         const val = Symbol('mock')
         const handler1 = jest.fn(() => val)
         const handler2 = jest.fn()
-        let result2 = mergeAttrs({ref: handler1}, {ref: handler2})
+        const result2 = mergeAttrs({ref: handler1}, {ref: handler2})
         const node = {}
         result2.ref(node)
         expect(handler1).toBeCalledWith(node)

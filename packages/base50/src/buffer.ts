@@ -53,9 +53,9 @@ export function bufToBase50(buf: Iterable<number>): string {
 // console.log(charToNum('0'))
 
 export function base50ToBuf(base50Str: string): Uint8Array {
-    let sextets:number[] = []
+    const sextets:number[] = []
     let carry = 0
-    let divisor = 15
+    const divisor = 15
 
     for(let i=0; i<base50Str.length; ++i) {
         const num = charToNum(base50Str[i])+carry

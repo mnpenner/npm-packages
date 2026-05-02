@@ -21,7 +21,7 @@ async function ask(question) {
 async function copyDir(src, dest) {
     const entries = await readDir(src, {withFileTypes: true});
     await mkdir(dest);
-    for(let entry of entries) {
+    for(const entry of entries) {
         const srcPath = Path.join(src, entry.name);
         const destPath = Path.join(dest, entry.name);
         if(entry.isDirectory()) {

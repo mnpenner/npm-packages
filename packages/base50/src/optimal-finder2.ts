@@ -40,7 +40,7 @@ function findOptimal(alphaSize: number): Record<string, number> {
 
         const overhead = (c/bytes-1)*100
 
-        let ret = {
+        const ret = {
             base: alphaSize,
             chars: c,
             maxVal,
@@ -68,7 +68,7 @@ function findOptimal(alphaSize: number): Record<string, number> {
 async function main(argv: string[]): Promise<number | void> {
     const formatter = Intl.NumberFormat(undefined, {maximumFractionDigits: 3})
 
-    let results = []
+    const results = []
 
     for(let i = 2; i <= 256; ++i) {
         results.push(findOptimal(i))
@@ -78,7 +78,7 @@ async function main(argv: string[]): Promise<number | void> {
     sortByKey(results, 'wasted')
 
     for(const [i, r] of results.entries()) {
-        let maxVal = r.maxVal > 999_999_999 ? '2^'+formatter.format(log2(r.maxVal)) : formatter.format(r.maxVal)
+        const maxVal = r.maxVal > 999_999_999 ? '2^'+formatter.format(log2(r.maxVal)) : formatter.format(r.maxVal)
         console.log(`${String(i + 1).padStart(3, ' ')}. Base ${String(r.base).padEnd(3, ' ')} : ${r.bytes} bytes <-> ${r.chars} chars; MaxVal=${maxVal}, WastedBits=${formatter.format(r.wasted)}, Overhead=${formatter.format(r.overhead)}%`)
     }
 }

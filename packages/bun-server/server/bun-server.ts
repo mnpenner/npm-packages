@@ -16,9 +16,9 @@ export type SimpleServeOptions = Omit<ServeOptions,'fetch'> & {
     listen?: (server: Server) => void
 }
 
-declare global {  /* eslint-disable no-var */
+declare global {   
     var requestId: number
-}  /* eslint-enable */
+}   
 
 globalThis.requestId ??= 0
 

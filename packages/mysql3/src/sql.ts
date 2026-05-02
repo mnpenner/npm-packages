@@ -72,7 +72,7 @@ export function escapeValue(value: Value): SqlFrag {
 }
 
 export function sql(strings: TemplateStringsArray, ...values: Value[]): SqlFrag {
-    let out = [];
+    const out = [];
     let i = 0;
     for (; i < values.length; ++i) {
         out.push(strings[i], escapeValue(values[i]).toSqlString());

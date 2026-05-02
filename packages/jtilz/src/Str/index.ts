@@ -11,7 +11,7 @@ export function replaceAll(this: string, search: string, replacement: string): s
  * @param char A single character
  */
 export function percentEncode(char: string): string {
-    let codePoint = char.codePointAt(0);
+    const codePoint = char.codePointAt(0);
     if(codePoint === undefined) {
         return '';
     }

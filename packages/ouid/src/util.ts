@@ -13,7 +13,7 @@ export function fromBase64Url(buf: string): Buffer {
 export function base36ToBigInt(str: string): bigint {
     let value = 0n
     const base = 36n
-    for(let char of str) {
+    for(const char of str) {
         const digit = parseInt(char, 36)
         value = value * base + BigInt(digit)
     }

@@ -223,7 +223,7 @@ async function main(mainArgs: string[]): Promise<number | void> {
             }
         }
 
-        let nodeScript: string = rule.nodeScript ?? rule.node ?? rule.jsBin ?? rule.jsbin;
+        const nodeScript: string = rule.nodeScript ?? rule.node ?? rule.jsBin ?? rule.jsbin;
         let cmd: string;
         let cmdArgs: string[]
         let shell = rule.shell;

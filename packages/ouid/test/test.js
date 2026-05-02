@@ -14,9 +14,9 @@ console.log([
     uuid(),
 ]);
 
-let time = process.hrtime();
+const time = process.hrtime();
 uuid();
-let elapsed = process.hrtime(time);
+const elapsed = process.hrtime(time);
 console.log(elapsed[0]*1e9 + elapsed[1]);
 
 function hrtimeToMs(hrtimePair) {
