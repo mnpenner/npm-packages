@@ -29,9 +29,13 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
   },
+  "dependencies": {
+    "@mpen/is-type": "workspace:*"
+  },
   "exports": {
-    "./index.node": "./dist/index.node.mjs",
-    "./index.web": "./dist/index.web.mjs",
+    ".": "./dist/index.mjs",
+    "./node": "./dist/node.mjs",
+    "./web": "./dist/web.mjs",
     "./package.json": "./package.json"
   }
 }

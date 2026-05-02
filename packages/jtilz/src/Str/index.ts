@@ -7,10 +7,12 @@ import {decToHex} from '../Nbr';
  * @param search - The string to search for.
  * @param replacement - The string to replace with.
  * @returns The new string.
+ * @deprecated Use [`String.prototype.replaceAll`]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replaceAll} instead.
  */
 export function replaceAll(this: string, search: string, replacement: string): string {
     return this.split(search).join(replacement);
 }
+
 
 /**
  * Percent-encodes a character.

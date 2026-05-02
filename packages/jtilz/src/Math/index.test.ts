@@ -1,3 +1,4 @@
+import {test, expect} from 'bun:test';
 import {divQR} from './index';
 
 test(divQR.name, () => {

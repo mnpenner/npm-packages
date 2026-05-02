@@ -1,5 +1,5 @@
 import * as Util from 'node:util';
-import {isString} from '../Lang/is';
+import {isString} from '@mpen/is-type';
 
 // TODO: should we export this...? as what?
 /** @internal */

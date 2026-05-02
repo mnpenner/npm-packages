@@ -1,3 +1,4 @@
+import {test, expect, describe, it} from 'bun:test';
 import {isEmpty, clone} from './value';
 
 test(isEmpty.name, () => {

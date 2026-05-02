@@ -22,10 +22,15 @@ export function promisify<TResult>(nodeFunction: (...args: any[]) => any): (...a
     };
 }
 
-/** @internal */
+/**
+ * Represents a fulfilled promise state.
+ */
 export const FULFILLED = 'fulfilled';
-/** @internal */
+/**
+ * Represents a rejected promise state.
+ */
 export const REJECTED = 'rejected';
+
 
 /**
  * Result of a settled promise.
@@ -40,6 +45,7 @@ export interface PromiseState<T> {
  * Waits for all promises to settle (either fulfill or reject).
  * @param promises - List of promises.
  * @returns Promise resolving to list of results.
+ * @deprecated Use [`Promise.allSettled`]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled} instead.
  */
 export function allSettled<T>(promises: Array<Promise<T>|T>): Promise<PromiseState<T>[]> {
     return Promise.all(promises.map(p => Promise.resolve(p).then(v => ({
@@ -50,4 +56,5 @@ export function allSettled<T>(promises: Array<Promise<T>|T>): Promise<PromiseSta
         reason: r,
     }))));
 }
+
 

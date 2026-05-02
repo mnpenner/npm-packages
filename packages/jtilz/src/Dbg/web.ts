@@ -1,4 +1,4 @@
-import * as T from '../Lang/is';
+import * as T from '@mpen/is-type';
 import type {Console} from '../interfaces';
 
 

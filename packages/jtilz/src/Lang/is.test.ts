@@ -1,4 +1,5 @@
-import * as Type from './is';
+import {test, expect} from 'bun:test';
+import * as Type from './index';
 
 test(Type.isInteger.name, () => {
     expect(Type.isInteger(1.1)).toBe(false);
@@ -50,7 +51,7 @@ test(Type.isPlainObject.name, () => {
     expect(Type.isPlainObject(new Date)).toBe(false);
     expect(Type.isPlainObject([])).toBe(false);
     expect(Type.isPlainObject(()=>{})).toBe(false);
-    expect(Type.isPlainObject(sneakyObject)).toBe(true);
+    expect(Type.isPlainObject(sneakyObject)).toBe(false);
 })
 
 test(Type.isObject.name, () => {

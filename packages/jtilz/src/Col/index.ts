@@ -1,4 +1,4 @@
-import {isArray, isIterable, isNullish, isPlainObject, isString} from '../Lang/is';
+import {isArray, isIterable, isNilOrNaN, isPlainObject, isString} from '@mpen/is-type';
 import {getType} from '../Dbg/shared';
 import chain from '../Seq';
 import type {IDictionary} from '../interfaces';
@@ -7,8 +7,10 @@ import {allSettled, FULFILLED} from '../Lang/promise';
 import {flatten} from '../Arr';
 
 
-/** @internal */
-export const SKIP = Symbol('skip');
+/**
+ * Represents a signal to skip the current iteration in a loop or filter.
+ */
+export const SKIP: unique symbol = Symbol('SKIP');
 
 /**
  * Converts any object to an array. In most cases this means
@@ -28,9 +30,10 @@ export const SKIP = Symbol('skip');
  * ```
  */
 export function toArray(obj: any): any[] {
-    if(isNullish(obj)) {
+    if(isNilOrNaN(obj)) {
         return [];
     }
+
     if(isArray(obj)) {
         return obj;
     }

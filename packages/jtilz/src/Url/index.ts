@@ -1,5 +1,6 @@
 import {SKIP, filterMap} from '../Col';
-import {isArray} from '../Lang/is';
+import {isArray} from '@mpen/is-type';
+
 
 /**
  * Encodes a value for use in a URI.

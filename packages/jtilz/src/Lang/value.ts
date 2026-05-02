@@ -1,4 +1,4 @@
-import * as Type from './is';
+import * as Type from '@mpen/is-type';
 
 /**
  * Identity function. Returns whatever it's given as-is.
@@ -44,7 +44,7 @@ export const EMPTY_OBJECT = Object.freeze(Object.create(null));
  */
 export function obj<T>(entries?: [T,PropertyKey][]) {
     const o = Object.create(null);
-    if(!entries || !entries.length) {
+    if(!entries?.length) {
         return o;
     }
     for(const [k,v] of entries) {

@@ -1,8 +1,9 @@
+import {test, expect, describe} from 'bun:test';
 import {
     SKIP, filterMap, filterMapAsync, flatMap, groupBy, mapArray, reduceArray, toArray, toArrayStrict,
     toSet
 } from './index';
-import {isIterable} from '../Lang/is';
+import {isIterable} from '@mpen/is-type';
 
 
 const numbers = [1, 2, 3, 4, 5];

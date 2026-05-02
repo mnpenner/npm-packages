@@ -1,5 +1,5 @@
 import {SKIP, filterMap} from '../Col';
-import {isFunction} from './is';
+import {isFunction} from '@mpen/is-type';
 import type {IDictionary} from '../interfaces';
 
 /**
