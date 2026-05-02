@@ -1,9 +1,7 @@
 /**
  * A dictionary of values.
  */
-export interface IDictionary<TValue> {
-    [key: string]: TValue // TS1023 prevents us from allowing arbitrary keys (symbols)
-}
+export type IDictionary<TValue> = Record<PropertyKey, TValue>;
 
 // TS2461: Type 'Iterable' is not an array type.
 // https://github.com/Microsoft/TypeScript/issues/4130
@@ -24,10 +22,8 @@ export interface Console {
     groupEnd(): void;
     info(...optionalParams: any[]): void;
     log(...optionalParams: any[]): void;
-    msIsIndependentlyComposed(element: any): boolean;
     profile(reportName?: string): void;
     profileEnd(): void;
-    select(element: any): void;
     table(...data: any[]): void;
     time(timerName?: string): void;
     timeEnd(timerName?: string): void;

@@ -55,7 +55,7 @@ export function toArray(obj: any): any[] {
 export function toArrayStrict<T>(obj: Iterable<T>): T[] {
     if(obj) {
         if(isArray(obj)) {
-            return obj;
+            return obj as T[];
         }
         if(isIterable(obj)) {
             return [...obj];
@@ -162,7 +162,7 @@ export function filterArray<TVal>(iterable: Iterable<TVal>, callback: (value: TV
  * @param filterCb - Sync filter function.
  * @returns Promise resolving to filtered array.
  */
-export function filterAsync<TInput,TResult>(iterable: Iterable<TInput>, mapCb: MapCallback<TInput,Promise<TResult>>, filterCb: (el: TResult) => boolean = identity): Promise<TInput[]> {
+export function filterAsync<TInput,TResult>(iterable: Iterable<TInput>, mapCb: MapCallback<TInput,Promise<TResult>>, filterCb: (el: TResult) => boolean = (el: any) => !!el): Promise<TInput[]> {
     return Promise.all(mapArray(iterable,mapCb))
         .then(results => filterArray(iterable,(_, i) => filterCb(results[i])));
 }

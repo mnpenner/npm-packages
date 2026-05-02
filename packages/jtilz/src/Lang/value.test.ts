@@ -52,7 +52,8 @@ describe(shallowClone.name, () => {
 
     it('clones custom types', () => {
         class Shape {
-            constructor(name) {
+            name: string;
+            constructor(name: string) {
                 this.name = name;
             }
             
@@ -69,27 +70,27 @@ describe(shallowClone.name, () => {
     });
 
     it('clones dates', () => {
-        const orig = new Date;
+        const orig = new Date() as any;
         orig.x = {};
-        const copy = shallowClone(orig);
+        const copy = shallowClone(orig) as any;
         expect(copy).toEqual(orig);
         expect(copy).not.toBe(orig);
         expect(copy.x).toBe(orig.x);
     });
 
     it('clones sets', () => {
-        const orig = new Set([3,1,1,2]);
+        const orig = new Set([3,1,1,2]) as any;
         orig.x = {};
-        const copy = shallowClone(orig);
+        const copy = shallowClone(orig) as any;
         expect(copy).toEqual(orig);
         expect(copy).not.toBe(orig);
         expect(copy.x).toBe(orig.x);
     });
 
     it('clones maps', () => {
-        const orig = new Map([['A',1],['B',2]]);
+        const orig = new Map([['A',1],['B',2]]) as any;
         orig.x = {};
-        const copy = shallowClone(orig);
+        const copy = shallowClone(orig) as any;
         expect(copy).toEqual(orig);
         expect(copy).not.toBe(orig);
         expect(copy.x).toBe(orig.x);
@@ -126,18 +127,18 @@ describe(shallowClone.name, () => {
     });
 
     it('clones regexes', () => {
-        const orig = /foo/i;
+        const orig = /foo/i as any;
         orig.x = {};
-        const copy = shallowClone(orig);
+        const copy = shallowClone(orig) as any;
         expect(copy).toEqual(orig);
         expect(copy).not.toBe(orig);
         expect(copy.x).toBe(orig.x);
     });
 
     it('clones functions', () => {
-        function orig(x) { return x*3 };
+        const orig = (function orig(x: number) { return x*3 }) as any;
         orig.x = {};
-        const copy = shallowClone(orig);
+        const copy = shallowClone(orig) as any;
         expect(copy.name).toBe(orig.name);
         expect(copy(2)).toBe(6);
         expect(copy).not.toBe(orig);

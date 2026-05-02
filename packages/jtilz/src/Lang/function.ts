@@ -13,5 +13,5 @@ export function wrapMethods(
     module: IDictionary<any>, 
     wrapFn: (fn: (...args: any[]) => any) => (...args: any[]) => any
 ): IDictionary<(...args: any[]) => any> {
-    return filterMap(module, v => isFunction(v) ? wrapFn(v) : SKIP);
+    return filterMap<any, (...args: any[]) => any>(module, v => isFunction(v) ? wrapFn(v) : SKIP);
 }

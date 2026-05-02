@@ -3,7 +3,7 @@ import type {Console} from '../interfaces';
 
 
 export function log(...args: any[]) {
-    (console as Console).log(...join(args.map(formatDevTools),' '));
+    (console as any as Console).log(...join(args.map(formatDevTools),' '));
 }
 
 function formatDevTools(obj: any) {
@@ -168,8 +168,8 @@ function fdt(obj: any, depth: number): string[] {
 }
 
 
-function serializeSymbol(sym: symbol) {
-    const key = Symbol.keyFor(sym);
+function serializeSymbol(sym: symbol | Symbol) {
+    const key = Symbol.keyFor(sym.valueOf() as symbol);
     if(key === undefined) {
         const m = sym.toString().match(/^Symbol\((.+)\)$/);
         if(m) {

@@ -11,7 +11,7 @@ export const BASE = ALPHABET.length
 
 const REVERSE = new Map(Array.from(ALPHABET, (v, i) => [v, i]))
 
-console.log(REVERSE)
+// console.log(REVERSE)
 
 
 export function charToNum(ch: string): number {
