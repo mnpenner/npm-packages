@@ -19,7 +19,7 @@ These are of varying quality. Use at your own risk.
 | `@mpen/logger` | — | [logger](https://github.com/mnpenner/npm-packages/tree/main/packages/logger) | — | — | — |
 | `@mpen/progressbar` | — | [progressbar](https://github.com/mnpenner/npm-packages/tree/main/packages/progressbar) | — | — | — |
 | `@mpen/react-basic-inputs` | 0.4.0 | [react-basic-inputs](https://github.com/mnpenner/npm-packages/tree/main/packages/react-basic-inputs) | 1.38KB / 3.1KB | 68% 𝑓 / 86% L | [Docs](https://mnpenner.github.io/npm-packages/react-basic-inputs/)  |
-| `@mpen/react-global-state` | 0.1.0 | [react-global-state](https://github.com/mnpenner/npm-packages/tree/main/packages/react-global-state) | 3.24KB / 10.82KB | 87% 𝑓 / 94% L | — |
+| `@mpen/react-global-state` | 0.1.0 | [react-global-state](https://github.com/mnpenner/npm-packages/tree/main/packages/react-global-state) | 4.37KB / 15.18KB | 88% 𝑓 / 94% L | — |
 | `@mpen/react-router` | — | [react-router](https://github.com/mnpenner/npm-packages/tree/main/packages/react-router) | — | 90% 𝑓 / 91% L | — |
 | `@mpen/rerouter` | — | [rerouter](https://github.com/mnpenner/npm-packages/tree/main/packages/rerouter) | — | 93% 𝑓 / 99% L | — |
 | `@mpen/server-router` | — | [server-router](https://github.com/mnpenner/npm-packages/tree/main/packages/server-router) | — | 92% 𝑓 / 94% L | — |
