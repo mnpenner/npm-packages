@@ -3,3 +3,9 @@
 - Use typescript 6
 - Target esnext/bundler/module
 - This is a Mercurial repo that is also pushed to GitHub via Hg-Git
+- For new packages, update the root `tsconfig.json` and `eslint.config.ts` as needed
+- Add detailed [TSDoc](https://tsdoc.org) comments including @example blocks, @param and @returns to all public APIs,
+  including all function overloads
+    - The public API is the `entry` point(s) listed in `tsdown.config.ts`
+    - Link to other functions and classes using this syntax: [`exampleFunc`]{@link exampleFunc}
+    - Link to methods using this syntax: [`Class.method`]{@link Class#method}

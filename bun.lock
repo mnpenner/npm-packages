@@ -426,6 +426,23 @@
         "vite": "^5.2.0",
       },
     },
+    "packages/react-global-state": {
+      "name": "@mpen/react-global-state",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@types/bun": "latest",
+        "@types/react": "^19",
+        "react": "catalog:",
+        "tsdown": "catalog:",
+        "typescript": "^6.0.2",
+      },
+      "peerDependencies": {
+        "react": "^19",
+      },
+      "optionalPeers": [
+        "react",
+      ],
+    },
     "packages/react-router": {
       "name": "@mpen/react-router",
       "bin": {
@@ -530,6 +547,9 @@
         "ttf2woff": "^2",
         "ttf2woff2": "^8.0.1",
       },
+    },
+    "packages/ts-types": {
+      "name": "@mpen/ts-types",
     },
     "packages/uri-template": {
       "name": "@mpen/uri-template",
@@ -1028,11 +1048,15 @@
 
     "@mpen/react-basic-inputs": ["@mpen/react-basic-inputs@workspace:packages/react-basic-inputs"],
 
+    "@mpen/react-global-state": ["@mpen/react-global-state@workspace:packages/react-global-state"],
+
     "@mpen/react-router": ["@mpen/react-router@workspace:packages/react-router"],
 
     "@mpen/rerouter": ["@mpen/rerouter@workspace:packages/rerouter"],
 
     "@mpen/server-router": ["@mpen/server-router@workspace:packages/server-router"],
+
+    "@mpen/ts-types": ["@mpen/ts-types@workspace:packages/ts-types"],
 
     "@mpen/uri-template": ["@mpen/uri-template@workspace:packages/uri-template"],
 
@@ -4149,6 +4173,8 @@
     "@mpen/react-basic-inputs/typedoc": ["typedoc@0.26.11", "", { "dependencies": { "lunr": "^2.3.9", "markdown-it": "^14.1.0", "minimatch": "^9.0.5", "shiki": "^1.16.2", "yaml": "^2.5.1" }, "peerDependencies": { "typescript": "4.6.x || 4.7.x || 4.8.x || 4.9.x || 5.0.x || 5.1.x || 5.2.x || 5.3.x || 5.4.x || 5.5.x || 5.6.x" }, "bin": { "typedoc": "bin/typedoc" } }, "sha512-sFEgRRtrcDl2FxVP58Ze++ZK2UQAEvtvvH8rRlig1Ja3o7dDaMHmaBfvJmdGnNEFaLTpQsN8dpvZaTqJSu/Ugw=="],
 
     "@mpen/react-basic-inputs/typedoc-plugin-missing-exports": ["typedoc-plugin-missing-exports@3.1.0", "", { "peerDependencies": { "typedoc": "0.26.x || 0.27.x" } }, "sha512-Sogbaj+qDa21NjB3SlIw4JXSwmcl/WOjwiPNaVEcPhpNG/MiRTtpwV81cT7h1cbu9StpONFPbddYWR0KV/fTWA=="],
+
+    "@mpen/react-global-state/typescript": ["typescript@6.0.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
 
     "@mpen/react-router/tsdown": ["tsdown@0.18.4", "", { "dependencies": { "ansis": "^4.2.0", "cac": "^6.7.14", "defu": "^6.1.4", "empathic": "^2.0.0", "hookable": "^6.0.1", "import-without-cache": "^0.2.5", "obug": "^2.1.1", "picomatch": "^4.0.3", "rolldown": "1.0.0-beta.57", "rolldown-plugin-dts": "^0.20.0", "semver": "^7.7.3", "tinyexec": "^1.0.2", "tinyglobby": "^0.2.15", "tree-kill": "^1.2.2", "unconfig-core": "^7.4.2", "unrun": "^0.2.21" }, "peerDependencies": { "@arethetypeswrong/core": "^0.18.1", "@vitejs/devtools": "*", "publint": "^0.3.0", "typescript": "^5.0.0", "unplugin-lightningcss": "^0.4.0", "unplugin-unused": "^0.5.0" }, "optionalPeers": ["@arethetypeswrong/core", "@vitejs/devtools", "publint", "typescript", "unplugin-lightningcss", "unplugin-unused"], "bin": { "tsdown": "dist/run.mjs" } }, "sha512-J/tRS6hsZTkvqmt4+xdELUCkQYDuUCXgBv0fw3ImV09WPGbEKfsPD65E+WUjSu3E7Z6tji9XZ1iWs8rbGqB/ZA=="],
 

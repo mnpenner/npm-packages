@@ -21,6 +21,12 @@
       "@mpen/react-basic-inputs": [
         "packages/react-basic-inputs/src/bundle.ts"
       ],
+      "@mpen/react-global-state": [
+        "packages/react-global-state/src/index.ts"
+      ],
+      "@mpen/react-global-state/react": [
+        "packages/react-global-state/src/react.tsx"
+      ],
       "@mpen/react-router": [
         "packages/react-router/src/index.ts"
       ],
