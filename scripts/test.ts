@@ -1,35 +1,42 @@
-#!/usr/bin/env bun
-import { $ } from "bun";
+#!/usr/bin/env -S bun -i
+import {parseArgs, type ParseArgsConfig} from "node:util"
+import {$} from 'bun'
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
+
+const PARSE_CONFIG = {
+    options: {},
+    strict: false,
+    allowPositionals: true,
+} satisfies ParseArgsConfig
 
 /**
  * Run tests for all packages and display a summary of passes/failures/skips.
  */
-async function main() {
+async function main(_options: Options, _positionals: Positionals): Promise<number | void> {
     const packagesDir = "packages";
     const packageDirs = (await readdir(packagesDir, { withFileTypes: true }))
         .filter(dirent => dirent.isDirectory())
         .map(dirent => dirent.name)
         .sort();
 
-    const args = process.argv.slice(2);
+    const rawArgs = process.argv.slice(2);
     
     // Simple package filtering: if any arg matches a package dir name exactly, only test those.
     let targetPackages = packageDirs;
-    const filterArgs = args.filter(arg => packageDirs.includes(arg));
+    const filterArgs = rawArgs.filter(arg => packageDirs.includes(arg));
     if (filterArgs.length > 0) {
         targetPackages = filterArgs;
     }
     
     // Pass other args (flags like -t, --watch, etc.) to bun test
-    const bunTestArgs = args.filter(arg => !packageDirs.includes(arg));
+    const bunTestArgs = rawArgs.filter(arg => !packageDirs.includes(arg));
 
-    process.stdout.write(`\x1b[1mRunning tests for ${targetPackages.length} packages...\x1b[0m\n\n`);
+    console.log(`\x1b[1mRunning tests for ${targetPackages.length} packages...\x1b[0m\n`);
 
     const results: Array<{
         pkg: string;
-        status: 'pass' | 'fail' | 'skip';
+        status: 'pass' | 'fail' | 'skip' | 'none';
         passCount: number;
         failCount: number;
         skipCount: number;
@@ -70,14 +77,15 @@ async function main() {
             if (skipMatch) skipCount = parseInt(skipMatch[1], 10);
             if (failMatch) failCount = parseInt(failMatch[1], 10);
 
-            let status: 'pass' | 'fail' | 'skip';
+            let status: 'pass' | 'fail' | 'skip' | 'none';
             if (exitCode !== 0 || failCount > 0) {
                 status = 'fail';
             } else if (passCount > 0) {
                 status = 'pass';
-            } else {
-                // If there are only skipped tests, or no tests at all, it's a 'skip'
+            } else if (skipCount > 0) {
                 status = 'skip';
+            } else {
+                status = 'none';
             }
             
             results.push({ pkg, status, passCount, failCount, skipCount, output });
@@ -85,8 +93,12 @@ async function main() {
             const TICK = '\x1b[32m✓\x1b[0m';
             const CROSS = '\x1b[31m✗\x1b[0m';
             const SKIP = '\x1b[33m»\x1b[0m';
+            const NONE = '\x1b[90m∅\x1b[0m';
             
-            const icon = status === 'pass' ? TICK : status === 'fail' ? CROSS : SKIP;
+            const icon = status === 'pass' ? TICK : 
+                         status === 'fail' ? CROSS : 
+                         status === 'skip' ? SKIP : NONE;
+
             const stats = [];
             if (passCount > 0) stats.push(`\x1b[32m${passCount} pass\x1b[0m`);
             if (failCount > 0) stats.push(`\x1b[31m${failCount} fail\x1b[0m`);
@@ -150,23 +162,45 @@ async function main() {
     await Promise.all(workers);
 
     // Final summary
-    process.stdout.write(`\n\x1b[1mSummary:\x1b[0m\n`);
+    console.log(`\n\x1b[1mSummary:\x1b[0m`);
     const totalPass = results.filter(r => r.status === 'pass').length;
     const totalFail = results.filter(r => r.status === 'fail').length;
     const totalSkip = results.filter(r => r.status === 'skip').length;
+    const totalNone = results.filter(r => r.status === 'none').length;
     
     if (totalPass > 0) console.log(`  \x1b[32m✓ ${totalPass} packages passed\x1b[0m`);
     if (totalFail > 0) console.log(`  \x1b[31m✗ ${totalFail} packages failed\x1b[0m`);
-    if (totalSkip > 0) console.log(`  \x1b[33m» ${totalSkip} packages skipped (or no tests)\x1b[0m`);
+    if (totalSkip > 0) console.log(`  \x1b[33m» ${totalSkip} packages skipped\x1b[0m`);
+    if (totalNone > 0) console.log(`  \x1b[90m∅ ${totalNone} packages with no tests\x1b[0m`);
 
     if (totalFail > 0) {
-        process.exit(1);
+        return 1;
     }
 }
 
-if (import.meta.main) {
-    main().catch(err => {
-        console.error(err);
-        process.exit(1);
-    });
+//#region Invoke main
+type ParsedConfig = ReturnType<typeof parseArgs<typeof PARSE_CONFIG>>
+type Options = ParsedConfig["values"]
+type Positionals = ParsedConfig["positionals"]
+
+if(import.meta.main) {
+    const {values, positionals} = parseArgs(PARSE_CONFIG)
+
+    main(values, positionals).then(
+        (exitCode) => {
+            if(typeof exitCode === "number") {
+                process.exitCode = exitCode
+            }
+        },
+        (err) => {
+            if(err instanceof $.ShellError) {
+                console.error(`Command failed with exit code ${err.exitCode}`)
+                process.exitCode = err.exitCode
+            } else {
+                console.error(err ?? 'An unknown error occurred')
+                process.exitCode = 1
+            }
+        },
+    )
 }
+//#endregion

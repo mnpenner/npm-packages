@@ -168,7 +168,7 @@ function fdt(obj: any, depth: number): string[] {
 }
 
 
-function serializeSymbol(sym: symbol | Symbol) {
+function serializeSymbol(sym: symbol | symbol) {
     const key = Symbol.keyFor(sym.valueOf() as symbol);
     if(key === undefined) {
         const m = sym.toString().match(/^Symbol\((.+)\)$/);

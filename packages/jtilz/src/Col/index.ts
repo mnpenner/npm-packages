@@ -2,7 +2,6 @@ import {isArray, isIterable, isNilOrNaN, isPlainObject, isString} from '@mpen/is
 import {getType} from '../Dbg/shared';
 import chain from '../Seq';
 import type {IDictionary} from '../interfaces';
-import {identity} from '../Lang/value';
 import {allSettled, FULFILLED} from '../Lang/promise';
 import {flatten} from '../Arr';
 

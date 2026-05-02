@@ -51,7 +51,7 @@
     "typecheck": "bun scripts/typecheck.ts",
     "fix:lint": "bun scripts/eslint-fix.ts",
     "fix": "bun scripts/fix.ts",
-    "static-analysis": "run-p -c lint typecheck",
-    "check": "run-p -c test lint typecheck"
+    "static-analysis": "run-p -c -s lint typecheck",
+    "check": "run-p -c -s test lint typecheck"
   }
 }
