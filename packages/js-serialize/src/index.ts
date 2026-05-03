@@ -12,18 +12,15 @@ import {
 } from '@mpen/is-type'
 import { findFunction } from './util'
 
-const nativeFuncs = new Map<Function, string>()
+const nativeFuncs = new Map<(...args: any[]) => any, string>()
 const isRaw = Symbol('isRaw')
 let wellKnownSymbols: Map<symbol, string>
-const EMPTY_ARRAY = Object.freeze<any>([])
 
 function merge<T extends {}>(target: T, ...sources: Array<undefined | Partial<T>>): T {
     for (const obj of sources) {
         if (obj) {
             for (const key of Object.keys(obj)) {
-                // @ts-ignore
                 if (obj[key] !== undefined) {
-                    // @ts-ignore
                     target[key] = obj[key]
                 }
             }
@@ -31,8 +28,6 @@ function merge<T extends {}>(target: T, ...sources: Array<undefined | Partial<T>
     }
     return target
 }
-
-type Path = PropertyKey[]
 
 interface Options {
     /** Make the output code slightly more compact (and harder to read) */
@@ -124,7 +119,6 @@ function referenceCount(object: any): Map<any, number> {
             // process object last because it'll get caught by some of the above stuff
             m.set(o, 1)
             for (const k of Reflect.ownKeys(o)) {
-                // @ts-ignore
                 r(o[k])
             }
         }
@@ -148,7 +142,7 @@ function serializeArray(obj: any[], ctx: Context) {
     let hasProp = false
     let isSparse = false
     for (let i = 0; i < obj.length; ++i) {
-        if (obj.hasOwnProperty(i)) {
+        if (Object.hasOwn(obj, i)) {
             hasProp = true
             sb.push(serializeAny(obj[i], ctx))
         } else {
@@ -168,7 +162,7 @@ function serializeArray(obj: any[], ctx: Context) {
             // FIXME: this is re-doing work done in the above loop...optimize this
             const sb = [`(${varName}=new Array(${obj.length})`]
             for (let i = 0; i < obj.length; ++i) {
-                if (obj.hasOwnProperty(i)) {
+                if (Object.hasOwn(obj, i)) {
                     sb.push(`${varName}[${i}]=${serializeAny(obj[i], ctx)}`)
                 }
             }
@@ -251,12 +245,9 @@ function wrapSimpleRef(serialize: SerializerFunc) {
 
 function serializeAnySymbol(obj: symbol, ctx: Context) {
     if (!wellKnownSymbols) {
-        // @ts-ignore
         wellKnownSymbols = new Map(
             Object.getOwnPropertyNames(Symbol)
-                // @ts-ignore
                 .filter((k) => isSymbol(Symbol[k]))
-                // @ts-ignore
                 .map((k) => [Symbol[k], k]),
         )
     }
@@ -267,7 +258,7 @@ function serializeAnySymbol(obj: symbol, ctx: Context) {
     return serializeSymbol(obj, ctx)
 }
 
-function serializeNativeFunction(obj: Function, ctx: Context) {
+function serializeNativeFunction(obj: (...args: any[]) => any, _ctx: Context) {
     const cachedPath = nativeFuncs.get(obj)
 
     if (cachedPath !== undefined) {
@@ -285,11 +276,11 @@ function serializeNativeFunction(obj: Function, ctx: Context) {
     return joinedPath
 }
 
-function serializeNonNativeFunction(obj: Function, ctx: Context) {
+function serializeNonNativeFunction(obj: (...args: any[]) => any, _ctx: Context) {
     return obj.toString()
 }
 
-function serializeAnyFunction(obj: Function, ctx: Context) {
+function serializeAnyFunction(obj: (...args: any[]) => any, ctx: Context) {
     if (/\{\s*\[native code]\s*}$/.test(obj.toString())) {
         return serializeNativeFunction(obj, ctx)
     }
@@ -321,7 +312,7 @@ function serializeUndefined(obj: undefined, ctx: Context) {
     return ctx.opts.compact ? 'void 0' : 'undefined'
 }
 
-function serializeNull(obj: null, ctx: Context) {
+function serializeNull(_obj: null, _ctx: Context) {
     return 'null'
 }
 
@@ -403,7 +394,7 @@ function serializeAny(obj: any, ctx: Context): string {
     throw new Error('Could not serialize unknown type')
 }
 
-function serializeNumberLike(obj: number | number, ctx: Context) {
+function serializeNumberLike(obj: number | Number, ctx: Context) {
     const tmp = serializeNumber(Number(obj), ctx)
     if (obj instanceof Number) {
         return `new Number(${tmp})`
@@ -455,7 +446,7 @@ function serializeBigInt(obj: bigint, ctx: Context) {
     return `${obj}n`
 }
 
-function serializeStringLike(obj: string | string, ctx: Context) {
+function serializeStringLike(obj: string | String, ctx: Context) {
     const js = doSerializeStringLike(obj, ctx)
     if (obj.length >= STRING_REF_MIN_LENGTH) {
         const varName = ctx.refs.get(obj)
@@ -467,7 +458,7 @@ function serializeStringLike(obj: string | string, ctx: Context) {
     return js
 }
 
-function doSerializeStringLike(obj: string | string, ctx: Context) {
+function doSerializeStringLike(obj: string | String, ctx: Context) {
     const tmp = serializeString(String(obj), ctx)
     if (obj instanceof String) {
         return `new String(${tmp})`

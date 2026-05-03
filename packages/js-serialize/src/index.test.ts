@@ -22,7 +22,7 @@ expect.extend({
 })
 
 declare module 'bun:test' {
-    interface Matchers<T = unknown> {
+    interface Matchers {
         toWse(expected: string): void
     }
 }
@@ -92,7 +92,7 @@ describe('numbers', () => {
     it('serializes NaN', () => {
         expect(jsSerialize(NaN)).toEqual('NaN')
         expect(jsSerialize(Number.NaN)).toEqual('NaN')
-        // @ts-ignore
+        // @ts-expect-error: subtracting from string results in NaN
         expect(jsSerialize('wat' - 1)).toEqual('NaN')
     })
 
@@ -484,7 +484,6 @@ describe('references', () => {
 
 describe('test helpers', () => {
     it('toWse fails on non-strings', () => {
-        // @ts-ignore
         expect(() => expect(123).toWse('foo')).toThrow()
     })
 })

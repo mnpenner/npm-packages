@@ -176,6 +176,7 @@ export default defineConfig([
             '@typescript-eslint/no-this-alias': 'off',
             '@typescript-eslint/no-unused-vars': 'off',
             '@typescript-eslint/no-namespace': 'off',
+            '@typescript-eslint/no-wrapper-object-types': 'off',
         },
     },
     {
@@ -236,12 +237,5 @@ export default defineConfig([
                 },
             ],
         },
-    },
-    {
-        name: 'packages/is-type/merged-config',
-        files: ['packages/is-type/**/*.{ts,tsx}'],
-        rules: {
-            '@typescript-eslint/no-wrapper-object-types': 'off',
-        },
-    },
+    }
 ])

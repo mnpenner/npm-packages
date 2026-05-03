@@ -13,6 +13,7 @@
         "forceConsistentCasingInFileNames": true,
         "moduleResolution": "bundler",
         "strict": true,
+        "rootDir": "../../",
         "skipLibCheck": true,
         "noImplicitAny": false,
         "types": ["bun-types"]

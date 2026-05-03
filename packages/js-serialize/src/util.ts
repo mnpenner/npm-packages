@@ -8,7 +8,11 @@
  * @param {Number} maxDepth
  * @returns {null|Array.<string>}
  */
-export function findFunction(lib: any, fn: Function, maxDepth: number = 3): null | string[] {
+export function findFunction(
+    lib: any,
+    fn: (...args: any[]) => any,
+    maxDepth: number = 3,
+): null | string[] {
     const queue: [path: string[], lib: any][] = []
     let path: string[] = []
     const seen = new Set()
