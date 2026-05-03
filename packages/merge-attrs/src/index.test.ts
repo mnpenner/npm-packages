@@ -94,6 +94,7 @@ describe(mergeAttrs.name, () => {
     it(`doesn't mutate styles`, () => {
         const style = { foo: 'bar' }
         const result = mergeAttrs({ style }, { style: { baz: 99 } })
+        expect(result.style).toEqual({ baz: 99, foo: 'bar' })
         expect(style).toEqual({ foo: 'bar' })
     })
 

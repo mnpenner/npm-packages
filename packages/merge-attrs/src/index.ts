@@ -20,34 +20,14 @@ export interface IAttrs {
     [other: string]: any
 }
 
-// @types/react is borked -- copy SyntheticEvent here to avoid compile errors
-interface SyntheticEvent<T> {
-    bubbles: boolean
-    currentTarget: EventTarget & T
-    cancelable: boolean
-    defaultPrevented: boolean
-    eventPhase: number
-    isTrusted: boolean
-    nativeEvent: Event
-    preventDefault(): void
-    isDefaultPrevented(): boolean
-    stopPropagation(): void
-    isPropagationStopped(): boolean
-    persist(): void
-    // If you thought this should be `EventTarget & T`, see https://github.com/DefinitelyTyped/DefinitelyTyped/pull/12239
-    target: EventTarget
-    timeStamp: number
-    type: string
-}
-
-type EventHandler = (e: SyntheticEvent<any>) => void
 export type RefCallback = (n: Element) => void
+type AttributeCallback = (...args: any[]) => unknown
 
 function mergeAttrs(...attrDicts: IAttrs[]): IAttrs {
     if (attrDicts.length === 0) {
         return {}
     }
-    const eventHandlers: { [attr: string]: Array<EventHandler | RefCallback> } = {}
+    const eventHandlers: { [attr: string]: AttributeCallback[] } = {}
     const classes = []
     const merged = attrDicts[0]
 
@@ -93,7 +73,7 @@ function mergeAttrs(...attrDicts: IAttrs[]): IAttrs {
                 let result = undefined
                 for (const func of funcs) {
                     const params: any[] = result === undefined ? args : [...args, result]
-                    result = (func as Function)(...params)
+                    result = func(...params)
                 }
                 return result
             }
