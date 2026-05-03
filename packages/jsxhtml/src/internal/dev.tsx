@@ -83,7 +83,7 @@ const jsxNode = (
                 </ul>
             </div>
             <div class="numbers">
-                {3.14159265358979323846264338327950288419716}
+                {3.141592653589793}
                 <br />
                 {7 / 3}
                 <br />
@@ -104,9 +104,12 @@ const jsxNode = (
                 >
                     Event XY
                 </button>
-                {/* @ts-expect-error TS18048: event is possibly undefined */}
                 <button
-                    onclick={() => console.log(`You clicked ${event.offsetX}, ${event.offsetY}`)}
+                    onclick={() =>
+                        console.log(
+                            `You clicked ${(event as MouseEvent).offsetX}, ${(event as MouseEvent).offsetY}`,
+                        )
+                    }
                 >
                     Global Event
                 </button>

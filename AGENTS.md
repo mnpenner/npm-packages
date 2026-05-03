@@ -12,3 +12,6 @@
     - Put an empty line between the description and the `@tags`
     - Mark items that are `export`ed but not public as `@internal`
 - Use `templates/script-template.ts` for new scripts
+- If you encounter a tsconfig deprecation error, don't add `'"ignoreDeprecations": "6.0"` to `tsconfig.json` -- figure
+  out how to avoid the issue so that we are compatible with TypeScript 7.0
+- If you need to write a temporary file, put it in `scratch/`

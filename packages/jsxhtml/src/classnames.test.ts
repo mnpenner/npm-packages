@@ -1,8 +1,11 @@
 import { expect, test } from 'bun:test'
 import { classCat } from './classnames'
 
+const bar = 'bar'
+
 test('supports strings', () => {
-    expect(classCat('foo', true && 'bar', 'baz')).toBe('foo bar baz')
+    const t = () => true
+    expect(classCat('foo', t() && bar, 'baz')).toBe('foo bar baz')
 })
 
 test('supports objects', () => {
@@ -21,8 +24,9 @@ test('supports arrays', () => {
 })
 
 test('supports nested inputs', () => {
+    const one = () => 1
     expect(
-        classCat('foo', [1 && 'bar', { baz: false, bat: null }, ['hello', ['world']]], 'cya'),
+        classCat('foo', [one() && bar, { baz: false, bat: null }, ['hello', ['world']]], 'cya'),
     ).toBe('foo bar hello world cya')
 })
 

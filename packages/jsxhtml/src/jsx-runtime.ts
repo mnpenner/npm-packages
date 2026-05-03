@@ -39,4 +39,4 @@ export function Fragment({ children }: ChildrenOnly) {
 }
 
 // https://github.com/DefinitelyTyped/DefinitelyTyped/blob/d6c594dc2aae293392c0062a2644e3624a1b57bd/types/react/jsx-runtime.d.ts#L4
-export { JSX } from './jsx'
+export * from './jsx'

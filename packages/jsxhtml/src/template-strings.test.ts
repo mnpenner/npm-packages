@@ -24,6 +24,7 @@ expect.extend({
 })
 
 declare module 'bun:test' {
+    // eslint-disable-next-line unused-imports/no-unused-vars
     interface Matchers<T = unknown> {
         toStrEq(expected: string): void
     }

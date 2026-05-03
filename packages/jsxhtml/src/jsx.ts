@@ -26,33 +26,30 @@ export interface FunctionComponent<P = {}> {
     displayName?: string | undefined
 }
 
-export declare namespace JSX {
-    type ElementType<P = any, Tag extends keyof IntrinsicElements = keyof IntrinsicElements> =
-        | { [K in Tag]: P extends IntrinsicElements[K] ? K : never }[Tag]
-        | ComponentType<P>
-    interface Element extends JsxNode {}
-    type ElementClass = never
-    interface ElementAttributesProperty {
+export namespace JSX {
+    export type ElementType<
+        P = any,
+        Tag extends keyof IntrinsicElements = keyof IntrinsicElements,
+    > = { [K in Tag]: P extends IntrinsicElements[K] ? K : never }[Tag] | ComponentType<P>
+    export interface Element extends JsxNode {}
+    export type ElementClass = never
+    export interface ElementAttributesProperty {
         props: {}
     }
-    interface ElementChildrenAttribute {
+    export interface ElementChildrenAttribute {
         children: {}
     }
 
-    type LibraryManagedAttributes<Component, Props> = Props
+    export type LibraryManagedAttributes<Component, Props> = Props
 
-    interface IntrinsicAttributes {
-        // key?: Key | null | undefined;
-    }
+    export interface IntrinsicAttributes {} // eslint-disable-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-empty-interface
 
-    interface IntrinsicClassAttributes<T> {
-        // ref?: Ref<T> | undefined;
-    }
+    export interface IntrinsicClassAttributes<T> {} // eslint-disable-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-empty-interface, unused-imports/no-unused-vars
 
     /**
      * Attributes specific to intrinsic elements (lowercase tags).
      */
-    interface IntrinsicElements extends instrinsic.IntrinsicElements {}
+    export interface IntrinsicElements extends instrinsic.IntrinsicElements {}
 }
 
 export const JSX = {} // Bun tries to import this for some reason
