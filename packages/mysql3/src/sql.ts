@@ -71,6 +71,7 @@ export function sql(strings: TemplateStringsArray, ...values: Value[]): SqlFrag 
     return frag(out.join(''))
 }
 
+/** @internal */
 export function escapeValueRaw(value: Value): string {
     if (isFrag(value)) {
         return value.toSqlString()
@@ -116,12 +117,14 @@ function escapeIdStrictFrag(id: Id): SqlFrag {
     return frag(escapeIdStrictRaw(id))
 }
 
+/** @internal */
 export function escapeIdLooseRaw(id: Id): string {
     if (isFrag(id)) return id.toSqlString()
     if (Array.isArray(id)) return id.map(escapeIdStrictRaw).join('.')
     return '`' + String(id).replace(ID_GLOBAL_REGEXP, '``').replace(QUAL_GLOBAL_REGEXP, '`.`') + '`'
 }
 
+/** @internal */
 export function escapeIdStrictRaw(id: Id): string {
     if (isFrag(id)) return id.toSqlString()
     if (Array.isArray(id)) return id.map(escapeIdStrictRaw).join('.')
