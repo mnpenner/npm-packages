@@ -524,7 +524,6 @@
         "cssesc": "^3.0.0",
         "he": "^1.2.0",
         "lodash": "^4.17.21",
-        "mkdirp": "^1.0.4",
         "sanitize-filename": "^1.6.4",
         "svg2ttf": "^5.2.0",
         "svgicons2svgfont": "^9.2.0",
@@ -5571,8 +5570,6 @@
     "stylis-rule-sheet/stylis": ["stylis@3.5.4", "", {}, "sha512-8/3pSmthWM7lsPBKv7NXkzn2Uc9W7NotcwGNpJaa3k7WMM1XDCA4MgT5k/8BIexd5ydZdboXtU90XH9Ec4Bv/Q=="],
 
     "svg2fonts/@types/node": ["@types/node@22.19.17", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-wGdMcf+vPYM6jikpS/qhg6WiqSV/OhG+jeeHT/KlVqxYfD40iYJf9/AE1uQxVWFvU7MipKRkRv8NSHiCGgPr8Q=="],
-
-    "svg2fonts/mkdirp": ["mkdirp@1.0.4", "", { "bin": { "mkdirp": "bin/cmd.js" } }, "sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw=="],
 
     "svg2ttf/argparse": ["argparse@2.0.1", "", {}, "sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q=="],
 

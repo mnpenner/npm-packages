@@ -6,7 +6,6 @@ import { fileURLToPath } from 'node:url'
 import { parseArgs, type ParseArgsConfig } from 'node:util'
 import cssesc from 'cssesc'
 import he from 'he'
-import mkdirp from 'mkdirp'
 import sanitizeFileName from 'sanitize-filename'
 import ttf2woff2 from 'ttf2woff2'
 
@@ -63,6 +62,9 @@ const PARSE_CONFIG = {
         'nested-css': {
             type: 'boolean',
         },
+        'ie-compat': {
+            type: 'boolean',
+        },
     },
     strict: true,
     allowPositionals: true,
@@ -79,6 +81,7 @@ interface CliArgs {
     fixed_width: boolean
     codepoint_file?: string
     nested_css: boolean
+    ie_compat: boolean
 }
 
 interface GlyphStream extends fs.ReadStream {
@@ -113,6 +116,7 @@ Options:
       --directory-separator <sep>  String to use in CSS class names for sub-directories
       --codepoint-file <file>      JSON file to read and write icon code points
       --nested-css                 Nest icon selectors inside the base CSS selector
+      --ie-compat                  Emit EOT/WOFF files and CSS for legacy IE support
       --fixed-width                Create a monospace font of the width of the largest input icon`)
 }
 
@@ -122,6 +126,7 @@ function createFonts(files: {
     woffFontFile: string
     woff2FontFile: string
     eotFile: string
+    ieCompat: boolean
 }): void {
     const svgString = fs.readFileSync(files.svgFontFile, { encoding: 'utf8' })
     const ttf = svg2ttf(svgString, {})
@@ -129,15 +134,17 @@ function createFonts(files: {
     console.log(`Wrote ${files.ttfFontFile}`)
 
     const ttfBuffer = fs.readFileSync(files.ttfFontFile)
-    const woff = ttf2woff(ttfBuffer, {})
-    fs.writeFileSync(files.woffFontFile, woff.buffer)
-    console.log(`Wrote ${files.woffFontFile}`)
-
     fs.writeFileSync(files.woff2FontFile, ttf2woff2(ttfBuffer))
     console.log(`Wrote ${files.woff2FontFile}`)
 
-    fs.writeFileSync(files.eotFile, ttf2eot(ttfBuffer).buffer)
-    console.log(`Wrote ${files.eotFile}`)
+    if (files.ieCompat) {
+        const woff = ttf2woff(ttfBuffer, {})
+        fs.writeFileSync(files.woffFontFile, woff.buffer)
+        console.log(`Wrote ${files.woffFontFile}`)
+
+        fs.writeFileSync(files.eotFile, ttf2eot(ttfBuffer).buffer)
+        console.log(`Wrote ${files.eotFile}`)
+    }
 }
 
 async function main(options: Options, positionals: Positionals): Promise<number | void> {
@@ -168,6 +175,7 @@ async function main(options: Options, positionals: Positionals): Promise<number 
         fixed_width: options['fixed-width'] ?? false,
         codepoint_file: options['codepoint-file'],
         nested_css: options['nested-css'] ?? false,
+        ie_compat: options['ie-compat'] ?? false,
     }
 
     if (!args.prefix && !args.base) {
@@ -202,7 +210,7 @@ async function main(options: Options, positionals: Positionals): Promise<number 
     const jsFile = `${outputDir}/${fileName}.js`
     const codePointFile = args.codepoint_file ?? `${outputDir}/${fileName}-chars.json`
 
-    mkdirp.sync(outputDir)
+    fs.mkdirSync(outputDir, {recursive: true})
 
     const fontStream = new SVGIcons2SVGFontStream({
         fontName: fontName,
@@ -220,6 +228,7 @@ async function main(options: Options, positionals: Positionals): Promise<number 
         woffFontFile,
         woff2FontFile,
         eotFile,
+        ieCompat: args.ie_compat,
     }
     const fontDone = new Promise<void>((resolve, reject) => {
         fontStream
@@ -245,16 +254,21 @@ async function main(options: Options, positionals: Positionals): Promise<number 
     const cssBaseSelector = cssBase
         ? `.${cssId(cssBase)}`
         : `[class^="${cssId(cssPrefix)}"], [class*=" ${cssId(cssPrefix)}"]`
-
-    let css = `
-@font-face {
-  font-family: ${cssStr(fontName)};
-  src: url(${cssStr(path.relative(cssDir, eotFile))}); /* IE9 Compat Modes */
+    const fontFaceSrc = args.ie_compat
+        ? `  src: url(${cssStr(path.relative(cssDir, eotFile))}); /* IE9 Compat Modes */
   src: url(${cssStr(path.relative(cssDir, eotFile) + '?iefix')}) format('embedded-opentype'), /* IE6-IE8 */
     url(${cssStr(path.relative(cssDir, woff2FontFile))}) format('woff2'), /* Edge 14+, Chrome 36+, Firefox 39+, some mobile */
     url(${cssStr(path.relative(cssDir, woffFontFile))}) format('woff'),  /* IE 9+, Edge, Firefox 3.6+, Chrome 5+, Safari 5.1+ */
     url(${cssStr(path.relative(cssDir, ttfFontFile))}) format('truetype'), /* Safari, Android, iOS */
-    url(${cssStr(path.relative(cssDir, svgFontFile))}) format('svg'); /* Legacy iOS */
+    url(${cssStr(path.relative(cssDir, svgFontFile))}) format('svg'); /* Legacy iOS */`
+        : `  src: url(${cssStr(path.relative(cssDir, woff2FontFile))}) format('woff2'), /* Edge 14+, Chrome 36+, Firefox 39+, some mobile */
+    url(${cssStr(path.relative(cssDir, ttfFontFile))}) format('truetype'), /* Safari, Android, iOS */
+    url(${cssStr(path.relative(cssDir, svgFontFile))}) format('svg'); /* Legacy iOS */`
+
+    let css = `
+@font-face {
+  font-family: ${cssStr(fontName)};
+${fontFaceSrc}
   font-weight: normal;
   font-style: normal;
 }
@@ -267,7 +281,7 @@ ${cssBaseSelector} {
   text-transform: none;
   line-height: 1;
   text-rendering: optimizeSpeed; /* Kerning and ligatures aren't needed */
-  -webkit-font-smoothing: antialiased;
+  -webkit-font-smoothing: subpixel-antialiased;
   -moz-osx-font-smoothing: grayscale;
 `.trimStart()
 
