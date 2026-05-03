@@ -7,8 +7,11 @@ export default defineConfig({
         web: './src/index.web.ts',
     },
 
+    platform: 'node',
     format: 'esm',
-    exports: true,
+    exports: {
+        legacy: true,
+    },
     clean: true,
     dts: true,
 })

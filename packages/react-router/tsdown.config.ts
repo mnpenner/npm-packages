@@ -9,6 +9,8 @@ export default defineConfig({
     platform: 'browser',
     format: ['esm'],
     external: [/^(node|bun):/, 'react'],
-    exports: true,
+    exports: {
+        legacy: true,
+    },
     dts: true, // The client must use "moduleResolution": "bundler", "node16" or "nodenext". "node" will not resolve the types properly.
 })

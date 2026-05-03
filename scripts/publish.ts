@@ -8,6 +8,7 @@ import { parseArgs, type ParseArgsConfig } from 'node:util'
 import { gunzipSync } from 'node:zlib'
 import { $ } from 'bun'
 import chalk from 'chalk'
+import { getNextPublishVersion } from './publish-version'
 
 const PARSE_CONFIG = {
     options: {
@@ -170,8 +171,9 @@ async function main(options: Options, positionals: Positionals): Promise<number 
                 continue
             }
 
-            const nextVersion = bumpPatch(
-                maxVersion(packageDir.packageJson.version, release.version),
+            const nextVersion = getNextPublishVersion(
+                packageDir.packageJson.version,
+                release.version,
             )
             console.log(
                 chalk.yellow(`Packed output changed: ${release.version} -> ${nextVersion}.`),
@@ -621,49 +623,6 @@ async function setPackageVersion(packageJsonPath: string, version: string): Prom
     packageJson.version = version
 
     await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`)
-}
-
-function maxVersion(a: string | undefined, b: string): string {
-    if (!a) {
-        return b
-    }
-
-    return compareVersions(a, b) >= 0 ? a : b
-}
-
-function compareVersions(a: string, b: string): number {
-    const parsedA = parseVersion(a)
-    const parsedB = parseVersion(b)
-
-    for (const part of ['major', 'minor', 'patch'] as const) {
-        const diff = parsedA[part] - parsedB[part]
-
-        if (diff !== 0) {
-            return diff
-        }
-    }
-
-    return 0
-}
-
-function bumpPatch(version: string): string {
-    const parsed = parseVersion(version)
-
-    return `${parsed.major}.${parsed.minor}.${parsed.patch + 1}`
-}
-
-function parseVersion(version: string): { major: number; minor: number; patch: number } {
-    const match = version.match(/^(\d+)\.(\d+)\.(\d+)(?:[-+].*)?$/)
-
-    if (!match) {
-        throw new Error(`Cannot patch-bump non-semver version "${version}".`)
-    }
-
-    return {
-        major: Number(match[1]),
-        minor: Number(match[2]),
-        patch: Number(match[3]),
-    }
 }
 
 async function publishPackage(packageDir: PackageDir, registry: string): Promise<void> {

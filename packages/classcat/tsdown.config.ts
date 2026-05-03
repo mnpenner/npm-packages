@@ -5,5 +5,8 @@ export default defineConfig({
     platform: 'neutral',
     format: ['esm'],
     dts: true,
+    exports: {
+        legacy: true,
+    },
     clean: true,
 })

@@ -5,7 +5,10 @@ export default defineConfig({
         index: 'src/index.ts',
         react: 'src/react.ts',
     },
-    exports: true,
+    platform: 'neutral',
+    exports: {
+        legacy: true,
+    },
     dts: true,
     format: 'esm',
     clean: true,

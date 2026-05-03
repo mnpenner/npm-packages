@@ -1,6 +1,6 @@
 {
   "name": "@mpen/classcat",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Conditionally concatenate class names.",
   "repository": {
     "type": "git",
@@ -20,15 +20,10 @@
     "access": "public"
   },
   "exports": {
-    ".": {
-      "types": "./dist/classcat.d.ts",
-      "bun": "./classcat.ts",
-      "import": "./dist/classcat.js",
-      "require": "./dist/classcat.cjs"
-    },
+    ".": "./dist/classcat.js",
     "./package.json": "./package.json"
   },
-  "main": "./dist/classcat.cjs",
+  "main": "./dist/classcat.js",
   "module": "./dist/classcat.js",
   "types": "./dist/classcat.d.ts",
   "devDependencies": {

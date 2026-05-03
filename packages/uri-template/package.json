@@ -4,7 +4,7 @@
   "packageManager": "bun",
   "type": "module",
   "exports": {
-    ".": "./dist/bundle.mjs",
+    ".": "./dist/bundle.js",
     "./package.json": "./package.json"
   },
   "files": [
@@ -29,5 +29,8 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "main": "./dist/bundle.js",
+  "module": "./dist/bundle.js",
+  "types": "./dist/bundle.d.ts"
 }

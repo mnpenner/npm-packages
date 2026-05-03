@@ -38,9 +38,11 @@
     "type": "hg",
     "url": "https://bitbucket.org/mnpenner/merge-attrs"
   },
-  "types": "./dist/index.d.mts",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.mjs",
+    ".": "./dist/index.js",
     "./package.json": "./package.json"
-  }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js"
 }

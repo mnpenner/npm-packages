@@ -2,7 +2,10 @@ import { defineConfig } from 'tsdown'
 
 export default defineConfig({
   entry: ['./src/index.ts'],
-  exports: true,
+  platform: 'neutral',
+  exports: {
+    legacy: true,
+  },
   dts: true,
   format: ['esm'],
 })

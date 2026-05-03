@@ -3,7 +3,7 @@
   "version": "0.2.2",
   "packageManager": "bun@1.3.6",
   "exports": {
-    ".": "./dist/index.mjs",
+    ".": "./dist/index.js",
     "./package.json": "./package.json"
   },
   "type": "module",
@@ -34,8 +34,10 @@
     "url": "https://github.com/mnpenner/npm-packages.git",
     "directory": "packages/imut-utils"
   },
-  "types": "./dist/index.d.mts",
+  "types": "./dist/index.d.ts",
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js"
 }

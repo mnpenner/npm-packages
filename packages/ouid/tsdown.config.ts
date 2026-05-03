@@ -5,5 +5,7 @@ export default defineConfig({
     // target: 'node20',  // https://nodejs.org/en/about/previous-releases
     platform: 'node',
     format: ['esm', 'cjs'],
-    exports: true,
+    exports: {
+        legacy: true,
+    },
 })

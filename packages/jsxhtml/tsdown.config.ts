@@ -6,8 +6,11 @@ export default defineConfig({
         'jsx-runtime': './src/jsx-runtime.ts',
         'jsx-dev-runtime': './src/jsx-dev-runtime.ts',
     },
+    platform: 'neutral',
     format: 'esm',
-    exports: true,
+    exports: {
+        legacy: true,
+    },
     clean: true,
     dts: true,
 })

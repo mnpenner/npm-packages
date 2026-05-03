@@ -7,7 +7,9 @@ export default defineConfig({
     platform: 'node',
     outDir: 'dist',
     clean: true,
-    exports: true, // https://tsdown.dev/options/package-exports#auto-generating-package-exports
+    exports: {
+        legacy: true,
+    }, // https://tsdown.dev/options/package-exports#auto-generating-package-exports
     publint: 'ci-only',
     external: [/^(node|bun):/],
 })
