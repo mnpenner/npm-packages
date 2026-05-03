@@ -2,6 +2,8 @@ type PackageJson = {
     scripts?: Record<string, string>
 }
 
+export {}
+
 function shellQuote(value: string): string {
     if (/^[\w./:-]+$/.test(value)) {
         return value
