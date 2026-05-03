@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'bun:test'
 import { tryCall, tryCallAsync } from './call.ts'
 import { err, ok, type Result } from '../result.ts'
-import { expectType, type TypeEqual } from '../internal/type-assert.ts'
+import { expectType, type TypeEqual } from '@mpen/ts-types'
 import type { DetailedError } from '../detailed-error.ts'
 import { mayFail1 } from '../internal/test-functions.ts'
 import type { NeverjectPromise } from '../neverject-promise.ts'

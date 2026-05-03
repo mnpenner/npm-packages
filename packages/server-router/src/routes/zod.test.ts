@@ -3,7 +3,7 @@ import { describe, expect, it } from 'bun:test'
 import { HttpMethod, HttpStatus } from '@mpen/http-helpers'
 import { z } from 'zod'
 import { Router } from '../router'
-import { expectType } from '@mpen/server-router/testing/type-assert'
+import { expectType } from '@mpen/ts-types'
 import { ValidationError, ZodRouteFactory, zodHandler, zodPartial, zodRoute } from '../helpers/zod'
 
 describe('zodHandler', () => {

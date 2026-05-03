@@ -20,8 +20,9 @@ function merge<T extends {}>(target: T, ...sources: Array<undefined | Partial<T>
     for (const obj of sources) {
         if (obj) {
             for (const key of Object.keys(obj)) {
-                if (obj[key] !== undefined) {
-                    target[key] = obj[key]
+                const k = key as keyof T
+                if (obj[k] !== undefined) {
+                    target[k] = obj[k]!
                 }
             }
         }
@@ -119,7 +120,7 @@ function referenceCount(object: any): Map<any, number> {
             // process object last because it'll get caught by some of the above stuff
             m.set(o, 1)
             for (const k of Reflect.ownKeys(o)) {
-                r(o[k])
+                r((o as any)[k])
             }
         }
     }
@@ -247,8 +248,8 @@ function serializeAnySymbol(obj: symbol, ctx: Context) {
     if (!wellKnownSymbols) {
         wellKnownSymbols = new Map(
             Object.getOwnPropertyNames(Symbol)
-                .filter((k) => isSymbol(Symbol[k]))
-                .map((k) => [Symbol[k], k]),
+                .filter((k) => isSymbol((Symbol as any)[k]))
+                .map((k) => [(Symbol as any)[k], k]),
         )
     }
     const symbolName = wellKnownSymbols.get(obj)

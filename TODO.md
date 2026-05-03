@@ -2,7 +2,7 @@
 - Convert packages that are compiled with something other than tsdown to use the latest version of tsdown. Make sure `exports: true` is set (this will fix the export paths in package.json)
 - Upgrade all packages to typescript 6
 - [x] Add eslint to root; remove eslint from packages
-- Add prettier
+- [x] Add prettier
 - [x] Repoint `@mnpenner/imut-utils` to `@mpen/imut-utils`
 - [x] Repoint `@mnpenner/is-type` to `@mpen/is-type`
 - Redirect https://github.com/mnpenner/child-spawn to https://github.com/mnpenner/npm-packages/tree/main/packages/child-spawn
@@ -18,3 +18,6 @@
 - Uplevel all the `packages/rollup-plugins/packages` packages
 - Create script to bump versions and publish any packages if it passes all tests and has been modified since last release
 - Add `resolveValue` to `jtilz` or `ts-types`...? Already exists as `value` in `packages/jtilz/src/Lang/value.ts`
+- In publish.ts, when bumping the version, show OLDVER -> NEWVER
+- For `imut-utils`, move fp functions into `@mpen/imut-utils/fp` and remove prefix
+- Add `--react` flag to `svg2fonts`; it should output a React component for each icon

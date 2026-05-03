@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'bun:test'
 import { ApiClient, type Fetcher } from './api-client.gen'
 import router from './router-instance'
-import { expectType, type TypeEqual } from '@mpen/server-router/testing/type-assert'
+import { expectType, type TypeEqual } from '@mpen/ts-types'
 
 type FetchCall = {
     url: string

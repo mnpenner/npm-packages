@@ -11,7 +11,6 @@ export default defineConfig({
         response: 'src/response/index.ts',
         'response/simple': 'src/response/simple.ts',
         routes: 'src/routes/index.ts',
-        'testing/type-assert': 'src/testing/type-assert.ts',
     },
     platform: 'node',
     format: ['esm'],

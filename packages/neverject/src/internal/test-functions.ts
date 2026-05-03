@@ -1,5 +1,5 @@
 import { err, ok, type Result } from '../result.ts'
-import { expectType, type TypeEqual } from './type-assert.ts'
+import { expectType, type TypeEqual } from '@mpen/ts-types'
 
 const pFail = 1 / Math.sqrt(2)
 

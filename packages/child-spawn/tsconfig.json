@@ -1,4 +1,5 @@
 {
+  "extends": "../../tsconfig.json",
   /* Visit https://aka.ms/tsconfig to read more about this file */
   "compilerOptions": {
     /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */

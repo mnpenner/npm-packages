@@ -1,29 +1,13 @@
 {
-    "extends": "../../tsconfig.base.json",
+    "extends": "../../tsconfig.json",
     "compilerOptions": {
-        "target": "ESNext",
-        "module": "ESNext",
-        "moduleResolution": "bundler",
-        "paths": {
-            "@mpen/jsxhtml/jsx-runtime": ["./src/jsx-runtime.ts"],
-            "@mpen/jsxhtml/jsx-dev-runtime": ["./src/jsx-dev-runtime.ts"],
-            "@mpen/jsxhtml": ["./src/index.ts"],
-            "@mpen/jsxhtml/*": ["./src/*"]
-        },
-        "rootDir": ".",
+        "rootDir": "../../",
         "declaration": true,
         "declarationDir": "./dist",
         "emitDeclarationOnly": true,
-        "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true,
-        "strict": true,
-        "exactOptionalPropertyTypes": true,
-        "skipLibCheck": true,
-        "resolveJsonModule": true,
-        "lib": ["ESNext", "DOM"],
-        "types": ["bun-types"],
         "jsx": "react-jsx",
         "jsxImportSource": "@mpen/jsxhtml",
         "outDir": "./dist"
-    }
+    },
+    "include": ["src/**/*.ts", "src/**/*.tsx"]
 }

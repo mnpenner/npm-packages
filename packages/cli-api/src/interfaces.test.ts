@@ -2,8 +2,8 @@ import { describe, it } from 'bun:test'
 import type { ExecutionContext } from './interfaces'
 import { App, Command, OptType } from './interfaces'
 import type { AnyOptType } from './index'
-import type { TypeEqual } from './testing/type-assert'
-import { expectType } from './testing/type-assert'
+import type { TypeEqual } from '@mpen/ts-types'
+import { expectType } from '@mpen/ts-types'
 
 describe(Command.name, () => {
     describe('public exports', () => {
@@ -20,9 +20,10 @@ describe(Command.name, () => {
                 .flag('loud')
                 .opt('target', { required: true })
                 .run((opts, context) => {
+                    type Simplify<T> = { [K in keyof T]: T[K] } & {}
                     expectType<
                         TypeEqual<
-                            typeof opts,
+                            Simplify<typeof opts>,
                             {
                                 target: string
                                 loud: boolean
@@ -39,9 +40,10 @@ describe(Command.name, () => {
                 .arg('input', { required: true })
                 .arg('rest', { repeatable: true })
                 .run((opts, context) => {
+                    type Simplify<T> = { [K in keyof T]: T[K] } & {}
                     expectType<
                         TypeEqual<
-                            typeof opts,
+                            Simplify<typeof opts>,
                             {
                                 count: number
                                 verbose: boolean
@@ -58,9 +60,10 @@ describe(Command.name, () => {
                 .opt('tag', { repeatable: 2 })
                 .arg('files', { repeatable: 3, required: 2 })
                 .run((opts, context) => {
+                    type Simplify<T> = { [K in keyof T]: T[K] } & {}
                     expectType<
                         TypeEqual<
-                            typeof opts,
+                            Simplify<typeof opts>,
                             {
                                 tag: string[]
                                 files: string[]
@@ -77,9 +80,10 @@ describe(Command.name, () => {
                 ] as const)
                 .arguments([{ name: 'input', required: true }] as const)
                 .run((opts, context) => {
+                    type Simplify<T> = { [K in keyof T]: T[K] } & {}
                     expectType<
                         TypeEqual<
-                            typeof opts,
+                            Simplify<typeof opts>,
                             {
                                 enabled: boolean
                                 total: number

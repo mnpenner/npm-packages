@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'bun:test'
 import { resolve } from './resolve.ts'
 import { err, ok, type Ok, type Result } from '../result.ts'
-import { expectType, type TypeEqual } from '../internal/type-assert.ts'
+import { expectType, type TypeEqual } from '@mpen/ts-types'
 
 describe('resolve', () => {
     it('wraps plain values in Ok', () => {

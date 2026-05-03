@@ -1,9 +1,9 @@
 /** @jsxImportSource @mpen/jsxhtml */
 import { expect, it } from 'bun:test'
-import { C, DocType } from './custom-components'
-import { InputMode } from './htmlspec/attributes/GlobalAttributes'
-import type { TypeEqual } from './internal/type-assert'
-import { expectType } from './internal/type-assert'
+import { C, DocType } from './custom'
+import { InputMode } from './htmlspec/attributes'
+import type { TypeEqual } from '@mpen/ts-types'
+import { expectType } from '@mpen/ts-types'
 import type { JsxNode } from './jsx-node'
 
 it('is typed', () => {

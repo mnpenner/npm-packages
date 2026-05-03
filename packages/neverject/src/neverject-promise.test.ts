@@ -4,7 +4,7 @@ import { describe, expect, it } from 'bun:test'
 import { nj } from './nj.ts'
 import type { NeverjectPromise } from './neverject-promise.ts'
 import { err, ok, type Result } from './result.ts'
-import { expectType, type TypeEqual } from './internal/type-assert.ts'
+import { expectType, type TypeEqual } from '@mpen/ts-types'
 
 describe('map', () => {
     it('maps successes and flattens returned results', async () => {

@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bun test
 import { describe, expect, it } from 'bun:test'
 import { okAsync, errAsync } from './async.ts'
-import { expectType, type TypeEqual } from '../internal/type-assert.ts'
+import { expectType, type TypeEqual } from '@mpen/ts-types'
 import type { NeverjectPromise } from '../neverject-promise.ts'
 
 describe('okAsync', () => {

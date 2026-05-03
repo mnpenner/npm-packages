@@ -1,7 +1,16 @@
 {
-    "extends": "./tsconfig.base.json",
     "compilerOptions": {
+        "target": "ESNext",
+        "lib": ["ESNext"],
+        "module": "Preserve",
+        "moduleResolution": "Bundler",
+        "strict": true,
+        "skipLibCheck": true,
+        "allowJs": true,
+        "jsx": "react-jsx",
+        "customConditions": ["bun"],
         "baseUrl": ".",
+        "rootDir": ".",
         "ignoreDeprecations": "6.0",
         "paths": {
             "@mpen/base50": ["packages/base50/src/bundle.ts"],
@@ -97,5 +106,15 @@
         }
     },
     "include": ["packages/**/*.ts", "packages/**/*.tsx", "packages/**/*.js"],
-    "exclude": ["**/node_modules/**", "**/dist/**"]
+    "exclude": [
+        "**/node_modules/**",
+        "**/dist/**",
+        "**/example/**",
+        "**/examples/**",
+        "**/experimental/**",
+        "**/test/**",
+        "packages/yamake/**",
+        "packages/svg-to-react-webpack-loader/**",
+        "packages/rollup-plugins/**",
+    ]
 }

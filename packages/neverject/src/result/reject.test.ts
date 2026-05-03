@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'bun:test'
 import { reject, rejectWithError } from './reject.ts'
 import { err, ok, type Err, type Result } from '../result.ts'
-import { expectType, type TypeEqual } from '../internal/type-assert.ts'
+import { expectType, type TypeEqual } from '@mpen/ts-types'
 import type { DetailedError } from '../detailed-error.ts'
 
 describe('rejectWithError', () => {

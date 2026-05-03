@@ -3,7 +3,7 @@ import { describe, expect, it } from 'bun:test'
 import { firstOk, firstSettled } from './first.ts'
 import { nj } from '../nj.ts'
 import { err, type Result } from '../result.ts'
-import { expectType, type TypeEqual } from '../internal/type-assert.ts'
+import { expectType, type TypeEqual } from '@mpen/ts-types'
 import type { NeverjectPromise } from '../neverject-promise.ts'
 import type { DetailedError } from '../detailed-error.ts'
 
