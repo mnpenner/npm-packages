@@ -4,6 +4,8 @@ export default defineConfig({
     entry: ['./src/bundle.ts'],
     format: 'esm',
     dts: true,
-    exports: true,
+    exports: {
+        legacy: true,
+    },
     clean: true,
 })
