@@ -84,12 +84,6 @@ const serverPackageFiles = [
     'scripts/**/*.{js,cjs,mjs,ts,cts,mts}',
 ]
 
-const bunGlobals = {
-    Bun: 'readonly',
-    HTMLRewriter: 'readonly',
-    HTMLRewriterTypes: 'readonly',
-}
-
 const reactHooksPlugin = reactHooks as unknown as ESLintTypes.Plugin
 
 export default defineConfig([
@@ -197,7 +191,7 @@ export default defineConfig([
         languageOptions: {
             globals: {
                 ...globals.node,
-                ...bunGlobals,
+                ...globals.bunBuiltin,
             },
         },
         rules: {
