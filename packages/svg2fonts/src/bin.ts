@@ -10,6 +10,7 @@ import sanitizeFileName from 'sanitize-filename'
 import ttf2woff2 from 'ttf2woff2'
 
 import { readDirDeep } from './util.js'
+import { camelCase } from './camelcase'
 
 const require = createRequire(import.meta.url)
 
@@ -17,7 +18,6 @@ const SVGIcons2SVGFontStream = require('svgicons2svgfont')
 const svg2ttf = require('svg2ttf')
 const ttf2woff = require('ttf2woff')
 const ttf2eot = require('ttf2eot')
-const { camelCase } = require('lodash') as { camelCase(value: string): string }
 const { version } = require('../package.json') as { version: string }
 
 const PARSE_CONFIG = {
@@ -210,7 +210,7 @@ async function main(options: Options, positionals: Positionals): Promise<number 
     const jsFile = `${outputDir}/${fileName}.js`
     const codePointFile = args.codepoint_file ?? `${outputDir}/${fileName}-chars.json`
 
-    fs.mkdirSync(outputDir, {recursive: true})
+    fs.mkdirSync(outputDir, { recursive: true })
 
     const fontStream = new SVGIcons2SVGFontStream({
         fontName: fontName,
