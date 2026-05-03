@@ -523,7 +523,6 @@
       "dependencies": {
         "cssesc": "^3.0.0",
         "he": "^1.2.0",
-        "lodash": "^4.17.21",
         "sanitize-filename": "^1.6.4",
         "svg2ttf": "^5.2.0",
         "svgicons2svgfont": "^9.2.0",
@@ -532,7 +531,6 @@
         "ttf2woff2": "^8.0.1",
       },
       "devDependencies": {
-        "@types/lodash": "^4.17.24",
         "@types/node": "^22",
         "tsdown": "catalog:",
         "typescript": "catalog:",

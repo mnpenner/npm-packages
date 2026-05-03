@@ -8,6 +8,7 @@
 - Redirect https://github.com/mnpenner/child-spawn to https://github.com/mnpenner/npm-packages/tree/main/packages/child-spawn
 - Redirect https://github.com/mnpenner/imut-utils to https://github.com/mnpenner/npm-packages/tree/main/packages/imut-utils
 - Redirect https://github.com/mnpenner/is-type to https://github.com/mnpenner/npm-packages/tree/main/packages/is-type
+- Redirect https://github.com/mnpenner/svg2fonts
 - [x] Freshen `@mpen/is-type`
 - Start `ts-types` package; include `ts-expect` and my fav helpers like `Override`, `assumeType`
     - Have a `react/` subdir for `OverrideProps` et al
