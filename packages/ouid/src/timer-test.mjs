@@ -1,3 +1,4 @@
+/* eslint-disable */
 function getBestTimer() {
     // Helper to measure the smallest detectable difference
     const measurePrecision = (timeFn, scale = 1, isBigInt = false) => {

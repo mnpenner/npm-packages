@@ -1,3 +1,4 @@
+/* eslint-disable */
 let small = Infinity
 
 for (let i = 0; i < 1000; ++i) {

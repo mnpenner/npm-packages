@@ -99,6 +99,8 @@ export default defineConfig([
         '**/node_modules/',
         '**/experimental/',
         '**/*.gen.*',
+        'packages/ouid/src/timer-test*.mjs',
+        'packages/ouid/test/test.js',
         'eslint-examples/',
         'scratch/',
         'templates/',
