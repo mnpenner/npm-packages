@@ -1,8 +1,25 @@
-// https://github.com/streamich/react-use/blob/e1d0cd9f7fb2a124a9d46879489abfefdf48d836/src/useLatest.ts
-import { useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 
+/**
+ * "Box" a value inside an object ("ref") and keep it up to date.
+ * This way the ref is stable, but the value is always current.
+ * Useful for avoiding unnecessary churn in `useEffect`.
+ *
+ * @example
+ * ```ts
+ * const cb = useLatest(callback)
+ * useEffect(() => {
+ *   cb.current()
+ * }, [cb])
+ * ```
+ *
+ * @param value - The value to store in the ref.
+ * @returns A ref object containing the latest value.
+ */
 export function useLatest<T>(value: T): { readonly current: T } {
     const ref = useRef(value)
-    ref.current = value
+    useLayoutEffect(() => {
+        ref.current = value
+    }, [value])
     return ref
 }

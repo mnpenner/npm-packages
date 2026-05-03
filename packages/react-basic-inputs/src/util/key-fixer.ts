@@ -14,9 +14,10 @@ function makeKey<T>(opt: AnyOption<T>, idx: number): string {
     try {
         const str = JSON.stringify(opt.value)
         if (str !== undefined) return str
-    } catch (_) {
+    } catch {
         // ignore
     }
+
     return String(idx)
 }
 

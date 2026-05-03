@@ -375,10 +375,11 @@ function DateFieldset() {
             {/*<DatetimeLocalInput value={new Date()} />*/}
             {/*<DatetimeLocalInput value={Date.now()} />*/}
             {/*<DatetimeLocalInput value={Date.now()} />*/}
-            <DatetimeLocalInput defaultValue={Date.now()} />
+            <DatetimeLocalInput defaultValue={1730000000000} />
             <DatetimeLocalInput defaultValue="2024-09-01T18:28Z" />
             <DatetimeLocalInput defaultValue="2024-09-01T18:28:29Z" />
             <DatetimeLocalInput defaultValue="2024-09-01T18:28:29.01Z" />
+
             <DatetimeLocalInput min="2024-09-08T00:00:00" max="2024-09-14T23:59:59" />
             <h3>Controlled</h3>
             <DatetimeLocalInput value={value} onChange={(ev) => setValue(ev.value)} />

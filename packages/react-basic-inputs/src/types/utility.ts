@@ -1,3 +1,5 @@
+import type { ChangeEvent, ComponentPropsWithoutRef, ElementType } from 'react'
+
 // Functions
 export type Fn<TArgs extends ReadonlyArray<unknown> = unknown[], TRet = unknown> = (
     ...args: TArgs[]
@@ -29,18 +31,18 @@ export type nil = null | undefined
 /**
  * Not null or undefined.
  */
-export type NonNil = {} // eslint-disable-line @typescript-eslint/ban-types
+export type NonNil = {}
 
 export type OverrideProps<
-    Base extends import('react').ElementType,
+    Base extends ElementType,
     Extension,
     DeleteKeys extends PropertyKey = never,
-> = Override<import('react').ComponentPropsWithoutRef<Base>, Extension, DeleteKeys>
+> = Override<ComponentPropsWithoutRef<Base>, Extension, DeleteKeys>
 
-export type OmitProps<
-    Base extends import('react').ElementType,
-    DeleteKeys extends PropertyKey,
-> = Omit<import('react').ComponentPropsWithoutRef<Base>, DeleteKeys>
+export type OmitProps<Base extends ElementType, DeleteKeys extends PropertyKey> = Omit<
+    ComponentPropsWithoutRef<Base>,
+    DeleteKeys
+>
 
 // https://stackoverflow.com/a/74881032/65387
 export type MapKeyType<M> = M extends Map<infer K, any> ? K : never
@@ -50,20 +52,20 @@ export type MapValueType<M> = M extends Map<any, infer V> ? V : never
 export type HtmlTextAreaElement = HTMLElementTagNameMap['textarea']
 export type HtmlInputElement = HTMLElementTagNameMap['input']
 export type HtmlSelectElement = HTMLElementTagNameMap['select']
-export type HtmlInputChangeEvent = import('react').ChangeEvent<HtmlInputElement>
+export type HtmlInputChangeEvent = ChangeEvent<HtmlInputElement>
 
 export type ArrayType<T extends any[]> = T[number]
 
 // https://stackoverflow.com/a/69062575/65387 ->
 // https://stackoverflow.com/questions/65805600/type-union-not-checking-for-excess-properties#answer-65805753 ->
 // https://stackoverflow.com/questions/52677576/typescript-discriminated-union-allows-invalid-state/52678379#52678379
-type _UnionKeys<T> = T extends T ? keyof T : never
+type UnionKeys<T> = T extends T ? keyof T : never
 
-type _StrictUnionHelper<T, TAll> = T extends any
-    ? T & Partial<Record<Exclude<_UnionKeys<TAll>, keyof T>, never>>
+type StrictUnionHelper<T, TAll> = T extends any
+    ? T & Partial<Record<Exclude<UnionKeys<TAll>, keyof T>, never>>
     : never
 
 // See also: https://github.com/ts-essentials/ts-essentials#xor
-export type XOR<T> = _StrictUnionHelper<T, T>
+export type XOR<T> = StrictUnionHelper<T, T>
 
 export type RequiredKeys<Type, Key extends keyof Type> = Omit<Type, Key> & Required<Pick<Type, Key>>

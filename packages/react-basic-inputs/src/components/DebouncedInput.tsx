@@ -1,6 +1,9 @@
 import type { OverrideProps } from '../types/utility.ts'
-import type { FC, MutableRefObject } from 'react'
-import { useEffect, useRef, useState } from 'react'
+import type { FC } from 'react'
+
+import { useRef, useState } from 'react'
+
+import { useEventHandler } from '../hooks/useEvent.ts'
 
 export type DebouncedInputChangeEvent = {
     value: string
@@ -25,13 +28,6 @@ export type DebouncedInputProps = OverrideProps<
 
 type Timer = ReturnType<typeof setTimeout>
 
-function clearTimer(timer: MutableRefObject<Timer | null>) {
-    if (timer.current != null) {
-        clearTimeout(timer.current)
-        timer.current = null
-    }
-}
-
 export const DebouncedInput: FC<DebouncedInputProps> = ({
     value: valueProp,
     onChange,
@@ -40,17 +36,18 @@ export const DebouncedInput: FC<DebouncedInputProps> = ({
 }) => {
     const timer = useRef<Timer | null>(null)
     const [inputValue, setInputValue] = useState(valueProp)
+    const [prevValueProp, setPrevValueProp] = useState(valueProp)
 
-    useEffect(() => {
-        clearTimer(timer)
+    if (valueProp !== prevValueProp) {
+        setPrevValueProp(valueProp)
         setInputValue(valueProp)
-    }, [valueProp])
+    }
 
-    const fireChange = () => {
+    const fireChange = useEventHandler(() => {
         if (inputValue !== valueProp) {
             onChange?.({ value: inputValue })
         }
-    }
+    })
 
     return (
         <input
@@ -58,11 +55,16 @@ export const DebouncedInput: FC<DebouncedInputProps> = ({
             value={inputValue}
             onChange={(ev) => {
                 setInputValue(ev.currentTarget.value)
-                clearTimer(timer)
-                timer.current = setTimeout(fireChange, debounce)
+                if (timer.current != null) {
+                    clearTimeout(timer.current)
+                }
+                timer.current = setTimeout(() => fireChange(), debounce)
             }}
             onBlur={() => {
-                clearTimer(timer)
+                if (timer.current != null) {
+                    clearTimeout(timer.current)
+                    timer.current = null
+                }
                 fireChange()
             }}
         />
