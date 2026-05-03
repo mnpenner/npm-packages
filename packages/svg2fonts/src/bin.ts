@@ -8,20 +8,16 @@ import cssesc from 'cssesc'
 import he from 'he'
 import mkdirp from 'mkdirp'
 import sanitizeFileName from 'sanitize-filename'
+import ttf2woff2 from 'ttf2woff2'
 
 import { readDirDeep } from './util.js'
 
 const require = createRequire(import.meta.url)
 
-function cjsDefault<T>(value: T | { default: T }): T {
-    return typeof value === 'object' && value !== null && 'default' in value ? value.default : value
-}
-
-const SVGIcons2SVGFontStream = cjsDefault(require('svgicons2svgfont'))
-const svg2ttf = cjsDefault(require('svg2ttf'))
-const ttf2woff = cjsDefault(require('ttf2woff'))
-const ttf2woff2 = cjsDefault(require('ttf2woff2'))
-const ttf2eot = cjsDefault(require('ttf2eot'))
+const SVGIcons2SVGFontStream = require('svgicons2svgfont')
+const svg2ttf = require('svg2ttf')
+const ttf2woff = require('ttf2woff')
+const ttf2eot = require('ttf2eot')
 const { camelCase } = require('lodash') as { camelCase(value: string): string }
 const { version } = require('../package.json') as { version: string }
 
@@ -61,6 +57,12 @@ const PARSE_CONFIG = {
         'fixed-width': {
             type: 'boolean',
         },
+        'codepoint-file': {
+            type: 'string',
+        },
+        'nested-css': {
+            type: 'boolean',
+        },
     },
     strict: true,
     allowPositionals: true,
@@ -75,6 +77,8 @@ interface CliArgs {
     base?: string
     directory_separator: string
     fixed_width: boolean
+    codepoint_file?: string
+    nested_css: boolean
 }
 
 interface GlyphStream extends fs.ReadStream {
@@ -107,6 +111,8 @@ Options:
   -p, --prefix <prefix>            CSS class name prefix
   -b, --base <class>               CSS class name added to all icons
       --directory-separator <sep>  String to use in CSS class names for sub-directories
+      --codepoint-file <file>      JSON file to read and write icon code points
+      --nested-css                 Nest icon selectors inside the base CSS selector
       --fixed-width                Create a monospace font of the width of the largest input icon`)
 }
 
@@ -160,12 +166,19 @@ async function main(options: Options, positionals: Positionals): Promise<number 
         base: options.base,
         directory_separator: options['directory-separator'] ?? '-',
         fixed_width: options['fixed-width'] ?? false,
+        codepoint_file: options['codepoint-file'],
+        nested_css: options['nested-css'] ?? false,
     }
 
     if (!args.prefix && !args.base) {
         console.error(
             `${commandName()}: Not enough arguments. Either --prefix, --base or both must be provided.`,
         )
+        return 1
+    }
+
+    if (args.nested_css && !args.base) {
+        console.error(`${commandName()}: --nested-css requires --base.`)
         return 1
     }
 
@@ -187,7 +200,7 @@ async function main(options: Options, positionals: Positionals): Promise<number 
     const cssFile = `${outputDir}/${fileName}.css`
     const htmlFile = `${outputDir}/${fileName}.html`
     const jsFile = `${outputDir}/${fileName}.js`
-    const codePointFile = `${outputDir}/${fileName}-chars.json`
+    const codePointFile = args.codepoint_file ?? `${outputDir}/${fileName}-chars.json`
 
     mkdirp.sync(outputDir)
 
@@ -229,6 +242,10 @@ async function main(options: Options, positionals: Positionals): Promise<number 
     const cssDir = path.dirname(cssFile)
     const htmlDir = path.dirname(htmlFile)
 
+    const cssBaseSelector = cssBase
+        ? `.${cssId(cssBase)}`
+        : `[class^="${cssId(cssPrefix)}"], [class*=" ${cssId(cssPrefix)}"]`
+
     let css = `
 @font-face {
   font-family: ${cssStr(fontName)};
@@ -241,7 +258,7 @@ async function main(options: Options, positionals: Positionals): Promise<number 
   font-weight: normal;
   font-style: normal;
 }
-${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${cssId(cssPrefix)}"]`} {
+${cssBaseSelector} {
   font-family: ${cssStr(fontName)} !important; /* Use !important to prevent issues with browser extensions that change fonts */
   speak: none;
   font-style: normal;
@@ -252,23 +269,25 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
   text-rendering: optimizeSpeed; /* Kerning and ligatures aren't needed */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
 `.trimStart()
 
     const cssIcons: string[] = []
     const htmlIcons: string[] = []
     const iconMap: Record<string, string> = {}
     let codePointMap: Record<string, number> = {}
+    let loadedCodePointFile = false
 
     try {
         codePointMap = JSON.parse(fs.readFileSync(codePointFile, { encoding: 'utf8' })) as Record<
             string,
             number
         >
+        loadedCodePointFile = true
         const codePoints = Object.values(codePointMap)
         if (codePoints.length > 0) {
             codePointCounter = Math.max(...codePoints) + 1
         }
+        console.log(`Found '${codePointFile}', using existing code points`)
     } catch (err) {
         if (isNodeError(err) && err.code === 'ENOENT') {
             console.log(`'${codePointFile}' not found, generating new code points`)
@@ -277,14 +296,20 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
         }
     }
 
+    const seenCodePointKeys = new Set<string>()
+
     for (const icon of icons) {
         const glyph = fs.createReadStream(icon) as GlyphStream
 
         const relPath = path.relative(inputDir, icon)
         const iconName = relPath.slice(0, -4).replace(/[/\\]+/g, args.directory_separator)
+        seenCodePointKeys.add(relPath)
 
         if (!codePointMap[relPath]) {
             codePointMap[relPath] = codePointCounter++
+            if (loadedCodePointFile) {
+                console.log(`Added code point for '${relPath}'`)
+            }
         }
 
         const iconChar = String.fromCodePoint(codePointMap[relPath])
@@ -307,9 +332,15 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
             htmlClass = `${cssBase} ${htmlClass}`
         }
 
-        cssIcons.push(`${cssSelector}:before {
+        if (args.nested_css) {
+            cssIcons.push(`  &.${cssId(className)}:before {
+    content: ${cssStr(iconChar)}
+  }`)
+        } else {
+            cssIcons.push(`${cssSelector}:before {
   content: ${cssStr(iconChar)}
 }`)
+        }
 
         htmlIcons.push(
             `<a href="" class="s2i__icon-link"><i class="${he.escape(htmlClass)}"></i><span class="s2i__classname">${he.escape(htmlClass)}</span></a>`,
@@ -317,7 +348,22 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
         iconMap[camelCase(iconName)] = htmlClass
     }
 
-    css += cssIcons.join('\n')
+    if (loadedCodePointFile) {
+        for (const relPath of Object.keys(codePointMap).sort()) {
+            if (!seenCodePointKeys.has(relPath)) {
+                console.log(`Missing icon for existing code point '${relPath}'`)
+            }
+        }
+    }
+
+    if (args.nested_css) {
+        css += `${cssIcons.length > 0 ? `\n${cssIcons.join('\n')}` : ''}
+}
+`
+    } else {
+        css += `}
+${cssIcons.join('\n')}`
+    }
 
     fontStream.end()
 

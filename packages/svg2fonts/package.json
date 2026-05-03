@@ -27,8 +27,9 @@
   },
   "scripts": {
     "build": "bun run --bun tsdown",
-    "test": "bun run build && node dist/bin.mjs test/icons -o test/out -n FontAwesome -f fontawesome -p fa-",
-    "serve": "bunx http-server test/out",
+    "test:build": "bun run build && node dist/bin.mjs test/icons -o test/out -n FontAwesome -f fontawesome -b mrkn --nested-css",
+    "test:serve": "bunx http-server -c-1 test/out",
+    "test": "bun run --sequential test:build test:serve",
     "prepublishOnly": "bun run build"
   },
   "repository": "https://github.com/mnpenner/svg2fonts",
