@@ -30,7 +30,7 @@
     "directory": "packages/podman"
   },
   "scripts": {
-    "build": "bun run build.ts && tsc -p tsconfig.build.json"
+    "build": "bun run build.ts && tsc -p tsconfig.json"
   },
   "devDependencies": {},
   "peerDependencies": {
