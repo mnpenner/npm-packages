@@ -7,20 +7,20 @@ type WSData = {}
 const port = 3000
 
 declare global {
-    var _clients: Set<ServerWebSocket<WSData>> | undefined
+    var clientsGlobal: Set<ServerWebSocket<WSData>> | undefined
 }
 
-if (!globalThis._clients) {
-    globalThis._clients = new Set<ServerWebSocket<WSData>>()
+if (!globalThis.clientsGlobal) {
+    globalThis.clientsGlobal = new Set<ServerWebSocket<WSData>>()
     console.log(`Dev server: http://localhost:${port}/`)
 } else {
-    console.log(`Dev server: Reloading ${globalThis._clients.size} clients...`)
-    for (const ws of globalThis._clients) {
+    console.log(`Dev server: Reloading ${globalThis.clientsGlobal.size} clients...`)
+    for (const ws of globalThis.clientsGlobal) {
         ws.send('reload')
     }
 }
 
-const clients = globalThis._clients
+const clients = globalThis.clientsGlobal
 
 function renderHtml(): string {
     return kitchenSink.toString()
@@ -58,7 +58,7 @@ function withLiveReload(html: string): string {
 serve({
     port,
     development: true,
-    async fetch(req, server) {
+    fetch(req, server) {
         const url = new URL(req.url)
 
         if (url.pathname === '/__live') {

@@ -40,7 +40,7 @@ export namespace JSX {
         children: {}
     }
 
-    export type LibraryManagedAttributes<Component, Props> = Props
+    export type LibraryManagedAttributes<_Component, Props> = Props
 
     export interface IntrinsicAttributes {} // eslint-disable-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-empty-interface
 

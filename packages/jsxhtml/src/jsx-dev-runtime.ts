@@ -8,11 +8,11 @@ export { jsx, Fragment } from './jsx-runtime'
 
 export function jsxDEV(
     tag: string | JsxComponent,
-    props: AnyAttributes,
-    key: unknown,
-    isStaticChildren: unknown,
-    source: unknown,
-    self: unknown,
+    _props: AnyAttributes,
+    _key: unknown,
+    _isStaticChildren: unknown,
+    _source: unknown,
+    _self: unknown,
 ): JsxNode {
     let node: JsxNode = (jsx as AnyFn)(...arguments)
     // if(process.env.JSXHTML_DEV) return node  // Can't turn off dev mode; https://github.com/oven-sh/bun/issues/3768

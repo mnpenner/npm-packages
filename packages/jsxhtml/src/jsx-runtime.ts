@@ -8,10 +8,10 @@ import { isJsxNode } from './jsx-node'
 export function jsx(
     tag: string | JsxComponent,
     props: AnyAttributes,
-    key?: unknown,
-    isStaticChildren?: unknown,
-    source?: unknown,
-    self?: unknown,
+    _key?: unknown,
+    _isStaticChildren?: unknown,
+    _source?: unknown,
+    _self?: unknown,
 ): JsxNode {
     if (isJsxComponent(tag)) {
         const node = tag(props)

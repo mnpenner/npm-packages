@@ -7,8 +7,8 @@ import { expectType } from './internal/type-assert'
 import type { JsxNode } from './jsx-node'
 
 it('is typed', () => {
-    const div = <div />
-    expectType<TypeEqual<typeof div, JsxNode>>(true)
+    const _div = <div />
+    expectType<TypeEqual<typeof _div, JsxNode>>(true)
 })
 
 it('handles basic inputs', () => {
