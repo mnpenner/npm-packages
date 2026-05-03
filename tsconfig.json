@@ -73,7 +73,7 @@
             "react-combobox": ["packages/react-combobox/src/index.tsx"],
             "register-pretty-error": ["packages/register-pretty-error/src/index.ts"],
             "svg-to-react-webpack-loader": ["packages/svg-to-react-webpack-loader/loader.js"],
-            "svg2fonts": ["packages/svg2fonts/bin.js"],
+            "svg2fonts": ["packages/svg2fonts/src/bin.ts"],
             "@mpen/ts-types": ["packages/ts-types/src/index.ts"],
             "@mpen/ts-types/react": ["packages/ts-types/src/react.ts"],
             "yamake": ["packages/yamake/src/index.ts"],

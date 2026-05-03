@@ -1,36 +1,51 @@
 {
   "name": "svg2fonts",
   "version": "0.3.2",
+  "type": "module",
+  "packageManager": "bun@1.3.13",
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "dependencies": {
-    "argparse": "^2.0.1",
     "cssesc": "^3.0.0",
-    "he": "^1",
-    "lodash": "^4",
+    "he": "^1.2.0",
+    "lodash": "^4.17.21",
     "mkdirp": "^1.0.4",
-    "sanitize-filename": "^1.6",
-    "svg2ttf": "^5.0.0",
-    "svgicons2svgfont": "^9",
+    "sanitize-filename": "^1.6.4",
+    "svg2ttf": "^5.2.0",
+    "svgicons2svgfont": "^9.2.0",
     "ttf2eot": "^2",
-    "ttf2woff": "^2",
+    "ttf2woff": "^2.0.2",
     "ttf2woff2": "^8.0.1"
   },
+  "devDependencies": {
+    "@types/lodash": "^4.17.24",
+    "@types/node": "^22",
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
+  },
   "scripts": {
-    "test": "node bin.js test/icons -o test/out -n FontAwesome -f fontawesome -p fa-",
-    "serve": "npx http-server test/out"
+    "build": "bun run --bun tsdown",
+    "test": "bun run build && node dist/bin.mjs test/icons -o test/out -n FontAwesome -f fontawesome -p fa-",
+    "serve": "bunx http-server test/out",
+    "prepublishOnly": "bun run build"
   },
   "repository": "https://github.com/mnpenner/svg2fonts",
   "author": "Mark Penner <npm@mpen.ca>",
   "license": "MIT",
-  "bin": "bin.js",
+  "bin": {
+    "svg2fonts": "./dist/bin.mjs"
+  },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
     "access": "public"
   },
   "exports": {
-    ".": {
-      "bun": "./bin.js",
-      "default": "./bin.js"
-    },
+    ".": "./dist/bin.mjs",
     "./package.json": "./package.json"
-  }
+  },
+  "main": "./dist/bin.mjs",
+  "module": "./dist/bin.mjs",
+  "types": "./dist/bin.d.mts"
 }

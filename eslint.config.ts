@@ -10,7 +10,6 @@ import unusedImports from 'eslint-plugin-unused-imports'
 
 const ignoredPackages = [
     'yamake',
-    'svg2fonts',
     'svg-to-react-webpack-loader',
     'rollup-plugins',
     'react-datepicker',

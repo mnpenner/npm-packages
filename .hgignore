@@ -6,6 +6,7 @@ syntax: rootglob
 **/coverage/
 scratch/
 **.tsbuildinfo
+packages/svg2fonts/test/
 
 # Temporary reference material
 packages/react-global-state/examples/
