@@ -198,14 +198,12 @@ describe('Utilities', () => {
     })
 
     example('Async invocation with tryCallAsync', async () => {
-        const settleUser = await njInvoke.tryCallAsync(async (id: number) => {
+        const settleUser = await njInvoke.tryCallAsync((id: number) => {
             if (id <= 0) throw new Error('invalid id')
-            return { id, name: 'User' }
+            return Promise.resolve({ id, name: 'User' })
         }, 1)
 
-        const failedLookup = await njInvoke.tryCallAsync(async () => {
-            throw 'network down'
-        })
+        const failedLookup = await njInvoke.tryCallAsync(() => Promise.reject('network down'))
 
         log('tryCallAsync success', settleUser) // -> Ok({ id: 1, name: 'User' })
         log('tryCallAsync failure ok?', failedLookup.ok) // -> false
@@ -216,9 +214,9 @@ describe('Utilities', () => {
     })
 
     example('Async wrapping with wrapAsyncFn', async () => {
-        const safeDivide = njInvoke.wrapAsyncFn(async (a: number, b: number) => {
-            if (b === 0) throw 'div by zero'
-            return a / b
+        const safeDivide = njInvoke.wrapAsyncFn((a: number, b: number) => {
+            if (b === 0) return Promise.reject('div by zero')
+            return Promise.resolve(a / b)
         })
 
         const success = await safeDivide(10, 2)
@@ -232,8 +230,8 @@ describe('Utilities', () => {
     })
 
     example('Handling never-rejecting functions with wrapSafeAsyncFn', async () => {
-        const getProfile = njInvoke.wrapSafeAsyncFn(async (id: number) =>
-            id ? ok({ id }) : err('missing id'),
+        const getProfile = njInvoke.wrapSafeAsyncFn((id: number) =>
+            Promise.resolve(id ? ok({ id }) : err('missing id')),
         )
 
         const success = await getProfile(1)
@@ -298,13 +296,14 @@ describe('Fetch helpers', () => {
 
     example('Discriminating network vs HTTP failures', async () => {
         const offlineFetch = mock((_req: Request) => Promise.reject(new Error('ECONNREFUSED')))
-        const missingFetch = mock(
-            async (_req: Request) =>
+        const missingFetch = mock((_req: Request) =>
+            Promise.resolve(
                 new Response(JSON.stringify({ message: 'missing' }), {
                     status: 404,
                     statusText: 'Not Found',
                     headers: { 'Content-Type': 'application/json' },
                 }),
+            ),
         )
 
         try {

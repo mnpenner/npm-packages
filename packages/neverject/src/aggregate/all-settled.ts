@@ -51,7 +51,7 @@ export function allSettled<T extends readonly (NeverjectPromise<any, any> | Mayb
     inputs: T,
 ): NeverjectPromise<AllSettledArray<T>, never> {
     const promise: Promise<Result<AllSettledArray<T>, never>> = Promise.all(
-        inputs.map(async (value) => nj(value as unknown)),
+        inputs.map((value) => nj(value as unknown)),
     ).then((settled) => ok(settled as AllSettledArray<T>))
 
     return NeverjectPromise.fromSafePromise(promise)

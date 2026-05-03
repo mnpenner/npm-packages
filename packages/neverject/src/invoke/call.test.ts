@@ -21,6 +21,7 @@ describe('tryCall', () => {
     it('passes through returned SyncResults unchanged', () => {
         const result = tryCall(mayFail1)
         expectType<TypeEqual<typeof result, Result<number, string>>>(true)
+        expect(result).toBeDefined()
     })
 
     it('handles Ok', () => {
@@ -62,7 +63,7 @@ describe('tryCall', () => {
 
 describe('tryCallAsync', () => {
     it('wraps resolved values in Ok', async () => {
-        const asyncResult = tryCallAsync(async () => 42)
+        const asyncResult = tryCallAsync(() => Promise.resolve(42))
 
         expectType<TypeEqual<typeof asyncResult, NeverjectPromise<number, DetailedError<unknown>>>>(
             true,
@@ -101,9 +102,7 @@ describe('tryCallAsync', () => {
 
     it('captures thrown errors as Err<DetailedError>', async () => {
         const reason = 'boom'
-        const asyncResult = tryCallAsync(async () => {
-            throw reason
-        })
+        const asyncResult = tryCallAsync(() => Promise.reject(reason))
 
         expectType<TypeEqual<typeof asyncResult, NeverjectPromise<never, DetailedError<unknown>>>>(
             true,

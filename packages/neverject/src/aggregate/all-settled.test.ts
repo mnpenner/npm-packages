@@ -35,7 +35,7 @@ describe('allSettledOb', () => {
             never
         >
         const assertAssignable: Expected = asyncResult
-        const assertInverse: typeof asyncResult = assertAssignable
+        expectType<typeof asyncResult>(assertAssignable)
         expectType<TypeEqual<typeof asyncResult, Expected>>(true)
 
         const settledResult = await asyncResult

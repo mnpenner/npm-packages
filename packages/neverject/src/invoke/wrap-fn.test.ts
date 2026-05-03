@@ -31,8 +31,8 @@ describe('wrapFn', () => {
 
     it('preserves SyncResult return types', () => {
         const wrapped = wrapFn(mayFail1)
-
         expectType<TypeEqual<typeof wrapped, () => Result<number, string>>>(true)
+        expect(wrapped).toBeFunction()
     })
 
     it('captures thrown errors when invoked', () => {
@@ -72,9 +72,9 @@ describe('wrapFn', () => {
 describe('wrapAsyncFn', () => {
     it('defers invocation and wraps resolved values', async () => {
         let calls = 0
-        const wrapped = wrapAsyncFn(async (value: number) => {
+        const wrapped = wrapAsyncFn((value: number) => {
             calls += 1
-            return value + 1
+            return Promise.resolve(value + 1)
         })
 
         expectType<
@@ -96,7 +96,7 @@ describe('wrapAsyncFn', () => {
     })
 
     it('passes through AsyncResult returns', async () => {
-        const wrapped = wrapAsyncFn(async () => err('boom'))
+        const wrapped = wrapAsyncFn(() => Promise.resolve(err('boom')))
 
         expectType<TypeEqual<typeof wrapped, () => NeverjectPromise<never, string>>>(true)
 
@@ -109,9 +109,7 @@ describe('wrapAsyncFn', () => {
 
     it('captures thrown errors on invocation', async () => {
         const reason = 'boom'
-        const wrapped = wrapAsyncFn(async () => {
-            throw reason
-        })
+        const wrapped = wrapAsyncFn(() => Promise.reject(reason))
 
         const settled = await wrapped()
         expectType<TypeEqual<typeof settled, Result<never, DetailedError<unknown>>>>(true)
@@ -127,7 +125,7 @@ describe('wrapAsyncFn', () => {
         type ParseError = { message: string }
         const toParseError = (): ParseError => ({ message: 'Parse Error' })
         const safeJsonParse = wrapAsyncFn(
-            async (input: string) => JSON.parse(input) as { id: number },
+            (input: string) => Promise.resolve(JSON.parse(input) as { id: number }),
             toParseError,
         )
 
@@ -149,9 +147,9 @@ describe('wrapAsyncFn', () => {
 describe('wrapSafeAsyncFn', () => {
     it('defers invocation for safe value-returning functions', async () => {
         let calls = 0
-        const wrapped = wrapSafeAsyncFn(async (value: number) => {
+        const wrapped = wrapSafeAsyncFn((value: number) => {
             calls += 1
-            return ok(value * 3)
+            return Promise.resolve(ok(value * 3))
         })
 
         expectType<TypeEqual<typeof wrapped, (value: number) => NeverjectPromise<number, never>>>(
@@ -169,7 +167,9 @@ describe('wrapSafeAsyncFn', () => {
     })
 
     it('passes through safe Result-returning functions', async () => {
-        const wrapped = wrapSafeAsyncFn(async (flag: boolean) => (flag ? err('boom') : ok(flag)))
+        const wrapped = wrapSafeAsyncFn((flag: boolean) =>
+            Promise.resolve(flag ? err('boom') : ok(flag)),
+        )
 
         expectType<TypeEqual<Awaited<ReturnType<typeof wrapped>>, Result<false, string>>>(true)
 

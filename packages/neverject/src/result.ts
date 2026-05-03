@@ -1,4 +1,5 @@
-import { _INTERNAL_RESULT_MARKER } from './result/type-check.ts'
+import type { inspect, InspectOptionsStylized, styleText as nodeStyleText } from 'node:util'
+import { INTERNAL_RESULT_MARKER } from './result/type-check.ts'
 import { varDump } from './var-dump.ts'
 
 interface ResultInterface<T, __E> {
@@ -20,7 +21,7 @@ export class Err<E> implements ResultInterface<never, E> {
     constructor(readonly error: E) {}
 
     readonly ok = false
-    readonly [_INTERNAL_RESULT_MARKER] = true
+    readonly [INTERNAL_RESULT_MARKER] = true
 
     valueOr<U>(defaultValue: U): U {
         return defaultValue
@@ -49,7 +50,7 @@ export class Ok<T> implements ResultInterface<T, never> {
     constructor(readonly value: T) {}
 
     readonly ok = true
-    readonly [_INTERNAL_RESULT_MARKER] = true
+    readonly [INTERNAL_RESULT_MARKER] = true
 
     valueOr<U>(_unused: U): T {
         return this.value
@@ -97,28 +98,24 @@ export function err<E>(error: E): Err<E> {
 
 // --- Add [nodejs.util.inspect.custom] methods.
 declare global {
-    interface Window {} // lets TS know Window exists
-    var window: Window | undefined
+    var window: typeof globalThis | undefined
 }
 
 if (typeof window === 'undefined') {
     // Allow tree-shaking for the browser. Maybe. Or at last skip execution.
     const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom')
 
-    type InspectOptionsStylized = import('node:util').InspectOptionsStylized
-    type StyleTextFn = typeof import('node:util').styleText
-    type InspectFn = typeof import('node:util').inspect
+    type StyleTextFn = typeof nodeStyleText
+    type InspectFn = typeof inspect
 
     let styleText: StyleTextFn = (_, text) => text
-    try {
-        const util = require('node:util') // Seems to be more compatible than `await import`
-
-        if (typeof util.styleText === 'function') {
-            styleText = util.styleText
-        }
-    } catch {
-        //
-    }
+    void import('node:util')
+        .then((util) => {
+            if (typeof util.styleText === 'function') {
+                styleText = util.styleText
+            }
+        })
+        .catch(() => undefined)
 
     Object.defineProperty(Ok.prototype, customInspectSymbol, {
         configurable: true,
