@@ -13,10 +13,14 @@ export default defineConfig({
         host: false,
     },
     plugins: [
-        react(),
+        react({
+            babel: {
+                plugins: [['babel-plugin-react-compiler', { target: '19' }]],
+            },
+        }),
         dts({
             insertTypesEntry: true,
-            rollupTypes: true,
+            rollupTypes: false,
         }),
     ],
     clearScreen: false,
@@ -25,16 +29,20 @@ export default defineConfig({
             localsConvention: 'camelCaseOnly',
         },
     },
+    esbuild: {
+        minifyIdentifiers: false,
+    },
+
     // envDir: __dirname,
 
     // https://vitejs.dev/guide/build#library-mode
     build: {
         // outDir: '../dist',
         // emptyOutDir: true,
-        minify: true,
+        minify: false,
         lib: {
             entry: resolve(__dirname, 'src/bundle.ts'),
-            name: '@mpen/react-basic-inputs',
+            formats: ['es'],
             fileName: 'react-basic-inputs',
         },
         rollupOptions: {
@@ -42,15 +50,6 @@ export default defineConfig({
             // app: 'src/index.html',
             // },
             external: ['react', 'react-dom', 'react/jsx-runtime'],
-            output: {
-                // Provide global variables to use in the UMD build
-                // for externalized deps
-                globals: {
-                    react: 'React',
-                    'react-dom': 'ReactDOM',
-                    'react/jsx-runtime': 'jsxRuntime',
-                },
-            },
         },
     },
 })
