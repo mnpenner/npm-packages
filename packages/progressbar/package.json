@@ -1,3 +1,7 @@
 {
-  "name": "@mpen/progressbar"
+  "name": "@mpen/progressbar",
+  "private": true,
+  "publishConfig": {
+    "access": "public"
+  }
 }

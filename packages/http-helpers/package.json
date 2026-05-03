@@ -1,5 +1,6 @@
 {
   "name": "@mpen/http-helpers",
+  "private": true,
   "type": "module",
   "exports": {
     ".": {
@@ -17,5 +18,8 @@
     "build": "tsdown"
   },
   "main": "./dist/index.mjs",
-  "types": "./dist/index.d.mts"
+  "types": "./dist/index.d.mts",
+  "publishConfig": {
+    "access": "public"
+  }
 }

@@ -59,6 +59,28 @@ type TarEntry = {
     path: string
 }
 
+type PublishResult =
+    | {
+          name: string
+          status: 'published'
+          version: string
+      }
+    | {
+          name: string
+          status: 'would-publish'
+          version: string
+      }
+    | {
+          name: string
+          reason: string
+          status: 'failed'
+      }
+    | {
+          name: string
+          reason: string
+          status: 'skipped'
+      }
+
 /**
  * Checks, builds, hashes, version-bumps, and publishes packages whose packed
  * output has changed since the latest npm release.
@@ -72,6 +94,7 @@ async function main(options: Options, positionals: Positionals): Promise<number 
     }
 
     let failed = false
+    const results: PublishResult[] = []
 
     for (const packageDir of packages) {
         const packageName = packageDir.packageJson.name
@@ -81,12 +104,16 @@ async function main(options: Options, positionals: Positionals): Promise<number 
 
         try {
             if (!packageName) {
-                console.log(chalk.gray('Skipping package without a name.'))
+                const reason = 'package.json does not have a name'
+                console.log(chalk.gray(`Skipping: ${reason}.`))
+                results.push({ name: label, reason, status: 'skipped' })
                 continue
             }
 
             if (packageDir.packageJson.private === true) {
-                console.log(chalk.gray('Skipping private package.'))
+                const reason = `package is ${chalk.red('private')}`
+                console.log(chalk.gray(`Skipping: ${reason}.`))
+                results.push({ name: packageName, reason, status: 'skipped' })
                 continue
             }
 
@@ -94,7 +121,9 @@ async function main(options: Options, positionals: Positionals): Promise<number 
             const release = await getLatestRelease(packageName, registry)
 
             if (!release) {
-                console.log(chalk.gray('Skipping unpublished package.'))
+                const reason = `package is ${chalk.blue('not published')} on npm`
+                console.log(chalk.gray(`Skipping: ${reason}.`))
+                results.push({ name: packageName, reason, status: 'skipped' })
                 continue
             }
 
@@ -121,6 +150,11 @@ async function main(options: Options, positionals: Positionals): Promise<number 
                 console.log(
                     chalk.green(`Packed output matches ${release.version}; skipping publish.`),
                 )
+                results.push({
+                    name: packageName,
+                    reason: `packed output matches ${release.version}`,
+                    status: 'skipped',
+                })
                 continue
             }
 
@@ -133,6 +167,7 @@ async function main(options: Options, positionals: Positionals): Promise<number 
 
             if (options['dry-run']) {
                 console.log(chalk.yellow(`Dry run: would publish ${packageName}@${nextVersion}.`))
+                results.push({ name: packageName, status: 'would-publish', version: nextVersion })
                 continue
             }
 
@@ -140,16 +175,86 @@ async function main(options: Options, positionals: Positionals): Promise<number 
             packageDir.packageJson.version = nextVersion
 
             await publishPackage(packageDir, registry)
+            results.push({ name: packageName, status: 'published', version: nextVersion })
         } catch (err) {
             failed = true
-            console.error(chalk.red(`${label} failed; skipping remaining steps for this package.`))
-            console.error(err instanceof Error ? err.message : err)
+            const reason = err instanceof Error ? err.message : String(err)
+            results.push({ name: label, reason, status: 'failed' })
+            console.log(reason)
+            console.log(chalk.red(`${label} failed; skipping remaining steps for this package.`))
         }
     }
+
+    printSummary(results)
 
     if (failed) {
         return 1
     }
+}
+
+function printSummary(results: readonly PublishResult[]): void {
+    const published = results.filter(isPublishedResult)
+    const wouldPublish = results.filter(isWouldPublishResult)
+    const skipped = results.filter(isSkippedResult)
+    const failedResults = results.filter(isFailedResult)
+
+    console.log(chalk.bold('\nSummary'))
+
+    if (published.length > 0) {
+        console.log(chalk.green('\nPublished:'))
+        for (const result of published) {
+            console.log(`  ${result.name}@${result.version}`)
+        }
+    }
+
+    if (wouldPublish.length > 0) {
+        console.log(chalk.yellow('\nWould publish:'))
+        for (const result of wouldPublish) {
+            console.log(`  ${result.name}@${result.version}`)
+        }
+    }
+
+    if (skipped.length > 0) {
+        console.log(chalk.gray('\nSkipped:'))
+        for (const result of skipped) {
+            console.log(`  ${result.name}: ${result.reason}`)
+        }
+    }
+
+    if (failedResults.length > 0) {
+        console.log(chalk.red('\nFailed:'))
+        for (const result of failedResults) {
+            console.log(`  ${result.name}: ${result.reason}`)
+        }
+    }
+
+    if (results.length === 0) {
+        console.log(chalk.gray('No packages processed.'))
+    }
+}
+
+function isPublishedResult(
+    result: PublishResult,
+): result is Extract<PublishResult, { status: 'published' }> {
+    return result.status === 'published'
+}
+
+function isWouldPublishResult(
+    result: PublishResult,
+): result is Extract<PublishResult, { status: 'would-publish' }> {
+    return result.status === 'would-publish'
+}
+
+function isSkippedResult(
+    result: PublishResult,
+): result is Extract<PublishResult, { status: 'skipped' }> {
+    return result.status === 'skipped'
+}
+
+function isFailedResult(
+    result: PublishResult,
+): result is Extract<PublishResult, { status: 'failed' }> {
+    return result.status === 'failed'
 }
 
 async function findPackageDirs(positionals: readonly string[]): Promise<PackageDir[]> {

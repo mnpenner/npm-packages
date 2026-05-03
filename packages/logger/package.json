@@ -1,3 +1,7 @@
 {
-  "name": "@mpen/logger"
+  "name": "@mpen/logger",
+  "private": true,
+  "publishConfig": {
+    "access": "public"
+  }
 }

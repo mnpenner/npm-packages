@@ -1,5 +1,6 @@
 {
-  "name": "react-datepicker",
+  "name": "@mpen/react-datepicker",
+  "private": true,
   "version": "0.1.0",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
@@ -22,5 +23,8 @@
     "less": "^4.2.2",
     "mkdirp": "^0.5.1",
     "vite": "^5.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
