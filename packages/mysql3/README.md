@@ -13,11 +13,7 @@ This project is no longer maintained. We suggest using one of the following alte
 ## Installation
 
 ```bash
-yarn add mysql3
-# or
 npm i mysql3
-# or
-pnpm add mysql3
 # or
 bun add mysql3
 ```

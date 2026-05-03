@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'bun:test'
 import type { SqlFrag } from './sql'
 import { DuplicateKey, sql } from './sql'
 
