@@ -1,9 +1,5 @@
 // Modified from https://github.com/ljharb/shell-quote/blob/3344a047dd1e95f71c4ca27522cbfd05c56277e0/quote.js
 
-interface Op {
-    op: string
-}
-
 /**
  * Quotes one argument for a POSIX-style shell command string.
  *
@@ -12,9 +8,9 @@ interface Op {
  * invocations. It is not `cmd.exe` quoting; `cmd.exe` treats single quotes as
  * literal characters and needs different escaping rules.
  *
- * Passing an object with an `op` property marks a shell operator token such as
- * `|`, `&&`, or `;`. Operators are escaped character-by-character so they are
- * passed literally instead of being interpreted as shell control syntax.
+ * NUL bytes cannot be represented in shell command strings or process argv, so
+ * this function throws instead of returning a lossy or misleading command
+ * fragment.
  *
  * @example
  * ```ts
@@ -24,27 +20,28 @@ interface Op {
  * shellQuote('C:\\projects\\app\\index.js')
  * // "'C:\\projects\\app\\index.js'"
  *
- * shellQuote({ op: '&&' })
+ * shellQuote('&&')
  * // "\\&\\&"
  * ```
  *
- * @param s - The argument or escaped operator marker to quote.
+ * @param s - The argument to quote.
  * @returns The POSIX-shell-safe representation of `s`.
+ * @throws {TypeError} If `s` contains a NUL byte.
  */
-export function shellQuote(s: string|Op): string {
+export function shellQuote(s: string): string {
+    if (s.includes('\0')) {
+        throw new TypeError('shell arguments cannot contain NUL bytes')
+    }
     if (s === '') {
         return "''"
-    }
-    if (s && typeof s === 'object') {
-        return s.op.replace(/(.)/g, '\\$1')
     }
     if (/["\s\\]/.test(s) && !/'/.test(s)) {
         return "'" + s.replace(/(')/g, '\\$1') + "'"
     }
     if (/["'\s]/.test(s)) {
-        return '"' + s.replace(/(["\\$`!])/g, '\\$1') + '"'
+        return '"' + s.replace(/(["\\$`])/g, '\\$1') + '"'
     }
-    return String(s).replace(/([A-Za-z]:)?([#!"$&'()*,:;<=>?@[\\\]^`{|}])/g, '$1\\$2')
+    return s.replace(/([A-Za-z]:)?([#!"$&'()*,:;<=>?@[\\\]^`{|}])/g, '$1\\$2')
 }
 
 /**
@@ -54,22 +51,23 @@ export function shellQuote(s: string|Op): string {
  * spaces. The returned string is suitable for POSIX-style shell syntax, not
  * `cmd.exe` syntax.
  *
- * Objects with an `op` property represent shell operator tokens that should be
- * preserved as literal text. For example, `{ op: '|' }` becomes `\|`, so the
- * pipe character is passed as an argument instead of connecting two commands.
+ * Shell operator tokens such as `|`, `&&`, and `;` can be passed as normal
+ * strings. They are escaped by [`shellQuote`]{@link shellQuote}, so they are
+ * passed literally instead of being interpreted as shell control syntax.
  *
  * @example
  * ```ts
  * shellQuoteArgs(['bun', 'test', 'c d'])
  * // "bun test 'c d'"
  *
- * shellQuoteArgs(['a', { op: '&&' }, 'b'])
+ * shellQuoteArgs(['a', '&&', 'b'])
  * // "a \\&\\& b"
  * ```
  *
- * @param xs - The arguments or escaped operator markers to quote.
+ * @param xs - The arguments to quote.
  * @returns A POSIX-shell-safe command argument string.
+ * @throws {TypeError} If any argument contains a NUL byte.
  */
-export function shellQuoteArgs(xs: (string|Op)[]): string {
+export function shellQuoteArgs(xs: string[]): string {
     return xs.map(shellQuote).join(' ')
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bun -i
 import { parseArgs, type ParseArgsConfig } from 'node:util'
 import { $ } from 'bun'
-import { shellQuoteArgs } from './shell'
+import { shellQuoteArgs } from './lib/shell-quote'
 
 type PackageJson = {
     scripts?: Record<string, string>

@@ -1,6 +1,7 @@
 #!/usr/bin/env -S bun -i
 import { parseArgs, type ParseArgsConfig } from 'node:util'
 import { $ } from 'bun'
+import { sh } from './lib/shell-exec'
 
 const PARSE_CONFIG = {
     options: {},
@@ -9,7 +10,7 @@ const PARSE_CONFIG = {
 } satisfies ParseArgsConfig
 
 async function main(options: Options, positionals: Positionals): Promise<number | void> {
-    await $`bun run --bun prettier --write ${positionals.length > 0 ? positionals : '.'}`
+    await sh`bun run --bun prettier --write ${positionals.length > 0 ? positionals : '.'}`
 }
 
 //#region Invoke main
