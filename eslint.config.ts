@@ -98,6 +98,8 @@ export default defineConfig([
         '**/.*',
         '**/dist/',
         '**/docs/',
+        '**/ai/',
+        '**/prompts/',
         '**/example/',
         '**/examples/',
         '**/node_modules/',

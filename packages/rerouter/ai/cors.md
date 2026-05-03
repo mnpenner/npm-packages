@@ -23,22 +23,22 @@ const app = new Hono()
 // CORS should be called before the route
 app.use('/api/*', cors())
 app.use(
-    '/api2/*',
-    cors({
-        origin: 'http://example.com',
-        allowHeaders: ['X-Custom-Header', 'Upgrade-Insecure-Requests'],
-        allowMethods: ['POST', 'GET', 'OPTIONS'],
-        exposeHeaders: ['Content-Length', 'X-Kuma-Revision'],
-        maxAge: 600,
-        credentials: true,
-    }),
+  '/api2/*',
+  cors({
+    origin: 'http://example.com',
+    allowHeaders: ['X-Custom-Header', 'Upgrade-Insecure-Requests'],
+    allowMethods: ['POST', 'GET', 'OPTIONS'],
+    exposeHeaders: ['Content-Length', 'X-Kuma-Revision'],
+    maxAge: 600,
+    credentials: true,
+  })
 )
 
 app.all('/api/abc', (c) => {
-    return c.json({ success: true })
+  return c.json({ success: true })
 })
 app.all('/api2/abc', (c) => {
-    return c.json({ success: true })
+  return c.json({ success: true })
 })
 ```
 
@@ -46,21 +46,23 @@ Multiple origins:
 
 ```ts
 app.use(
-    '/api3/*',
-    cors({
-        origin: ['https://example.com', 'https://example.org'],
-    }),
+  '/api3/*',
+  cors({
+    origin: ['https://example.com', 'https://example.org'],
+  })
 )
 
 // Or you can use "function"
 app.use(
-    '/api4/*',
-    cors({
-        // `c` is a `Context` object
-        origin: (origin, c) => {
-            return origin.endsWith('.example.com') ? origin : 'http://example.com'
-        },
-    }),
+  '/api4/*',
+  cors({
+    // `c` is a `Context` object
+    origin: (origin, c) => {
+      return origin.endsWith('.example.com')
+        ? origin
+        : 'http://example.com'
+    },
+  })
 )
 ```
 
@@ -68,15 +70,16 @@ Dynamic allowed methods based on origin:
 
 ```ts
 app.use(
-    '/api5/*',
-    cors({
-        origin: (origin) => (origin === 'https://example.com' ? origin : '*'),
-        // `c` is a `Context` object
-        allowMethods: (origin, c) =>
-            origin === 'https://example.com'
-                ? ['GET', 'HEAD', 'POST', 'PATCH', 'DELETE']
-                : ['GET', 'HEAD'],
-    }),
+  '/api5/*',
+  cors({
+    origin: (origin) =>
+      origin === 'https://example.com' ? origin : '*',
+    // `c` is a `Context` object
+    allowMethods: (origin, c) =>
+      origin === 'https://example.com'
+        ? ['GET', 'HEAD', 'POST', 'PATCH', 'DELETE']
+        : ['GET', 'HEAD'],
+  })
 )
 ```
 
@@ -112,10 +115,10 @@ If you want to adjust CORS configuration according to the execution environment,
 
 ```ts
 app.use('*', async (c, next) => {
-    const corsMiddlewareHandler = cors({
-        origin: c.env.CORS_ORIGIN,
-    })
-    return corsMiddlewareHandler(c, next)
+  const corsMiddlewareHandler = cors({
+    origin: c.env.CORS_ORIGIN,
+  })
+  return corsMiddlewareHandler(c, next)
 })
 ```
 
@@ -129,32 +132,29 @@ import { cloudflare } from '@cloudflare/vite-plugin'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-    server: {
-        cors: false, // disable Vite's built-in CORS setting
-    },
-    plugins: [cloudflare()],
+  server: {
+    cors: false, // disable Vite's built-in CORS setting
+  },
+  plugins: [cloudflare()],
 })
 ```
-
 </hono>
 
-## <elysia>
-
+<elysia>
+---
 title: CORS Plugin - ElysiaJS
 head:
-
--   - meta
+- - meta
 - property: 'og:title'
-  content: CORS Plugin - ElysiaJS
+content: CORS Plugin - ElysiaJS
 
-                - - meta
-                  - name: 'description'
-                    content: Plugin for Elysia that adds support for customizing Cross-Origin Resource Sharing behavior. Start by installing the plugin with "bun add @elysiajs/cors".
+    - - meta
+      - name: 'description'
+        content: Plugin for Elysia that adds support for customizing Cross-Origin Resource Sharing behavior. Start by installing the plugin with "bun add @elysiajs/cors".
 
-                - - meta
-                  - name: 'og:description'
-                    content: Plugin for Elysia that adds support for customizing Cross-Origin Resource Sharing behavior. Start by installing the plugin with "bun add @elysiajs/cors".
-
+    - - meta
+      - name: 'og:description'
+        content: Plugin for Elysia that adds support for customizing Cross-Origin Resource Sharing behavior. Start by installing the plugin with "bun add @elysiajs/cors".
 ---
 
 # CORS Plugin
@@ -302,13 +302,13 @@ import { Elysia } from 'elysia'
 import { cors } from '@elysiajs/cors'
 
 const app = new Elysia()
-    .use(
-        cors({
-            origin: /.*\.saltyaom\.com$/,
-        }),
-    )
-    .get('/', () => 'Hi')
-    .listen(3000)
+	.use(
+		cors({
+			origin: /.*\.saltyaom\.com$/
+		})
+	)
+	.get('/', () => 'Hi')
+	.listen(3000)
 ```
 
 This will allow requests from top-level domains with `saltyaom.com`
@@ -406,7 +406,7 @@ console.log('CORS-enabled web server listening on port 80')
 })
 You can also enable pre-flight across-the-board like so:
 
-app.options('\*', cors()) // include before other routes
+app.options('*', cors()) // include before other routes
 NOTE: When using this middleware as an application level middleware (for example, app.use(cors())), pre-flight requests are already handled for all routes.
 
 Customizing CORS Settings Dynamically per Request
@@ -428,10 +428,10 @@ var corsOptions;
 if (req.path.startsWith('/auth/connect/')) {
 corsOptions = {
 origin: 'http://mydomain.com', // Allow only a specific origin
-credentials: true, // Enable cookies and credentials
+credentials: true,            // Enable cookies and credentials
 };
 } else {
-corsOptions = { origin: '\*' }; // Allow all origins for other routes
+corsOptions = { origin: '*' };   // Allow all origins for other routes
 }
 callback(null, corsOptions);
 };
@@ -454,7 +454,7 @@ origin: Configures the Access-Control-Allow-Origin CORS header. Possible values:
 Boolean - set origin to true to reflect the request origin, as defined by req.header('Origin'), or set it to false to disable CORS.
 String - set origin to a specific origin. For example, if you set it to
 "http://example.com" only requests from “http://example.com” will be allowed.
-"\*" for all domains to be allowed.
+"*" for all domains to be allowed.
 RegExp - set origin to a regular expression pattern which will be used to test the request origin. If it’s a match, the request origin will be reflected. For example the pattern /example\.com$/ will reflect any request that is coming from an origin ending with “example.com”.
 Array - set origin to an array of valid origins. Each origin can be a String or a RegExp. For example ["http://example1.com", /\.example2\.com$/] will accept any request from “http://example1.com” or from a subdomain of “example2.com”.
 Function - set origin to a function implementing some custom logic. The function takes the request origin as the first parameter and a callback (called as callback(err, origin), where origin is a non-function value of the origin option) as the second.
@@ -468,7 +468,7 @@ optionsSuccessStatus: Provides a status code to use for successful OPTIONS reque
 The default configuration is the equivalent of:
 
 {
-"origin": "\*",
+"origin": "*",
 "methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
 "preflightContinue": false,
 "optionsSuccessStatus": 204

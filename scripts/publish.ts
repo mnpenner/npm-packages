@@ -52,6 +52,14 @@ type RunOptions = {
     capture?: boolean
     cwd?: string
     env?: Record<string, string | undefined>
+    suppressFailureOutput?: boolean
+}
+
+type QuietStep = {
+    args: string[]
+    command: string
+    cwd?: string
+    label: string
 }
 
 type TarEntry = {
@@ -127,19 +135,23 @@ async function main(options: Options, positionals: Positionals): Promise<number 
                 continue
             }
 
-            if (!options.force) {
-                await run('bun', ['scripts/check.ts', packageDir.dirName], {
-                    cwd: process.cwd(),
-                })
-            } else {
+            if (options.force) {
                 console.log(chalk.yellow('Skipping checks because --force was provided.'))
+            } else {
+                await checkPackage(packageDir)
             }
 
             if (!packageDir.packageJson.scripts?.build) {
                 throw new Error(`${packageName} is published but does not have a build script.`)
             }
 
-            await run('bun', ['run', 'build'], { cwd: packageDir.path })
+            console.log('build')
+            await runQuietStep({
+                args: ['run', 'build'],
+                command: 'bun',
+                cwd: packageDir.path,
+                label: 'build',
+            })
 
             const [localHash, releaseHash] = await Promise.all([
                 createLocalPackageHash(packageDir.path),
@@ -190,6 +202,51 @@ async function main(options: Options, positionals: Positionals): Promise<number 
     if (failed) {
         return 1
     }
+}
+
+async function checkPackage(packageDir: PackageDir): Promise<void> {
+    console.log('static analysis')
+    await runQuietStep({
+        args: ['run', 'lint', join('packages', packageDir.dirName)],
+        command: 'bun',
+        label: 'lint',
+    })
+    await runQuietStep({
+        args: ['run', 'typecheck', packageDir.dirName],
+        command: 'bun',
+        label: 'types',
+    })
+    await runQuietStep({
+        args: ['run', '--bun', 'prettier', join('packages', packageDir.dirName), '--check'],
+        command: 'bun',
+        label: 'format',
+    })
+
+    console.log('tests')
+    await runQuietStep({
+        args: ['run', 'test:unit', packageDir.dirName],
+        command: 'bun',
+        label: 'unit',
+    })
+}
+
+async function runQuietStep(step: QuietStep): Promise<void> {
+    const passed = await run(step.command, step.args, {
+        capture: true,
+        cwd: step.cwd,
+        suppressFailureOutput: true,
+    }).then(
+        () => true,
+        () => false,
+    )
+
+    if (passed) {
+        console.log(`    ${chalk.green('✓')} ${step.label}`)
+        return
+    }
+
+    console.log(`    ${chalk.red('✗')} ${step.label}`)
+    throw new Error(`${step.label} failed`)
 }
 
 function printSummary(results: readonly PublishResult[]): void {
@@ -638,7 +695,7 @@ async function run(command: string, args: string[], options: RunOptions = {}): P
     ])
 
     if (exitCode !== 0) {
-        if (options.capture && stderr.trim()) {
+        if (options.capture && !options.suppressFailureOutput && stderr.trim()) {
             console.error(stderr.trim())
         }
 
