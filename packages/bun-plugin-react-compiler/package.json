@@ -36,5 +36,8 @@
     },
     "./package.json": "./package.json"
   },
-  "types": "./dist/react-compiler.d.ts"
+  "types": "./dist/react-compiler.d.ts",
+  "publishConfig": {
+    "access": "public"
+  }
 }

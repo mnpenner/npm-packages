@@ -32,5 +32,8 @@
       "default": "./src/index.tsx"
     },
     "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

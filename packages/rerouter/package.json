@@ -35,5 +35,8 @@
   },
   "dependencies": {
     "@mpen/uri-template": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

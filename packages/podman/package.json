@@ -35,5 +35,8 @@
   "devDependencies": {},
   "peerDependencies": {
     "typescript": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

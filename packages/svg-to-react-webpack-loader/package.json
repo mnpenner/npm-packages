@@ -13,7 +13,8 @@
     "url": "https://github.com/mnpenner/svg-to-react-webpack-loader"
   },
   "publishConfig": {
-    "registry": "https://registry.npmjs.org"
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
   },
   "exports": {
     ".": {

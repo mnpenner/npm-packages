@@ -34,5 +34,8 @@
     "url": "https://github.com/mnpenner/npm-packages.git",
     "directory": "packages/imut-utils"
   },
-  "types": "./dist/index.d.mts"
+  "types": "./dist/index.d.mts",
+  "publishConfig": {
+    "access": "public"
+  }
 }

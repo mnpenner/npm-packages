@@ -28,7 +28,8 @@
     "url": "https://bitbucket.org/mnpenner/jtilz"
   },
   "publishConfig": {
-    "registry": "https://registry.npmjs.org"
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
   },
   "dependencies": {
     "@mpen/is-type": "workspace:*"

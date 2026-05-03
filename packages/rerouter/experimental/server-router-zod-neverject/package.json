@@ -17,5 +17,8 @@
     "@mpen/server-router": "workspace:*",
     "neverject": "workspace:*",
     "zod": "^4.1.13"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

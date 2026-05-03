@@ -44,5 +44,8 @@
     "release": "run-s bundle patch && npm publish --access=public && hg push",
     "lint": "sh -c 'eslint --quiet --fix --fix-type problem,suggestion,layout,directive -- \"${@:-.}\"' --",
     "types": "tsc -p tsconfig.bundle.json"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

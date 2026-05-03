@@ -58,5 +58,8 @@
       "default": "./src/main.ts"
     },
     "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

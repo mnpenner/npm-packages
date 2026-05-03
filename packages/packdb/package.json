@@ -31,5 +31,8 @@
       "default": "PackDB.js"
     },
     "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -39,5 +39,8 @@
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
-  "types": "./dist/index.d.cts"
+  "types": "./dist/index.d.cts",
+  "publishConfig": {
+    "access": "public"
+  }
 }
