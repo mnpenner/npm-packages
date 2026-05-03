@@ -66,6 +66,7 @@
     "fix": "bun scripts/fix.ts",
     "static-analysis": "run-p -c -s lint typecheck check-format",
     "check": "bun scripts/check.ts",
-    "publish": "bun scripts/publish.ts"
+    "publish": "bun scripts/publish.ts",
+    "diff": "hg diff"
   }
 }

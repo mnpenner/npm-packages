@@ -11,6 +11,7 @@ const PARSE_CONFIG = {
 import { tmpdir } from 'node:os'
 import { mkdtemp, readdir, readFile, writeFile, unlink, rm } from 'node:fs/promises'
 import { join } from 'node:path'
+import { br, sh } from './lib/shell-exec'
 
 async function main(options: Options, positionals: Positionals): Promise<number | void> {
     const packagesDir = 'packages'
@@ -153,6 +154,7 @@ async function main(options: Options, positionals: Positionals): Promise<number 
         readme.substring(endIndex)
 
     await writeFile(readmePath, readme)
+    await br`prettier --write ${readmePath}`
     console.log('README.md updated!')
 }
 

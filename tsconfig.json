@@ -105,7 +105,7 @@
             "@mpen/server-router/routes": ["packages/server-router/src/routes/index.ts"]
         }
     },
-    "include": ["packages/**/*.ts", "packages/**/*.tsx", "packages/**/*.js"],
+
     "exclude": [
         "**/node_modules/**",
         "**/dist/**",

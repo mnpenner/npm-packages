@@ -21,7 +21,6 @@ const jsAndTsFiles = ['**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}']
 const tsFiles = ['**/*.{ts,cts,mts,tsx}']
 
 const browserPackageFiles = [
-    'packages/bun-plugin-react-compiler/test/serve-static-fixture/**/*.{js,jsx,ts,tsx}',
     'packages/crap-app/template/**/*.{js,jsx,ts,tsx}',
     'packages/jsxhtml/src/internal/dev.tsx',
     'packages/react-ajax-loader/**/*.{js,jsx,ts,tsx}',
@@ -33,7 +32,6 @@ const browserPackageFiles = [
 ]
 
 const reactPackageFiles = [
-    'packages/bun-plugin-react-compiler/test/serve-static-fixture/**/*.{js,jsx,ts,tsx}',
     'packages/crap-app/template/**/*.{js,jsx,ts,tsx}',
     'packages/react-ajax-loader/**/*.{js,jsx,ts,tsx}',
     'packages/react-basic-inputs/**/*.{js,jsx,ts,tsx}',
@@ -98,6 +96,7 @@ export default defineConfig([
         '**/node_modules/',
         '**/experimental/',
         '**/*.gen.*',
+        'packages/bun-plugin-react-compiler/test/',
         'packages/ouid/src/timer-test*.mjs',
         'packages/ouid/test/test.js',
         'eslint-examples/',
