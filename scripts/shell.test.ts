@@ -27,10 +27,10 @@ test('quote ops', () => {
     expect(shellQuoteArgs(['a', { op: '&&' }, 'b', { op: ';' }, 'c'])).toBe('a \\&\\& b \\; c')
 })
 
-test.skip('quote windows paths', () => {
+test('quote windows paths', () => {
     const path = 'C:\\projects\\node-shell-quote\\index.js'
 
-    expect(shellQuoteArgs([path, 'b', 'c d'])).toBe("C:\\projects\\node-shell-quote\\index.js b 'c d'")
+    expect(shellQuoteArgs([path, 'b', 'c d'])).toBe("'C:\\projects\\node-shell-quote\\index.js' b 'c d'")
 })
 
 test("chars for windows paths don't break out", () => {
