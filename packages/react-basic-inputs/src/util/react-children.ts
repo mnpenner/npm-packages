@@ -27,7 +27,7 @@ export function* iterateChildren(
     if (isValidElement<MaybeChildrenProps>(children)) {
         yield children
         yield* iterateChildren(children.props.children)
-    } else if (isIterable(children)) {
+    } else if (isIterable(children) && typeof children !== 'string') {
         for (const child of children) {
             yield* iterateChildren(child)
         }
