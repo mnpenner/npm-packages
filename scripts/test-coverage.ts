@@ -129,7 +129,7 @@ async function main(options: Options, positionals: Positionals): Promise<number 
         const docsLink = hasDocs
             ? `[Docs](https://mnpenner.github.io/npm-packages/${dirName}/) `
             : '—'
-        const pkgLink = `[\`${displayName}\`](https:/npmx.dev/package/${displayName})`
+        const pkgLink = `[\`${displayName}\`](https://npmx.dev/package/${displayName})`
         table += `| ${pkgLink} | ${version} | ${dirLink} | ${packSize} | ${coverageStr} | ${docsLink} |\n`
     }
 
