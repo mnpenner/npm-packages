@@ -2,33 +2,21 @@
   "name": "@mpen/base50",
   "version": "0.2.0",
   "packageManager": "bun@1.2.10",
+  "type": "module",
   "exports": {
-    ".": {
-      "bun": "./src/bundle.ts",
-      "types": "./dist/bundle.d.ts",
-      "import": "./dist/bundle.mjs",
-      "require": "./dist/bundle.cjs"
-    },
+    ".": "./dist/bundle.mjs",
     "./package.json": "./package.json"
   },
-  "type": "module",
   "files": [
     "dist"
   ],
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^25.0.8",
-    "@rollup/plugin-node-resolve": "^15.3.1",
-    "@rollup/plugin-replace": "^5.0.7",
-    "@rollup/plugin-terser": "^0.4.4",
-    "@rollup/plugin-typescript": "^11.1.6",
-    "bun-types": "^1.2.10",
-    "chalk": "^5.4.1",
+    "@types/bun": "catalog:",
+    "bun-types": "catalog:",
+    "chalk": "catalog:",
     "mitata": "^1.0.34",
-    "npm-run-all": "^4.1.5",
-    "rimraf": "^5.0.10",
-    "rollup": "^3.29.5",
-    "tslib": "^2.8.1",
-    "typescript": "^5.8.3"
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
   },
   "engines": {
     "bun": ">=1.0.0"
@@ -37,13 +25,9 @@
   "scripts": {
     "test": "bun test --watch src",
     "dev": "bun run --hot src/dev.ts",
-    "bundle:clean": "rimraf -g \"dist/*\"",
-    "bundle:build": "rollup -c",
-    "bundle": "run-s bundle:clean bundle:build",
+    "build": "tsdown",
     "patch": "npm version patch && VER=$(jq -r '.version' package.json) && hg ci -m \"Publish v$VER\" && hg tag \"v$VER\"",
-    "release": "run-s bundle patch && npm publish --access=public && hg push",
-    "lint": "sh -c 'eslint --quiet --fix --fix-type problem,suggestion,layout,directive -- \"${@:-.}\"' --",
-    "types": "tsc -p tsconfig.bundle.json"
+    "release": "bun run build && bun run patch && npm publish --access=public && hg push"
   },
   "publishConfig": {
     "access": "public"

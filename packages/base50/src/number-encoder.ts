@@ -1,5 +1,8 @@
 import { u8ToInt } from './buffer-to-bigint'
 
+/**
+ * Encodes and decodes numbers (integers and floats) and buffers into base-N strings.
+ */
 export class NumberEncoder {
     private readonly _alphabet: string[]
     private readonly _reverse: Map<string, bigint>
@@ -9,6 +12,18 @@ export class NumberEncoder {
     private readonly _negSign: string
     private readonly _decSep: string
 
+    /**
+     * Create a new NumberEncoder.
+     *
+     * @param alphabet - The alphabet to use for encoding.
+     * @param negativeSign - The character to use for negative numbers.
+     * @param decimalSeparator - The character to use for the decimal separator.
+     *
+     * @example
+     * ```ts
+     * const encoder = new NumberEncoder('0123456789ABCDEF');
+     * ```
+     */
     constructor(alphabet: ArrayLike<string>, negativeSign = '-', decimalSeparator = '.') {
         this._alphabet = Array.from(alphabet)
         this._reverse = new Map(this._alphabet.map((ch, i) => [ch, BigInt(i)]))
@@ -19,6 +34,17 @@ export class NumberEncoder {
         this._decSep = decimalSeparator
     }
 
+    /**
+     * Decode a base-N integer string or array of characters back into a BigInt.
+     *
+     * @param str - The base-N string or array of characters to decode.
+     * @returns The decoded BigInt.
+     *
+     * @example
+     * ```ts
+     * encoder.decodeInt('123');
+     * ```
+     */
     decodeInt(str: ArrayLike<string>): bigint {
         // split into symbols (handles surrogate pairs)
         const arr =
@@ -43,6 +69,17 @@ export class NumberEncoder {
         return neg ? -num : num
     }
 
+    /**
+     * Encode an integer or BigInt into a base-N string.
+     *
+     * @param input - The integer or BigInt to encode.
+     * @returns The encoded base-N string.
+     *
+     * @example
+     * ```ts
+     * encoder.encodeInt(123n);
+     * ```
+     */
     encodeInt(input: number | bigint): string {
         let n = BigInt(input)
         const A = this._alphabet
@@ -67,8 +104,15 @@ export class NumberEncoder {
     }
 
     /**
-     * Encode a JS number (float) into your base-N alphabet.
-     * @param x any finite number
+     * Encode a JS number (float) into a base-N string.
+     *
+     * @param x - Any finite number.
+     * @returns The encoded base-N string.
+     *
+     * @example
+     * ```ts
+     * encoder.encodeFloat(123.456);
+     * ```
      */
     encodeFloat(x: number): string {
         if (!Number.isFinite(x)) throw new Error('Non-finite')
@@ -95,7 +139,15 @@ export class NumberEncoder {
     }
 
     /**
-     * Decode a base-N float string back to JS number.
+     * Decode a base-N float string back into a JS number.
+     *
+     * @param s - The base-N float string to decode.
+     * @returns The decoded number.
+     *
+     * @example
+     * ```ts
+     * encoder.decodeFloat('123.456');
+     * ```
      */
     decodeFloat(s: string): number {
         const arr = Array.from(s) // preserves emojis/etc.
@@ -120,6 +172,17 @@ export class NumberEncoder {
         return sign * (Number(iBig) + (denom > 1 ? fracN / denom : 0))
     }
 
+    /**
+     * Decode a base-N string back into a Uint8Array.
+     *
+     * @param str - The base-N string or array of characters to decode.
+     * @returns The decoded Uint8Array.
+     *
+     * @example
+     * ```ts
+     * encoder.decodeBuf('123');
+     * ```
+     */
     decodeBuf(str: ArrayLike<string>): Uint8Array {
         if (!str?.length) return new Uint8Array()
 
@@ -164,7 +227,8 @@ export class NumberEncoder {
      * Calculate the maximum length of a string encoded in base N, given the
      * number of bytes it will take up.
      *
-     * @param byteLength
+     * @param byteLength - The length of the buffer in bytes.
+     * @returns The maximum length of the encoded string.
      */
     maxLength(byteLength: number): number {
         // original would produce 1 for 0 bytes
@@ -172,6 +236,17 @@ export class NumberEncoder {
         return Math.ceil((8 * byteLength) / this._log2Base)
     }
 
+    /**
+     * Encode a buffer into a base-N string.
+     *
+     * @param arr - The buffer or array of numbers to encode.
+     * @returns The encoded base-N string.
+     *
+     * @example
+     * ```ts
+     * encoder.encodeBuf(new Uint8Array([1, 2, 3]));
+     * ```
+     */
     encodeBuf(arr: ArrayLike<number>): string {
         const len = arr.length
         if (len === 0) return ''

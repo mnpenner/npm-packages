@@ -116,11 +116,28 @@ type MapItem =
           type: VarType.STATIC
       }
 
+/**
+ * Implementation of RFC 6570 URI Templates.
+ *
+ * @see {@link https://tools.ietf.org/html/rfc6570}
+ *
+ * @template P - The type of the parameters for expansion and matching.
+ */
 export class UriTemplate<P extends UriParams> {
     expandParts: TemplateParts
     matchRegex: RegExp
     matchMap: Map<string, MapItem>
 
+    /**
+     * Create a new UriTemplate.
+     *
+     * @param template - The URI template string (e.g., `/users/{id}`).
+     *
+     * @example
+     * ```ts
+     * const template = new UriTemplate('/users/{id}');
+     * ```
+     */
     constructor(template: string) {
         this.expandParts = []
         const re: string[] = ['^']
@@ -270,6 +287,17 @@ export class UriTemplate<P extends UriParams> {
         this.matchRegex = new RegExp(re.join(''))
     }
 
+    /**
+     * Expand the template with the given variables.
+     *
+     * @param variables - The variables to use for expansion.
+     * @returns The expanded URI string.
+     *
+     * @example
+     * ```ts
+     * template.expand({ id: 123 }); // "/users/123"
+     * ```
+     */
     expand(variables: P): string {
         const out = []
         for (const p of this.expandParts) {
@@ -334,6 +362,17 @@ export class UriTemplate<P extends UriParams> {
         return out.join('')
     }
 
+    /**
+     * Match a URI against the template.
+     *
+     * @param url - The URI to match.
+     * @returns The match result containing the score and parsed parameters, or null if no match.
+     *
+     * @example
+     * ```ts
+     * template.match('/users/123'); // { score: 5, params: { id: '123' } }
+     * ```
+     */
     match(url: string): UriMatch<P> | null {
         // https://reach.tech/router/ranking
 

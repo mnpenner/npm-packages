@@ -33,6 +33,10 @@ function padArrayRight<T>(chunk: T[], maxLength: number, fill: T): T[] {
     return chunk.concat(Array(maxLength - chunk.length).fill(fill))
 }
 
+/**
+ * Encodes and decodes buffers into base-N strings using a chunked approach.
+ * This is useful for consistent output lengths regardless of value.
+ */
 export class ChunkedBufferEncoder {
     private readonly _alphabet: string[]
     private readonly _reverse: Map<string, bigint>
@@ -40,6 +44,18 @@ export class ChunkedBufferEncoder {
     private readonly _bytesPerChunk: number
     private readonly _charsPerChunk: number
 
+    /**
+     * Create a new ChunkedBufferEncoder.
+     *
+     * @param alphabet - The alphabet to use for encoding.
+     * @param bytesPerChunk - The number of bytes per chunk.
+     * @param charsPerChunk - The number of characters per chunk. If not provided, it is calculated based on the alphabet size.
+     *
+     * @example
+     * ```ts
+     * const encoder = new ChunkedBufferEncoder('0123456789ABCDEF', 2);
+     * ```
+     */
     constructor(alphabet: ArrayLike<string>, bytesPerChunk: number, charsPerChunk?: number) {
         this._alphabet = toArray(alphabet)
         assert(this._alphabet.length >= 2)
@@ -58,22 +74,37 @@ export class ChunkedBufferEncoder {
         )
     }
 
+    /** The base of the encoding (length of the alphabet). */
     get base() {
         return this._base
     }
 
+    /** The alphabet used for encoding. */
     get alphabet() {
         return this._alphabet
     }
 
+    /** The number of bytes in each chunk. */
     get bytesPerChunk() {
         return this._bytesPerChunk
     }
 
+    /** The number of characters in each encoded chunk. */
     get charsPerChunk() {
         return this._charsPerChunk
     }
 
+    /**
+     * Encode a buffer or string into a base-N string.
+     *
+     * @param input - The input to encode.
+     * @returns The encoded base-N string.
+     *
+     * @example
+     * ```ts
+     * encoder.encode(new Uint8Array([1, 2, 3]));
+     * ```
+     */
     encode(input: string | ArrayLike<number>): string {
         const buf =
             typeof input === 'string' ? new TextEncoder().encode(input) : Uint8Array.from(input)
@@ -111,6 +142,17 @@ export class ChunkedBufferEncoder {
         return out.join('')
     }
 
+    /**
+     * Decode a base-N string or array of characters back into a Uint8Array.
+     *
+     * @param input - The base-N string or array of characters to decode.
+     * @returns The decoded Uint8Array.
+     *
+     * @example
+     * ```ts
+     * encoder.decode('123');
+     * ```
+     */
     decode(input: string | ArrayLike<string>): Uint8Array {
         const arr = Array.from(input as any) as string[]
         const len = arr.length
