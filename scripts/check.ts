@@ -20,19 +20,26 @@ async function main(_options: Options, positionals: Positionals): Promise<number
         .map((dirent) => dirent.name)
 
     if (positionals.length === 0) {
-        console.log('Running full check (test, lint, typecheck)...')
+        console.log('Running full check (test, lint, typecheck, format)...')
         // Run in parallel for full check to match existing behavior of 'bun run check'
         const testPromise = $`bun run test:unit`.nothrow()
         const lintPromise = $`bun run lint .`.nothrow()
         const typecheckPromise = $`bun run typecheck`.nothrow()
+        const formatPromise = $`bun run check-format`.nothrow()
 
-        const [testRes, lintRes, typeRes] = await Promise.all([
+        const [testRes, lintRes, typeRes, formatRes] = await Promise.all([
             testPromise,
             lintPromise,
             typecheckPromise,
+            formatPromise,
         ])
 
-        if (testRes.exitCode !== 0 || lintRes.exitCode !== 0 || typeRes.exitCode !== 0) {
+        if (
+            testRes.exitCode !== 0 ||
+            lintRes.exitCode !== 0 ||
+            typeRes.exitCode !== 0 ||
+            formatRes.exitCode !== 0
+        ) {
             return 1
         }
         return 0
@@ -76,6 +83,10 @@ async function main(_options: Options, positionals: Positionals): Promise<number
     console.log('\n--- Linting ---')
     const lintRes = await $`bun run lint ${Array.from(lintTargets)}`.nothrow()
     if (lintRes.exitCode !== 0) failed = true
+
+    console.log('\n--- Formatting ---')
+    const formatRes = await $`bun run --bun prettier ${Array.from(lintTargets)} --check`.nothrow()
+    if (formatRes.exitCode !== 0) failed = true
 
     if (targetPackages.size > 0 || positionals.length > 0) {
         console.log('\n--- Typechecking ---')
