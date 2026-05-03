@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bun -i
 import { parseArgs, type ParseArgsConfig } from 'node:util'
 import { $ } from 'bun'
-import { shellQuoteArgs } from './lib/shell-quote'
+import { sh } from './lib/shell-exec'
 
 type PackageJson = {
     scripts?: Record<string, string>
@@ -25,21 +25,15 @@ async function main(options: Options, positionals: Positionals): Promise<number 
     }
 
     const commands = scriptNames.map((scriptName) => {
-        console.log(['$', 'bun', 'run', scriptName, shellQuoteArgs(positionals)].join(' '))
-
         return {
-            process: Bun.spawn([process.execPath, 'run', scriptName, ...positionals], {
-                stderr: 'inherit',
-                stdin: 'inherit',
-                stdout: 'inherit',
-            }),
+            process: sh`${process.execPath} run ${scriptName} ${positionals}`.nothrow(),
             scriptName,
         }
     })
 
     const results = await Promise.all(
         commands.map(async (command) => ({
-            exitCode: await command.process.exited,
+            exitCode: (await command.process).exitCode,
             scriptName: command.scriptName,
         })),
     )

@@ -1,4 +1,13 @@
 - Use bun as a package manager and test runner
+- In Codex on Windows, prefer invoking Bun via PowerShell with `SystemRoot` set and the full Bun path, e.g.
+  `$env:SystemRoot='C:\Windows'; & 'C:\Users\Mark\.bun\bin\bun.exe' run check`
+    - Use this pattern for documented repo commands like `bun run check`, `bun run typecheck`, `bun run lint <files>`,
+      `bun test`, and targeted script runs before assuming dependency resolution or Node/Bun typecheck failures are real
+      repo failures.
+    - Avoid plain `bun ...` / `node ...` validation commands in Codex when they fail with missing packages, `EPERM` under
+      `C:\Users\Mark`, or other environment-shaped errors.
+    - If that still fails with package resolution or filesystem permission errors, rerun the same command with escalation;
+      sandboxed failures like "Cannot find package 'chalk'" can be false negatives.
 - Use tsdown w/ `{exports: true, dts: true, format: 'esm'}` to build
 - Use typescript 6
 - Target esnext/bundler/module
