@@ -8,6 +8,16 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import unusedImports from 'eslint-plugin-unused-imports'
 
+const ignoredPackages = [
+    'yamake',
+    'svg2fonts',
+    'svg-to-react-webpack-loader',
+    'rollup-plugins',
+    'react-datepicker',
+    'react-combobox',
+    'packdb',
+]
+
 const jsAndTsFiles = ['**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}']
 const tsFiles = ['**/*.{ts,cts,mts,tsx}']
 
@@ -84,6 +94,7 @@ const reactHooksPlugin = reactHooks as unknown as ESLintTypes.Plugin
 
 export default defineConfig([
     globalIgnores([
+        ...ignoredPackages.map((p) => `packages/${p}/`),
         '**/.*',
         '**/dist/',
         '**/docs/',
@@ -94,6 +105,7 @@ export default defineConfig([
         '**/*.gen.*',
         'eslint-examples/',
         'scratch/',
+        'templates/',
     ]),
     {
         name: 'global/recommended',
@@ -129,8 +141,8 @@ export default defineConfig([
                     vars: 'all',
                     caughtErrors: 'all',
                     args: 'after-used',
-                    varsIgnorePattern: '^(_|__|unused)',
-                    argsIgnorePattern: '^(_|__|unused)',
+                    varsIgnorePattern: '^(_|unused(?![a-z]))',
+                    argsIgnorePattern: '^(_|unused(?![a-z]))',
                     reportUsedIgnorePattern: true,
                 },
             ],
@@ -146,7 +158,13 @@ export default defineConfig([
             ],
             '@typescript-eslint/consistent-type-imports': 'error',
             '@typescript-eslint/no-empty-interface': ['warn', { allowSingleExtends: true }],
-            '@typescript-eslint/no-empty-object-type': ['warn', { allowObjectTypes: 'always' }],
+            '@typescript-eslint/no-empty-object-type': [
+                'warn',
+                {
+                    allowObjectTypes: 'always',
+                    allowInterfaces: 'with-single-extends',
+                },
+            ],
             '@typescript-eslint/no-explicit-any': 'off',
             '@typescript-eslint/no-inferrable-types': [
                 'warn',
@@ -155,6 +173,7 @@ export default defineConfig([
             '@typescript-eslint/no-non-null-assertion': 'off',
             '@typescript-eslint/no-this-alias': 'off',
             '@typescript-eslint/no-unused-vars': 'off',
+            '@typescript-eslint/no-namespace': 'off',
         },
     },
     {
