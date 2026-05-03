@@ -1,6 +1,6 @@
 {
   "name": "@mpen/base50",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "packageManager": "bun@1.2.10",
   "type": "module",
   "exports": {

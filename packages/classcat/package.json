@@ -1,6 +1,6 @@
 {
   "name": "@mpen/classcat",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Conditionally concatenate class names.",
   "repository": {
     "type": "git",

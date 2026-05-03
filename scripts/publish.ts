@@ -129,7 +129,7 @@ async function main(options: Options, positionals: Positionals): Promise<number 
             const release = await getLatestRelease(packageName, registry)
 
             if (!release) {
-                const reason = `package is ${chalk.blue('not published')} on npm`
+                const reason = `package is ${chalk.blue('not published')} on ${registry}`
                 console.log(chalk.gray(`Skipping: ${reason}.`))
                 results.push({ name: packageName, reason, status: 'skipped' })
                 continue
@@ -164,7 +164,7 @@ async function main(options: Options, positionals: Positionals): Promise<number 
                 )
                 results.push({
                     name: packageName,
-                    reason: `packed output matches ${release.version}`,
+                    reason: `packed ${chalk.green('output matches')} ${release.version}`,
                     status: 'skipped',
                 })
                 continue
@@ -241,11 +241,11 @@ async function runQuietStep(step: QuietStep): Promise<void> {
     )
 
     if (passed) {
-        console.log(`    ${chalk.green('✓')} ${step.label}`)
+        console.log(`  ${chalk.green('✓')} ${step.label}`)
         return
     }
 
-    console.log(`    ${chalk.red('✗')} ${step.label}`)
+    console.log(`  ${chalk.red('✗')} ${step.label}`)
     throw new Error(`${step.label} failed`)
 }
 
@@ -265,14 +265,14 @@ function printSummary(results: readonly PublishResult[]): void {
     }
 
     if (wouldPublish.length > 0) {
-        console.log(chalk.yellow('\nWould publish:'))
+        console.log(chalk.cyan('\nWould publish:'))
         for (const result of wouldPublish) {
             console.log(`  ${result.name}@${result.version}`)
         }
     }
 
     if (skipped.length > 0) {
-        console.log(chalk.gray('\nSkipped:'))
+        console.log(chalk.yellow('\nSkipped:'))
         for (const result of skipped) {
             console.log(`  ${result.name}: ${result.reason}`)
         }

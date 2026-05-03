@@ -1,6 +1,6 @@
 {
   "name": "js-serialize",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "author": "Mark Penner <npm@mpen.ca>",
   "dependencies": {
     "@mpen/is-type": "workspace:*"
