@@ -90,6 +90,7 @@ export default defineConfig([
         '**/example/',
         '**/examples/',
         '**/node_modules/',
+        '**/experimental/',
         '**/*.gen.*',
         'eslint-examples/',
         'scratch/',

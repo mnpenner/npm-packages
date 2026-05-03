@@ -147,13 +147,13 @@ head:
 - property: 'og:title'
   content: CORS Plugin - ElysiaJS
 
-            - - meta
-              - name: 'description'
-                content: Plugin for Elysia that adds support for customizing Cross-Origin Resource Sharing behavior. Start by installing the plugin with "bun add @elysiajs/cors".
+              - - meta
+                - name: 'description'
+                  content: Plugin for Elysia that adds support for customizing Cross-Origin Resource Sharing behavior. Start by installing the plugin with "bun add @elysiajs/cors".
 
-            - - meta
-              - name: 'og:description'
-                content: Plugin for Elysia that adds support for customizing Cross-Origin Resource Sharing behavior. Start by installing the plugin with "bun add @elysiajs/cors".
+              - - meta
+                - name: 'og:description'
+                  content: Plugin for Elysia that adds support for customizing Cross-Origin Resource Sharing behavior. Start by installing the plugin with "bun add @elysiajs/cors".
 
 ---
 

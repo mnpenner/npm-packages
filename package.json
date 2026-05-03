@@ -57,9 +57,11 @@
     "lint": "bun run --bun eslint --format ./scripts/eslint-relative-formatter.ts --",
     "typecheck": "bun scripts/typecheck.ts",
     "fix:lint": "bun scripts/eslint-fix.ts",
+    "check-format": "bun run --bun prettier . --check",
     "fix:format": "bun run --bun prettier . --write",
     "fix": "bun scripts/fix.ts",
-    "static-analysis": "run-p -c -s lint typecheck",
-    "check": "bun scripts/check.ts"
+    "static-analysis": "run-p -c -s lint typecheck check-format",
+    "check": "bun scripts/check.ts",
+    "publish": "bun scripts/publish.ts"
   }
 }
