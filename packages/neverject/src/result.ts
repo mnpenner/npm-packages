@@ -102,20 +102,17 @@ declare global {
 }
 
 if (typeof window === 'undefined') {
-    // Allow tree-shaking for the browser. Maybe. Or at last skip execution.
+    // Allow tree-shaking for the browser. Maybe. Or at least skip execution.
     const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom')
 
     type StyleTextFn = typeof nodeStyleText
     type InspectFn = typeof inspect
 
     let styleText: StyleTextFn = (_, text) => text
-    void import('node:util')
-        .then((util) => {
-            if (typeof util.styleText === 'function') {
-                styleText = util.styleText
-            }
-        })
-        .catch(() => undefined)
+    const util = await import('node:util').catch(() => undefined)
+    if (util && typeof util.styleText === 'function') {
+        styleText = util.styleText
+    }
 
     Object.defineProperty(Ok.prototype, customInspectSymbol, {
         configurable: true,
