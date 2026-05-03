@@ -92,7 +92,7 @@ function createHelpCommand(app: AnyApp): AnyCmd | undefined {
             description: 'The command path.',
             repeatable: true,
         })
-        .run(async ({ command: commandPath = [] }, context) => {
+        .run(({ command: commandPath = [] }, context) => {
             const rootCommands = getRootCommands(context.app)
 
             if (commandPath.length) {
@@ -122,7 +122,7 @@ function createVersionCommand(app: AnyApp): AnyCmd | undefined {
 
     const command = new Command(config.name)
         .describe('Displays current version')
-        .run(async (_, context) => {
+        .run((_, context) => {
             printLn(context.app._version)
             return 0
         })

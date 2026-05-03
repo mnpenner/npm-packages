@@ -8,9 +8,9 @@ import { expectType } from '@mpen/ts-types'
 describe(Command.name, () => {
     describe('public exports', () => {
         it('re-exports AnyOptType from the package entrypoint', () => {
-            const enumLikeType = ['fast', 'slow'] as const satisfies AnyOptType
+            const _enumLikeType = ['fast', 'slow'] as const satisfies AnyOptType
 
-            expectType<TypeEqual<typeof enumLikeType, readonly ['fast', 'slow']>>(true)
+            expectType<TypeEqual<typeof _enumLikeType, readonly ['fast', 'slow']>>(true)
         })
     })
 
@@ -19,18 +19,18 @@ describe(Command.name, () => {
             const greetCommand = new Command('greet')
                 .flag('loud')
                 .opt('target', { required: true })
-                .run((opts, context) => {
+                .run((_opts, _context) => {
                     type Simplify<T> = { [K in keyof T]: T[K] } & {}
                     expectType<
                         TypeEqual<
-                            Simplify<typeof opts>,
+                            Simplify<typeof _opts>,
                             {
                                 target: string
                                 loud: boolean
                             }
                         >
                     >(true)
-                    expectType<TypeEqual<typeof context, ExecutionContext>>(true)
+                    expectType<TypeEqual<typeof _context, ExecutionContext>>(true)
                 })
 
             const inspectCommand = new Command('inspect')
@@ -39,11 +39,11 @@ describe(Command.name, () => {
                 .opt('mode', { type: ['fast', 'slow'] as const })
                 .arg('input', { required: true })
                 .arg('rest', { repeatable: true })
-                .run((opts, context) => {
+                .run((_opts, _context) => {
                     type Simplify<T> = { [K in keyof T]: T[K] } & {}
                     expectType<
                         TypeEqual<
-                            Simplify<typeof opts>,
+                            Simplify<typeof _opts>,
                             {
                                 count: number
                                 verbose: boolean
@@ -53,24 +53,24 @@ describe(Command.name, () => {
                             }
                         >
                     >(true)
-                    expectType<TypeEqual<typeof context, ExecutionContext>>(true)
+                    expectType<TypeEqual<typeof _context, ExecutionContext>>(true)
                 })
 
             const boundedCommand = new Command('bounded')
                 .opt('tag', { repeatable: 2 })
                 .arg('files', { repeatable: 3, required: 2 })
-                .run((opts, context) => {
+                .run((_opts, _context) => {
                     type Simplify<T> = { [K in keyof T]: T[K] } & {}
                     expectType<
                         TypeEqual<
-                            Simplify<typeof opts>,
+                            Simplify<typeof _opts>,
                             {
                                 tag: string[]
                                 files: string[]
                             }
                         >
                     >(true)
-                    expectType<TypeEqual<typeof context, ExecutionContext>>(true)
+                    expectType<TypeEqual<typeof _context, ExecutionContext>>(true)
                 })
 
             const bulkCommand = new Command('bulk')
@@ -79,11 +79,11 @@ describe(Command.name, () => {
                     { name: 'count', propName: 'total', type: OptType.INT, required: true },
                 ] as const)
                 .arguments([{ name: 'input', required: true }] as const)
-                .run((opts, context) => {
+                .run((_opts, _context) => {
                     type Simplify<T> = { [K in keyof T]: T[K] } & {}
                     expectType<
                         TypeEqual<
-                            Simplify<typeof opts>,
+                            Simplify<typeof _opts>,
                             {
                                 enabled: boolean
                                 total: number
@@ -91,7 +91,7 @@ describe(Command.name, () => {
                             }
                         >
                     >(true)
-                    expectType<TypeEqual<typeof context, ExecutionContext>>(true)
+                    expectType<TypeEqual<typeof _context, ExecutionContext>>(true)
                 })
 
             const fluentApp = new App('hello')

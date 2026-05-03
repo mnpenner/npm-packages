@@ -144,7 +144,10 @@ function resolvePathAliases(
 function resolveEntryPaths(packageDirectory: string, entryValue: string | string[]): string[] {
     const entries = Array.isArray(entryValue) ? entryValue : [entryValue]
 
-    return entries.map((entryPath) => relative('.', join(packageDirectory, entryPath)))
+    return entries.map((entryPath) => {
+        const rel = relative('.', join(packageDirectory, entryPath))
+        return rel.startsWith('.') ? rel : `./${rel}`
+    })
 }
 
 function assertEntryValue(

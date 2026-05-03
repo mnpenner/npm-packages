@@ -1,3 +1,3 @@
 import { Chalk } from 'chalk'
 
-const customChalk = new Chalk({ level: 0 })
+export const customChalk = new Chalk({ level: 0 })

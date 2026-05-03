@@ -92,18 +92,18 @@ type ValueOfArg<A extends Argument> =
         ? PrimitiveOfOptType<TypeOfItem<A>>[]
         : PrimitiveOfOptType<TypeOfItem<A>>
 
-type _ArgsFixed<As extends readonly Argument[], Acc extends unknown[] = []> = As extends readonly [
+type ArgsFixed<As extends readonly Argument[], Acc extends unknown[] = []> = As extends readonly [
     infer A,
     ...infer R,
 ]
     ? A extends Argument
         ? IsRepeatable<A> extends true
             ? Acc
-            : _ArgsFixed<R & readonly Argument[], [...Acc, ValueOfArg<A>]>
+            : ArgsFixed<R & readonly Argument[], [...Acc, ValueOfArg<A>]>
         : Acc
     : Acc
 
-type _ArgsTailRepeat<As extends readonly Argument[]> = As extends readonly [...infer _, infer L]
+type ArgsTailRepeat<As extends readonly Argument[]> = As extends readonly [...infer _, infer L]
     ? L extends Argument
         ? IsRepeatable<L> extends true
             ? PrimitiveOfOptType<TypeOfItem<L>>
@@ -121,9 +121,9 @@ type RequiredArguments<I extends Argument> = I extends any
 type OptionalArguments<I extends Argument> = Exclude<I, RequiredArguments<I>>
 
 export type ArgsOf<As extends readonly Argument[] | undefined> = As extends readonly Argument[]
-    ? _ArgsTailRepeat<As> extends never
-        ? _ArgsFixed<As>
-        : [..._ArgsFixed<As>, ..._ArgsTailRepeat<As>[]]
+    ? ArgsTailRepeat<As> extends never
+        ? ArgsFixed<As>
+        : [...ArgsFixed<As>, ...ArgsTailRepeat<As>[]]
     : unknown[]
 
 export type OptsOf<

@@ -31,6 +31,7 @@ export const importDataCmd = app
         },
     })
     .run(async ({ flags }) => {
+        if (!flags.filename) throw new Error('filename is required')
         const table = flags.table ?? Path.parse(flags.filename).name
 
         console.log(
@@ -40,7 +41,7 @@ export const importDataCmd = app
         const startTime = Date.now()
         const conn = await createConnection(flags)
 
-        const def = await getStruct(conn, flags.database, table)
+        const def = await getStruct(conn, flags.database!, table)
         if (!def) {
             throw new Error(`Could not get definition for table ${table}`)
         }

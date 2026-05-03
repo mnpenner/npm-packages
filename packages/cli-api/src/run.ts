@@ -1,4 +1,4 @@
-import type { AnyApp, AnyCmd, AnyLeafCommand } from './interfaces'
+import type { AnyApp, AnyCmd, AnyLeafCommand, Option } from './interfaces'
 import {
     ExecutionContext,
     getCommandArguments,
@@ -208,7 +208,7 @@ function parseGlobalOptions(
 function getOptionTokenConsumption(
     argv: readonly string[],
     index: number,
-    rawOptions: readonly import('./interfaces').Option[],
+    rawOptions: readonly Option[],
 ): number {
     const token = argv[index]
     if (token === '--') {
@@ -266,7 +266,7 @@ function getOptionTokenConsumption(
 
 function extractGlobalOptionArgv(
     argv: readonly string[],
-    globalOptions: readonly import('./interfaces').Option[],
+    globalOptions: readonly Option[],
 ): string[] {
     const extracted: string[] = []
 
@@ -286,7 +286,7 @@ function extractGlobalOptionArgv(
 function resolveCommandWithGlobalOptions(
     argv: readonly string[],
     subCommands: readonly AnyCmd[],
-    globalOptions: readonly import('./interfaces').Option[],
+    globalOptions: readonly Option[],
 ): ResolvedCommand {
     const path: string[] = []
     const commandIndexes = new Set<number>()
@@ -326,7 +326,7 @@ function resolveCommandWithGlobalOptions(
 
 function getFirstNonGlobalToken(
     argv: readonly string[],
-    globalOptions: readonly import('./interfaces').Option[],
+    globalOptions: readonly Option[],
 ): string | undefined {
     for (let index = 0; index < argv.length; ) {
         const consumed = getOptionTokenConsumption(argv, index, globalOptions)
@@ -492,7 +492,7 @@ async function executeAppDetailed(
 
     if (argv.length === 0) {
         if (isExecutable(app)) {
-            return executeLeaf(app, normalizeAppAsLeafCommand(app), [], [])
+            return await executeLeaf(app, normalizeAppAsLeafCommand(app), [], [])
         }
         printHelp(rootContext, rootCommands)
         return { result: { code: 0 }, context: rootContext }
@@ -511,13 +511,13 @@ async function executeAppDetailed(
             return { result: { code: 0 }, context: createExecutionContext(app, globalParse.opts) }
         }
         if (globalParse.opts?.help) {
-            return executeLeaf(app, normalizeAppAsLeafCommand(app), argv, [])
+            return await executeLeaf(app, normalizeAppAsLeafCommand(app), argv, [])
         }
         const builtin = findSubCommand(argv[0], rootCommands)
         if (builtin && isExecutable(builtin)) {
-            return executeLeaf(app, builtin, argv.slice(1), [builtin.name])
+            return await executeLeaf(app, builtin, argv.slice(1), [builtin.name])
         }
-        return executeLeaf(app, normalizeAppAsLeafCommand(app), argv, [])
+        return await executeLeaf(app, normalizeAppAsLeafCommand(app), argv, [])
     }
 
     const resolved = resolveCommandWithGlobalOptions(argv, rootCommands, globalOptions)
@@ -539,7 +539,7 @@ async function executeAppDetailed(
         if (firstNonGlobalToken === undefined) {
             if (globalOpts.help || !hasSubCommands(app)) {
                 if (isExecutable(app)) {
-                    return executeLeaf(app, normalizeAppAsLeafCommand(app), argv, [])
+                    return await executeLeaf(app, normalizeAppAsLeafCommand(app), argv, [])
                 }
                 printHelp(context, rootCommands)
                 return { result: { code: 0 }, context }
@@ -593,7 +593,7 @@ async function executeAppDetailed(
         }
     }
 
-    return executeLeaf(app, resolved.command, resolved.remainingArgv, resolved.path)
+    return await executeLeaf(app, resolved.command, resolved.remainingArgv, resolved.path)
 }
 
 /**

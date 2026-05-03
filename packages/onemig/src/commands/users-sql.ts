@@ -36,6 +36,7 @@ export const usersSqlCmd = app
         },
     ])
     .run(async ({ args }) => {
+        if (!args.schemaFile) throw new Error('schemaFile is required')
         const schemaYaml = await fs.readFile(args.schemaFile, { encoding: 'utf8' })
         const schema = yaml.load(schemaYaml) as Array<Record<string, any>>
         const lines: string[] = []

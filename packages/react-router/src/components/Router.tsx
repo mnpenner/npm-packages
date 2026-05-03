@@ -1,10 +1,10 @@
-import { useMemo } from 'react'
+import { useMemo, type ComponentType } from 'react'
 import { useUrlPath } from '../hooks'
 import { match as pathMatch } from 'path-to-regexp'
 
 export type RouteParams = Record<string, string | undefined>
 
-export type RouteComponent<TParams extends RouteParams = RouteParams> = React.ComponentType<TParams>
+export type RouteComponent<TParams extends RouteParams = RouteParams> = ComponentType<TParams>
 
 export type RouteObject = {
     name: string

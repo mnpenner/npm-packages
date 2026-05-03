@@ -33,7 +33,7 @@ export const exportDataCmd = app
         },
     ])
     .run(async ({ args, flags }) => {
-        console.log(`Exporting database ${Chalk.cyan(flags.database)} ...`)
+        console.log(`Exporting database ${Chalk.cyan(flags.database!)} ...`)
 
         const startTime = Date.now()
         const conn = await createConnection(flags)
@@ -45,7 +45,7 @@ export const exportDataCmd = app
             const result = await conn.query<{ name: string }>(
                 sql`SELECT TABLE_NAME 'name'
 						FROM INFORMATION_SCHEMA.TABLES
-						WHERE TABLES.TABLE_SCHEMA=${flags.database} AND TABLE_TYPE='BASE TABLE'
+						WHERE TABLES.TABLE_SCHEMA=${flags.database!} AND TABLE_TYPE='BASE TABLE'
 						ORDER BY name`,
             )
             tables = result.map((r) => r.name)
@@ -57,7 +57,7 @@ export const exportDataCmd = app
             process.stdout.write(`  Exporting table ${Chalk.yellow(tbl)} ...`)
             const tblTime = Date.now()
 
-            await exportTableDataToFile(conn, flags.database, tbl, `${args.outdir}/${tbl}.csv`)
+            await exportTableDataToFile(conn, flags.database!, tbl, `${args.out!dir}/${tbl}.csv`)
 
             process.stdout.write(` ${Chalk.green(Date.now() - tblTime)}ms\n`)
         }
@@ -65,5 +65,5 @@ export const exportDataCmd = app
         await conn.close()
 
         const elapsed = Date.now() - startTime
-        console.log(`Exported ${Chalk.cyan(flags.database)} in ${Chalk.green(elapsed)}ms`)
+        console.log(`Exported ${Chalk.cyan(flags.database!)} in ${Chalk.green(elapsed)}ms`)
     })

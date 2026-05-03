@@ -88,20 +88,20 @@ export const exportTypescriptCmd = app
     .run(async ({ args, flags }) => {
         const conn = await createConnection(flags)
 
-        const tblStream = conn.stream<{ name: string }>(getTableNamesQuery(flags.database))
+        const tblStream = conn.stream<{ name: string }>(getTableNamesQuery(flags.database!))
         const lines: string[] = []
         if (flags.mysql3) {
             lines.push("import {ConnectionPool, sql, SqlFrag} from 'mysql3'\n")
         }
         if (flags.namespace) {
-            lines.push(`export namespace ${flags.namespace || columnToKey(flags.database)} {`)
+            lines.push(`export namespace ${flags.namespace || columnToKey(flags.database!)} {`)
         }
 
         const tables: DbTable[] = []
         const enums = new Map<string, string[]>()
 
         for await (const tbl of tblStream) {
-            const def = await getStruct(conn, flags.database, tbl.name)
+            const def = await getStruct(conn, flags.database!, tbl.name)
             if (!def) {
                 continue
             }
@@ -194,7 +194,7 @@ export const exportTypescriptCmd = app
         }
 
         if (flags.mysql3 && flags.tablemap && flags.colmaps) {
-            lines.push(`export class ${columnToKey(flags.classname ?? flags.database)} {`)
+            lines.push(`export class ${columnToKey(flags.classname ?? flags.database!)} {`)
             lines.push('  constructor(private readonly db: ConnectionPool){}')
             for (const def of tables) {
                 const tableName = inflection.camelize(def.name, false)
@@ -236,7 +236,7 @@ export const exportTypescriptCmd = app
         }
 
         await conn.close()
-        await fs.writeFile(args.outfile, lines.join('\n'))
+        await fs.writeFile(args.out!file, lines.join('\n'))
     })
 
 function dumbScape(name: string) {

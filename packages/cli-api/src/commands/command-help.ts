@@ -12,7 +12,7 @@ export const helpCommand = new Command('help')
         description: 'The command path.',
         repeatable: true,
     })
-    .run(async ({ command: commandPath = [] }, context) => {
+    .run(({ command: commandPath = [] }, context) => {
         const app = context.app
         const rootCommands = [
             ...(getSubCommands(app) !== undefined

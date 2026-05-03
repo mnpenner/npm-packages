@@ -78,7 +78,7 @@ const serverPackageFiles = [
     'packages/uri-template/**/*.{js,jsx,ts,tsx}',
     'packages/uri-template/**/*.{cjs,mjs,cts,mts}',
     'packages/yamake/**/*.{js,jsx,ts,tsx}',
-    'scripts/**/*.{js,cjs,mjs,ts,cts,mts}',
+    '**/scripts/**/*.{js,cjs,mjs,ts,cts,mts}',
 ]
 
 const reactHooksPlugin = reactHooks as unknown as ESLintTypes.Plugin

@@ -88,10 +88,10 @@ export async function exportTableDataToFile(
         for await (const row of conn.stream(sql`select * from ${sql.id([db, tbl])}`)) {
             if (first) {
                 // TODO: find a way to write these headers even with 0 records
-                csv.writeLine(Object.keys(row))
+                csv.writeLine(Object.keys(row as object))
                 first = false
             }
-            csv.writeLine(Object.values(row))
+            csv.writeLine(Object.values(row as object))
         }
     } finally {
         closing = csv.close()
@@ -221,7 +221,7 @@ export async function getStruct(conn: ConnectionPool, dbName: string, tblName: s
             for await (const col of colStream) {
                 const colDef: DbColumn = {
                     name: col.name,
-                    type: col.columnType,
+                    type: col.columnType as any,
                 }
 
                 if (col.comment.length) {
@@ -240,9 +240,9 @@ export async function getStruct(conn: ConnectionPool, dbName: string, tblName: s
                     if (col.extra === 'auto_increment') {
                         colDef.autoIncrement = true
                     } else if (col.extra.startsWith('on update ')) {
-                        colDef.onUpdate = col.extra.slice(10)
+                        colDef.onUpdate = col.extra.slice(10) as any
                     } else if (col.extra.endsWith(' GENERATED')) {
-                        colDef.generated = col.extra.slice(0, -10)
+                        colDef.generated = col.extra.slice(0, -10) as any
                     } else if (col.extra === 'INVISIBLE') {
                         colDef.invisible = true
                     } else {
@@ -473,13 +473,13 @@ export async function getStruct(conn: ConnectionPool, dbName: string, tblName: s
                     })
 
                     if (idx.name === 'PRIMARY') {
-                        idxDef.type = 'PRIMARY'
+                        idxDef.type = 'PRIMARY' as any
                     } else if (idx.type !== 'BTREE') {
-                        idxDef.type = idx.type
+                        idxDef.type = idx.type as any
                     } else if (!idx.nonUnique) {
-                        idxDef.type = 'UNIQUE'
+                        idxDef.type = 'UNIQUE' as any
                     } else {
-                        idxDef.type = 'INDEX'
+                        idxDef.type = 'INDEX' as any
                     }
                     idxDef.columns = [colName]
 
@@ -544,8 +544,8 @@ export async function getStruct(conn: ConnectionPool, dbName: string, tblName: s
                         // refDatabase: fk.refDatabase,
                         refTable: fk.refTable,
                         refColumns: [fk.refColumnName],
-                        onDelete: fk.onDelete,
-                        onUpdate: fk.onUpdate,
+                        onDelete: fk.onDelete as any,
+                        onUpdate: fk.onUpdate as any,
                     })
                     if (fk.refDatabase !== dbName) {
                         fkDef.refDatabase = fk.refDatabase

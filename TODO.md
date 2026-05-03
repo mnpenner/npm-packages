@@ -21,3 +21,4 @@
 - In publish.ts, when bumping the version, show OLDVER -> NEWVER
 - For `imut-utils`, move fp functions into `@mpen/imut-utils/fp` and remove prefix
 - Add `--react` flag to `svg2fonts`; it should output a React component for each icon
+- Drop `"ignoreDeprecations": "6.0"` from `tsconfig.json`

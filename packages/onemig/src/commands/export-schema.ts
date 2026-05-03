@@ -21,16 +21,16 @@ export const exportSchemaCmd = app
         },
     ])
     .run(async ({ args, flags }) => {
-        const spinner = ora().start(`Exporting ${flags.database}`)
+        const spinner = ora().start(`Exporting ${flags.database!}`)
         const startedAt = Date.now()
 
         const conn = await createConnection(flags)
-        const tblStream = conn.stream<{ name: string }>(getTableNamesQuery(flags.database))
+        const tblStream = conn.stream<{ name: string }>(getTableNamesQuery(flags.database!))
         const tables = []
 
         for await (const tbl of tblStream) {
             spinner.text = `Exporting ${tbl.name}`
-            const def = await getStruct(conn, flags.database, tbl.name)
+            const def = await getStruct(conn, flags.database!, tbl.name)
             tables.push(def)
         }
         await conn.close()
@@ -38,9 +38,9 @@ export const exportSchemaCmd = app
         const elapsed = Date.now() - startedAt
         const yaml = dumpAllYaml(tables)
 
-        if (args.outfile) {
-            await fs.writeFile(args.outfile, yaml)
-            spinner.succeed(`Exported ${flags.database} in ${elapsed} ms`)
+        if (args.out!file) {
+            await fs.writeFile(args.out!file, yaml)
+            spinner.succeed(`Exported ${flags.database!} in ${elapsed} ms`)
         } else {
             spinner.stop()
             console.log(

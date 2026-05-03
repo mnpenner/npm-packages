@@ -23,6 +23,7 @@ export const schemaSqlCmd = app
         },
     ])
     .run(async ({ args, flags }) => {
+        if (!args.schemaFile) throw new Error('schemaFile is required')
         const schemaYaml = await fs.readFile(args.schemaFile, { encoding: 'utf8' })
         const schema = yaml.loadAll(schemaYaml) as Array<Record<string, any>>
         const lines = []
