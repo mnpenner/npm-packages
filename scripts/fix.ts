@@ -1,51 +1,80 @@
+#!/usr/bin/env -S bun -i
+import { parseArgs, type ParseArgsConfig } from 'node:util'
+import { $ } from 'bun'
+import { shellQuoteArgs } from './shell'
+
 type PackageJson = {
     scripts?: Record<string, string>
 }
 
-export {}
+const PARSE_CONFIG = {
+    options: {},
+    strict: true,
+    allowPositionals: true,
+} satisfies ParseArgsConfig
 
-function shellQuote(value: string): string {
-    if (/^[\w./:-]+$/.test(value)) {
-        return value
+async function main(options: Options, positionals: Positionals): Promise<number | void> {
+    const packageJson = (await Bun.file('package.json').json()) as PackageJson
+    const scriptNames = Object.keys(packageJson.scripts ?? {})
+        .filter((scriptName) => scriptName.startsWith('fix:'))
+        .sort()
+
+    if (scriptNames.length === 0) {
+        console.error('No fix:* scripts found.')
+        return 1
     }
 
-    return JSON.stringify(value)
-}
+    const commands = scriptNames.map((scriptName) => {
+        console.log(['$', 'bun', 'run', scriptName, shellQuoteArgs(positionals)].join(' '))
 
-const args = Bun.argv.slice(2)
-const packageJson = (await Bun.file('package.json').json()) as PackageJson
-const scriptNames = Object.keys(packageJson.scripts ?? {})
-    .filter((scriptName) => scriptName.startsWith('fix:'))
-    .sort()
+        return {
+            process: Bun.spawn([process.execPath, 'run', scriptName, ...positionals], {
+                stderr: 'inherit',
+                stdin: 'inherit',
+                stdout: 'inherit',
+            }),
+            scriptName,
+        }
+    })
 
-if (scriptNames.length === 0) {
-    console.error('No fix:* scripts found.')
-    process.exit(1)
-}
+    const results = await Promise.all(
+        commands.map(async (command) => ({
+            exitCode: await command.process.exited,
+            scriptName: command.scriptName,
+        })),
+    )
 
-const commands = scriptNames.map((scriptName) => {
-    console.log(['$', 'bun', 'run', scriptName, ...args.map(shellQuote)].join(' '))
+    const failure = results.find((result) => result.exitCode !== 0)
 
-    return {
-        process: Bun.spawn([process.execPath, 'run', scriptName, ...args], {
-            stderr: 'inherit',
-            stdin: 'inherit',
-            stdout: 'inherit',
-        }),
-        scriptName,
+    if (failure) {
+        console.error(`${failure.scriptName} exited with code ${failure.exitCode}`)
+        return failure.exitCode
     }
-})
-
-const results = await Promise.all(
-    commands.map(async (command) => ({
-        exitCode: await command.process.exited,
-        scriptName: command.scriptName,
-    })),
-)
-
-const failure = results.find((result) => result.exitCode !== 0)
-
-if (failure) {
-    console.error(`${failure.scriptName} exited with code ${failure.exitCode}`)
-    process.exit(failure.exitCode)
 }
+
+//#region Invoke main
+type ParsedConfig = ReturnType<typeof parseArgs<typeof PARSE_CONFIG>>
+type Options = ParsedConfig['values']
+type Positionals = ParsedConfig['positionals']
+
+if (import.meta.main) {
+    const { values, positionals } = parseArgs(PARSE_CONFIG)
+
+    main(values, positionals).then(
+        (exitCode) => {
+            if (typeof exitCode === 'number') {
+                process.exitCode = exitCode
+            }
+        },
+        (err) => {
+            if (err instanceof $.ShellError) {
+                console.error(`Command failed with exit code ${err.exitCode}`)
+                process.exitCode = err.exitCode
+            } else {
+                console.error(err ?? 'An unknown error occurred')
+                process.exitCode = 1
+            }
+        },
+    )
+}
+//#endregion
