@@ -23,7 +23,7 @@ const MAX_CHAR_LEN = 64
 const MAX_BYTE_LEN = 16
 
 function findOptimal(alphaSize: number): Record<string, number> {
-    let bytes = 0
+    let bytes
     // let i = 1
     let minWasted = Infinity
     let best
@@ -62,7 +62,7 @@ function findOptimal(alphaSize: number): Record<string, number> {
     return best!
 }
 
-async function main(argv: string[]): Promise<number | void> {
+function main(_argv: string[]): void {
     const formatter = Intl.NumberFormat(undefined, { maximumFractionDigits: 3 })
 
     const results = []
@@ -86,13 +86,5 @@ async function main(argv: string[]): Promise<number | void> {
 }
 
 if (import.meta.main) {
-    main(process.argv.slice(2)).then(
-        (exitCode) => {
-            process.exitCode = exitCode!
-        },
-        (err) => {
-            console.error(err || 'an unknown error occurred')
-            process.exitCode = 1
-        },
-    )
+    main(process.argv.slice(2))
 }

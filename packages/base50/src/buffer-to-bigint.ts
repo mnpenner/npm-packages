@@ -1,5 +1,5 @@
 const SUPPORTS_BUFFER = typeof Buffer !== 'undefined' && typeof Buffer.isBuffer === 'function'
-const SUPPORTS_DATAVIEW = typeof DataView !== 'undefined' && typeof ArrayBuffer !== 'undefined'
+// const SUPPORTS_DATAVIEW = typeof DataView !== 'undefined' && typeof ArrayBuffer !== 'undefined'
 
 function getView(buffer: ArrayLike<number>): DataView {
     if (ArrayBuffer.isView(buffer)) {

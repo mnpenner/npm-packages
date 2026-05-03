@@ -17,9 +17,11 @@ const alphabet = found.join('')
 console.log(alphabet.length)
 console.log(JSON.stringify(alphabet))
 
+export {}
+
 // 94 chars
-const FOUND =
-    " !#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+// const FOUND =
+//     " !#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 
 // blurhash uses base 83? https://github.com/woltapp/blurhash?tab=readme-ov-file#why-base-83
 // https://github.com/woltapp/blurhash/blob/712a47f946b98c30097eb1ada086ea00b18681ec/TypeScript/src/base83.ts (looks inefficient!)

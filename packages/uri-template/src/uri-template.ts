@@ -275,7 +275,7 @@ export class UriTemplate<P extends UriParams> {
                 type: STR,
                 value: lit,
             })
-            const groupName = `static${matchCounter++}`
+            const groupName = `static${matchCounter}`
             re.push(`(?<${groupName}>${escapeRegExp(lit)})`)
             this.matchMap.set(groupName, { type: VarType.STATIC })
         }

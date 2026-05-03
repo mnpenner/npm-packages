@@ -252,7 +252,9 @@ describe('Base50 Streaming Conversion', () => {
                             )
                         }
                         // Re-throw the error to make the test fail
-                        throw new Error(`Test failed for size ${randomSize}: ${error.message}`)
+                        throw new Error(`Test failed for size ${randomSize}: ${error.message}`, {
+                            cause: error,
+                        })
                     }
                     // Optional: Add progress indication for long runs
                     if ((i + 1) % 1000 === 0) {

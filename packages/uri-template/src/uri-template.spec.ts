@@ -1,8 +1,8 @@
 import type { UriParams, UrlParamValue } from './uri-template'
 import { UriTemplate } from './uri-template'
-import specExamples from './testcases/spec-examples.json' assert { type: 'json' }
-import extendedTests from './testcases/extended-tests.json' assert { type: 'json' }
-import matchCases from './testcases/match-cases.json' assert { type: 'json' }
+import specExamples from './testcases/spec-examples.json' with { type: 'json' }
+import extendedTests from './testcases/extended-tests.json' with { type: 'json' }
+import matchCases from './testcases/match-cases.json' with { type: 'json' }
 import { expect, describe, it } from 'bun:test'
 
 type TestCase = [input: string, output: string | string[]]

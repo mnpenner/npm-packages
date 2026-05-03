@@ -20,6 +20,7 @@ function toArray<T>(arr: ArrayLike<T>): T[] {
  * @param buf
  * @param length
  */
+/*
 function padUint8ArrayRight(buf: Uint8Array, length: number): Uint8Array {
     // return buf.slice(start, start + length)
     if (buf.length >= length) return buf
@@ -32,6 +33,7 @@ function padArrayRight<T>(chunk: T[], maxLength: number, fill: T): T[] {
     if (chunk.length >= maxLength) return chunk
     return chunk.concat(Array(maxLength - chunk.length).fill(fill))
 }
+*/
 
 /**
  * Encodes and decodes buffers into base-N strings using a chunked approach.

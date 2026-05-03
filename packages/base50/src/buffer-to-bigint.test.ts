@@ -2,10 +2,6 @@
 import { describe, expect, test } from 'bun:test'
 import { bufToInt, leBufToBigInt } from './buffer-to-bigint'
 
-function u8(...args: Array<number | number[]>) {
-    return new Uint8Array(args.flat(1))
-}
-
 describe(bufToInt, () => {
     test('like node', () => {
         // Compare with https://nodejs.org/api/buffer.html#bufreadbiguint64beoffset

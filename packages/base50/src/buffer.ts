@@ -1,6 +1,7 @@
 import { charToNum, numToChar } from './alphabet'
 import assert from 'node:assert'
 
+/*
 type BufferType = Buffer | Uint8Array | number[]
 
 const last6 = 0b00111111
@@ -25,6 +26,7 @@ function toBinary(num: number): string {
 function rightAlignedMask(N: number) {
     return (1 << N) - 1
 }
+*/
 
 export function bufToBase50(buf: Iterable<number>): string {
     let out = ''

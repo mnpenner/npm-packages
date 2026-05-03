@@ -16,3 +16,5 @@ for (let i = 0; i < 256; ++i) {
 const alphabet = found.join('')
 console.log(alphabet.length)
 console.log(JSON.stringify(alphabet))
+
+export {}

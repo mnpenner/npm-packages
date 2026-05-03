@@ -1,4 +1,5 @@
 import { randomBytes } from 'crypto'
+export {}
 
 /**
  * Encodes a byte buffer into a base-N string using BigInt for optimized
@@ -8,7 +9,7 @@ import { randomBytes } from 'crypto'
  * @param {string} alphabet The characters for the target base N.
  * @returns {string} The base-N encoded string.
  */
-function encodeToBaseN_BigInt(buffer, alphabet) {
+function encodeToBaseN_BigInt(buffer: Uint8Array, alphabet: string) {
     const base = BigInt(alphabet.length)
     if (base <= 1n) {
         throw new Error('Alphabet must contain at least 2 characters.')

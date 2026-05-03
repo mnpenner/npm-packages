@@ -4,7 +4,7 @@
  * @param {number} b
  * @returns {number} The GCD of a and b.
  */
-function gcd(a, b) {
+function gcd(a: number, b: number): number {
     a = Math.abs(a)
     b = Math.abs(b)
     while (b) {
@@ -21,10 +21,12 @@ function gcd(a, b) {
  * @param {number} b
  * @returns {number} The LCM of a and b.
  */
-function lcm(a, b) {
+function lcm(a: number, b: number): number {
     if (a === 0 || b === 0) return 0
     return Math.abs(a * b) / gcd(a, b)
 }
+
+export {}
 
 /**
  * Finds the exponent 'k' for a power-of-2 base (N=2^k)

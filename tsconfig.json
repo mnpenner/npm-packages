@@ -2,6 +2,7 @@
     "extends": "./tsconfig.base.json",
     "compilerOptions": {
         "baseUrl": ".",
+        "ignoreDeprecations": "6.0",
         "paths": {
             "@mpen/base50": ["packages/base50/src/bundle.ts"],
             "@mpen/http-helpers": ["packages/http-helpers/src/index.ts"],
