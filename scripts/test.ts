@@ -25,17 +25,41 @@ async function main(options: Options, _positionals: Positionals): Promise<number
         .map((dirent) => dirent.name)
         .sort()
 
+    const packageNamesMap = new Map<string, string>()
+    await Promise.all(
+        packageDirs.map(async (dirName) => {
+            try {
+                const pkgPath = join(packagesDir, dirName, 'package.json')
+                const pkgJson = await Bun.file(pkgPath).json()
+                if (pkgJson.name) {
+                    packageNamesMap.set(pkgJson.name, dirName)
+                }
+            } catch {
+                // ignore
+            }
+        }),
+    )
+
     const rawArgs = process.argv.slice(2)
 
-    // Simple package filtering: if any arg matches a package dir name exactly, only test those.
+    // Simple package filtering: if any arg matches a package dir name exactly or a package name, only test those.
     let targetPackages = packageDirs
-    const filterArgs = rawArgs.filter((arg) => packageDirs.includes(arg))
+    const filterArgs = rawArgs
+        .map((arg) => {
+            if (packageDirs.includes(arg)) return arg
+            if (packageNamesMap.has(arg)) return packageNamesMap.get(arg)
+            return null
+        })
+        .filter((arg): arg is string => arg !== null)
+
     if (filterArgs.length > 0) {
         targetPackages = filterArgs
     }
 
     // Pass other args (flags like -t, --watch, etc.) to bun test
-    const bunTestArgs = rawArgs.filter((arg) => !packageDirs.includes(arg))
+    const bunTestArgs = rawArgs.filter(
+        (arg) => !packageDirs.includes(arg) && !packageNamesMap.has(arg),
+    )
 
     console.log(chalk.bold(`Running tests for ${targetPackages.length} packages...\n`))
 

@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process'
 import { join, isAbsolute, relative } from 'node:path'
-import { existsSync, readdirSync, statSync } from 'node:fs'
+import { existsSync, readdirSync, statSync, readFileSync } from 'node:fs'
 
 const args = process.argv.slice(2)
 
@@ -44,9 +44,23 @@ function findTsConfig(target: string): string | null {
             for (const entry of entries) {
                 if (entry.isDirectory()) {
                     const fullPath = join(dir, entry.name)
+                    // Match by directory name
                     if (entry.name === target) {
                         const config = join(fullPath, 'tsconfig.json')
                         if (existsSync(config)) return config
+                    }
+                    // Match by package name
+                    const pkgJsonPath = join(fullPath, 'package.json')
+                    if (existsSync(pkgJsonPath)) {
+                        try {
+                            const pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf-8'))
+                            if (pkgJson.name === target) {
+                                const config = join(fullPath, 'tsconfig.json')
+                                if (existsSync(config)) return config
+                            }
+                        } catch {
+                            // ignore
+                        }
                     }
                     const found = search(fullPath)
                     if (found) return found

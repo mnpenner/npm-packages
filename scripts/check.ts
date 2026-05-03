@@ -19,6 +19,21 @@ async function main(_options: Options, positionals: Positionals): Promise<number
         .filter((dirent) => dirent.isDirectory())
         .map((dirent) => dirent.name)
 
+    const packageNamesMap = new Map<string, string>()
+    await Promise.all(
+        packageDirs.map(async (dirName) => {
+            try {
+                const pkgPath = join(packagesDir, dirName, 'package.json')
+                const pkgJson = await Bun.file(pkgPath).json()
+                if (pkgJson.name) {
+                    packageNamesMap.set(pkgJson.name, dirName)
+                }
+            } catch {
+                // ignore
+            }
+        }),
+    )
+
     if (positionals.length === 0) {
         console.log('Running full check (test, lint, typecheck, format)...')
         // Run in parallel for full check to match existing behavior of 'bun run check'
@@ -49,9 +64,16 @@ async function main(_options: Options, positionals: Positionals): Promise<number
     const lintTargets = new Set<string>()
 
     for (const arg of positionals) {
+        let resolvedDir: string | undefined
         if (packageDirs.includes(arg)) {
-            targetPackages.add(arg)
-            lintTargets.add(join(packagesDir, arg))
+            resolvedDir = arg
+        } else if (packageNamesMap.has(arg)) {
+            resolvedDir = packageNamesMap.get(arg)
+        }
+
+        if (resolvedDir) {
+            targetPackages.add(resolvedDir)
+            lintTargets.add(join(packagesDir, resolvedDir))
             continue
         }
 

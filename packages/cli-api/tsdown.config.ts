@@ -11,5 +11,7 @@ export default defineConfig({
         legacy: true,
     }, // https://tsdown.dev/options/package-exports#auto-generating-package-exports
     publint: 'ci-only',
-    external: [/^(node|bun):/],
+    deps: {
+        neverBundle: [/^(node|bun):/],
+    },
 })

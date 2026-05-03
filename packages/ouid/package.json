@@ -23,7 +23,7 @@
     "@types/bun": "^1.2.4",
     "typescript": "^5.8.2",
     "mitata": "^1.0.34",
-    "tsdown": "^0.15.8"
+    "tsdown": "catalog:"
   },
   "repository": {
     "type": "git",

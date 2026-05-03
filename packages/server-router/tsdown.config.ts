@@ -15,7 +15,9 @@ export default defineConfig({
     },
     platform: 'node',
     format: ['esm'],
-    external: [/^(node|bun):/],
+    deps: {
+        neverBundle: [/^(node|bun):/],
+    },
     exports: {
         legacy: true,
     },

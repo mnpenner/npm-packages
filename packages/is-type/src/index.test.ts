@@ -1,4 +1,4 @@
-import { test, expect, describe, it } from 'bun:test'
+import { test, expect, describe, expectTypeOf, it } from 'bun:test'
 import * as lib from './index'
 import { isTruthy } from './index'
 
@@ -583,9 +583,9 @@ test(lib.isTruthy.name, () => {
   expect(lib.isTruthy('str')).toBe(true)
   expect(lib.isTruthy(3.14)).toBe(true)
 
-  let x: unknown
+  const x: unknown = Math.random() > 0.5 ? 'str' : undefined
   if (isTruthy(x)) {
-    x
+    expectTypeOf(x).toEqualTypeOf<lib.Truthy>()
   }
 })
 
@@ -616,9 +616,9 @@ test(lib.isFalsy.name, () => {
   expect(lib.isFalsy('str')).toBe(false)
   expect(lib.isFalsy(3.14)).toBe(false)
 
-  let x: unknown
+  const x: unknown = Math.random() > 0.5 ? 'str' : undefined
   if (lib.isFalsy(x)) {
-    x
+    expectTypeOf(x).toEqualTypeOf<false | 0 | 0n | '' | null | undefined>()
   }
 })
 

@@ -21,7 +21,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19.2.3",
     "react-dom": "^19.2.3",
-    "tsdown": "^0.18.1"
+    "tsdown": "catalog:"
   },
   "scripts": {
     "build": "tsdown",

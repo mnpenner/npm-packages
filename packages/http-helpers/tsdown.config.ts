@@ -8,7 +8,11 @@ export default defineConfig({
     },
     platform: 'node',
     format: ['esm'],
-    external: [/^(node|bun):/],
-    exports: true,
+    exports: {
+        legacy: true,
+    },
+    deps: {
+        neverBundle: [/^(node|bun):/],
+    },
     dts: true, // The client must use "moduleResolution": "bundler", "node16" or "nodenext". "node" will not resolve the types properly.
 })

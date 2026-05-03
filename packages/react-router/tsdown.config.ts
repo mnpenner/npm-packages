@@ -8,7 +8,9 @@ export default defineConfig({
     },
     platform: 'browser',
     format: ['esm'],
-    external: [/^(node|bun):/, 'react'],
+    deps: {
+        neverBundle: [/^(node|bun):/, 'react'],
+    },
     exports: {
         legacy: true,
     },
