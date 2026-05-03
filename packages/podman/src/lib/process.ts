@@ -1,7 +1,7 @@
-import {spawn, type ChildProcess} from 'node:child_process'
-import type {TypedEventEmitter} from './typed-event-emitter.ts'
-import {EventEmitter} from 'node:events'
-import {Readable, Writable} from 'node:stream'
+import { spawn, type ChildProcess } from 'node:child_process'
+import type { TypedEventEmitter } from './typed-event-emitter.ts'
+import { EventEmitter } from 'node:events'
+import { Readable, Writable } from 'node:stream'
 
 /**
  * Configuration for [`Process.spawn`]{@link Process.spawn}.
@@ -35,18 +35,20 @@ export type ProcessSpawnOptions = {
     cwd?: string
 }
 
-type OneOrMore<T> = [T, ...T[]];
+type OneOrMore<T> = [T, ...T[]]
 
 type Events = {
     /**
      * Data from either stdout or stderr.
      */
-    data: (chunk: Buffer, fd: 1|2) => void,
+    data: (chunk: Buffer, fd: 1 | 2) => void
 }
 
 const DEV_NULL = new Writable({
-    write(_c, _e, cb) { cb(); },
-});
+    write(_c, _e, cb) {
+        cb()
+    },
+})
 
 type StreamInConfig = {
     stdio: 'pipe' | 'ignore' | 'inherit' | Readable
@@ -87,8 +89,8 @@ export class Process extends (EventEmitter as new () => TypedEventEmitter<Events
     private constructor(proc: ChildProcess) {
         super()
         this._child = proc
-        this.stdout = proc.stdout ?? Readable.from([]);
-        this.stderr = proc.stderr ?? Readable.from([]);
+        this.stdout = proc.stdout ?? Readable.from([])
+        this.stderr = proc.stderr ?? Readable.from([])
         this.stdin = proc.stdin ?? DEV_NULL
         this._exitPromise = new Promise<number>((resolve, reject) => {
             proc.once('error', reject)
@@ -109,11 +111,11 @@ export class Process extends (EventEmitter as new () => TypedEventEmitter<Events
      * ```ts
      * import {Process, StreamIn, StreamOut} from 'podman'
      *
- * const proc = Process.spawn(['podman', '--version'], {
- *     stdin: StreamIn.EMPTY,
- *     stdout: StreamOut.PIPE,
- *     stderr: StreamOut.TEE,
- * })
+     * const proc = Process.spawn(['podman', '--version'], {
+     *     stdin: StreamIn.EMPTY,
+     *     stdout: StreamOut.PIPE,
+     *     stderr: StreamOut.TEE,
+     * })
      * const code = await proc.wait()
      * console.log('exit code:', code)
      * ```
@@ -135,20 +137,19 @@ export class Process extends (EventEmitter as new () => TypedEventEmitter<Events
 
         const proc = new Process(child)
 
-        if(stdoutConfig.closeAfterSpawn) {
+        if (stdoutConfig.closeAfterSpawn) {
             child.stdout?.destroy()
         } else {
             attachOutput(proc, child.stdout, 1, stdoutConfig.tee)
         }
 
-        if(stderrConfig.closeAfterSpawn) {
+        if (stderrConfig.closeAfterSpawn) {
             child.stderr?.destroy()
         } else {
             attachOutput(proc, child.stderr, 2, stderrConfig.tee)
         }
 
         return proc
-
     }
 
     /**
@@ -215,7 +216,7 @@ export class Process extends (EventEmitter as new () => TypedEventEmitter<Events
      * ```
      */
     wait(timeoutMs?: number): Promise<number> {
-        if(timeoutMs === undefined) {
+        if (timeoutMs === undefined) {
             return this._exitPromise
         }
 
@@ -263,7 +264,7 @@ export class Process extends (EventEmitter as new () => TypedEventEmitter<Events
      */
     async waitOrThrow(timeoutMs?: number): Promise<void> {
         const code = await this.wait(timeoutMs)
-        if(code !== 0) {
+        if (code !== 0) {
             throw new Error(`process exited with code ${code}`)
         }
     }
@@ -320,40 +321,40 @@ export const enum StreamOut {
 }
 
 function resolveStreamIn(mode: StreamIn | undefined): StreamInConfig {
-    switch(mode ?? StreamIn.INHERIT) {
+    switch (mode ?? StreamIn.INHERIT) {
         case StreamIn.EMPTY:
-            return {stdio: 'ignore'}
+            return { stdio: 'ignore' }
         case StreamIn.INHERIT:
-            return {stdio: 'inherit'}
+            return { stdio: 'inherit' }
         case StreamIn.PIPE:
-            return {stdio: 'pipe'}
+            return { stdio: 'pipe' }
     }
 }
 
 function resolveStreamOut(mode: StreamOut | undefined): StreamOutConfig {
-    switch(mode ?? StreamOut.INHERIT) {
+    switch (mode ?? StreamOut.INHERIT) {
         case StreamOut.DISCARD:
-            return {stdio: 'ignore', tee: false, closeAfterSpawn: false}
+            return { stdio: 'ignore', tee: false, closeAfterSpawn: false }
         case StreamOut.CLOSE:
-            return {stdio: 'pipe', tee: false, closeAfterSpawn: true}
+            return { stdio: 'pipe', tee: false, closeAfterSpawn: true }
         case StreamOut.INHERIT:
-            return {stdio: 'inherit', tee: false, closeAfterSpawn: false}
+            return { stdio: 'inherit', tee: false, closeAfterSpawn: false }
         case StreamOut.PIPE:
-            return {stdio: 'pipe', tee: false, closeAfterSpawn: false}
+            return { stdio: 'pipe', tee: false, closeAfterSpawn: false }
         case StreamOut.TEE:
-            return {stdio: 'pipe', tee: true, closeAfterSpawn: false}
+            return { stdio: 'pipe', tee: true, closeAfterSpawn: false }
     }
 }
 
 function attachOutput(proc: Process, stream: Readable | null, fd: 1 | 2, tee: boolean): void {
-    if(!stream) {
+    if (!stream) {
         return
     }
 
     stream.on('data', (chunk) => {
         proc.emit('data', chunk as Buffer, fd)
-        if(tee) {
-            if(fd === 1) {
+        if (tee) {
+            if (fd === 1) {
                 process.stdout.write(chunk)
             } else {
                 process.stderr.write(chunk)

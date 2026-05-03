@@ -1,14 +1,14 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
+import React from 'react'
+import ReactDOM from 'react-dom/client'
 
 function App() {
-  return <h1>Hello React</h1>;
+    return <h1>Hello React</h1>
 }
 
-const rootElement = document.getElementById("root");
+const rootElement = document.getElementById('root')
 if (!rootElement) {
-  throw new Error('Missing element with id "root"');
+    throw new Error('Missing element with id "root"')
 }
 
-const root = ReactDOM.createRoot(rootElement);
-root.render(<App />);
+const root = ReactDOM.createRoot(rootElement)
+root.render(<App />)

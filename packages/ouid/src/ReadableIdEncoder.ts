@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict'
-import {base36ToBigInt, fromBase64Url} from './util'
+import { base36ToBigInt, fromBase64Url } from './util'
 
 export class ReadableIdEncoder {
     encode(id: Buffer): string {
         assert(id.length === 16, 'ID must be 16 bytes long')
 
-        const typeHigh = id[14] & 0x0F
+        const typeHigh = id[14] & 0x0f
         const typeLow = id[15]
         const typeTag = (typeHigh << 8) | typeLow
 
@@ -26,14 +26,14 @@ export class ReadableIdEncoder {
         randomBytes[4] = id[11]
         randomBytes[5] = id[12]
         randomBytes[6] = id[13]
-        randomBytes[7] = id[14] & 0xF0
+        randomBytes[7] = id[14] & 0xf0
 
         return `${typeTag.toString(16).toUpperCase()}.${time.toString(36)}.${randomBytes.toString('base64url')}`
     }
 
     decode(encoded: string): Buffer {
         const [typeStr, timeStr, randomBase64] = encoded.split('.')
-        if(!typeStr || !timeStr || !randomBase64) {
+        if (!typeStr || !timeStr || !randomBase64) {
             throw new Error('Invalid encoded ID format')
         }
 
@@ -44,13 +44,13 @@ export class ReadableIdEncoder {
         assert(randomBytes.length === 8, 'Invalid random bytes length')
 
         const id = Buffer.alloc(16)
-        id[0] = Number((time >> 48n) & 0xFFn)
-        id[1] = Number((time >> 40n) & 0xFFn)
-        id[2] = Number((time >> 32n) & 0xFFn)
-        id[3] = Number((time >> 24n) & 0xFFn)
-        id[4] = Number((time >> 16n) & 0xFFn)
-        id[5] = Number((time >> 8n) & 0xFFn)
-        id[6] = Number(time & 0xFFn)
+        id[0] = Number((time >> 48n) & 0xffn)
+        id[1] = Number((time >> 40n) & 0xffn)
+        id[2] = Number((time >> 32n) & 0xffn)
+        id[3] = Number((time >> 24n) & 0xffn)
+        id[4] = Number((time >> 16n) & 0xffn)
+        id[5] = Number((time >> 8n) & 0xffn)
+        id[6] = Number(time & 0xffn)
 
         id[7] = randomBytes[0]
         id[8] = randomBytes[1]
@@ -60,9 +60,9 @@ export class ReadableIdEncoder {
         id[12] = randomBytes[5]
         id[13] = randomBytes[6]
 
-        const typeHigh = (typeTag >> 8) & 0x0F
-        id[14] = (randomBytes[7] & 0xF0) | typeHigh
-        id[15] = typeTag & 0xFF
+        const typeHigh = (typeTag >> 8) & 0x0f
+        id[14] = (randomBytes[7] & 0xf0) | typeHigh
+        id[15] = typeTag & 0xff
 
         return id
     }

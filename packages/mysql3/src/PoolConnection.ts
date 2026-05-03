@@ -1,15 +1,15 @@
-import type {DefaultValueType, QueryParam, QueryResult} from './util';
-import { makeOptions} from './util'
+import type { DefaultValueType, QueryParam, QueryResult } from './util'
+import { makeOptions } from './util'
 import type mariadb from 'mariadb'
-import type { SqlFrag} from './sql';
-import {sql} from './sql'
+import type { SqlFrag } from './sql'
+import { sql } from './sql'
 
 export class PoolConnection<TDefaultValue = DefaultValueType> {
+    constructor(private readonly conn: mariadb.PoolConnection) {}
 
-    constructor(private readonly conn: mariadb.PoolConnection) {
-    }
-
-    query<TRecord = Record<string, TDefaultValue>>(query: QueryParam): Promise<QueryResult<TRecord>> {
+    query<TRecord = Record<string, TDefaultValue>>(
+        query: QueryParam,
+    ): Promise<QueryResult<TRecord>> {
         const opts = makeOptions(query)
         return this.conn.query({
             ...opts,
@@ -17,15 +17,19 @@ export class PoolConnection<TDefaultValue = DefaultValueType> {
         })
     }
 
-    exec: ((...args: Parameters<typeof PoolConnection.prototype.query>) => Promise<mariadb.UpsertResult>) = this.query.bind(this) as any
+    exec: (
+        ...args: Parameters<typeof PoolConnection.prototype.query>
+    ) => Promise<mariadb.UpsertResult> = this.query.bind(this) as any
 
-    async row<TRecord extends object = Record<string, TDefaultValue>>(query: QueryParam): Promise<TRecord | null> {
+    async row<TRecord extends object = Record<string, TDefaultValue>>(
+        query: QueryParam,
+    ): Promise<TRecord | null> {
         const opts = makeOptions(query)
         const rows = await this.query<TRecord>({
             ...opts,
             sql: sql`select *
                      from (${opts.sql}) _query
-                     limit 1`
+                     limit 1`,
         })
         return rows.length ? rows[0] : null
     }
@@ -35,9 +39,10 @@ export class PoolConnection<TDefaultValue = DefaultValueType> {
             sql: query,
             rowsAsArray: true,
         })
-        if(!rows.length) return []
-        if(rows[0].length !== 1) throw new Error(`Expected exactly 1 field in query, got ${rows[0].length}`)
-        return rows.map(r => r[0])
+        if (!rows.length) return []
+        if (rows[0].length !== 1)
+            throw new Error(`Expected exactly 1 field in query, got ${rows[0].length}`)
+        return rows.map((r) => r[0])
     }
 
     async value<TValue = TDefaultValue>(query: SqlFrag): Promise<TValue | null> {
@@ -45,8 +50,9 @@ export class PoolConnection<TDefaultValue = DefaultValueType> {
             sql: query,
             rowsAsArray: true,
         })
-        if(!row) return null
-        if(row.length !== 1) throw new Error(`Expected exactly 1 field in query, got ${row.length}`)
+        if (!row) return null
+        if (row.length !== 1)
+            throw new Error(`Expected exactly 1 field in query, got ${row.length}`)
         return row[0]
     }
 
@@ -58,17 +64,20 @@ export class PoolConnection<TDefaultValue = DefaultValueType> {
         return Number(await this.value(sql`select count(*) from (${query}) _query`))
     }
 
-    async* stream<TRecord extends object = Record<string, TDefaultValue>>(query: SqlFrag): AsyncGenerator<TRecord, unknown, undefined> {
+    async *stream<TRecord extends object = Record<string, TDefaultValue>>(
+        query: SqlFrag,
+    ): AsyncGenerator<TRecord, unknown, undefined> {
         let results: TRecord[] = []
         let resolve: () => void
-        let promise = new Promise<void>(r => resolve = r)
+        let promise = new Promise<void>((r) => (resolve = r))
         let done = false
 
-        this.conn.queryStream(query.toSqlString())
-            .on('error', err => {
+        this.conn
+            .queryStream(query.toSqlString())
+            .on('error', (err) => {
                 throw err
             })
-            .on('data', row => {
+            .on('data', (row) => {
                 results.push(row)
                 resolve()
             })
@@ -77,11 +86,11 @@ export class PoolConnection<TDefaultValue = DefaultValueType> {
                 resolve()
             })
 
-        for(; ;) {
+        for (;;) {
             await promise
             yield* results
-            if(done) break
-            promise = new Promise(r => resolve = r)
+            if (done) break
+            promise = new Promise((r) => (resolve = r))
             results = []
         }
         return

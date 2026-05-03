@@ -1,5 +1,5 @@
 # {{ project }}
-    
+
 Created with [`crap-app`](https://yarnpkg.com/en/package/crap-app).
 
 ## Start development server

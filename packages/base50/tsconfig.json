@@ -26,7 +26,5 @@
         "allowSyntheticDefaultImports": true,
         "types": ["bun-types"]
     },
-    "files": [
-        "src/bundle.ts",
-    ],
+    "files": ["src/bundle.ts"]
 }

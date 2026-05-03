@@ -18,7 +18,7 @@ npm install @mpen/react-basic-inputs
 
 - Docs: https://mnpenner.github.io/npm-packages/react-basic-inputs/
 - Npm: https://www.npmjs.com/package/@mpen/react-basic-inputs
-  - https://www.npmjs.com/package/@mpen/react-basic-inputs?activeTab=code
+    - https://www.npmjs.com/package/@mpen/react-basic-inputs?activeTab=code
 - Npmx: https://npmx.dev/package/@mpen/react-basic-inputs
 - Yarn: https://yarnpkg.com/package/@mpen/react-basic-inputs
 - pkg-size: https://pkg-size.dev/@mpen%2Freact-basic-inputs
@@ -37,5 +37,5 @@ Like `<select>` but takes an `options` prop instead of `children`.
   alphabetical order, it will just work
 - Each `<option>` will automatically be assigned a unique React `key`
 - If the current `value` cannot be found in the list of `options` it will be appended to the end
-  - If you want to override this behavior, set `invalidValueOption`
+    - If you want to override this behavior, set `invalidValueOption`
 - `placeholder` prop

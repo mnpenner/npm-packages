@@ -1,5 +1,5 @@
-import {ok, type Err, type Ok, type Result} from '../result.ts'
-import {isResult} from './type-check.ts'
+import { ok, type Err, type Ok, type Result } from '../result.ts'
+import { isResult } from './type-check.ts'
 
 /**
  * Preserve an existing [`Ok`]{@link Ok} result while ensuring it stays normalized.
@@ -12,7 +12,7 @@ import {isResult} from './type-check.ts'
  * const normalized = resolve(existing)
  * console.assert(normalized === existing)
  */
-export function resolve<V>(result: Ok<V>): Ok<V>;
+export function resolve<V>(result: Ok<V>): Ok<V>
 
 /**
  * Preserve an existing [`Err`]{@link Err} result while ensuring it stays normalized.
@@ -25,7 +25,7 @@ export function resolve<V>(result: Ok<V>): Ok<V>;
  * const normalized = resolve(existing)
  * console.assert(normalized === existing)
  */
-export function resolve<E>(result: Err<E>): Err<E>;
+export function resolve<E>(result: Err<E>): Err<E>
 
 /**
  * Preserve any [`Result`]{@link Result} without changing its outcome.
@@ -39,7 +39,7 @@ export function resolve<E>(result: Err<E>): Err<E>;
  * const normalized = resolve(maybe)
  * console.assert(normalized === maybe)
  */
-export function resolve<V, E>(result: Result<V, E>): Result<V, E>;
+export function resolve<V, E>(result: Result<V, E>): Result<V, E>
 
 /**
  * Normalize a plain value into an [`Ok`]{@link Ok} result.
@@ -51,7 +51,7 @@ export function resolve<V, E>(result: Result<V, E>): Result<V, E>;
  * const normalized = resolve('hi')
  * console.assert(normalized.ok && normalized.value === 'hi')
  */
-export function resolve<V>(value: V): Ok<V>;
+export function resolve<V>(value: V): Ok<V>
 
 export function resolve<V, E>(value: Result<V, E> | V): Result<V, E> {
     return isResult(value) ? value : ok(value)

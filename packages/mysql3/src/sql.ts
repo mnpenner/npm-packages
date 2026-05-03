@@ -1,8 +1,8 @@
-type PrimitiveValue = string | number | Buffer | bigint | boolean | null | Date;
+type PrimitiveValue = string | number | Buffer | bigint | boolean | null | Date
 type SingleValue = PrimitiveValue | SqlFrag
 type InsertValue = SingleValue | undefined
-type Value = SingleValue | SingleValue[];
-type OptionalValue = Value|undefined
+type Value = SingleValue | SingleValue[]
+type OptionalValue = Value | undefined
 
 type StrictDatabaseId = [database: string]
 type LooseDatabaseId = StrictDatabaseId | string
@@ -11,12 +11,15 @@ type StrictTableId = [database: string, table: string] | [table: string]
 type LooseTableId = StrictTableId | string
 type TableId = LooseTableId | SqlFrag
 
-type StrictColumnId = [column: string] | [table: string, column: string] | [database: string, table: string, column: string]
-type LooseColumnId = StrictColumnId | string;
+type StrictColumnId =
+    | [column: string]
+    | [table: string, column: string]
+    | [database: string, table: string, column: string]
+type LooseColumnId = StrictColumnId | string
 type ColumnId = LooseColumnId | SqlFrag
 
-type LooseId = LooseColumnId;
-type Id = LooseId | SqlFrag;
+type LooseId = LooseColumnId
+type Id = LooseId | SqlFrag
 
 type LatLngPair = [lat: number, lng: number]
 type PointArray = LatLngPair[] | Point[] | LatLngObj[]
@@ -31,35 +34,34 @@ interface LatLngObj {
     lng: number
 }
 
-const CHARS_REGEX = /[\x00\b\n\r\t\x1A'\\]/gu;
-const CHARS_ESCAPE_MAP: Record<string,string> = {
+const CHARS_REGEX = /[\x00\b\n\r\t\x1A'\\]/gu
+const CHARS_ESCAPE_MAP: Record<string, string> = {
     '\0': '\\0',
     '\b': '\\b',
     '\n': '\\n',
     '\r': '\\r',
     '\t': '\\t',
     '\x1a': '\\Z',
-    '\'': "''",
-    '\\': '\\\\'
-};
-const ID_GLOBAL_REGEXP = /`/g;
-const QUAL_GLOBAL_REGEXP = /\./g;
+    "'": "''",
+    '\\': '\\\\',
+}
+const ID_GLOBAL_REGEXP = /`/g
+const QUAL_GLOBAL_REGEXP = /\./g
 
 export class SqlFrag {
-    constructor(private readonly sql: string) {
-    }
+    constructor(private readonly sql: string) {}
 
     toString() {
-        throw new Error("SqlFrag cannot be cast to string");
+        throw new Error('SqlFrag cannot be cast to string')
     }
 
     toSqlString() {
-        return this.sql;
+        return this.sql
     }
 }
 
 export function isFrag(x: any): x is SqlFrag {
-    return x instanceof SqlFrag;
+    return x instanceof SqlFrag
 }
 
 function frag(sql: string): SqlFrag {
@@ -67,93 +69,94 @@ function frag(sql: string): SqlFrag {
 }
 
 export function escapeValue(value: Value): SqlFrag {
-    if (isFrag(value)) return value;
-    return frag(_escapeValue(value));
+    if (isFrag(value)) return value
+    return frag(_escapeValue(value))
 }
 
 export function sql(strings: TemplateStringsArray, ...values: Value[]): SqlFrag {
-    const out = [];
-    let i = 0;
+    const out = []
+    let i = 0
     for (; i < values.length; ++i) {
-        out.push(strings[i], escapeValue(values[i]).toSqlString());
+        out.push(strings[i], escapeValue(values[i]).toSqlString())
     }
-    out.push(strings[i]);
-    return frag(out.join(''));
+    out.push(strings[i])
+    return frag(out.join(''))
 }
 
 export function _escapeValue(value: Value): string {
     if (isFrag(value)) {
-        return value.toSqlString();
+        return value.toSqlString()
     }
-    if(Array.isArray(value)) {
-        if(!value.length) return '/*emptyArr*/NULL'
-        return value.map(v => _escapeValue(v)).join(',');
+    if (Array.isArray(value)) {
+        if (!value.length) return '/*emptyArr*/NULL'
+        return value.map((v) => _escapeValue(v)).join(',')
     }
-    if(Buffer.isBuffer(value)) {
-        return `x'${value.toString('hex')}'`;
+    if (Buffer.isBuffer(value)) {
+        return `x'${value.toString('hex')}'`
     }
-    if(typeof value === 'number' || typeof value === 'bigint') {
-        return String(value);
+    if (typeof value === 'number' || typeof value === 'bigint') {
+        return String(value)
     }
-    if(typeof value === 'string') {
-        return _escapeString(value);
+    if (typeof value === 'string') {
+        return _escapeString(value)
     }
-    if(value === true) {
-        return '1';
+    if (value === true) {
+        return '1'
     }
-    if(value === false) {
-        return '0';
+    if (value === false) {
+        return '0'
     }
-    if(value === null) {
-        return 'NULL';
+    if (value === null) {
+        return 'NULL'
     }
-    if(value instanceof Date) {
-        return `TIMESTAMP'${value.toISOString().replace('T', ' ').replace(/(?:\.000)?Z$/, '')}'`
+    if (value instanceof Date) {
+        return `TIMESTAMP'${value
+            .toISOString()
+            .replace('T', ' ')
+            .replace(/(?:\.000)?Z$/, '')}'`
     }
     throw new Error(`Unsupported value type: ${value}`)
 }
 
 function hasOwn(obj: object, key: PropertyKey) {
-    return Object.prototype.hasOwnProperty.call(obj, key);
+    return Object.prototype.hasOwnProperty.call(obj, key)
 }
 
-
 function _escapeString(value: string): string {
-    return "'" + String(value).replace(CHARS_REGEX,m => CHARS_ESCAPE_MAP[m]) + "'";
+    return "'" + String(value).replace(CHARS_REGEX, (m) => CHARS_ESCAPE_MAP[m]) + "'"
 }
 
 function escapeIdStrictFrag(id: Id): SqlFrag {
-    if (isFrag(id)) return id;
-    if (Array.isArray(id)) return frag(id.map(_escapeIdStrict).join('.'));
-    return frag(_escapeIdStrict(id));
+    if (isFrag(id)) return id
+    if (Array.isArray(id)) return frag(id.map(_escapeIdStrict).join('.'))
+    return frag(_escapeIdStrict(id))
 }
 
-
 export function _escapeIdLoose(id: Id): string {
-    if(isFrag(id)) return id.toSqlString();
-    if(Array.isArray(id)) return id.map(_escapeIdStrict).join('.');
-    return '`' + String(id).replace(ID_GLOBAL_REGEXP, '``').replace(QUAL_GLOBAL_REGEXP, '`.`') + '`';
+    if (isFrag(id)) return id.toSqlString()
+    if (Array.isArray(id)) return id.map(_escapeIdStrict).join('.')
+    return '`' + String(id).replace(ID_GLOBAL_REGEXP, '``').replace(QUAL_GLOBAL_REGEXP, '`.`') + '`'
 }
 
 export function _escapeIdStrict(id: Id): string {
-    if(isFrag(id)) return id.toSqlString();
-    if(Array.isArray(id)) return id.map(_escapeIdStrict).join('.');
-    return '`' + String(id).replace(ID_GLOBAL_REGEXP, '``') + '`';
+    if (isFrag(id)) return id.toSqlString()
+    if (Array.isArray(id)) return id.map(_escapeIdStrict).join('.')
+    return '`' + String(id).replace(ID_GLOBAL_REGEXP, '``') + '`'
 }
 
 function pointPairs(points: PointArray): LatLngPair[] {
-    if (!points.length) return [];
-    const sample = points[0];
+    if (!points.length) return []
+    const sample = points[0]
     if (Array.isArray(sample) && sample.length === 2) {
-        return [...points] as LatLngPair[];
+        return [...points] as LatLngPair[]
     }
     if (hasOwn(sample, 'x') && hasOwn(sample, 'y')) {
-        return (points as Point[]).map(pt => [pt.x, pt.y]);
+        return (points as Point[]).map((pt) => [pt.x, pt.y])
     }
     if (hasOwn(sample, 'lat') && hasOwn(sample, 'lng')) {
-        return (points as LatLngObj[]).map(pt => [pt.lat, pt.lng]);
+        return (points as LatLngObj[]).map((pt) => [pt.lat, pt.lng])
     }
-    throw new Error("Points are not in an expected format")
+    throw new Error('Points are not in an expected format')
 }
 
 export interface InsertOptions {
@@ -167,7 +170,7 @@ export interface InsertOptions {
     ignore?: boolean
 }
 
-const EMPTY_OBJECT: Record<string,any> = Object.freeze({__proto__:null})
+const EMPTY_OBJECT: Record<string, any> = Object.freeze({ __proto__: null })
 
 export enum DuplicateKey {
     /** Don't insert duplicate records. */
@@ -182,15 +185,13 @@ type TableSchema<T> = Record<Columns<T>, Value>
 type InsertTableSchema<T> = Record<Columns<T>, InsertValue>
 // type TableSchema<T> = {[P in keyof T]?: Value}
 type AnySchema = Record<string, Value>
-type ColumnValueTuple<T> = [column: Columns<T>|ColumnId, value: Value]
-type InsertColumnValueTuple<T> = [column: Columns<T>|ColumnId, value: InsertValue]
-type InsertData<T extends InsertTableSchema<T>> =  T|InsertColumnValueTuple<T>[]
+type ColumnValueTuple<T> = [column: Columns<T> | ColumnId, value: Value]
+type InsertColumnValueTuple<T> = [column: Columns<T> | ColumnId, value: InsertValue]
+type InsertData<T extends InsertTableSchema<T>> = T | InsertColumnValueTuple<T>[]
 
-
-function getFields<T extends Record<string,any>>(o: T) {
-    return Object.keys(o).filter(k => o[k] !== undefined) as Array<keyof T & string>
+function getFields<T extends Record<string, any>>(o: T) {
+    return Object.keys(o).filter((k) => o[k] !== undefined) as Array<keyof T & string>
 }
-
 
 // interface ObjectConstructor {
 //     keys<T extends object>(o: T): Array<keyof T & string>
@@ -201,61 +202,78 @@ function getFields<T extends Record<string,any>>(o: T) {
 
 export namespace sql {
     export function set<T extends InsertTableSchema<T>>(fields: InsertData<T>): SqlFrag {
-        if(Array.isArray(fields)) {
-            const filteredFields = fields.filter(p => p[1] !== undefined)
-            if(!filteredFields.length) throw new Error("No fields defined")
+        if (Array.isArray(fields)) {
+            const filteredFields = fields.filter((p) => p[1] !== undefined)
+            if (!filteredFields.length) throw new Error('No fields defined')
             return frag(
                 filteredFields
-                    .map(f => `${_escapeIdStrict(f[0])}=${_escapeValue(f[1] as Value)}`)
-                    .join(', ')
-            );
+                    .map((f) => `${_escapeIdStrict(f[0])}=${_escapeValue(f[1] as Value)}`)
+                    .join(', '),
+            )
         }
         const filteredFields = getFields(fields)
-        if(!filteredFields.length) throw new Error("No fields defined")
+        if (!filteredFields.length) throw new Error('No fields defined')
         return frag(
             filteredFields
-                .map(fieldName => `${_escapeIdLoose(fieldName)}=${_escapeValue((fields as AnySchema)[fieldName])}`)
-                .join(', ')
-        );
+                .map(
+                    (fieldName) =>
+                        `${_escapeIdLoose(fieldName)}=${_escapeValue((fields as AnySchema)[fieldName])}`,
+                )
+                .join(', '),
+        )
     }
-    export function insert<T extends InsertTableSchema<T>>(table: TableId, data: InsertData<T>, options: InsertOptions=EMPTY_OBJECT): SqlFrag {
-        let q = sql`INSERT ${frag(options.ignore ? 'IGNORE ' : '')}INTO ${escapeIdStrictFrag(table)} SET ${sql.set(data)}`;
+    export function insert<T extends InsertTableSchema<T>>(
+        table: TableId,
+        data: InsertData<T>,
+        options: InsertOptions = EMPTY_OBJECT,
+    ): SqlFrag {
+        let q = sql`INSERT ${frag(options.ignore ? 'IGNORE ' : '')}INTO ${escapeIdStrictFrag(table)} SET ${sql.set(data)}`
 
         if (options.onDuplicateKey === DuplicateKey.IGNORE) {
-            let firstCol: Id;
+            let firstCol: Id
             if (Array.isArray(data)) {
                 firstCol = data[0][0]
             } else {
-                firstCol = Object.keys(data)[0];
+                firstCol = Object.keys(data)[0]
             }
-            const escCol = frag(_escapeIdLoose(firstCol));
-            q = sql`${q} ON DUPLICATE KEY UPDATE ${escCol}=${escCol}`;
-        } else if(options.onDuplicateKey === DuplicateKey.UPDATE) {
-            let cols: Id[];
-            if(Array.isArray(data)) {
-                cols = data.map(f => f[0] as ColumnId);
+            const escCol = frag(_escapeIdLoose(firstCol))
+            q = sql`${q} ON DUPLICATE KEY UPDATE ${escCol}=${escCol}`
+        } else if (options.onDuplicateKey === DuplicateKey.UPDATE) {
+            let cols: Id[]
+            if (Array.isArray(data)) {
+                cols = data.map((f) => f[0] as ColumnId)
             } else {
-                cols = getFields(data);
+                cols = getFields(data)
             }
-            q = sql`${q} ON DUPLICATE KEY UPDATE ${cols.map(col =>{
-                const escCol = frag(_escapeIdLoose(col));
+            q = sql`${q} ON DUPLICATE KEY UPDATE ${cols.map((col) => {
+                const escCol = frag(_escapeIdLoose(col))
                 return sql`${escCol}=VALUES(${escCol})`
-            })}`;
+            })}`
         }
-        return q;
+        return q
     }
     // TODO: bulkInsert
     // TODO: update?
 
-    export function alias(fields: Record<string, ColumnId>|Array<[column:ColumnId,alias:string]>): SqlFrag {
-        if(Array.isArray(fields)) {
-            return frag(fields.map(f => `${_escapeIdStrict(f[0])} AS ${_escapeIdStrict(f[1])}`).join(', '));
+    export function alias(
+        fields: Record<string, ColumnId> | Array<[column: ColumnId, alias: string]>,
+    ): SqlFrag {
+        if (Array.isArray(fields)) {
+            return frag(
+                fields
+                    .map((f) => `${_escapeIdStrict(f[0])} AS ${_escapeIdStrict(f[1])}`)
+                    .join(', '),
+            )
         }
-        return frag(getFields(fields).map(alias => `${_escapeIdStrict(fields[alias])} AS ${_escapeIdStrict(alias)}`).join(', '));
+        return frag(
+            getFields(fields)
+                .map((alias) => `${_escapeIdStrict(fields[alias])} AS ${_escapeIdStrict(alias)}`)
+                .join(', '),
+        )
     }
     export function raw(sqlString: string | SqlFrag): SqlFrag {
-        if (isFrag(sqlString)) return sqlString;
-        return frag(sqlString);
+        if (isFrag(sqlString)) return sqlString
+        return frag(sqlString)
     }
     // export function timestamp(value: moment.MomentInput, outputTimezone?: string | null, inputTimezone?: string | null, fsp?: number | null): SqlFrag {
     //     // https://dev.mysql.com/doc/refman/5.7/en/date-and-time-literals.html
@@ -275,8 +293,8 @@ export namespace sql {
     //
     //     return raw(`TIMESTAMP'${date.format(`YYYY-MM-DD HH:mm:ss${frac}`)}'`)
     // }
-    export function point(x: number, y: number): SqlFrag  {
-        return sql`PointFromText(${`POINT(${x} ${y})`})`;
+    export function point(x: number, y: number): SqlFrag {
+        return sql`PointFromText(${`POINT(${x} ${y})`})`
     }
     // export function polygon(points: PointArray, autoComplete = true): SqlFrag  {
     //     // https://dev.mysql.com/doc/refman/5.7/en/gis-data-formats.html
@@ -317,6 +335,6 @@ export namespace sql {
         return frag(columns.map(_escapeIdStrict).join(', '))
     }
     export function values(values: Value[][]): SqlFrag {
-        return frag(values.map(row => `(${row.map(_escapeValue).join(',')})`).join(',\n'))
+        return frag(values.map((row) => `(${row.map(_escapeValue).join(',')})`).join(',\n'))
     }
 }

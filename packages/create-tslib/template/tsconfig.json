@@ -26,10 +26,6 @@
             "*": ["src/*"]
         }
     },
-    "files": [
-        "src/index.ts"
-    ],
-    "include": [
-        "src/**/*.d.ts"
-    ]
+    "files": ["src/index.ts"],
+    "include": ["src/**/*.d.ts"]
 }

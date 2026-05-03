@@ -1,10 +1,10 @@
-import {type Err, type Ok, type Result} from '../result.ts'
-import {type DetailedError} from '../detailed-error.ts'
-import {rejectWithError} from '../result/reject.ts'
-import {resolve} from '../result/resolve.ts'
-import {nj} from '../nj.ts'
-import {type NeverjectPromise} from '../neverject-promise.ts'
-import type {MaybePromise} from '../maybe-promise.ts'
+import { type Err, type Ok, type Result } from '../result.ts'
+import { type DetailedError } from '../detailed-error.ts'
+import { rejectWithError } from '../result/reject.ts'
+import { resolve } from '../result/resolve.ts'
+import { nj } from '../nj.ts'
+import { type NeverjectPromise } from '../neverject-promise.ts'
+import type { MaybePromise } from '../maybe-promise.ts'
 
 /**
  * Invoke a sync function that never returns successfully, capturing thrown errors as `Err`.
@@ -17,7 +17,10 @@ import type {MaybePromise} from '../maybe-promise.ts'
  * const errResult = tryCall(() => { throw 'boom' })
  * console.assert(!errResult.ok)
  */
-export function tryCall<A extends any[] = []>(fn: (...args: A) => never, ...args: A): Result<never, unknown>;
+export function tryCall<A extends any[] = []>(
+    fn: (...args: A) => never,
+    ...args: A
+): Result<never, unknown>
 
 /**
  * Invoke a sync function that returns [`Ok`]{@link Ok}, forwarding the successful payload.
@@ -31,7 +34,10 @@ export function tryCall<A extends any[] = []>(fn: (...args: A) => never, ...args
  * const okResult = tryCall(() => ok(1))
  * console.assert(okResult.ok && okResult.value === 1)
  */
-export function tryCall<V, A extends any[] = []>(fn: (...args: A) => Ok<V>, ...args: A): Result<V, never>;
+export function tryCall<V, A extends any[] = []>(
+    fn: (...args: A) => Ok<V>,
+    ...args: A
+): Result<V, never>
 
 /**
  * Invoke a sync function that returns [`Err`]{@link Err}, forwarding the error payload.
@@ -45,7 +51,10 @@ export function tryCall<V, A extends any[] = []>(fn: (...args: A) => Ok<V>, ...a
  * const errResult = tryCall(() => err('nope'))
  * console.assert(!errResult.ok && errResult.error === 'nope')
  */
-export function tryCall<E, A extends any[] = []>(fn: (...args: A) => Err<E>, ...args: A): Result<never, E>;
+export function tryCall<E, A extends any[] = []>(
+    fn: (...args: A) => Err<E>,
+    ...args: A
+): Result<never, E>
 
 /**
  * Invoke a sync function that returns a [`Result`]{@link Result}, preserving its shape.
@@ -60,7 +69,10 @@ export function tryCall<E, A extends any[] = []>(fn: (...args: A) => Err<E>, ...
  * const maybe = tryCall((a: number, b: number) => b ? ok(a / b) : err('div by 0'), 6, 2)
  * console.assert(maybe.ok && maybe.value === 3)
  */
-export function tryCall<V, E, A extends any[] = []>(fn: (...args: A) => Result<V, E>, ...args: A): Result<V, E>;
+export function tryCall<V, E, A extends any[] = []>(
+    fn: (...args: A) => Result<V, E>,
+    ...args: A
+): Result<V, E>
 
 /**
  * Invoke a sync function returning a plain value, capturing thrown errors as [`DetailedError`]{@link DetailedError}.
@@ -74,7 +86,10 @@ export function tryCall<V, E, A extends any[] = []>(fn: (...args: A) => Result<V
  * const safeValue = tryCall((x: number) => x * 2, 2)
  * console.assert(safeValue.ok && safeValue.value === 4)
  */
-export function tryCall<V, A extends any[] = []>(fn: (...args: A) => V, ...args: A): Result<V, DetailedError<unknown>>;
+export function tryCall<V, A extends any[] = []>(
+    fn: (...args: A) => V,
+    ...args: A
+): Result<V, DetailedError<unknown>>
 
 /**
  * Invoke a sync function that may return either a plain value or a [`Result`]{@link Result}, normalizing the output and capturing thrown errors.
@@ -89,10 +104,13 @@ export function tryCall<V, A extends any[] = []>(fn: (...args: A) => V, ...args:
  * const maybe = tryCall((flag: boolean) => flag ? 1 : err('bad'), true)
  * console.assert(maybe.ok && maybe.value === 1)
  */
-export function tryCall<V, E = DetailedError<unknown>, A extends any[] = []>(fn: (...args: A) => Result<V, E> | V, ...args: A): Result<V, E | DetailedError<unknown>> {
+export function tryCall<V, E = DetailedError<unknown>, A extends any[] = []>(
+    fn: (...args: A) => Result<V, E> | V,
+    ...args: A
+): Result<V, E | DetailedError<unknown>> {
     try {
         return resolve(fn(...args)) as Result<V, E>
-    } catch(e) {
+    } catch (e) {
         return rejectWithError(e) as Result<V, E | DetailedError<unknown>>
     }
 }
@@ -108,7 +126,10 @@ export function tryCall<V, E = DetailedError<unknown>, A extends any[] = []>(fn:
  * const failed = await tryCallAsync(() => Promise.reject('boom'))
  * console.assert(!failed.ok)
  */
-export function tryCallAsync<A extends any[] = []>(fn: (...args: A) => MaybePromise<never>, ...args: A): NeverjectPromise<never, DetailedError<unknown>>;
+export function tryCallAsync<A extends any[] = []>(
+    fn: (...args: A) => MaybePromise<never>,
+    ...args: A
+): NeverjectPromise<never, DetailedError<unknown>>
 
 /**
  * Invoke an async function that returns [`Ok`]{@link Ok}, forwarding the successful payload.
@@ -122,7 +143,10 @@ export function tryCallAsync<A extends any[] = []>(fn: (...args: A) => MaybeProm
  * const settled = await tryCallAsync(async () => ok({ id: 1 }))
  * console.assert(settled.ok && settled.value.id === 1)
  */
-export function tryCallAsync<V, A extends any[] = []>(fn: (...args: A) => MaybePromise<Ok<V>>, ...args: A): NeverjectPromise<V, never>;
+export function tryCallAsync<V, A extends any[] = []>(
+    fn: (...args: A) => MaybePromise<Ok<V>>,
+    ...args: A
+): NeverjectPromise<V, never>
 
 /**
  * Invoke an async function that returns [`Err`]{@link Err}, forwarding the error payload.
@@ -136,7 +160,10 @@ export function tryCallAsync<V, A extends any[] = []>(fn: (...args: A) => MaybeP
  * const settled = await tryCallAsync(async () => err('nope'))
  * console.assert(!settled.ok && settled.error === 'nope')
  */
-export function tryCallAsync<E, A extends any[] = []>(fn: (...args: A) => MaybePromise<Err<E>>, ...args: A): NeverjectPromise<never, E>;
+export function tryCallAsync<E, A extends any[] = []>(
+    fn: (...args: A) => MaybePromise<Err<E>>,
+    ...args: A
+): NeverjectPromise<never, E>
 
 /**
  * Invoke an async function that returns a [`Result`]{@link Result}, preserving its shape.
@@ -151,7 +178,10 @@ export function tryCallAsync<E, A extends any[] = []>(fn: (...args: A) => MaybeP
  * const settled = await tryCallAsync(async (id: number) => id ? ok(id) : err('missing'), 2)
  * console.assert(settled.ok && settled.value === 2)
  */
-export function tryCallAsync<V, E, A extends any[] = []>(fn: (...args: A) => MaybePromise<Result<V, E>>, ...args: A): NeverjectPromise<V, E>;
+export function tryCallAsync<V, E, A extends any[] = []>(
+    fn: (...args: A) => MaybePromise<Result<V, E>>,
+    ...args: A
+): NeverjectPromise<V, E>
 
 /**
  * Invoke an async function returning a plain value, capturing thrown errors and rejections as [`DetailedError`]{@link DetailedError}.
@@ -165,7 +195,10 @@ export function tryCallAsync<V, E, A extends any[] = []>(fn: (...args: A) => May
  * const settled = await tryCallAsync(async (x: number) => x * 2, 3)
  * console.assert(settled.ok && settled.value === 6)
  */
-export function tryCallAsync<V, A extends any[] = []>(fn: (...args: A) => MaybePromise<V>, ...args: A): NeverjectPromise<V, DetailedError<unknown>>;
+export function tryCallAsync<V, A extends any[] = []>(
+    fn: (...args: A) => MaybePromise<V>,
+    ...args: A
+): NeverjectPromise<V, DetailedError<unknown>>
 
 /**
  * Invoke an async function that may return a plain value or a [`Result`]{@link Result}, normalizing both into [`NeverjectPromise`]{@link NeverjectPromise}.
@@ -180,7 +213,10 @@ export function tryCallAsync<V, A extends any[] = []>(fn: (...args: A) => MaybeP
  * const settled = await tryCallAsync(async (flag: boolean) => flag ? 1 : err('no'), false)
  * console.assert(!settled.ok && settled.error === 'no')
  */
-export function tryCallAsync<V, E = DetailedError<unknown>, A extends any[] = []>(fn: (...args: A) => MaybePromise<Result<V, E> | V>, ...args: A): NeverjectPromise<V, E | DetailedError<unknown>> {
+export function tryCallAsync<V, E = DetailedError<unknown>, A extends any[] = []>(
+    fn: (...args: A) => MaybePromise<Result<V, E> | V>,
+    ...args: A
+): NeverjectPromise<V, E | DetailedError<unknown>> {
     const promisedResult = Promise.try(fn, ...args) as PromiseLike<Result<V, E> | V>
     return nj(promisedResult) as NeverjectPromise<V, E | DetailedError<unknown>>
 }

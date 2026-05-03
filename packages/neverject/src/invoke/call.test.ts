@@ -1,11 +1,11 @@
 #!/usr/bin/env -S bun test
-import {describe, expect, it} from 'bun:test'
-import {tryCall, tryCallAsync} from './call.ts'
-import {err, ok, type Result} from '../result.ts'
-import {expectType, type TypeEqual} from '../internal/type-assert.ts'
-import type {DetailedError} from '../detailed-error.ts'
-import {mayFail1} from '../internal/test-functions.ts'
-import type {NeverjectPromise} from '../neverject-promise.ts'
+import { describe, expect, it } from 'bun:test'
+import { tryCall, tryCallAsync } from './call.ts'
+import { err, ok, type Result } from '../result.ts'
+import { expectType, type TypeEqual } from '../internal/type-assert.ts'
+import type { DetailedError } from '../detailed-error.ts'
+import { mayFail1 } from '../internal/test-functions.ts'
+import type { NeverjectPromise } from '../neverject-promise.ts'
 
 describe('tryCall', () => {
     it('wraps returned values in Ok', () => {
@@ -13,7 +13,7 @@ describe('tryCall', () => {
 
         expectType<TypeEqual<typeof result, Result<number, DetailedError<unknown>>>>(true)
         expect(result.ok).toBe(true)
-        if(!result.ok) return
+        if (!result.ok) return
 
         expect(result.value).toBe(42)
     })
@@ -45,15 +45,17 @@ describe('tryCall', () => {
 
     it('captures thrown errors as Err<DetailedError>', () => {
         const reason = 'boom'
-        const throwingFn = () => { throw reason }
+        const throwingFn = () => {
+            throw reason
+        }
         const result = tryCall(throwingFn)
 
         expectType<TypeEqual<typeof result, Result<never, unknown>>>(true)
         expect(result.ok).toBe(false)
-        if(result.ok) return
+        if (result.ok) return
 
         expect(result.error).toBeInstanceOf(Error)
-        const detailed = result.error as {details?: unknown}
+        const detailed = result.error as { details?: unknown }
         expect(detailed.details).toBe(reason)
     })
 })
@@ -62,11 +64,13 @@ describe('tryCallAsync', () => {
     it('wraps resolved values in Ok', async () => {
         const asyncResult = tryCallAsync(async () => 42)
 
-        expectType<TypeEqual<typeof asyncResult, NeverjectPromise<number, DetailedError<unknown>>>>(true)
+        expectType<TypeEqual<typeof asyncResult, NeverjectPromise<number, DetailedError<unknown>>>>(
+            true,
+        )
 
         const settled = await asyncResult
         expect(settled.ok).toBe(true)
-        if(!settled.ok) return
+        if (!settled.ok) return
 
         expect(settled.value).toBe(42)
     })
@@ -78,7 +82,7 @@ describe('tryCallAsync', () => {
 
         const settled = await asyncResult
         expect(settled.ok).toBe(true)
-        if(!settled.ok) return
+        if (!settled.ok) return
 
         expect(settled.value).toBe('hi')
     })
@@ -90,20 +94,24 @@ describe('tryCallAsync', () => {
 
         const settled = await asyncResult
         expect(settled.ok).toBe(false)
-        if(settled.ok) return
+        if (settled.ok) return
 
         expect(settled.error).toBe('boom')
     })
 
     it('captures thrown errors as Err<DetailedError>', async () => {
         const reason = 'boom'
-        const asyncResult = tryCallAsync(async () => { throw reason })
+        const asyncResult = tryCallAsync(async () => {
+            throw reason
+        })
 
-        expectType<TypeEqual<typeof asyncResult, NeverjectPromise<never, DetailedError<unknown>>>>(true)
+        expectType<TypeEqual<typeof asyncResult, NeverjectPromise<never, DetailedError<unknown>>>>(
+            true,
+        )
 
         const settled = await asyncResult
         expect(settled.ok).toBe(false)
-        if(settled.ok) return
+        if (settled.ok) return
 
         expect(settled.error).toBeInstanceOf(Error)
         expect(settled.error.details).toBe(reason)

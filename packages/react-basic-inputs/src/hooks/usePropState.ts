@@ -1,9 +1,7 @@
-import { useReducer, useRef} from 'react'
-
+import { useReducer, useRef } from 'react'
 
 export function usePropState<T>(prop: T, _onChange?: () => void) {
-
-    const [, forceUpdate] = useReducer(() => Symbol(), Symbol());
+    const [, forceUpdate] = useReducer(() => Symbol(), Symbol())
 
     // const [value, setValue] = useState(prop)
     // const internalValue = useRef(prop)
@@ -21,7 +19,7 @@ export function usePropState<T>(prop: T, _onChange?: () => void) {
 
     console.log('usePropState', prop, valueRef.current, delayedRef.current)
 
-    if(valueRef.current === delayedRef.current && prop !== valueRef.current) {
+    if (valueRef.current === delayedRef.current && prop !== valueRef.current) {
         console.log('trigger!')
     }
 
@@ -53,9 +51,8 @@ export function usePropState<T>(prop: T, _onChange?: () => void) {
 
     // if(prop !== valueRef.current) {
 
-        // setValue(prop)
+    // setValue(prop)
     // }
-
 
     // if(!setThisIter.current && prop !== internalValue.current) {
     //     console.log('prop changed',value,prop, internalValue.current)
@@ -66,11 +63,5 @@ export function usePropState<T>(prop: T, _onChange?: () => void) {
     //     console.log('skipped',value,prop, internalValue.current)
     // }
 
-
-
-    return [
-        valueRef.current,
-        setValueInternal
-    ] as const
+    return [valueRef.current, setValueInternal] as const
 }
-

@@ -1,8 +1,7 @@
 import util from 'util'
 
-
 function formatVar(obj: any) {
-    if(typeof obj === 'string') return obj
+    if (typeof obj === 'string') return obj
     return util.inspect(obj, {
         depth: 3,
         maxArrayLength: 3,
@@ -18,5 +17,9 @@ export function devLog(...vars: any[]) {
 }
 
 export function logFull(...vars: any[]) {
-    console.log(vars.map(v => util.inspect(v, {showHidden: false, depth: null, colors: true})).join('  '))
+    console.log(
+        vars
+            .map((v) => util.inspect(v, { showHidden: false, depth: null, colors: true }))
+            .join('  '),
+    )
 }

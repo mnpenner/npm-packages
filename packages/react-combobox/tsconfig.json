@@ -11,7 +11,7 @@
         "removeComments": true,
         "preserveConstEnums": false,
         "sourceMap": true,
-        "lib": ["es2018","dom"],
+        "lib": ["es2018", "dom"],
         "skipLibCheck": true,
         "outDir": "dist",
         "target": "es2018",
@@ -21,13 +21,7 @@
         "jsx": "react",
         "moduleResolution": "node"
     },
-    "files": [
-        "src/index.tsx"
-    ],
-    "include": [
-        "src/types/**/*.d.ts"
-    ],
-    "exclude": [
-        "node_modules"
-    ]
+    "files": ["src/index.tsx"],
+    "include": ["src/types/**/*.d.ts"],
+    "exclude": ["node_modules"]
 }

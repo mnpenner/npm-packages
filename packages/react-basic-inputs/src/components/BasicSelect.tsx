@@ -1,10 +1,9 @@
-import type {EventCallback, HtmlSelectElement, nil, OverrideProps} from '../types/utility.ts'
-import type {ChangeEventHandler, ReactNode} from 'react';
-import { useMemo, useRef} from 'react'
-import {iterateChildren} from '../util/react-children.ts'
-import {deepEqual, fmap} from '../util/collections.ts'
-import { useFirstLayoutEffect} from '../hooks/useOnce.ts'
-
+import type { EventCallback, HtmlSelectElement, nil, OverrideProps } from '../types/utility.ts'
+import type { ChangeEventHandler, ReactNode } from 'react'
+import { useMemo, useRef } from 'react'
+import { iterateChildren } from '../util/react-children.ts'
+import { deepEqual, fmap } from '../util/collections.ts'
+import { useFirstLayoutEffect } from '../hooks/useOnce.ts'
 
 export type BasicSelectChangeEvent<T> = {
     value: T
@@ -18,14 +17,16 @@ export type BasicSelectChangeEvent<T> = {
 
 export type BasicSelectChangeEventHandler<T> = EventCallback<BasicSelectChangeEvent<T>>
 
-
-export type BasicSelectProps<T> = OverrideProps<'select', {
-    value?: T | null
-    defaultValue?: T | null
-    onChange?: BasicSelectChangeEventHandler<T>,
-    equals?: (a: T | nil, b: T | nil) => boolean
-}, 'defaultChecked'>
-
+export type BasicSelectProps<T> = OverrideProps<
+    'select',
+    {
+        value?: T | null
+        defaultValue?: T | null
+        onChange?: BasicSelectChangeEventHandler<T>
+        equals?: (a: T | nil, b: T | nil) => boolean
+    },
+    'defaultChecked'
+>
 
 /**
  * A lot like a normal <select> but supports any type of value.
@@ -40,21 +41,27 @@ export function BasicSelect<T>({
     equals = deepEqual,
     ...props
 }: BasicSelectProps<T>) {
-    const values = useMemo<Array<T | undefined>>(() => fmap(iterateChildren(children), child => {
-        const optionChild = child as typeof child & {props: {value?: T; children?: ReactNode}}
-        if(optionChild.type === 'option' || (optionChild.type as any).__is$option) {
-            return optionChild.props.value !== undefined
-                ? optionChild.props.value
-                : optionChild.props.children as T
-        }
-    }), [children])
+    const values = useMemo<Array<T | undefined>>(
+        () =>
+            fmap(iterateChildren(children), (child) => {
+                const optionChild = child as typeof child & {
+                    props: { value?: T; children?: ReactNode }
+                }
+                if (optionChild.type === 'option' || (optionChild.type as any).__is$option) {
+                    return optionChild.props.value !== undefined
+                        ? optionChild.props.value
+                        : (optionChild.props.children as T)
+                }
+            }),
+        [children],
+    )
 
     const ref = useRef<HtmlSelectElement | null>(null)
     const selectedIndex = useRef<number>(-1)
 
     // console.log(values)
 
-    const changeHandler: ChangeEventHandler<HtmlSelectElement> = ev => {
+    const changeHandler: ChangeEventHandler<HtmlSelectElement> = (ev) => {
         const index = ev.target.selectedIndex
         selectedIndex.current = index
         // console.log('selected',index)
@@ -68,26 +75,36 @@ export function BasicSelect<T>({
         })
     }
 
-    useFirstLayoutEffect(isFirst => {
-        if(ref.current == null) return
-        if(isFirst) {
-            // Use `defaultValue` for first render
-            const initialValue = propValue !== undefined ? propValue : defaultValue
-            selectedIndex.current = initialValue === undefined
-                ? -1
-                : ref.current.selectedIndex = values.findIndex(v => equals(v, initialValue))
-        } else if(propValue !== undefined) {
-            // When the property-value changes, select the first matching option if an equivalent value isn't already selected
-            if(!equals(propValue, values[ref.current.selectedIndex])) {
-                selectedIndex.current = ref.current.selectedIndex = values.findIndex(v => equals(v, propValue))
+    useFirstLayoutEffect(
+        (isFirst) => {
+            if (ref.current == null) return
+            if (isFirst) {
+                // Use `defaultValue` for first render
+                const initialValue = propValue !== undefined ? propValue : defaultValue
+                selectedIndex.current =
+                    initialValue === undefined
+                        ? -1
+                        : (ref.current.selectedIndex = values.findIndex((v) =>
+                              equals(v, initialValue),
+                          ))
+            } else if (propValue !== undefined) {
+                // When the property-value changes, select the first matching option if an equivalent value isn't already selected
+                if (!equals(propValue, values[ref.current.selectedIndex])) {
+                    selectedIndex.current = ref.current.selectedIndex = values.findIndex((v) =>
+                        equals(v, propValue),
+                    )
+                }
+            } else {
+                // Restore the previously selectedIndex after a hot reload
+                ref.current.selectedIndex = selectedIndex.current
             }
-        } else {
-            // Restore the previously selectedIndex after a hot reload
-            ref.current.selectedIndex = selectedIndex.current
-        }
-    }, [equals, propValue, values])
+        },
+        [equals, propValue, values],
+    )
 
     return (
-        <select {...props} ref={ref} onChange={changeHandler}>{children}</select>
+        <select {...props} ref={ref} onChange={changeHandler}>
+            {children}
+        </select>
     )
 }

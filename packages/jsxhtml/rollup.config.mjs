@@ -1,10 +1,10 @@
-import typescript from '@rollup/plugin-typescript';
-import terser from '@rollup/plugin-terser';
-import {nodeResolve} from '@rollup/plugin-node-resolve';
-import commonjs from '@rollup/plugin-commonjs';
-import replace from '@rollup/plugin-replace';
+import typescript from '@rollup/plugin-typescript'
+import terser from '@rollup/plugin-terser'
+import { nodeResolve } from '@rollup/plugin-node-resolve'
+import commonjs from '@rollup/plugin-commonjs'
+import replace from '@rollup/plugin-replace'
 
-const production = !process.env.ROLLUP_WATCH;
+const production = !process.env.ROLLUP_WATCH
 
 /** @type {import('rollup').RollupOptions} */
 const config = {
@@ -20,7 +20,7 @@ const config = {
         nodeResolve(),
         commonjs(),
         typescript({
-            tsconfig: './tsconfig.json'
+            tsconfig: './tsconfig.json',
         }),
         replace({
             preventAssignment: true,
@@ -31,16 +31,16 @@ const config = {
     ],
     context: 'globalThis',
     watch: {
-        clearScreen: false
+        clearScreen: false,
     },
 }
 
-if(production) {
+if (production) {
     config.output.push({
         dir: 'dist',
         format: 'cjs',
         entryFileNames: '[name].cjs',
-        exports: "named"
+        exports: 'named',
     })
     // config.external = new RegExp('^(' + Object.keys(pkgJson.peerDependencies).join('|') + ')($|/)')
     config.plugins.push(

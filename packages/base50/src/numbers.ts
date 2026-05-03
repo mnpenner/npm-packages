@@ -1,6 +1,5 @@
-import {BASE, charToNum, numToChar} from './alphabet'
+import { BASE, charToNum, numToChar } from './alphabet'
 import assert from 'assert'
-
 
 /**
  * Division with remainder.
@@ -15,25 +14,25 @@ export function divqr(a: number, b: number): [quotient: number, remainder: numbe
 }
 
 function isNegativeZero(num: number): num is -0 {
-    return num === 0 && 1 / num === -Infinity;
+    return num === 0 && 1 / num === -Infinity
 }
 
 export function base10to50(num: number): string {
     const isNeg = num < 0 || isNegativeZero(num)
     let out = ''
 
-    if(isNeg) {
+    if (isNeg) {
         num *= -1
     }
 
     let remainder: number
 
     do {
-        [num, remainder] = divqr(num, BASE)
+        ;[num, remainder] = divqr(num, BASE)
         out = numToChar(remainder) + out
-    } while(num > 0)
+    } while (num > 0)
 
-    if(isNeg) {
+    if (isNeg) {
         return '-' + out
     }
 
@@ -41,18 +40,18 @@ export function base10to50(num: number): string {
 }
 
 export function base50to10(base50Str: string): number {
-    let result = 0;
-    let negate = 1;
+    let result = 0
+    let negate = 1
     let i = 0
 
-    if(base50Str.startsWith('-')) {
+    if (base50Str.startsWith('-')) {
         negate = -1
         ++i
     }
 
     for (; i < base50Str.length; ++i) {
-        const value = charToNum(base50Str[i]);
-        result = result * BASE + value;
+        const value = charToNum(base50Str[i])
+        result = result * BASE + value
     }
 
     return result * negate

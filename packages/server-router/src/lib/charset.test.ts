@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bun test
-import {describe, expect, it} from 'bun:test'
-import {normalizeCharsetName} from './charset'
+import { describe, expect, it } from 'bun:test'
+import { normalizeCharsetName } from './charset'
 
 describe(normalizeCharsetName.name, () => {
     it('returns preferred MIME names for common aliases', () => {

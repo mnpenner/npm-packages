@@ -1,19 +1,19 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "moduleDetection": "force",
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "moduleDetection": "force",
+        "allowImportingTsExtensions": true,
+        "verbatimModuleSyntax": true,
 
-    "declaration": true,
-    "emitDeclarationOnly": true,
-    "outDir": "./dist",
+        "declaration": true,
+        "emitDeclarationOnly": true,
+        "outDir": "./dist",
 
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUncheckedIndexedAccess": true,
+        "noImplicitOverride": true,
 
-    "types": ["bun-types"]
-  },
-  "include": ["src/**/*.ts", "test.ts", "build.ts"]
+        "types": ["bun-types"]
+    },
+    "include": ["src/**/*.ts", "test.ts", "build.ts"]
 }

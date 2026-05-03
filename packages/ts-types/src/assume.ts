@@ -13,4 +13,6 @@
  * @param _val - The value to assert the type of.
  * @template T - The type to assert.
  */
-export function assumeType<T>(_val: any): asserts _val is T { /* no implementation */ }
+export function assumeType<T>(_val: any): asserts _val is T {
+    /* no implementation */
+}

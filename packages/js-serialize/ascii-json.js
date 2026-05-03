@@ -1,44 +1,43 @@
 // https://raw.githubusercontent.com/donpark/ascii-json/master/lib/ascii-json.js
-(function() {
-    var asciiJSON;
+;(function () {
+    var asciiJSON
 
-    asciiJSON = exports;
+    asciiJSON = exports
 
-    asciiJSON.isAscii = function(text) {
-        return /^[\x00-\x7F]*$/.test(text);
-    };
+    asciiJSON.isAscii = function (text) {
+        return /^[\x00-\x7F]*$/.test(text)
+    }
 
-    asciiJSON.escapeNonAsciis = function(text) {
-        var chars, code, i;
+    asciiJSON.escapeNonAsciis = function (text) {
+        var chars, code, i
 
-        chars = [];
-        i = 0;
+        chars = []
+        i = 0
         while (i < text.length) {
-            code = text.charCodeAt(i);
+            code = text.charCodeAt(i)
             if (code < 128) {
-                chars.push(text[i]);
+                chars.push(text[i])
             } else {
                 if (code < 256) {
-                    chars.push('\\u00');
+                    chars.push('\\u00')
                 } else if (code < 4096) {
-                    chars.push('\\u0');
+                    chars.push('\\u0')
                 } else {
-                    chars.push('\\u');
+                    chars.push('\\u')
                 }
-                chars.push(code.toString(16));
+                chars.push(code.toString(16))
             }
-            i++;
+            i++
         }
-        return chars.join('');
-    };
+        return chars.join('')
+    }
 
-    asciiJSON.stringify = function(object) {
-        var utf8JSON;
+    asciiJSON.stringify = function (object) {
+        var utf8JSON
 
-        utf8JSON = JSON.stringify(object);
-        return asciiJSON.escapeNonAsciis(utf8JSON);
-    };
+        utf8JSON = JSON.stringify(object)
+        return asciiJSON.escapeNonAsciis(utf8JSON)
+    }
 
-    asciiJSON.parse = JSON.parse;
-
-}).call(this);
+    asciiJSON.parse = JSON.parse
+}).call(this)

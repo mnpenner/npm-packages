@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bun test
-import {describe, expect, it, mock} from 'bun:test'
-import {HttpMethod, HttpStatus} from '@mpen/http-helpers'
-import {Router} from '../router'
-import {bodyLimit} from './body-limit'
+import { describe, expect, it, mock } from 'bun:test'
+import { HttpMethod, HttpStatus } from '@mpen/http-helpers'
+import { Router } from '../router'
+import { bodyLimit } from './body-limit'
 
 const encoder = new TextEncoder()
 
@@ -22,12 +22,12 @@ describe(bodyLimit.name, () => {
         const router = new Router()
         const handler = mock(() => new Response('ok'))
 
-        router.use(bodyLimit({maxSize: 9}))
-        router.add({method: HttpMethod.POST, pattern: '/upload', handler})
+        router.use(bodyLimit({ maxSize: 9 }))
+        router.add({ method: HttpMethod.POST, pattern: '/upload', handler })
 
         const request = new Request('https://example.com/upload', {
             method: HttpMethod.POST,
-            headers: {'content-length': '10'},
+            headers: { 'content-length': '10' },
             body: makeStream(['ok']),
         })
 
@@ -40,11 +40,11 @@ describe(bodyLimit.name, () => {
     it('rejects when the streamed body exceeds maxSize', async () => {
         const router = new Router()
 
-        router.use(bodyLimit({maxSize: 4}))
+        router.use(bodyLimit({ maxSize: 4 }))
         router.add({
             method: HttpMethod.POST,
             pattern: '/upload',
-            handler: async ({req}) => new Response(await req.text()),
+            handler: async ({ req }) => new Response(await req.text()),
         })
 
         const request = new Request('https://example.com/upload', {
@@ -60,16 +60,16 @@ describe(bodyLimit.name, () => {
     it('rejects when Content-Length does not match the received bytes', async () => {
         const router = new Router()
 
-        router.use(bodyLimit({maxSize: 10}))
+        router.use(bodyLimit({ maxSize: 10 }))
         router.add({
             method: HttpMethod.POST,
             pattern: '/upload',
-            handler: async ({req}) => new Response(await req.text()),
+            handler: async ({ req }) => new Response(await req.text()),
         })
 
         const request = new Request('https://example.com/upload', {
             method: HttpMethod.POST,
-            headers: {'content-length': '4'},
+            headers: { 'content-length': '4' },
             body: makeStream(['abc']),
         })
 
@@ -81,16 +81,16 @@ describe(bodyLimit.name, () => {
     it('allows requests within the limit and matching Content-Length', async () => {
         const router = new Router()
 
-        router.use(bodyLimit({maxSize: 10}))
+        router.use(bodyLimit({ maxSize: 10 }))
         router.add({
             method: HttpMethod.POST,
             pattern: '/upload',
-            handler: async ({req}) => new Response(await req.text()),
+            handler: async ({ req }) => new Response(await req.text()),
         })
 
         const request = new Request('https://example.com/upload', {
             method: HttpMethod.POST,
-            headers: {'content-length': '5'},
+            headers: { 'content-length': '5' },
             body: makeStream(['hello']),
         })
 

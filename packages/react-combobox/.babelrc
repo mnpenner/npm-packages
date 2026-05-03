@@ -7,9 +7,7 @@
             ]
         },
         "production": {
-            "plugins": [
-                ["emotion", { "hoist": true }]
-            ]
+            "plugins": [["emotion", { "hoist": true }]]
         }
     }
 }

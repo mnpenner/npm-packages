@@ -1,9 +1,4 @@
-export {
-    createStore,
-    resolveInitializer,
-    resolveStateUpdater,
-    Store,
-} from './store'
+export { createStore, resolveInitializer, resolveStateUpdater, Store } from './store'
 export type {
     EqualityFn,
     Initializer,
@@ -15,10 +10,5 @@ export type {
     SubscribeOptions,
     Unsubscribe,
 } from './store'
-export {
-    createLocalStorageStore,
-} from './local-storage'
-export type {
-    LocalStorageStoreOptions,
-    StorageLike,
-} from './local-storage'
+export { createLocalStorageStore } from './local-storage'
+export type { LocalStorageStoreOptions, StorageLike } from './local-storage'

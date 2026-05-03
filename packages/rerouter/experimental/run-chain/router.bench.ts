@@ -1,34 +1,31 @@
 #!bun
-import { run, bench, group, do_not_optimize } from 'mitata';
-import {Router} from './router'
-import {NOOP} from '#shared/constants'
+import { run, bench, group, do_not_optimize } from 'mitata'
+import { Router } from './router'
+import { NOOP } from '#shared/constants'
 
 interface MitataState {
-    get(name: string): any;
+    get(name: string): any
 }
 
-
-bench(`$quantity routes | match('GET',"$path")`, function*(state: MitataState) {
+bench(`$quantity routes | match('GET',"$path")`, function* (state: MitataState) {
     const router = new Router()
-    router.get('/first', () => new Response("Hello First"))
+    router.get('/first', () => new Response('Hello First'))
     router.get('/error', () => {
         throw new Error('Error')
     })
-    for(let i=0; i<state.get('quantity'); ++i) {
+    for (let i = 0; i < state.get('quantity'); ++i) {
         router.get(`/route${i}`, () => new Response(`Hello ${i}`))
     }
-    router.get('/last', () => new Response("Hello Last"))
+    router.get('/last', () => new Response('Hello Last'))
     const path = state.get('path')
 
-    yield () => do_not_optimize(router.match('GET',path))
+    yield () => do_not_optimize(router.match('GET', path))
 })
-    .args('path',['/first','/last','/notfound','/error'])
-    .range('quantity',1,1024)
-
+    .args('path', ['/first', '/last', '/notfound', '/error'])
+    .range('quantity', 1, 1024)
 
 group('hono', () => {
-
-// compare to https://hono.dev/docs/concepts/benchmarks | https://github.com/honojs/hono/blob/02377efde52c5b182a1d1ade904b1a3caea7f827/benchmarks/routers/src/bench.mts#L1
+    // compare to https://hono.dev/docs/concepts/benchmarks | https://github.com/honojs/hono/blob/02377efde52c5b182a1d1ade904b1a3caea7f827/benchmarks/routers/src/bench.mts#L1
     const HONO_ROUTES = [
         { method: 'GET', path: '/user' },
         { method: 'GET', path: '/user/comments' },
@@ -44,7 +41,7 @@ group('hono', () => {
         { method: 'GET', path: '/static/*' },
     ]
 
-    const HONO_TEST_CASES =[
+    const HONO_TEST_CASES = [
         {
             name: 'short static',
             method: 'GET',
@@ -82,19 +79,17 @@ group('hono', () => {
         },
     ]
 
-    const router = new Router()
-        .get('/user',NOOP)
+    const router = new Router().get('/user', NOOP)
 
-    for(const r of HONO_ROUTES) {
+    for (const r of HONO_ROUTES) {
         router.on(r.method, r.path, NOOP)
     }
 
-    for(const tc of HONO_TEST_CASES) {
+    for (const tc of HONO_TEST_CASES) {
         bench(`${tc.name} - ${tc.method} ${tc.path}`, () => {
             router.match(tc.method, tc.path)
         })
     }
-
 })
 
-await run();
+await run()

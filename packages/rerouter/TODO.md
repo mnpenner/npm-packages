@@ -12,10 +12,10 @@
 Envoy sets these headers:
 
 ```txt
- "x-forwarded-for": "1.2.3.4                                    
- "x-forwarded-proto": "https                                             
+ "x-forwarded-for": "1.2.3.4
+ "x-forwarded-proto": "https
  "x-envoy-external-address": "1.2.3.4
- "x-request-id": "b7738766-fd6a-4922-a0f0-d26660f0df08",  
+ "x-request-id": "b7738766-fd6a-4922-a0f0-d26660f0df08",
 ```
 
 Add a `ip-address-ctx` middleware.

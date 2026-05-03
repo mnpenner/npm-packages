@@ -1,4 +1,4 @@
-import typescript from '@rollup/plugin-typescript';
+import typescript from '@rollup/plugin-typescript'
 
 export default {
     input: 'src/index.ts',
@@ -29,5 +29,5 @@ export default {
         //     module: true,
         // }),
     ],
-    external: ['mariadb']
-};
+    external: ['mariadb'],
+}

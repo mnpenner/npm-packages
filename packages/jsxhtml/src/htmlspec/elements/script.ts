@@ -1,5 +1,5 @@
-import type {CommonAttributes, CrossOrigin} from '../attributes/ElementAttributes'
-import type {ElementForTag} from './element-types'
+import type { CommonAttributes, CrossOrigin } from '../attributes/ElementAttributes'
+import type { ElementForTag } from './element-types'
 
 /**
  * All valid properties for a <script> HTML element.
@@ -52,7 +52,6 @@ export interface ScriptAttributes extends CommonAttributes<ElementForTag<'script
      */
     nomodule?: boolean
 
-
     /**
      * Indicates which [referrer](/en-US/docs/Web/API/Document/referrer) to send when fetching the script, or resources fetched by the script:
      */
@@ -80,5 +79,4 @@ export interface ScriptAttributes extends CommonAttributes<ElementForTag<'script
      * - speculationrules
      */
     type?: 'importmap' | 'module' | 'speculationrules'
-
 }

@@ -13,7 +13,7 @@ console.log(<div class={["foo","bar"]} style={{color:'blue',border:1}}>Hello Jsx
 
 JsxHtml is a jsx-runtime that converts your compiled JSX into static HTML. That means no virtual DOM, no hydration, no excess markup, no client-side JavaScript needed.
 
-Unlike [other libraries](https://github.com/kitajs/html#the-safe-attribute), JsxHtml is *safe by default*. That means all your variables, whether they're used in attribute values or content, will be escaped.
+Unlike [other libraries](https://github.com/kitajs/html#the-safe-attribute), JsxHtml is _safe by default_. That means all your variables, whether they're used in attribute values or content, will be escaped.
 
 ```tsx
 const userGeneratedContent = `I'm "going" to <script>alert('hack')</script> you!`
@@ -30,14 +30,14 @@ console.log(<div>{serverContent}</div>.toString())
 // <div>I'm "going" to <script>alert('hack')</script> myself!</div>
 ```
 
-Notice how the output is *not* escaped now, because the `serverContent` is JSX and can't have been written by a user. There is no need to annotate which pieces are "safe" or "unsafe" which is prone to human error.
+Notice how the output is _not_ escaped now, because the `serverContent` is JSX and can't have been written by a user. There is no need to annotate which pieces are "safe" or "unsafe" which is prone to human error.
 
 ## Escape Hatch
 
 If you really want to allow unescaped HTML to be rendered out as-is, you can use the `<RawHtml>` component:
 
 ```tsx
-const html = "HTML <b>generated</b> from some WYSIWYG."
+const html = 'HTML <b>generated</b> from some WYSIWYG.'
 console.log('SAFE: ' + <div>{html}</div>)
 console.log('NOT SAFE: ' + <RawHtml>{html}</RawHtml>)
 ```
@@ -65,20 +65,19 @@ Add these options to your `tsconfig.json` or Babel config.
 As of v0.5, the Elysia plugin has been removed, but it's very easy to implement yourself:
 
 ```ts
-import {isJsxNode} from './jsx-nodes'
-import {Elysia} from 'elysia'
+import { isJsxNode } from './jsx-nodes'
+import { Elysia } from 'elysia'
 
 export function elysiaJsx() {
-    return new Elysia()
-        .onAfterHandle(({response}) => {
-            if(isJsxNode(response)) {
-                return new Response(String(response), {
-                    headers: {
-                        'content-type': 'text/html; charset=utf8'
-                    }
-                })
-            }
-        })
+    return new Elysia().onAfterHandle(({ response }) => {
+        if (isJsxNode(response)) {
+            return new Response(String(response), {
+                headers: {
+                    'content-type': 'text/html; charset=utf8',
+                },
+            })
+        }
+    })
 }
 ```
 
@@ -86,38 +85,34 @@ i.e., it's just checking if you're returning a JsxHtml node and then converts th
 
 ## Client-side
 
-If you *really* want, you can ship the compiled JSX to the client. It looks like this:
+If you _really_ want, you can ship the compiled JSX to the client. It looks like this:
 
 ```js
-_jsx("div", { children: "hello" });
+_jsx('div', { children: 'hello' })
 ```
 
 But then you will need to send the `@mpen/jsxhtml/jsx-runtime` to the client too. But then you can render out the HTML in the browser, which will allow for more dynamic behavior, but you won't get reactive elements, hooks, or state management or anything of the sort. If you want that, try [React](https://react.dev/).
 
 ## jsx-dev-runtime
 
-JsxHtml includes `jsx-dev-runtime`. There is no equivalent [React Dev Tools](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi), because again, there is no client-side JS included here, it's just HTML, *but*, we can add some good old-fashioned HTML comments to the output, so you can see which bits of HTML were generated from custom components:
+JsxHtml includes `jsx-dev-runtime`. There is no equivalent [React Dev Tools](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi), because again, there is no client-side JS included here, it's just HTML, _but_, we can add some good old-fashioned HTML comments to the output, so you can see which bits of HTML were generated from custom components:
 
 ```tsx
 function BlueBox(props: CommonProps) {
-    return (
-        <div class="cr-blue-box">
-            {props.children}
-        </div>
-    )
+    return <div class="cr-blue-box">{props.children}</div>
 }
 
-new Elysia()
-    .use(elysiaJsx())
-    .get('/dev', () => {
-        return <BlueBox>box</BlueBox>
-    })
+new Elysia().use(elysiaJsx()).get('/dev', () => {
+    return <BlueBox>box</BlueBox>
+})
 ```
 
 When using `{"jsx": "react-jsxdev"}`, this will output:
 
 ```html
-<!--<BlueBox>--><div class="cr-blue-box">box</div><!--</BlueBox>-->
+<!--<BlueBox>-->
+<div class="cr-blue-box">box</div>
+<!--</BlueBox>-->
 ```
 
 When using `{"jsx": "react-jsx"}`, this will output:

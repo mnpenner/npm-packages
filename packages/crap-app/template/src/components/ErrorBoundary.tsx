@@ -1,5 +1,5 @@
-import type {ErrorInfo, ReactNode} from 'react';
-import styled from 'styled-components';
+import type { ErrorInfo, ReactNode } from 'react'
+import styled from 'styled-components'
 
 export interface Props {
     children: ReactNode
@@ -24,17 +24,16 @@ const ErrorMessage = styled.code`
 `
 
 const Title = styled.h2`
-   font-size: x-large;
+    font-size: x-large;
 `
 
 export default class ErrorBoundary extends React.Component<Props, State> {
-
-    state: State = {error: null, errorInfo: null};
+    state: State = { error: null, errorInfo: null }
 
     componentDidCatch(error: Error, errorInfo: ErrorInfo) {
         this.setState({
             error: error,
-            errorInfo: errorInfo
+            errorInfo: errorInfo,
         })
     }
 
@@ -45,9 +44,9 @@ export default class ErrorBoundary extends React.Component<Props, State> {
                     <Title>Runtime Error</Title>
                     <ErrorMessage>{String(this.state.error)}</ErrorMessage>
                 </ErrorContainer>
-            );
+            )
         }
 
-        return this.props.children;
+        return this.props.children
     }
 }

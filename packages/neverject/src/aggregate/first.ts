@@ -1,8 +1,8 @@
-import {NeverjectPromise} from '../neverject-promise.ts'
-import {err, ok, type Result} from '../result.ts'
-import {nj} from '../nj.ts'
-import type {ToSyncResult} from './all-settled.ts'
-import type {MaybePromise} from '../maybe-promise.ts'
+import { NeverjectPromise } from '../neverject-promise.ts'
+import { err, ok, type Result } from '../result.ts'
+import { nj } from '../nj.ts'
+import type { ToSyncResult } from './all-settled.ts'
+import type { MaybePromise } from '../maybe-promise.ts'
 
 type NormalizedValue<T> = ToSyncResult<T> extends Result<infer V, any> ? V : never
 type NormalizedError<T> = ToSyncResult<T> extends Result<any, infer E> ? E : never
@@ -29,10 +29,10 @@ type FirstInput = NeverjectPromise<any, any> | MaybePromise<any>
  * console.assert(settled.ok && settled.value === 1)
  */
 export function firstSettled<T extends readonly [FirstInput, ...FirstInput[]]>(
-    inputs: T
+    inputs: T,
 ): NeverjectPromise<FirstSettledValue<T>, FirstSettledError<T>> {
     const promise = Promise.race(
-        inputs.map((value) => Promise.resolve(nj(value as unknown)))
+        inputs.map((value) => Promise.resolve(nj(value as unknown))),
     ) as Promise<Result<FirstSettledValue<T>, FirstSettledError<T>>>
 
     return NeverjectPromise.fromSafePromise(promise)
@@ -51,7 +51,7 @@ export function firstSettled<T extends readonly [FirstInput, ...FirstInput[]]>(
  * ])
  */
 export function race<T extends readonly [FirstInput, ...FirstInput[]]>(
-    inputs: T
+    inputs: T,
 ): NeverjectPromise<FirstSettledValue<T>, FirstSettledError<T>> {
     return firstSettled(inputs)
 }
@@ -70,7 +70,7 @@ export function race<T extends readonly [FirstInput, ...FirstInput[]]>(
  * console.assert(settled.ok && settled.value === 2)
  */
 export function firstOk<T extends readonly [FirstInput, ...FirstInput[]]>(
-    inputs: T
+    inputs: T,
 ): NeverjectPromise<FirstOkValue<T>, FirstOkError<T>[]> {
     const promise: Promise<Result<FirstOkValue<T>, FirstOkError<T>[]>> = new Promise((resolve) => {
         const errors: FirstOkError<T>[] = []
@@ -78,7 +78,7 @@ export function firstOk<T extends readonly [FirstInput, ...FirstInput[]]>(
 
         inputs.forEach((value, index) => {
             Promise.resolve(nj(value as unknown)).then((settled) => {
-                if(settled.ok) {
+                if (settled.ok) {
                     resolve(ok(settled.value as FirstOkValue<T>))
                     return
                 }
@@ -86,7 +86,7 @@ export function firstOk<T extends readonly [FirstInput, ...FirstInput[]]>(
                 errors[index] = settled.error as FirstOkError<T>
                 pending -= 1
 
-                if(pending === 0) {
+                if (pending === 0) {
                     resolve(err(errors as FirstOkError<T>[]))
                 }
             })
@@ -110,7 +110,7 @@ export function firstOk<T extends readonly [FirstInput, ...FirstInput[]]>(
  * console.assert(settled.ok && settled.value === 2)
  */
 export function any<T extends readonly [FirstInput, ...FirstInput[]]>(
-    inputs: T
+    inputs: T,
 ): NeverjectPromise<FirstOkValue<T>, FirstOkError<T>[]> {
     return firstOk(inputs)
 }

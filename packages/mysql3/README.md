@@ -10,7 +10,6 @@ This project is no longer maintained. We suggest using one of the following alte
 - [mariadb](https://github.com/mariadb-corporation/mariadb-connector-nodejs?tab=readme-ov-file#quick-start)
 - [kysley](https://kysely.dev)
 
-
 ## Installation
 
 ```bash
@@ -59,48 +58,60 @@ function createPool(config: MariaDB.PoolConfig): Promise<ConnectionPool>
 
 ```ts
 class ConnectionPool {
-    constructor(pool: MariaDB.Pool);
-    getConnection(): Promise<PoolConnection>;
-    private _fwd;
-    query: <TRecord = Record<string, DefaultValueType>>(query: QueryParam) => Promise<QueryResult<TRecord>>;
-    exec: (query: QueryParam) => Promise<MariaDB.UpsertResult>;
-    row: <TRecord extends object = Record<string, DefaultValueType>>(query: QueryParam) => Promise<TRecord | null>;
-    col: <TValue = DefaultValueType>(query: SqlFrag) => Promise<TValue[]>;
-    value: <TValue = DefaultValueType>(query: SqlFrag) => Promise<TValue | null>;
-    exists: (query: SqlFrag) => Promise<boolean>;
-    count: (query: SqlFrag) => Promise<number>;
-    stream<TRecord extends object = DefaultRecordType>(query: SqlFrag): AsyncGenerator<TRecord, unknown, undefined>;
-    close: () => Promise<void>;
-    transaction<TReturn>(callback: (conn: PoolConnection) => Promise<TReturn>): Promise<TReturn>;
-    transaction<TUnionResults = DefaultRecordType>(callback: SqlFrag[]): Promise<QueryResult<TUnionResults>[]>;
-    get activeConnections(): number;
-    get totalConnections(): number;
-    get idleConnections(): number;
-    get taskQueueSize(): number;
+    constructor(pool: MariaDB.Pool)
+    getConnection(): Promise<PoolConnection>
+    private _fwd
+    query: <TRecord = Record<string, DefaultValueType>>(
+        query: QueryParam,
+    ) => Promise<QueryResult<TRecord>>
+    exec: (query: QueryParam) => Promise<MariaDB.UpsertResult>
+    row: <TRecord extends object = Record<string, DefaultValueType>>(
+        query: QueryParam,
+    ) => Promise<TRecord | null>
+    col: <TValue = DefaultValueType>(query: SqlFrag) => Promise<TValue[]>
+    value: <TValue = DefaultValueType>(query: SqlFrag) => Promise<TValue | null>
+    exists: (query: SqlFrag) => Promise<boolean>
+    count: (query: SqlFrag) => Promise<number>
+    stream<TRecord extends object = DefaultRecordType>(
+        query: SqlFrag,
+    ): AsyncGenerator<TRecord, unknown, undefined>
+    close: () => Promise<void>
+    transaction<TReturn>(callback: (conn: PoolConnection) => Promise<TReturn>): Promise<TReturn>
+    transaction<TUnionResults = DefaultRecordType>(
+        callback: SqlFrag[],
+    ): Promise<QueryResult<TUnionResults>[]>
+    get activeConnections(): number
+    get totalConnections(): number
+    get idleConnections(): number
+    get taskQueueSize(): number
 }
 ```
 
 ```ts
 class PoolConnection {
-    constructor(conn: MariaDB.PoolConnection);
-    query<TRecord = DefaultRecordType>(query: QueryParam): Promise<QueryResult<TRecord>>;
-    exec: ((...args: Parameters<typeof PoolConnection.prototype.query>) => Promise<MariaDB.UpsertResult>);
-    row<TRecord extends object = DefaultRecordType>(query: QueryParam): Promise<TRecord | null>;
-    col<TValue = DefaultValueType>(query: SqlFrag): Promise<TValue[]>;
-    value<TValue = DefaultValueType>(query: SqlFrag): Promise<TValue | null>;
-    exists(query: SqlFrag): Promise<boolean>;
-    count(query: SqlFrag): Promise<number>;
-    stream<TRecord extends object = DefaultRecordType>(query: SqlFrag): AsyncGenerator<TRecord, unknown, undefined>;
-    release: () => void;
-    beginTransaction: () => Promise<void>;
-    commit: () => Promise<void>;
-    rollback: () => Promise<void>;
-    ping: () => Promise<void>;
-    changeUser: (options?: MariaDB.UserConnectionConfig | undefined) => Promise<void>;
-    get isValid(): boolean;
-    close: () => Promise<void>;
-    destroy: () => void;
-    serverVersion: () => string;
+    constructor(conn: MariaDB.PoolConnection)
+    query<TRecord = DefaultRecordType>(query: QueryParam): Promise<QueryResult<TRecord>>
+    exec: (
+        ...args: Parameters<typeof PoolConnection.prototype.query>
+    ) => Promise<MariaDB.UpsertResult>
+    row<TRecord extends object = DefaultRecordType>(query: QueryParam): Promise<TRecord | null>
+    col<TValue = DefaultValueType>(query: SqlFrag): Promise<TValue[]>
+    value<TValue = DefaultValueType>(query: SqlFrag): Promise<TValue | null>
+    exists(query: SqlFrag): Promise<boolean>
+    count(query: SqlFrag): Promise<number>
+    stream<TRecord extends object = DefaultRecordType>(
+        query: SqlFrag,
+    ): AsyncGenerator<TRecord, unknown, undefined>
+    release: () => void
+    beginTransaction: () => Promise<void>
+    commit: () => Promise<void>
+    rollback: () => Promise<void>
+    ping: () => Promise<void>
+    changeUser: (options?: MariaDB.UserConnectionConfig | undefined) => Promise<void>
+    get isValid(): boolean
+    close: () => Promise<void>
+    destroy: () => void
+    serverVersion: () => string
 }
 ```
 
@@ -155,21 +166,21 @@ const userExists: boolean = await pool.exists(sql`select * from users where user
 ### Transactions
 
 ```ts
-const userId = ouid();
-const profileId = ouid();
+const userId = ouid()
+const profileId = ouid()
 await pool.transaction([
-    sql.insert('users', {id: userId, username: 'mpen'}),
-    sql.insert('profiles', {id: profileId, userId, name: "Mark"}),
+    sql.insert('users', { id: userId, username: 'mpen' }),
+    sql.insert('profiles', { id: profileId, userId, name: 'Mark' }),
 ])
 ```
 
 OR
 
 ```ts
-const [userId,profileId] = await pool.transaction(async conn => {
-    const user = await conn.exec(sql.insert('users', {username: 'mpen'}))
-    const profile = await conn.exec(sql.insert('profiles', {userId: user.insertId, name: 'Mark'}))
-    return [user.insertId,profile.insertId]
+const [userId, profileId] = await pool.transaction(async (conn) => {
+    const user = await conn.exec(sql.insert('users', { username: 'mpen' }))
+    const profile = await conn.exec(sql.insert('profiles', { userId: user.insertId, name: 'Mark' }))
+    return [user.insertId, profile.insertId]
 })
 ```
 
@@ -180,18 +191,23 @@ If you need to process many rows, it's better to stream the results than to try 
 ```ts
 const imgQuery = sql`select * from images`
 const count = await pool.count(imgQuery)
-let i=0;
-for await(const img of pool.stream<{starred:boolean|null,date_taken_local:Date|null}>(imgQuery)) {
-    console.log(`${++i}/${count}`,img.date_taken_local)
+let i = 0
+for await (const img of pool.stream<{ starred: boolean | null; date_taken_local: Date | null }>(
+    imgQuery,
+)) {
+    console.log(`${++i}/${count}`, img.date_taken_local)
 }
 ```
 
 ### More Examples
 
 ```ts
-console.dir(await pool.query(sql`select ${sql.as({mediaType: 'media_type', width: 'width', height: 'height', aspectRatio: 'aspect_ratio'})}
+console.dir(
+    await pool.query(sql`select ${sql.as({ mediaType: 'media_type', width: 'width', height: 'height', aspectRatio: 'aspect_ratio' })}
                                  from ${sql.tbl(['imagegather', 'image_files'])}
-                                 limit 2`), {depth: 1})
+                                 limit 2`),
+    { depth: 1 },
+)
 ```
 
 ```txt
@@ -213,11 +229,15 @@ console.dir(await pool.query(sql`select ${sql.as({mediaType: 'media_type', width
 ```
 
 ```ts
-console.dir(await pool.query({
-    sql: sql`select media_type,width,height from image_files limit 2`,
-    rowsAsArray: true,
-}), {depth: 1})
+console.dir(
+    await pool.query({
+        sql: sql`select media_type,width,height from image_files limit 2`,
+        rowsAsArray: true,
+    }),
+    { depth: 1 },
+)
 ```
+
 ```txt
 [
   [ 'image/jpeg', 296, 222 ],
@@ -227,7 +247,7 @@ console.dir(await pool.query({
 ```
 
 ```ts
-console.log(sql`insert into foo set ${sql.set({bar:1,baz:"qu'ux"})}`)
+console.log(sql`insert into foo set ${sql.set({ bar: 1, baz: "qu'ux" })}`)
 ```
 
 ```txt
@@ -235,11 +255,13 @@ SqlFrag { sql: "insert into foo set `bar`=1, `baz`='qu''ux'" }
 ```
 
 ```ts
-console.log(sql`insert into foo(bar, baz)
+console.log(
+    sql`insert into foo(bar, baz)
                 values ${sql.values([
                     [1, "qu'ux"],
                     [2, null],
-                ])}`.toSqlString())
+                ])}`.toSqlString(),
+)
 ```
 
 ```txt

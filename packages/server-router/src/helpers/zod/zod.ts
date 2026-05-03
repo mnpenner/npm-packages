@@ -1,5 +1,5 @@
-import {HttpStatus} from '@mpen/http-helpers'
-import type {Router} from '../../router'
+import { HttpStatus } from '@mpen/http-helpers'
+import type { Router } from '../../router'
 import type {
     AnyContext,
     Handler,
@@ -8,9 +8,9 @@ import type {
     JsonObjectSchema,
     JsonSchema,
     Route,
-    RouteSchema
+    RouteSchema,
 } from '../../types'
-import {z} from 'zod'
+import { z } from 'zod'
 
 /**
  * Validation error component identifiers for Zod-backed routes.
@@ -53,8 +53,7 @@ export type ZodRouteSchemaInput<
     }
 }
 
-type InferSchema<Schema extends ZodSchema> =
-    Schema extends z.ZodTypeAny ? z.infer<Schema> : unknown
+type InferSchema<Schema extends ZodSchema> = Schema extends z.ZodTypeAny ? z.infer<Schema> : unknown
 
 type InferResponseBody<ResponseBodySchemas extends ZodResponseBodySchemas> =
     ResponseBodySchemas extends Record<number, z.ZodTypeAny>
@@ -69,16 +68,26 @@ type NormalizeSchema<Schema> =
         : ZodRouteSchemaInput<undefined, undefined, undefined, undefined>
 
 type ExtractBodySchema<Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined> =
-    NormalizeSchema<Schema> extends ZodRouteSchemaInput<infer BodySchema, any, any, any> ? BodySchema : undefined
+    NormalizeSchema<Schema> extends ZodRouteSchemaInput<infer BodySchema, any, any, any>
+        ? BodySchema
+        : undefined
 
 type ExtractPathSchema<Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined> =
-    NormalizeSchema<Schema> extends ZodRouteSchemaInput<any, infer PathSchema, any, any> ? PathSchema : undefined
+    NormalizeSchema<Schema> extends ZodRouteSchemaInput<any, infer PathSchema, any, any>
+        ? PathSchema
+        : undefined
 
 type ExtractQuerySchema<Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined> =
-    NormalizeSchema<Schema> extends ZodRouteSchemaInput<any, any, infer QuerySchema, any> ? QuerySchema : undefined
+    NormalizeSchema<Schema> extends ZodRouteSchemaInput<any, any, infer QuerySchema, any>
+        ? QuerySchema
+        : undefined
 
-type ExtractResponseBodySchemas<Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined> =
-    NormalizeSchema<Schema> extends ZodRouteSchemaInput<any, any, any, infer ResponseBodySchemas> ? ResponseBodySchemas : undefined
+type ExtractResponseBodySchemas<
+    Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
+> =
+    NormalizeSchema<Schema> extends ZodRouteSchemaInput<any, any, any, infer ResponseBodySchemas>
+        ? ResponseBodySchemas
+        : undefined
 
 /**
  * Validated request inputs exposed to a Zod-backed handler.
@@ -112,7 +121,10 @@ export type ZodHandlerContext<
  * @param error - The Zod validation error.
  * @returns A handler result that should be returned to the client.
  */
-export type ValidationErrorHandler = (component: ValidationError, error: z.ZodError) => HandlerResult
+export type ValidationErrorHandler = (
+    component: ValidationError,
+    error: z.ZodError,
+) => HandlerResult
 
 /**
  * Shared defaults that can be applied to Zod route helpers.
@@ -145,7 +157,7 @@ export type ZodRouteHandler<
     Ctx extends object = AnyContext,
 > = (
     this: Router<any>,
-    ctx: ZodHandlerContext<BodySchema, PathSchema, QuerySchema, Ctx>
+    ctx: ZodHandlerContext<BodySchema, PathSchema, QuerySchema, Ctx>,
 ) => HandlerResult<InferResponseBody<ResponseBodySchemas>>
 
 /**
@@ -220,7 +232,7 @@ function createValidationResponse(component: ValidationError, error: z.ZodError)
     }
     return new Response(JSON.stringify(payload), {
         status: HttpStatus.BAD_REQUEST,
-        headers: {'content-type': 'application/json'},
+        headers: { 'content-type': 'application/json' },
     })
 }
 
@@ -229,13 +241,17 @@ function resolveDefaults<
     Ctx extends object,
 >(
     options: ZodHandlerOptions<Schema, Ctx>,
-    defaults?: ZodRouteHelperDefaults
+    defaults?: ZodRouteHelperDefaults,
 ): ResolvedZodHandlerOptions<Schema, Ctx> {
     return {
         schema: options.schema,
         handler: options.handler,
-        validateResponse: options.validateResponse ?? defaults?.validateResponse ?? process.env.NODE_ENV !== 'production',
-        validationError: options.validationError ?? defaults?.validationError ?? createValidationResponse,
+        validateResponse:
+            options.validateResponse ??
+            defaults?.validateResponse ??
+            process.env.NODE_ENV !== 'production',
+        validationError:
+            options.validationError ?? defaults?.validationError ?? createValidationResponse,
     }
 }
 
@@ -266,16 +282,20 @@ async function readRequestBody(request: Request): Promise<unknown> {
 }
 
 function zodErrorFromThrowable(error: unknown): z.ZodError {
-    return new z.ZodError([{
-        code: z.ZodIssueCode.custom,
-        path: [],
-        message: error instanceof Error ? error.message : String(error),
-    }])
+    return new z.ZodError([
+        {
+            code: z.ZodIssueCode.custom,
+            path: [],
+            message: error instanceof Error ? error.message : String(error),
+        },
+    ])
 }
 
 function sanitizeJsonSchema(schema: JsonSchema): JsonSchema {
     if (Array.isArray(schema)) {
-        return schema.map(entry => sanitizeJsonSchema(entry as JsonSchema)) as unknown as JsonSchema
+        return schema.map((entry) =>
+            sanitizeJsonSchema(entry as JsonSchema),
+        ) as unknown as JsonSchema
     }
     if (!schema || typeof schema !== 'object') {
         return schema
@@ -291,58 +311,67 @@ function toJsonSchema(schema: z.ZodTypeAny): JsonSchema {
     return sanitizeJsonSchema(z.toJSONSchema(schema) as JsonSchema)
 }
 
-function buildRouteSchema(schema?: ZodRouteSchemaInput<any, any, any, any>): RouteSchema | undefined {
+function buildRouteSchema(
+    schema?: ZodRouteSchemaInput<any, any, any, any>,
+): RouteSchema | undefined {
     if (!schema) return undefined
 
     const request = schema.request
         ? {
-            ...(schema.request.query ? {query: toJsonSchema(schema.request.query) as JsonObjectSchema} : {}),
-            ...(schema.request.path ? {path: toJsonSchema(schema.request.path) as JsonObjectSchema} : {}),
-            ...(schema.request.body ? {body: toJsonSchema(schema.request.body)} : {}),
-        }
+              ...(schema.request.query
+                  ? { query: toJsonSchema(schema.request.query) as JsonObjectSchema }
+                  : {}),
+              ...(schema.request.path
+                  ? { path: toJsonSchema(schema.request.path) as JsonObjectSchema }
+                  : {}),
+              ...(schema.request.body ? { body: toJsonSchema(schema.request.body) } : {}),
+          }
         : undefined
 
     const responseBody = schema.response?.body
         ? Object.fromEntries(
-            Object.entries(schema.response.body).map(([status, responseSchema]) => [
-                Number(status),
-                toJsonSchema(responseSchema as z.ZodTypeAny),
-            ])
-        )
+              Object.entries(schema.response.body).map(([status, responseSchema]) => [
+                  Number(status),
+                  toJsonSchema(responseSchema as z.ZodTypeAny),
+              ]),
+          )
         : undefined
 
-    const response = responseBody && Object.keys(responseBody).length > 0
-        ? {body: responseBody}
-        : undefined
+    const response =
+        responseBody && Object.keys(responseBody).length > 0 ? { body: responseBody } : undefined
 
     if ((!request || Object.keys(request).length === 0) && !response) {
         return undefined
     }
 
     return {
-        ...(request && Object.keys(request).length > 0 ? {request} : {}),
-        ...(response ? {response} : {}),
+        ...(request && Object.keys(request).length > 0 ? { request } : {}),
+        ...(response ? { response } : {}),
     }
 }
 
 function isResponseEnvelope(value: unknown): value is ResponseEnvelope {
-    return !!value
-        && typeof value === 'object'
-        && 'status' in value
-        && typeof (value as {status: unknown}).status === 'number'
-        && 'body' in value
+    return (
+        !!value &&
+        typeof value === 'object' &&
+        'status' in value &&
+        typeof (value as { status: unknown }).status === 'number' &&
+        'body' in value
+    )
 }
 
 function isSkippableResponseValidationValue(value: unknown): boolean {
-    return value instanceof ReadableStream
-        || value instanceof Uint8Array
-        || (typeof Buffer !== 'undefined' && value instanceof Buffer)
-        || (!!value && typeof value === 'object' && Symbol.asyncIterator in value)
+    return (
+        value instanceof ReadableStream ||
+        value instanceof Uint8Array ||
+        (typeof Buffer !== 'undefined' && value instanceof Buffer) ||
+        (!!value && typeof value === 'object' && Symbol.asyncIterator in value)
+    )
 }
 
 function getResponseSchemaForStatus(
     schema: ZodRouteSchemaInput<any, any, any, any> | undefined,
-    status: number
+    status: number,
 ): z.ZodTypeAny | undefined {
     return schema?.response?.body?.[status]
 }
@@ -360,7 +389,7 @@ async function readResponseBodyForValidation(response: Response): Promise<unknow
 function assertResponseSchema(
     schema: ZodRouteSchemaInput<any, any, any, any> | undefined,
     status: number,
-    value: unknown
+    value: unknown,
 ): void {
     const responseSchema = getResponseSchemaForStatus(schema, status)
     if (!responseSchema) return
@@ -372,10 +401,16 @@ function assertResponseSchema(
 
 async function validateHandlerResult(
     schema: ZodRouteSchemaInput<any, any, any, any> | undefined,
-    result: unknown
+    result: unknown,
 ): Promise<void> {
     if (result instanceof Response) {
-        await Promise.resolve(assertResponseSchema(schema, result.status, await readResponseBodyForValidation(result)))
+        await Promise.resolve(
+            assertResponseSchema(
+                schema,
+                result.status,
+                await readResponseBodyForValidation(result),
+            ),
+        )
         return
     }
     if (isResponseEnvelope(result)) {
@@ -414,11 +449,15 @@ async function validateHandlerResult(
 export function zodHandler<
     Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
     Ctx extends object = AnyContext,
->(options: ZodHandlerOptions<Schema, Ctx>): Handler<InferResponseBody<ExtractResponseBodySchemas<Schema>>, Ctx> {
+>(
+    options: ZodHandlerOptions<Schema, Ctx>,
+): Handler<InferResponseBody<ExtractResponseBodySchemas<Schema>>, Ctx> {
     const resolved = resolveDefaults(options)
 
     return async function (this: Router<any>, ctx: HandlerContext<Ctx>) {
-        const run = async (): Promise<HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>> => {
+        const run = async (): Promise<
+            HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>
+        > => {
             const bodySchema = resolved.schema?.request?.body
             const pathSchema = resolved.schema?.request?.path
             const querySchema = resolved.schema?.request?.query
@@ -443,10 +482,12 @@ export function zodHandler<
                 if (!queryResult.success) {
                     return resolved.validationError(
                         ValidationError.QUERY_PARAMETERS,
-                        queryResult.error
+                        queryResult.error,
                     ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>
                 }
-                handlerContext.params.query = queryResult.data as InferSchema<ExtractQuerySchema<Schema>>
+                handlerContext.params.query = queryResult.data as InferSchema<
+                    ExtractQuerySchema<Schema>
+                >
             }
 
             if (bodySchema) {
@@ -456,17 +497,19 @@ export function zodHandler<
                 } catch (err) {
                     return resolved.validationError(
                         ValidationError.REQUEST_BODY,
-                        zodErrorFromThrowable(err)
+                        zodErrorFromThrowable(err),
                     ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>
                 }
                 const bodyResult = bodySchema.safeParse(rawBody)
                 if (!bodyResult.success) {
                     return resolved.validationError(
                         ValidationError.REQUEST_BODY,
-                        bodyResult.error
+                        bodyResult.error,
                     ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>
                 }
-                handlerContext.params.body = bodyResult.data as InferSchema<ExtractBodySchema<Schema>>
+                handlerContext.params.body = bodyResult.data as InferSchema<
+                    ExtractBodySchema<Schema>
+                >
             }
 
             if (pathSchema) {
@@ -474,10 +517,12 @@ export function zodHandler<
                 if (!pathResult.success) {
                     return resolved.validationError(
                         ValidationError.URL_PATH,
-                        pathResult.error
+                        pathResult.error,
                     ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>
                 }
-                handlerContext.params.path = pathResult.data as InferSchema<ExtractPathSchema<Schema>>
+                handlerContext.params.path = pathResult.data as InferSchema<
+                    ExtractPathSchema<Schema>
+                >
             }
 
             const result = await resolved.handler.call(this, handlerContext)
@@ -500,14 +545,16 @@ export function zodHandler<
 export function zodPartial<
     Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
     Ctx extends object = AnyContext,
->(options: ZodHandlerOptions<Schema, Ctx>): {
+>(
+    options: ZodHandlerOptions<Schema, Ctx>,
+): {
     handler: Handler<InferResponseBody<ExtractResponseBodySchemas<Schema>>, Ctx>
     schema?: RouteSchema
 } {
     const schema = buildRouteSchema(options.schema)
     return {
         handler: zodHandler(options),
-        ...(schema ? {schema} : {}),
+        ...(schema ? { schema } : {}),
     }
 }
 
@@ -521,16 +568,16 @@ export function zodRoute<
     Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
     Ctx extends object = AnyContext,
 >(options: ZodRouteOptions<Schema, Ctx>): Route<Ctx> {
-    const {schema, handler, validationError, validateResponse, ...route} = options
+    const { schema, handler, validationError, validateResponse, ...route } = options
     const partial = zodPartial<Schema, Ctx>({
-        ...(schema ? {schema} : {}),
+        ...(schema ? { schema } : {}),
         handler,
-        ...(validationError ? {validationError} : {}),
-        ...(validateResponse === undefined ? {} : {validateResponse}),
+        ...(validationError ? { validationError } : {}),
+        ...(validateResponse === undefined ? {} : { validateResponse }),
     })
     return {
         ...route,
         handler: partial.handler,
-        ...(partial.schema ? {schema: partial.schema} : {}),
+        ...(partial.schema ? { schema: partial.schema } : {}),
     }
 }

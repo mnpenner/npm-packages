@@ -1,6 +1,6 @@
-import type {AnyContext, ContextMiddleware} from '..'
-import {randomUUID} from 'node:crypto'
-import {inspect} from 'node:util'
+import type { AnyContext, ContextMiddleware } from '..'
+import { randomUUID } from 'node:crypto'
+import { inspect } from 'node:util'
 import path from 'node:path'
 import chalk from 'chalk'
 
@@ -12,8 +12,6 @@ const enum LogLevel {
     ERROR = 'error',
     FATAL = 'fatal',
 }
-
-
 
 // FIXME: Entries like "events" https://signoz.io/blog/opentelemetry-spans/#what-are-span-events
 // "Spans" have a start and end time.
@@ -48,7 +46,7 @@ const LOG_LEVEL_TO_VERBOSITY: Record<LogLevel, number> = {
     [LogLevel.ERROR]: 5,
     [LogLevel.FATAL]: 6,
 }
-const DEFAULT_WRITERS: Record<LogWriter,WriteLogFn> = {
+const DEFAULT_WRITERS: Record<LogWriter, WriteLogFn> = {
     [LogWriter.CONSOLE]: consoleLogger,
     [LogWriter.PRETTY_CONSOLE]: prettyConsoleLogger,
     [LogWriter.JSON]: jsonLogger,
@@ -64,18 +62,18 @@ function jsonLogger(entry: LogEntry) {
 }
 
 function prettyJsonLogger(entry: LogEntry) {
-    console.log(JSON.stringify(entry,null,2))
+    console.log(JSON.stringify(entry, null, 2))
 }
 
 function prettyConsoleLogger(entry: LogEntry) {
     // TODO: if request id is the same as last request, then show relative time, like +4ms.
     // TODO: colorize request IDs or maybe put a divider between requests
-    const { timestamp, level, path, message, data, context, filepath, line_no } = entry;
-    const { request_id } = context;
-    const date = new Date(timestamp);
-    const timeStr = date.toISOString().replace('T', ' ').replace('Z', '');
+    const { timestamp, level, path, message, data, context, filepath, line_no } = entry
+    const { request_id } = context
+    const date = new Date(timestamp)
+    const timeStr = date.toISOString().replace('T', ' ').replace('Z', '')
 
-    type ChalkColor = typeof chalk.gray;
+    type ChalkColor = typeof chalk.gray
     const levelColors: Record<LogLevel, ChalkColor> = {
         [LogLevel.TRACE]: chalk.gray,
         [LogLevel.DEBUG]: chalk.blue,
@@ -83,52 +81,61 @@ function prettyConsoleLogger(entry: LogEntry) {
         [LogLevel.WARN]: chalk.yellow,
         [LogLevel.ERROR]: chalk.red,
         [LogLevel.FATAL]: chalk.bgRed.white,
-    };
+    }
 
-    const levelStr = level.toUpperCase().padEnd(5);
-    const coloredLevel = levelColors[level] ? levelColors[level](levelStr) : levelStr;
-    const requestIdStr = request_id ? chalk.gray(` (${request_id})`) : '';
+    const levelStr = level.toUpperCase().padEnd(5)
+    const coloredLevel = levelColors[level] ? levelColors[level](levelStr) : levelStr
+    const requestIdStr = request_id ? chalk.gray(` (${request_id})`) : ''
 
-    const pathStr = path && path.length > 0 ? chalk.gray(`[/${path.join('/')}]`) : '';
-    const locationStr = filepath ? chalk.gray(`${filepath}${line_no ? ':' + line_no : ''}`) : '';
-    const msgStr = message ? message : '';
+    const pathStr = path && path.length > 0 ? chalk.gray(`[/${path.join('/')}]`) : ''
+    const locationStr = filepath ? chalk.gray(`${filepath}${line_no ? ':' + line_no : ''}`) : ''
+    const msgStr = message ? message : ''
 
-    let dataStr = '';
+    let dataStr = ''
     if (data !== undefined) {
-        const items = Array.isArray(data) ? data : [data];
+        const items = Array.isArray(data) ? data : [data]
         for (const item of items) {
             if (item instanceof Error) {
-                dataStr += '\n' + chalk.bgRed.white(` ${item.name} `) + ' ' + item.message + '\n' + chalk.gray(item.stack || '');
+                dataStr +=
+                    '\n' +
+                    chalk.bgRed.white(` ${item.name} `) +
+                    ' ' +
+                    item.message +
+                    '\n' +
+                    chalk.gray(item.stack || '')
             } else if (typeof item === 'object' && item !== null && Object.keys(item).length > 0) {
-                dataStr += '\n' + inspect(item, { colors: true, depth: 8, maxStringLength: 80 });
+                dataStr += '\n' + inspect(item, { colors: true, depth: 8, maxStringLength: 80 })
             } else {
-                const inspected = inspect(item, { colors: true });
+                const inspected = inspect(item, { colors: true })
                 if (inspected !== '{}') {
-                    dataStr += ' ' + inspected;
+                    dataStr += ' ' + inspected
                 }
             }
         }
     }
 
-    const firstLine = `${chalk.gray(timeStr)} ${coloredLevel}${requestIdStr} ${pathStr} ${locationStr} ${msgStr}`.trimEnd();
+    const firstLine =
+        `${chalk.gray(timeStr)} ${coloredLevel}${requestIdStr} ${pathStr} ${locationStr} ${msgStr}`.trimEnd()
 
     if (dataStr) {
         // Indent subsequent lines
-        const indent = ' '.repeat(2);
-        const indentedData = dataStr.split('\n').map((line, i) => i === 0 ? line : indent + line).join('\n');
-        console.log(firstLine + indentedData);
+        const indent = ' '.repeat(2)
+        const indentedData = dataStr
+            .split('\n')
+            .map((line, i) => (i === 0 ? line : indent + line))
+            .join('\n')
+        console.log(firstLine + indentedData)
     } else {
-        console.log(firstLine);
+        console.log(firstLine)
     }
 }
-
 
 type WriteLogFn = (entry: LogEntry) => void
 
 export interface LoggerCtxOptions<Ctx extends object = AnyContext> {
     name?: string
     context?: Record<string, any>
-    log?: WriteLogFn|LogWriter
+    log?: WriteLogFn | LogWriter
     rootPath?: string
 }
 
@@ -139,7 +146,13 @@ class Logger {
     private readonly _parentEntry: LogEntry | null
     private readonly _rootPath: string
 
-    constructor(write: WriteLogFn, path: string[] = [], context: Record<string, any> = {}, parentEntry: LogEntry | null = null, rootPath: string = process.cwd()) {
+    constructor(
+        write: WriteLogFn,
+        path: string[] = [],
+        context: Record<string, any> = {},
+        parentEntry: LogEntry | null = null,
+        rootPath: string = process.cwd(),
+    ) {
         this._write = write
         this._path = path
         this._context = context
@@ -191,8 +204,8 @@ class Logger {
             timestamp: Date.now(),
             path: this._path,
         }
-        if(this._parentEntry) entry.parent_span_id = this._parentEntry.span_id
-        if(data.length === 1 && typeof data[0] === 'string') {
+        if (this._parentEntry) entry.parent_span_id = this._parentEntry.span_id
+        if (data.length === 1 && typeof data[0] === 'string') {
             entry.message = data[0]
         } else {
             entry.data = data
@@ -228,14 +241,20 @@ class Logger {
 }
 
 export function loggerCtx<Ctx extends object = AnyContext>(
-    options: LoggerCtxOptions<Ctx> = {}
+    options: LoggerCtxOptions<Ctx> = {},
 ): ContextMiddleware<{ logger: Logger }> {
     const logMode = options.log ?? LogWriter.PRETTY_CONSOLE
     const logFn = typeof logMode === 'function' ? logMode : DEFAULT_WRITERS[logMode]
     const rootPath = options.rootPath ?? process.cwd()
 
-    return ctx => {
-        ctx.logger = new Logger(logFn, options.name ? [options.name] : [], options.context ?? Object.create(null), null, rootPath)
-        if(ctx.requestId) ctx.logger.set('request_id', ctx.requestId)
+    return (ctx) => {
+        ctx.logger = new Logger(
+            logFn,
+            options.name ? [options.name] : [],
+            options.context ?? Object.create(null),
+            null,
+            rootPath,
+        )
+        if (ctx.requestId) ctx.logger.set('request_id', ctx.requestId)
     }
 }

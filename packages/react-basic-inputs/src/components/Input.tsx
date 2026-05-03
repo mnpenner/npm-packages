@@ -1,8 +1,8 @@
-import type { ComponentPropsWithRef} from 'react';
-import { useRef, useState} from 'react'
-import {useUpdateEffect} from 'react-use'
-import type {EventCallback, HtmlInputElement, OverrideProps} from "../types/utility";
-import {identity} from "../util/constants";
+import type { ComponentPropsWithRef } from 'react'
+import { useRef, useState } from 'react'
+import { useUpdateEffect } from 'react-use'
+import type { EventCallback, HtmlInputElement, OverrideProps } from '../types/utility'
+import { identity } from '../util/constants'
 
 export type InputChangeEvent = {
     value: string
@@ -12,18 +12,29 @@ export type InputChangeEvent = {
 }
 export type InputChangeEventHandler = EventCallback<InputChangeEvent>
 
-export type InputProps = OverrideProps<'input', {
-    onChange?: InputChangeEventHandler
-    value?: string
-    ref?: ComponentPropsWithRef<'input'>['ref']
-    /**
-     * Function used to format value on blur.
-     */
-    formatOnChange?: (value: string) => string
-}>
+export type InputProps = OverrideProps<
+    'input',
+    {
+        onChange?: InputChangeEventHandler
+        value?: string
+        ref?: ComponentPropsWithRef<'input'>['ref']
+        /**
+         * Function used to format value on blur.
+         */
+        formatOnChange?: (value: string) => string
+    }
+>
 
-
-export function Input({value: initialValue = '', onPaste, onChange, onInput, onBlur, formatOnChange = identity, ref, ...otherProps}: InputProps) {
+export function Input({
+    value: initialValue = '',
+    onPaste,
+    onChange,
+    onInput,
+    onBlur,
+    formatOnChange = identity,
+    ref,
+    ...otherProps
+}: InputProps) {
     const [currentValue, setCurrentValue] = useState(initialValue)
     const lastValue = useRef(initialValue)
     const modified = useRef(false)
@@ -39,7 +50,7 @@ export function Input({value: initialValue = '', onPaste, onChange, onInput, onB
         ...otherProps,
         ref,
         value: currentValue,
-        onChange: ev => {
+        onChange: (ev) => {
             setCurrentValue(ev.target.value)
         },
         // TODO: fire a change event onPaste ?
@@ -58,11 +69,11 @@ export function Input({value: initialValue = '', onPaste, onChange, onInput, onB
         //     // ev.preventDefault()
         //     // setCurrentValue(formatOnChange(ev.clipboardData.getData('text/plain')))
         // },
-        onInput: ev => {
+        onInput: (ev) => {
             modified.current = true
             onInput?.(ev)
         },
-        onBlur: ev => {
+        onBlur: (ev) => {
             const formattedValue = formatOnChange(currentValue)
             if (modified.current) {
                 if (formattedValue !== lastValue.current) {
@@ -79,7 +90,7 @@ export function Input({value: initialValue = '', onPaste, onChange, onInput, onB
                 }
             }
             onBlur?.(ev)
-        }
+        },
     }
 
     return <input {...props} />

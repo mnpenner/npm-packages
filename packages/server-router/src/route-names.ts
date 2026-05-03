@@ -34,7 +34,7 @@ export function splitNameString(name: string): string[] {
     }
     parts.push(current)
 
-    return parts.filter(p => p.length > 0)
+    return parts.filter((p) => p.length > 0)
 }
 
 function upperFirst(str: string): string {
@@ -59,7 +59,7 @@ function segmentToDefaultName(segment: string): string {
 
 export function pattToName(_method: string, patt: URLPattern): string[] {
     const pathname = patt.pathname
-    const parts = pathname.split('/').filter(p => p.length > 0)
+    const parts = pathname.split('/').filter((p) => p.length > 0)
 
     if (parts.length === 0) {
         return []

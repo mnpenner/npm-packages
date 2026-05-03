@@ -1,9 +1,9 @@
-import {NeverjectPromise} from './neverject-promise.ts'
-import type {Err, Ok} from './result.ts'
-import {err, type Result} from './result.ts'
-import {type DetailedError} from './detailed-error.ts'
-import {reject, rejectWithError, resolve} from './result/index.ts'
-import {isResult} from './result/type-check.ts'
+import { NeverjectPromise } from './neverject-promise.ts'
+import type { Err, Ok } from './result.ts'
+import { err, type Result } from './result.ts'
+import { type DetailedError } from './detailed-error.ts'
+import { reject, rejectWithError, resolve } from './result/index.ts'
+import { isResult } from './result/type-check.ts'
 
 /**
  * Normalize a promise-like value into a [`NeverjectPromise`]{@link NeverjectPromise}, flattening nested [`Result`]{@link Result} values and capturing rejections as [`DetailedError`]{@link DetailedError}.
@@ -15,10 +15,12 @@ import {isResult} from './result/type-check.ts'
  * const result = await nj(fetchUser(1))
  * if(result.ok) renderUser(result.value)
  */
-export function nj<P>(value: PromiseLike<P>): NeverjectPromise<
+export function nj<P>(
+    value: PromiseLike<P>,
+): NeverjectPromise<
     Awaited<P> extends Result<infer V, any> ? V : Awaited<P>,
     Awaited<P> extends Result<any, infer E> ? E : DetailedError<unknown>
->;
+>
 
 /**
  * Wrap an explicit `Error` instance into a failed [`NeverjectPromise`]{@link NeverjectPromise}.
@@ -30,7 +32,7 @@ export function nj<P>(value: PromiseLike<P>): NeverjectPromise<
  * const failed = await nj(new Error('boom'))
  * if(!failed.ok) console.error(failed.error.message)
  */
-export function nj<E extends Error>(error: E): NeverjectPromise<never, E>;
+export function nj<E extends Error>(error: E): NeverjectPromise<never, E>
 
 /**
  * Lift an existing [`Ok`]{@link Ok} result into a [`NeverjectPromise`]{@link NeverjectPromise} without altering it.
@@ -43,7 +45,7 @@ export function nj<E extends Error>(error: E): NeverjectPromise<never, E>;
  * const settled = await okResult
  * console.assert(settled.ok && settled.value === 'ready')
  */
-export function nj<V>(result: Ok<V>): NeverjectPromise<V, never>;
+export function nj<V>(result: Ok<V>): NeverjectPromise<V, never>
 
 /**
  * Lift an existing [`Err`]{@link Err} result into a [`NeverjectPromise`]{@link NeverjectPromise} without altering it.
@@ -56,7 +58,7 @@ export function nj<V>(result: Ok<V>): NeverjectPromise<V, never>;
  * const settled = await errResult
  * console.assert(!settled.ok && settled.error === 'nope')
  */
-export function nj<E>(result: Err<E>): NeverjectPromise<never, E>;
+export function nj<E>(result: Err<E>): NeverjectPromise<never, E>
 
 /**
  * Normalize any [`Result`]{@link Result} into a [`NeverjectPromise`]{@link NeverjectPromise}, preserving success or failure.
@@ -69,7 +71,7 @@ export function nj<E>(result: Err<E>): NeverjectPromise<never, E>;
  * const settled = await nj(Math.random() > 0.5 ? ok(1) : err('x'))
  * console.log(settled.ok ? settled.value : settled.error)
  */
-export function nj<V, E>(result: Result<V, E>): NeverjectPromise<V, E>;
+export function nj<V, E>(result: Result<V, E>): NeverjectPromise<V, E>
 
 /**
  * Wrap a plain value into a successful [`NeverjectPromise`]{@link NeverjectPromise}.
@@ -81,7 +83,7 @@ export function nj<V, E>(result: Result<V, E>): NeverjectPromise<V, E>;
  * const wrapped = await nj(42)
  * console.assert(wrapped.ok && wrapped.value === 42)
  */
-export function nj<V>(value: V): NeverjectPromise<V, never>;
+export function nj<V>(value: V): NeverjectPromise<V, never>
 
 /**
  * Normalize a promise-like value with a custom error mapper, producing a [`NeverjectPromise`]{@link NeverjectPromise} that re-maps rejection reasons.
@@ -98,7 +100,10 @@ export function nj<V>(value: V): NeverjectPromise<V, never>;
  * )
  * if(!mapped.ok) console.error(mapped.error.message)
  */
-export function nj<P, E>(promise: PromiseLike<P>, errorFn: (e: unknown) => E): NeverjectPromise<Awaited<P>, E>;
+export function nj<P, E>(
+    promise: PromiseLike<P>,
+    errorFn: (e: unknown) => E,
+): NeverjectPromise<Awaited<P>, E>
 
 /**
  * Normalize a [`Result`]{@link Result} while mapping any existing error through `errorFn`.
@@ -113,7 +118,7 @@ export function nj<P, E>(promise: PromiseLike<P>, errorFn: (e: unknown) => E): N
  * const mapped = await nj(err(404), (code) => new Error(`Missing: ${code}`))
  * if(!mapped.ok) console.error(mapped.error.message)
  */
-export function nj<V, I, E>(result: Result<V, I>, errorFn: (e: I) => E): NeverjectPromise<V, E>;
+export function nj<V, I, E>(result: Result<V, I>, errorFn: (e: I) => E): NeverjectPromise<V, E>
 
 /**
  * Wrap a value while providing an error mapper used if the value behaves like a rejecting thenable.
@@ -130,28 +135,29 @@ export function nj<V, I, E>(result: Result<V, I>, errorFn: (e: I) => E): Neverje
  * )
  * if(!guarded.ok) console.log(guarded.error.message)
  */
-export function nj<V, E>(value: V, errorFn: (e: unknown) => E): NeverjectPromise<V, E>;
+export function nj<V, E>(value: V, errorFn: (e: unknown) => E): NeverjectPromise<V, E>
 
 export function nj(value: unknown, errorFn?: (e: unknown) => unknown): NeverjectPromise<any, any> {
-    if(isResult(value)) {
-        if(errorFn && !value.ok) {
+    if (isResult(value)) {
+        if (errorFn && !value.ok) {
             return NeverjectPromise.fromSafePromise(Promise.resolve(err(errorFn(value.error))))
         }
         return NeverjectPromise.fromSafePromise(Promise.resolve(value))
     }
 
-    if(value instanceof Error) {
+    if (value instanceof Error) {
         return NeverjectPromise.fromSafePromise(Promise.resolve(err(value)))
     }
 
-    return NeverjectPromise.fromSafePromise(Promise.resolve(value).then(
+    return NeverjectPromise.fromSafePromise(
+        Promise.resolve(value).then(
             (value) => resolve(value),
             (reason) => {
-                if(errorFn) {
+                if (errorFn) {
                     return reject(errorFn(reason))
                 }
                 return rejectWithError(reason)
-            }
-        )
+            },
+        ),
     )
 }

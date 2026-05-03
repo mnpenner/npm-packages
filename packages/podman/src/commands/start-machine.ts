@@ -1,4 +1,4 @@
-import {execPodman} from '../lib/podman-spawn.ts'
+import { execPodman } from '../lib/podman-spawn.ts'
 
 type PodmanMachine = {
     Name: string
@@ -54,8 +54,10 @@ export async function listMachines(): Promise<PodmanMachine[]> {
 export async function isMachineRunning(machineName = 'podman-machine-default'): Promise<boolean> {
     const machines = await listMachines()
     const m = machines.find((x) => x.Name === machineName)
-    if(!m) {
-        throw new Error(`Podman machine "${machineName}" not found in list:\n${machines.map((x) => `- ${x.Name}`).join('\n')}`)
+    if (!m) {
+        throw new Error(
+            `Podman machine "${machineName}" not found in list:\n${machines.map((x) => `- ${x.Name}`).join('\n')}`,
+        )
     }
     return m.Running
 }
@@ -98,7 +100,7 @@ export async function forceStartMachine(machineName = 'podman-machine-default'):
         await startMachine(machineName)
         return true
     } catch (err) {
-        if(isAlreadyRunningError(err)) {
+        if (isAlreadyRunningError(err)) {
             return false
         }
         throw err
@@ -106,10 +108,12 @@ export async function forceStartMachine(machineName = 'podman-machine-default'):
 }
 
 function isAlreadyRunningError(err: unknown): boolean {
-    if(!err || typeof err !== 'object') {
+    if (!err || typeof err !== 'object') {
         return false
     }
-    const candidate = err as {stderr?: string; stdout?: string; message?: string}
-    const combined = [candidate.stderr, candidate.stdout, candidate.message].filter(Boolean).join('\n')
+    const candidate = err as { stderr?: string; stdout?: string; message?: string }
+    const combined = [candidate.stderr, candidate.stdout, candidate.message]
+        .filter(Boolean)
+        .join('\n')
     return combined.toLowerCase().includes('already running')
 }

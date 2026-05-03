@@ -1,6 +1,6 @@
-import type {CommonAttributes} from '../attributes/ElementAttributes'
-import type {ElementForTag} from './element-types'
-import type {Numeric} from '../attributes/StandardGlobalAttributes'
+import type { CommonAttributes } from '../attributes/ElementAttributes'
+import type { ElementForTag } from './element-types'
+import type { Numeric } from '../attributes/StandardGlobalAttributes'
 
 export interface SelectAttributes extends CommonAttributes<ElementForTag<'select'>> {
     /**
@@ -35,6 +35,4 @@ export interface SelectAttributes extends CommonAttributes<ElementForTag<'select
      * The **`size`** attribute defines the width of the input and the height of the select element. For an `input` element, it defines the number of characters that the user agent allows the user to see when editing the value. For a `select` element, it defines the number of options that should be shown to the user. This must be a valid non-negative integer greater than zero.
      */
     size?: Numeric
-
 }
-

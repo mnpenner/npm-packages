@@ -11,7 +11,7 @@
         "removeComments": false,
         "preserveConstEnums": false,
         "sourceMap": true,
-        "lib": ["es2018","dom"],
+        "lib": ["es2018", "dom"],
         "skipLibCheck": false,
         "outDir": "dist",
         "target": "es2018",
@@ -27,10 +27,6 @@
     "paths": {
         "@/*": ["src/*"]
     },
-    "files": [
-        "src/index.tsx"
-    ],
-    "include": [
-        "src/**/*.d.ts"
-    ]
+    "files": ["src/index.tsx"],
+    "include": ["src/**/*.d.ts"]
 }

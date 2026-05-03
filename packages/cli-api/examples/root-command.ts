@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import {App, OptType} from '../src'
+import { App, OptType } from '../src'
 import * as pkg from '../package.json'
 
 const app = new App('hello')
@@ -53,12 +53,10 @@ const app = new App('hello')
     .help({
         disableOption: false,
     })
-    .run(opts => {
+    .run((opts) => {
         console.log(opts)
     })
 
-if(import.meta.main) {
+if (import.meta.main) {
     await app.execute()
 }
-
-

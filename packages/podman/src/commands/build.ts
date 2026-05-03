@@ -1,5 +1,5 @@
-import {ArgBuilder} from '../lib/arg-builder.ts'
-import {execPodmanStreamingWithStdoutLines} from '../lib/podman-spawn.ts'
+import { ArgBuilder } from '../lib/arg-builder.ts'
+import { execPodmanStreamingWithStdoutLines } from '../lib/podman-spawn.ts'
 
 type PodmanBuildOptions = {
     /** Build context directory. */
@@ -350,11 +350,11 @@ export async function build(options: PodmanBuildOptions = {}): Promise<string> {
     let imageId: string | undefined
     await execPodmanStreamingWithStdoutLines(args.toArgs(), (line) => {
         const trimmed = line.trim()
-        if(/^[a-f0-9]{64}$/.test(trimmed)) {
+        if (/^[a-f0-9]{64}$/.test(trimmed)) {
             imageId = trimmed
         }
     })
-    if(!imageId) {
+    if (!imageId) {
         throw new Error('Unable to determine built image ID from podman output.')
     }
     return imageId

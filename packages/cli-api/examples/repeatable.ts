@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import {App} from '../src'
+import { App } from '../src'
 
 const app = new App('repeatable')
     .arguments([
@@ -12,12 +12,10 @@ const app = new App('repeatable')
             required: true,
         },
     ])
-    .run(opts => {
-        console.log({opts})
+    .run((opts) => {
+        console.log({ opts })
     })
 
-if(import.meta.main) {
+if (import.meta.main) {
     await app.execute()
 }
-
-

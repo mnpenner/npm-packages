@@ -5,13 +5,8 @@ import {
     useState,
     useSyncExternalStore,
 } from 'react'
-import type {ReactNode} from 'react'
-import {
-    createStore,
-    resolveInitializer,
-    resolveStateUpdater,
-    Store,
-} from './store'
+import type { ReactNode } from 'react'
+import { createStore, resolveInitializer, resolveStateUpdater, Store } from './store'
 import type {
     EqualityFn,
     Initializer,
@@ -49,13 +44,13 @@ function createSelectedSnapshot<T, S>(
     return () => {
         const storeSnapshot = store.getSnapshot()
 
-        if(hasSnapshot && Object.is(storeSnapshot, lastStoreSnapshot)) {
+        if (hasSnapshot && Object.is(storeSnapshot, lastStoreSnapshot)) {
             return lastSelectedSnapshot
         }
 
         const selectedSnapshot = selector(storeSnapshot)
 
-        if(hasSnapshot && isEqual(lastSelectedSnapshot, selectedSnapshot)) {
+        if (hasSnapshot && isEqual(lastSelectedSnapshot, selectedSnapshot)) {
             lastStoreSnapshot = storeSnapshot
             return lastSelectedSnapshot
         }
@@ -84,7 +79,7 @@ export function useStore<T, S = T>(
     )
 
     return useSyncExternalStore(
-        onStoreChange => store.subscribe(onStoreChange),
+        (onStoreChange) => store.subscribe(onStoreChange),
         getSnapshot,
         getSnapshot,
     )
@@ -99,7 +94,7 @@ export function createReactStore<T>(
     function useReactStore(): T
     function useReactStore<S>(selector: Selector<T, S>, useOptions?: UseStoreOptions<S>): S
     function useReactStore<S = T>(selector?: Selector<T, S>, useOptions?: UseStoreOptions<S>) {
-        return useStore(store, selector ?? identity as Selector<T, S>, useOptions)
+        return useStore(store, selector ?? (identity as Selector<T, S>), useOptions)
     }
 
     store.use = useReactStore
@@ -107,42 +102,36 @@ export function createReactStore<T>(
     return store
 }
 
-export function createStoreContext<T>(
-    defaultValue: Initializer<T>,
-    options?: StoreOptions<T>,
-) {
+export function createStoreContext<T>(defaultValue: Initializer<T>, options?: StoreOptions<T>) {
     const Context = createReactContext<Store<T> | null>(null)
 
     function useStoreInstance() {
         const store = useContext(Context)
 
-        if(store === null) {
+        if (store === null) {
             throw new Error('Store context is missing a matching Provider')
         }
 
         return store
     }
 
-    function Provider({children, initialValue}: StoreProviderProps<T>) {
+    function Provider({ children, initialValue }: StoreProviderProps<T>) {
         const [store] = useState(() => {
             const resolvedDefaultValue = resolveInitializer(defaultValue)
-            const resolvedInitialValue = initialValue === undefined
-                ? resolvedDefaultValue
-                : resolveStateUpdater(initialValue, resolvedDefaultValue)
+            const resolvedInitialValue =
+                initialValue === undefined
+                    ? resolvedDefaultValue
+                    : resolveStateUpdater(initialValue, resolvedDefaultValue)
             return new Store(resolvedInitialValue, options)
         })
 
-        return (
-            <Context.Provider value={store}>
-                {children}
-            </Context.Provider>
-        )
+        return <Context.Provider value={store}>{children}</Context.Provider>
     }
 
     function useContextStore(): T
     function useContextStore<S>(selector: Selector<T, S>, useOptions?: UseStoreOptions<S>): S
     function useContextStore<S = T>(selector?: Selector<T, S>, useOptions?: UseStoreOptions<S>) {
-        return useStore(useStoreInstance(), selector ?? identity as Selector<T, S>, useOptions)
+        return useStore(useStoreInstance(), selector ?? (identity as Selector<T, S>), useOptions)
     }
 
     return {

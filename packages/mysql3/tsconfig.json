@@ -11,9 +11,7 @@
         "removeComments": true,
         "preserveConstEnums": false,
         "sourceMap": true,
-        "lib": [
-            "esnext"
-        ],
+        "lib": ["esnext"],
         "skipLibCheck": true,
         "outDir": "dist",
         "target": "esnext",
@@ -25,10 +23,6 @@
         "allowSyntheticDefaultImports": true,
         "emitDeclarationOnly": true
     },
-    "include": [
-        "src/**/*.d.ts"
-    ],
-    "files": [
-        "src/index.ts"
-    ]
+    "include": ["src/**/*.d.ts"],
+    "files": ["src/index.ts"]
 }

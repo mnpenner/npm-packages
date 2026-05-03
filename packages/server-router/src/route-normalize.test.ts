@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bun test
-import {describe, expect, it} from 'bun:test'
-import {HttpMethod} from '@mpen/http-helpers'
-import {normalizeRoute} from './route-normalize'
+import { describe, expect, it } from 'bun:test'
+import { HttpMethod } from '@mpen/http-helpers'
+import { normalizeRoute } from './route-normalize'
 
 describe('normalizeRoute', function () {
     it('builds a URLPattern and default name', function () {
@@ -22,15 +22,15 @@ describe('normalizeRoute', function () {
         const route = normalizeRoute({
             method: HttpMethod.POST,
             path: '/upload',
-            accept: ['Application/JSON; charset=UTF-8', {type: 'text/plain'}],
+            accept: ['Application/JSON; charset=UTF-8', { type: 'text/plain' }],
             handler: function () {
                 return new Response('ok')
             },
         })
 
         expect(route.accept).toEqual([
-            {type: 'application/json', charset: 'utf-8'},
-            {type: 'text/plain'},
+            { type: 'application/json', charset: 'utf-8' },
+            { type: 'text/plain' },
         ])
     })
 })

@@ -5,7 +5,7 @@ export const LEADER = BASE50_ALPHABET.charAt(0) // Character representing zero
 
 // Create reverse lookup map
 const BASE50_MAP: { [char: string]: number } = {}
-for(let i = 0; i < BASE50_ALPHABET.length; i++) {
+for (let i = 0; i < BASE50_ALPHABET.length; i++) {
     BASE50_MAP[BASE50_ALPHABET[i]] = i
 }
 
@@ -19,20 +19,20 @@ for(let i = 0; i < BASE50_ALPHABET.length; i++) {
  * @returns The Base50 encoded string.
  */
 export function uint8ArrayToBase50Streaming(buffer: Uint8Array): string {
-    if(buffer.length === 0) {
-        return ""
+    if (buffer.length === 0) {
+        return ''
     }
 
     // 1. Count leading zero bytes.
     let zeros = 0
-    while(zeros < buffer.length && buffer[zeros] === 0) {
+    while (zeros < buffer.length && buffer[zeros] === 0) {
         zeros++
     }
 
     // 2. Allocate space for conversion - Base256 digits (bytes)
     // We work on a mutable array of numbers
     const digits256: number[] = []
-    for(let i = zeros; i < buffer.length; i++) {
+    for (let i = zeros; i < buffer.length; i++) {
         digits256.push(buffer[i])
     }
 
@@ -41,12 +41,12 @@ export function uint8ArrayToBase50Streaming(buffer: Uint8Array): string {
 
     // 4. Perform base conversion (Base256 -> Base50)
     // Process digits until the number becomes zero
-    while(digits256.length > 0) {
+    while (digits256.length > 0) {
         let remainder = 0
         const quotient: number[] = []
 
         // Long division: Divide digits256 by BASE (50)
-        for(let i = 0; i < digits256.length; i++) {
+        for (let i = 0; i < digits256.length; i++) {
             // Bring down the next digit (effectively multiplying remainder by 256)
             const accumulator = digits256[i] + remainder * 256
             const digit = Math.floor(accumulator / BASE)
@@ -54,7 +54,7 @@ export function uint8ArrayToBase50Streaming(buffer: Uint8Array): string {
 
             // Add the new quotient digit if it's non-zero or if we have already
             // added non-zero digits previously (to avoid leading zeros in quotient).
-            if(quotient.length > 0 || digit > 0) {
+            if (quotient.length > 0 || digit > 0) {
                 quotient.push(digit)
             }
         }
@@ -70,13 +70,12 @@ export function uint8ArrayToBase50Streaming(buffer: Uint8Array): string {
     let result = LEADER.repeat(zeros)
 
     // 6. Convert Base50 digits to characters (in reverse order)
-    for(let i = digits50.length - 1; i >= 0; i--) {
+    for (let i = digits50.length - 1; i >= 0; i--) {
         result += BASE50_ALPHABET[digits50[i]]
     }
 
     return result
 }
-
 
 /**
  * Decodes a Base50 string back into a Uint8Array using a streaming approach.
@@ -86,22 +85,22 @@ export function uint8ArrayToBase50Streaming(buffer: Uint8Array): string {
  * @throws Error if the string contains invalid Base50 characters.
  */
 export function base50ToUint8ArrayStreaming(str: string): Uint8Array {
-    if(str.length === 0) {
+    if (str.length === 0) {
         return new Uint8Array()
     }
 
     // 1. Count leading 'leader' characters (representing zero bytes)
     let zeros = 0
-    while(zeros < str.length && str[zeros] === LEADER) {
+    while (zeros < str.length && str[zeros] === LEADER) {
         zeros++
     }
 
     // 2. Allocate space for Base50 digits (numeric values)
     const digits50: number[] = []
-    for(let i = zeros; i < str.length; i++) {
+    for (let i = zeros; i < str.length; i++) {
         const char = str[i]
         const value = BASE50_MAP[char]
-        if(value === undefined) {
+        if (value === undefined) {
             throw new Error(`Invalid Base50 character found: "${char}"`)
         }
         digits50.push(value)
@@ -111,19 +110,19 @@ export function base50ToUint8ArrayStreaming(str: string): Uint8Array {
     const digits256: number[] = []
 
     // 4. Perform base conversion (Base50 -> Base256)
-    while(digits50.length > 0) {
+    while (digits50.length > 0) {
         let remainder = 0
         const quotient: number[] = []
 
         // Long division: Divide digits50 by 256
-        for(let i = 0; i < digits50.length; i++) {
+        for (let i = 0; i < digits50.length; i++) {
             // Bring down the next digit (effectively multiplying remainder by BASE=50)
             const accumulator = digits50[i] + remainder * BASE
             const digit = Math.floor(accumulator / 256)
             remainder = accumulator % 256
 
             // Add the new quotient digit if non-zero or if we have seen non-zeros
-            if(quotient.length > 0 || digit > 0) {
+            if (quotient.length > 0 || digit > 0) {
                 quotient.push(digit)
             }
         }
@@ -142,13 +141,12 @@ export function base50ToUint8ArrayStreaming(str: string): Uint8Array {
     // (Uint8Array is initialized with zeros, so no explicit action needed if zeros > 0)
 
     // 7. Add the decoded bytes (in reverse order)
-    for(let i = 0; i < digits256.length; i++) {
+    for (let i = 0; i < digits256.length; i++) {
         result[zeros + i] = digits256[digits256.length - 1 - i] // Add in correct order
     }
 
     return result
 }
-
 
 if (import.meta.main) {
     // This file is being run directly
@@ -158,6 +156,6 @@ if (import.meta.main) {
     console.log(uint8ArrayToBase50Streaming(new Uint8Array([49])))
     console.log(uint8ArrayToBase50Streaming(new Uint8Array([50])))
     console.log(uint8ArrayToBase50Streaming(new Uint8Array([255])))
-    console.log(uint8ArrayToBase50Streaming(new Uint8Array([1,2,3,4,5,6])))
+    console.log(uint8ArrayToBase50Streaming(new Uint8Array([1, 2, 3, 4, 5, 6])))
     console.log(base50ToUint8ArrayStreaming('vnrgr23'))
 }

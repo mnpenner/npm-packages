@@ -5,16 +5,14 @@
 ## Usage
 
 ```ts
-import {build} from "bun";
-import {reactCompiler} from "bun-plugin-react-compiler";
+import { build } from 'bun'
+import { reactCompiler } from 'bun-plugin-react-compiler'
 
 await Bun.build({
-    entrypoints: ["./index.tsx"],
-    outdir: "./out",
-    plugins: [
-        reactCompiler()
-    ],
-});
+    entrypoints: ['./index.tsx'],
+    outdir: './out',
+    plugins: [reactCompiler()],
+})
 ```
 
 ## Bunfig `serve.static` plugin usage

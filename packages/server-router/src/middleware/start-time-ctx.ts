@@ -1,6 +1,5 @@
-import type {ContextMiddleware} from '../types'
+import type { ContextMiddleware } from '../types'
 
-
-export const startTimeCtx = (): ContextMiddleware<{startTime: number}> => ctx => {
+export const startTimeCtx = (): ContextMiddleware<{ startTime: number }> => (ctx) => {
     ctx.startTime = Date.now()
 }

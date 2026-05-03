@@ -1,6 +1,6 @@
-import {promises as FileSystem} from 'fs'
+import { promises as FileSystem } from 'fs'
 import Path from 'path'
-import type {Plugin} from 'rollup'
+import type { Plugin } from 'rollup'
 
 const log = console.error.bind(console)
 
@@ -9,7 +9,7 @@ const plugin = (): Plugin => ({
     async generateBundle(outputOptions, bundle, isWrite) {
         if (!isWrite) return
         if (!outputOptions.dir) {
-            return this.warn("Not cleaning; output.dir not specifeid")
+            return this.warn('Not cleaning; output.dir not specifeid')
         }
 
         const outputDir = Path.relative('.', outputOptions.dir)
@@ -21,7 +21,7 @@ const plugin = (): Plugin => ({
         const deleting = []
         let entries
         try {
-            entries = await FileSystem.readdir(outputDir, {withFileTypes: true})
+            entries = await FileSystem.readdir(outputDir, { withFileTypes: true })
         } catch (err) {
             if (err.code === 'ENOENT') return
             throw err
@@ -32,14 +32,13 @@ const plugin = (): Plugin => ({
             if (entry.isSymbolicLink() || !entry.isDirectory()) {
                 deleting.push(FileSystem.unlink(filePath))
             } else {
-                deleting.push(FileSystem.rmdir(filePath, {recursive: true}))
+                deleting.push(FileSystem.rmdir(filePath, { recursive: true }))
             }
         }
 
         await Promise.allSettled(deleting)
         log(`Deleted ${deleting.length} files from ${outputDir}${Path.sep}`)
-    }
+    },
 })
 
 export default plugin
-

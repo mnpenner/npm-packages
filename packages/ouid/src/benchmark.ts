@@ -1,6 +1,6 @@
 #!bun --expose-gc
-import { run, bench } from 'mitata';
-import {OrderedTypedIdGenerator} from './OrderedTypedIdGenerator'
+import { run, bench } from 'mitata'
+import { OrderedTypedIdGenerator } from './OrderedTypedIdGenerator'
 
 const enum IdType {
     USER,
@@ -8,8 +8,7 @@ const enum IdType {
     POST,
 }
 
-
-const generator = new OrderedTypedIdGenerator<IdType>
+const generator = new OrderedTypedIdGenerator<IdType>()
 
 bench('idgen', () => generator.generate(IdType.COMMENT))
 

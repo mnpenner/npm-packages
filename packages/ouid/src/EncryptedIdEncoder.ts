@@ -1,19 +1,19 @@
-import assert from "node:assert/strict"
-import {createCipheriv, createDecipheriv} from "node:crypto"
+import assert from 'node:assert/strict'
+import { createCipheriv, createDecipheriv } from 'node:crypto'
 
 const TWO_128 = 1n << 128n
 
 function bytes16ToBigInt(b: Buffer): bigint {
-    assert(b.length === 16, "need 16 bytes")
+    assert(b.length === 16, 'need 16 bytes')
     let x = 0n
-    for(let i = 0; i < 16; i++) x = (x << 8n) | BigInt(b[i])
+    for (let i = 0; i < 16; i++) x = (x << 8n) | BigInt(b[i])
     return x
 }
 
 function bigIntToBytes16(x: bigint): Buffer {
-    assert(x >= 0n && x < TWO_128, "value must be < 2^128")
+    assert(x >= 0n && x < TWO_128, 'value must be < 2^128')
     const out = Buffer.alloc(16)
-    for(let i = 15; i >= 0; i--) {
+    for (let i = 15; i >= 0; i--) {
         out[i] = Number(x & 0xffn)
         x >>= 8n
     }
@@ -21,23 +21,22 @@ function bigIntToBytes16(x: bigint): Buffer {
 }
 
 function aesEcbEncrypt16(key16: Buffer, plain16: Buffer): Buffer {
-    assert(key16.length === 16, "Secret key must be exactly 16 bytes")
-    assert(plain16.length === 16, "ID must be 16 bytes long")
-    const cipher = createCipheriv("aes-128-ecb", key16, null)
+    assert(key16.length === 16, 'Secret key must be exactly 16 bytes')
+    assert(plain16.length === 16, 'ID must be 16 bytes long')
+    const cipher = createCipheriv('aes-128-ecb', key16, null)
     cipher.setAutoPadding(false)
     return Buffer.concat([cipher.update(plain16), cipher.final()])
 }
 
 function aesEcbDecrypt16(key16: Buffer, ct16: Buffer): Buffer {
-    assert(key16.length === 16, "Secret key must be exactly 16 bytes")
-    assert(ct16.length === 16, "encoded value must decode to 16 bytes")
-    const decipher = createDecipheriv("aes-128-ecb", key16, null)
+    assert(key16.length === 16, 'Secret key must be exactly 16 bytes')
+    assert(ct16.length === 16, 'encoded value must decode to 16 bytes')
+    const decipher = createDecipheriv('aes-128-ecb', key16, null)
     decipher.setAutoPadding(false)
     return Buffer.concat([decipher.update(ct16), decipher.final()])
 }
 
-export const DEFAULT_ALPHABET =
-    "0123456789bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ" // 50 chars
+export const DEFAULT_ALPHABET = '0123456789bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ' // 50 chars
 
 /**
  * AES-ECB based obfuscator for 16-byte IDs with base-N encoding.
@@ -52,9 +51,12 @@ export class EncryptedIdEncoder {
     private readonly maxLength: number
 
     constructor(secretKey: Buffer, alphabet: string = DEFAULT_ALPHABET) {
-        assert(secretKey.length === 16, "Secret key must be exactly 16 bytes")
-        assert(alphabet.length >= 2, "Alphabet must contain at least 2 characters")
-        assert(new Set(alphabet).size === alphabet.length, "Alphabet must contain unique characters")
+        assert(secretKey.length === 16, 'Secret key must be exactly 16 bytes')
+        assert(alphabet.length >= 2, 'Alphabet must contain at least 2 characters')
+        assert(
+            new Set(alphabet).size === alphabet.length,
+            'Alphabet must contain unique characters',
+        )
 
         // With base >= 2, a fixed length exists for representing 128-bit values.
         const log2Base = Math.log2(alphabet.length)
@@ -68,21 +70,21 @@ export class EncryptedIdEncoder {
 
     /** Encodes a 16-byte ID to a fixed-length string. */
     encode(id: Buffer): string {
-        assert(id.length === 16, "ID must be 16 bytes long")
+        assert(id.length === 16, 'ID must be 16 bytes long')
 
         // 1) AES-ECB mask (16 -> 16)
         const masked = aesEcbEncrypt16(this.secretKey, id)
 
         // 2) Convert 128-bit to base-N string
         let x = bytes16ToBigInt(masked)
-        let s = ""
-        for(let i = 0; i < this.maxLength; i++) {
+        let s = ''
+        for (let i = 0; i < this.maxLength; i++) {
             const d = x % this.base
             s = this.alphabet[Number(d)] + s
             x /= this.base
         }
         // If x != 0 here, overflow (base too small or bug)
-        assert(x === 0n, "overflow > 128 bits")
+        assert(x === 0n, 'overflow > 128 bits')
         return s // fixed length
     }
 
@@ -90,16 +92,16 @@ export class EncryptedIdEncoder {
     decode(formattedId: string): Buffer {
         assert(
             formattedId.length <= this.maxLength,
-            `Formatted ID must be ${this.maxLength} characters or less`
+            `Formatted ID must be ${this.maxLength} characters or less`,
         )
 
         // 1) Base-N to bigint
         let x = 0n
-        for(const ch of formattedId) {
+        for (const ch of formattedId) {
             const v = this.reverse.get(ch)
             assert(v !== undefined, `Invalid character in ID: ${ch}`)
             x = x * this.base + v
-            assert(x < TWO_128, "value exceeds 128 bits")
+            assert(x < TWO_128, 'value exceeds 128 bits')
         }
 
         // Left-pad semantics: shorter strings are valid (they represent smaller x).

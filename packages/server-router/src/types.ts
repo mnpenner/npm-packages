@@ -1,5 +1,5 @@
-import type {HttpMethod, HttpStatus} from '@mpen/http-helpers'
-import type {Router} from './router'
+import type { HttpMethod, HttpStatus } from '@mpen/http-helpers'
+import type { Router } from './router'
 
 export type OneOrMany<T> = T | T[]
 export type MaybePromise<T> = T | Promise<T>
@@ -274,7 +274,7 @@ export type HandlerYield =
     | number
     | HttpStatus
     | Headers
-    | {status?: number | HttpStatus; headers?: HeadersInit}
+    | { status?: number | HttpStatus; headers?: HeadersInit }
     | Buffer
     | Uint8Array
     | string
@@ -313,7 +313,12 @@ export type HandlerResult<TOkRes = unknown> =
     | ResponseWithData<TOkRes>
     | TOkRes
     | HandlerBody
-    | Promise<ResponseWithData<TOkRes> | TOkRes | HandlerBody | AsyncGenerator<HandlerYield, HandlerBody>>
+    | Promise<
+          | ResponseWithData<TOkRes>
+          | TOkRes
+          | HandlerBody
+          | AsyncGenerator<HandlerYield, HandlerBody>
+      >
     | AsyncGenerator<HandlerYield, HandlerBody>
 
 /**
@@ -331,10 +336,10 @@ export type HandlerResult<TOkRes = unknown> =
  * @param ctx - Handler context containing the incoming [`Request`]{@link Request}, parsed [`URL`]{@link URL}, path parameters, and middleware extensions.
  * @returns A response, a serializable value handled by middleware, or a streaming generator that yields response metadata.
  */
-export type Handler<
-    TOkRes=unknown,
-    Ctx extends object = AnyContext,
-> = (this: Router<any>, ctx: HandlerContext<Ctx>) => HandlerResult<TOkRes>
+export type Handler<TOkRes = unknown, Ctx extends object = AnyContext> = (
+    this: Router<any>,
+    ctx: HandlerContext<Ctx>,
+) => HandlerResult<TOkRes>
 
 /**
  * Middleware that can intercept requests, responses, and extend context.
@@ -350,12 +355,13 @@ export type Handler<
  * @param next - Invokes the next middleware or route handler.
  * @returns The response or handler result, optionally wrapped in a Promise.
  */
-export type ContextMiddleware<AddedCtx extends object = AnyContext, Ctx extends object = AnyContext> =
-    (ctx: RequestContext<Ctx & AddedCtx>, next: () => Promise<HandlerResult>) =>
-        | HandlerResult
-        | Promise<HandlerResult>
-        | void
-        | Promise<void>
+export type ContextMiddleware<
+    AddedCtx extends object = AnyContext,
+    Ctx extends object = AnyContext,
+> = (
+    ctx: RequestContext<Ctx & AddedCtx>,
+    next: () => Promise<HandlerResult>,
+) => HandlerResult | Promise<HandlerResult> | void | Promise<void>
 
 /**
  * Middleware that can intercept requests and responses.
@@ -385,5 +391,6 @@ export type Middleware<Ctx extends object = AnyContext> = ContextMiddleware<{}, 
  * @param list - Collection of middleware entries, optionally including falsy values.
  * @returns A list of middleware compatible with `Router.use`.
  */
-export type MiddlewareList<Ctx extends object = AnyContext> =
-    ReadonlyArray<ContextMiddleware<any, Ctx> | null | undefined | false>
+export type MiddlewareList<Ctx extends object = AnyContext> = ReadonlyArray<
+    ContextMiddleware<any, Ctx> | null | undefined | false
+>

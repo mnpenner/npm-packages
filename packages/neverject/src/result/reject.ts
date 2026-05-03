@@ -1,6 +1,6 @@
-import {err, type Err, type Result, type Ok} from '../result.ts'
-import {toDetailedError, type DetailedError} from '../detailed-error.ts'
-import {isResult} from './type-check.ts'
+import { err, type Err, type Result, type Ok } from '../result.ts'
+import { toDetailedError, type DetailedError } from '../detailed-error.ts'
+import { isResult } from './type-check.ts'
 
 /**
  * Return an existing successful [`Ok`]{@link Ok} result untouched when normalizing with [`rejectWithError`]{@link rejectWithError}.
@@ -13,7 +13,7 @@ import {isResult} from './type-check.ts'
  * const normalized = rejectWithError(success)
  * console.assert(normalized === success)
  */
-export function rejectWithError<V>(result: Ok<V>): Ok<V>;
+export function rejectWithError<V>(result: Ok<V>): Ok<V>
 
 /**
  * Return an existing failed [`Err`]{@link Err} result untouched when normalizing with [`rejectWithError`]{@link rejectWithError}.
@@ -26,7 +26,7 @@ export function rejectWithError<V>(result: Ok<V>): Ok<V>;
  * const normalized = rejectWithError(failure)
  * console.assert(normalized === failure)
  */
-export function rejectWithError<E>(result: Err<E>): Err<E>;
+export function rejectWithError<E>(result: Err<E>): Err<E>
 
 /**
  * Preserve a [`Result`]{@link Result} as-is when calling [`rejectWithError`]{@link rejectWithError}.
@@ -40,7 +40,7 @@ export function rejectWithError<E>(result: Err<E>): Err<E>;
  * const normalized = rejectWithError(maybe)
  * console.assert(normalized === maybe)
  */
-export function rejectWithError<V, E>(result: Result<V, E>): Result<V, E>;
+export function rejectWithError<V, E>(result: Result<V, E>): Result<V, E>
 
 /**
  * Convert an `Error` instance into [`Err`]{@link Err} without wrapping it in [`DetailedError`]{@link DetailedError}.
@@ -52,7 +52,7 @@ export function rejectWithError<V, E>(result: Result<V, E>): Result<V, E>;
  * const failure = rejectWithError(new Error('boom'))
  * console.assert(!failure.ok && failure.error.message === 'boom')
  */
-export function rejectWithError<E extends Error>(reason: E): Err<E>;
+export function rejectWithError<E extends Error>(reason: E): Err<E>
 
 /**
  * Convert any rejection reason into [`Err<DetailedError>`]{@link DetailedError}, enriching non-error values.
@@ -64,7 +64,7 @@ export function rejectWithError<E extends Error>(reason: E): Err<E>;
  * const failure = rejectWithError('oops')
  * console.assert(!failure.ok && failure.error.details === 'oops')
  */
-export function rejectWithError<T>(reason: T): Err<DetailedError<T>>;
+export function rejectWithError<T>(reason: T): Err<DetailedError<T>>
 export function rejectWithError(reason: unknown): Result<unknown, unknown> {
     return isResult(reason) ? reason : err(toDetailedError(reason))
 }
@@ -80,7 +80,7 @@ export function rejectWithError(reason: unknown): Result<unknown, unknown> {
  * const normalized = reject(success)
  * console.assert(normalized === success)
  */
-export function reject<V>(result: Ok<V>): Ok<V>;
+export function reject<V>(result: Ok<V>): Ok<V>
 
 /**
  * Return an existing failed [`Err`]{@link Err} result untouched when normalizing with [`reject`]{@link reject}.
@@ -93,7 +93,7 @@ export function reject<V>(result: Ok<V>): Ok<V>;
  * const normalized = reject(failure)
  * console.assert(normalized === failure)
  */
-export function reject<E>(result: Err<E>): Err<E>;
+export function reject<E>(result: Err<E>): Err<E>
 
 /**
  * Preserve any [`Result`]{@link Result} when normalizing with [`reject`]{@link reject}.
@@ -107,7 +107,7 @@ export function reject<E>(result: Err<E>): Err<E>;
  * const normalized = reject(maybe)
  * console.assert(normalized === maybe)
  */
-export function reject<V, E>(result: Result<V, E>): Result<V, E>;
+export function reject<V, E>(result: Result<V, E>): Result<V, E>
 
 /**
  * Wrap any reason in an [`Err`]{@link Err} without converting it to [`DetailedError`]{@link DetailedError}.
@@ -119,7 +119,7 @@ export function reject<V, E>(result: Result<V, E>): Result<V, E>;
  * const failure = reject('plain failure')
  * console.assert(!failure.ok && failure.error === 'plain failure')
  */
-export function reject<E>(reason: E): Err<E>;
+export function reject<E>(reason: E): Err<E>
 export function reject(reason: unknown): Result<unknown, unknown> {
     return isResult(reason) ? reason : err(reason)
 }

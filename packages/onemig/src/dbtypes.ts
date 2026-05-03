@@ -62,13 +62,12 @@ export enum DbColumnType {
     GEOMETRY = 'geometry',
 }
 
-
 export enum DbIndexType {
     PRIMARY = 'PRIMARY',
     BTREE = 'BTREE',
     UNIQUE = 'UNIQUE',
     INDEX = 'INDEX',
-    HASH = 'HASH'
+    HASH = 'HASH',
 }
 
 export interface DbColumn {
@@ -79,9 +78,9 @@ export interface DbColumn {
     collation?: string
     autoIncrement?: boolean
     // extra?: 'on update current_timestamp()'|'STORED GENERATED'|string
-    onUpdate?: 'current_timestamp()', // TODO: anything else?
+    onUpdate?: 'current_timestamp()' // TODO: anything else?
 
-    generated?: 'STORED'|'VIRTUAL'|'PERSISTENT',
+    generated?: 'STORED' | 'VIRTUAL' | 'PERSISTENT'
     /** Generation expression */
     genExpr?: string
     values?: string[]

@@ -1,6 +1,6 @@
-import type {CommonAttributes} from '../attributes/ElementAttributes'
-import type {ElementForTag} from './element-types'
-import type {CssFrag} from '../../template-strings'
+import type { CommonAttributes } from '../attributes/ElementAttributes'
+import type { ElementForTag } from './element-types'
+import type { CssFrag } from '../../template-strings'
 
 /**
  * Represents the attributes of a <style> HTML element.
@@ -19,9 +19,6 @@ export interface StyleAttributes extends CommonAttributes<ElementForTag<'style'>
      */
     media?: string
 
-
-
     /** children attribute. */
     children?: CssFrag
 }
-

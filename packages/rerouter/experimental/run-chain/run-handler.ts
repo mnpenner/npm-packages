@@ -1,7 +1,6 @@
-import type {AnyContext, RequestContext} from './run-handler-types'
-import {runChain} from './run-chain/run-chain'
-import type {RunChain} from './run-chain/run-chain-types'
-
+import type { AnyContext, RequestContext } from './run-handler-types'
+import { runChain } from './run-chain/run-chain'
+import type { RunChain } from './run-chain/run-chain-types'
 
 /**
  * Invokes a chain of middleware functions using the Web API Response object.
@@ -16,13 +15,15 @@ import type {RunChain} from './run-chain/run-chain-types'
  */
 export async function runHandler<Ctx extends object = AnyContext>(
     input: RequestContext<Ctx>,
-    middleware: RunChain<RequestContext<Ctx>,Response>
+    middleware: RunChain<RequestContext<Ctx>, Response>,
 ): Promise<Response> {
     const finalResult = await runChain(input, middleware)
 
-    if(!(finalResult instanceof Response)) {
+    if (!(finalResult instanceof Response)) {
         const resultType = finalResult === null ? 'null' : typeof finalResult
-        throw new Error(`Middleware chain completed without returning a Response. Final value was of type: ${resultType}`)
+        throw new Error(
+            `Middleware chain completed without returning a Response. Final value was of type: ${resultType}`,
+        )
     }
 
     return finalResult

@@ -1,10 +1,8 @@
 {
     "presets": [
-        ["@babel/preset-env",{"targets": {"node": "10.7"}}],
+        ["@babel/preset-env", { "targets": { "node": "10.7" } }],
         "@babel/preset-typescript"
     ],
-    "plugins": [
-        "@babel/plugin-syntax-bigint"
-    ],
+    "plugins": ["@babel/plugin-syntax-bigint"],
     "comments": false
 }

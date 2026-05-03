@@ -1,7 +1,7 @@
-import type {CommonAttributes} from '../attributes/ElementAttributes'
-import type {ElementForTag} from './element-types'
-import type {Numeric} from '../attributes/StandardGlobalAttributes'
-import type {AnyString} from '../../util-types'
+import type { CommonAttributes } from '../attributes/ElementAttributes'
+import type { ElementForTag } from './element-types'
+import type { Numeric } from '../attributes/StandardGlobalAttributes'
+import type { AnyString } from '../../util-types'
 
 export interface TextareaAttributes extends CommonAttributes<ElementForTag<'textarea'>> {
     /**
@@ -65,5 +65,4 @@ export interface TextareaAttributes extends CommonAttributes<ElementForTag<'text
      * - off
      */
     wrap?: 'hard' | 'soft' | 'off'
-
 }

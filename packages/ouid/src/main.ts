@@ -1,13 +1,13 @@
 #!bun
-import {randomBytes} from 'node:crypto'
-import {OrderedTypedIdGenerator} from './OrderedTypedIdGenerator'
-import {EncryptedIdEncoder} from './EncryptedIdEncoder'
-import {ReadableIdEncoder} from './ReadableIdEncoder'
-import {shuffleString} from './util'
+import { randomBytes } from 'node:crypto'
+import { OrderedTypedIdGenerator } from './OrderedTypedIdGenerator'
+import { EncryptedIdEncoder } from './EncryptedIdEncoder'
+import { ReadableIdEncoder } from './ReadableIdEncoder'
+import { shuffleString } from './util'
 
 const enum IdType {
     USER,
-    COMMENT=0xABC,
+    COMMENT = 0xabc,
     POST,
 }
 
@@ -20,7 +20,7 @@ console.log(`secretKey(base64url): ${secretKey.toString('base64url')}`)
 console.log(`alphabet: ${alphabet}`)
 console.log()
 
-const ouidGenerator = new OrderedTypedIdGenerator<IdType>
+const ouidGenerator = new OrderedTypedIdGenerator<IdType>()
 const obsEncoder = new EncryptedIdEncoder(secretKey, alphabet)
 const readableEncoder = new ReadableIdEncoder()
 
@@ -40,7 +40,7 @@ const readableEncoder = new ReadableIdEncoder()
 //
 // assert.deepEqual(parsed,id)
 
-for(let i = 0; i < 100; ++i) {
+for (let i = 0; i < 100; ++i) {
     const id = ouidGenerator.generate(IdType.COMMENT)
     console.log(obsEncoder.encode(id), readableEncoder.encode(id))
 }

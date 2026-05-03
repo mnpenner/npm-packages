@@ -9,13 +9,13 @@
 The bun 'default syntax' is like:
 
 ```ts
-import type { Serve } from "bun";
+import type { Serve } from 'bun'
 
 export default {
-  fetch(req) {
-    return new Response("Bun!");
-  },
-} satisfies Serve.Options<undefined>;
+    fetch(req) {
+        return new Response('Bun!')
+    },
+} satisfies Serve.Options<undefined>
 ```
 
 The ValTown one is like
@@ -30,10 +30,10 @@ export default async function(req: Request) {
 
 ```ts
 export default {
-  async fetch(request) {
-    return new Response("Hello world!");
-  },
-};
+    async fetch(request) {
+        return new Response('Hello world!')
+    },
+}
 ```
 
 The cloudflare one is something like
@@ -62,14 +62,14 @@ export interface ExportedHandler<E = Env> {
     env: E,
     ctx: ExecutionContext
   ): Response | Promise<Response>;
-  
+
   // Optional: handlers for other events
   scheduled?(
     controller: ScheduledController,
     env: E,
     ctx: ExecutionContext
   ): void | Promise<void>;
-  
+
   email?(
     message: ForwardableEmailMessage,
     env: E,
@@ -78,17 +78,20 @@ export interface ExportedHandler<E = Env> {
 }
 ```
 
-Choose names that make sense. Not sure if we should call them "handlers" or "server" or what. I would call the req -> res function a handler. The object that *holds* the handler is closer to a server but it isn't really because it doesn't open ports and all of that jazz, so I don't know what to call it.
+Choose names that make sense. Not sure if we should call them "handlers" or "server" or what. I would call the req -> res function a handler. The object that _holds_ the handler is closer to a server but it isn't really because it doesn't open ports and all of that jazz, so I don't know what to call it.
 
 The cloudflare one can be like this actually:
 
 ```ts
-import type { Request as WorkerRequest, ExecutionContext } from "@cloudflare/workers-types/experimental"
+import type {
+    Request as WorkerRequest,
+    ExecutionContext,
+} from '@cloudflare/workers-types/experimental'
 
 export default {
     fetch(request: WorkerRequest, env: unknown, ctx: ExecutionContext) {
-        return new Response("OK")
-    }
+        return new Response('OK')
+    },
 }
 ```
 

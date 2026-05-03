@@ -25,12 +25,12 @@ No network calls. All geo/ASN resolution must be local.
 - **Bucket**: `(windowMs, scale)`
 - **Bucket max**:
 
-
 bucketMax =
 floor(
 baseMaxRequestsPerBaseWindow
-* (bucket.windowMs / baseWindowMs)
-* bucket.scale
+
+- (bucket.windowMs / baseWindowMs)
+- bucket.scale
   )
 
 ````
@@ -146,12 +146,12 @@ export interface RateLimitOptions<C> {
     // --- resolvers (optional overrides)
     getAsn?(
         ctx: C,
-        input: {userId: string | number | null | undefined; ipAddress: string}
+        input: { userId: string | number | null | undefined; ipAddress: string },
     ): Promise<AsnRecord | null>
 
     getCountryCode?(
         ctx: C,
-        input: {userId: string | number | null | undefined; ipAddress: string}
+        input: { userId: string | number | null | undefined; ipAddress: string },
     ): Promise<string | null>
 
     // --- ASN classification
@@ -171,9 +171,9 @@ export interface RateLimitOptions<C> {
         subnet: {
             ipv4: number
             ipv6: number
-            byAsnClass?: Record<string, number> & {unknown: number}
-            ipv4Prefix?: 24   // default
-            ipv6Prefix?: 64   // default
+            byAsnClass?: Record<string, number> & { unknown: number }
+            ipv4Prefix?: 24 // default
+            ipv6Prefix?: 64 // default
         }
     }
 
@@ -198,13 +198,13 @@ export interface RateLimitOptions<C> {
 
 ## TTL rules (important)
 
-* **entry TTL does NOT need to be user-configured**
-* Default TTL = `max(bucket.windowMs)`
-* This is sufficient because:
+- **entry TTL does NOT need to be user-configured**
+- Default TTL = `max(bucket.windowMs)`
+- This is sufficient because:
+    - counters reset when `now >= resetAtMs`
+    - after the largest bucket expires, the key is no longer needed
 
-    * counters reset when `now >= resetAtMs`
-    * after the largest bucket expires, the key is no longer needed
-* Allow override **only** for advanced use (Redis tuning)
+- Allow override **only** for advanced use (Redis tuning)
 
 ---
 
@@ -212,53 +212,49 @@ export interface RateLimitOptions<C> {
 
 ### Identity
 
-* if userId truthy:
+- if userId truthy:
+    - `identity:user:${userId}`
+    - multiplier = `1`
 
-    * `identity:user:${userId}`
-    * multiplier = `1`
-* else:
-
-    * `identity:ip:${ipAddress}`
-    * multiplier = `anonymousIpMultiplier`
+- else:
+    - `identity:ip:${ipAddress}`
+    - multiplier = `anonymousIpMultiplier`
 
 ### Subnet (always)
 
-* IPv4 `/24`:
+- IPv4 `/24`:
+    - `ip24:${a}.${b}.${c}.0/24`
 
-    * `ip24:${a}.${b}.${c}.0/24`
-* IPv6 `/64`:
+- IPv6 `/64`:
+    - parse IPv6 → first 64 bits
+    - `ip64:${h1}:${h2}:${h3}:${h4}::/64`
 
-    * parse IPv6 → first 64 bits
-    * `ip64:${h1}:${h2}:${h3}:${h4}::/64`
-* If parsing fails:
-
-    * `subnet:unknown`
+- If parsing fails:
+    - `subnet:unknown`
 
 ### Country (optional)
 
-* null → `country:unknown`
-* known but not listed → scale `other`
-* key always uses real country code
+- null → `country:unknown`
+- known but not listed → scale `other`
+- key always uses real country code
 
 ### ASN (optional)
 
-* null → `asn:unknown`
-* else:
-
-    * key: `asn:${asn}`
-    * class via `asnToClass`
+- null → `asn:unknown`
+- else:
+    - key: `asn:${asn}`
+    - class via `asnToClass`
 
 ### Endpoint
 
-* pathname from URL
-* method uppercased
-* if includeQueryInEndpointKey:
+- pathname from URL
+- method uppercased
+- if includeQueryInEndpointKey:
+    - normalizeQuery(url)
 
-    * normalizeQuery(url)
-* keys:
-
-    * `route:${METHOD}:${pathname}`
-    * `routeq:${METHOD}:${pathname}?${query}`
+- keys:
+    - `route:${METHOD}:${pathname}`
+    - `routeq:${METHOD}:${pathname}?${query}`
 
 ---
 
@@ -317,28 +313,26 @@ max =
 
 ### Endpoint
 
-* Convert endpoint base limit → bucket limit
-* Apply:
+- Convert endpoint base limit → bucket limit
+- Apply:
+    - identity multiplier
+    - subnet multiplier
 
-    * identity multiplier
-    * subnet multiplier
-* Enforce both identity-keyed and subnet-keyed endpoint buckets
+- Enforce both identity-keyed and subnet-keyed endpoint buckets
 
 ---
 
 ## Storage behavior
 
-* If `storage` provided:
+- If `storage` provided:
+    - Use `readCounter` / `writeCounter`
+    - Pass TTL = largest bucket.windowMs
 
-    * Use `readCounter` / `writeCounter`
-    * Pass TTL = largest bucket.windowMs
-* Else:
-
-    * In-memory LRU:
-
-        * key → counter + expiry
-        * maxEntries default: 100_000
-        * TTL default: largest bucket.windowMs
+- Else:
+    - In-memory LRU:
+        - key → counter + expiry
+        - maxEntries default: 100_000
+        - TTL default: largest bucket.windowMs
 
 ---
 
@@ -348,18 +342,29 @@ Include a built-in classifier:
 
 ```ts
 const ASN_OVERRIDES = {
-  16509: 'cloud',
-  15169: 'cloud',
-  8075: 'cloud',
-  13335: 'cdn',
+    16509: 'cloud',
+    15169: 'cloud',
+    8075: 'cloud',
+    13335: 'cdn',
 }
 
 const KEYWORDS = {
-  cdn: ['cloudflare','fastly','akamai','cdn'],
-  cloud: ['amazon','aws','google','gcp','azure','digitalocean','linode','vultr','ovh','hetzner'],
-  hosting: ['hosting','host','datacenter','server'],
-  mobile: ['mobile','wireless','lte','5g'],
-  residential: ['telecom','broadband','cable','fiber'],
+    cdn: ['cloudflare', 'fastly', 'akamai', 'cdn'],
+    cloud: [
+        'amazon',
+        'aws',
+        'google',
+        'gcp',
+        'azure',
+        'digitalocean',
+        'linode',
+        'vultr',
+        'ovh',
+        'hetzner',
+    ],
+    hosting: ['hosting', 'host', 'datacenter', 'server'],
+    mobile: ['mobile', 'wireless', 'lte', '5g'],
+    residential: ['telecom', 'broadband', 'cable', 'fiber'],
 }
 ```
 
@@ -367,11 +372,10 @@ const KEYWORDS = {
 
 ## Final notes
 
-* ASN and country limits **must scale with peakConcurrentUsers**
-* Subnet limits are the **primary IPv6 defense**
-* Country limits are a **last-resort pressure valve**
-* ASN limits are **classification-based**, not population-based
-* Endpoint limits must apply to both identity and subnet
+- ASN and country limits **must scale with peakConcurrentUsers**
+- Subnet limits are the **primary IPv6 defense**
+- Country limits are a **last-resort pressure valve**
+- ASN limits are **classification-based**, not population-based
+- Endpoint limits must apply to both identity and subnet
 
 Add a short usage example as a comment at the bottom of the file.
-

@@ -1,9 +1,9 @@
-import {ok, type Err, type Result} from './result.ts'
+import { ok, type Err, type Result } from './result.ts'
 
-import {UnreachableError} from './unreachable-error.ts'
-import type {MaybePromise} from './maybe-promise.ts'
-import {reject} from './result/reject.ts'
-import {resolve} from './result/resolve.ts'
+import { UnreachableError } from './unreachable-error.ts'
+import type { MaybePromise } from './maybe-promise.ts'
+import { reject } from './result/reject.ts'
+import { resolve } from './result/resolve.ts'
 
 type NormalizedValue<V, E> = NeverjectPromise<V, E> | MaybePromise<Result<V | never, E> | V>
 type NormalizedError<V, E> = NeverjectPromise<V, E> | MaybePromise<Result<V, E> | E>
@@ -23,8 +23,7 @@ function normalizeErrResult<V, E>(value: NormalizedError<V, E>): Promise<Result<
 
 export class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
     // Constructor is private. Use `nj`.
-    private constructor(private readonly promise: PromiseLike<Result<V, E>>) {
-    }
+    private constructor(private readonly promise: PromiseLike<Result<V, E>>) {}
 
     /**
      * Create a [`NeverjectPromise`]{@link NeverjectPromise} from any promise that fulfills to a [`Result`]{@link Result}.
@@ -43,7 +42,7 @@ export class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
      * const result = await failed
      * console.assert(!result.ok && result.error === 'nope')
      */
-    static fromSafePromise<V, E>(promise: PromiseLike<Result<V, E>>): NeverjectPromise<V,E> {
+    static fromSafePromise<V, E>(promise: PromiseLike<Result<V, E>>): NeverjectPromise<V, E> {
         return new NeverjectPromise(promise)
     }
 
@@ -62,9 +61,15 @@ export class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
      * const settled = await nj(fetchUser(1))
      * const json = await settled.then((result) => result.ok ? result.value : result.error)
      */
-    then<TResult1 = Result<V, E>, TResult2 = never>(onfulfilled?: ((value: Result<V, E>) => (PromiseLike<TResult1> | TResult1)) | undefined | null, onrejected?: ((reason: any) => (PromiseLike<TResult2> | TResult2)) | undefined | null): PromiseLike<TResult1 | TResult2> {
-        return this.promise.then(onfulfilled, cause => {
-            const error = new UnreachableError('NeverjectPromise unexpectedly rejected', {cause})
+    then<TResult1 = Result<V, E>, TResult2 = never>(
+        onfulfilled?:
+            | ((value: Result<V, E>) => PromiseLike<TResult1> | TResult1)
+            | undefined
+            | null,
+        onrejected?: ((reason: any) => PromiseLike<TResult2> | TResult2) | undefined | null,
+    ): PromiseLike<TResult1 | TResult2> {
+        return this.promise.then(onfulfilled, (cause) => {
+            const error = new UnreachableError('NeverjectPromise unexpectedly rejected', { cause })
             return onrejected ? onrejected(error) : Promise.reject(error)
         }) as PromiseLike<TResult1 | TResult2>
     }
@@ -93,21 +98,24 @@ export class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
      * )
      * console.assert(recovered.ok && recovered.value === 'default:missing')
      */
-    map<NV, NE = E>(onfulfilled: (value: V) => NormalizedValue<NV, NE>, onrejected?: (error: E) => NormalizedValue<NV, NE>): NeverjectPromise<NV, E | NE> {
+    map<NV, NE = E>(
+        onfulfilled: (value: V) => NormalizedValue<NV, NE>,
+        onrejected?: (error: E) => NormalizedValue<NV, NE>,
+    ): NeverjectPromise<NV, E | NE> {
         const promise = this.promise.then(async (result) => {
-            if(result.ok) {
+            if (result.ok) {
                 try {
                     return await normalizeResult<NV, NE>(onfulfilled(result.value))
-                } catch(error) {
+                } catch (error) {
                     return reject(error) as Result<NV, E | NE>
                 }
             }
 
-            if(!onrejected) return result
+            if (!onrejected) return result
 
             try {
                 return await normalizeResult<NV, NE>(onrejected(result.error))
-            } catch(error) {
+            } catch (error) {
                 return reject(error) as Result<NV, E | NE>
             }
         })
@@ -131,11 +139,11 @@ export class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
      */
     mapErr<NE>(fn: (error: E) => NormalizedError<V, NE>): NeverjectPromise<V, NE> {
         const promise = this.promise.then(async (result) => {
-            if(result.ok) return result as Result<V, NE>
+            if (result.ok) return result as Result<V, NE>
 
             try {
                 return await normalizeErrResult<V, NE>(fn(result.error))
-            } catch(error) {
+            } catch (error) {
                 return reject(error) as Result<V, NE>
             }
         })
@@ -157,16 +165,20 @@ export class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
      * const recovered = await nj(err('offline')).recover(() => 'cached')
      * console.assert(recovered.ok && recovered.value === 'cached')
      */
-    recover<NE>(fn: (error: E) => Err<NE> | NeverjectPromise<never, NE> | MaybePromise<Err<NE>>): NeverjectPromise<V, NE>
+    recover<NE>(
+        fn: (error: E) => Err<NE> | NeverjectPromise<never, NE> | MaybePromise<Err<NE>>,
+    ): NeverjectPromise<V, NE>
     recover<RV, NE>(fn: (error: E) => HandlerResult<RV, NE>): NeverjectPromise<V | RV, NE>
     recover<RV>(fn: (error: E) => MaybePromise<RV>): NeverjectPromise<V | RV, never>
-    recover<RV, NE = never>(fn: (error: E) => HandlerResult<RV, NE> | MaybePromise<RV>): NeverjectPromise<V | RV, NE> {
+    recover<RV, NE = never>(
+        fn: (error: E) => HandlerResult<RV, NE> | MaybePromise<RV>,
+    ): NeverjectPromise<V | RV, NE> {
         const promise = this.promise.then(async (result) => {
-            if(result.ok) return result
+            if (result.ok) return result
 
             try {
                 return await normalizeResult<RV, NE>(fn(result.error))
-            } catch(error) {
+            } catch (error) {
                 return reject(error as NE) as Result<RV, NE>
             }
         })
@@ -186,11 +198,13 @@ export class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
      * const swapped = await nj(ok(1)).mapResult((result) => result.ok ? err('nope') : ok(result.error))
      * console.assert(!swapped.ok && swapped.error === 'nope')
      */
-    mapResult<NV, NE = E>(fn: (result: Result<V, E>) => NormalizedValue<NV, NE>): NeverjectPromise<NV, NE> {
+    mapResult<NV, NE = E>(
+        fn: (result: Result<V, E>) => NormalizedValue<NV, NE>,
+    ): NeverjectPromise<NV, NE> {
         const promise = this.promise.then(async (result) => {
             try {
                 return await normalizeResult<NV, NE>(fn(result))
-            } catch(error) {
+            } catch (error) {
                 return reject(error) as Result<NV, NE>
             }
         })
@@ -213,12 +227,11 @@ export class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
      * console.assert(dynamic === 'missing: missing')
      */
     valueOr<U>(fallback: U | ((error: E) => U)): NeverjectPromise<V | U, never> {
-        const fallbackFn = typeof fallback === 'function'
-            ? fallback as (error: E) => U
-            : () => fallback
+        const fallbackFn =
+            typeof fallback === 'function' ? (fallback as (error: E) => U) : () => fallback
 
         const promise = this.promise.then((result) => {
-            if(result.ok) return ok(result.value as V | U)
+            if (result.ok) return ok(result.value as V | U)
             return ok(fallbackFn(result.error))
         })
 
@@ -236,9 +249,12 @@ export class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
      * const logged = await nj(ok(3)).tap((value) => console.log('value', value))
      * console.assert(logged.ok && logged.value === 3)
      */
-    tap(onfulfilled: (value: V) => MaybePromise<unknown>, onrejected?: (error: E) => MaybePromise<unknown>): NeverjectPromise<V, E> {
+    tap(
+        onfulfilled: (value: V) => MaybePromise<unknown>,
+        onrejected?: (error: E) => MaybePromise<unknown>,
+    ): NeverjectPromise<V, E> {
         const promise = this.promise.then(async (result) => {
-            if(result.ok) {
+            if (result.ok) {
                 try {
                     await onfulfilled(result.value)
                 } catch {
@@ -247,7 +263,7 @@ export class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
                 return result
             }
 
-            if(onrejected) {
+            if (onrejected) {
                 try {
                     await onrejected(result.error)
                 } catch {
@@ -295,7 +311,7 @@ export class NeverjectPromise<V, E> implements PromiseLike<Result<V, E>> {
      */
     tapErr(fn: (error: E) => MaybePromise<unknown>): NeverjectPromise<V, E> {
         const promise = this.promise.then(async (result) => {
-            if(!result.ok) {
+            if (!result.ok) {
                 try {
                     await fn(result.error)
                 } catch {

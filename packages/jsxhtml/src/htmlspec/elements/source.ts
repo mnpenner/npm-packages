@@ -1,6 +1,6 @@
-import type {CommonAttributes} from '../attributes/ElementAttributes'
-import type {ElementForTag} from './element-types'
-import type {Numeric} from '../attributes/StandardGlobalAttributes'
+import type { CommonAttributes } from '../attributes/ElementAttributes'
+import type { ElementForTag } from './element-types'
+import type { Numeric } from '../attributes/StandardGlobalAttributes'
 
 export interface SourceAttributes extends CommonAttributes<ElementForTag<'source'>> {
     /**
@@ -31,5 +31,4 @@ export interface SourceAttributes extends CommonAttributes<ElementForTag<'source
      * Specifies the intrinsic width of the image in pixels. Allowed if the parent of `<source ` is a picture. Not allowed if the parent is audio or video. The width value must be an integer without any units.
      */
     width?: Numeric
-
 }

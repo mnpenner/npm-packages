@@ -3,7 +3,7 @@ Add an endpoint `/_batch`
 Format is like
 
 ```ts
-type Header = [name:string, value:string]
+type Header = [name: string, value: string]
 
 type BatchRequest = {
     headers: Header[]
@@ -51,4 +51,3 @@ On the server, I think each sub-request should get its own request id, but it sh
 We need to find away to avoid re-authenticating for each sub-request. Perhaps any routes that 'match everything' should only run once.
 
 For other things, we have to be careful not to share the request context. Perhaps we should clone the request context for each sub-request.
-

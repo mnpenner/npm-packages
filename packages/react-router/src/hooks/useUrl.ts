@@ -1,4 +1,4 @@
-import {useMemo, useSyncExternalStore} from 'react'
+import { useMemo, useSyncExternalStore } from 'react'
 
 // Snapshot getters
 const getHref = () => window.location.href

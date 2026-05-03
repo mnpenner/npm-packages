@@ -1,5 +1,5 @@
-import {createStore} from './store'
-import type {Initializer, StoreOptions} from './store'
+import { createStore } from './store'
+import type { Initializer, StoreOptions } from './store'
 
 export type StorageLike = Pick<Storage, 'getItem' | 'setItem'>
 
@@ -11,7 +11,7 @@ export interface LocalStorageStoreOptions<T> extends StoreOptions<T> {
 }
 
 function getDefaultStorage() {
-    if(typeof globalThis.localStorage === 'undefined') {
+    if (typeof globalThis.localStorage === 'undefined') {
         return null
     }
 
@@ -28,28 +28,28 @@ export function createLocalStorageStore<T>(
     const serialize = options?.serialize ?? JSON.stringify
     let value = initialValue
 
-    if(storage !== null) {
+    if (storage !== null) {
         try {
             const storedValue = storage.getItem(key)
 
-            if(storedValue !== null) {
+            if (storedValue !== null) {
                 value = deserialize(storedValue)
             }
-        } catch(error) {
+        } catch (error) {
             options?.onError?.(error, 'read')
         }
     }
 
     const store = createStore(value, options)
 
-    store.subscribe(nextValue => {
-        if(storage === null) {
+    store.subscribe((nextValue) => {
+        if (storage === null) {
             return
         }
 
         try {
             storage.setItem(key, serialize(nextValue))
-        } catch(error) {
+        } catch (error) {
             options?.onError?.(error, 'write')
         }
     })

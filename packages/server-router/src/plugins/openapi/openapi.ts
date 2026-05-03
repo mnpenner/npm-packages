@@ -1,6 +1,6 @@
-import {HttpMethod, HttpStatus, StatusText} from '@mpen/http-helpers'
-import type {Router} from '../../router'
-import type {Handler, JsonObjectSchema, JsonSchema, NormalizedRoute, RouteMeta} from '../../types'
+import { HttpMethod, HttpStatus, StatusText } from '@mpen/http-helpers'
+import type { Router } from '../../router'
+import type { Handler, JsonObjectSchema, JsonSchema, NormalizedRoute, RouteMeta } from '../../types'
 
 /**
  * OpenAPI document `info` section.
@@ -65,12 +65,12 @@ type OpenApiParameter = {
 
 type OpenApiRequestBody = {
     required?: boolean
-    content: Record<string, {schema: JsonSchema}>
+    content: Record<string, { schema: JsonSchema }>
 }
 
 type OpenApiResponse = {
     description: string
-    content?: Record<string, {schema: JsonSchema}>
+    content?: Record<string, { schema: JsonSchema }>
 }
 
 const DEFAULT_OPENAPI_VERSION = '3.0.3'
@@ -91,7 +91,9 @@ function routePathToOpenApi(pathname: string): string {
 
 function normalizeOpenApiMethods(route: NormalizedRoute<any>): string[] {
     const rawMethods = route.method
-        ? (Array.isArray(route.method) ? route.method : [route.method])
+        ? Array.isArray(route.method)
+            ? route.method
+            : [route.method]
         : DEFAULT_METHODS
     const normalized = new Set<string>()
     for (const method of rawMethods) {
@@ -101,7 +103,10 @@ function normalizeOpenApiMethods(route: NormalizedRoute<any>): string[] {
     return [...normalized]
 }
 
-function buildParameterEntries(schema: JsonObjectSchema, location: 'path' | 'query'): OpenApiParameter[] {
+function buildParameterEntries(
+    schema: JsonObjectSchema,
+    location: 'path' | 'query',
+): OpenApiParameter[] {
     const properties = schema.properties
     const requiredList = Array.isArray(schema.required)
         ? schema.required.filter((value): value is string => typeof value === 'string')
@@ -114,12 +119,14 @@ function buildParameterEntries(schema: JsonObjectSchema, location: 'path' | 'que
             schema: (propSchema as JsonSchema) ?? {},
         }))
     }
-    return [{
-        name: location,
-        in: location,
-        required: location === 'path',
-        schema,
-    }]
+    return [
+        {
+            name: location,
+            in: location,
+            required: location === 'path',
+            schema,
+        },
+    ]
 }
 
 function openApiRequestContentTypes(route: NormalizedRoute<any>): string[] {
@@ -147,7 +154,7 @@ function buildOperationFromSchema(route: NormalizedRoute<any>): OpenApiOperation
     const schema = route.schema
     const operation: OpenApiOperation = {}
     if (!schema) {
-        operation.responses = {200: {description: 'OK'}}
+        operation.responses = { 200: { description: 'OK' } }
         return operation
     }
 
@@ -164,7 +171,10 @@ function buildOperationFromSchema(route: NormalizedRoute<any>): OpenApiOperation
 
     if (schema.request?.body !== undefined) {
         const content = Object.fromEntries(
-            openApiRequestContentTypes(route).map(contentType => [contentType, {schema: schema.request!.body!}])
+            openApiRequestContentTypes(route).map((contentType) => [
+                contentType,
+                { schema: schema.request!.body! },
+            ]),
         )
         operation.requestBody = {
             required: true,
@@ -181,23 +191,29 @@ function buildOperationFromSchema(route: NormalizedRoute<any>): OpenApiOperation
                 }
                 if (responseSchema !== undefined) {
                     response.content = Object.fromEntries(
-                        contentTypes.map(contentType => [contentType, {schema: responseSchema}])
+                        contentTypes.map((contentType) => [
+                            contentType,
+                            { schema: responseSchema },
+                        ]),
                     )
                 }
                 return [status, response]
-            })
+            }),
         )
     } else {
-        operation.responses = {200: {description: 'OK'}}
+        operation.responses = { 200: { description: 'OK' } }
     }
 
     return operation
 }
 
-function mergeOpenApiOperations(generated: OpenApiOperation, custom?: RouteMeta['openapi']): OpenApiOperation {
+function mergeOpenApiOperations(
+    generated: OpenApiOperation,
+    custom?: RouteMeta['openapi'],
+): OpenApiOperation {
     if (!custom) return generated
 
-    const merged: OpenApiOperation = {...generated, ...custom}
+    const merged: OpenApiOperation = { ...generated, ...custom }
     const generatedParameters = Array.isArray(generated.parameters) ? generated.parameters : []
     const customParameters = Array.isArray(custom.parameters) ? custom.parameters : []
     if (generatedParameters.length > 0 || customParameters.length > 0) {
@@ -269,14 +285,14 @@ export function openapi(options: OpenApiOptions): Handler<OpenApiDocument> {
             openapi: options.openapi ?? DEFAULT_OPENAPI_VERSION,
             info: options.info,
             paths,
-            ...(options.servers ? {servers: options.servers} : {}),
-            ...(options.components ? {components: options.components} : {}),
-            ...(options.security ? {security: options.security} : {}),
+            ...(options.servers ? { servers: options.servers } : {}),
+            ...(options.components ? { components: options.components } : {}),
+            ...(options.security ? { security: options.security } : {}),
         }
 
         return new Response(JSON.stringify(document), {
             status: HttpStatus.OK,
-            headers: {'content-type': 'application/json'},
+            headers: { 'content-type': 'application/json' },
         })
     }
 }

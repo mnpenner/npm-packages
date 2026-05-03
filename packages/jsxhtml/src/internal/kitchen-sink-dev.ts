@@ -1,9 +1,8 @@
 #!/usr/bin/env -S bun --hot
-import {serve, type ServerWebSocket} from "bun"
-import {kitchenSink} from './kitchen-sink'
+import { serve, type ServerWebSocket } from 'bun'
+import { kitchenSink } from './kitchen-sink'
 
-
-type WSData = {};
+type WSData = {}
 
 const port = 3000
 
@@ -11,19 +10,17 @@ declare global {
     var _clients: Set<ServerWebSocket<WSData>> | undefined
 }
 
-
-if(!globalThis._clients) {
+if (!globalThis._clients) {
     globalThis._clients = new Set<ServerWebSocket<WSData>>()
     console.log(`Dev server: http://localhost:${port}/`)
 } else {
     console.log(`Dev server: Reloading ${globalThis._clients.size} clients...`)
-    for(const ws of globalThis._clients) {
-        ws.send("reload")
+    for (const ws of globalThis._clients) {
+        ws.send('reload')
     }
 }
 
 const clients = globalThis._clients
-
 
 function renderHtml(): string {
     return kitchenSink.toString()
@@ -42,9 +39,7 @@ function withLiveReload(html: string): string {
 </script>
 <!--END HOT_RELOAD-->
 `
-    return html.includes("</body>")
-        ? html.replace("</body>", script + "</body>")
-        : html + script
+    return html.includes('</body>') ? html.replace('</body>', script + '</body>') : html + script
 }
 
 // function broadcastReload(): void {
@@ -66,22 +61,22 @@ serve({
     async fetch(req, server) {
         const url = new URL(req.url)
 
-        if(url.pathname === "/__live") {
-            if(server.upgrade(req, {data: {}})) return
-            return new Response("Upgrade required", {status: 426})
+        if (url.pathname === '/__live') {
+            if (server.upgrade(req, { data: {} })) return
+            return new Response('Upgrade required', { status: 426 })
         }
 
-        if(url.pathname === "/" || url.pathname === "/kitchen-sink.html") {
+        if (url.pathname === '/' || url.pathname === '/kitchen-sink.html') {
             const html = withLiveReload(renderHtml())
             return new Response(html, {
                 headers: {
-                    "content-type": "text/html; charset=utf-8",
-                    "cache-control": "no-store",
+                    'content-type': 'text/html; charset=utf-8',
+                    'cache-control': 'no-store',
                 },
             })
         }
 
-        return new Response("Not found", {status: 404})
+        return new Response('Not found', { status: 404 })
     },
     websocket: {
         open(ws: ServerWebSocket<WSData>) {
@@ -95,4 +90,3 @@ serve({
         },
     },
 })
-

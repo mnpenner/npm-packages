@@ -1,6 +1,6 @@
-import type {CommonAttributes} from '../attributes/ElementAttributes'
-import type {ElementForTag} from './element-types'
-import type {Numeric} from '../attributes/StandardGlobalAttributes'
+import type { CommonAttributes } from '../attributes/ElementAttributes'
+import type { ElementForTag } from './element-types'
+import type { Numeric } from '../attributes/StandardGlobalAttributes'
 
 export interface OlAttributes extends CommonAttributes<ElementForTag<'ol'>> {
     /**
@@ -23,4 +23,3 @@ export interface OlAttributes extends CommonAttributes<ElementForTag<'ol'>> {
      */
     type?: 'a' | 'A' | 'i' | 'I' | '1'
 }
-

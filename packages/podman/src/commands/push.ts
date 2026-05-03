@@ -1,5 +1,5 @@
-import {ArgBuilder} from '../lib/arg-builder.ts'
-import {execPodmanStreaming} from '../lib/podman-spawn.ts'
+import { ArgBuilder } from '../lib/arg-builder.ts'
+import { execPodmanStreaming } from '../lib/podman-spawn.ts'
 
 type PodmanPushOptions = {
     /** Source image to push. */
@@ -62,7 +62,7 @@ export async function push(options: PodmanPushOptions): Promise<void> {
     args.addBool('--tls-verify', options.tlsVerify)
 
     args.add(options.image)
-    if(options.destination) {
+    if (options.destination) {
         args.add(options.destination)
     }
 

@@ -6,10 +6,6 @@ A date/time picker for React.
 
 - Ease/quickness of use
 
-
-
-
-
 ### Notes
 
 Copy some design from [Office UI Fabric](http://dev.office.com/fabric#/components/datepicker)?

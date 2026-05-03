@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bun test
-import {describe, expect, it} from 'bun:test'
-import {reject, rejectWithError} from './reject.ts'
-import {err, ok, type Err, type Result} from '../result.ts'
-import {expectType, type TypeEqual} from '../internal/type-assert.ts'
-import type {DetailedError} from '../detailed-error.ts'
+import { describe, expect, it } from 'bun:test'
+import { reject, rejectWithError } from './reject.ts'
+import { err, ok, type Err, type Result } from '../result.ts'
+import { expectType, type TypeEqual } from '../internal/type-assert.ts'
+import type { DetailedError } from '../detailed-error.ts'
 
 describe('rejectWithError', () => {
     it('wraps non-Result reasons in Err<DetailedError>', () => {
@@ -12,7 +12,7 @@ describe('rejectWithError', () => {
 
         expectType<TypeEqual<typeof result, Err<DetailedError<string>>>>(true)
         expect(result.ok).toBe(false)
-        if(result.ok) return
+        if (result.ok) return
 
         expect(result.error).toBeInstanceOf(Error)
         expect(result.error.details).toBe(reason)
@@ -24,7 +24,7 @@ describe('rejectWithError', () => {
 
         expectType<TypeEqual<typeof result, Err<Error>>>(true)
         expect(result.ok).toBe(false)
-        if(result.ok) return
+        if (result.ok) return
 
         expect(result.error).toBe(error)
     })
@@ -53,7 +53,7 @@ describe('reject', () => {
 
         expectType<TypeEqual<typeof result, Err<string>>>(true)
         expect(result.ok).toBe(false)
-        if(result.ok) return
+        if (result.ok) return
 
         expect(result.error).toBe(reason)
     })

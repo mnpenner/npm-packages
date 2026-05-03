@@ -1,6 +1,6 @@
-import type {CommonAttributes, CrossOrigin} from '../attributes/ElementAttributes'
-import type {ElementForTag} from './element-types'
-import type {AnyString} from '../../util-types'
+import type { CommonAttributes, CrossOrigin } from '../attributes/ElementAttributes'
+import type { ElementForTag } from './element-types'
+import type { AnyString } from '../../util-types'
 
 export interface LinkAttributes extends CommonAttributes<ElementForTag<'link'>> {
     /**
@@ -66,7 +66,12 @@ export interface LinkAttributes extends CommonAttributes<ElementForTag<'link'>> 
      * - origin-when-cross-origin
      * - unsafe-url
      */
-    referrerpolicy?: 'no-referrer' | 'no-referrer-when-downgrade' | 'origin' | 'origin-when-cross-origin' | 'unsafe-url'
+    referrerpolicy?:
+        | 'no-referrer'
+        | 'no-referrer-when-downgrade'
+        | 'origin'
+        | 'origin-when-cross-origin'
+        | 'unsafe-url'
     /**
      * The **`rel`** attribute defines the relationship between a linked resource and the current document. Valid on link, a, area, and form, the supported values depend on the element on which the attribute is found.
      */
@@ -83,5 +88,4 @@ export interface LinkAttributes extends CommonAttributes<ElementForTag<'link'>> 
      * This attribute is used to define the type of the content linked to. The value of the attribute should be a MIME type such as **text/html**, **text/css**, and so on. The common use of this attribute is to define the type of stylesheet being referenced (such as **text/css**), but given that CSS is the only stylesheet language used on the web, not only is it possible to omit the `type` attribute, but is actually now recommended practice. It is also used on `rel="preload"` link types, to make sure the browser only downloads file types that it supports.
      */
     type?: string
-
 }

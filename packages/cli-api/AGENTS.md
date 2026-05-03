@@ -12,7 +12,7 @@
     - Link to methods using this syntax: [`Class.method`]{@link Class#method}
 - This repo uses hg for version control
 - Add a test to prevent regressions every time the user reports a bug or error
-- Prefix private props with _
+- Prefix private props with \_
 - All tests should be in a `describe(func.name, () => ...` block. Class methods should be in a `describe(Class.name,`
   block with the methods nested underneath.
 - Don't delete files that aren't under version control. Use `hg rm` to delete files that are. `hg add` new files.

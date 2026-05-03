@@ -1,132 +1,103 @@
 #!/usr/bin/env node
 /* eslint-env node */
- 
-'use strict';
 
-const SVGIcons2SVGFontStream = require('svgicons2svgfont');
-const fs = require('fs');
-const path = require('path');
-const svg2ttf = require('svg2ttf');
-const ttf2woff = require('ttf2woff');
-const ttf2woff2 = require('ttf2woff2');
-const ttf2eot = require('ttf2eot');
-const cssesc = require('cssesc');
-const he = require('he');
-const _ = require('lodash');
-const mkdirp = require('mkdirp');
-const sanitizeFileName = require("sanitize-filename");
-const {readDirDeep} = require('./util');
-const {ArgumentParser} = require('argparse');
+'use strict'
 
+const SVGIcons2SVGFontStream = require('svgicons2svgfont')
+const fs = require('fs')
+const path = require('path')
+const svg2ttf = require('svg2ttf')
+const ttf2woff = require('ttf2woff')
+const ttf2woff2 = require('ttf2woff2')
+const ttf2eot = require('ttf2eot')
+const cssesc = require('cssesc')
+const he = require('he')
+const _ = require('lodash')
+const mkdirp = require('mkdirp')
+const sanitizeFileName = require('sanitize-filename')
+const { readDirDeep } = require('./util')
+const { ArgumentParser } = require('argparse')
 
 const parser = new ArgumentParser({
     add_help: true,
-    description: "Converts a directory full of SVG icons into webfonts"
-});
+    description: 'Converts a directory full of SVG icons into webfonts',
+})
 
-parser.add_argument(
-    '-v', '--version',
-    {
-        action: 'version',
-        version: require('./package.json').version
-    }
-);
+parser.add_argument('-v', '--version', {
+    action: 'version',
+    version: require('./package.json').version,
+})
 
-parser.add_argument(
-    'src',
-    {
-        help: 'Source directory'
-    }
-);
+parser.add_argument('src', {
+    help: 'Source directory',
+})
 
-parser.add_argument(
-    '-o', '--out-dir',
-    {
-        help: 'Output directory'
-    }
-);
+parser.add_argument('-o', '--out-dir', {
+    help: 'Output directory',
+})
 
-parser.add_argument(
-    '-n', '--font-name',
-    {
-        help: 'Font name',
-    }
-);
+parser.add_argument('-n', '--font-name', {
+    help: 'Font name',
+})
 
-parser.add_argument(
-    '-f', '--file',
-    {
-        help: 'Output filenames (without extension)',
-    }
-);
+parser.add_argument('-f', '--file', {
+    help: 'Output filenames (without extension)',
+})
 
-parser.add_argument(
-    '-p', '--prefix',
-    {
-        help: 'CSS class name prefix',
-    }
-);
+parser.add_argument('-p', '--prefix', {
+    help: 'CSS class name prefix',
+})
 
-parser.add_argument(
-    '-b', '--base',
-    {
-        help: 'CSS class name added to all icons',
-    }
-);
+parser.add_argument('-b', '--base', {
+    help: 'CSS class name added to all icons',
+})
 
-parser.add_argument(
-    '--directory-separator',
-    {
-        help: 'The string to use in CSS class names when the icon files are in sub-directories',
-        default: '-'
-    }
-);
+parser.add_argument('--directory-separator', {
+    help: 'The string to use in CSS class names when the icon files are in sub-directories',
+    default: '-',
+})
 
-parser.add_argument(
-    '--fixed-width',
-    {
-        help: 'Creates a monospace font of the width of the largest input icon',
-        action: 'store_true',
-    }
-);
+parser.add_argument('--fixed-width', {
+    help: 'Creates a monospace font of the width of the largest input icon',
+    action: 'store_true',
+})
 
-const args = parser.parse_args();
+const args = parser.parse_args()
 
-if(!args.prefix && !args.base) {
-    console.error(`${path.basename(process.argv[1])}: Not enough arguments. Either --prefix, --base or both must be provided.`);
-    process.exit(1);
+if (!args.prefix && !args.base) {
+    console.error(
+        `${path.basename(process.argv[1])}: Not enough arguments. Either --prefix, --base or both must be provided.`,
+    )
+    process.exit(1)
 }
 
 // console.log(args);process.exit();
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+const cssStr = (s) => cssesc(s, { wrap: true })
+const cssId = (s) => cssesc(s, { isIdentifier: true })
 
-const cssStr = s => cssesc(s, {wrap: true});
-const cssId = s => cssesc(s, {isIdentifier: true});
+const inputDir = args.src
+const outputDir = args.out_dir || '.'
+const fontName = args.font_name || path.basename(inputDir)
+const fileName = args.file || sanitizeFileName(fontName)
+const cssPrefix = args.prefix || ''
+const cssBase = args.base || null
 
-const inputDir = args.src;
-const outputDir = args.out_dir || '.';
-const fontName = args.font_name || path.basename(inputDir);
-const fileName = args.file || sanitizeFileName(fontName);
-const cssPrefix = args.prefix || '';
-const cssBase = args.base || null;
-
-const svgFontFile = `${outputDir}/${fileName}.svg`;
-const ttfFontFile = `${outputDir}/${fileName}.ttf`;
-const woffFontFile = `${outputDir}/${fileName}.woff`;
-const woff2FontFile = `${outputDir}/${fileName}.woff2`;
-const eotFile = `${outputDir}/${fileName}.eot`;
-const cssFile = `${outputDir}/${fileName}.css`;
-const htmlFile = `${outputDir}/${fileName}.html`;
-const jsFile = `${outputDir}/${fileName}.js`; // map icon name to css class and/or character
+const svgFontFile = `${outputDir}/${fileName}.svg`
+const ttfFontFile = `${outputDir}/${fileName}.ttf`
+const woffFontFile = `${outputDir}/${fileName}.woff`
+const woff2FontFile = `${outputDir}/${fileName}.woff2`
+const eotFile = `${outputDir}/${fileName}.eot`
+const cssFile = `${outputDir}/${fileName}.css`
+const htmlFile = `${outputDir}/${fileName}.html`
+const jsFile = `${outputDir}/${fileName}.js` // map icon name to css class and/or character
 // TODO: should we use a JSON file instead?
 // TODO: should we allow customization over how the names are generated (allow something other than camelCase)?
-const codePointFile = `${outputDir}/${fileName}-chars.json`;
+const codePointFile = `${outputDir}/${fileName}-chars.json`
 
-
-mkdirp.sync(outputDir);
+mkdirp.sync(outputDir)
 
 const fontStream = new SVGIcons2SVGFontStream({
     fontName: fontName,
@@ -134,33 +105,32 @@ const fontStream = new SVGIcons2SVGFontStream({
     fontHeight: 5000,
     fixedWidth: args.fixed_width,
     centerHorizontally: true,
-    log: () => {
-    },
-});
+    log: () => {},
+})
 
-const svgFileStream = fs.createWriteStream(svgFontFile);
+const svgFileStream = fs.createWriteStream(svgFontFile)
 
-fontStream.pipe(svgFileStream)
-    .on('finish', function() {
-        console.log(`Wrote ${svgFontFile}`);
-        createFonts();
+fontStream
+    .pipe(svgFileStream)
+    .on('finish', function () {
+        console.log(`Wrote ${svgFontFile}`)
+        createFonts()
     })
-    .on('error', function(err) {
-        console.log(err);
-    });
+    .on('error', function (err) {
+        console.log(err)
+    })
 
-
-readDirDeep(inputDir).then(icons => {
-    icons = icons.filter(filename => /\.svg$/i.test(filename));
-    const collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
-    icons.sort(collator.compare);
+readDirDeep(inputDir).then((icons) => {
+    icons = icons.filter((filename) => /\.svg$/i.test(filename))
+    const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
+    icons.sort(collator.compare)
 
     // console.log(icons);process.exit();
 
-    let codePointCounter = 0xF000;
+    let codePointCounter = 0xf000
 
-    const cssDir = path.dirname(cssFile);
-    const htmlDir = path.dirname(htmlFile);
+    const cssDir = path.dirname(cssFile)
+    const htmlDir = path.dirname(htmlFile)
 
     let css = `
 @font-face {
@@ -186,82 +156,92 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-`.trimLeft();
+`.trimLeft()
 
-
-    const cssIcons = [];
-    const htmlIcons = [];
-    const iconMap = {};
-    let codePointMap = {};
+    const cssIcons = []
+    const htmlIcons = []
+    const iconMap = {}
+    let codePointMap = {}
 
     try {
-        codePointMap = JSON.parse(fs.readFileSync(codePointFile, {encoding: 'utf8'}));
-        codePointCounter = Math.max(...Object.values(codePointMap)) + 1;
-    } catch(err) {
-        if(err.code === 'ENOENT') {
-            console.log(`'${codePointFile}' not found, generating new code points`);
+        codePointMap = JSON.parse(fs.readFileSync(codePointFile, { encoding: 'utf8' }))
+        codePointCounter = Math.max(...Object.values(codePointMap)) + 1
+    } catch (err) {
+        if (err.code === 'ENOENT') {
+            console.log(`'${codePointFile}' not found, generating new code points`)
         } else {
-            throw err;
+            throw err
         }
     }
 
-    for(const icon of icons) {
-        const glyph = fs.createReadStream(icon);
+    for (const icon of icons) {
+        const glyph = fs.createReadStream(icon)
 
-        const relPath = path.relative(inputDir, icon);
-        const iconName = relPath.slice(0, -4).replace(/[\/\\]+/g, args.directory_separator);
+        const relPath = path.relative(inputDir, icon)
+        const iconName = relPath.slice(0, -4).replace(/[\/\\]+/g, args.directory_separator)
 
-        if(!codePointMap[relPath]) {
-            codePointMap[relPath] = codePointCounter++;
+        if (!codePointMap[relPath]) {
+            codePointMap[relPath] = codePointCounter++
         }
 
-        const iconChar = String.fromCodePoint(codePointMap[relPath]);
+        const iconChar = String.fromCodePoint(codePointMap[relPath])
 
         glyph.metadata = {
             unicode: [iconChar],
             name: iconName,
-        };
-        fontStream.write(glyph);
+        }
+        fontStream.write(glyph)
 
+        const className = `${cssPrefix}${iconName}`
 
-        const className = `${cssPrefix}${iconName}`;
-
-        let cssSelector = `.${cssId(className)}`;
-        if(!cssPrefix) {
-            cssSelector = `.${cssId(cssBase)}${cssSelector}`;
+        let cssSelector = `.${cssId(className)}`
+        if (!cssPrefix) {
+            cssSelector = `.${cssId(cssBase)}${cssSelector}`
         }
 
-        let htmlClass = className;
-        if(cssBase) {
-            htmlClass = `${cssBase} ${htmlClass}`;
+        let htmlClass = className
+        if (cssBase) {
+            htmlClass = `${cssBase} ${htmlClass}`
         }
 
         cssIcons.push(`${cssSelector}:before {
   content: ${cssStr(iconChar)}
-}`);
+}`)
 
-        htmlIcons.push(`<a href="" class="s2i__icon-link"><i class="${he.escape(htmlClass)}"></i><span class="s2i__classname">${he.escape(htmlClass)}</span></a>`);
-        iconMap[_.camelCase(iconName)] = htmlClass;
+        htmlIcons.push(
+            `<a href="" class="s2i__icon-link"><i class="${he.escape(htmlClass)}"></i><span class="s2i__classname">${he.escape(htmlClass)}</span></a>`,
+        )
+        iconMap[_.camelCase(iconName)] = htmlClass
     }
 
-    css += cssIcons.join('\n');
+    css += cssIcons.join('\n')
 
-    fontStream.end();
+    fontStream.end()
 
-    fs.writeFile(jsFile, `export default ${JSON.stringify(iconMap, null, 4)};`, {encoding: 'utf8'}, err => {
-        if(err) throw err;
-        console.log(`Wrote ${jsFile}`);
-    });
+    fs.writeFile(
+        jsFile,
+        `export default ${JSON.stringify(iconMap, null, 4)};`,
+        { encoding: 'utf8' },
+        (err) => {
+            if (err) throw err
+            console.log(`Wrote ${jsFile}`)
+        },
+    )
 
-    fs.writeFile(cssFile, css, {encoding: 'utf8'}, err => {
-        if(err) throw err;
-        console.log(`Wrote ${cssFile}`);
-    });
+    fs.writeFile(cssFile, css, { encoding: 'utf8' }, (err) => {
+        if (err) throw err
+        console.log(`Wrote ${cssFile}`)
+    })
 
-    fs.writeFile(codePointFile, JSON.stringify(codePointMap, null, 4), {encoding: 'utf8'}, err => {
-        if(err) throw err;
-        console.log(`Wrote ${codePointFile}`);
-    });
+    fs.writeFile(
+        codePointFile,
+        JSON.stringify(codePointMap, null, 4),
+        { encoding: 'utf8' },
+        (err) => {
+            if (err) throw err
+            console.log(`Wrote ${codePointFile}`)
+        },
+    )
 
     const html = `
 <!DOCTYPE html>
@@ -342,28 +322,28 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
     </script>
   </body>
 </html>
-`.trimLeft();
+`.trimLeft()
 
-    fs.writeFile(htmlFile, html, {encoding: 'utf8'}, err => {
-        if(err) throw err;
-        console.log(`Wrote ${htmlFile}`);
-    });
-});
+    fs.writeFile(htmlFile, html, { encoding: 'utf8' }, (err) => {
+        if (err) throw err
+        console.log(`Wrote ${htmlFile}`)
+    })
+})
 
 function createFonts() {
-    const svgString = fs.readFileSync(svgFontFile, {encoding: 'utf8'});
-    const ttf = svg2ttf(svgString, {});
-    fs.writeFileSync(ttfFontFile, ttf.buffer);
-    console.log(`Wrote ${ttfFontFile}`);
+    const svgString = fs.readFileSync(svgFontFile, { encoding: 'utf8' })
+    const ttf = svg2ttf(svgString, {})
+    fs.writeFileSync(ttfFontFile, ttf.buffer)
+    console.log(`Wrote ${ttfFontFile}`)
 
-    const ttfBuffer = fs.readFileSync(ttfFontFile);
-    const woff = ttf2woff(ttfBuffer, {});
-    fs.writeFileSync(woffFontFile, woff.buffer);
-    console.log(`Wrote ${woffFontFile}`);
+    const ttfBuffer = fs.readFileSync(ttfFontFile)
+    const woff = ttf2woff(ttfBuffer, {})
+    fs.writeFileSync(woffFontFile, woff.buffer)
+    console.log(`Wrote ${woffFontFile}`)
 
-    fs.writeFileSync(woff2FontFile, ttf2woff2(ttfBuffer));
-    console.log(`Wrote ${woff2FontFile}`);
+    fs.writeFileSync(woff2FontFile, ttf2woff2(ttfBuffer))
+    console.log(`Wrote ${woff2FontFile}`)
 
-    fs.writeFileSync(eotFile, ttf2eot(ttfBuffer).buffer);
-    console.log(`Wrote ${eotFile}`);
+    fs.writeFileSync(eotFile, ttf2eot(ttfBuffer).buffer)
+    console.log(`Wrote ${eotFile}`)
 }

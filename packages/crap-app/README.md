@@ -1,6 +1,6 @@
 # crap-app
 
-Creates a React app w/ [TypeScript](https://www.typescriptlang.org/), [emotion](https://github.com/emotion-js/emotion), [Webpack 4](https://webpack.js.org/) + [hot-loading](https://github.com/gaearon/react-hot-loader). 
+Creates a React app w/ [TypeScript](https://www.typescriptlang.org/), [emotion](https://github.com/emotion-js/emotion), [Webpack 4](https://webpack.js.org/) + [hot-loading](https://github.com/gaearon/react-hot-loader).
 
 Unlike [CRA](https://github.com/facebook/create-react-app) (which is great BTW), this app will be immediately "ejected", i.e., after your project is created, you're on your own.
 

@@ -1,14 +1,20 @@
-import {err, ok, type Result} from '../result.ts'
-import {expectType, type TypeEqual} from './type-assert.ts'
+import { err, ok, type Result } from '../result.ts'
+import { expectType, type TypeEqual } from './type-assert.ts'
 
-const pFail = 1/Math.sqrt(2)
+const pFail = 1 / Math.sqrt(2)
 
-export function mayFail1(): Result<number,string> { return Math.random() < pFail ? ok(1) : err('oh no')}
-export function mayFail2() { return Math.random() < pFail ? ok(2) : err('err0r')}
+export function mayFail1(): Result<number, string> {
+    return Math.random() < pFail ? ok(1) : err('oh no')
+}
+export function mayFail2() {
+    return Math.random() < pFail ? ok(2) : err('err0r')
+}
 
 expectType<TypeEqual<typeof mayFail1, typeof mayFail2>>(true)
 
-export function alwaysThrows(): never { throw new Error('boom') }
+export function alwaysThrows(): never {
+    throw new Error('boom')
+}
 
 /**
  * A function that may throw an error randomly based on a probability.
@@ -17,7 +23,7 @@ export function alwaysThrows(): never { throw new Error('boom') }
  * @throws {Error} Throws an error with the message 'boom' if a failure condition is met.
  */
 export function mayThrow1() {
-    if(Math.random() < pFail) throw new Error('boom')
+    if (Math.random() < pFail) throw new Error('boom')
     return 3
 }
 
@@ -27,5 +33,5 @@ export function mayThrow1() {
  * @return {void} Does not return a value. May throw an error if the random condition is met.
  */
 export function mayThrow2() {
-    if(Math.random() < pFail) throw new Error('boom')
+    if (Math.random() < pFail) throw new Error('boom')
 }

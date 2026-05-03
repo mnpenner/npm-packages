@@ -1,25 +1,24 @@
 /* eslint-disable */
 const Path = require('path')
-const FS = require('fs');
+const FS = require('fs')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const zopfli = require('@gfx/zopfli');
-const CompressionPlugin = require('compression-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const {DefinePlugin, ProvidePlugin, ProgressPlugin} = require('webpack');
-const {CleanWebpackPlugin} = require('clean-webpack-plugin');
-const TerserPlugin = require('terser-webpack-plugin');
+const zopfli = require('@gfx/zopfli')
+const CompressionPlugin = require('compression-webpack-plugin')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const { DefinePlugin, ProvidePlugin, ProgressPlugin } = require('webpack')
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+const TerserPlugin = require('terser-webpack-plugin')
 
 const isDevelopment = process.env.NODE_ENV === 'development'
-const isDevServer = !!process.env.WEBPACK_DEV_SERVER; // https://stackoverflow.com/a/57474397/65387
-const copyrightPatt = /^!|\b(copyright|license)\b|@(preserve|license|cc_on)\b/i;
+const isDevServer = !!process.env.WEBPACK_DEV_SERVER // https://stackoverflow.com/a/57474397/65387
+const copyrightPatt = /^!|\b(copyright|license)\b|@(preserve|license|cc_on)\b/i
 
 const babelLoader = {
     loader: 'babel-loader',
     options: {
         cacheDirectory: true,
     },
-};
-
+}
 
 const cssLoader = [
     isDevelopment ? 'style-loader' : MiniCssExtractPlugin.loader,
@@ -31,35 +30,33 @@ const cssLoader = [
                 localIdentName: isDevelopment ? '[path][name]__[local]' : '[hash:base64]', // https://webpack.js.org/loaders/css-loader/#localidentname
             },
             localsConvention: 'camelCaseOnly',
-        }
+        },
     },
     {
         loader: 'postcss-loader',
         options: {
             ident: 'postcss',
             sourceMap: true,
-            plugins: loader => {
-                const plugins = [
-                    require('autoprefixer'),
-                ];
-                if(!isDevelopment) {
+            plugins: (loader) => {
+                const plugins = [require('autoprefixer')]
+                if (!isDevelopment) {
                     // TODO: investigate postcss-preset-env https://preset-env.cssdb.org/features
                     plugins.push(
                         require('cssnano')({
                             discardComments: {
-                                remove: comment => !copyrightPatt.test(comment),
+                                remove: (comment) => !copyrightPatt.test(comment),
                             },
                             zindex: false,
                             reduceIdents: false,
                             mergeIdents: false,
                             discardUnused: false,
                             autoprefixer: false,
-                        })
-                    );
+                        }),
+                    )
                 }
-                return plugins;
+                return plugins
             },
-        }
+        },
     },
     {
         loader: 'less-loader',
@@ -67,7 +64,7 @@ const cssLoader = [
             strictMath: true,
             strictUnits: true,
             sourceMap: true,
-        }
+        },
     },
 ]
 
@@ -81,7 +78,7 @@ const webpackConfig = {
         chunkFilename: isDevelopment ? '[name].bundle.js' : '[chunkhash].js',
     },
     resolveLoader: {
-        modules: ['node_modules', `${__dirname}/loaders`]
+        modules: ['node_modules', `${__dirname}/loaders`],
     },
     devtool: isDevelopment ? 'cheap-module-eval-source-map' : 'source-map',
     module: {
@@ -112,14 +109,14 @@ const webpackConfig = {
                             strictMath: true,
                             strictUnits: true,
                             sourceMap: true,
-                        }
+                        },
                     },
-                ]
+                ],
             },
             {
                 test: /\.css$/,
-                use: cssLoader
-            }
+                use: cssLoader,
+            },
         ],
     },
     resolve: {
@@ -133,22 +130,24 @@ const webpackConfig = {
         new HtmlWebpackPlugin({
             template: 'src/index.html',
             favicon: 'src/images/favicon.ico',
-            minify: isDevelopment ? false : {
-                caseSensitive: false,
-                removeComments: true,
-                collapseWhitespace: true,
-                removeRedundantAttributes: true,
-                useShortDoctype: false,
-                removeEmptyAttributes: true,
-                removeStyleLinkTypeAttributes: true,
-                removeScriptTypeAttributes: true,
-                keepClosingSlash: false,
-                minifyJS: true,
-                minifyCSS: true,
-                minifyURLs: true,
-                sortAttributes: true,
-                sortClassName: true,
-            },
+            minify: isDevelopment
+                ? false
+                : {
+                      caseSensitive: false,
+                      removeComments: true,
+                      collapseWhitespace: true,
+                      removeRedundantAttributes: true,
+                      useShortDoctype: false,
+                      removeEmptyAttributes: true,
+                      removeStyleLinkTypeAttributes: true,
+                      removeScriptTypeAttributes: true,
+                      keepClosingSlash: false,
+                      minifyJS: true,
+                      minifyCSS: true,
+                      minifyURLs: true,
+                      sortAttributes: true,
+                      sortClassName: true,
+                  },
         }),
         new DefinePlugin({
             'process.env': {
@@ -157,8 +156,8 @@ const webpackConfig = {
             DEBUG: JSON.stringify(isDevelopment),
         }),
         new ProvidePlugin({
-            'React': 'react',
-        })
+            React: 'react',
+        }),
     ],
     devServer: {
         headers: {
@@ -175,7 +174,7 @@ const webpackConfig = {
         watchOptions: {
             aggregateTimeout: 250,
             poll: 50,
-            ignored: /\bnode_modules\b/
+            ignored: /\bnode_modules\b/,
         },
         stats: 'minimal',
     },
@@ -191,13 +190,13 @@ const webpackConfig = {
     },
 }
 
-if(isDevelopment) {
-    Object.assign(webpackConfig.resolve.alias,{
+if (isDevelopment) {
+    Object.assign(webpackConfig.resolve.alias, {
         'react-dom': Path.join(__dirname, 'node_modules', '@hot-loader/react-dom'), // https://github.com/gaearon/react-hot-loader#react--dom
-    });
+    })
 } else {
     // https://webpack.js.org/guides/production/
-    const compressible = /\.(js|json|html|map|css|svg|htc|eot|ttf)($|\?)/i;
+    const compressible = /\.(js|json|html|map|css|svg|htc|eot|ttf)($|\?)/i
 
     webpackConfig.plugins.push(
         new ProgressPlugin(),
@@ -206,26 +205,26 @@ if(isDevelopment) {
             filename: '[path].gz[query]',
             test: compressible,
             compressionOptions: {
-                numiterations: 5
+                numiterations: 5,
             },
             algorithm(input, compressionOptions, callback) {
-                return zopfli.gzip(input, compressionOptions, callback);
-            }
+                return zopfli.gzip(input, compressionOptions, callback)
+            },
         }),
         new CompressionPlugin({
             // Not currently supported by `serve` (https://github.com/zeit/serve/issues/543) but works with nginx (https://github.com/google/ngx_brotli#brotli_static)
             filename: '[path].br[query]',
             test: compressible,
             compressionOptions: {
-                level: 11
+                level: 11,
             },
-            algorithm: 'brotliCompress'
+            algorithm: 'brotliCompress',
         }),
         new MiniCssExtractPlugin({
             filename: '[name].[contenthash].css',
             chunkFilename: 'chunk.[chunkhash].css',
         }),
-    );
+    )
 
     webpackConfig.optimization = {
         minimizer: [
@@ -238,10 +237,10 @@ if(isDevelopment) {
                 terserOptions: {
                     // https://github.com/webpack-contrib/terser-webpack-plugin#terseroptions
                     extractComments: copyrightPatt,
-                }
+                },
             }),
         ],
     }
 }
 
-module.exports = webpackConfig;
+module.exports = webpackConfig

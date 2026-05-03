@@ -1,10 +1,10 @@
-import {type Err, type Ok, type Result} from '../result.ts'
-import {toDetailedError, type DetailedError} from '../detailed-error.ts'
-import {resolve} from '../result/resolve.ts'
-import {nj} from '../nj.ts'
-import { NeverjectPromise} from '../neverject-promise.ts'
-import {reject} from '../result/reject.ts'
-import type {MaybePromise} from '../maybe-promise.ts'
+import { type Err, type Ok, type Result } from '../result.ts'
+import { toDetailedError, type DetailedError } from '../detailed-error.ts'
+import { resolve } from '../result/resolve.ts'
+import { nj } from '../nj.ts'
+import { NeverjectPromise } from '../neverject-promise.ts'
+import { reject } from '../result/reject.ts'
+import type { MaybePromise } from '../maybe-promise.ts'
 
 type ErrorMapper<E> = (reason: unknown) => E
 
@@ -20,7 +20,10 @@ type ErrorMapper<E> = (reason: unknown) => E
  * const settled = neverReturns()
  * console.assert(!settled.ok)
  */
-export function wrapFn<A extends any[] = []>(fn: (...args: A) => never, onError?: ErrorMapper<unknown>): (...args: A) => Result<never, unknown>;
+export function wrapFn<A extends any[] = []>(
+    fn: (...args: A) => never,
+    onError?: ErrorMapper<unknown>,
+): (...args: A) => Result<never, unknown>
 
 /**
  * Wrap a sync function that already returns [`Ok`]{@link Ok}, preserving success while mapping thrown errors.
@@ -35,7 +38,10 @@ export function wrapFn<A extends any[] = []>(fn: (...args: A) => never, onError?
  * const result = safeAdd(1, 2)
  * console.assert(result.ok && result.value === 3)
  */
-export function wrapFn<V, A extends any[] = []>(fn: (...args: A) => Ok<V>, onError?: ErrorMapper<unknown>): (...args: A) => Result<V, never>;
+export function wrapFn<V, A extends any[] = []>(
+    fn: (...args: A) => Ok<V>,
+    onError?: ErrorMapper<unknown>,
+): (...args: A) => Result<V, never>
 
 /**
  * Wrap a sync function that already returns [`Err`]{@link Err}, keeping the error payload intact.
@@ -50,7 +56,10 @@ export function wrapFn<V, A extends any[] = []>(fn: (...args: A) => Ok<V>, onErr
  * const result = alwaysErr()
  * console.assert(!result.ok && result.error === 'nope')
  */
-export function wrapFn<E, A extends any[] = []>(fn: (...args: A) => Err<E>, onError?: ErrorMapper<unknown>): (...args: A) => Result<never, E>;
+export function wrapFn<E, A extends any[] = []>(
+    fn: (...args: A) => Err<E>,
+    onError?: ErrorMapper<unknown>,
+): (...args: A) => Result<never, E>
 
 /**
  * Wrap a sync function that already returns a [`Result`]{@link Result}, forwarding either outcome while mapping thrown errors.
@@ -66,7 +75,10 @@ export function wrapFn<E, A extends any[] = []>(fn: (...args: A) => Err<E>, onEr
  * const result = safeDivide(4, 2)
  * console.assert(result.ok && result.value === 2)
  */
-export function wrapFn<V, E, A extends any[] = []>(fn: (...args: A) => Result<V, E>, onError?: ErrorMapper<E>): (...args: A) => Result<V, E>;
+export function wrapFn<V, E, A extends any[] = []>(
+    fn: (...args: A) => Result<V, E>,
+    onError?: ErrorMapper<E>,
+): (...args: A) => Result<V, E>
 
 /**
  * Wrap a sync function that returns a plain value, capturing thrown errors as [`DetailedError`]{@link DetailedError}.
@@ -81,7 +93,10 @@ export function wrapFn<V, E, A extends any[] = []>(fn: (...args: A) => Result<V,
  * const parsed = safeParse('{\"id\":1}')
  * console.assert(parsed.ok && parsed.value.id === 1)
  */
-export function wrapFn<V, A extends any[] = []>(fn: (...args: A) => V, onError?: ErrorMapper<DetailedError<unknown>>): (...args: A) => Result<V, DetailedError<unknown>>;
+export function wrapFn<V, A extends any[] = []>(
+    fn: (...args: A) => V,
+    onError?: ErrorMapper<DetailedError<unknown>>,
+): (...args: A) => Result<V, DetailedError<unknown>>
 
 /**
  * Wrap a sync function that may return either a plain value or a [`Result`]{@link Result}, normalizing both and mapping thrown errors.
@@ -97,13 +112,19 @@ export function wrapFn<V, A extends any[] = []>(fn: (...args: A) => V, onError?:
  * const result = maybe(false)
  * console.assert(!result.ok && result.error === 'no')
  */
-export function wrapFn<V, E = DetailedError<unknown>, A extends any[] = []>(fn: (...args: A) => Result<V, E> | V, onError?: ErrorMapper<E>): (...args: A) => Result<V, E>;
-export function wrapFn<V, E = DetailedError<unknown>, A extends any[] = []>(fn: (...args: A) => Result<V, E> | V, onError?: ErrorMapper<E>): (...args: A) => Result<V, E> {
+export function wrapFn<V, E = DetailedError<unknown>, A extends any[] = []>(
+    fn: (...args: A) => Result<V, E> | V,
+    onError?: ErrorMapper<E>,
+): (...args: A) => Result<V, E>
+export function wrapFn<V, E = DetailedError<unknown>, A extends any[] = []>(
+    fn: (...args: A) => Result<V, E> | V,
+    onError?: ErrorMapper<E>,
+): (...args: A) => Result<V, E> {
     const mapError = (onError ?? toDetailedError) as ErrorMapper<E>
     return (...args: A) => {
         try {
             return resolve(fn(...args)) as Result<V, E>
-        } catch(error) {
+        } catch (error) {
             return reject(mapError(error)) as Result<V, E>
         }
     }
@@ -121,7 +142,10 @@ export function wrapFn<V, E = DetailedError<unknown>, A extends any[] = []>(fn: 
  * const result = await alwaysRejects()
  * console.assert(!result.ok)
  */
-export function wrapAsyncFn<A extends any[] = []>(fn: (...args: A) => MaybePromise<never>, onError?: ErrorMapper<DetailedError<unknown>>): (...args: A) => NeverjectPromise<never, DetailedError<unknown>>;
+export function wrapAsyncFn<A extends any[] = []>(
+    fn: (...args: A) => MaybePromise<never>,
+    onError?: ErrorMapper<DetailedError<unknown>>,
+): (...args: A) => NeverjectPromise<never, DetailedError<unknown>>
 
 /**
  * Wrap an async function that returns [`Ok`]{@link Ok}, preserving success while mapping thrown errors.
@@ -136,7 +160,10 @@ export function wrapAsyncFn<A extends any[] = []>(fn: (...args: A) => MaybePromi
  * const result = await getOk(1)
  * console.assert(result.ok && result.value.id === 1)
  */
-export function wrapAsyncFn<V, A extends any[] = []>(fn: (...args: A) => MaybePromise<Ok<V>>, onError?: ErrorMapper<never>): (...args: A) => NeverjectPromise<V, never>;
+export function wrapAsyncFn<V, A extends any[] = []>(
+    fn: (...args: A) => MaybePromise<Ok<V>>,
+    onError?: ErrorMapper<never>,
+): (...args: A) => NeverjectPromise<V, never>
 
 /**
  * Wrap an async function that returns [`Err`]{@link Err}, forwarding the error payload.
@@ -151,7 +178,10 @@ export function wrapAsyncFn<V, A extends any[] = []>(fn: (...args: A) => MaybePr
  * const result = await alwaysErr()
  * console.assert(!result.ok && result.error === 'nope')
  */
-export function wrapAsyncFn<E, A extends any[] = []>(fn: (...args: A) => MaybePromise<Err<E>>, onError?: ErrorMapper<unknown>): (...args: A) => NeverjectPromise<never, E>;
+export function wrapAsyncFn<E, A extends any[] = []>(
+    fn: (...args: A) => MaybePromise<Err<E>>,
+    onError?: ErrorMapper<unknown>,
+): (...args: A) => NeverjectPromise<never, E>
 
 /**
  * Wrap an async function that already returns a [`Result`]{@link Result}, keeping the shape while mapping thrown errors.
@@ -167,7 +197,10 @@ export function wrapAsyncFn<E, A extends any[] = []>(fn: (...args: A) => MaybePr
  * const result = await safeDivide(4, 0)
  * console.assert(!result.ok && result.error === 'bad')
  */
-export function wrapAsyncFn<V, E, A extends any[] = []>(fn: (...args: A) => MaybePromise<Result<V, E>>, onError?: ErrorMapper<E>): (...args: A) => NeverjectPromise<V, E>;
+export function wrapAsyncFn<V, E, A extends any[] = []>(
+    fn: (...args: A) => MaybePromise<Result<V, E>>,
+    onError?: ErrorMapper<E>,
+): (...args: A) => NeverjectPromise<V, E>
 
 /**
  * Wrap an async function that returns a raw value, converting thrown or rejected values into [`DetailedError`]{@link DetailedError}.
@@ -187,7 +220,10 @@ export function wrapAsyncFn<V, E, A extends any[] = []>(fn: (...args: A) => Mayb
  * if(fetched.ok) console.log(fetched.value.id)
  * else console.error(fetched.error.details)
  */
-export function wrapAsyncFn<V, A extends any[] = []>(fn: (...args: A) => MaybePromise<V>, onError?: ErrorMapper<DetailedError<unknown>>): (...args: A) => NeverjectPromise<V, DetailedError<unknown>>;
+export function wrapAsyncFn<V, A extends any[] = []>(
+    fn: (...args: A) => MaybePromise<V>,
+    onError?: ErrorMapper<DetailedError<unknown>>,
+): (...args: A) => NeverjectPromise<V, DetailedError<unknown>>
 
 /**
  * Wrap an async function that may return either a raw value or a [`Result`]{@link Result}, normalizing both into [`NeverjectPromise`]{@link NeverjectPromise}.
@@ -203,8 +239,14 @@ export function wrapAsyncFn<V, A extends any[] = []>(fn: (...args: A) => MaybePr
  * const settled = await maybe(false)
  * console.assert(!settled.ok && settled.error === 'bad')
  */
-export function wrapAsyncFn<V, E = DetailedError<unknown>, A extends any[] = []>(fn: (...args: A) => MaybePromise<Result<V, E> | V>, onError?: ErrorMapper<E>): (...args: A) => NeverjectPromise<V, E>;
-export function wrapAsyncFn<V, E = DetailedError<unknown>, A extends any[] = []>(fn: (...args: A) => MaybePromise<Result<V, E> | V>, onError?: ErrorMapper<E>): (...args: A) => NeverjectPromise<V, E> {
+export function wrapAsyncFn<V, E = DetailedError<unknown>, A extends any[] = []>(
+    fn: (...args: A) => MaybePromise<Result<V, E> | V>,
+    onError?: ErrorMapper<E>,
+): (...args: A) => NeverjectPromise<V, E>
+export function wrapAsyncFn<V, E = DetailedError<unknown>, A extends any[] = []>(
+    fn: (...args: A) => MaybePromise<Result<V, E> | V>,
+    onError?: ErrorMapper<E>,
+): (...args: A) => NeverjectPromise<V, E> {
     const mapError = (onError ?? toDetailedError) as ErrorMapper<E>
     return (...args: A) => {
         const promise = Promise.try(fn, ...args)
@@ -228,8 +270,12 @@ export function wrapAsyncFn<V, E = DetailedError<unknown>, A extends any[] = []>
  * const settled = await wrapped()
  * console.assert(!settled.ok && settled.error === 'boom')
  */
-export function wrapSafeAsyncFn<V, E = never, A extends any[] = []>(fn: (...args: A) => PromiseLike<Result<V, E>>): (...args: A) => NeverjectPromise<V, E>;
+export function wrapSafeAsyncFn<V, E = never, A extends any[] = []>(
+    fn: (...args: A) => PromiseLike<Result<V, E>>,
+): (...args: A) => NeverjectPromise<V, E>
 
-export function wrapSafeAsyncFn<V, E = never, A extends any[] = []>(fn: (...args: A) => PromiseLike<Result<V, E>>): (...args: A) => NeverjectPromise<V, E> {
+export function wrapSafeAsyncFn<V, E = never, A extends any[] = []>(
+    fn: (...args: A) => PromiseLike<Result<V, E>>,
+): (...args: A) => NeverjectPromise<V, E> {
     return (...args: A) => NeverjectPromise.fromSafePromise(fn(...args))
 }

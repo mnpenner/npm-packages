@@ -1,6 +1,6 @@
-import type {CommonAttributes, CrossOrigin} from '../attributes/ElementAttributes'
-import type {ElementForTag} from './element-types'
-import type {Numeric} from '../attributes/StandardGlobalAttributes'
+import type { CommonAttributes, CrossOrigin } from '../attributes/ElementAttributes'
+import type { ElementForTag } from './element-types'
+import type { Numeric } from '../attributes/StandardGlobalAttributes'
 
 export interface VideoAttributes extends CommonAttributes<ElementForTag<'video'>> {
     /**
@@ -70,5 +70,4 @@ export interface VideoAttributes extends CommonAttributes<ElementForTag<'video'>
      * The URL of the video to embed. This is optional; you may instead use the source element within the video block to specify the video to embed.
      */
     src?: string
-
 }

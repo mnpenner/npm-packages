@@ -1,4 +1,4 @@
-import type {RouteComponent, RouteObject, RouteParams} from '../src'
+import type { RouteComponent, RouteObject, RouteParams } from '../src'
 
 function Home() {
     return <div>Home</div>
@@ -12,7 +12,7 @@ type KitchenSinkParams = {
     two?: string
 }
 
-const KitchenSink: RouteComponent<KitchenSinkParams> = ({foo, baz, splat, optional, two}) => {
+const KitchenSink: RouteComponent<KitchenSinkParams> = ({ foo, baz, splat, optional, two }) => {
     return (
         <div>
             <div>foo: {foo}</div>
@@ -28,7 +28,7 @@ function Login() {
     return <div>Login</div>
 }
 
-function Match({id}: RouteParams) {
+function Match({ id }: RouteParams) {
     return <div>Match: {id}</div>
 }
 
@@ -37,11 +37,15 @@ function NotFound() {
 }
 
 const ROUTES: readonly RouteObject[] = [
-    {name: 'home', pattern: '/', component: Home},
-    {name: 'kitchenSink', pattern: '/hello/:foo/bar/:baz/*splat/xxx{/:optional/lol/:two}', component: KitchenSink},
-    {name: 'login', pattern: '/login', component: Login},
-    {name: 'match', pattern: '/matches/:id', component: Match},
-    {name: 'notFound', pattern: '*', component: NotFound},
+    { name: 'home', pattern: '/', component: Home },
+    {
+        name: 'kitchenSink',
+        pattern: '/hello/:foo/bar/:baz/*splat/xxx{/:optional/lol/:two}',
+        component: KitchenSink,
+    },
+    { name: 'login', pattern: '/login', component: Login },
+    { name: 'match', pattern: '/matches/:id', component: Match },
+    { name: 'notFound', pattern: '*', component: NotFound },
 ]
 
 export default ROUTES

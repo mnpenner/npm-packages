@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bun test
-import {describe, expect, it} from 'bun:test'
-import {kitchenSink, home, login, match} from './routes.gen'
+import { describe, expect, it } from 'bun:test'
+import { kitchenSink, home, login, match } from './routes.gen'
 
 describe('routes.gen', () => {
     it('home()', () => {
@@ -12,26 +12,28 @@ describe('routes.gen', () => {
     })
 
     it('match()', () => {
-        expect(match({id: '123'})).toBe('/matches/123')
+        expect(match({ id: '123' })).toBe('/matches/123')
     })
 
     it('match() uses encodeURIComponent', () => {
-        expect(match({id: 'a/b'})).toBe('/matches/a%2Fb')
+        expect(match({ id: 'a/b' })).toBe('/matches/a%2Fb')
     })
 
     it('kitchenSink() without optional group', () => {
-        expect(kitchenSink({foo: 'a', baz: 'b', splat: ['x', 'y']})).toBe('/hello/a/bar/b/x/y/xxx')
+        expect(kitchenSink({ foo: 'a', baz: 'b', splat: ['x', 'y'] })).toBe(
+            '/hello/a/bar/b/x/y/xxx',
+        )
     })
 
     it('kitchenSink() with optional group', () => {
-        expect(kitchenSink({foo: 'a', baz: 'b', splat: ['x', 'y'], optional: 'opt', two: 'two'})).toBe(
-            '/hello/a/bar/b/x/y/xxx/opt/lol/two',
-        )
+        expect(
+            kitchenSink({ foo: 'a', baz: 'b', splat: ['x', 'y'], optional: 'opt', two: 'two' }),
+        ).toBe('/hello/a/bar/b/x/y/xxx/opt/lol/two')
     })
 
     it('kitchenSink() requires all-or-none optional group', () => {
-        expect(() => kitchenSink({foo: 'a', baz: 'b', splat: ['x', 'y'], optional: 'opt'} as any)).toThrow(
-            'Group requires all-or-none: "optional", "two"',
-        )
+        expect(() =>
+            kitchenSink({ foo: 'a', baz: 'b', splat: ['x', 'y'], optional: 'opt' } as any),
+        ).toThrow('Group requires all-or-none: "optional", "two"')
     })
 })

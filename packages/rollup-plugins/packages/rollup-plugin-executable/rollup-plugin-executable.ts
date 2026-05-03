@@ -1,5 +1,5 @@
-import type {Plugin} from 'rollup'
-import MagicString from 'magic-string';
+import type { Plugin } from 'rollup'
+import MagicString from 'magic-string'
 
 export interface RollupPluginExecutableOptions {
     /**
@@ -37,58 +37,57 @@ export interface RollupPluginExecutableOptions {
 const plugin = (opts: RollupPluginExecutableOptions = {}): Plugin => {
     return {
         name: 'rollup-plugin-executable',
-        renderChunk(code, chunk, {sourcemap}) {
-            if(!chunk.isEntry) return null
+        renderChunk(code, chunk, { sourcemap }) {
+            if (!chunk.isEntry) return null
 
             const ms = new MagicString(code)
             const flags = []
-            if(opts.title) {
+            if (opts.title) {
                 flags.push(`--title=${shellescapeArg(opts.title)}`)
             }
-            if(opts.abortOnUncaughtException) {
+            if (opts.abortOnUncaughtException) {
                 flags.push(`--abort-on-uncaught-exception`)
             }
-            if(opts.reportUncaughtException) {
+            if (opts.reportUncaughtException) {
                 flags.push(`--report-uncaught-exception`)
             }
-            if(opts.throwDeprecation) {
+            if (opts.throwDeprecation) {
                 flags.push(`--throw-deprecation`)
             }
-            if(opts.noWarnings) {
+            if (opts.noWarnings) {
                 flags.push(`--no-warnings`)
             }
-            if(opts.enableSourceMaps) {
+            if (opts.enableSourceMaps) {
                 flags.push(`--enable-source-maps`)
             }
-            if(opts.maxOldSpaceSize) {
+            if (opts.maxOldSpaceSize) {
                 flags.push(`--max-old-space-size=${shellescapeArg(String(opts.maxOldSpaceSize))}`)
             }
-            if(flags.length) {
-                ms.prepend(`#!/usr/bin/env -S node${flags.map(f => ' '+f).join('')}\n`)
+            if (flags.length) {
+                ms.prepend(`#!/usr/bin/env -S node${flags.map((f) => ' ' + f).join('')}\n`)
             } else {
                 ms.prepend(`#!/usr/bin/env node\n`)
             }
             return {
                 code: ms.toString(),
-                map: sourcemap ? ms.generateMap({hires: true}) : null
+                map: sourcemap ? ms.generateMap({ hires: true }) : null,
             }
-        }
+        },
     }
 }
 
-
 function debug(obj: any) {
-    console.dir(obj,{depth:3,maxStringLength :80})
+    console.dir(obj, { depth: 3, maxStringLength: 80 })
 }
 
 export default plugin
 
-
 function shellescapeArg(s: string) {
     if (!/^[A-Za-z0-9=._\/-]+$/.test(s)) {
-        s = "'" + s.replace(/'/g, "'\\''") + "'";
-        s = s.replace(/^(?:'')+/g, '') // unduplicate single-quote at the beginning
-            .replace(/\\'''/g, "\\'"); // remove non-escaped single-quote if there are enclosed between 2 escaped
+        s = "'" + s.replace(/'/g, "'\\''") + "'"
+        s = s
+            .replace(/^(?:'')+/g, '') // unduplicate single-quote at the beginning
+            .replace(/\\'''/g, "\\'") // remove non-escaped single-quote if there are enclosed between 2 escaped
     }
-    return s;
+    return s
 }

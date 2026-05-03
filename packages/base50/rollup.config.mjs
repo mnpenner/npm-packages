@@ -1,11 +1,11 @@
-import typescript from '@rollup/plugin-typescript';
-import terser from '@rollup/plugin-terser';
-import {nodeResolve} from '@rollup/plugin-node-resolve';
-import commonjs from '@rollup/plugin-commonjs';
-import replace from '@rollup/plugin-replace';
-import pkgJson from './package.json' with {type: 'json'}
+import typescript from '@rollup/plugin-typescript'
+import terser from '@rollup/plugin-terser'
+import { nodeResolve } from '@rollup/plugin-node-resolve'
+import commonjs from '@rollup/plugin-commonjs'
+import replace from '@rollup/plugin-replace'
+import pkgJson from './package.json' with { type: 'json' }
 
-const production = !process.env.ROLLUP_WATCH;
+const production = !process.env.ROLLUP_WATCH
 
 /** @type {import('rollup').RollupOptions} */
 const config = {
@@ -21,7 +21,7 @@ const config = {
         nodeResolve(),
         commonjs(),
         typescript({
-            exclude: './src/dev.ts'
+            exclude: './src/dev.ts',
         }),
         replace({
             preventAssignment: true,
@@ -41,8 +41,10 @@ if (production) {
         entryFileNames: '[name].cjs',
         sourcemap: false,
     })
-    if(pkgJson.peerDependencies) {
-        config.external = new RegExp('^(' + Object.keys(pkgJson.peerDependencies).join('|') + ')($|/)')
+    if (pkgJson.peerDependencies) {
+        config.external = new RegExp(
+            '^(' + Object.keys(pkgJson.peerDependencies).join('|') + ')($|/)',
+        )
     }
     config.plugins.push(
         terser({

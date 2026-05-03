@@ -1,13 +1,13 @@
-import {randomBytes} from 'node:crypto'
+import { randomBytes } from 'node:crypto'
 import assert from 'node:assert/strict'
 
 /** Default epoch set to 2025-01-01T00:00:00Z in nanoseconds since Unix epoch. */
 const DEFAULT_EPOCH = 1735689600_000_000_000n
 /** Default scale factor, where each time unit in the ID represents 50 nanoseconds. */
-const DEFAULT_SCALE_FACTOR = 50n  // 2^56*50ns = 114 years
+const DEFAULT_SCALE_FACTOR = 50n // 2^56*50ns = 114 years
 
 /** Type definition for a high-resolution time function returning nanoseconds as a bigint. */
-type HrTimeFn = () => bigint;
+type HrTimeFn = () => bigint
 
 /**
  * Determines the best available high-resolution time function.
@@ -15,10 +15,10 @@ type HrTimeFn = () => bigint;
  * falling back to `performance.now` (browser-compatible).
  */
 const performanceNow: HrTimeFn = (() => {
-    if(typeof process !== 'undefined' && typeof process.hrtime?.bigint === 'function') {
+    if (typeof process !== 'undefined' && typeof process.hrtime?.bigint === 'function') {
         return process.hrtime.bigint
     }
-    if(typeof Bun !== 'undefined' && typeof Bun.nanoseconds === 'function') {
+    if (typeof Bun !== 'undefined' && typeof Bun.nanoseconds === 'function') {
         // Note: Precision may degrade after 14.8 weeks of uptime in Bun.
         return () => BigInt(Bun.nanoseconds())
     }
@@ -68,12 +68,12 @@ export class OrderedTypedIdGenerator<IdType extends number> {
      */
     constructor(
         private readonly epoch = DEFAULT_EPOCH,
-        private readonly scaleFactor = DEFAULT_SCALE_FACTOR
+        private readonly scaleFactor = DEFAULT_SCALE_FACTOR,
     ) {
         assert(typeof epoch === 'bigint' && epoch >= 0n, 'epoch must be a non-negative bigint')
         assert(
             typeof scaleFactor === 'bigint' && scaleFactor > 0n,
-            'scaleFactor must be a positive bigint'
+            'scaleFactor must be a positive bigint',
         )
         const [dateNow, perfNow] = [Date.now(), performanceNow()]
         this.startTime = BigInt(dateNow) * 1_000_000n - this.epoch - perfNow
@@ -89,15 +89,14 @@ export class OrderedTypedIdGenerator<IdType extends number> {
      */
     generate(type: IdType): Buffer {
         const typeNum = Number(type)
-        assert(
-            typeNum >= 0 && typeNum <= 0xFFF,
-            `type must be in [0, ${0xFFF}], got ${typeNum}`
-        )
+        assert(typeNum >= 0 && typeNum <= 0xfff, `type must be in [0, ${0xfff}], got ${typeNum}`)
 
-        let time = (this.startTime + performanceNow()) / this.scaleFactor  // bigint will floor
+        let time = (this.startTime + performanceNow()) / this.scaleFactor // bigint will floor
         if (this.lastTime != null && time <= this.lastTime) {
-            console.error('Current time was not greater than last time. Possible degradation in performance counter or insufficient scale factor.')
-            time = this.lastTime + 1n;     // bump by one time unit
+            console.error(
+                'Current time was not greater than last time. Possible degradation in performance counter or insufficient scale factor.',
+            )
+            time = this.lastTime + 1n // bump by one time unit
         }
         // assert(
         //     this.lastTime == null || time > this.lastTime,
@@ -112,13 +111,13 @@ export class OrderedTypedIdGenerator<IdType extends number> {
         const buffer = Buffer.alloc(16)
 
         // 56 bits of time (bytes 0-6)
-        buffer[0] = Number((time >> 48n) & 0xFFn)
-        buffer[1] = Number((time >> 40n) & 0xFFn)
-        buffer[2] = Number((time >> 32n) & 0xFFn)
-        buffer[3] = Number((time >> 24n) & 0xFFn)
-        buffer[4] = Number((time >> 16n) & 0xFFn)
-        buffer[5] = Number((time >> 8n) & 0xFFn)
-        buffer[6] = Number(time & 0xFFn)
+        buffer[0] = Number((time >> 48n) & 0xffn)
+        buffer[1] = Number((time >> 40n) & 0xffn)
+        buffer[2] = Number((time >> 32n) & 0xffn)
+        buffer[3] = Number((time >> 24n) & 0xffn)
+        buffer[4] = Number((time >> 16n) & 0xffn)
+        buffer[5] = Number((time >> 8n) & 0xffn)
+        buffer[6] = Number(time & 0xffn)
 
         // 60 bits of randomness (bytes 7-13 + top 4 bits of byte 14)
         buffer[7] = random[0]
@@ -128,10 +127,10 @@ export class OrderedTypedIdGenerator<IdType extends number> {
         buffer[11] = random[4]
         buffer[12] = random[5]
         buffer[13] = random[6]
-        buffer[14] = (random[7] & 0xF0) | ((typeNum >> 8) & 0x0F) // Top 4 random + top 4 type
+        buffer[14] = (random[7] & 0xf0) | ((typeNum >> 8) & 0x0f) // Top 4 random + top 4 type
 
         // 12 bits of type (bottom 4 bits of byte 14 + byte 15)
-        buffer[15] = typeNum & 0xFF // Bottom 8 bits of type
+        buffer[15] = typeNum & 0xff // Bottom 8 bits of type
 
         return buffer
     }
@@ -145,7 +144,7 @@ export class OrderedTypedIdGenerator<IdType extends number> {
     extractType(id: Buffer): IdType {
         assert(id.length === 16, 'ID must be 16 bytes long')
 
-        const typeHigh = id[14] & 0x0F // Bottom 4 bits of byte 14
+        const typeHigh = id[14] & 0x0f // Bottom 4 bits of byte 14
         const typeLow = id[15] // All 8 bits of byte 15
         return ((typeHigh << 8) | typeLow) as IdType
     }

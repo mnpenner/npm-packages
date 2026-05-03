@@ -1,6 +1,6 @@
 /** @jsxImportSource @mpen/jsxhtml */
-import type {DocTypeProps} from '../jsx-elements'
-import {JsxDocType} from '../jsx-elements'
+import type { DocTypeProps } from '../jsx-elements'
+import { JsxDocType } from '../jsx-elements'
 
 /**
  * The `<!DOCTYPE>` node.

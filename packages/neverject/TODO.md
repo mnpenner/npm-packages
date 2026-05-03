@@ -8,20 +8,18 @@ What should you do if you're writing a brand new function and want to return an 
 ```ts
 function mySafeAsyncFunction(arg: string): NeverjectPromise<number, Error> {
     // or toAsync?
-    return NeverjectPromise.wrapResult(Math.random() < 0.5 ? err(new Error('oops')) : ok(arg.length))
+    return NeverjectPromise.wrapResult(
+        Math.random() < 0.5 ? err(new Error('oops')) : ok(arg.length),
+    )
 }
 ```
 
 We didn't need all the error catching that nj provides here. Could try something like...
 
-
 ```ts
-const mySafeAsyncFunction2 = wrapAsyncFn<string, Error>(async (arg: number) => {
-    
-})
+const mySafeAsyncFunction2 = wrapAsyncFn<string, Error>(async (arg: number) => {})
 ```
 
 But this is doing too much work too. we need safeNj (similar to `ok` vs `resolve`) and wrapSafeAsyncFn. We don't need wrapSafeFn because safe functions can just return Ok or Err and it'll be inferred properly.
 
 ~~Should `nj` be the safe ver or unsafe ver?~~ Safe ver.
-

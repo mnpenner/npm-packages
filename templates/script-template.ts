@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bun -i
-import {parseArgs, type ParseArgsConfig} from "node:util"
-import {$} from 'bun'
+import { parseArgs, type ParseArgsConfig } from 'node:util'
+import { $ } from 'bun'
 
 const PARSE_CONFIG = {
     options: {},
@@ -8,26 +8,24 @@ const PARSE_CONFIG = {
     allowPositionals: true,
 } satisfies ParseArgsConfig
 
-async function main(options: Options, positionals: Positionals): Promise<number | void> {
-
-}
+async function main(options: Options, positionals: Positionals): Promise<number | void> {}
 
 //#region Invoke main
 type ParsedConfig = ReturnType<typeof parseArgs<typeof PARSE_CONFIG>>
-type Options = ParsedConfig["values"]
-type Positionals = ParsedConfig["positionals"]
+type Options = ParsedConfig['values']
+type Positionals = ParsedConfig['positionals']
 
-if(import.meta.main) {
-    const {values, positionals} = parseArgs(PARSE_CONFIG)
+if (import.meta.main) {
+    const { values, positionals } = parseArgs(PARSE_CONFIG)
 
     main(values, positionals).then(
         (exitCode) => {
-            if(typeof exitCode === "number") {
+            if (typeof exitCode === 'number') {
                 process.exitCode = exitCode
             }
         },
         (err) => {
-            if(err instanceof $.ShellError) {
+            if (err instanceof $.ShellError) {
                 console.error(`Command failed with exit code ${err.exitCode}`)
                 process.exitCode = err.exitCode
             } else {

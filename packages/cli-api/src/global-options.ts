@@ -1,6 +1,6 @@
-import type {AnyApp, Option} from './interfaces'
-import {OptType} from './interfaces'
-import {sortOptions} from './options'
+import type { AnyApp, Option } from './interfaces'
+import { OptType } from './interfaces'
+import { sortOptions } from './options'
 
 export const HELP_OPTION: Option = {
     name: 'help',

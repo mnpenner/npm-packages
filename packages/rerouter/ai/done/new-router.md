@@ -1,5 +1,5 @@
 in packages/server-router/src/router.ts, simplify fetch(). in packages/server-router/src/types.ts, the Handler should take as an argument
-an interface {req:Request} and return Promise<Response>|Response|AsyncGenerator<number|HttpStatus|Headers,Buffer|Uint8Array|ReadableStream>, *however* we need to keep the Type
+an interface {req:Request} and return Promise<Response>|Response|AsyncGenerator<number|HttpStatus|Headers,Buffer|Uint8Array|ReadableStream>, _however_ we need to keep the Type
 params for packages/server-router/src/bin/gen-api-client.ts. even if fetch() doesn't use them, the user needs to be able to specify them
 for type inference.
 

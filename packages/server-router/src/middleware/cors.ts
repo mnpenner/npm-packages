@@ -1,4 +1,4 @@
-import {CommonHeaders, HttpStatus, HttpMethod} from '@mpen/http-helpers'
+import { CommonHeaders, HttpStatus, HttpMethod } from '@mpen/http-helpers'
 import type {
     AnyContext,
     HandlerBody,
@@ -8,19 +8,23 @@ import type {
     OneOrMany,
     RequestContext,
 } from '../types'
-import {isLocalhost} from '../lib/host'
+import { isLocalhost } from '../lib/host'
 
-type CorsOriginResolver<Ctx extends object> =
-    (origin: string | null, ctx: RequestContext<Ctx>) => MaybePromise<string | null | undefined | false>
+type CorsOriginResolver<Ctx extends object> = (
+    origin: string | null,
+    ctx: RequestContext<Ctx>,
+) => MaybePromise<string | null | undefined | false>
 
-type CorsMethodsResolver<Ctx extends object> =
-    (origin: string | null, ctx: RequestContext<Ctx>) => MaybePromise<OneOrMany<string>>
+type CorsMethodsResolver<Ctx extends object> = (
+    origin: string | null,
+    ctx: RequestContext<Ctx>,
+) => MaybePromise<OneOrMany<string>>
 
 type AllowedOriginEntry =
-    | {kind: 'origin'; value: string}
-    | {kind: 'host'; value: string}
-    | {kind: 'regex'; value: RegExp}
-    | {kind: 'null'}
+    | { kind: 'origin'; value: string }
+    | { kind: 'host'; value: string }
+    | { kind: 'regex'; value: RegExp }
+    | { kind: 'null' }
 
 export interface CorsOptions<Ctx extends object = AnyContext> {
     /**
@@ -73,7 +77,14 @@ const headerAllowCredentials = CommonHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS
 const headerExposeHeaders = CommonHeaders.ACCESS_CONTROL_EXPOSE_HEADERS
 const headerMaxAge = CommonHeaders.ACCESS_CONTROL_MAX_AGE
 
-const defaultAllowedMethods = [HttpMethod.GET, HttpMethod.HEAD, HttpMethod.PUT, HttpMethod.POST, HttpMethod.DELETE, HttpMethod.PATCH]
+const defaultAllowedMethods = [
+    HttpMethod.GET,
+    HttpMethod.HEAD,
+    HttpMethod.PUT,
+    HttpMethod.POST,
+    HttpMethod.DELETE,
+    HttpMethod.PATCH,
+]
 
 function normalizeHeaderValue(value: string | null): string | null {
     if (!value) return null
@@ -97,11 +108,11 @@ function parseOrigin(originHeader: string | null): URL | null {
 function normalizeList(value?: OneOrMany<string>): string[] {
     if (!value) return []
     const list = Array.isArray(value) ? value : [value]
-    return list.map(entry => entry.trim()).filter(Boolean)
+    return list.map((entry) => entry.trim()).filter(Boolean)
 }
 
 function normalizeMethods(value?: OneOrMany<string>): string[] {
-    return normalizeList(value).map(entry => entry.toUpperCase())
+    return normalizeList(value).map((entry) => entry.toUpperCase())
 }
 
 function formatHeaderList(value?: OneOrMany<string>): string | null {
@@ -122,27 +133,27 @@ function normalizeAllowedOrigins(value?: OneOrMany<string | URL | RegExp>): Allo
     const normalized: AllowedOriginEntry[] = []
     for (const entry of list) {
         if (entry instanceof RegExp) {
-            normalized.push({kind: 'regex', value: entry})
+            normalized.push({ kind: 'regex', value: entry })
             continue
         }
         if (entry instanceof URL) {
-            normalized.push({kind: 'origin', value: entry.origin})
+            normalized.push({ kind: 'origin', value: entry.origin })
             continue
         }
         const trimmed = entry.trim()
         if (!trimmed) continue
         if (trimmed === 'null') {
-            normalized.push({kind: 'null'})
+            normalized.push({ kind: 'null' })
             continue
         }
         if (trimmed.includes('://')) {
             try {
-                normalized.push({kind: 'origin', value: new URL(trimmed).origin})
+                normalized.push({ kind: 'origin', value: new URL(trimmed).origin })
             } catch {
                 continue
             }
         } else {
-            normalized.push({kind: 'host', value: trimmed.replace(/\/+$/, '')})
+            normalized.push({ kind: 'host', value: trimmed.replace(/\/+$/, '') })
         }
     }
     return normalized
@@ -160,7 +171,7 @@ function isOriginAllowed(
     originHeader: string | null,
     originUrl: URL | null,
     allowlist: AllowedOriginEntry[],
-    allowLocalhost: boolean
+    allowLocalhost: boolean,
 ): boolean {
     if (!originHeader) return false
     if (originHeader === 'null') {
@@ -204,7 +215,7 @@ function applyCorsHeaders(
     allowOrigin: string,
     allowCredentials: boolean,
     exposeHeaders?: OneOrMany<string>,
-    varyOrigin?: boolean
+    varyOrigin?: boolean,
 ): void {
     headers.set(headerAllowOrigin, allowOrigin)
     if (allowCredentials) {
@@ -224,7 +235,11 @@ function isBodyChunk(value: unknown): value is Uint8Array | string {
 }
 
 function isAsyncGenerator(value: unknown): value is AsyncGenerator<HandlerYield, HandlerBody> {
-    return !!value && typeof (value as AsyncGenerator<HandlerYield, HandlerBody>)[Symbol.asyncIterator] === 'function'
+    return (
+        !!value &&
+        typeof (value as AsyncGenerator<HandlerYield, HandlerBody>)[Symbol.asyncIterator] ===
+            'function'
+    )
 }
 
 function wrapGeneratorWithCors(
@@ -232,7 +247,7 @@ function wrapGeneratorWithCors(
     allowOrigin: string,
     allowCredentials: boolean,
     exposeHeaders: OneOrMany<string> | undefined,
-    varyOrigin: boolean
+    varyOrigin: boolean,
 ): AsyncGenerator<HandlerYield, HandlerBody> {
     const apply = (headers: Headers) => {
         applyCorsHeaders(headers, allowOrigin, allowCredentials, exposeHeaders, varyOrigin)
@@ -259,11 +274,11 @@ function wrapGeneratorWithCors(
                 continue
             }
             if (value && typeof value === 'object' && 'headers' in value) {
-                const entry = value as {status?: number; headers?: HeadersInit}
+                const entry = value as { status?: number; headers?: HeadersInit }
                 const headers = new Headers(entry.headers)
                 apply(headers)
                 headersInjected = true
-                yield {...entry, headers}
+                yield { ...entry, headers }
                 continue
             }
             if (!headersInjected && isBodyChunk(value)) {
@@ -292,16 +307,14 @@ function wrapGeneratorWithCors(
  * @param options - Configuration for origin, preflight, and header behavior.
  * @returns Middleware that applies CORS headers to matching requests.
  */
-export function cors<Ctx extends object = AnyContext>(
-    options: CorsOptions<Ctx>
-): Middleware<Ctx> {
+export function cors<Ctx extends object = AnyContext>(options: CorsOptions<Ctx>): Middleware<Ctx> {
     const allowCredentials = options.credentials ?? false
     const allowLocalhost = options.allowLocalhost ?? options.dev ?? false
     const originOption = options.origin
-    const originResolver = typeof originOption === 'function'
-        ? originOption
-        : undefined
-    const originList = originResolver ? undefined : originOption as OneOrMany<string | URL | RegExp>
+    const originResolver = typeof originOption === 'function' ? originOption : undefined
+    const originList = originResolver
+        ? undefined
+        : (originOption as OneOrMany<string | URL | RegExp>)
     const allowlist = originList ? normalizeAllowedOrigins(originList) : []
     const hasWildcard = originList ? hasWildcardOrigin(originList) : false
     const preflightStatus = options.preflightStatus ?? HttpStatus.NO_CONTENT
@@ -336,31 +349,40 @@ export function cors<Ctx extends object = AnyContext>(
             } else if (!allowCredentials) {
                 allowOrigin = '*'
             }
-        } else if (originHeader && isOriginAllowed(originHeader, originUrl, allowlist, allowLocalhost)) {
+        } else if (
+            originHeader &&
+            isOriginAllowed(originHeader, originUrl, allowlist, allowLocalhost)
+        ) {
             allowOrigin = originUrl?.origin ?? originHeader
             varyOrigin = true
         }
 
-        const isPreflight = ctx.req.method.toUpperCase() === 'OPTIONS'
-            && ctx.req.headers.has(headerAccessControlRequestMethod)
+        const isPreflight =
+            ctx.req.method.toUpperCase() === 'OPTIONS' &&
+            ctx.req.headers.has(headerAccessControlRequestMethod)
 
         if (isPreflight) {
             if (!allowOrigin) {
-                return new Response(null, {status: preflightStatus})
+                return new Response(null, { status: preflightStatus })
             }
             const headers = new Headers()
             applyCorsHeaders(headers, allowOrigin, allowCredentials, undefined, varyOrigin)
 
-            const allowMethods = typeof options.allowMethods === 'function'
-                ? await options.allowMethods(originHeader, ctx)
-                : options.allowMethods ?? defaultAllowedMethods
+            const allowMethods =
+                typeof options.allowMethods === 'function'
+                    ? await options.allowMethods(originHeader, ctx)
+                    : (options.allowMethods ?? defaultAllowedMethods)
             const allowMethodsValue = formatMethodList(allowMethods)
             if (allowMethodsValue) {
                 headers.set(headerAllowMethods, allowMethodsValue)
             }
 
-            const requestHeaders = normalizeHeaderValue(ctx.req.headers.get(headerAccessControlRequestHeaders))
-            const allowHeadersValue = formatHeaderList(options.allowHeaders ?? requestHeaders ?? undefined)
+            const requestHeaders = normalizeHeaderValue(
+                ctx.req.headers.get(headerAccessControlRequestHeaders),
+            )
+            const allowHeadersValue = formatHeaderList(
+                options.allowHeaders ?? requestHeaders ?? undefined,
+            )
             if (allowHeadersValue) {
                 headers.set(headerAllowHeaders, allowHeadersValue)
             }
@@ -368,25 +390,43 @@ export function cors<Ctx extends object = AnyContext>(
             if (options.maxAge != null) {
                 headers.set(headerMaxAge, String(options.maxAge))
             }
-            return new Response(null, {status: preflightStatus, headers})
+            return new Response(null, { status: preflightStatus, headers })
         }
 
         const result = await next()
         if (!allowOrigin) return result
 
         if (result instanceof Response) {
-            applyCorsHeaders(result.headers, allowOrigin, allowCredentials, options.exposeHeaders, varyOrigin)
+            applyCorsHeaders(
+                result.headers,
+                allowOrigin,
+                allowCredentials,
+                options.exposeHeaders,
+                varyOrigin,
+            )
             return result
         }
 
         if (isAsyncGenerator(result)) {
-            return wrapGeneratorWithCors(result, allowOrigin, allowCredentials, options.exposeHeaders, varyOrigin)
+            return wrapGeneratorWithCors(
+                result,
+                allowOrigin,
+                allowCredentials,
+                options.exposeHeaders,
+                varyOrigin,
+            )
         }
 
         if (isBodyChunk(result) || result instanceof ReadableStream) {
             const headers = new Headers()
-            applyCorsHeaders(headers, allowOrigin, allowCredentials, options.exposeHeaders, varyOrigin)
-            return new Response(result as BodyInit, {headers})
+            applyCorsHeaders(
+                headers,
+                allowOrigin,
+                allowCredentials,
+                options.exposeHeaders,
+                varyOrigin,
+            )
+            return new Response(result as BodyInit, { headers })
         }
 
         return result

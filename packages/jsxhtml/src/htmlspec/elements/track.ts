@@ -1,5 +1,5 @@
-import type {CommonAttributes} from '../attributes/ElementAttributes'
-import type {ElementForTag} from './element-types'
+import type { CommonAttributes } from '../attributes/ElementAttributes'
+import type { ElementForTag } from './element-types'
 
 export interface TrackAttributes extends CommonAttributes<ElementForTag<'track'>> {
     /**
@@ -29,5 +29,4 @@ export interface TrackAttributes extends CommonAttributes<ElementForTag<'track'>
      * Language of the track text data. It must be a valid BCP 47 language tag. If the `kind` attribute is set to `subtitles`, then `srclang` must be defined.
      */
     srclang?: string
-
 }

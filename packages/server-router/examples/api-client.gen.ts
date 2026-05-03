@@ -8,86 +8,93 @@ export interface Fetcher {
 export type TypedResponse<T> = Omit<Response, 'json'> & { json(): Promise<T> }
 export type PromisedResponse<T> = Promise<TypedResponse<T>>
 
-type SinglePathParam<TParams, TKey extends string> = TParams extends { [K in TKey]: infer V } ? V : unknown
+type SinglePathParam<TParams, TKey extends string> = TParams extends { [K in TKey]: infer V }
+    ? V
+    : unknown
 
 export interface GetIndexResponse200 {
-  message: string;
+    message: string
 }
 
 export interface GetIndexResponsesByStatus {
-    "200": GetIndexResponse200
+    '200': GetIndexResponse200
 }
 export type GetIndexResponse = GetIndexResponsesByStatus[keyof GetIndexResponsesByStatus]
 
 export interface GetNamedRouteResponse200 {
-  message: string;
+    message: string
 }
 
 export interface GetNamedRouteResponsesByStatus {
-    "200": GetNamedRouteResponse200
+    '200': GetNamedRouteResponse200
 }
-export type GetNamedRouteResponse = GetNamedRouteResponsesByStatus[keyof GetNamedRouteResponsesByStatus]
+export type GetNamedRouteResponse =
+    GetNamedRouteResponsesByStatus[keyof GetNamedRouteResponsesByStatus]
 
 export interface PostNamedRouteResponse200 {
-  message: string;
+    message: string
 }
 
 export interface PostNamedRouteResponsesByStatus {
-    "200": PostNamedRouteResponse200
+    '200': PostNamedRouteResponse200
 }
-export type PostNamedRouteResponse = PostNamedRouteResponsesByStatus[keyof PostNamedRouteResponsesByStatus]
+export type PostNamedRouteResponse =
+    PostNamedRouteResponsesByStatus[keyof PostNamedRouteResponsesByStatus]
 
 export interface PostFooBarResponse200 {
-  message: string;
+    message: string
 }
 
 export interface PostFooBarResponsesByStatus {
-    "200": PostFooBarResponse200
+    '200': PostFooBarResponse200
 }
 export type PostFooBarResponse = PostFooBarResponsesByStatus[keyof PostFooBarResponsesByStatus]
 
 export interface PostBooksByIdPathParams {
-  id: number;
+    id: number
 }
 
 export interface PostBooksByIdRequest {
-  title: string;
-  author: string;
+    title: string
+    author: string
 }
 
 export interface PostBooksByIdResponse200 {
-  id: number;
-  title: string;
-  author: string;
+    id: number
+    title: string
+    author: string
 }
 
 export interface PostBooksByIdResponsesByStatus {
-    "200": PostBooksByIdResponse200
+    '200': PostBooksByIdResponse200
 }
-export type PostBooksByIdResponse = PostBooksByIdResponsesByStatus[keyof PostBooksByIdResponsesByStatus]
+export type PostBooksByIdResponse =
+    PostBooksByIdResponsesByStatus[keyof PostBooksByIdResponsesByStatus]
 
 export interface GetJsonHelperResponse200 {
-  message: string;
+    message: string
 }
 
 export interface GetJsonHelperResponsesByStatus {
-    "200": GetJsonHelperResponse200
+    '200': GetJsonHelperResponse200
 }
-export type GetJsonHelperResponse = GetJsonHelperResponsesByStatus[keyof GetJsonHelperResponsesByStatus]
+export type GetJsonHelperResponse =
+    GetJsonHelperResponsesByStatus[keyof GetJsonHelperResponsesByStatus]
 
 export interface PostJsonHelperZodRequest {
-  tag: string;
+    tag: string
 }
 
 export interface PostJsonHelperZodResponse200 {
-  ok: boolean;
-  tag: string;
+    ok: boolean
+    tag: string
 }
 
 export interface PostJsonHelperZodResponsesByStatus {
-    "200": PostJsonHelperZodResponse200
+    '200': PostJsonHelperZodResponse200
 }
-export type PostJsonHelperZodResponse = PostJsonHelperZodResponsesByStatus[keyof PostJsonHelperZodResponsesByStatus]
+export type PostJsonHelperZodResponse =
+    PostJsonHelperZodResponsesByStatus[keyof PostJsonHelperZodResponsesByStatus]
 
 export type GetHealthResponse = unknown
 
@@ -143,8 +150,8 @@ export class ApiClient {
     }
 
     get() {
-        return this.fetcher.fetch("/", {
-            method: "GET",
+        return this.fetcher.fetch('/', {
+            method: 'GET',
         }) as PromisedResponse<GetIndexResponse>
     }
 }
@@ -152,14 +159,14 @@ export class ApiClient {
 class ApiClient_NamedRoute {
     constructor(private readonly fetcher: Fetcher) {}
     get() {
-        return this.fetcher.fetch("/name/bar", {
-            method: "GET",
+        return this.fetcher.fetch('/name/bar', {
+            method: 'GET',
         }) as PromisedResponse<GetNamedRouteResponse>
     }
 
     post() {
-        return this.fetcher.fetch("/name/bar", {
-            method: "POST",
+        return this.fetcher.fetch('/name/bar', {
+            method: 'POST',
         }) as PromisedResponse<PostNamedRouteResponse>
     }
 }
@@ -175,19 +182,25 @@ class ApiClient_Foo {
 class ApiClient_Foo_Bar {
     constructor(private readonly fetcher: Fetcher) {}
     post() {
-        return this.fetcher.fetch("/foo/bar", {
-            method: "POST",
+        return this.fetcher.fetch('/foo/bar', {
+            method: 'POST',
         }) as PromisedResponse<PostFooBarResponse>
     }
 }
 
 class ApiClient_BooksById {
     constructor(private readonly fetcher: Fetcher) {}
-    post(path: PostBooksByIdPathParams | SinglePathParam<PostBooksByIdPathParams, "id">, body: PostBooksByIdRequest) {
-        const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { id: path } as any
+    post(
+        path: PostBooksByIdPathParams | SinglePathParam<PostBooksByIdPathParams, 'id'>,
+        body: PostBooksByIdRequest,
+    ) {
+        const _path =
+            typeof path === 'object' && path !== null && !Array.isArray(path)
+                ? path
+                : ({ id: path } as any)
         return this.fetcher.fetch(`/books/${_path.id}`, {
-            method: "POST",
-            headers: { "content-type": "application/json" },
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
             body: JSON.stringify(body),
         }) as PromisedResponse<PostBooksByIdResponse>
     }
@@ -196,8 +209,8 @@ class ApiClient_BooksById {
 class ApiClient_JsonHelper {
     constructor(private readonly fetcher: Fetcher) {}
     get() {
-        return this.fetcher.fetch("/json-helper", {
-            method: "GET",
+        return this.fetcher.fetch('/json-helper', {
+            method: 'GET',
         }) as PromisedResponse<GetJsonHelperResponse>
     }
 }
@@ -205,9 +218,9 @@ class ApiClient_JsonHelper {
 class ApiClient_JsonHelperZod {
     constructor(private readonly fetcher: Fetcher) {}
     post(body: PostJsonHelperZodRequest) {
-        return this.fetcher.fetch("/json-helper-zod", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
+        return this.fetcher.fetch('/json-helper-zod', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
             body: JSON.stringify(body),
         }) as PromisedResponse<PostJsonHelperZodResponse>
     }
@@ -216,14 +229,14 @@ class ApiClient_JsonHelperZod {
 class ApiClient_Health {
     constructor(private readonly fetcher: Fetcher) {}
     get() {
-        return this.fetcher.fetch("/health", {
-            method: "GET",
+        return this.fetcher.fetch('/health', {
+            method: 'GET',
         }) as PromisedResponse<GetHealthResponse>
     }
 
     head() {
-        return this.fetcher.fetch("/health", {
-            method: "HEAD",
+        return this.fetcher.fetch('/health', {
+            method: 'HEAD',
         }) as PromisedResponse<HeadHealthResponse>
     }
 }
@@ -231,8 +244,8 @@ class ApiClient_Health {
 class ApiClient_Submit {
     constructor(private readonly fetcher: Fetcher) {}
     post() {
-        return this.fetcher.fetch("/submit", {
-            method: "POST",
+        return this.fetcher.fetch('/submit', {
+            method: 'POST',
         }) as PromisedResponse<PostSubmitResponse>
     }
 }
@@ -240,23 +253,32 @@ class ApiClient_Submit {
 class ApiClient_ItemsById {
     constructor(private readonly fetcher: Fetcher) {}
     put(path: any | any) {
-        const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { id: path } as any
+        const _path =
+            typeof path === 'object' && path !== null && !Array.isArray(path)
+                ? path
+                : ({ id: path } as any)
         return this.fetcher.fetch(`/items/${_path.id}`, {
-            method: "PUT",
+            method: 'PUT',
         }) as PromisedResponse<PutItemsByIdResponse>
     }
 
     delete(path: any | any) {
-        const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { id: path } as any
+        const _path =
+            typeof path === 'object' && path !== null && !Array.isArray(path)
+                ? path
+                : ({ id: path } as any)
         return this.fetcher.fetch(`/items/${_path.id}`, {
-            method: "DELETE",
+            method: 'DELETE',
         }) as PromisedResponse<DeleteItemsByIdResponse>
     }
 
     patch(path: any | any) {
-        const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { id: path } as any
+        const _path =
+            typeof path === 'object' && path !== null && !Array.isArray(path)
+                ? path
+                : ({ id: path } as any)
         return this.fetcher.fetch(`/items/${_path.id}`, {
-            method: "PATCH",
+            method: 'PATCH',
         }) as PromisedResponse<PatchItemsByIdResponse>
     }
 }
@@ -264,8 +286,8 @@ class ApiClient_ItemsById {
 class ApiClient_Gen {
     constructor(private readonly fetcher: Fetcher) {}
     get() {
-        return this.fetcher.fetch("/gen", {
-            method: "GET",
+        return this.fetcher.fetch('/gen', {
+            method: 'GET',
         }) as PromisedResponse<GetGenResponse>
     }
 }

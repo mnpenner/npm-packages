@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bun test
-import {describe, expect, it} from 'bun:test'
-import {HttpMethod, HttpStatus} from '@mpen/http-helpers'
-import {Router} from '../router'
-import {csrf} from './csrf'
+import { describe, expect, it } from 'bun:test'
+import { HttpMethod, HttpStatus } from '@mpen/http-helpers'
+import { Router } from '../router'
+import { csrf } from './csrf'
 
 describe(csrf.name, () => {
     it('allows same-site fetch requests by default', async () => {
@@ -55,7 +55,7 @@ describe(csrf.name, () => {
 
     it('allows whitelisted origins even when cross-site', async () => {
         const router = new Router()
-        router.use(csrf({allowedOrigins: ['https://evil.example']}))
+        router.use(csrf({ allowedOrigins: ['https://evil.example'] }))
         router.add({
             method: HttpMethod.POST,
             pattern: '/submit',
@@ -79,7 +79,7 @@ describe(csrf.name, () => {
 
     it('allows local dev requests without fetch metadata or origin when dev is enabled', async () => {
         const router = new Router()
-        router.use(csrf({dev: true}))
+        router.use(csrf({ dev: true }))
         router.add({
             method: HttpMethod.POST,
             pattern: '/submit',

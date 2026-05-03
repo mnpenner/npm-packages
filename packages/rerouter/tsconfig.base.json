@@ -18,7 +18,9 @@
             "@mpen/http-helpers/*": ["packages/http-helpers/src/*"],
             "@mpen/server-router": ["packages/server-router/src/index.ts"],
             "@mpen/server-router/*": ["packages/server-router/src/*"],
-            "@mpen/server-router-zod-neverject": ["packages/server-router-zod-neverject/src/index.ts"],
+            "@mpen/server-router-zod-neverject": [
+                "packages/server-router-zod-neverject/src/index.ts"
+            ],
             "@mpen/server-router-zod-neverject/*": ["packages/server-router-zod-neverject/src/*"],
             "@mpen/react-router": ["packages/react-router/src/index.ts"],
             "@mpen/react-router/*": ["packages/react-router/src/*"],

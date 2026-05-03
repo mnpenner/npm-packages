@@ -8,9 +8,7 @@
  * expectType<TypeOf<123, number>>(false);
  * ```
  */
-export type TypeOf<Target, Value> = Exclude<Value, Target> extends never
-    ? true
-    : false;
+export type TypeOf<Target, Value> = Exclude<Value, Target> extends never ? true : false
 
 /**
  * Checks that `Value` is equal to the same type as `Target`.
@@ -22,11 +20,8 @@ export type TypeOf<Target, Value> = Exclude<Value, Target> extends never
  * expectType<TypeEqual<number, number>>(true);
  * ```
  */
-export type TypeEqual<Target, Value> = (<T>() => T extends Target
-    ? 1
-    : 2) extends <T>() => T extends Value ? 1 : 2
-    ? true
-    : false;
+export type TypeEqual<Target, Value> =
+    (<T>() => T extends Target ? 1 : 2) extends <T>() => T extends Value ? 1 : 2 ? true : false
 
 /**
  * Asserts the `value` type is assignable to the generic `Type`.
@@ -36,7 +31,7 @@ export type TypeEqual<Target, Value> = (<T>() => T extends Target
  * expectType<boolean>(true);
  * ```
  */
-export const expectType = <Type>(_: Type): void => void 0;
+export const expectType = <Type>(_: Type): void => void 0
 
 /**
  * Asserts the `value` type is `never`, i.e. this function should never be called.
@@ -48,5 +43,5 @@ export const expectType = <Type>(_: Type): void => void 0;
  * ```
  */
 export const expectNever = (value: never): never => {
-    throw new TypeError("Unexpected value: " + value);
-};
+    throw new TypeError('Unexpected value: ' + value)
+}

@@ -1,20 +1,29 @@
 #!/usr/bin/env -S bun test
-import {describe, expect, it, mock} from 'bun:test'
-import {HttpMethod, HttpStatus} from '@mpen/http-helpers'
-import {Router} from './router'
-import type {ContextMiddleware, Handler} from './types'
-import {expectType} from './testing/type-assert'
-import {requestIdCtx} from './middleware/request-id-ctx'
+import { describe, expect, it, mock } from 'bun:test'
+import { HttpMethod, HttpStatus } from '@mpen/http-helpers'
+import { Router } from './router'
+import type { ContextMiddleware, Handler } from './types'
+import { expectType } from './testing/type-assert'
+import { requestIdCtx } from './middleware/request-id-ctx'
 
-function makeRequest(path: string, method: HttpMethod = HttpMethod.GET, headers?: HeadersInit): Request {
-    const init: RequestInit = {method}
+function makeRequest(
+    path: string,
+    method: HttpMethod = HttpMethod.GET,
+    headers?: HeadersInit,
+): Request {
+    const init: RequestInit = { method }
     if (headers) init.headers = headers
     return new Request(`https://example.com${path}`, init)
 }
 
 describe('Router', () => {
-    it.skip('works with Bun.serve', async () => {  // failing when ran by Codex for some reason
-        const router = new Router().add({method: HttpMethod.GET, pattern: '/hello', handler: () => new Response('world')})
+    it.skip('works with Bun.serve', async () => {
+        // failing when ran by Codex for some reason
+        const router = new Router().add({
+            method: HttpMethod.GET,
+            pattern: '/hello',
+            handler: () => new Response('world'),
+        })
 
         const server = Bun.serve({
             port: 0,
@@ -43,7 +52,7 @@ describe('Router', () => {
         router.add({
             method: HttpMethod.GET,
             pattern: '/search',
-            handler: ({url}) => new Response(`${url.pathname}?q=${url.searchParams.get('q')}`),
+            handler: ({ url }) => new Response(`${url.pathname}?q=${url.searchParams.get('q')}`),
         })
 
         const response = await router.fetch(makeRequest('/search?q=bun'))
@@ -56,7 +65,7 @@ describe('Router', () => {
         router.add({
             method: HttpMethod.GET,
             pattern: '/users/:id',
-            handler: ({pathParams}) => new Response((pathParams as {id: string}).id),
+            handler: ({ pathParams }) => new Response((pathParams as { id: string }).id),
         })
 
         const response = await router.fetch(makeRequest('/users/42'))
@@ -70,12 +79,12 @@ describe('Router', () => {
         const handler: Handler = async function* () {
             yield 201
             beforeHeader()
-            yield new Headers({'x-stream': 'true'})
+            yield new Headers({ 'x-stream': 'true' })
             afterHeader()
             return new TextEncoder().encode('hello')
         }
         const router = new Router()
-        router.add({method: HttpMethod.GET, pattern: '/', handler})
+        router.add({ method: HttpMethod.GET, pattern: '/', handler })
 
         const getResponse = await router.fetch(makeRequest('/'))
         expect(getResponse.status).toBe(HttpStatus.CREATED)
@@ -92,21 +101,21 @@ describe('Router', () => {
     })
 
     it('defaults to 200 when headers are yielded before status', async () => {
-        const {resolve: resume, promise: deferred} = Promise.withResolvers()
+        const { resolve: resume, promise: deferred } = Promise.withResolvers()
         const handler: Handler = async function* () {
-            yield new Headers({'x-stream': 'true'})
-            yield 499  // ignored
+            yield new Headers({ 'x-stream': 'true' })
+            yield 499 // ignored
             await deferred
             return new TextEncoder().encode('hello')
         }
         const router = new Router()
-        router.add({method: HttpMethod.GET, pattern: '/', handler})
+        router.add({ method: HttpMethod.GET, pattern: '/', handler })
 
         const responsePromise = router.fetch(makeRequest('/', HttpMethod.HEAD))
         const response = await Promise.race([
             responsePromise,
             new Promise<Response>((_, reject) =>
-                setTimeout(() => reject(new Error('response did not resolve')), 50)
+                setTimeout(() => reject(new Error('response did not resolve')), 50),
             ),
         ])
 
@@ -122,7 +131,7 @@ describe('Router', () => {
             method: HttpMethod.GET,
             pattern: '/status',
             handler: async function* () {
-                yield {status: 202}
+                yield { status: 202 }
                 return new TextEncoder().encode('ok')
             },
         })
@@ -130,7 +139,7 @@ describe('Router', () => {
             method: HttpMethod.GET,
             pattern: '/headers',
             handler: async function* () {
-                yield {headers: {'x-meta': 'yes'}}
+                yield { headers: { 'x-meta': 'yes' } }
                 return new TextEncoder().encode('ok')
             },
         })
@@ -138,7 +147,7 @@ describe('Router', () => {
             method: HttpMethod.GET,
             pattern: '/both',
             handler: async function* () {
-                yield {status: 201, headers: {'x-both': 'true'}}
+                yield { status: 201, headers: { 'x-both': 'true' } }
                 return new TextEncoder().encode('ok')
             },
         })
@@ -177,7 +186,7 @@ describe('Router', () => {
     })
 
     it('streams response bodies written after returning a Response', async () => {
-        const {resolve: allowWrite, promise: writeAllowed} = Promise.withResolvers<void>()
+        const { resolve: allowWrite, promise: writeAllowed } = Promise.withResolvers<void>()
         const router = new Router()
         router.add({
             method: HttpMethod.GET,
@@ -198,7 +207,7 @@ describe('Router', () => {
         const response = await Promise.race([
             responsePromise,
             new Promise<Response>((_, reject) =>
-                setTimeout(() => reject(new Error('response did not resolve')), 50)
+                setTimeout(() => reject(new Error('response did not resolve')), 50),
             ),
         ])
 
@@ -208,8 +217,9 @@ describe('Router', () => {
     })
 
     it('exposes request aborts so handlers can stop early', async () => {
-        const {resolve: handlerStarted, promise: handlerStartedPromise} = Promise.withResolvers<void>()
-        const {resolve: allowCheck, promise: allowCheckPromise} = Promise.withResolvers<void>()
+        const { resolve: handlerStarted, promise: handlerStartedPromise } =
+            Promise.withResolvers<void>()
+        const { resolve: allowCheck, promise: allowCheckPromise } = Promise.withResolvers<void>()
         const controller = new AbortController()
         let sawAbort = false
         let finished = false
@@ -217,19 +227,21 @@ describe('Router', () => {
         router.add({
             method: HttpMethod.GET,
             pattern: '/slow',
-            handler: async ({req}) => {
+            handler: async ({ req }) => {
                 handlerStarted()
                 await allowCheckPromise
                 if (req.signal.aborted) {
                     sawAbort = true
-                    return new Response('aborted', {status: HttpStatus.CLIENT_CLOSED_REQUEST})
+                    return new Response('aborted', { status: HttpStatus.CLIENT_CLOSED_REQUEST })
                 }
                 finished = true
                 return new Response('ok')
             },
         })
 
-        const responsePromise = router.fetch(new Request('https://example.com/slow', {signal: controller.signal}))
+        const responsePromise = router.fetch(
+            new Request('https://example.com/slow', { signal: controller.signal }),
+        )
         await handlerStartedPromise
         controller.abort()
         allowCheck()
@@ -370,7 +382,9 @@ describe('Router', () => {
 
         const response = await router.fetch(makeRequest('/cors', HttpMethod.OPTIONS))
         expect(response.status).toBe(HttpStatus.NO_CONTENT)
-        expect(response.headers.get('access-control-allow-methods')).toBe('GET, HEAD, POST, OPTIONS')
+        expect(response.headers.get('access-control-allow-methods')).toBe(
+            'GET, HEAD, POST, OPTIONS',
+        )
         expect(response.headers.has('access-control-allow-origin')).toBe(false)
     })
 
@@ -379,27 +393,35 @@ describe('Router', () => {
         router.add({
             method: HttpMethod.POST,
             pattern: '/json',
-            accept: ['application/json; charset=UTF-8', {type: 'text/plain'}],
+            accept: ['application/json; charset=UTF-8', { type: 'text/plain' }],
             handler: () => new Response('ok'),
         })
 
         const missingHeader = await router.fetch(makeRequest('/json', HttpMethod.POST))
         expect(missingHeader.status).toBe(HttpStatus.NOT_ACCEPTABLE)
 
-        const wrongType = await router.fetch(makeRequest('/json', HttpMethod.POST, {'content-type': 'text/html'}))
+        const wrongType = await router.fetch(
+            makeRequest('/json', HttpMethod.POST, { 'content-type': 'text/html' }),
+        )
         expect(wrongType.status).toBe(HttpStatus.NOT_ACCEPTABLE)
 
         const wrongCharset = await router.fetch(
-            makeRequest('/json', HttpMethod.POST, {'content-type': 'application/json; charset=latin1'})
+            makeRequest('/json', HttpMethod.POST, {
+                'content-type': 'application/json; charset=latin1',
+            }),
         )
         expect(wrongCharset.status).toBe(HttpStatus.NOT_ACCEPTABLE)
 
-        const noCharset = await router.fetch(makeRequest('/json', HttpMethod.POST, {'content-type': 'application/json'}))
+        const noCharset = await router.fetch(
+            makeRequest('/json', HttpMethod.POST, { 'content-type': 'application/json' }),
+        )
         expect(noCharset.status).toBe(HttpStatus.OK)
         expect(await noCharset.text()).toBe('ok')
 
         const normalizedCharset = await router.fetch(
-            makeRequest('/json', HttpMethod.POST, {'content-type': 'application/json; charset=utf8'})
+            makeRequest('/json', HttpMethod.POST, {
+                'content-type': 'application/json; charset=utf8',
+            }),
         )
         expect(normalizedCharset.status).toBe(HttpStatus.OK)
         expect(await normalizedCharset.text()).toBe('ok')
@@ -413,7 +435,9 @@ describe('Router', () => {
             handler: () => new Response('ok'),
         })
 
-        const response = await router.fetch(makeRequest('/plain', HttpMethod.POST, {'content-type': 'text/plain'}))
+        const response = await router.fetch(
+            makeRequest('/plain', HttpMethod.POST, { 'content-type': 'text/plain' }),
+        )
         expect(response.status).toBe(HttpStatus.OK)
         expect(await response.text()).toBe('ok')
     })
@@ -499,7 +523,9 @@ describe('Router.patch', () => {
 
 describe('Router.notFound', () => {
     it('uses the configured notFound handler', async () => {
-        const router = new Router().notFound(() => new Response('missing', {status: HttpStatus.NOT_FOUND}))
+        const router = new Router().notFound(
+            () => new Response('missing', { status: HttpStatus.NOT_FOUND }),
+        )
 
         const response = await router.fetch(makeRequest('/missing'))
 
@@ -522,7 +548,7 @@ describe('Router.notFound', () => {
 describe('Router.methodNotAllowed', () => {
     it('uses the configured methodNotAllowed handler', async () => {
         const router = new Router()
-            .methodNotAllowed(() => new Response('nope', {status: HttpStatus.METHOD_NOT_ALLOWED}))
+            .methodNotAllowed(() => new Response('nope', { status: HttpStatus.METHOD_NOT_ALLOWED }))
             .add({
                 method: HttpMethod.POST,
                 pattern: '/mutate',
@@ -539,7 +565,7 @@ describe('Router.methodNotAllowed', () => {
 describe('Router.notAcceptable', () => {
     it('uses the configured notAcceptable handler', async () => {
         const router = new Router()
-            .notAcceptable(() => new Response('unsupported', {status: HttpStatus.NOT_ACCEPTABLE}))
+            .notAcceptable(() => new Response('unsupported', { status: HttpStatus.NOT_ACCEPTABLE }))
             .add({
                 method: HttpMethod.POST,
                 pattern: '/json',
@@ -557,7 +583,7 @@ describe('Router.notAcceptable', () => {
 describe('Router.internalError', () => {
     it('uses the configured internalError handler', async () => {
         const router = new Router()
-            .internalError(() => new Response('broken', {status: HttpStatus.SERVICE_UNAVAILABLE}))
+            .internalError(() => new Response('broken', { status: HttpStatus.SERVICE_UNAVAILABLE }))
             .add({
                 method: HttpMethod.GET,
                 pattern: '/boom',
@@ -654,7 +680,7 @@ describe('Router.use', () => {
         router.add({
             method: HttpMethod.GET,
             pattern: '/',
-            handler: ctx => {
+            handler: (ctx) => {
                 expectType<string>(ctx.requestId)
                 return new Response('ok')
             },
@@ -662,10 +688,10 @@ describe('Router.use', () => {
     })
 
     it('merges context across middleware lists', () => {
-        const addUser: ContextMiddleware<{userId: string}> = ctx => {
+        const addUser: ContextMiddleware<{ userId: string }> = (ctx) => {
             ctx.userId = 'user-1'
         }
-        const addFlag: ContextMiddleware<{isAdmin: boolean}> = ctx => {
+        const addFlag: ContextMiddleware<{ isAdmin: boolean }> = (ctx) => {
             ctx.isAdmin = true
         }
 
@@ -674,7 +700,7 @@ describe('Router.use', () => {
         router.add({
             method: HttpMethod.GET,
             pattern: '/',
-            handler: ctx => {
+            handler: (ctx) => {
                 expectType<string>(ctx.userId)
                 expectType<boolean>(ctx.isAdmin)
                 return new Response('ok')
@@ -683,7 +709,7 @@ describe('Router.use', () => {
     })
 
     it('passes middleware context through to handlers', async () => {
-        const addRequestIdLocal: ContextMiddleware<{requestId: number}> = async (ctx, next) => {
+        const addRequestIdLocal: ContextMiddleware<{ requestId: number }> = async (ctx, next) => {
             ctx.requestId = 42
             return await next()
         }
@@ -691,7 +717,7 @@ describe('Router.use', () => {
         router.add({
             method: HttpMethod.GET,
             pattern: '/',
-            handler: ctx => new Response(String(ctx.requestId)),
+            handler: (ctx) => new Response(String(ctx.requestId)),
         })
 
         const response = await router.fetch(makeRequest('/'))
@@ -702,16 +728,16 @@ describe('Router.use', () => {
 
 describe('Router.group', () => {
     it('exposes grouped middleware context to handlers', () => {
-        const addUser: ContextMiddleware<{userId: string}> = ctx => {
+        const addUser: ContextMiddleware<{ userId: string }> = (ctx) => {
             ctx.userId = 'user-2'
         }
 
         const router = new Router().use(requestIdCtx())
-        router.group([addUser] as const, group => {
+        router.group([addUser] as const, (group) => {
             group.add({
                 method: HttpMethod.GET,
                 pattern: '/',
-                handler: ctx => {
+                handler: (ctx) => {
                     expectType<string>(ctx.requestId)
                     expectType<string>(ctx.userId)
                     return new Response('ok')
@@ -722,15 +748,17 @@ describe('Router.group', () => {
 
     it('applies parent and grouped middleware in order', async () => {
         const events: string[] = []
-        const log = (label: string): ContextMiddleware => async (_ctx, next) => {
-            events.push(`${label}:before`)
-            const result = await next()
-            events.push(`${label}:after`)
-            return result
-        }
+        const log =
+            (label: string): ContextMiddleware =>
+            async (_ctx, next) => {
+                events.push(`${label}:before`)
+                const result = await next()
+                events.push(`${label}:after`)
+                return result
+            }
         const router = new Router().use(log('root'))
 
-        router.group([log('group')], group => {
+        router.group([log('group')], (group) => {
             group.add({
                 method: HttpMethod.GET,
                 pattern: '/items',

@@ -1,7 +1,7 @@
-import type {EventCallback, HtmlInputElement, OverrideProps} from "../types/utility";
-import {Input} from "./Input";
-import type {ComponentPropsWithRef, ComponentPropsWithoutRef} from "react";
-import {formatStrNumber, numberToString, stringToNumber} from "../util/format";
+import type { EventCallback, HtmlInputElement, OverrideProps } from '../types/utility'
+import { Input } from './Input'
+import type { ComponentPropsWithRef, ComponentPropsWithoutRef } from 'react'
+import { formatStrNumber, numberToString, stringToNumber } from '../util/format'
 
 export type NumberChangeEvent = {
     value: number
@@ -11,17 +11,27 @@ export type NumberChangeEvent = {
 }
 export type NumberChangeEventHandler = EventCallback<NumberChangeEvent>
 
-export type NumberInputProps = OverrideProps<typeof Input, {
-    value?: number
-    placeholder?: string | number
-    onChange?: NumberChangeEventHandler
-    ref?: ComponentPropsWithRef<typeof Input>['ref']
-}, 'type'>
+export type NumberInputProps = OverrideProps<
+    typeof Input,
+    {
+        value?: number
+        placeholder?: string | number
+        onChange?: NumberChangeEventHandler
+        ref?: ComponentPropsWithRef<typeof Input>['ref']
+    },
+    'type'
+>
 
 // TODO: format as a number and return Number type for ev.value
 
-
-export function NumberInput({placeholder, formatOnChange = formatStrNumber, onChange, value, ref, ...otherProps}: NumberInputProps) {
+export function NumberInput({
+    placeholder,
+    formatOnChange = formatStrNumber,
+    onChange,
+    value,
+    ref,
+    ...otherProps
+}: NumberInputProps) {
     const props: ComponentPropsWithoutRef<typeof Input> = {
         inputMode: 'decimal',
         ...otherProps,
@@ -36,13 +46,13 @@ export function NumberInput({placeholder, formatOnChange = formatStrNumber, onCh
         props.placeholder = String(placeholder)
     }
     if (onChange != null) {
-        props.onChange = ev => {
+        props.onChange = (ev) => {
             onChange({
                 ...ev,
-                value: stringToNumber(ev.value)
+                value: stringToNumber(ev.value),
             })
         }
     }
 
-    return <Input {...props} ref={ref}/>
+    return <Input {...props} ref={ref} />
 }

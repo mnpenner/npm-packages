@@ -1,18 +1,16 @@
-import type {UriTemplate, UriParams} from '@mpen/rerouter'
+import type { UriTemplate, UriParams } from '@mpen/rerouter'
 
-import type {HybridResponse} from './hybrid-response'
-import type {BunRequest} from './bun-request'
-
+import type { HybridResponse } from './hybrid-response'
+import type { BunRequest } from './bun-request'
 
 export type Chunkable = string | ArrayBufferLike | TypedArray
 
 export interface BunResponseInterface {
-
     respond(res: Response): void
 
     respond(...args: ConstructorParameters<typeof Response>): void
 
-    status: number | bigint;
+    status: number | bigint
 
     sendHeaders(headers: HeadersInit): void
 
@@ -55,18 +53,22 @@ export interface BunUrl extends URL {
     path: string
 }
 
-export type Handler<P extends UriParams=any> = (req: BunRequest<P>, res: HybridResponse) => void | Promise<void>
+export type Handler<P extends UriParams = any> = (
+    req: BunRequest<P>,
+    res: HybridResponse,
+) => void | Promise<void>
 
 export type CompiledRouteMap<T extends Record<string, any>> = {
-    [R in keyof T]: CompiledRoute<T[R]>;
+    [R in keyof T]: CompiledRoute<T[R]>
 }
 
 export type PatternRouteMap<T extends Record<string, any>> = {
-    [R in keyof T]: PatternRoute<T[R] extends UriParams ? T[R] : UriParams>;
+    [R in keyof T]: PatternRoute<T[R] extends UriParams ? T[R] : UriParams>
 }
 
-
-export function routeMap<T extends Record<string, any>>(arg: CompiledRouteMap<T>) { return arg; }
+export function routeMap<T extends Record<string, any>>(arg: CompiledRouteMap<T>) {
+    return arg
+}
 
 // export type RouteMap = Record<string, CompiledRoute<any>>
 // export type RouteMap = {
@@ -77,7 +79,7 @@ export function createRoute<P extends UriParams>(obj: CompiledRoute<P>) {
     return obj
 }
 
-export interface MethodHandlers<P extends UriParams=any> {
+export interface MethodHandlers<P extends UriParams = any> {
     request?: Handler<P>
     get?: Handler<P>
     head?: Handler<P>
@@ -90,27 +92,35 @@ export interface MethodHandlers<P extends UriParams=any> {
     patch?: Handler<P>
 }
 
-export type TemplateInterface<P extends UriParams> = Pick<UriTemplate<P>, 'match'|'expand'>
+export type TemplateInterface<P extends UriParams> = Pick<UriTemplate<P>, 'match' | 'expand'>
 
-export interface CompiledRoute<P extends UriParams=any> extends MethodHandlers<P> {
+export interface CompiledRoute<P extends UriParams = any> extends MethodHandlers<P> {
     template: TemplateInterface<P>
 }
 
-export interface NamedRoute<P extends UriParams=any> {
-    name: string|undefined
+export interface NamedRoute<P extends UriParams = any> {
+    name: string | undefined
     template: TemplateInterface<P>
     handlers: MethodHandlers<P>
 }
 
-export interface PatternRoute<P extends UriParams=any> extends MethodHandlers<P> {
-    url: string|TemplateInterface<P>
+export interface PatternRoute<P extends UriParams = any> extends MethodHandlers<P> {
+    url: string | TemplateInterface<P>
 }
 
-
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods
-export const HttpRequestMethods = ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH'] as const
-export type HttpRequestMethod = typeof HttpRequestMethods[number]
-
+export const HttpRequestMethods = [
+    'GET',
+    'HEAD',
+    'POST',
+    'PUT',
+    'DELETE',
+    'CONNECT',
+    'OPTIONS',
+    'TRACE',
+    'PATCH',
+] as const
+export type HttpRequestMethod = (typeof HttpRequestMethods)[number]
 
 // export interface ReadableHTTPResponseSinkController {
 //     close: AnyFn,

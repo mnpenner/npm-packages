@@ -1,19 +1,28 @@
-import { isArray, isBigInt, isBoolean, isFunction, isNumberLike, isObject, isRegExp, isString, isStringLike, isSymbol } from '@mpen/is-type'
+import {
+    isArray,
+    isBigInt,
+    isBoolean,
+    isFunction,
+    isNumberLike,
+    isObject,
+    isRegExp,
+    isString,
+    isStringLike,
+    isSymbol,
+} from '@mpen/is-type'
 import { findFunction } from './util'
 
-const nativeFuncs = new Map<Function,string>()
+const nativeFuncs = new Map<Function, string>()
 const isRaw = Symbol('isRaw')
-let wellKnownSymbols: Map<symbol,string>
+let wellKnownSymbols: Map<symbol, string>
 const EMPTY_ARRAY = Object.freeze<any>([])
 
-
-
 function merge<T extends {}>(target: T, ...sources: Array<undefined | Partial<T>>): T {
-    for(const obj of sources) {
-        if(obj) {
-            for(const key of Object.keys(obj)) {
+    for (const obj of sources) {
+        if (obj) {
+            for (const key of Object.keys(obj)) {
                 // @ts-ignore
-                if(obj[key] !== undefined) {
+                if (obj[key] !== undefined) {
                     // @ts-ignore
                     target[key] = obj[key]
                 }
@@ -33,44 +42,49 @@ interface Options {
 }
 
 interface Context {
-    seen: Set<any>,
-    refs: Map<any,string>,  // TODO: combine 'seen' into refs; e.g. {seen: boolean, name:string}
-    opts: Options,
+    seen: Set<any>
+    refs: Map<any, string> // TODO: combine 'seen' into refs; e.g. {seen: boolean, name:string}
+    opts: Options
 }
 
 function jsSerialize(object: any, options?: Partial<Options>): string {
-    return startSerialize(object, options).replace(/<\/(script)/ig, '<\\/$1')
+    return startSerialize(object, options).replace(/<\/(script)/gi, '<\\/$1')
 }
 
 function startSerialize(object: any, options?: Partial<Options>): string {
-    const counts = referenceCount(object);
+    const counts = referenceCount(object)
 
-    let c = 0;
-    const dupes: [any,string][] = [...counts]
-        .filter(x => x[1] > 1)
-        .sort((a,b) => b[1]-a[1])
-        .map(x => [x[0], `$${c++}`])
+    let c = 0
+    const dupes: [any, string][] = [...counts]
+        .filter((x) => x[1] > 1)
+        .sort((a, b) => b[1] - a[1])
+        .map((x) => [x[0], `$${c++}`])
     // console.log(dupes)
     const refs = new Map(dupes)
     // console.log(refs)
 
     const ctx: Context = {
-        seen: new Set,
+        seen: new Set(),
         refs,
-        opts: Object.freeze(merge<Options>({
-            compact: false,
-            safe: true,
-        }, options)),
+        opts: Object.freeze(
+            merge<Options>(
+                {
+                    compact: false,
+                    safe: true,
+                },
+                options,
+            ),
+        ),
     }
 
-    let js = serializeAny(object, ctx);
+    let js = serializeAny(object, ctx)
 
-    if(dupes.length) {
-        let varDecl = dupes.map(x=>x[1]).join(',')
-        if(dupes.length > 1) {
+    if (dupes.length) {
+        let varDecl = dupes.map((x) => x[1]).join(',')
+        if (dupes.length > 1) {
             varDecl = `(${varDecl})`
         }
-        if(js.startsWith('{')) {
+        if (js.startsWith('{')) {
             js = `(${js})`
         }
         return `(${varDecl}=>${js})()`
@@ -81,33 +95,35 @@ function startSerialize(object: any, options?: Partial<Options>): string {
 
 const STRING_REF_MIN_LENGTH = 12
 
-function referenceCount(object: any): Map<any,number> {
-    const m = new Map
+function referenceCount(object: any): Map<any, number> {
+    const m = new Map()
     function r(o: any) {
         const c = m.get(o)
-        if(c)  {
-            m.set(o,c+1)
+        if (c) {
+            m.set(o, c + 1)
             return
         }
-        if(isArray(o) || o instanceof Set) {
-            m.set(o,1)
-            for(const v of o) {
+        if (isArray(o) || o instanceof Set) {
+            m.set(o, 1)
+            for (const v of o) {
                 r(v)
             }
-        } else if(isString(o)) {
-            if(o.length >= STRING_REF_MIN_LENGTH) {  // TODO: make this part of the "compact" option
-                m.set(o,1)
+        } else if (isString(o)) {
+            if (o.length >= STRING_REF_MIN_LENGTH) {
+                // TODO: make this part of the "compact" option
+                m.set(o, 1)
             }
-        } else if(o instanceof Map) {
-            m.set(o,1)
-            for(const v of o.values()) {
+        } else if (o instanceof Map) {
+            m.set(o, 1)
+            for (const v of o.values()) {
                 r(v)
             }
-        } else if(isRegExp(o) || o instanceof Date || isSymbol(o) || isFunction(o)) {
-            m.set(o,1)
-        } else if(isObject(o)) {  // process object last because it'll get caught by some of the above stuff
-            m.set(o,1)
-            for(const k of Reflect.ownKeys(o)) {
+        } else if (isRegExp(o) || o instanceof Date || isSymbol(o) || isFunction(o)) {
+            m.set(o, 1)
+        } else if (isObject(o)) {
+            // process object last because it'll get caught by some of the above stuff
+            m.set(o, 1)
+            for (const k of Reflect.ownKeys(o)) {
                 // @ts-ignore
                 r(o[k])
             }
@@ -117,24 +133,22 @@ function referenceCount(object: any): Map<any,number> {
     return m
 }
 
-
 function isNegativeZero(value: number) {
     // https://stackoverflow.com/a/39280486/65387
     return 1 / value === -Infinity
 }
 
-
 function serializeArray(obj: any[], ctx: Context) {
     const varName = ctx.refs.get(obj)
-    const assign = varName ? `${varName}=` : '';
-    if(obj.length === 0) {
+    const assign = varName ? `${varName}=` : ''
+    if (obj.length === 0) {
         return `${assign}[]`
     }
     const sb: string[] = []
     let hasProp = false
     let isSparse = false
-    for(let i = 0; i < obj.length; ++i) {
-        if(obj.hasOwnProperty(i)) {
+    for (let i = 0; i < obj.length; ++i) {
+        if (obj.hasOwnProperty(i)) {
             hasProp = true
             sb.push(serializeAny(obj[i], ctx))
         } else {
@@ -142,19 +156,19 @@ function serializeArray(obj: any[], ctx: Context) {
             sb.push('')
         }
     }
-    if(!hasProp) {
+    if (!hasProp) {
         return `${assign}new Array(${obj.length})`
     }
-    if(sb[sb.length - 1] === '') {
+    if (sb[sb.length - 1] === '') {
         sb.push('')
     }
     const inner = sb.join(',')
-    if(varName) {
-        if(isSparse) {
+    if (varName) {
+        if (isSparse) {
             // FIXME: this is re-doing work done in the above loop...optimize this
-            const sb=[`(${varName}=new Array(${obj.length})`]
-            for(let i = 0; i < obj.length; ++i) {
-                if(obj.hasOwnProperty(i)) {
+            const sb = [`(${varName}=new Array(${obj.length})`]
+            for (let i = 0; i < obj.length; ++i) {
+                if (obj.hasOwnProperty(i)) {
                     sb.push(`${varName}[${i}]=${serializeAny(obj[i], ctx)}`)
                 }
             }
@@ -168,54 +182,66 @@ function serializeArray(obj: any[], ctx: Context) {
 
 function serializeSet(obj: Set<any>, ctx: Context) {
     const varName = ctx.refs.get(obj)
-    if(obj.size) {
-        if(varName) {
-            return `(${varName}=new Set,${varName}` +Array.from(obj).map(x => `.add(${serializeAny(x,ctx)})`).join('')+')'
+    if (obj.size) {
+        if (varName) {
+            return (
+                `(${varName}=new Set,${varName}` +
+                Array.from(obj)
+                    .map((x) => `.add(${serializeAny(x, ctx)})`)
+                    .join('') +
+                ')'
+            )
         }
         return 'new Set(' + serializeAny(Array.from(obj), ctx) + ')'
     }
-    if(varName) {
+    if (varName) {
         return `${varName}=new Set`
     }
     return 'new Set'
 }
 
-function serializeMap(obj: Map<any,any>, ctx: Context) {
+function serializeMap(obj: Map<any, any>, ctx: Context) {
     const varName = ctx.refs.get(obj)
-    if(obj.size) {
-        if(varName) {
-            return `(${varName}=new Map,${varName}` +Array.from(obj).map(([k,v]) => `.set(${serializeAny(k,ctx)},${serializeAny(v,ctx)})`).join('')+')'
+    if (obj.size) {
+        if (varName) {
+            return (
+                `(${varName}=new Map,${varName}` +
+                Array.from(obj)
+                    .map(([k, v]) => `.set(${serializeAny(k, ctx)},${serializeAny(v, ctx)})`)
+                    .join('') +
+                ')'
+            )
         }
         return 'new Map(' + serializeAny(Array.from(obj), ctx) + ')'
     }
-    if(varName) {
+    if (varName) {
         return `${varName}=new Map`
     }
     return 'new Map'
 }
 
 function serializeDate(obj: Date, ctx: Context) {
-    if(ctx.opts.compact) {
+    if (ctx.opts.compact) {
         return `new Date(${obj.valueOf()})`
     }
-    const parts = [obj.getUTCFullYear(),obj.getUTCMonth(),obj.getUTCDate()]
-    if((+obj % 86400000) !== 0) {
-        parts.push(obj.getUTCHours(),obj.getUTCMinutes(),obj.getUTCSeconds())
+    const parts = [obj.getUTCFullYear(), obj.getUTCMonth(), obj.getUTCDate()]
+    if (+obj % 86400000 !== 0) {
+        parts.push(obj.getUTCHours(), obj.getUTCMinutes(), obj.getUTCSeconds())
         const ms = obj.getUTCMilliseconds()
-        if(ms) {
+        if (ms) {
             parts.push(ms)
         }
     }
     return `new Date(Date.UTC(${parts.join(',')}))`
 }
 
-type SerializerFunc = (obj:any, ctx: Context) => string
+type SerializerFunc = (obj: any, ctx: Context) => string
 
 function wrapSimpleRef(serialize: SerializerFunc) {
     return (obj: any, ctx: Context) => {
         const js = serialize(obj, ctx)
         const varName = ctx.refs.get(obj)
-        if(varName) {
+        if (varName) {
             ctx.seen.add(obj)
             return `${varName}=${js}`
         }
@@ -224,18 +250,18 @@ function wrapSimpleRef(serialize: SerializerFunc) {
 }
 
 function serializeAnySymbol(obj: symbol, ctx: Context) {
-    if(!wellKnownSymbols) {
+    if (!wellKnownSymbols) {
         // @ts-ignore
         wellKnownSymbols = new Map(
             Object.getOwnPropertyNames(Symbol)
                 // @ts-ignore
-                .filter(k => isSymbol(Symbol[k]))
+                .filter((k) => isSymbol(Symbol[k]))
                 // @ts-ignore
-                .map(k => [Symbol[k], k])
+                .map((k) => [Symbol[k], k]),
         )
     }
     const symbolName = wellKnownSymbols.get(obj)
-    if(symbolName) {
+    if (symbolName) {
         return `Symbol.${symbolName}`
     }
     return serializeSymbol(obj, ctx)
@@ -244,13 +270,13 @@ function serializeAnySymbol(obj: symbol, ctx: Context) {
 function serializeNativeFunction(obj: Function, ctx: Context) {
     const cachedPath = nativeFuncs.get(obj)
 
-    if(cachedPath !== undefined) {
+    if (cachedPath !== undefined) {
         return cachedPath
     }
 
     const foundPath = findFunction(global, obj)
 
-    if(foundPath === null) {
+    if (foundPath === null) {
         throw new Error(`Could not determine fully-qualified name of native function '${obj.name}'`)
     }
 
@@ -264,23 +290,24 @@ function serializeNonNativeFunction(obj: Function, ctx: Context) {
 }
 
 function serializeAnyFunction(obj: Function, ctx: Context) {
-    if(/\{\s*\[native code]\s*}$/.test(obj.toString())) {
+    if (/\{\s*\[native code]\s*}$/.test(obj.toString())) {
         return serializeNativeFunction(obj, ctx)
     }
     return serializeNonNativeFunction(obj, ctx)
 }
 
 function serializeBoolean(obj: boolean, ctx: Context) {
-    if(obj) {
+    if (obj) {
         return ctx.opts.compact ? '!0' : 'true'
     }
     return ctx.opts.compact ? '!1' : 'false'
 }
 
 function escapeUnsafeHtml(str: string) {
-    return str.replace(/<!--/g, '\\x3c!--')
-              .replace(/<script/gi, '\\x3cscript')
-              .replace(/-->/g, '--\\x3e')
+    return str
+        .replace(/<!--/g, '\\x3c!--')
+        .replace(/<script/gi, '\\x3cscript')
+        .replace(/-->/g, '--\\x3e')
 }
 
 function serializeRegExp(obj: RegExp, ctx: Context) {
@@ -299,13 +326,13 @@ function serializeNull(obj: null, ctx: Context) {
 }
 
 function maybeFreeze(obj: any, js: string) {
-    if(Object.isFrozen(obj)) {
+    if (Object.isFrozen(obj)) {
         return `Object.freeze(${js})`
     }
-    if(Object.isSealed(obj)) {
+    if (Object.isSealed(obj)) {
         return `Object.seal(${js})`
     }
-    if(!Object.isExtensible(obj)) {
+    if (!Object.isExtensible(obj)) {
         return `Object.preventExtensions(${js})`
     }
     return js
@@ -314,62 +341,62 @@ function maybeFreeze(obj: any, js: string) {
 function serializeAnyObject(obj: any, ctx: Context) {
     const tmp = serializeObject(obj, ctx)
     const name = ctx.refs.get(obj)
-    if(name) {
-        if(Reflect.ownKeys(obj).length) {
-            return `(${name}={},${maybeFreeze(obj,`Object.assign(${name},${tmp})`)})`
+    if (name) {
+        if (Reflect.ownKeys(obj).length) {
+            return `(${name}={},${maybeFreeze(obj, `Object.assign(${name},${tmp})`)})`
         }
-        return `${name}=${maybeFreeze(obj,'{}')}`
+        return `${name}=${maybeFreeze(obj, '{}')}`
     }
-    return maybeFreeze(obj,tmp)
+    return maybeFreeze(obj, tmp)
 }
 
 function serializeAny(obj: any, ctx: Context): string {
-    if(ctx.seen.has(obj) && ctx.refs.has(obj)) {
+    if (ctx.seen.has(obj) && ctx.refs.has(obj)) {
         return ctx.refs.get(obj)!
     }
-    if(isArray(obj)) {
+    if (isArray(obj)) {
         ctx.seen.add(obj)
-        return serializeArray(obj, ctx);
+        return serializeArray(obj, ctx)
     }
-    if(obj instanceof Set) {
+    if (obj instanceof Set) {
         ctx.seen.add(obj)
-        return serializeSet(obj, ctx);
+        return serializeSet(obj, ctx)
     }
-    if(obj instanceof Map) {
+    if (obj instanceof Map) {
         ctx.seen.add(obj)
-        return serializeMap(obj, ctx);
+        return serializeMap(obj, ctx)
     }
-    if(obj instanceof Date) {
-        return wrapSimpleRef(serializeDate)(obj, ctx);
+    if (obj instanceof Date) {
+        return wrapSimpleRef(serializeDate)(obj, ctx)
     }
-    if(isSymbol(obj)) {
-        return wrapSimpleRef(serializeAnySymbol)(obj, ctx);
+    if (isSymbol(obj)) {
+        return wrapSimpleRef(serializeAnySymbol)(obj, ctx)
     }
-    if(isFunction(obj)) {
-        return wrapSimpleRef(serializeAnyFunction)(obj, ctx);
+    if (isFunction(obj)) {
+        return wrapSimpleRef(serializeAnyFunction)(obj, ctx)
     }
-    if(isRegExp(obj)) {
-        return wrapSimpleRef(serializeRegExp)(obj, ctx);
+    if (isRegExp(obj)) {
+        return wrapSimpleRef(serializeRegExp)(obj, ctx)
     }
-    if(isNumberLike(obj)) {
+    if (isNumberLike(obj)) {
         return serializeNumberLike(obj, ctx)
     }
-    if(isBigInt(obj)) {
+    if (isBigInt(obj)) {
         return serializeBigInt(obj, ctx)
     }
-    if(isBoolean(obj)) {
+    if (isBoolean(obj)) {
         return serializeBoolean(obj, ctx)
     }
-    if(isStringLike(obj)) {
+    if (isStringLike(obj)) {
         return serializeStringLike(obj, ctx)
     }
-    if(obj === undefined) {
+    if (obj === undefined) {
         return serializeUndefined(obj, ctx)
     }
-    if(obj === null) {
+    if (obj === null) {
         return serializeNull(obj, ctx)
     }
-    if(isObject(obj)) {
+    if (isObject(obj)) {
         ctx.seen.add(obj)
         return serializeAnyObject(obj, ctx)
     }
@@ -378,14 +405,14 @@ function serializeAny(obj: any, ctx: Context): string {
 
 function serializeNumberLike(obj: number | number, ctx: Context) {
     const tmp = serializeNumber(Number(obj), ctx)
-    if(obj instanceof Number) {
+    if (obj instanceof Number) {
         return `new Number(${tmp})`
     }
     return tmp
 }
 
 function serializeNumber(obj: number, ctx: Context) {
-    switch(obj) {
+    switch (obj) {
         // alternatively, search Object.getOwnPropertyNames(Math).filter(k => typeof Math[k] === 'number')
         case Math.E:
             return 'Math.E'
@@ -414,15 +441,15 @@ function serializeNumber(obj: number, ctx: Context) {
         case -Infinity:
             return ctx.opts.compact ? '1/-0' : '-Infinity'
     }
-    if(isNegativeZero(obj)) return '-0'
-    if(ctx.opts.compact && Number.isInteger(obj) && obj >= 1000000000000) {
+    if (isNegativeZero(obj)) return '-0'
+    if (ctx.opts.compact && Number.isInteger(obj) && obj >= 1000000000000) {
         return '0x' + obj.toString(16)
     }
     return String(obj)
 }
 
 function serializeBigInt(obj: bigint, ctx: Context) {
-    if(ctx.opts.compact && obj >= 1000000000000n) {
+    if (ctx.opts.compact && obj >= 1000000000000n) {
         return '0x' + obj.toString(16) + 'n'
     }
     return `${obj}n`
@@ -430,9 +457,9 @@ function serializeBigInt(obj: bigint, ctx: Context) {
 
 function serializeStringLike(obj: string | string, ctx: Context) {
     const js = doSerializeStringLike(obj, ctx)
-    if(obj.length >= STRING_REF_MIN_LENGTH) {
+    if (obj.length >= STRING_REF_MIN_LENGTH) {
         const varName = ctx.refs.get(obj)
-        if(varName) {
+        if (varName) {
             ctx.seen.add(obj)
             return `${varName}=${js}`
         }
@@ -442,7 +469,7 @@ function serializeStringLike(obj: string | string, ctx: Context) {
 
 function doSerializeStringLike(obj: string | string, ctx: Context) {
     const tmp = serializeString(String(obj), ctx)
-    if(obj instanceof String) {
+    if (obj instanceof String) {
         return `new String(${tmp})`
     }
     return tmp
@@ -451,7 +478,7 @@ function doSerializeStringLike(obj: string | string, ctx: Context) {
 function serializeString(obj: string, ctx: Context) {
     let numDouble = 0
     let numSingle = 0
-    for(let i=0; i<obj.length; i++) {
+    for (let i = 0; i < obj.length; i++) {
         if (obj[i] === '"') ++numDouble
         else if (obj[i] === "'") ++numSingle
     }
@@ -459,42 +486,47 @@ function serializeString(obj: string, ctx: Context) {
     const quote = useSingle ? "'" : '"'
     const quoteCode = useSingle ? 0x27 : 0x22
 
-    let result = quote + Array.from(obj).map(ch => {
-        const cp = ch.codePointAt(0)!
-        switch(cp) {
-            case 0x08:
-                return '\\b'
-            case 0x0C:
-                return '\\f'
-            case 0x0A:
-                return '\\n'
-            case 0x0D:
-                return '\\r'
-            case 0x09:
-                return '\\t'
-            case 0x0B:
-                return ctx.opts.safe ? '\\x0B' : '\\v' // IE < 9 doesn't support \v
-            // case 0x00: return '\\0'; // causes problems if the next character is a digit
-            case quoteCode:
-                return '\\' + ch
-            case 0x5C:
-                return '\\\\'
-            case 0x3C:
-                return ctx.opts.safe ? '\\x3c' : '<'
-            case 0x3E:
-                return ctx.opts.safe ? '\\x3e' : '>'
-        }
-        if(cp >= 32 && cp <= 126) {
-            return ch
-        }
-        if(cp <= 0xFF) {
-            return '\\x' + cp.toString(16).padStart(2, '0')
-        }
-        if(cp <= 0xFFFF) {
-            return '\\u' + cp.toString(16).padStart(4, '0')
-        }
-        return '\\u{' + cp.toString(16) + '}'
-    }).join('') + quote
+    let result =
+        quote +
+        Array.from(obj)
+            .map((ch) => {
+                const cp = ch.codePointAt(0)!
+                switch (cp) {
+                    case 0x08:
+                        return '\\b'
+                    case 0x0c:
+                        return '\\f'
+                    case 0x0a:
+                        return '\\n'
+                    case 0x0d:
+                        return '\\r'
+                    case 0x09:
+                        return '\\t'
+                    case 0x0b:
+                        return ctx.opts.safe ? '\\x0B' : '\\v' // IE < 9 doesn't support \v
+                    // case 0x00: return '\\0'; // causes problems if the next character is a digit
+                    case quoteCode:
+                        return '\\' + ch
+                    case 0x5c:
+                        return '\\\\'
+                    case 0x3c:
+                        return ctx.opts.safe ? '\\x3c' : '<'
+                    case 0x3e:
+                        return ctx.opts.safe ? '\\x3e' : '>'
+                }
+                if (cp >= 32 && cp <= 126) {
+                    return ch
+                }
+                if (cp <= 0xff) {
+                    return '\\x' + cp.toString(16).padStart(2, '0')
+                }
+                if (cp <= 0xffff) {
+                    return '\\u' + cp.toString(16).padStart(4, '0')
+                }
+                return '\\u{' + cp.toString(16) + '}'
+            })
+            .join('') +
+        quote
 
     if (!ctx.opts.safe) {
         result = escapeUnsafeHtml(result)
@@ -503,21 +535,22 @@ function serializeString(obj: string, ctx: Context) {
 }
 
 function serializeObject(obj: any, ctx: Context) {
-    if(obj[isRaw]) {
+    if (obj[isRaw]) {
         return obj.value
     }
-    if(isFunction(obj.toSource)) { // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toSource
+    if (isFunction(obj.toSource)) {
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toSource
         return obj.toSource()
     }
-    if(isFunction(obj.toJSON)) {
+    if (isFunction(obj.toJSON)) {
         return serializeAny(obj.toJSON(), ctx)
     }
-    return serializePlainObject(obj, ctx);
+    return serializePlainObject(obj, ctx)
 }
 
-function serializePlainObject(obj: any,  ctx: Context) {
+function serializePlainObject(obj: any, ctx: Context) {
     const tmp: string[] = []
-    for(const key of Reflect.ownKeys(obj)) {
+    for (const key of Reflect.ownKeys(obj)) {
         tmp.push(serializePropertyName(key, ctx) + ':' + serializeAny(obj[key], ctx))
     }
     return '{' + tmp.join(',') + '}'
@@ -532,9 +565,9 @@ jsSerialize.raw = function raw(jsCode: string) {
 
 function serializeSymbol(sym: symbol, ctx: Context) {
     const key = Symbol.keyFor(sym)
-    if(key === undefined) {
+    if (key === undefined) {
         const m = sym.toString().match(/^Symbol\((.+)\)$/)
-        if(m) {
+        if (m) {
             return `Symbol(${serializeString(m[1], ctx)})`
         }
         return `Symbol()` // not sure if this is worthwhile or not
@@ -543,7 +576,55 @@ function serializeSymbol(sym: symbol, ctx: Context) {
     }
 }
 
-const keywords = new Set(['do', 'if', 'in', 'for', 'let', 'new', 'try', 'var', 'case', 'else', 'enum', 'eval', 'false', 'null', 'this', 'true', 'void', 'with', 'break', 'catch', 'class', 'const', 'super', 'throw', 'while', 'yield', 'delete', 'export', 'import', 'public', 'return', 'static', 'switch', 'typeof', 'default', 'extends', 'finally', 'package', 'private', 'continue', 'debugger', 'function', 'arguments', 'interface', 'protected', 'implements', 'instanceof'])
+const keywords = new Set([
+    'do',
+    'if',
+    'in',
+    'for',
+    'let',
+    'new',
+    'try',
+    'var',
+    'case',
+    'else',
+    'enum',
+    'eval',
+    'false',
+    'null',
+    'this',
+    'true',
+    'void',
+    'with',
+    'break',
+    'catch',
+    'class',
+    'const',
+    'super',
+    'throw',
+    'while',
+    'yield',
+    'delete',
+    'export',
+    'import',
+    'public',
+    'return',
+    'static',
+    'switch',
+    'typeof',
+    'default',
+    'extends',
+    'finally',
+    'package',
+    'private',
+    'continue',
+    'debugger',
+    'function',
+    'arguments',
+    'interface',
+    'protected',
+    'implements',
+    'instanceof',
+])
 
 const propName = /^[$_a-zA-Z][$_a-zA-Z0-9]*$/
 
@@ -552,11 +633,11 @@ function isSafePropName(name: string, ctx: Context) {
 }
 
 function serializePropertyName(name: PropertyKey, ctx: Context) {
-    if(isSymbol(name)) {
+    if (isSymbol(name)) {
         return '[' + serializeSymbol(name, ctx) + ']'
     }
-    if(isStringLike(name)) {
-        if(isSafePropName(name, ctx)) {
+    if (isStringLike(name)) {
+        if (isSafePropName(name, ctx)) {
             return name
         }
         return serializeString(name, ctx)

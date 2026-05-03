@@ -11,7 +11,7 @@ export type DetailedError<T = unknown> = Error & { details?: T }
  * const detailed = toDetailedError(original)
  * console.assert(detailed === original)
  */
-export function toDetailedError<T extends Error>(x: T): T;
+export function toDetailedError<T extends Error>(x: T): T
 
 /**
  * Wrap any non-error value inside a [`DetailedError`]{@link DetailedError}, capturing the original as `details`.
@@ -23,20 +23,20 @@ export function toDetailedError<T extends Error>(x: T): T;
  * const detailed = toDetailedError('oops')
  * console.assert(detailed.details === 'oops')
  */
-export function toDetailedError<T>(x: T): DetailedError<T>;
+export function toDetailedError<T>(x: T): DetailedError<T>
 export function toDetailedError(x: unknown): DetailedError {
-    if(x instanceof Error) return x
+    if (x instanceof Error) return x
 
     let message = 'Rejected Promise'
 
-    if(x !== null && x !== undefined) {
+    if (x !== null && x !== undefined) {
         try {
             const stringified = String(x)
 
-            if(stringified !== '[object Object]') {
+            if (stringified !== '[object Object]') {
                 const firstLine = stringified.split(/\r?\n/, 1)[0]!
                 message += `: ${firstLine}`
-                if(message.length > 200) {
+                if (message.length > 200) {
                     message = message.slice(0, 197) + '...'
                 }
             }

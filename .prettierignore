@@ -1,0 +1,14 @@
+.github/
+.idea/
+**/node_modules/
+**/dist/
+**/docs/
+**/coverage/
+scratch/
+**.tsbuildinfo
+package-lock.json
+
+# Temporary reference material
+packages/react-global-state/examples/
+packages/react-datepicker/public/bundle.js
+packages/progressbar/progress.mjs

@@ -6,8 +6,7 @@ app.help({
     alias: ['a'],
     disableCommand: true,
     disableOption: false,
-})
-.version({
+}).version({
     name: 'versión',
     alias: 'V',
     disableCommand: false,

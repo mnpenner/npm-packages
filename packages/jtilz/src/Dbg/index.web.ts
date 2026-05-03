@@ -1,2 +1,2 @@
-export * from './shared';
-export * from './web';
+export * from './shared'
+export * from './web'

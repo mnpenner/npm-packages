@@ -1,24 +1,22 @@
 {
-  "compilerOptions": {
-    "lib": [
-      "ESNext"
-    ],
-    "types": ["bun-types"],
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "node",
-    "declaration": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "exactOptionalPropertyTypes": true,
-    "skipLibCheck": true,
-    "noUncheckedIndexedAccess": false,
-    "resolveJsonModule": true,
-    "outDir": "./dist"
-  },
-//  "files": [
-//    "./serve.ts"
-//  ],
-//  "include": ["server/**.ts"]
+    "compilerOptions": {
+        "lib": ["ESNext"],
+        "types": ["bun-types"],
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "node",
+        "declaration": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
+        "exactOptionalPropertyTypes": true,
+        "skipLibCheck": true,
+        "noUncheckedIndexedAccess": false,
+        "resolveJsonModule": true,
+        "outDir": "./dist"
+    }
+    //  "files": [
+    //    "./serve.ts"
+    //  ],
+    //  "include": ["server/**.ts"]
 }

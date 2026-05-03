@@ -1,5 +1,5 @@
-import {_INTERNAL_RESULT_MARKER} from './result/type-check.ts'
-import {varDump} from './var-dump.ts'
+import { _INTERNAL_RESULT_MARKER } from './result/type-check.ts'
+import { varDump } from './var-dump.ts'
 
 interface ResultInterface<T, __E> {
     readonly ok: boolean
@@ -17,8 +17,7 @@ interface ResultInterface<T, __E> {
  * console.log(failed.toString()) // Err("boom")
  */
 export class Err<E> implements ResultInterface<never, E> {
-    constructor(readonly error: E) {
-    }
+    constructor(readonly error: E) {}
 
     readonly ok = false
     readonly [_INTERNAL_RESULT_MARKER] = true
@@ -47,8 +46,7 @@ export class Err<E> implements ResultInterface<never, E> {
  * console.log(success.toString()) // Ok(123)
  */
 export class Ok<T> implements ResultInterface<T, never> {
-    constructor(readonly value: T) {
-    }
+    constructor(readonly value: T) {}
 
     readonly ok = true
     readonly [_INTERNAL_RESULT_MARKER] = true
@@ -67,7 +65,7 @@ export class Ok<T> implements ResultInterface<T, never> {
     }
 }
 
-export type Result<T, E> = Ok<T> | Err<E>;
+export type Result<T, E> = Ok<T> | Err<E>
 
 /**
  * Wrap a value in an {@link Ok} result.
@@ -103,7 +101,8 @@ declare global {
     var window: Window | undefined
 }
 
-if(typeof window === 'undefined') {  // Allow tree-shaking for the browser. Maybe. Or at last skip execution.
+if (typeof window === 'undefined') {
+    // Allow tree-shaking for the browser. Maybe. Or at last skip execution.
     const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom')
 
     type InspectOptionsStylized = import('node:util').InspectOptionsStylized
@@ -112,7 +111,7 @@ if(typeof window === 'undefined') {  // Allow tree-shaking for the browser. Mayb
 
     let styleText: StyleTextFn = (_, text) => text
     try {
-        const util = require('node:util')  // Seems to be more compatible than `await import`
+        const util = require('node:util') // Seems to be more compatible than `await import`
 
         if (typeof util.styleText === 'function') {
             styleText = util.styleText
@@ -125,7 +124,12 @@ if(typeof window === 'undefined') {  // Allow tree-shaking for the browser. Mayb
         configurable: true,
         enumerable: false,
         writable: false,
-        value(this: Ok<unknown>, _depth: number, options: InspectOptionsStylized, inspect: InspectFn) {
+        value(
+            this: Ok<unknown>,
+            _depth: number,
+            options: InspectOptionsStylized,
+            inspect: InspectFn,
+        ) {
             return `${styleText('green', 'Ok')}(${inspect(this.value, options)})`
         },
     })
@@ -134,7 +138,12 @@ if(typeof window === 'undefined') {  // Allow tree-shaking for the browser. Mayb
         configurable: true,
         enumerable: false,
         writable: false,
-        value(this: Err<unknown>, _depth: number, options: InspectOptionsStylized, inspect: InspectFn) {
+        value(
+            this: Err<unknown>,
+            _depth: number,
+            options: InspectOptionsStylized,
+            inspect: InspectFn,
+        ) {
             return `${styleText('red', 'Err')}(${inspect(this.error, options)})`
         },
     })

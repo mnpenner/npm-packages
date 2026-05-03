@@ -1,13 +1,13 @@
-import type {ForkOptions,ChildProcess} from 'child_process'
-import { exec} from 'child_process'
+import type { ForkOptions, ChildProcess } from 'child_process'
+import { exec } from 'child_process'
 import * as path from 'path'
-import type {Plugin, RenderedChunk} from 'rollup'
+import type { Plugin, RenderedChunk } from 'rollup'
 import Readline from 'readline'
 import Chalk from 'chalk'
 
 export interface RollupRunOptions extends ForkOptions {
-    args?: readonly string[];
-    options?: ForkOptions;
+    args?: readonly string[]
+    options?: ForkOptions
     memory?: number
 }
 
@@ -15,7 +15,7 @@ const ESCAPE_TIMEOUT = 500
 
 export default function run(opts: RollupRunOptions = {}): Plugin {
     let input: string
-    let proc: ChildProcess|null = null
+    let proc: ChildProcess | null = null
 
     const args = opts.args || []
     const forkOptions = opts.options || opts
@@ -31,7 +31,7 @@ export default function run(opts: RollupRunOptions = {}): Plugin {
         tabSize: 2,
     })
     let cmdPrefix = ''
-    rl.on('line', additionalArgs => {
+    rl.on('line', (additionalArgs) => {
         if (proc) {
             proc.kill()
             proc = null
@@ -53,16 +53,16 @@ export default function run(opts: RollupRunOptions = {}): Plugin {
         })
     })
     rl.on('SIGINT', () => {
-        if(proc) {
+        if (proc) {
             proc.kill()
             proc = null
             console.log(`\n💀 Killed process`)
             rl.prompt(true)
-        } else if(rl.line) {
+        } else if (rl.line) {
             // https://stackoverflow.com/a/16687377/65387
             // https://nodejs.org/dist/latest-v14.x/docs/api/readline.html#readline_tty_keybindings
-            rl.write(null as any, {ctrl:true,name:'e'})
-            rl.write(null as any, {ctrl:true,name:'u'})
+            rl.write(null as any, { ctrl: true, name: 'e' })
+            rl.write(null as any, { ctrl: true, name: 'u' })
         } else {
             // rl.write(null as any, {ctrl:true,name:'c'})
             console.log(`\n🛑 Exiting`)
@@ -97,7 +97,9 @@ export default function run(opts: RollupRunOptions = {}): Plugin {
 
         generateBundle(_outputOptions, _bundle, isWrite) {
             if (!isWrite) {
-                this.error(`@mpen/rollup-plugin-run currently only works with bundles that are written to disk`)
+                this.error(
+                    `@mpen/rollup-plugin-run currently only works with bundles that are written to disk`,
+                )
             }
         },
 
@@ -113,7 +115,7 @@ export default function run(opts: RollupRunOptions = {}): Plugin {
             }
 
             const filePath = path.join(dir, entryFileName)
-            cmdPrefix = `${process.argv[0]} --max-old-space-size=${opts.memory ?? 4*1024} --enable-source-maps -- ${shellescapeArg(filePath)}`
+            cmdPrefix = `${process.argv[0]} --max-old-space-size=${opts.memory ?? 4 * 1024} --enable-source-maps -- ${shellescapeArg(filePath)}`
 
             rl.setPrompt(`${Chalk.bold.green('❯')} ${Chalk.bold.cyan(cmdPrefix)} `)
 
@@ -122,17 +124,18 @@ export default function run(opts: RollupRunOptions = {}): Plugin {
             setTimeout(() => {
                 rl.prompt(true)
             }, 0)
-        }
+        },
     }
 }
 
 function shellescapeArg(s: string) {
     if (!/^[A-Za-z0-9=._\/-]+$/.test(s)) {
-        s = "'" + s.replace(/'/g, "'\\''") + "'";
-        s = s.replace(/^(?:'')+/g, '') // unduplicate single-quote at the beginning
-            .replace(/\\'''/g, "\\'"); // remove non-escaped single-quote if there are enclosed between 2 escaped
+        s = "'" + s.replace(/'/g, "'\\''") + "'"
+        s = s
+            .replace(/^(?:'')+/g, '') // unduplicate single-quote at the beginning
+            .replace(/\\'''/g, "\\'") // remove non-escaped single-quote if there are enclosed between 2 escaped
     }
-    return s;
+    return s
 }
 
 function shellescape(s: string[]) {

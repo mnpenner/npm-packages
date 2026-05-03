@@ -1,6 +1,5 @@
-import {describe, expect, it} from 'bun:test'
-import {base50to10, base10to50} from './numbers'
-
+import { describe, expect, it } from 'bun:test'
+import { base50to10, base10to50 } from './numbers'
 
 describe('numToBase', () => {
     it('non-negative numbers', () => {

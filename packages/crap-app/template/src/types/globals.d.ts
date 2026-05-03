@@ -1,4 +1,4 @@
-import type {css} from 'styled-components';
+import type { css } from 'styled-components'
 
 declare global {
     const React: typeof React
@@ -15,6 +15,6 @@ declare module 'react' {
          *
          * @see https://www.styled-components.com/docs/api#css-prop
          */
-        css?: string|ReturnType<typeof css>
+        css?: string | ReturnType<typeof css>
     }
 }

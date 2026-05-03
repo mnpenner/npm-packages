@@ -1,5 +1,5 @@
 /** @jsxImportSource @mpen/jsxhtml */
-import type {InputAttributes} from '../htmlspec/elements'
+import type { InputAttributes } from '../htmlspec/elements'
 
 /**
  * `<input type="date">`.

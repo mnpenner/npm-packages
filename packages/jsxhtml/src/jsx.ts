@@ -3,7 +3,6 @@
 // see https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/react/jsx-runtime.d.ts
 // or https://github.com/kitajs/html/blob/master/jsx.d.ts#L593
 
-
 // declare namespace JSX {
 //     type IntrinsicElements = import('./htmlspec/IntrinsicElements').IntrinsicElements
 //     type Element = import('./jsx-node').JsxNode
@@ -15,36 +14,32 @@
 //     }
 // }
 
-import type {JsxNode} from './jsx-node'
+import type { JsxNode } from './jsx-node'
 import type * as instrinsic from './htmlspec/IntrinsicElements'
 
+export type ComponentType<P = {}> = FunctionComponent<P>
 
-export type ComponentType<P = {}> = FunctionComponent<P>;
-
-export type JsxChild = string | number | boolean | null | undefined | JsxNode | JsxNode[];
-
+export type JsxChild = string | number | boolean | null | undefined | JsxNode | JsxNode[]
 
 export interface FunctionComponent<P = {}> {
-    (props: P): JsxChild;
-    displayName?: string | undefined;
+    (props: P): JsxChild
+    displayName?: string | undefined
 }
-
 
 export declare namespace JSX {
     type ElementType<P = any, Tag extends keyof IntrinsicElements = keyof IntrinsicElements> =
         | { [K in Tag]: P extends IntrinsicElements[K] ? K : never }[Tag]
-        | ComponentType<P>;
+        | ComponentType<P>
     interface Element extends JsxNode {}
     type ElementClass = never
     interface ElementAttributesProperty {
-        props: {};
+        props: {}
     }
     interface ElementChildrenAttribute {
-        children: {};
+        children: {}
     }
 
-
-    type LibraryManagedAttributes<Component, Props> = Props;
+    type LibraryManagedAttributes<Component, Props> = Props
 
     interface IntrinsicAttributes {
         // key?: Key | null | undefined;
@@ -60,4 +55,4 @@ export declare namespace JSX {
     interface IntrinsicElements extends instrinsic.IntrinsicElements {}
 }
 
-export const JSX = {}  // Bun tries to import this for some reason
+export const JSX = {} // Bun tries to import this for some reason

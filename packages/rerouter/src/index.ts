@@ -1,1 +1,1 @@
-export * from "@mpen/uri-template";
+export * from '@mpen/uri-template'

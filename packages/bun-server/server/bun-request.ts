@@ -1,7 +1,5 @@
-import type {HttpRequestMethod} from './server-api'
-import type {UriParams} from '@mpen/rerouter'
-
-
+import type { HttpRequestMethod } from './server-api'
+import type { UriParams } from '@mpen/rerouter'
 
 interface BunUrl<P extends UriParams> extends URL {
     params: P
@@ -9,10 +7,7 @@ interface BunUrl<P extends UriParams> extends URL {
 }
 
 class BunBody {
-
-    constructor(private readonly req: Request) {
-
-    }
+    constructor(private readonly req: Request) {}
 
     stream() {
         return this.req.body

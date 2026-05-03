@@ -1,5 +1,5 @@
-import type {CommonAttributes} from '../attributes/ElementAttributes'
-import type {ElementForTag} from './element-types'
+import type { CommonAttributes } from '../attributes/ElementAttributes'
+import type { ElementForTag } from './element-types'
 
 export interface OutputAttributes extends CommonAttributes<ElementForTag<'output'>> {
     /**
@@ -15,4 +15,3 @@ export interface OutputAttributes extends CommonAttributes<ElementForTag<'output
      */
     name?: string
 }
-

@@ -1,12 +1,11 @@
-import type {CommonAttributes} from '../attributes/ElementAttributes'
-import type {ElementForTag} from './element-types'
-import type {Numeric} from '../attributes/StandardGlobalAttributes'
+import type { CommonAttributes } from '../attributes/ElementAttributes'
+import type { ElementForTag } from './element-types'
+import type { Numeric } from '../attributes/StandardGlobalAttributes'
 
 /**
  * All standard attributes for the `<button>` HTML element.
  */
 export interface ButtonAttributes extends CommonAttributes<ElementForTag<'button'>> {
-
     /**
      * Specifies the action to be performed on an element being controlled by a control `<button ` specified via the `commandfor` attribute. The possible values are: The button will show a dialog as modal. If the dialog is already modal, no action will be taken. This is a declarative equivalent of calling the HTMLDialogElement.showModal() method on the `<dialog ` element. The button will close a dialog element. If the dialog is already closed, no action will be taken. This is a declarative equivalent of calling the HTMLDialogElement.close() method on the `<dialog ` element. The button will trigger a cancel event on a dialog element to request that the browser dismiss it, followed by a close event. This differs from the `close` command in that authors can call Event.preventDefault() on the `cancel` event to prevent the `<dialog ` from closing. If the dialog is already closed, no action will be taken. This is a declarative equivalent of calling the HTMLDialogElement.requestClose() method on the `<dialog ` element. The button will show a hidden popover. If you try to show an already showing popover, no action will be taken. See Popover API for more details. This is equivalent to setting a value of `show` for the `popovertargetaction` attribute, and also provides a declarative equivalent to calling the HTMLElement.showPopover() method on the popover element. The button will hide a showing popover. If you try to hide an already hidden popover, no action will be taken. See Popover API for more details. This is equivalent to setting a value of `hide` for the `popovertargetaction` attribute, and also provides a declarative equivalent to calling the HTMLElement.hidePopover() method on the popover element. The button will toggle a popover between showing and hidden. If the popover is hidden, it will be shown; if the popover is showing, it will be hidden. See Popover API for more details. This is equivalent to setting a value of `toggle` for the `popovertargetaction` attribute, and also provides a declarative equivalent to calling the HTMLElement.togglePopover() method on the popover element. This attribute can represent custom values that are prefixed with a two hyphen characters (`--`). Buttons with a custom value will dispatch the CommandEvent on the controlled element.
      *
@@ -18,7 +17,13 @@ export interface ButtonAttributes extends CommonAttributes<ElementForTag<'button
      * - "hide-popover"
      * - "toggle-popover"
      */
-    command?: '"show-modal"' | '"close"' | '"request-close"' | '"show-popover"' | '"hide-popover"' | '"toggle-popover"'
+    command?:
+        | '"show-modal"'
+        | '"close"'
+        | '"request-close"'
+        | '"show-popover"'
+        | '"hide-popover"'
+        | '"toggle-popover"'
 
     /**
      * Turns a `<button ` element into a command button, controlling a given interactive element by issuing the command specified in the button's `command` attribute. The `commandfor` attribute takes the ID of the element to control as its value. This is a more general version of `popovertarget`.
@@ -117,4 +122,3 @@ export interface ButtonAttributes extends CommonAttributes<ElementForTag<'button
      */
     value?: string | Numeric
 }
-

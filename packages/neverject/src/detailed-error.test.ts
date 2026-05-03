@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bun test
-import {describe, expect, it} from "bun:test"
-import {toDetailedError} from './detailed-error.ts'
+import { describe, expect, it } from 'bun:test'
+import { toDetailedError } from './detailed-error.ts'
 
 describe('toDetailedError stringification', () => {
     it('keeps a short single-line reason without ellipsis', () => {

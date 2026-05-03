@@ -1,12 +1,12 @@
-import {promisify} from 'node:util'
-import {execFile} from 'node:child_process'
-import {createInterface} from 'node:readline'
-import {Process, StreamIn, StreamOut} from './process.ts'
+import { promisify } from 'node:util'
+import { execFile } from 'node:child_process'
+import { createInterface } from 'node:readline'
+import { Process, StreamIn, StreamOut } from './process.ts'
 
 const execFileAsync = promisify(execFile)
 
 export async function execPodman(args: string[]): Promise<string> {
-    const {stdout} = await execFileAsync('podman', args)
+    const { stdout } = await execFileAsync('podman', args)
     return stdout
 }
 
@@ -29,7 +29,7 @@ export async function execPodmanStreamingWithStdoutLines(
         stderr: StreamOut.TEE,
     })
 
-    const rl = createInterface({input: proc.stdout, crlfDelay: Infinity})
+    const rl = createInterface({ input: proc.stdout, crlfDelay: Infinity })
     rl.on('line', onLine)
 
     try {

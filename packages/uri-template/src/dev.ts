@@ -1,4 +1,3 @@
-
 // https://t-code.pl/blog/2016/11/Towards-server-side-routing-with-URI-Templates/
 // https://www.npmjs.com/package/urijs
 // https://tools.ietf.org/html/rfc6570
@@ -36,8 +35,7 @@
 //     // console.log('uri-templates',k,match2);
 // }
 
-
-import {UriTemplate} from "./uri-template"
+import { UriTemplate } from './uri-template'
 
 // const templ = new UriTemplate('/schedule/{year:int:4}-{month:int:2}-{day:int:2}{?foo,q*}');
 // log(templ);
@@ -56,16 +54,18 @@ import {UriTemplate} from "./uri-template"
     console.log(templ.match('/foo/bar/here'))
 }
 {
-    const templ = new UriTemplate<{firstName:string,lastName:string}>('/people/{firstName}-{lastName}/SSN')
+    const templ = new UriTemplate<{ firstName: string; lastName: string }>(
+        '/people/{firstName}-{lastName}/SSN',
+    )
     // console.log(templ);
     console.log(templ.match('/people/Björk-Guðmundsdóttir/SSN'))
-    console.log(templ.expand({firstName: 'Mark', lastName: "Penner"}))
+    console.log(templ.expand({ firstName: 'Mark', lastName: 'Penner' }))
 }
 {
     const templ = new UriTemplate('/query{?firstName,lastName}')
     // console.log(templ);
     console.log(templ.match('/query?firstName=Bj%c3%b6rk&lastName=Gu%c3%b0mundsd%c3%b3ttir'))
-    console.log(templ.expand({firstName: 'Mark', lastName: 'Penner'}))
+    console.log(templ.expand({ firstName: 'Mark', lastName: 'Penner' }))
 }
 {
     const templ = new UriTemplate('weather/{state}/{city}?forecast={day}')

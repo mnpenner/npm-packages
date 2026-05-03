@@ -1,13 +1,19 @@
 type NumericTypedArray =
-    Int8Array | Uint8Array | Uint8ClampedArray |
-    Int16Array | Uint16Array |
-    Int32Array | Uint32Array |
-    Float32Array | Float64Array
+    | Int8Array
+    | Uint8Array
+    | Uint8ClampedArray
+    | Int16Array
+    | Uint16Array
+    | Int32Array
+    | Uint32Array
+    | Float32Array
+    | Float64Array
 
 type BigIntTypedArray = BigInt64Array | BigUint64Array
 
 function isNumericTypedArray(view: ArrayBufferView): view is NumericTypedArray {
-    return view instanceof Int8Array ||
+    return (
+        view instanceof Int8Array ||
         view instanceof Uint8Array ||
         view instanceof Uint8ClampedArray ||
         view instanceof Int16Array ||
@@ -16,6 +22,7 @@ function isNumericTypedArray(view: ArrayBufferView): view is NumericTypedArray {
         view instanceof Uint32Array ||
         view instanceof Float32Array ||
         view instanceof Float64Array
+    )
 }
 
 function isBigIntTypedArray(view: ArrayBufferView): view is BigIntTypedArray {
@@ -26,8 +33,7 @@ function hasCustomToString(value: object): value is { toString(): string } {
     const toString = (value as { toString?: unknown }).toString
     if (typeof toString !== 'function') return false
 
-    return toString !== Object.prototype.toString &&
-        toString !== Array.prototype.toString
+    return toString !== Object.prototype.toString && toString !== Array.prototype.toString
 }
 
 export function varDump(payload: unknown): string {
@@ -52,7 +58,7 @@ export function varDump(payload: unknown): string {
     // Map
     if (payload instanceof Map) {
         const entries = Array.from(payload.entries()).map(
-            ([k, v]) => `${varDump(k)}=>${varDump(v)}`
+            ([k, v]) => `${varDump(k)}=>${varDump(v)}`,
         )
         return `Map{${entries.join(',')}}`
     }
@@ -90,7 +96,9 @@ export function varDump(payload: unknown): string {
         if (hasCustomToString(payload)) {
             try {
                 return payload.toString()
-            } catch { /* ignore */ }
+            } catch {
+                /* ignore */
+            }
         }
 
         if (Array.isArray(payload)) {
@@ -101,7 +109,7 @@ export function varDump(payload: unknown): string {
         const proto = Object.getPrototypeOf(payload)
         if (proto === Object.prototype || proto === null) {
             const entries = Object.entries(payload).map(
-                ([key, value]) => `${JSON.stringify(key)}:${varDump(value)}`
+                ([key, value]) => `${JSON.stringify(key)}:${varDump(value)}`,
             )
             return `{${entries.join(',')}}`
         }
@@ -109,10 +117,15 @@ export function varDump(payload: unknown): string {
         try {
             const json = JSON.stringify(payload)
             if (json !== undefined) return json
-        } catch { /* ignore */ }
+        } catch {
+            /* ignore */
+        }
     }
 
     // final fallback
-    try { return String(payload) }
-    catch { return '[unstringifiable]' }
+    try {
+        return String(payload)
+    } catch {
+        return '[unstringifiable]'
+    }
 }

@@ -1,2 +1,1 @@
-
-declare module 'uri-template-lite';
+declare module 'uri-template-lite'

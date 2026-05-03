@@ -1,6 +1,6 @@
-import {SKIP, filterMap} from '../Col';
-import {isFunction} from '@mpen/is-type';
-import type {IDictionary} from '../interfaces';
+import { SKIP, filterMap } from '../Col'
+import { isFunction } from '@mpen/is-type'
+import type { IDictionary } from '../interfaces'
 
 /**
  * Decorates all the functions in a module.
@@ -10,8 +10,10 @@ import type {IDictionary} from '../interfaces';
  * @returns A new object with wrapped methods.
  */
 export function wrapMethods(
-    module: IDictionary<any>, 
-    wrapFn: (fn: (...args: any[]) => any) => (...args: any[]) => any
+    module: IDictionary<any>,
+    wrapFn: (fn: (...args: any[]) => any) => (...args: any[]) => any,
 ): IDictionary<(...args: any[]) => any> {
-    return filterMap<any, (...args: any[]) => any>(module, v => isFunction(v) ? wrapFn(v) : SKIP);
+    return filterMap<any, (...args: any[]) => any>(module, (v) =>
+        isFunction(v) ? wrapFn(v) : SKIP,
+    )
 }

@@ -1,1 +1,1 @@
-export type {Route, RouteMatch, RouteMeta, RouteSchema} from '../types'
+export type { Route, RouteMatch, RouteMeta, RouteSchema } from '../types'

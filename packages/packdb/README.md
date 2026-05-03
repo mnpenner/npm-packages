@@ -5,19 +5,19 @@
 Similar to [lowdb](https://github.com/typicode/lowdb), but even simpler.
 
 ```js
-const PackDB = require('../PackDB');
+const PackDB = require('../PackDB')
 
-const {data} = new PackDB(`db.json`);
+const { data } = new PackDB(`db.json`)
 
 // Set some defaults if your JSON file is empty
-if(!data.posts) data.posts = [];
-if(!data.user) data.user = {};
+if (!data.posts) data.posts = []
+if (!data.user) data.user = {}
 
 // Add a post
-data.posts.push({id: 1, title: 'packdb is awesome'});
+data.posts.push({ id: 1, title: 'packdb is awesome' })
 
 // Set a user
-data.user = {name: 'mpen'};
+data.user = { name: 'mpen' }
 ```
 
 Data is automatically saved to `db.json` whenever<sup>1</sup> you mutate `data`:
@@ -36,10 +36,7 @@ Data is automatically saved to `db.json` whenever<sup>1</sup> you mutate `data`:
 }
 ```
 
-
-
 You can use any library you like (or none at all) to manipulate `data` -- it's just a plain old JavaScript object<sup>2</sup>.
-
 
 ## Why PackDB?
 
@@ -53,12 +50,11 @@ You can use any library you like (or none at all) to manipulate `data` -- it's j
 
 - `filename` string -- where to load/save data
 - `options` object
-  - `serialize` function used to serialize data. Is passed root `data` object whenever a write occurs. Should return a string or Buffer. Defaults to `JSON.stringify`
-  - `deserialize` function used to deserialize data after it's read from disk. Is passed a `Buffer`. Should return an `object`. Defaults to `JSON.parse`
-  - `minWait` number. "Debounce" time, measured in milliseconds (ms). i.e., the amount of time it will wait for more mutations to occur before writing the data back to disk. Defaults to `10`.
-  - `maxWait` number. The maximum amount of time to wait between writes if a mutation has occurred. Defaults to `5000`.
-  
-  
+    - `serialize` function used to serialize data. Is passed root `data` object whenever a write occurs. Should return a string or Buffer. Defaults to `JSON.stringify`
+    - `deserialize` function used to deserialize data after it's read from disk. Is passed a `Buffer`. Should return an `object`. Defaults to `JSON.parse`
+    - `minWait` number. "Debounce" time, measured in milliseconds (ms). i.e., the amount of time it will wait for more mutations to occur before writing the data back to disk. Defaults to `10`.
+    - `maxWait` number. The maximum amount of time to wait between writes if a mutation has occurred. Defaults to `5000`.
+
 **`PackDB.write()`**
 
 - Queue up a write if you don't think the Proxy is doing its job (please [file an issue](https://bitbucket.org/mnpenner/packdb/issues) if this is the case).
@@ -73,7 +69,7 @@ You can use any library you like (or none at all) to manipulate `data` -- it's j
 
 ## Future
 
-With some slight modifications, PackDB could be made to work with [localStorage](https://developer.mozilla.org/en/docs/Web/API/Window/localStorage) or other storage mechanisms. For now, it's Node only. 
+With some slight modifications, PackDB could be made to work with [localStorage](https://developer.mozilla.org/en/docs/Web/API/Window/localStorage) or other storage mechanisms. For now, it's Node only.
 
 ---
 

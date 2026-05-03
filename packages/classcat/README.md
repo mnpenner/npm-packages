@@ -9,7 +9,7 @@ Conditionally concatenate class names.
 - runtime: bun 1.3.13 (x64-win32)
 
 | cc              | avg              | min         | p75         | p99         | max         |
-|-----------------|------------------|-------------|-------------|-------------|-------------|
+| --------------- | ---------------- | ----------- | ----------- | ----------- | ----------- |
 | strings         | ` 37.39 ns/iter` | ` 31.57 ns` | ` 34.16 ns` | `188.72 ns` | `270.31 ns` |
 | array           | `103.82 ns/iter` | ` 89.89 ns` | `105.76 ns` | `261.72 ns` | `319.73 ns` |
 | object          | ` 45.82 ns/iter` | ` 38.40 ns` | ` 42.65 ns` | `198.88 ns` | `249.12 ns` |
@@ -21,4 +21,3 @@ Conditionally concatenate class names.
 - [classcat](https://npmx.dev/package/classcat)
 - [classnames](https://npmx.dev/package/classnames)
 - [clsx](https://npmx.dev/package/clsx)
-

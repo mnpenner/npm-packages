@@ -5,38 +5,38 @@ export interface ClassArray extends Array<ClassValue> {}
 export type ClassObject = Record<string, any>
 
 function appendClass(out: string, value: ClassValue): string {
-    if(typeof value === "string") {
-        return value === "" ? out : out + (out && " ") + value
+    if (typeof value === 'string') {
+        return value === '' ? out : out + (out && ' ') + value
     }
 
-    if(typeof value === "number") {
-        return out + (out && " ") + value
+    if (typeof value === 'number') {
+        return out + (out && ' ') + value
     }
 
-    if(value == null || typeof value === "boolean") return out
+    if (value == null || typeof value === 'boolean') return out
 
-    if(Array.isArray(value)) {
-        for(let i = 0; i < value.length; ++i) {
+    if (Array.isArray(value)) {
+        for (let i = 0; i < value.length; ++i) {
             out = appendClass(out, value[i])
         }
 
         return out
     }
 
-    for(const key in value) {
-        if(!Object.hasOwn(value, key)) continue
+    for (const key in value) {
+        if (!Object.hasOwn(value, key)) continue
 
         const enabled = value[key]
-        if(enabled) out += (out && " ") + key
+        if (enabled) out += (out && ' ') + key
     }
 
     return out
 }
 
 function arrayToClass(values: ClassArray): string {
-    let out = ""
+    let out = ''
 
-    for(let i = 0; i < values.length; ++i) {
+    for (let i = 0; i < values.length; ++i) {
         out = appendClass(out, values[i])
     }
 

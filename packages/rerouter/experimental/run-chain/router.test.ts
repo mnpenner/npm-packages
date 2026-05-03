@@ -1,10 +1,15 @@
 #!/usr/bin/env -S bun test
-import {describe, it, expect} from "bun:test"
+import { describe, it, expect } from 'bun:test'
 // Use updated Handlers type
 // Use RequestParams from router
-import {Router} from "./router"
-import type {RequestHandler, RequestMiddleware, RequestContext, MatchedPath} from './run-handler-types'
-import {ANY_PATH} from "./constants"
+import { Router } from './router'
+import type {
+    RequestHandler,
+    RequestMiddleware,
+    RequestContext,
+    MatchedPath,
+} from './run-handler-types'
+import { ANY_PATH } from './constants'
 
 const enum HttpStatus {
     GATEWAY_TIMEOUT = 504,
@@ -15,7 +20,7 @@ const enum ErrorCode {
 }
 
 function sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms))
+    return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 const addAccept: RequestMiddleware = (_ctx, next) => next()
@@ -27,11 +32,16 @@ function timeout(ms: number): RequestMiddleware {
         const timeoutResponse = new Promise<Response>((resolve) => {
             timer = setTimeout(() => {
                 ;(ctx as any).aborted = true
-                resolve(Response.json({
-                    ok: false,
-                    code: ErrorCode.TIMEOUT,
-                    userMessage: "Response timed out.",
-                }, {status: HttpStatus.GATEWAY_TIMEOUT}))
+                resolve(
+                    Response.json(
+                        {
+                            ok: false,
+                            code: ErrorCode.TIMEOUT,
+                            userMessage: 'Response timed out.',
+                        },
+                        { status: HttpStatus.GATEWAY_TIMEOUT },
+                    ),
+                )
             }, ms)
         })
 
@@ -42,26 +52,22 @@ function timeout(ms: number): RequestMiddleware {
     }
 }
 
-
 // --- Test Context & User Types ---
-type TestUser = { id: number; name: string };
-type TestContext = { user?: TestUser; traceId?: string };
-
+type TestUser = { id: number; name: string }
+type TestContext = { user?: TestUser; traceId?: string }
 
 function simpleHandler(response: BodyInit | null, status?: number): RequestHandler {
-    return () => new Response(response, {status})
+    return () => new Response(response, { status })
 }
 
-
-describe("Router", () => {
-
+describe('Router', () => {
     // --- Reusable Test Handlers ---
     const traceHandlers: RequestMiddleware<TestContext> = async (ctx, next) => {
         ctx.traceId = Math.random().toString(36).substring(2)
         await next()
     }
     const authHandlers: RequestMiddleware<TestContext> = async (ctx, next) => {
-        ctx.user = {id: 1, name: 'Admin'}
+        ctx.user = { id: 1, name: 'Admin' }
         await next()
     }
     const rateLimitHandlers: RequestMiddleware<TestContext> = async (ctx, next) => {
@@ -70,20 +76,20 @@ describe("Router", () => {
     const corsHandlers: RequestMiddleware = (ctx, next) => next()
 
     // --- Reusable Test Handlers ---
-    const handlerA = simpleHandler("Handler A")
-    const handlerB = simpleHandler("Handler B")
-    const handlerC = simpleHandler("Handler C")
-    const handlerD = simpleHandler("Handler D") // CORS OPTIONS handler
-    const handlerE = simpleHandler("Handler E")
+    const handlerA = simpleHandler('Handler A')
+    const handlerB = simpleHandler('Handler B')
+    const handlerC = simpleHandler('Handler C')
+    const handlerD = simpleHandler('Handler D') // CORS OPTIONS handler
+    const handlerE = simpleHandler('Handler E')
     const optionsHandler = simpleHandler(null, 204)
 
     // --- Basic Tests ---
-    it("handle basic GET request", () => {
+    it('handle basic GET request', () => {
         const router = new Router().get('/foo', handlerA)
         expect(router.match('GET', '/foo')?.handlers).toEqual([handlerA])
     })
 
-    it("returns router-level handlers", () => {
+    it('returns router-level handlers', () => {
         const router = new Router<TestContext>([traceHandlers]).get('/foo', handlerA)
         expect(router.match('GET', '/foo')?.handlers).toEqual([traceHandlers, handlerA])
     })
@@ -92,60 +98,75 @@ describe("Router", () => {
     it('stacks handlers correctly via use()', () => {
         const router = new Router<TestContext>([traceHandlers])
             .get('/login', handlerA)
-            .use([authHandlers], r => r
-                .post('/upload', handlerB)
-                .use([rateLimitHandlers], r => r
-                    .patch('/limit', handlerC)
-                )
+            .use([authHandlers], (r) =>
+                r
+                    .post('/upload', handlerB)
+                    .use([rateLimitHandlers], (r) => r.patch('/limit', handlerC)),
             )
             .post('/logout', handlerD) // Assuming D was intended logout handler
 
-        expect(router.match('GET', '/login')?.handlers)
-            .toEqual([traceHandlers, handlerA])
-        expect(router.match('POST', '/upload')?.handlers)
-            .toEqual([traceHandlers, authHandlers, handlerB])
-        expect(router.match('PATCH', '/limit')?.handlers)
-            .toEqual([traceHandlers, authHandlers, rateLimitHandlers, handlerC])
-        expect(router.match('POST', '/logout')?.handlers)
-            .toEqual([traceHandlers, handlerD])
+        expect(router.match('GET', '/login')?.handlers).toEqual([traceHandlers, handlerA])
+        expect(router.match('POST', '/upload')?.handlers).toEqual([
+            traceHandlers,
+            authHandlers,
+            handlerB,
+        ])
+        expect(router.match('PATCH', '/limit')?.handlers).toEqual([
+            traceHandlers,
+            authHandlers,
+            rateLimitHandlers,
+            handlerC,
+        ])
+        expect(router.match('POST', '/logout')?.handlers).toEqual([traceHandlers, handlerD])
     })
 
-    it("removes falsy handlers values", () => {
+    it('removes falsy handlers values', () => {
         const isDev = false
         const devLogger: RequestMiddleware | false = isDev && traceHandlers
         const prodRateLimit: RequestMiddleware | false = !isDev && rateLimitHandlers
-        const router = new Router([devLogger])
-            .get('/foo', [prodRateLimit, handlerA])
+        const router = new Router([devLogger]).get('/foo', [prodRateLimit, handlerA])
         expect(router.match('GET', '/foo')?.handlers).toEqual([rateLimitHandlers, handlerA])
     })
 
     // --- Mounting Tests (Should pass now) ---
     it('mounts routes under a prefix', () => {
-        const getMeHandler: RequestMiddleware<TestContext> = (ctx: RequestContext<TestContext>) => Response.json(ctx.user)
-        const postItemsHandler: RequestMiddleware = (rp, next) => new Response('created', {status: 201})
+        const getMeHandler: RequestMiddleware<TestContext> = (ctx: RequestContext<TestContext>) =>
+            Response.json(ctx.user)
+        const postItemsHandler: RequestMiddleware = (rp, next) =>
+            new Response('created', { status: 201 })
 
-        const router = new Router<TestContext>([traceHandlers])
-            .get('/login', handlerA)
-            .mount('/api', (r: Router<TestContext>) => r
-                .use([authHandlers], r => r.get('/me', getMeHandler)) // Sub-path is '/me'
-                .post('/items', postItemsHandler) // Sub-path is '/items'
-            )
+        const router = new Router<TestContext>([traceHandlers]).get('/login', handlerA).mount(
+            '/api',
+            (r: Router<TestContext>) =>
+                r
+                    .use([authHandlers], (r) => r.get('/me', getMeHandler)) // Sub-path is '/me'
+                    .post('/items', postItemsHandler), // Sub-path is '/items'
+        )
 
         expect(router.match('GET', '/login')?.handlers).toEqual([traceHandlers, handlerA])
         // Expecting merged path '/api/me'
-        expect(router.match('GET', '/api/me')?.handlers).toEqual([traceHandlers, authHandlers, getMeHandler])
+        expect(router.match('GET', '/api/me')?.handlers).toEqual([
+            traceHandlers,
+            authHandlers,
+            getMeHandler,
+        ])
         // Expecting merged path '/api/items'
-        expect(router.match('POST', '/api/items')?.handlers).toEqual([traceHandlers, postItemsHandler])
+        expect(router.match('POST', '/api/items')?.handlers).toEqual([
+            traceHandlers,
+            postItemsHandler,
+        ])
         expect(router.match('GET', '/api/login')).toBeNull()
         expect(router.match('GET', '/me')).toBeNull()
     })
 
     it('mounts pre-configured router using mount', () => {
-        const getMeHandler: RequestMiddleware<TestContext> = (ctx: RequestContext<TestContext>) => Response.json(ctx.user)
-        const postItemsHandler: RequestMiddleware = (rp, next) => new Response('created', {status: 201})
+        const getMeHandler: RequestMiddleware<TestContext> = (ctx: RequestContext<TestContext>) =>
+            Response.json(ctx.user)
+        const postItemsHandler: RequestMiddleware = (rp, next) =>
+            new Response('created', { status: 201 })
 
         const apiRouter = new Router<TestContext>()
-            .use([authHandlers], r => r.get('/me', getMeHandler)) // Sub-path '/me'
+            .use([authHandlers], (r) => r.get('/me', getMeHandler)) // Sub-path '/me'
             .post('/items', postItemsHandler) // Sub-path '/items'
 
         const mainRouter = new Router<TestContext>([traceHandlers])
@@ -154,17 +175,24 @@ describe("Router", () => {
 
         expect(mainRouter.match('GET', '/login')?.handlers).toEqual([traceHandlers, handlerA])
         // Expecting merged path '/api/me'
-        expect(mainRouter.match('GET', '/api/me')?.handlers).toEqual([traceHandlers, authHandlers, getMeHandler])
+        expect(mainRouter.match('GET', '/api/me')?.handlers).toEqual([
+            traceHandlers,
+            authHandlers,
+            getMeHandler,
+        ])
         // Expecting merged path '/api/items'
-        expect(mainRouter.match('POST', '/api/items')?.handlers).toEqual([traceHandlers, postItemsHandler])
+        expect(mainRouter.match('POST', '/api/items')?.handlers).toEqual([
+            traceHandlers,
+            postItemsHandler,
+        ])
     })
 
     // --- Tappable Test ---
     it('is tappable for inspection or modification', () => {
         let optionsRouteAdded = false
-        const router = new Router().get('/data', handlerA).tap(r => {
+        const router = new Router().get('/data', handlerA).tap((r) => {
             const dataMethods = r.getPaths().get('/data')
-            if(dataMethods && !dataMethods.has('OPTIONS')) {
+            if (dataMethods && !dataMethods.has('OPTIONS')) {
                 r.options('/data', optionsHandler)
                 optionsRouteAdded = true
             }
@@ -172,7 +200,6 @@ describe("Router", () => {
         expect(optionsRouteAdded).toBe(true)
         expect(router.match('OPTIONS', '/data')?.handlers).toEqual([optionsHandler])
     })
-
 
     // --- Wildcard Matching Tests ---
     it('matches ANY method (*) routes', () => {
@@ -217,10 +244,10 @@ describe("Router", () => {
         const corsOptionsHandler = handlerD
 
         const corsRouter = new Router()
-            .use([corsHandlers], r => r.get('/cors-enabled', handlerC))
-            .tap(subRouter => {
-                for(const [path, methods] of subRouter.getPaths().entries()) {
-                    if(!methods.has('OPTIONS')) {
+            .use([corsHandlers], (r) => r.get('/cors-enabled', handlerC))
+            .tap((subRouter) => {
+                for (const [path, methods] of subRouter.getPaths().entries()) {
+                    if (!methods.has('OPTIONS')) {
                         subRouter.options(path, corsOptionsHandler)
                     }
                 }
@@ -248,15 +275,13 @@ describe("Router", () => {
     // --- Dispatch Test ---
     it('dispatch method finds route and invokes handlers (passing router in params)', async () => {
         const finalDataHandler: RequestMiddleware<TestContext> = (ctx) => {
-            return Response.json({trace: ctx.traceId, user: ctx.user, params: ctx.pathParams})
+            return Response.json({ trace: ctx.traceId, user: ctx.user, params: ctx.pathParams })
         }
         const simpleOkHandler = simpleHandler('simple ok')
 
-        const router = new Router<TestContext>()
-            .use(traceHandlers, r => r
-                .get('/data/exact', [authHandlers, finalDataHandler])
-                .get('/simple', simpleOkHandler)
-            )
+        const router = new Router<TestContext>().use(traceHandlers, (r) =>
+            r.get('/data/exact', [authHandlers, finalDataHandler]).get('/simple', simpleOkHandler),
+        )
 
         const reqSimple = new Request('http://localhost/simple')
         const responseSimple = await router.dispatch(reqSimple)
@@ -268,7 +293,7 @@ describe("Router", () => {
         expect(responseData.status).toBe(200)
         const body = await responseData.json()
         expect(body.trace).toBeString()
-        expect(body.user).toEqual({id: 1, name: 'Admin'})
+        expect(body.user).toEqual({ id: 1, name: 'Admin' })
         expect(body.params).toEqual({})
     })
 
@@ -286,26 +311,24 @@ describe("Router", () => {
     })
 
     it('custom not found handler', async () => {
-        const r = new Router()
-            .notFound([
-                ctx => {
-                    ctx.supportsMiddleware = true
-                },
-                ctx => {
-                    expect(ctx.supportsMiddleware).toBeTrue()
-                    return new Response('Custom 404', {status: 404})
-                }
-            ])
+        const r = new Router().notFound([
+            (ctx) => {
+                ctx.supportsMiddleware = true
+            },
+            (ctx) => {
+                expect(ctx.supportsMiddleware).toBeTrue()
+                return new Response('Custom 404', { status: 404 })
+            },
+        ])
 
         const res = await r.dispatch(new Request('http://localhost/not-found'))
         expect(await res.text()).toBe('Custom 404')
     })
 
     it('default error handler', async () => {
-        const r = new Router()
-            .get('/error', () => {
-                throw new Error('Error')
-            })
+        const r = new Router().get('/error', () => {
+            throw new Error('Error')
+        })
         const res = await r.dispatch(new Request('http://localhost/error'))
         expect(res.status).toBe(500)
     })
@@ -315,81 +338,93 @@ describe("Router", () => {
             .get('/error', () => {
                 throw new Error('Unique Error')
             })
-            .error(ctx => {
-                return new Response(`Custom: ${ctx.error.message}`, {status: 501})
+            .error((ctx) => {
+                return new Response(`Custom: ${ctx.error.message}`, { status: 501 })
             })
         const res = await r.dispatch(new Request('http://localhost/error'))
         expect(res.status).toBe(501)
-        expect(await res.text()).toBe("Custom: Unique Error")
+        expect(await res.text()).toBe('Custom: Unique Error')
     })
 
     it('converts into error', async () => {
         const r = new Router()
             .get('/error', () => {
-                throw "a string"
+                throw 'a string'
             })
-            .error(ctx => {
+            .error((ctx) => {
                 expect(ctx.error).toBeInstanceOf(Error)
-                return new Response(`Custom: ${ctx.error.message}`, {status: 501})
+                return new Response(`Custom: ${ctx.error.message}`, { status: 501 })
             })
         const res = await r.dispatch(new Request('http://localhost/error'))
         expect(res.status).toBe(501)
-        expect(await res.text()).toBe("Custom: a string")
+        expect(await res.text()).toBe('Custom: a string')
     })
 
-    it('error handler middleware', async() => {
-        const r = new Router([(ctx,next) => next().catch((err:any) => {
-            return new Response(`Custom: ${err}`, {status: 502})
-        })])
-            .get('/error', () => {
-                throw "a string"
-            })
+    it('error handler middleware', async () => {
+        const r = new Router([
+            (ctx, next) =>
+                next().catch((err: any) => {
+                    return new Response(`Custom: ${err}`, { status: 502 })
+                }),
+        ]).get('/error', () => {
+            throw 'a string'
+        })
         const res = await r.dispatch(new Request('http://localhost/error'))
         expect(res.status).toBe(502)
-        expect(await res.text()).toBe("Custom: a string")
-
+        expect(await res.text()).toBe('Custom: a string')
     })
 
     it('supports timeout middleware', async () => {
         const ctx = {}
-        const r = new Router([addAccept, convertStdResponse, timeout(1)])
-            .get('/slow', () => {
-                return sleep(30_000).then(() => new Response('slow'))
-            })
+        const r = new Router([addAccept, convertStdResponse, timeout(1)]).get('/slow', () => {
+            return sleep(30_000).then(() => new Response('slow'))
+        })
 
         const res = await r.dispatch(new Request('http://localhost/slow'), ctx)
         expect(res.status).toBe(HttpStatus.GATEWAY_TIMEOUT)
-        expect(await res.json()).toEqual(expect.objectContaining({
-            ok: false,
-            code: ErrorCode.TIMEOUT,
-            userMessage: "Response timed out.",
-        }))
-        expect(ctx).toEqual(expect.objectContaining({
-            aborted: true,
-        }))
+        expect(await res.json()).toEqual(
+            expect.objectContaining({
+                ok: false,
+                code: ErrorCode.TIMEOUT,
+                userMessage: 'Response timed out.',
+            }),
+        )
+        expect(ctx).toEqual(
+            expect.objectContaining({
+                aborted: true,
+            }),
+        )
     })
 
     describe('getPaths', () => {
         it('merges paths', () => {
-            const router = new Router()
-                .mount('/a', new Router()
-                    .mount('/b', new Router()
-                        .get('/c', () => new Response('c'))))
+            const router = new Router().mount(
+                '/a',
+                new Router().mount(
+                    '/b',
+                    new Router().get('/c', () => new Response('c')),
+                ),
+            )
             expect(router.getPaths().get('/a/b/c')).toEqual(new Set(['GET']))
         })
 
         it('appends regex', () => {
-            const router = new Router()
-                .mount('/a', new Router()
-                    .mount('/b', new Router()
-                        .on(['GET','POST'],'/c', () => new Response('c'))
+            const router = new Router().mount(
+                '/a',
+                new Router().mount(
+                    '/b',
+                    new Router()
+                        .on(['GET', 'POST'], '/c', () => new Response('c'))
                         .patch('/c', () => new Response('c-patch'))
-                        .post(/^\/d/, () => new Response('d'))
-                    ))
-            expect(router.getPaths()).toEqual(new Map<MatchedPath, Set<string>>([
-                ['/a/b/c', new Set(['GET','POST','PATCH'])],
-                [['/a/b', /^\/d/], new Set(['POST'])],
-            ]))
+                        .post(/^\/d/, () => new Response('d')),
+                ),
+            )
+            expect(router.getPaths()).toEqual(
+                new Map<MatchedPath, Set<string>>([
+                    ['/a/b/c', new Set(['GET', 'POST', 'PATCH'])],
+                    [['/a/b', /^\/d/], new Set(['POST'])],
+                ]),
+            )
         })
     })
 })

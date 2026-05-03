@@ -1,72 +1,70 @@
-import {ColorInput} from './components/ColorInput'
-import {DateInput} from './components/DateInput'
-import {DatetimeLocalInput} from './components/DatetimeLocalInput'
-import {DecimalInput} from './components/DecimalInput'
-import {EmailInput} from './components/EmailInput'
-import {Input} from './components/Input'
-import {MonthInput} from './components/MonthInput'
-import {NumberInput} from './components/NumberInput'
-import {NumericInput} from './components/NumericInput'
-import {PasswordInput} from './components/PasswordInput'
-import {PhoneInput} from './components/PhoneInput'
-import {RadioMenu} from './components/RadioMenu'
-import type {FC, ReactNode} from 'react';
-import { useState} from 'react'
-import {SearchInput} from './components/SearchInput'
-import type { SelectOption} from './components/Select';
-import {Select} from './components/Select'
-import {TextArea} from './components/TextArea'
-import {TextInput} from './components/TextInput'
-import {TimeInput} from './components/TimeInput'
-import {UrlInput} from './components/UrlInput'
-import {UsernameInput} from './components/UsernameInput'
-import {WeekInput} from './components/WeekInput'
+import { ColorInput } from './components/ColorInput'
+import { DateInput } from './components/DateInput'
+import { DatetimeLocalInput } from './components/DatetimeLocalInput'
+import { DecimalInput } from './components/DecimalInput'
+import { EmailInput } from './components/EmailInput'
+import { Input } from './components/Input'
+import { MonthInput } from './components/MonthInput'
+import { NumberInput } from './components/NumberInput'
+import { NumericInput } from './components/NumericInput'
+import { PasswordInput } from './components/PasswordInput'
+import { PhoneInput } from './components/PhoneInput'
+import { RadioMenu } from './components/RadioMenu'
+import type { FC, ReactNode } from 'react'
+import { useState } from 'react'
+import { SearchInput } from './components/SearchInput'
+import type { SelectOption } from './components/Select'
+import { Select } from './components/Select'
+import { TextArea } from './components/TextArea'
+import { TextInput } from './components/TextInput'
+import { TimeInput } from './components/TimeInput'
+import { UrlInput } from './components/UrlInput'
+import { UsernameInput } from './components/UsernameInput'
+import { WeekInput } from './components/WeekInput'
 import css from './App.module.css'
-import {BasicSelect} from './components/BasicSelect.tsx'
-import {DebouncedInput} from './components/DebouncedInput.tsx'
-import {ActionButton} from './components/ActionButton.tsx'
-import {jsonStringify} from './util/json-serialize.ts'
-import {BasicOption} from './components/BasicOption.tsx'
-import {DatetimeOffsetInput} from './components/DatetimeOffsetInput.tsx'
-import type {DateValue} from './util/time.ts'
-
+import { BasicSelect } from './components/BasicSelect.tsx'
+import { DebouncedInput } from './components/DebouncedInput.tsx'
+import { ActionButton } from './components/ActionButton.tsx'
+import { jsonStringify } from './util/json-serialize.ts'
+import { BasicOption } from './components/BasicOption.tsx'
+import { DatetimeOffsetInput } from './components/DatetimeOffsetInput.tsx'
+import type { DateValue } from './util/time.ts'
 
 const FRUIT_OPTIONS: SelectOption<number>[] = [
-    {text: "Apple", value: 0},
-    {text: "Banana", value: 1},
-    {text: "Cherry", value: 2},
-    {text: "Date", value: 3},
-    {text: "Elderberry", value: 4},
-    {text: "Fig", value: 5},
-    {text: "Grape", value: 6},
-    {text: "Honeydew", value: 7},
-    {text: "Kiwi", value: 8},
-    {text: "Lemon", value: 9},
-    {text: "Mango", value: 10},
-    {text: "Nectarine", value: 11},
-    {text: "Orange", value: 12, style: {color: 'orange'}},
-    {text: "Peach", value: 13},
-    {text: "Pineapple", value: 14},
-    {text: "Quince", value: 15},
-    {text: "Raspberry", value: 16},
-    {text: "Strawberry", value: 17},
-    {text: "Tangerine", value: 18},
-    {text: "Ugli fruit", value: 19},
-    {text: "Vanilla bean", value: 20},
-    {text: "Watermelon", value: 21},
-    {text: "Xigua", value: 22},
-    {text: "Yellow passion fruit", value: 23},
-    {text: "Zucchini", value: 24}
+    { text: 'Apple', value: 0 },
+    { text: 'Banana', value: 1 },
+    { text: 'Cherry', value: 2 },
+    { text: 'Date', value: 3 },
+    { text: 'Elderberry', value: 4 },
+    { text: 'Fig', value: 5 },
+    { text: 'Grape', value: 6 },
+    { text: 'Honeydew', value: 7 },
+    { text: 'Kiwi', value: 8 },
+    { text: 'Lemon', value: 9 },
+    { text: 'Mango', value: 10 },
+    { text: 'Nectarine', value: 11 },
+    { text: 'Orange', value: 12, style: { color: 'orange' } },
+    { text: 'Peach', value: 13 },
+    { text: 'Pineapple', value: 14 },
+    { text: 'Quince', value: 15 },
+    { text: 'Raspberry', value: 16 },
+    { text: 'Strawberry', value: 17 },
+    { text: 'Tangerine', value: 18 },
+    { text: 'Ugli fruit', value: 19 },
+    { text: 'Vanilla bean', value: 20 },
+    { text: 'Watermelon', value: 21 },
+    { text: 'Xigua', value: 22 },
+    { text: 'Yellow passion fruit', value: 23 },
+    { text: 'Zucchini', value: 24 },
 ]
 
-
 const DUPLICATE_OPTIONS: SelectOption<number>[] = [
-    {text: "Apple", value: 0},
-    {text: "Banana", value: 1},
-    {text: "Cherry", value: 2},
-    {text: "Banana 2", value: 1},
-    {text: "Banana 2-2", value: 1, key: '1(2)'},  // force an adversarial collision
-    {text: "Banana 3", value: 1},
+    { text: 'Apple', value: 0 },
+    { text: 'Banana', value: 1 },
+    { text: 'Cherry', value: 2 },
+    { text: 'Banana 2', value: 1 },
+    { text: 'Banana 2-2', value: 1, key: '1(2)' }, // force an adversarial collision
+    { text: 'Banana 3', value: 1 },
 ]
 
 function Select_Example3() {
@@ -87,7 +85,9 @@ function Select_Example4() {
     )
 }
 
-const FlexRow: FC<{ children: ReactNode }> = ({children}) => <div className={css.flexRow}>{children}</div>
+const FlexRow: FC<{ children: ReactNode }> = ({ children }) => (
+    <div className={css.flexRow}>{children}</div>
+)
 
 function Select_Example1() {
     const [value, setValue] = useState(8)
@@ -95,7 +95,11 @@ function Select_Example1() {
         <>
             <h3>Basic</h3>
             <div className={css.flexRow}>
-                <Select options={FRUIT_OPTIONS} value={value} onChange={ev => setValue(ev.value)} />
+                <Select
+                    options={FRUIT_OPTIONS}
+                    value={value}
+                    onChange={(ev) => setValue(ev.value)}
+                />
                 <output>{JSON.stringify(value)}</output>
             </div>
         </>
@@ -108,10 +112,16 @@ function Select_Dupe() {
         <>
             <h3>Basic</h3>
             <div className={css.flexRow}>
-                <Select options={DUPLICATE_OPTIONS} value={value} onChange={ev => setValue(ev.value)} />
+                <Select
+                    options={DUPLICATE_OPTIONS}
+                    value={value}
+                    onChange={(ev) => setValue(ev.value)}
+                />
                 <output>{JSON.stringify(value)}</output>
             </div>
-            <button type="button" onClick={() => setValue(1)}>Set Banana</button>
+            <button type="button" onClick={() => setValue(1)}>
+                Set Banana
+            </button>
         </>
     )
 }
@@ -122,18 +132,31 @@ function Select_Example2() {
         <>
             <h3>Invalid Option & External Setter</h3>
             <div className={css.flexRow}>
-                <Select placeholder="-- Not Selected --" options={FRUIT_OPTIONS} value={value}
-                    onChange={ev => setValue(ev.value)} />
+                <Select
+                    placeholder="-- Not Selected --"
+                    options={FRUIT_OPTIONS}
+                    value={value}
+                    onChange={(ev) => setValue(ev.value)}
+                />
                 <output>{JSON.stringify(value)}</output>
             </div>
             <div className={css.flexRow}>
-                <button type="button" onClick={() => setValue(null as any)}>Set Null</button>
-                <button type="button" onClick={() => setValue(2)}>Set Cherry</button>
-                <button type="button" onClick={() => setValue(FRUIT_OPTIONS.length + 1)}>Set Invalid</button>
-                <button type="button" onClick={() => setValue(Math.floor(Math.random() * 20))}>Set Random</button>
-                <button type="button" onClick={() => setValue(v => v + 1)}>Next</button>
+                <button type="button" onClick={() => setValue(null as any)}>
+                    Set Null
+                </button>
+                <button type="button" onClick={() => setValue(2)}>
+                    Set Cherry
+                </button>
+                <button type="button" onClick={() => setValue(FRUIT_OPTIONS.length + 1)}>
+                    Set Invalid
+                </button>
+                <button type="button" onClick={() => setValue(Math.floor(Math.random() * 20))}>
+                    Set Random
+                </button>
+                <button type="button" onClick={() => setValue((v) => v + 1)}>
+                    Next
+                </button>
             </div>
-
         </>
     )
 }
@@ -151,7 +174,7 @@ function SelectFieldset() {
 }
 
 function BasicSelectFieldset() {
-    const [value, setValue] = useState<any>("3")
+    const [value, setValue] = useState<any>('3')
     return (
         <FieldSet legend="BasicSelect">
             <h3>Uncontrolled Input</h3>
@@ -166,9 +189,9 @@ function BasicSelectFieldset() {
                 <optgroup label="more options">
                     <BasicOption value={5}>option 5</BasicOption>
                     <BasicOption value={5}>option 5b</BasicOption>
-                    <BasicOption value={"5(2)"}>option 5(2)</BasicOption>
+                    <BasicOption value={'5(2)'}>option 5(2)</BasicOption>
                     <BasicOption value={[6, 7]}>option 6,7</BasicOption>
-                    <BasicOption value={{eight: 9n}}>option 9n</BasicOption>
+                    <BasicOption value={{ eight: 9n }}>option 9n</BasicOption>
                 </optgroup>
             </BasicSelect>
             <BasicSelect defaultValue="2">
@@ -177,7 +200,7 @@ function BasicSelectFieldset() {
             </BasicSelect>
             <h3>Controlled Input</h3>
             <FlexRow>
-                <BasicSelect value={value} onChange={ev => setValue(ev.value)}>
+                <BasicSelect value={value} onChange={(ev) => setValue(ev.value)}>
                     <option value="1">option 1</option>
                     {/*<hr /> https://github.com/facebook/react/issues/27572 */}
                     <option value="2">option 2</option>
@@ -190,9 +213,9 @@ function BasicSelectFieldset() {
                         <BasicOption value={5}>option 5</BasicOption>
                         <BasicOption value={5}>option 5b</BasicOption>
                         <BasicOption value={5}>option 5c</BasicOption>
-                        <BasicOption value={"5(2)"}>option 5(2)</BasicOption>
+                        <BasicOption value={'5(2)'}>option 5(2)</BasicOption>
                         <BasicOption value={[6, 7]}>option 6,7</BasicOption>
-                        <BasicOption value={{eight: 9n}}>option 9n</BasicOption>
+                        <BasicOption value={{ eight: 9n }}>option 9n</BasicOption>
                     </optgroup>
                 </BasicSelect>
                 <output>{jsonStringify(value)}</output>
@@ -205,7 +228,6 @@ function BasicSelectFieldset() {
     )
 }
 
-
 function TextInput_Example1() {
     return (
         <>
@@ -215,17 +237,18 @@ function TextInput_Example1() {
     )
 }
 
-
 function TextInput_Example2() {
-    const [value, setValue] = useState("\tHello  \"\n\r\x0B\x0C\xA0\" world ")
+    const [value, setValue] = useState('\tHello  "\n\r\x0B\x0C\xA0" world ')
     return (
         <>
             <h3>Collapse Spaces</h3>
             <div className={css.flexRow}>
-                <TextInput value={value} onChange={ev => setValue(ev.value)} />
+                <TextInput value={value} onChange={(ev) => setValue(ev.value)} />
                 <output>{JSON.stringify(value)}</output>
             </div>
-            <button type="button" onClick={() => setValue('\t"     "\t')}>Set Space</button>
+            <button type="button" onClick={() => setValue('\t"     "\t')}>
+                Set Space
+            </button>
         </>
     )
 }
@@ -240,14 +263,14 @@ function TextInputFieldset() {
 }
 
 function InputFieldset() {
-    const [value, setValue] = useState("Hello")
+    const [value, setValue] = useState('Hello')
     return (
         <FieldSet legend="Input">
             <div className={css.flexRow}>
                 <Input />
             </div>
             <div className={css.flexRow}>
-                <Input value={value} onChange={e => setValue(e.value)} />
+                <Input value={value} onChange={(e) => setValue(e.value)} />
                 <output>{JSON.stringify(value)}</output>
             </div>
         </FieldSet>
@@ -255,30 +278,33 @@ function InputFieldset() {
 }
 
 function DebouncedFieldset() {
-    const [value, setValue] = useState("Hello")
+    const [value, setValue] = useState('Hello')
     return (
         <FieldSet legend="DebouncedInput">
             <div className={css.flexRow}>
-                <DebouncedInput value={value} onChange={e => setValue(e.value)} debounce={1000} />
+                <DebouncedInput value={value} onChange={(e) => setValue(e.value)} debounce={1000} />
                 <output>{JSON.stringify(value)}</output>
             </div>
             <div>
-                <ActionButton onClick={() => {
-                    console.log('click')
-                    setValue("Goodbye")
-                }}>Reset</ActionButton>
+                <ActionButton
+                    onClick={() => {
+                        console.log('click')
+                        setValue('Goodbye')
+                    }}
+                >
+                    Reset
+                </ActionButton>
             </div>
         </FieldSet>
     )
 }
-
 
 type FieldSetProps = {
     legend: ReactNode
     children: ReactNode
 }
 
-function FieldSet({legend, children}: FieldSetProps) {
+function FieldSet({ legend, children }: FieldSetProps) {
     return (
         <fieldset>
             <legend>{legend}</legend>
@@ -290,29 +316,47 @@ function FieldSet({legend, children}: FieldSetProps) {
 function OtherTextInputsFieldset() {
     return (
         <FieldSet legend="Other Text Inputs">
-            <label className={css.flexRow}>Email: <EmailInput placeholder="Email" /></label>
-            <label className={css.flexRow}>Number: <NumberInput placeholder={123} /></label>
-            <label className={css.flexRow}>Decimal: <DecimalInput placeholder="456" /></label>
-            <label className={css.flexRow}>Numeric: <NumericInput placeholder="3.14" /></label>
-            <label className={css.flexRow}>Phone: <PhoneInput placeholder="867-5309" /></label>
-            <label className={css.flexRow}>Search: <SearchInput placeholder="Google" /></label>
-            <label className={css.flexRow}>Url: <UrlInput placeholder="example.org" /></label>
+            <label className={css.flexRow}>
+                Email: <EmailInput placeholder="Email" />
+            </label>
+            <label className={css.flexRow}>
+                Number: <NumberInput placeholder={123} />
+            </label>
+            <label className={css.flexRow}>
+                Decimal: <DecimalInput placeholder="456" />
+            </label>
+            <label className={css.flexRow}>
+                Numeric: <NumericInput placeholder="3.14" />
+            </label>
+            <label className={css.flexRow}>
+                Phone: <PhoneInput placeholder="867-5309" />
+            </label>
+            <label className={css.flexRow}>
+                Search: <SearchInput placeholder="Google" />
+            </label>
+            <label className={css.flexRow}>
+                Url: <UrlInput placeholder="example.org" />
+            </label>
         </FieldSet>
     )
 }
 
 function ColorFieldset() {
-    const [value, setValue] = useState("#FF0000")
+    const [value, setValue] = useState('#FF0000')
     // TODO: choose font color using color-contrast: https://caniuse.com/mdn-css_types_color_color-contrast
     return (
         <fieldset>
             <legend>Color</legend>
-            <ColorInput value={value} onChange={ev => setValue(ev.value)} />
-            <div style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                backgroundColor: value
-            }}>{JSON.stringify(value)}</div>
+            <ColorInput value={value} onChange={(ev) => setValue(ev.value)} />
+            <div
+                style={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    backgroundColor: value,
+                }}
+            >
+                {JSON.stringify(value)}
+            </div>
         </fieldset>
     )
 }
@@ -337,48 +381,58 @@ function DateFieldset() {
             <DatetimeLocalInput defaultValue="2024-09-01T18:28:29.01Z" />
             <DatetimeLocalInput min="2024-09-08T00:00:00" max="2024-09-14T23:59:59" />
             <h3>Controlled</h3>
-            <DatetimeLocalInput value={value} onChange={ev => setValue(ev.value)} />
-            <DatetimeLocalInput value={value} onChange={ev => setValue(ev.date)} />
-            <DatetimeLocalInput value={value} onChange={ev => setValue(ev.isoString)} />
+            <DatetimeLocalInput value={value} onChange={(ev) => setValue(ev.value)} />
+            <DatetimeLocalInput value={value} onChange={(ev) => setValue(ev.date)} />
+            <DatetimeLocalInput value={value} onChange={(ev) => setValue(ev.isoString)} />
             <br />
             <output>{JSON.stringify(value)}</output>
         </FieldSet>
     )
 }
 
-const ControlledDatetimeOffsetInput: FC<{defaultValue:DateValue|(() => DateValue)}> = ({defaultValue}) => {
+const ControlledDatetimeOffsetInput: FC<{ defaultValue: DateValue | (() => DateValue) }> = ({
+    defaultValue,
+}) => {
     const [value, setValue] = useState<Date | number | string | null>(defaultValue)
-    return <FlexRow>
-        <DatetimeOffsetInput value={value} onChange={ev => setValue(ev.value)} />
-       <output>{JSON.stringify(value)}</output>
-    </FlexRow>
+    return (
+        <FlexRow>
+            <DatetimeOffsetInput value={value} onChange={(ev) => setValue(ev.value)} />
+            <output>{JSON.stringify(value)}</output>
+        </FlexRow>
+    )
 }
 
 const ControlledDatetimeOffsetInput2: FC = () => {
     const [value, setValue] = useState<Date | number | string | null>(null)
-    return <FlexRow>
-        <DatetimeOffsetInput value={value} onChange={ev => setValue(ev.value)} />
-        <ActionButton onClick={() => setValue(Date.now)}>Now</ActionButton>
-        <ActionButton onClick={() => setValue("2000-01-01T00:00")}>Y2K</ActionButton>
-        <ActionButton onClick={() => setValue("1987-12-21T03:00-07:00")}>Birth</ActionButton>
-        <ActionButton onClick={() => setValue("invalid")}>Invalid</ActionButton>
-        <ActionButton onClick={() => setValue("1987-12-21T03:00-03:14")}>Weird</ActionButton>
-        <output>{JSON.stringify(value)}</output>
-    </FlexRow>
+    return (
+        <FlexRow>
+            <DatetimeOffsetInput value={value} onChange={(ev) => setValue(ev.value)} />
+            <ActionButton onClick={() => setValue(Date.now)}>Now</ActionButton>
+            <ActionButton onClick={() => setValue('2000-01-01T00:00')}>Y2K</ActionButton>
+            <ActionButton onClick={() => setValue('1987-12-21T03:00-07:00')}>Birth</ActionButton>
+            <ActionButton onClick={() => setValue('invalid')}>Invalid</ActionButton>
+            <ActionButton onClick={() => setValue('1987-12-21T03:00-03:14')}>Weird</ActionButton>
+            <output>{JSON.stringify(value)}</output>
+        </FlexRow>
+    )
 }
 
 function DatetimeOffsetFieldset() {
     return (
         <FieldSet legend="DatetimeOffsetInput">
             <h3>Controlled</h3>
-            <ControlledDatetimeOffsetInput defaultValue={() => new Date()}/>
-            <ControlledDatetimeOffsetInput defaultValue="2024-11-13T05:41:49.28+08:45"/>
-            <ControlledDatetimeOffsetInput defaultValue="2024-11-13T05:41:49.28"/>
-            <ControlledDatetimeOffsetInput defaultValue="+08:45"/>
+            <ControlledDatetimeOffsetInput defaultValue={() => new Date()} />
+            <ControlledDatetimeOffsetInput defaultValue="2024-11-13T05:41:49.28+08:45" />
+            <ControlledDatetimeOffsetInput defaultValue="2024-11-13T05:41:49.28" />
+            <ControlledDatetimeOffsetInput defaultValue="+08:45" />
             <ControlledDatetimeOffsetInput2 />
             <h3>Uncontrolled</h3>
-            <FlexRow><DatetimeOffsetInput/></FlexRow>
-            <FlexRow><DatetimeOffsetInput defaultValue={"1987-12-21T03:00-08:00"} /></FlexRow>
+            <FlexRow>
+                <DatetimeOffsetInput />
+            </FlexRow>
+            <FlexRow>
+                <DatetimeOffsetInput defaultValue={'1987-12-21T03:00-08:00'} />
+            </FlexRow>
         </FieldSet>
     )
 }
@@ -405,11 +459,13 @@ function TextAreaFields() {
 function RadioMenuFields() {
     return (
         <FieldSet legend="RadioMenu">
-            <RadioMenu options={[
-                {text: "Opt1", value: 1},
-                {text: "Opt2", value: 2},
-                {text: "Opt3", value: 3},
-            ]} />
+            <RadioMenu
+                options={[
+                    { text: 'Opt1', value: 1 },
+                    { text: 'Opt2', value: 2 },
+                    { text: 'Opt3', value: 3 },
+                ]}
+            />
         </FieldSet>
     )
 }

@@ -1,4 +1,4 @@
-import {cc, type ClassArray, type ClassObject, type ClassValue} from '@mpen/classcat'
+import { cc, type ClassArray, type ClassObject, type ClassValue } from '@mpen/classcat'
 
 export type ClassNamePrimitive = string | number
 export type ClassNameDictionary = ClassObject

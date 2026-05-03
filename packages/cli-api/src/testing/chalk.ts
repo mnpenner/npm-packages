@@ -1,3 +1,3 @@
-import {Chalk} from 'chalk';
+import { Chalk } from 'chalk'
 
-const customChalk = new Chalk({level: 0});
+const customChalk = new Chalk({ level: 0 })

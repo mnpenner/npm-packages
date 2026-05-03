@@ -1,7 +1,7 @@
-import type {HttpMethod} from '@mpen/http-helpers';
-import { HttpStatus} from '@mpen/http-helpers'
-import {simpleStatus} from '@mpen/server-router/response/simple'
-import type {AnyContext, Middleware, RequestContext} from '../types'
+import type { HttpMethod } from '@mpen/http-helpers'
+import { HttpStatus } from '@mpen/http-helpers'
+import { simpleStatus } from '@mpen/server-router/response/simple'
+import type { AnyContext, Middleware, RequestContext } from '../types'
 
 export interface RateBucket {
     windowMs: number
@@ -52,12 +52,7 @@ export interface RateLimitStorage<C> {
      * ttlMs MUST be respected by the implementation.
      * Redis implementations should set key expiry accordingly.
      */
-    writeCounter(
-        ctx: C,
-        key: string,
-        counter: FixedWindowCounter,
-        ttlMs: number
-    ): Promise<void>
+    writeCounter(ctx: C, key: string, counter: FixedWindowCounter, ttlMs: number): Promise<void>
 }
 
 export interface RateLimitOptions<C> {
@@ -101,15 +96,9 @@ export interface RateLimitOptions<C> {
     maxmindCountryDatabase?: string
 
     // --- resolvers (optional overrides)
-    getAsn?(
-        ctx: C,
-        input: RateLimitIdentityInput
-    ): Promise<AsnRecord | null>
+    getAsn?(ctx: C, input: RateLimitIdentityInput): Promise<AsnRecord | null>
 
-    getCountryCode?(
-        ctx: C,
-        input: RateLimitIdentityInput
-    ): Promise<string | null>
+    getCountryCode?(ctx: C, input: RateLimitIdentityInput): Promise<string | null>
 
     // --- ASN classification
     asnToClass?: (asn: number, organization: string) => AsnClass
@@ -128,9 +117,9 @@ export interface RateLimitOptions<C> {
         subnet: {
             ipv4: number
             ipv6: number
-            byAsnClass?: Record<string, number> & {unknown: number}
-            ipv4Prefix?: number   // default 24
-            ipv6Prefix?: number   // default 64
+            byAsnClass?: Record<string, number> & { unknown: number }
+            ipv4Prefix?: number // default 24
+            ipv6Prefix?: number // default 64
         }
     }
 
@@ -166,54 +155,67 @@ type GeoResolvers<C> = {
 }
 
 type MaxmindModule = {
-    open: (path: string) => Promise<{get: (ip: string) => any}>
+    open: (path: string) => Promise<{ get: (ip: string) => any }>
 }
 
 const DEFAULT_MAX_ENTRIES = 100_000
 
 const ASN_OVERRIDES: Record<number, AsnClass> = {
     // Cloud hyperscalers
-    16509: 'cloud',     // AWS
-    14618: 'cloud',     // Amazon.com (enterprise)
-    15169: 'cloud',     // Google
-    8075:  'cloud',     // Microsoft Azure
-    31898: 'cloud',     // Oracle Cloud
-    45102: 'cloud',     // Alibaba Cloud
-    132203: 'cloud',    // Tencent Cloud
-    36351: 'cloud',     // IBM Cloud
+    16509: 'cloud', // AWS
+    14618: 'cloud', // Amazon.com (enterprise)
+    15169: 'cloud', // Google
+    8075: 'cloud', // Microsoft Azure
+    31898: 'cloud', // Oracle Cloud
+    45102: 'cloud', // Alibaba Cloud
+    132203: 'cloud', // Tencent Cloud
+    36351: 'cloud', // IBM Cloud
 
     // CDN
-    13335: 'cdn',       // Cloudflare
-    54113: 'cdn',       // Fastly
-    20940: 'cdn',       // Akamai
+    13335: 'cdn', // Cloudflare
+    54113: 'cdn', // Fastly
+    20940: 'cdn', // Akamai
 
     // Other cloud/hosting
-    14061: 'cloud',     // DigitalOcean
-    20473: 'cloud',     // Vultr
-    63949: 'cloud',     // Linode (Akamai)
-    24940: 'hosting',   // Hetzner
-    16276: 'hosting',   // OVHcloud
-    12876: 'hosting',   // Scaleway
-    8560:  'hosting',   // IONOS
-    47583: 'hosting',   // Hostinger
-    22612: 'hosting',   // Namecheap
+    14061: 'cloud', // DigitalOcean
+    20473: 'cloud', // Vultr
+    63949: 'cloud', // Linode (Akamai)
+    24940: 'hosting', // Hetzner
+    16276: 'hosting', // OVHcloud
+    12876: 'hosting', // Scaleway
+    8560: 'hosting', // IONOS
+    47583: 'hosting', // Hostinger
+    22612: 'hosting', // Namecheap
 }
 
 const KEYWORDS: Record<Extract<AsnClass, string>, string[]> = {
     cdn: ['cloudflare', 'fastly', 'akamai', 'cdn'],
     cloud: [
-        'amazon', 'aws',
-        'google', 'gcp',
-        'microsoft', 'azure',
-        'oracle', 'alibaba',
-        'tencent', 'digitalocean',
-        'vultr', 'linode', 'ibm'
+        'amazon',
+        'aws',
+        'google',
+        'gcp',
+        'microsoft',
+        'azure',
+        'oracle',
+        'alibaba',
+        'tencent',
+        'digitalocean',
+        'vultr',
+        'linode',
+        'ibm',
     ],
     hosting: [
-        'hosting', 'host', 'colo',
-        'datacenter', 'data center',
-        'ovh', 'scaleway', 'ionos',
-        'hostinger', 'namecheap'
+        'hosting',
+        'host',
+        'colo',
+        'datacenter',
+        'data center',
+        'ovh',
+        'scaleway',
+        'ionos',
+        'hostinger',
+        'namecheap',
     ],
     mobile: ['mobile', 'wireless', 'cellular', 'lte', '5g'],
     residential: ['telecom', 'broadband', 'cable', 'fiber'],
@@ -222,7 +224,7 @@ const KEYWORDS: Record<Extract<AsnClass, string>, string[]> = {
 
 class InMemoryRateLimitStorage<C> implements RateLimitStorage<C> {
     private readonly maxEntries: number
-    private readonly store = new Map<string, {counter: FixedWindowCounter; expiresAtMs: number}>()
+    private readonly store = new Map<string, { counter: FixedWindowCounter; expiresAtMs: number }>()
 
     constructor(maxEntries: number) {
         this.maxEntries = maxEntries
@@ -240,10 +242,15 @@ class InMemoryRateLimitStorage<C> implements RateLimitStorage<C> {
         return entry.counter
     }
 
-    async writeCounter(_ctx: C, key: string, counter: FixedWindowCounter, ttlMs: number): Promise<void> {
+    async writeCounter(
+        _ctx: C,
+        key: string,
+        counter: FixedWindowCounter,
+        ttlMs: number,
+    ): Promise<void> {
         const expiresAtMs = Date.now() + ttlMs
         if (this.store.has(key)) this.store.delete(key)
-        this.store.set(key, {counter, expiresAtMs})
+        this.store.set(key, { counter, expiresAtMs })
         this.evictIfNeeded()
     }
 
@@ -256,7 +263,9 @@ class InMemoryRateLimitStorage<C> implements RateLimitStorage<C> {
     }
 }
 
-function defaultGetIpAddress<Ctx extends object = AnyContext>(ctx: RequestContext<Ctx>): Promise<string> {
+function defaultGetIpAddress<Ctx extends object = AnyContext>(
+    ctx: RequestContext<Ctx>,
+): Promise<string> {
     const forwardedFor = ctx.req.headers.get('x-forwarded-for')
     if (forwardedFor) {
         const first = forwardedFor.split(',')[0]?.trim()
@@ -318,21 +327,18 @@ async function applyFixedWindowLimit<C>(
     windowMs: number,
     max: number,
     nowMs: number,
-    retentionMs: number
-): Promise<{allowed: boolean; resetAtMs: number}> {
+    retentionMs: number,
+): Promise<{ allowed: boolean; resetAtMs: number }> {
     const stored = await storage.readCounter(ctx, key)
     const resetAtMs = getBucketResetAt(nowMs, windowMs)
-    const counter =
-        stored && stored.resetAtMs > nowMs
-            ? stored
-            : {resetAtMs, count: 0}
+    const counter = stored && stored.resetAtMs > nowMs ? stored : { resetAtMs, count: 0 }
     const nextCount = counter.count + 1
-    const updated: FixedWindowCounter = {resetAtMs: counter.resetAtMs, count: nextCount}
+    const updated: FixedWindowCounter = { resetAtMs: counter.resetAtMs, count: nextCount }
     const ttlAligned = Math.max(1, counter.resetAtMs - nowMs + 1000)
     const ttlEffective = ttlAligned + Math.max(0, retentionMs)
     await storage.writeCounter(ctx, key, updated, ttlEffective)
 
-    return {allowed: nextCount <= max, resetAtMs: counter.resetAtMs}
+    return { allowed: nextCount <= max, resetAtMs: counter.resetAtMs }
 }
 
 function toURLPattern(pattern: EndpointLimit['pattern']): URLPattern {
@@ -343,21 +349,23 @@ function toURLPattern(pattern: EndpointLimit['pattern']): URLPattern {
         if (pattern.startsWith('http://') || pattern.startsWith('https://')) {
             return new URLPatternCtor(pattern)
         }
-        return new URLPatternCtor({pathname: pattern})
+        return new URLPatternCtor({ pathname: pattern })
     }
     return new URLPatternCtor(pattern)
 }
 
-function resolveEndpointLimit(method: string, url: URL, matchers: EndpointMatcher[]): number | null {
+function resolveEndpointLimit(
+    method: string,
+    url: URL,
+    matchers: EndpointMatcher[],
+): number | null {
     const normalizedMethod = method.toUpperCase()
     let minLimit: number | null = null
     for (const matcher of matchers) {
         if (!matcher.pattern.test(url)) continue
         const limit = matcher.limit
         const methodLimit =
-            typeof limit === 'number'
-                ? limit
-                : limit[normalizedMethod as HttpMethod]
+            typeof limit === 'number' ? limit : limit[normalizedMethod as HttpMethod]
         if (methodLimit == null) continue
         minLimit = minLimit == null ? methodLimit : Math.min(minLimit, methodLimit)
     }
@@ -429,14 +437,14 @@ function deriveSubnet(ipAddress: string, ipv4Prefix = 24, ipv6Prefix = 64): Subn
     const ipv4 = parseIpv4Address(ipAddress)
     if (ipv4) {
         if (ipv4.length !== 4) {
-            return {key: 'subnet:unknown', version: 'unknown'}
+            return { key: 'subnet:unknown', version: 'unknown' }
         }
         const [o1, o2, o3] = ipv4
         if (o1 == null || o2 == null || o3 == null) {
-            return {key: 'subnet:unknown', version: 'unknown'}
+            return { key: 'subnet:unknown', version: 'unknown' }
         }
         if (!Number.isInteger(ipv4Prefix) || ipv4Prefix < 0 || ipv4Prefix > 32) {
-            return {key: 'subnet:unknown', version: 'unknown'}
+            return { key: 'subnet:unknown', version: 'unknown' }
         }
         if (ipv4Prefix !== 24) {
             const ipInt = ((o1 << 24) | (o2 << 16) | (o3 << 8) | (ipv4[3] ?? 0)) >>> 0
@@ -464,7 +472,7 @@ function deriveSubnet(ipAddress: string, ipv4Prefix = 24, ipv6Prefix = 64): Subn
         const h3 = ipv6[2]!
         const h4 = ipv6[3]!
         if (!Number.isInteger(ipv6Prefix) || ipv6Prefix < 0 || ipv6Prefix > 128) {
-            return {key: 'subnet:unknown', version: 'unknown'}
+            return { key: 'subnet:unknown', version: 'unknown' }
         }
         if (ipv6Prefix !== 64) {
             const masked = maskIpv6(ipv6, ipv6Prefix)
@@ -480,7 +488,7 @@ function deriveSubnet(ipAddress: string, ipv4Prefix = 24, ipv6Prefix = 64): Subn
         }
     }
 
-    return {key: 'subnet:unknown', version: 'unknown'}
+    return { key: 'subnet:unknown', version: 'unknown' }
 }
 
 function maskIpv6(hextets: number[], prefix: number): number[] {
@@ -531,16 +539,19 @@ function normalizeCountryCode(code: string | null | undefined): string | null {
 
 async function loadMaxmindModule(): Promise<MaxmindModule> {
     try {
-        return await import('maxmind') as MaxmindModule
+        return (await import('maxmind')) as MaxmindModule
     } catch (err) {
-        throw new Error('maxmind is required for ASN or country lookups; install it as a peer dependency', {cause: err as Error})
+        throw new Error(
+            'maxmind is required for ASN or country lookups; install it as a peer dependency',
+            { cause: err as Error },
+        )
     }
 }
 
 function createGeoResolvers<C>(options: RateLimitOptions<C>): GeoResolvers<C> {
     let maxmindModulePromise: Promise<MaxmindModule> | null = null
-    let asnReaderPromise: Promise<{get: (ip: string) => any} | null> | null = null
-    let countryReaderPromise: Promise<{get: (ip: string) => any} | null> | null = null
+    let asnReaderPromise: Promise<{ get: (ip: string) => any } | null> | null = null
+    let countryReaderPromise: Promise<{ get: (ip: string) => any } | null> | null = null
 
     const loadMaxmind = () => {
         if (!maxmindModulePromise) {
@@ -549,50 +560,58 @@ function createGeoResolvers<C>(options: RateLimitOptions<C>): GeoResolvers<C> {
         return maxmindModulePromise
     }
 
-    const loadAsnReader = async (): Promise<{get: (ip: string) => any} | null> => {
+    const loadAsnReader = async (): Promise<{ get: (ip: string) => any } | null> => {
         if (!options.maxmindAsnDatabase) return null
         if (!asnReaderPromise) {
-            asnReaderPromise = loadMaxmind().then((module) => module.open(options.maxmindAsnDatabase!))
+            asnReaderPromise = loadMaxmind().then((module) =>
+                module.open(options.maxmindAsnDatabase!),
+            )
         }
         return asnReaderPromise
     }
 
-    const loadCountryReader = async (): Promise<{get: (ip: string) => any} | null> => {
+    const loadCountryReader = async (): Promise<{ get: (ip: string) => any } | null> => {
         if (!options.maxmindCountryDatabase) return null
         if (!countryReaderPromise) {
-            countryReaderPromise = loadMaxmind().then((module) => module.open(options.maxmindCountryDatabase!))
+            countryReaderPromise = loadMaxmind().then((module) =>
+                module.open(options.maxmindCountryDatabase!),
+            )
         }
         return countryReaderPromise
     }
 
-    const getAsn = options.getAsn ?? (async (_ctx: C, input) => {
-        const reader = await loadAsnReader()
-        if (!reader) return null
-        const record = reader.get(input.ipAddress)
-        const asn = record?.autonomous_system_number ?? record?.autonomousSystemNumber
-        const organization =
-            record?.autonomous_system_organization
-            ?? record?.autonomousSystemOrganization
-            ?? record?.organization
-        if (typeof asn !== 'number' || !organization) return null
-        return {asn, organization: String(organization)}
-    })
+    const getAsn =
+        options.getAsn ??
+        (async (_ctx: C, input) => {
+            const reader = await loadAsnReader()
+            if (!reader) return null
+            const record = reader.get(input.ipAddress)
+            const asn = record?.autonomous_system_number ?? record?.autonomousSystemNumber
+            const organization =
+                record?.autonomous_system_organization ??
+                record?.autonomousSystemOrganization ??
+                record?.organization
+            if (typeof asn !== 'number' || !organization) return null
+            return { asn, organization: String(organization) }
+        })
 
-    const getCountry = options.getCountryCode ?? (async (_ctx: C, input) => {
-        const reader = await loadCountryReader()
-        if (!reader) return null
-        const record = reader.get(input.ipAddress)
-        const code =
-            record?.country?.iso_code
-            ?? record?.country?.isoCode
-            ?? record?.registered_country?.iso_code
-            ?? record?.registeredCountry?.isoCode
-            ?? record?.represented_country?.iso_code
-            ?? record?.representedCountry?.isoCode
-        return normalizeCountryCode(typeof code === 'string' ? code : null)
-    })
+    const getCountry =
+        options.getCountryCode ??
+        (async (_ctx: C, input) => {
+            const reader = await loadCountryReader()
+            if (!reader) return null
+            const record = reader.get(input.ipAddress)
+            const code =
+                record?.country?.iso_code ??
+                record?.country?.isoCode ??
+                record?.registered_country?.iso_code ??
+                record?.registeredCountry?.isoCode ??
+                record?.represented_country?.iso_code ??
+                record?.representedCountry?.isoCode
+            return normalizeCountryCode(typeof code === 'string' ? code : null)
+        })
 
-    return {getAsn, getCountry}
+    return { getAsn, getCountry }
 }
 
 function formatRetryAfterSeconds(resetAtMs: number, nowMs: number): string {
@@ -600,7 +619,11 @@ function formatRetryAfterSeconds(resetAtMs: number, nowMs: number): string {
     return String(seconds)
 }
 
-function buildTooManyRequests(addRetryAfterHeader: boolean, resetAtMs: number, nowMs: number): Response {
+function buildTooManyRequests(
+    addRetryAfterHeader: boolean,
+    resetAtMs: number,
+    nowMs: number,
+): Response {
     const response = simpleStatus(HttpStatus.TOO_MANY_REQUESTS)
     if (addRetryAfterHeader) {
         response.headers.set('Retry-After', formatRetryAfterSeconds(resetAtMs, nowMs))
@@ -631,14 +654,17 @@ function buildTooManyRequests(addRetryAfterHeader: boolean, resetAtMs: number, n
  * @returns Middleware that enforces rate limits and returns 429 responses when exceeded.
  */
 export function rateLimit<Ctx extends object = AnyContext>(
-    options: RateLimitOptions<RequestContext<Ctx>>
+    options: RateLimitOptions<RequestContext<Ctx>>,
 ): Middleware<Ctx> {
     if (!options.buckets.length) {
         throw new Error('rateLimit requires at least one bucket')
     }
 
-    const storage = options.storage
-        ?? new InMemoryRateLimitStorage<RequestContext<Ctx>>(options.inMemory?.maxEntries ?? DEFAULT_MAX_ENTRIES)
+    const storage =
+        options.storage ??
+        new InMemoryRateLimitStorage<RequestContext<Ctx>>(
+            options.inMemory?.maxEntries ?? DEFAULT_MAX_ENTRIES,
+        )
     const getIpAddress = options.getIpAddress ?? defaultGetIpAddress
     const normalizeQuery = options.normalizeQuery ?? normalizeQueryString
     const endpointMatchers = options.endpointLimits.map((limit) => ({
@@ -648,9 +674,15 @@ export function rateLimit<Ctx extends object = AnyContext>(
     const asnToClass = options.asnToClass ?? defaultAsnToClass
     const geoResolvers = createGeoResolvers(options)
 
-    const asnLimitEnabled = Boolean(options.scales.asnClass && (options.getAsn || options.maxmindAsnDatabase))
-    const countryLimitEnabled = Boolean(options.scales.country && (options.getCountryCode || options.maxmindCountryDatabase))
-    const subnetAsnClassEnabled = Boolean(options.scales.subnet.byAsnClass && (options.getAsn || options.maxmindAsnDatabase))
+    const asnLimitEnabled = Boolean(
+        options.scales.asnClass && (options.getAsn || options.maxmindAsnDatabase),
+    )
+    const countryLimitEnabled = Boolean(
+        options.scales.country && (options.getCountryCode || options.maxmindCountryDatabase),
+    )
+    const subnetAsnClassEnabled = Boolean(
+        options.scales.subnet.byAsnClass && (options.getAsn || options.maxmindAsnDatabase),
+    )
     const retentionMs = options.storage ? 0 : (options.inMemory?.ttlMs ?? 1000)
 
     return async (ctx, next) => {
@@ -667,20 +699,21 @@ export function rateLimit<Ctx extends object = AnyContext>(
         const subnet = deriveSubnet(
             ipAddress,
             options.scales.subnet.ipv4Prefix ?? 24,
-            options.scales.subnet.ipv6Prefix ?? 64
+            options.scales.subnet.ipv6Prefix ?? 64,
         )
-        const subnetScaleBase = subnet.version === 'ipv6'
-            ? options.scales.subnet.ipv6
-            : subnet.version === 'ipv4'
-                ? options.scales.subnet.ipv4
-                : Math.min(options.scales.subnet.ipv4, options.scales.subnet.ipv6)
+        const subnetScaleBase =
+            subnet.version === 'ipv6'
+                ? options.scales.subnet.ipv6
+                : subnet.version === 'ipv4'
+                  ? options.scales.subnet.ipv4
+                  : Math.min(options.scales.subnet.ipv4, options.scales.subnet.ipv6)
         let asnRecord: AsnRecord | null = null
         let asnClass: AsnClass = 'unknown'
 
         if (asnLimitEnabled || subnetAsnClassEnabled) {
-            asnRecord = await geoResolvers.getAsn(ctx, {userId, ipAddress})
+            asnRecord = await geoResolvers.getAsn(ctx, { userId, ipAddress })
             asnClass = normalizeAsnClass(
-                asnRecord ? asnToClass(asnRecord.asn, asnRecord.organization) : 'unknown'
+                asnRecord ? asnToClass(asnRecord.asn, asnRecord.organization) : 'unknown',
             )
         }
 
@@ -689,7 +722,9 @@ export function rateLimit<Ctx extends object = AnyContext>(
 
         let countryCode: string | null = null
         if (countryLimitEnabled) {
-            countryCode = normalizeCountryCode(await geoResolvers.getCountry(ctx, {userId, ipAddress}))
+            countryCode = normalizeCountryCode(
+                await geoResolvers.getCountry(ctx, { userId, ipAddress }),
+            )
         }
 
         const endpointBaseLimit = endpointMatchers.length
@@ -699,20 +734,25 @@ export function rateLimit<Ctx extends object = AnyContext>(
             url,
             method,
             options.includeQueryInEndpointKey,
-            normalizeQuery
+            normalizeQuery,
         )
-        const endpointIdentityKey = endpointKeyBase ? `endpoint:${endpointKeyBase}:${identityKey}` : null
-        const endpointSubnetKey = endpointKeyBase ? `endpoint:${endpointKeyBase}:${subnet.key}` : null
+        const endpointIdentityKey = endpointKeyBase
+            ? `endpoint:${endpointKeyBase}:${identityKey}`
+            : null
+        const endpointSubnetKey = endpointKeyBase
+            ? `endpoint:${endpointKeyBase}:${subnet.key}`
+            : null
 
-        const globalPeak = (asnLimitEnabled || countryLimitEnabled)
-            ? await options.getGlobalPeakConcurrentUsers(ctx)
-            : 1
+        const globalPeak =
+            asnLimitEnabled || countryLimitEnabled
+                ? await options.getGlobalPeakConcurrentUsers(ctx)
+                : 1
 
         for (const bucket of options.buckets) {
             const bucketMax = getBucketMax(
                 options.baseMaxRequestsPerBaseWindow,
                 options.baseWindowMs,
-                bucket
+                bucket,
             )
             const bucketSuffix = `:w${bucket.windowMs}`
 
@@ -724,10 +764,14 @@ export function rateLimit<Ctx extends object = AnyContext>(
                 bucket.windowMs,
                 identityMax,
                 nowMs,
-                retentionMs
+                retentionMs,
             )
             if (!identityResult.allowed) {
-                return buildTooManyRequests(options.addRetryAfterHeader, identityResult.resetAtMs, nowMs)
+                return buildTooManyRequests(
+                    options.addRetryAfterHeader,
+                    identityResult.resetAtMs,
+                    nowMs,
+                )
             }
 
             const subnetMax = Math.floor(bucketMax * subnetMultiplier)
@@ -738,14 +782,19 @@ export function rateLimit<Ctx extends object = AnyContext>(
                 bucket.windowMs,
                 subnetMax,
                 nowMs,
-                retentionMs
+                retentionMs,
             )
             if (!subnetResult.allowed) {
-                return buildTooManyRequests(options.addRetryAfterHeader, subnetResult.resetAtMs, nowMs)
+                return buildTooManyRequests(
+                    options.addRetryAfterHeader,
+                    subnetResult.resetAtMs,
+                    nowMs,
+                )
             }
 
             if (asnLimitEnabled && options.scales.asnClass) {
-                const asnScale = options.scales.asnClass[asnClass] ?? options.scales.asnClass.unknown
+                const asnScale =
+                    options.scales.asnClass[asnClass] ?? options.scales.asnClass.unknown
                 const asnMax = Math.floor(bucketMax * asnScale * globalPeak)
                 const asnKey = asnRecord ? `asn:${asnRecord.asn}` : 'asn:unknown'
                 const asnResult = await applyFixedWindowLimit(
@@ -755,16 +804,20 @@ export function rateLimit<Ctx extends object = AnyContext>(
                     bucket.windowMs,
                     asnMax,
                     nowMs,
-                    retentionMs
+                    retentionMs,
                 )
                 if (!asnResult.allowed) {
-                    return buildTooManyRequests(options.addRetryAfterHeader, asnResult.resetAtMs, nowMs)
+                    return buildTooManyRequests(
+                        options.addRetryAfterHeader,
+                        asnResult.resetAtMs,
+                        nowMs,
+                    )
                 }
             }
 
             if (countryLimitEnabled && options.scales.country) {
                 const countryScale = countryCode
-                    ? options.scales.country[countryCode] ?? options.scales.country.other
+                    ? (options.scales.country[countryCode] ?? options.scales.country.other)
                     : options.scales.country.unknown
                 const countryMax = Math.floor(bucketMax * countryScale * globalPeak)
                 const countryKey = countryCode ? `country:${countryCode}` : 'country:unknown'
@@ -775,18 +828,27 @@ export function rateLimit<Ctx extends object = AnyContext>(
                     bucket.windowMs,
                     countryMax,
                     nowMs,
-                    retentionMs
+                    retentionMs,
                 )
                 if (!countryResult.allowed) {
-                    return buildTooManyRequests(options.addRetryAfterHeader, countryResult.resetAtMs, nowMs)
+                    return buildTooManyRequests(
+                        options.addRetryAfterHeader,
+                        countryResult.resetAtMs,
+                        nowMs,
+                    )
                 }
             }
 
-            if (endpointBaseLimit != null && endpointKeyBase && endpointIdentityKey && endpointSubnetKey) {
+            if (
+                endpointBaseLimit != null &&
+                endpointKeyBase &&
+                endpointIdentityKey &&
+                endpointSubnetKey
+            ) {
                 const endpointBucketMax = getBucketMax(
                     endpointBaseLimit,
                     options.baseWindowMs,
-                    bucket
+                    bucket,
                 )
                 const endpointIdentityMax = Math.floor(endpointBucketMax * identityMultiplier)
                 const endpointSubnetMax = Math.floor(endpointBucketMax * subnetMultiplier)
@@ -798,10 +860,14 @@ export function rateLimit<Ctx extends object = AnyContext>(
                     bucket.windowMs,
                     endpointIdentityMax,
                     nowMs,
-                    retentionMs
+                    retentionMs,
                 )
                 if (!endpointIdentityResult.allowed) {
-                    return buildTooManyRequests(options.addRetryAfterHeader, endpointIdentityResult.resetAtMs, nowMs)
+                    return buildTooManyRequests(
+                        options.addRetryAfterHeader,
+                        endpointIdentityResult.resetAtMs,
+                        nowMs,
+                    )
                 }
 
                 const endpointSubnetResult = await applyFixedWindowLimit(
@@ -811,10 +877,14 @@ export function rateLimit<Ctx extends object = AnyContext>(
                     bucket.windowMs,
                     endpointSubnetMax,
                     nowMs,
-                    retentionMs
+                    retentionMs,
                 )
                 if (!endpointSubnetResult.allowed) {
-                    return buildTooManyRequests(options.addRetryAfterHeader, endpointSubnetResult.resetAtMs, nowMs)
+                    return buildTooManyRequests(
+                        options.addRetryAfterHeader,
+                        endpointSubnetResult.resetAtMs,
+                        nowMs,
+                    )
                 }
             }
         }
@@ -827,7 +897,7 @@ function buildEndpointKeyBase(
     url: URL,
     method: string,
     includeQuery: boolean,
-    normalizeQuery: (url: URL) => string
+    normalizeQuery: (url: URL) => string,
 ): string | null {
     const pathname = url.pathname
     const normalizedMethod = method.toUpperCase()

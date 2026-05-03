@@ -1,17 +1,13 @@
 {
-  "compilerOptions": {
-    "target": "ESNext",
-    "lib": [
-      "ESNext"
-    ],
-    "module": "Preserve",
-    "moduleResolution": "Bundler",
-    "strict": true,
-    "skipLibCheck": true,
-    "allowJs": true,
-    "jsx": "react-jsx",
-    "customConditions": [
-      "bun"
-    ]
-  }
+    "compilerOptions": {
+        "target": "ESNext",
+        "lib": ["ESNext"],
+        "module": "Preserve",
+        "moduleResolution": "Bundler",
+        "strict": true,
+        "skipLibCheck": true,
+        "allowJs": true,
+        "jsx": "react-jsx",
+        "customConditions": ["bun"]
+    }
 }

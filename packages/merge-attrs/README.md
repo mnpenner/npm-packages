@@ -19,33 +19,41 @@ npm i merge-attrs --save
 ## Usage
 
 ```js
-import mergeAttrs from 'merge-attrs';
+import mergeAttrs from 'merge-attrs'
 
-let merged = mergeAttrs({id: 'foo', className: 'bar', width: 200}, {className: 'corge', width: 150});
+let merged = mergeAttrs(
+    { id: 'foo', className: 'bar', width: 200 },
+    { className: 'corge', width: 150 },
+)
 // {id: 'foo', className: 'bar corge', width: 150}
 ```
-
 
 ## API
 
 ```typescript
-export interface ClassArray extends Array<ClassValue> {
-}
-export declare type ClassValue = string | number | ClassDictionary | ClassArray | undefined | null | false;
+export interface ClassArray extends Array<ClassValue> {}
+export declare type ClassValue =
+    | string
+    | number
+    | ClassDictionary
+    | ClassArray
+    | undefined
+    | null
+    | false
 export interface ClassDictionary {
-    [id: string]: boolean | undefined | null;
+    [id: string]: boolean | undefined | null
 }
 export interface IAttrs {
-    className?: ClassValue;
+    className?: ClassValue
     style?: {
-        [prop: string]: string | number;
-    };
-    ref?: RefCallback;
-    [key: string]: any;
+        [prop: string]: string | number
+    }
+    ref?: RefCallback
+    [key: string]: any
 }
-export declare type RefCallback = (n: Element) => void;
+export declare type RefCallback = (n: Element) => void
 
-export default function mergeAttrs(merged: IAttrs, ...attrDicts: IAttrs[]): IAttrs;
+export default function mergeAttrs(merged: IAttrs, ...attrDicts: IAttrs[]): IAttrs
 ```
 
 i.e., `mergeAttrs` takes one or more objects and merges them into the first argument and then returns it. If you don't want to mutate the first argument, pass `{}` instead -- just like `Object.assign`.

@@ -1,5 +1,5 @@
-import type {CommonAttributes} from '../attributes/ElementAttributes'
-import type {ElementForTag} from './element-types'
+import type { CommonAttributes } from '../attributes/ElementAttributes'
+import type { ElementForTag } from './element-types'
 
 export interface OptgroupAttributes extends CommonAttributes<ElementForTag<'optgroup'>> {
     /**
@@ -11,4 +11,3 @@ export interface OptgroupAttributes extends CommonAttributes<ElementForTag<'optg
      */
     label?: string
 }
-

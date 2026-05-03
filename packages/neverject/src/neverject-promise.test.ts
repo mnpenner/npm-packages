@@ -1,10 +1,10 @@
 #!/usr/bin/env -S bun test
-import {describe, expect, it} from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 
-import {nj} from './nj.ts'
-import type {NeverjectPromise} from './neverject-promise.ts'
-import {err, ok, type Result} from './result.ts'
-import {expectType, type TypeEqual} from './internal/type-assert.ts'
+import { nj } from './nj.ts'
+import type { NeverjectPromise } from './neverject-promise.ts'
+import { err, ok, type Result } from './result.ts'
+import { expectType, type TypeEqual } from './internal/type-assert.ts'
 
 describe('map', () => {
     it('maps successes and flattens returned results', async () => {
@@ -13,7 +13,7 @@ describe('map', () => {
 
         const result = await mapped
         expect(result.ok).toBe(true)
-        if(result.ok) {
+        if (result.ok) {
             expect(result.value).toBe(4)
         }
     })
@@ -24,7 +24,7 @@ describe('map', () => {
 
         const errResult = await mappedToErr
         expect(errResult.ok).toBe(false)
-        if(!errResult.ok) {
+        if (!errResult.ok) {
             expect(errResult.error).toBe('fail')
         }
     })
@@ -35,7 +35,7 @@ describe('map', () => {
 
         const result = await mapped
         expect(result.ok).toBe(true)
-        if(result.ok) {
+        if (result.ok) {
             expect(result.value).toBe(2)
         }
     })
@@ -48,7 +48,7 @@ describe('mapErr', () => {
 
         const result = await mappedError
         expect(result.ok).toBe(false)
-        if(!result.ok) {
+        if (!result.ok) {
             expect(result.error).toBe(4)
         }
     })
@@ -59,7 +59,7 @@ describe('mapErr', () => {
 
         const result = await mappedError
         expect(result.ok).toBe(true)
-        if(result.ok) {
+        if (result.ok) {
             expect(result.value).toBe(5)
         }
     })
@@ -70,7 +70,7 @@ describe('mapErr', () => {
 
         const result = await mappedError
         expect(result.ok).toBe(false)
-        if(!result.ok) {
+        if (!result.ok) {
             expect(result.error).toBe(4)
         }
     })
@@ -78,12 +78,14 @@ describe('mapErr', () => {
 
 describe('mapResult', () => {
     it('rewrites the entire result', async () => {
-        const mapped = nj(ok(1) as Result<number, string>).mapResult<string, number>((result) => result.ok ? ok('done') : err(result.error.length))
+        const mapped = nj(ok(1) as Result<number, string>).mapResult<string, number>((result) =>
+            result.ok ? ok('done') : err(result.error.length),
+        )
         expectType<TypeEqual<typeof mapped, NeverjectPromise<string, number>>>(true)
 
         const result = await mapped
         expect(result.ok).toBe(true)
-        if(result.ok) {
+        if (result.ok) {
             expect(result.value).toBe('done')
         }
     })
@@ -96,7 +98,7 @@ describe('valueOr', () => {
 
         const result = await value
         expect(result.ok).toBe(true)
-        if(result.ok) {
+        if (result.ok) {
             expect(result.value).toBe('user')
         }
     })
@@ -107,7 +109,7 @@ describe('valueOr', () => {
 
         const result = await value
         expect(result.ok).toBe(true)
-        if(result.ok) {
+        if (result.ok) {
             expect(result.value).toBe('guest')
         }
     })
@@ -118,7 +120,7 @@ describe('valueOr', () => {
 
         const result = await fallback
         expect(result.ok).toBe(true)
-        if(result.ok) {
+        if (result.ok) {
             expect(result.value).toBe('fallback:missing')
         }
     })
@@ -134,7 +136,7 @@ describe('tap', () => {
 
         const success = await tappedPromise
         expect(success.ok).toBe(true)
-        if(success.ok) {
+        if (success.ok) {
             expect(success.value).toBe(5)
         }
         expect(tapped).toBe(5)
@@ -146,7 +148,7 @@ describe('tap', () => {
 
         const failedResult = await failedTap
         expect(failedResult.ok).toBe(true)
-        if(failedResult.ok) {
+        if (failedResult.ok) {
             expect(failedResult.value).toBe(1)
         }
     })
@@ -162,9 +164,9 @@ describe('tapErr', () => {
 
         const result = await tappedPromise
         expect(result.ok).toBe(false)
-        if(!result.ok) {
+        if (!result.ok) {
             expect(result.error).toBe('boom')
-            if(tappedErr === undefined) throw new Error('tapErr did not run')
+            if (tappedErr === undefined) throw new Error('tapErr did not run')
             expect(tappedErr).toBe('boom')
         }
     })
@@ -178,7 +180,7 @@ describe('tapResult', () => {
         })
 
         expect(tappedResult.ok).toBe(true)
-        if(tappedResult.ok) {
+        if (tappedResult.ok) {
             expect(tappedResult.value).toBe(10)
         }
         expect(sawOk).toBe(true)
@@ -192,7 +194,7 @@ describe('recover', () => {
 
         const result = await recovered
         expect(result.ok).toBe(true)
-        if(result.ok) {
+        if (result.ok) {
             expect(result.value).toBe('cached:offline')
         }
     })
@@ -203,7 +205,7 @@ describe('recover', () => {
 
         const result = await failedRecovery
         expect(result.ok).toBe(false)
-        if(!result.ok) {
+        if (!result.ok) {
             expect(result.error).toBe(500)
         }
     })

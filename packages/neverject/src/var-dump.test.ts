@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bun test
-import {describe, expect, it} from 'bun:test'
-import {varDump} from './var-dump.ts'
-import {err, ok} from './result.ts'
+import { describe, expect, it } from 'bun:test'
+import { varDump } from './var-dump.ts'
+import { err, ok } from './result.ts'
 
 describe(varDump.name, () => {
     it('stringifies typed arrays with constructor name and values', () => {
@@ -17,9 +17,7 @@ describe(varDump.name, () => {
     })
 
     it('stringifies nested Map and Set structures', () => {
-        const payload = new Map([
-            ['ids', new Set([1, 2, 3])],
-        ])
+        const payload = new Map([['ids', new Set([1, 2, 3])]])
 
         expect(varDump(payload)).toBe('Map{"ids"=>Set{1,2,3}}')
     })
@@ -41,7 +39,7 @@ describe(varDump.name, () => {
 
     it('stringifies plain objects with nested Results', () => {
         const payload = {
-            user: ok({id: 1}),
+            user: ok({ id: 1 }),
             profile: err('missing'),
         }
 

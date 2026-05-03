@@ -13,7 +13,7 @@ declare global {
 
 globalThis._requestCounter ??= 0
 
-export const addRequestId = (): ContextMiddleware<{ requestId: number }> => ctx => {
+export const addRequestId = (): ContextMiddleware<{ requestId: number }> => (ctx) => {
     ctx.requestId = ++globalThis._requestCounter
 }
 ```
@@ -70,13 +70,14 @@ OR maybe better:
 
 ```ts
 // shared-middleware.ts
-export const middleware: MiddlewareList = [   // simple array is ideal but some middleware-container is acceptable if needed
+export const middleware: MiddlewareList = [
+    // simple array is ideal but some middleware-container is acceptable if needed
     middleware1(),
-    middleware2()
+    middleware2(),
 ]
 
 // subrouter.ts
-import {middleware} from './shared-middleware.ts'
+import { middleware } from './shared-middleware.ts'
 export const router = new Router()
 router.use(middleware)
 ```

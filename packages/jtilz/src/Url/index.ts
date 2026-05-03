@@ -1,41 +1,42 @@
-import {SKIP, filterMap} from '../Col';
-import {isArray} from '@mpen/is-type';
-
+import { SKIP, filterMap } from '../Col'
+import { isArray } from '@mpen/is-type'
 
 /**
  * Encodes a value for use in a URI.
  * @param x - The value to encode.
  * @returns The encoded string.
  */
-export function encodeParam(x: string|number|boolean|undefined|null): string {
-    if(x === true) {
-        return '1';
+export function encodeParam(x: string | number | boolean | undefined | null): string {
+    if (x === true) {
+        return '1'
     }
-    if(x === false) {
-        return '0';
+    if (x === false) {
+        return '0'
     }
-    if(x === undefined || x === null) {
-        return '';
+    if (x === undefined || x === null) {
+        return ''
     }
-    return encodeURIComponent(String(x));
+    return encodeURIComponent(String(x))
 }
 
 /**
- * Joins URLs together with /. Leaves leading and trailing slashes alone. 
+ * Joins URLs together with /. Leaves leading and trailing slashes alone.
  * Does not duplicate internal slashes.
  * @param urls - The URL parts to join.
  * @returns The joined URL string.
  */
 export function joinUrlPaths(...urls: string[]): string {
-    return urls.map((u,i) => {
-        if(i > 0) {
-            u = u.replace(/^\/+/g, '');
-        }
-        if(i < urls.length - 1) {
-            u = u.replace(/\/+$/g, '');
-        }
-        return u;
-    }).join('/');
+    return urls
+        .map((u, i) => {
+            if (i > 0) {
+                u = u.replace(/^\/+/g, '')
+            }
+            if (i < urls.length - 1) {
+                u = u.replace(/\/+$/g, '')
+            }
+            return u
+        })
+        .join('/')
 }
 
 /**
@@ -43,16 +44,14 @@ export function joinUrlPaths(...urls: string[]): string {
  * @param params - The object to encode.
  * @returns The query string.
  */
-export function queryParams(params: {[key: string]: any}): string {
-    return filterMap(Object.keys(params), k => {
-        if(params[k] === undefined) {
-            return SKIP;
+export function queryParams(params: { [key: string]: any }): string {
+    return filterMap(Object.keys(params), (k) => {
+        if (params[k] === undefined) {
+            return SKIP
         }
-        if(isArray(params[k])) {
-            return params[k]
-                .map((val:any) => `${encodeParam(k)}[]=${encodeParam(val)}`)
-                .join('&')
+        if (isArray(params[k])) {
+            return params[k].map((val: any) => `${encodeParam(k)}[]=${encodeParam(val)}`).join('&')
         }
-        return `${encodeParam(k)}=${encodeParam(params[k])}`;
-    }).join('&');
+        return `${encodeParam(k)}=${encodeParam(params[k])}`
+    }).join('&')
 }

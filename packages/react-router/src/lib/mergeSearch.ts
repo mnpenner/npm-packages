@@ -1,4 +1,4 @@
-import type {SearchParamsInit} from '../components/Link'
+import type { SearchParamsInit } from '../components/Link'
 
 export function mergeSearch(to: string, search: SearchParamsInit): string {
     const hashIndex = to.indexOf('#')
@@ -19,4 +19,3 @@ export function mergeSearch(to: string, search: SearchParamsInit): string {
     const queryString = params.toString()
     return `${path}${queryString ? '?' + queryString : ''}${hash}`
 }
-

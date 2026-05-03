@@ -13,19 +13,19 @@ bun add @mpen/react-global-state
 ## Store
 
 ```ts
-import {createStore} from '@mpen/react-global-state'
+import { createStore } from '@mpen/react-global-state'
 
-const counter = createStore({count: 0})
+const counter = createStore({ count: 0 })
 
 const unsubscribe = counter.subscribe((state, previousState) => {
     console.log(previousState.count, '->', state.count)
 })
 
-counter.setState(state => ({
+counter.setState((state) => ({
     count: state.count + 1,
 }))
 
-counter.set({count: 10})
+counter.set({ count: 10 })
 
 console.log(counter.get())
 
@@ -36,18 +36,18 @@ Use `subscribeSelector` when code outside React only cares about part of the sta
 
 ```ts
 const unsubscribe = counter.subscribeSelector(
-    state => state.count,
-    count => {
+    (state) => state.count,
+    (count) => {
         console.log('count changed:', count)
     },
-    {fireImmediately: true},
+    { fireImmediately: true },
 )
 ```
 
 ## React
 
 ```tsx
-import {createReactStore} from '@mpen/react-global-state/react'
+import { createReactStore } from '@mpen/react-global-state/react'
 
 const session = createReactStore({
     userId: null as string | null,
@@ -55,13 +55,13 @@ const session = createReactStore({
 })
 
 export function ThemeButton() {
-    const theme = session.use(state => state.theme)
+    const theme = session.use((state) => state.theme)
 
     return (
         <button
             type="button"
             onClick={() => {
-                session.setState(state => ({
+                session.setState((state) => ({
                     ...state,
                     theme: state.theme === 'dark' ? 'light' : 'dark',
                 }))
@@ -72,7 +72,7 @@ export function ThemeButton() {
     )
 }
 
-session.setState(state => ({
+session.setState((state) => ({
     ...state,
     userId: 'user_123',
 }))
@@ -81,18 +81,18 @@ session.setState(state => ({
 You can also use an existing store with `useStore`.
 
 ```tsx
-import {createStore} from '@mpen/react-global-state'
-import {useStore} from '@mpen/react-global-state/react'
+import { createStore } from '@mpen/react-global-state'
+import { useStore } from '@mpen/react-global-state/react'
 
-const counter = createStore({count: 0})
+const counter = createStore({ count: 0 })
 
 export function Counter() {
-    const count = useStore(counter, state => state.count)
+    const count = useStore(counter, (state) => state.count)
 
     return (
         <button
             type="button"
-            onClick={() => counter.setState(state => ({count: state.count + 1}))}
+            onClick={() => counter.setState((state) => ({ count: state.count + 1 }))}
         >
             {count}
         </button>
@@ -103,14 +103,14 @@ export function Counter() {
 ## localStorage
 
 ```ts
-import {createLocalStorageStore} from '@mpen/react-global-state'
+import { createLocalStorageStore } from '@mpen/react-global-state'
 
 const settings = createLocalStorageStore('app.settings', {
     theme: 'system' as 'light' | 'dark' | 'system',
     sidebarOpen: true,
 })
 
-settings.setState(state => ({
+settings.setState((state) => ({
     ...state,
     sidebarOpen: !state.sidebarOpen,
 }))
@@ -121,7 +121,7 @@ By default values are serialized with `JSON.stringify` and restored with `JSON.p
 ```ts
 const settings = createLocalStorageStore(
     'app.settings',
-    {theme: 'system'},
+    { theme: 'system' },
     {
         onError(error, operation) {
             console.warn(`Could not ${operation} settings`, error)
@@ -135,7 +135,7 @@ const settings = createLocalStorageStore(
 Use `createStoreContext` when state should be scoped to a React subtree instead of global module state.
 
 ```tsx
-import {createStoreContext} from '@mpen/react-global-state/react'
+import { createStoreContext } from '@mpen/react-global-state/react'
 
 const DraftContext = createStoreContext({
     title: '',
@@ -144,7 +144,7 @@ const DraftContext = createStoreContext({
 
 export function DraftEditor() {
     return (
-        <DraftContext.Provider initialValue={{title: 'Untitled', body: ''}}>
+        <DraftContext.Provider initialValue={{ title: 'Untitled', body: '' }}>
             <TitleInput />
             <Preview />
         </DraftContext.Provider>
@@ -152,14 +152,14 @@ export function DraftEditor() {
 }
 
 function TitleInput() {
-    const title = DraftContext.use(state => state.title)
+    const title = DraftContext.use((state) => state.title)
     const setDraft = DraftContext.useSetState()
 
     return (
         <input
             value={title}
-            onChange={event => {
-                setDraft(state => ({
+            onChange={(event) => {
+                setDraft((state) => ({
                     ...state,
                     title: event.currentTarget.value,
                 }))

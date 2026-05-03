@@ -25,7 +25,6 @@ The logger should be able to produce JSONL / k8s OTel compatible format like, so
 "error.type": null
 }
 
-
 Middlewares should be able to add things into the logger.. like setting the requestId so that all subsequent logs include it.
 
 Handlers should be able to create 'sub-loggers' which they can use throughout the remainder of the handler and have all logs associated with it.
@@ -60,12 +59,9 @@ function mymiddleware(ctx, next) {
 
 But I don't know how well that work if something in next() is also pushing things in but not popping... might not be the right API.
 
-
-
 Create `packages/server-router/src/middleware/logger-ctx.ctx`.
 
 This middleware injects a logger into the context for use by other middleware and handlers. You can provide your own logger that implements the interface below, or one will be provided automatically.
-
 
 ```ts
 export interface LoggerCtxOptions<Ctx extends object = AnyContext> {
@@ -105,7 +101,7 @@ class Logger implements LoggerInterface {
             this.log({vars: vars, level: LogLevel.INFO})
         }
     }
-    
+
     private log(entry: LogEntry) {
         console.log(entry)
     }
@@ -120,12 +116,14 @@ This will utilize the first middleware to log each request as it comes in and as
 
 ```ts
 export interface RequestLoggerOptions<Ctx extends object = AnyContext> {
-    logLevel: LogLevel|{
-        1: LogLevel  // 1xx responses
-        2: LogLevel  // 2xx responses...
-        3: LogLevel
-        4: LogLevel
-        5: LogLevel
-    } // defaults to INFO or ERROR or 5xx
+    logLevel:
+        | LogLevel
+        | {
+              1: LogLevel // 1xx responses
+              2: LogLevel // 2xx responses...
+              3: LogLevel
+              4: LogLevel
+              5: LogLevel
+          } // defaults to INFO or ERROR or 5xx
 }
 ```

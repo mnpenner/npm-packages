@@ -1,5 +1,5 @@
-import {ArgBuilder} from '../lib/arg-builder.ts'
-import {Process, type ProcessSpawnOptions} from '../lib/process.ts'
+import { ArgBuilder } from '../lib/arg-builder.ts'
+import { Process, type ProcessSpawnOptions } from '../lib/process.ts'
 
 type PodmanRunOptions = {
     /** Image to run. */
@@ -321,10 +321,7 @@ type PodmanRunOptions = {
  * console.log('exit code:', code)
  * ```
  */
-export function run(
-    options: PodmanRunOptions,
-    processOptions: ProcessSpawnOptions = {},
-): Process {
+export function run(options: PodmanRunOptions, processOptions: ProcessSpawnOptions = {}): Process {
     const args = new ArgBuilder('run')
 
     args.addValues('--add-host', options.addHost)
@@ -472,14 +469,14 @@ export function run(
 
     args.add(options.image)
 
-    if(options.command) {
+    if (options.command) {
         const commandParts = Array.isArray(options.command) ? options.command : [options.command]
-        for(const part of commandParts) {
+        for (const part of commandParts) {
             args.add(part)
         }
     }
-    if(options.commandArgs?.length) {
-        for(const part of options.commandArgs) {
+    if (options.commandArgs?.length) {
+        for (const part of options.commandArgs) {
             args.add(part)
         }
     }

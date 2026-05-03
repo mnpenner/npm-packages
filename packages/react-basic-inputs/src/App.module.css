@@ -1,16 +1,16 @@
 .grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 1em;
-  margin-inline: auto;
-  max-width: 1650px;
-  padding: 1em;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1em;
+    margin-inline: auto;
+    max-width: 1650px;
+    padding: 1em;
 }
 
 .flex-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .2em;
-  align-items: center;
-  margin-block: .2em;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2em;
+    align-items: center;
+    margin-block: 0.2em;
 }

@@ -1,1 +1,1 @@
-declare module '@babel/code-frame';
+declare module '@babel/code-frame'

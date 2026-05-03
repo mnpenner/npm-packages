@@ -1,9 +1,10 @@
-import {HttpStatus} from '@mpen/http-helpers'
-import {simpleStatus} from '@mpen/server-router/response/simple'
-import type {AnyContext, HandlerResult, MaybePromise, Middleware, RequestContext} from '../types'
+import { HttpStatus } from '@mpen/http-helpers'
+import { simpleStatus } from '@mpen/server-router/response/simple'
+import type { AnyContext, HandlerResult, MaybePromise, Middleware, RequestContext } from '../types'
 
-type BodyLimitHandler<Ctx extends object = AnyContext> =
-    (ctx: RequestContext<Ctx>) => MaybePromise<HandlerResult>
+type BodyLimitHandler<Ctx extends object = AnyContext> = (
+    ctx: RequestContext<Ctx>,
+) => MaybePromise<HandlerResult>
 
 export interface MaxContentSizeOptions<Ctx extends object = AnyContext> {
     maxSize: number
@@ -63,12 +64,10 @@ function chunkByteLength(chunk: Uint8Array | string): number {
  * @returns Middleware that rejects oversized bodies and mismatched Content-Length values.
  */
 export function bodyLimit<Ctx extends object = AnyContext>(
-    options: MaxContentSizeOptions<Ctx>
+    options: MaxContentSizeOptions<Ctx>,
 ): Middleware<Ctx> {
-    const tooLargeHandler = options.tooLarge
-        ?? (() => simpleStatus(HttpStatus.PAYLOAD_TOO_LARGE))
-    const sizeMismatchHandler = options.sizeMismatch
-        ?? (() => simpleStatus(HttpStatus.BAD_REQUEST))
+    const tooLargeHandler = options.tooLarge ?? (() => simpleStatus(HttpStatus.PAYLOAD_TOO_LARGE))
+    const sizeMismatchHandler = options.sizeMismatch ?? (() => simpleStatus(HttpStatus.BAD_REQUEST))
 
     return async (ctx, next) => {
         const maxSize = options.maxSize

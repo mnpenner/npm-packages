@@ -1,11 +1,11 @@
 /* eslint-disable */
 // ripped from react-dom
 
-import {StyleObject} from './jsx-types'
+import { StyleObject } from './jsx-types'
 
 // https://github.com/facebook/react/blob/ce2bc58a9f6f3b0bfc8c738a0d8e2a5f3a332ff5/packages/react-dom-bindings/src/shared/hyphenateStyleName.js#L10
-const uppercasePattern = /([A-Z])/g;
-const msPattern = /^ms-/;
+const uppercasePattern = /([A-Z])/g
+const msPattern = /^ms-/
 
 /**
  * Hyphenates a camelcased CSS property name, for example:
@@ -21,20 +21,17 @@ const msPattern = /^ms-/;
  * is converted to `-ms-`.
  */
 function hyphenateStyleName(name: string): string {
-    return name
-        .replace(uppercasePattern, '-$1')
-        .toLowerCase()
-        .replace(msPattern, '-ms-');
+    return name.replace(uppercasePattern, '-$1').toLowerCase().replace(msPattern, '-ms-')
 }
 
 /**
  * Memoizes the return value of a function that accepts one string argument.
  */
 function memoizeStringOnly(callback: (arg: string) => string) {
-    const cache = new Map<string,string>()
-    return function(this: unknown, string: string) {
+    const cache = new Map<string, string>()
+    return function (this: unknown, string: string) {
         let value = cache.get(string)
-        if(value === undefined) {
+        if (value === undefined) {
             value = callback.call(this, string)
             cache.set(string, value)
         }
@@ -43,7 +40,6 @@ function memoizeStringOnly(callback: (arg: string) => string) {
 }
 
 const makeStyleName = memoizeStringOnly(hyphenateStyleName)
-
 
 // https://github.com/facebook/react/blob/ce2bc58a9f6f3b0bfc8c738a0d8e2a5f3a332ff5/packages/react-dom-bindings/src/shared/isUnitlessNumber.js#L13
 /**
@@ -121,8 +117,7 @@ const unitlessNumbers = new Set([
     'WebkitFlexPositive',
     'WebkitFlexShrink',
     'WebkitLineClamp',
-]);
-
+])
 
 /**
  * Convert a value into the proper css writable value. The style name `name`
@@ -145,16 +140,16 @@ function makeStyleValue(name: string, value: any): string {
     // trust URLs moving forward. See #2115901
 
     let isEmpty = value == null || typeof value === 'boolean' || value === ''
-    if(isEmpty) {
+    if (isEmpty) {
         return ''
     }
 
     let isNonNumeric = isNaN(value)
-    if(isNonNumeric || value === 0 || unitlessNumbers.has(name)) {
+    if (isNonNumeric || value === 0 || unitlessNumbers.has(name)) {
         return '' + value // cast to string
     }
 
-    if(typeof value === 'string') {
+    if (typeof value === 'string') {
         value = value.trim()
     }
     return value + 'px'
@@ -174,12 +169,11 @@ function makeStyleValue(name: string, value: any): string {
  */
 export default function styleObjectToString(styles: StyleObject): string {
     let serialized = ''
-    for(const [styleName,styleValue] of Object.entries(styles)) {
-        if(styleValue != null) {
+    for (const [styleName, styleValue] of Object.entries(styles)) {
+        if (styleValue != null) {
             serialized += makeStyleName(styleName) + ':'
             serialized += makeStyleValue(styleName, styleValue) + ';'
         }
     }
     return serialized
 }
-

@@ -1,6 +1,6 @@
-import type {CommonAttributes} from '../attributes/ElementAttributes'
-import type {ElementForTag} from './element-types'
-import type {AnyString} from '../../util-types'
+import type { CommonAttributes } from '../attributes/ElementAttributes'
+import type { ElementForTag } from './element-types'
+import type { AnyString } from '../../util-types'
 
 export interface FormAttributes extends CommonAttributes<ElementForTag<'form'>> {
     /**
@@ -60,5 +60,4 @@ export interface FormAttributes extends CommonAttributes<ElementForTag<'form'>> 
      * - _unfencedTop
      */
     target?: '_self' | '_blank' | '_parent' | '_top' | '_unfencedTop'
-
 }

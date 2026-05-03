@@ -1,15 +1,12 @@
-
-
-
 function byteLen(str: string) {
     return new TextEncoder().encode(str).length
 }
 
-const found: string[] = [];
+const found: string[] = []
 
-for(let i=0; i<256; ++i) {
+for (let i = 0; i < 256; ++i) {
     const ch = String.fromCodePoint(i)
-    if(byteLen(encodeURIComponent(ch)) === 1) {
+    if (byteLen(encodeURIComponent(ch)) === 1) {
         found.push(ch)
     } else {
         // console.log(JSON.stringify(ch))

@@ -1,20 +1,22 @@
 #!/usr/bin/env -S bun test
-import {describe, expect, it} from "bun:test"
-import {nj} from './nj.ts'
-import type {NeverjectPromise} from './neverject-promise.ts'
-import {err, ok, type Result} from './result.ts'
-import {expectType, type TypeEqual} from './internal/type-assert.ts'
-import type {DetailedError} from './detailed-error.ts'
+import { describe, expect, it } from 'bun:test'
+import { nj } from './nj.ts'
+import type { NeverjectPromise } from './neverject-promise.ts'
+import { err, ok, type Result } from './result.ts'
+import { expectType, type TypeEqual } from './internal/type-assert.ts'
+import type { DetailedError } from './detailed-error.ts'
 
 describe('nj overloads', () => {
     it('wraps a promise', async () => {
         const asyncResult = nj(Promise.resolve(1))
 
-        expectType<TypeEqual<typeof asyncResult, NeverjectPromise<number, DetailedError<unknown>>>>(true)
+        expectType<TypeEqual<typeof asyncResult, NeverjectPromise<number, DetailedError<unknown>>>>(
+            true,
+        )
 
         const result = await asyncResult
         expect(result.ok).toBe(true)
-        if(result.ok) {
+        if (result.ok) {
             expect(result.value).toBe(1)
         }
     })
@@ -23,11 +25,13 @@ describe('nj overloads', () => {
         const rejectedPromise: Promise<string> = Promise.reject('bad')
         const asyncResult = nj(rejectedPromise)
 
-        expectType<TypeEqual<typeof asyncResult, NeverjectPromise<string, DetailedError<unknown>>>>(true)
+        expectType<TypeEqual<typeof asyncResult, NeverjectPromise<string, DetailedError<unknown>>>>(
+            true,
+        )
 
         const result = await asyncResult
         expect(result.ok).toBe(false)
-        if(!result.ok) {
+        if (!result.ok) {
             expect(result.error).toBeInstanceOf(Error)
             expect(result.error.message).toContain('bad')
             expect(result.error.details).toBe('bad')
@@ -42,7 +46,7 @@ describe('nj overloads', () => {
 
         const result = await asyncResult
         expect(result.ok).toBe(false)
-        if(!result.ok) {
+        if (!result.ok) {
             expect(result.error).toBe(input)
         }
     })
@@ -55,20 +59,20 @@ describe('nj overloads', () => {
 
         const result = await asyncResult
         expect(result.ok).toBe(true)
-        if(result.ok) {
+        if (result.ok) {
             expect(result.value).toBe(2)
         }
     })
 
     it('wraps a value', async () => {
-        const asyncResult = nj({value: 'abc'})
+        const asyncResult = nj({ value: 'abc' })
 
         expectType<TypeEqual<typeof asyncResult, NeverjectPromise<{ value: string }, never>>>(true)
 
         const result = await asyncResult
         expect(result.ok).toBe(true)
-        if(result.ok) {
-            expect(result.value).toEqual({value: 'abc'})
+        if (result.ok) {
+            expect(result.value).toEqual({ value: 'abc' })
         }
     })
 
@@ -82,7 +86,7 @@ describe('nj overloads', () => {
 
         const result = await asyncResult
         expect(result.ok).toBe(false)
-        if(!result.ok) {
+        if (!result.ok) {
             expect(result.error).toBe(4)
         }
     })
@@ -95,7 +99,7 @@ describe('nj overloads', () => {
 
         const result = await asyncResult
         expect(result.ok).toBe(false)
-        if(!result.ok) {
+        if (!result.ok) {
             expect(result.error).toBe(4)
         }
     })
@@ -107,7 +111,7 @@ describe('nj overloads', () => {
 
         const result = await asyncResult
         expect(result.ok).toBe(true)
-        if(result.ok) {
+        if (result.ok) {
             expect(result.value).toBe(5)
         }
     })

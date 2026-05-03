@@ -3,10 +3,8 @@ export {
     DuplicateKey,
     _escapeValue as escapeValue,
     _escapeIdLoose as escapeIdLoose,
-    _escapeIdStrict as escapeIdStrict
+    _escapeIdStrict as escapeIdStrict,
 } from './sql'
-export type {PoolConfig} from 'mariadb'
-export {createPool} from './ConnectionPool'
-export {ConnectionPool} from './ConnectionPool'
-
-
+export type { PoolConfig } from 'mariadb'
+export { createPool } from './ConnectionPool'
+export { ConnectionPool } from './ConnectionPool'

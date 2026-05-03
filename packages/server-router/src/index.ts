@@ -1,4 +1,4 @@
-export {Router} from './router'
+export { Router } from './router'
 export type {
     AnyContext,
     ContextMiddleware,
@@ -17,5 +17,5 @@ export type {
     RoutePath,
     RouteSchema,
 } from './types'
-export type {UniversalFetchResult, UniversalServerInterface} from './UniversalServerInterface'
-export type {UniversalExecutionContext} from './UniversalServerInterface'
+export type { UniversalFetchResult, UniversalServerInterface } from './UniversalServerInterface'
+export type { UniversalExecutionContext } from './UniversalServerInterface'

@@ -1,4 +1,4 @@
-import {Writable} from 'stream'
+import { Writable } from 'stream'
 
 export default class MemoryStream extends Writable {
     private chunks: Buffer[] = []
@@ -11,7 +11,7 @@ export default class MemoryStream extends Writable {
         return this.chunks.reduce((prev, cur) => prev + cur.length, 0)
     }
 
-    _write(chunk: Buffer, encoding: BufferEncoding, callback: (error?: (Error | null)) => void) {
+    _write(chunk: Buffer, encoding: BufferEncoding, callback: (error?: Error | null) => void) {
         this.chunks.push(chunk)
         callback()
     }

@@ -1,4 +1,4 @@
-```sh
+````sh
 Mark@DESKTOP-NN7TD9I ~
 $ jj --help
 Jujutsu (An experimental VCS)
@@ -213,8 +213,8 @@ Global Options:
 
       --config-file <PATH>
           Additional configuration files (can be repeated)
-          
-          
+
+
 Mark@DESKTOP-NN7TD9I ~
 $ jj file show --help
 Print contents of files in a revision
@@ -311,9 +311,9 @@ Global Options:
           notation), quotes can be omitted.
 
       --config-file <PATH>
-          Additional configuration files (can be repeated)          
-          
-          
+          Additional configuration files (can be repeated)
+
+
 $ jj new --help
 Create a new, empty change and (by default) edit it in the working copy
 
@@ -470,5 +470,5 @@ Global Options:
 
       --config-file <PATH>
           Additional configuration files (can be repeated)
-          
-```
+
+````

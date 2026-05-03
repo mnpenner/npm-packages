@@ -2,12 +2,12 @@
 import countryDb from './GeoLite2-Country.mmdb'
 import asnDb from './GeoLite2-ASN.mmdb'
 
-import {createReadStream} from 'node:fs'
+import { createReadStream } from 'node:fs'
 import * as readline from 'node:readline'
 
-console.log({countryDb, asnDb})
+console.log({ countryDb, asnDb })
 
-type AsnEntry = {asn: number; org: string}
+type AsnEntry = { asn: number; org: string }
 type Output = {
     asns: AsnEntry[]
     orgs: string[]
@@ -66,7 +66,7 @@ const parseCsvLine = (line: string): string[] => {
 }
 
 const parseAsnBlocks = async (path: string, asnToOrgs: Map<number, Set<string>>) => {
-    const rl = readline.createInterface({input: createReadStream(path), crlfDelay: Infinity})
+    const rl = readline.createInterface({ input: createReadStream(path), crlfDelay: Infinity })
 
     let header: string[] | null = null
     let idxAsn = -1
@@ -103,7 +103,7 @@ const parseAsnBlocks = async (path: string, asnToOrgs: Map<number, Set<string>>)
 }
 
 const parseCountryLocations = async (path: string, countryCodes: Set<string>) => {
-    const rl = readline.createInterface({input: createReadStream(path), crlfDelay: Infinity})
+    const rl = readline.createInterface({ input: createReadStream(path), crlfDelay: Infinity })
 
     let header: string[] | null = null
 
@@ -143,10 +143,10 @@ const countryCodes = new Set<string>()
 await parseCountryLocations(COUNTRY_LOCATIONS_CSV, countryCodes)
 
 const asns: AsnEntry[] = Array.from(asnToOrgs.entries())
-    .flatMap(([asn, orgs]) => Array.from(orgs).map(org => ({asn, org})))
-    .sort((a, b) => (a.asn - b.asn) || a.org.localeCompare(b.org))
+    .flatMap(([asn, orgs]) => Array.from(orgs).map((org) => ({ asn, org })))
+    .sort((a, b) => a.asn - b.asn || a.org.localeCompare(b.org))
 
-const orgs = Array.from(new Set(asns.map(x => x.org))).sort((a, b) => a.localeCompare(b))
+const orgs = Array.from(new Set(asns.map((x) => x.org))).sort((a, b) => a.localeCompare(b))
 const codes = Array.from(countryCodes).sort((a, b) => a.localeCompare(b))
 
 const out: Output = {

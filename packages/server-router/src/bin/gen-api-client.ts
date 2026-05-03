@@ -1,12 +1,12 @@
 #!/usr/bin/env -S bun
 import path from 'node:path'
 import fs from 'node:fs'
-import {pathToFileURL} from 'node:url'
-import {parseArgs} from 'util'
-import {$} from 'bun'
-import {compile} from 'json-schema-to-typescript'
-import {HttpMethod} from '@mpen/http-helpers'
-import type {JsonSchema, NormalizedRoute, RouteSchema} from '../types'
+import { pathToFileURL } from 'node:url'
+import { parseArgs } from 'util'
+import { $ } from 'bun'
+import { compile } from 'json-schema-to-typescript'
+import { HttpMethod } from '@mpen/http-helpers'
+import type { JsonSchema, NormalizedRoute, RouteSchema } from '../types'
 
 type ExtractedRouteMeta = {
     name: string[]
@@ -58,7 +58,7 @@ function routeTypeBaseName(route: ExtractedRouteMeta): string {
 
 function getPathParamNames(routePath: string): string[] {
     const matches = routePath.match(/:([a-zA-Z0-9_]+)/g) ?? []
-    return matches.map(match => match.slice(1))
+    return matches.map((match) => match.slice(1))
 }
 
 function buildRouteTree(routes: ProcessedRouteMeta[]): RouteNode {
@@ -88,7 +88,10 @@ function parseImportTypeOption(value: string): ImportType {
     }
     const names = value.slice(0, colonIdx)
     const module = value.slice(colonIdx + 1).trim()
-    const parsedNames = names.split(',').map(name => name.trim()).filter(Boolean)
+    const parsedNames = names
+        .split(',')
+        .map((name) => name.trim())
+        .filter(Boolean)
     if (parsedNames.length === 0 || module.length === 0) {
         throw new Error(`Invalid --import-type value: "${value}"`)
     }
@@ -97,12 +100,14 @@ function parseImportTypeOption(value: string): ImportType {
 
 function normalizeClientName(name: string | undefined): string {
     if (!name) return 'ApiClient'
-    return name
-        .replace(/[^A-Za-z0-9]+/g, ' ')
-        .trim()
-        .split(/\s+/)
-        .map(upperFirst)
-        .join('') || 'ApiClient'
+    return (
+        name
+            .replace(/[^A-Za-z0-9]+/g, ' ')
+            .trim()
+            .split(/\s+/)
+            .map(upperFirst)
+            .join('') || 'ApiClient'
+    )
 }
 
 function upperFirst(str: string): string {
@@ -134,8 +139,10 @@ function extractRoutes(routes: NormalizedRoute<any>[]): ExtractedRouteMeta[] {
                 name: route.name,
                 method,
                 path: route.path.pathname,
-                ...(route.schema?.request ? {requestSchema: route.schema.request} : {}),
-                ...(route.schema?.response?.body ? {responseBodySchemas: route.schema.response.body} : {}),
+                ...(route.schema?.request ? { requestSchema: route.schema.request } : {}),
+                ...(route.schema?.response?.body
+                    ? { responseBodySchemas: route.schema.response.body }
+                    : {}),
             })
         }
     }
@@ -143,13 +150,13 @@ function extractRoutes(routes: NormalizedRoute<any>[]): ExtractedRouteMeta[] {
 }
 
 function resolveRouterModule(module: Record<string, unknown>): RoutableModule {
-    const candidates = [
-        module.default,
-        module.router,
-        ...Object.values(module),
-    ]
+    const candidates = [module.default, module.router, ...Object.values(module)]
     for (const candidate of candidates) {
-        if (candidate && typeof candidate === 'object' && typeof (candidate as RoutableModule).getRoutes === 'function') {
+        if (
+            candidate &&
+            typeof candidate === 'object' &&
+            typeof (candidate as RoutableModule).getRoutes === 'function'
+        ) {
             return candidate as RoutableModule
         }
     }
@@ -164,12 +171,14 @@ async function loadRuntimeRoutes(routerPath: string): Promise<NormalizedRoute<an
 }
 
 async function compileSchemaType(name: string, schema: JsonSchema): Promise<string> {
-    return (await compile(schema as Record<string, unknown>, name, {
-        bannerComment: '',
-        style: {
-            singleQuote: true,
-        },
-    })).trim()
+    return (
+        await compile(schema as Record<string, unknown>, name, {
+            bannerComment: '',
+            style: {
+                singleQuote: true,
+            },
+        })
+    ).trim()
 }
 
 function responseStatusAlias(typeBase: string, status: string): string {
@@ -183,13 +192,22 @@ async function generateRouteTypes(route: ProcessedRouteMeta): Promise<GeneratedR
     }
 
     if (route.requestSchema?.path) {
-        generated.pathTypeSource = await compileSchemaType(`${route.typeBase}PathParams`, route.requestSchema.path)
+        generated.pathTypeSource = await compileSchemaType(
+            `${route.typeBase}PathParams`,
+            route.requestSchema.path,
+        )
     }
     if (route.requestSchema?.query) {
-        generated.queryTypeSource = await compileSchemaType(`${route.typeBase}Query`, route.requestSchema.query)
+        generated.queryTypeSource = await compileSchemaType(
+            `${route.typeBase}Query`,
+            route.requestSchema.query,
+        )
     }
     if (route.requestSchema?.body !== undefined) {
-        generated.requestTypeSource = await compileSchemaType(`${route.typeBase}Request`, route.requestSchema.body)
+        generated.requestTypeSource = await compileSchemaType(
+            `${route.typeBase}Request`,
+            route.requestSchema.body,
+        )
     }
 
     if (route.responseBodySchemas && Object.keys(route.responseBodySchemas).length > 0) {
@@ -213,11 +231,16 @@ async function generateRouteTypes(route: ProcessedRouteMeta): Promise<GeneratedR
     return generated
 }
 
-function buildMethodLines(route: ProcessedRouteMeta, options: BuildOptions, indent: string): string[] {
+function buildMethodLines(
+    route: ProcessedRouteMeta,
+    options: BuildOptions,
+    indent: string,
+): string[] {
     const lines: string[] = []
     const methodName = route.method.toLowerCase()
     const pathType = route.requestSchema?.path ? `${route.typeBase}PathParams` : undefined
-    const bodyType = route.requestSchema?.body !== undefined ? `${route.typeBase}Request` : undefined
+    const bodyType =
+        route.requestSchema?.body !== undefined ? `${route.typeBase}Request` : undefined
     const queryType = route.requestSchema?.query ? `${route.typeBase}Query` : undefined
     const hasPathParams = route.pathParams.length > 0
     const hasSinglePathParam = route.pathParams.length === 1
@@ -227,7 +250,9 @@ function buildMethodLines(route: ProcessedRouteMeta, options: BuildOptions, inde
     if (hasPathParams) {
         let pathParamType = pathType ?? 'any'
         if (hasSinglePathParam) {
-            const singleParamType = pathType ? `SinglePathParam<${pathType}, "${route.pathParams[0]}">` : 'any'
+            const singleParamType = pathType
+                ? `SinglePathParam<${pathType}, "${route.pathParams[0]}">`
+                : 'any'
             pathParamType = `${pathParamType} | ${singleParamType}`
             pathVar = '_path'
         }
@@ -240,7 +265,9 @@ function buildMethodLines(route: ProcessedRouteMeta, options: BuildOptions, inde
 
     lines.push(`${indent}${methodName}(${params.join(', ')}) {`)
     if (hasSinglePathParam) {
-        lines.push(`${indent}    const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { ${route.pathParams[0]}: path } as any`)
+        lines.push(
+            `${indent}    const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { ${route.pathParams[0]}: path } as any`,
+        )
     }
     const urlExpr = patternToUrlTemplate(route.path, pathVar)
     const finalUrlExpr = queryType ? `withQuery(${urlExpr}, query)` : urlExpr
@@ -293,14 +320,17 @@ function emitClass(node: RouteNode, parts: string[], options: BuildOptions, line
     }
 }
 
-async function buildApiClientSource(routes: ExtractedRouteMeta[], options: BuildOptions): Promise<string> {
-    const processedRoutes: ProcessedRouteMeta[] = routes.map(route => ({
+async function buildApiClientSource(
+    routes: ExtractedRouteMeta[],
+    options: BuildOptions,
+): Promise<string> {
+    const processedRoutes: ProcessedRouteMeta[] = routes.map((route) => ({
         ...route,
         typeBase: routeTypeBaseName(route),
         pathParams: getPathParamNames(route.path),
     }))
-    const needsSinglePathHelper = processedRoutes.some(route => route.pathParams.length === 1)
-    const needsQueryHelper = processedRoutes.some(route => route.requestSchema?.query)
+    const needsSinglePathHelper = processedRoutes.some((route) => route.pathParams.length === 1)
+    const needsQueryHelper = processedRoutes.some((route) => route.requestSchema?.query)
     const generatedTypes = await Promise.all(processedRoutes.map(generateRouteTypes))
 
     const lines: string[] = []
@@ -329,7 +359,9 @@ async function buildApiClientSource(routes: ExtractedRouteMeta[], options: Build
 
     if (needsSinglePathHelper) {
         lines.push(``)
-        lines.push(`type SinglePathParam<TParams, TKey extends string> = TParams extends { [K in TKey]: infer V } ? V : unknown`)
+        lines.push(
+            `type SinglePathParam<TParams, TKey extends string> = TParams extends { [K in TKey]: infer V } ? V : unknown`,
+        )
     }
 
     if (needsQueryHelper) {
@@ -340,11 +372,15 @@ async function buildApiClientSource(routes: ExtractedRouteMeta[], options: Build
         lines.push(`        if (value == null) continue`)
         lines.push(`        if (Array.isArray(value)) {`)
         lines.push(`            for (const item of value) {`)
-        lines.push(`                if (item != null) searchParams.append(key, typeof item === 'object' ? JSON.stringify(item) : String(item))`)
+        lines.push(
+            `                if (item != null) searchParams.append(key, typeof item === 'object' ? JSON.stringify(item) : String(item))`,
+        )
         lines.push(`            }`)
         lines.push(`            continue`)
         lines.push(`        }`)
-        lines.push(`        searchParams.append(key, typeof value === 'object' ? JSON.stringify(value) : String(value))`)
+        lines.push(
+            `        searchParams.append(key, typeof value === 'object' ? JSON.stringify(value) : String(value))`,
+        )
         lines.push(`    }`)
         lines.push(`    const search = searchParams.toString()`)
         lines.push(`    return search.length > 0 ? \`\${url}?\${search}\` : url`)
@@ -353,13 +389,17 @@ async function buildApiClientSource(routes: ExtractedRouteMeta[], options: Build
 
     lines.push(``)
     for (const generated of generatedTypes) {
-        if (generated.pathTypeSource && !isUnknown(generated.pathTypeSource)) lines.push(generated.pathTypeSource, ``)
-        if (generated.queryTypeSource && !isUnknown(generated.queryTypeSource)) lines.push(generated.queryTypeSource, ``)
-        if (generated.requestTypeSource && !isUnknown(generated.requestTypeSource)) lines.push(generated.requestTypeSource, ``)
+        if (generated.pathTypeSource && !isUnknown(generated.pathTypeSource))
+            lines.push(generated.pathTypeSource, ``)
+        if (generated.queryTypeSource && !isUnknown(generated.queryTypeSource))
+            lines.push(generated.queryTypeSource, ``)
+        if (generated.requestTypeSource && !isUnknown(generated.requestTypeSource))
+            lines.push(generated.requestTypeSource, ``)
         for (const responseTypeSource of generated.responseTypeSources) {
             if (!isUnknown(responseTypeSource)) lines.push(responseTypeSource, ``)
         }
-        if (generated.responseTypesByStatusSource) lines.push(generated.responseTypesByStatusSource, ``)
+        if (generated.responseTypesByStatusSource)
+            lines.push(generated.responseTypesByStatusSource, ``)
     }
 
     const tree = buildRouteTree(processedRoutes)
@@ -389,13 +429,29 @@ export async function main(argv: string[] = Bun.argv) {
 
     const [, , routerPathArg, outputPathArg] = positionals
     if (!routerPathArg) {
-        console.error('Usage: bun run packages/server-router/src/bin/gen-api-client.ts <router-file> [output-file] [--client-name <Name>] [--import-type "Type:module"] [--response-type <Type>]')
+        console.error(
+            'Usage: bun run packages/server-router/src/bin/gen-api-client.ts <router-file> [output-file] [--client-name <Name>] [--import-type "Type:module"] [--response-type <Type>]',
+        )
         process.exit(1)
     }
 
-    const clientName = normalizeClientName((values as Record<string, string | string[] | undefined>)['client-name'] as string | undefined)
-    const responseType = ((values as Record<string, string | string[] | undefined>)['response-type'] as string | undefined)?.trim() || 'PromisedResponse'
-    const importTypes = ((values as Record<string, string | string[] | undefined>)['import-type'] as string[] | undefined)?.map(parseImportTypeOption) ?? []
+    const clientName = normalizeClientName(
+        (values as Record<string, string | string[] | undefined>)['client-name'] as
+            | string
+            | undefined,
+    )
+    const responseType =
+        (
+            (values as Record<string, string | string[] | undefined>)['response-type'] as
+                | string
+                | undefined
+        )?.trim() || 'PromisedResponse'
+    const importTypes =
+        (
+            (values as Record<string, string | string[] | undefined>)['import-type'] as
+                | string[]
+                | undefined
+        )?.map(parseImportTypeOption) ?? []
 
     const routerPath = path.resolve(routerPathArg)
     const routes = extractRoutes(await loadRuntimeRoutes(routerPath))
@@ -403,7 +459,7 @@ export async function main(argv: string[] = Bun.argv) {
     if (rawArgs[0] && path.isAbsolute(rawArgs[0])) {
         rawArgs[0] = path.relative(process.cwd(), rawArgs[0]).replace(/\\/g, '/')
     }
-    const commandText = ['bun', ...rawArgs.map(arg => $.escape(arg))].join(' ')
+    const commandText = ['bun', ...rawArgs.map((arg) => $.escape(arg))].join(' ')
 
     const client = await buildApiClientSource(routes, {
         clientName,
@@ -422,7 +478,7 @@ export async function main(argv: string[] = Bun.argv) {
 }
 
 if (import.meta.main) {
-    main().catch(err => {
+    main().catch((err) => {
         console.error(err)
         process.exit(1)
     })

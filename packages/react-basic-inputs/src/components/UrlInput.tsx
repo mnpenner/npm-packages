@@ -1,10 +1,9 @@
-import type { TextInputProps} from './TextInput';
-import {TextInput} from './TextInput'
-import {formatUrl} from '../util/format'
-
+import type { TextInputProps } from './TextInput'
+import { TextInput } from './TextInput'
+import { formatUrl } from '../util/format'
 
 export type UrlInputProps = Omit<TextInputProps, 'inputMode'>
 
 export function UrlInput(props: UrlInputProps) {
-    return <TextInput inputMode="url" formatOnChange={formatUrl} {...props}/>
+    return <TextInput inputMode="url" formatOnChange={formatUrl} {...props} />
 }

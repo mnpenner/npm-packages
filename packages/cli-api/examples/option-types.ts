@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import {App, OptType} from '../src'
+import { App, OptType } from '../src'
 import * as pkg from '../package.json'
 
 const app = new App('option-types')
@@ -62,12 +62,10 @@ const app = new App('option-types')
             description: 'Empty or non-existent directory',
         },
     ])
-    .run(opts => {
-        console.log({opts})
+    .run((opts) => {
+        console.log({ opts })
     })
 
-if(import.meta.main) {
+if (import.meta.main) {
     await app.execute()
 }
-
-

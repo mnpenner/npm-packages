@@ -1,8 +1,8 @@
-import type {Plugin} from 'rollup'
-import Path, {dirname} from 'path'
-import {constants as FSC, promises as FileSys} from 'fs'
+import type { Plugin } from 'rollup'
+import Path, { dirname } from 'path'
+import { constants as FSC, promises as FileSys } from 'fs'
 import builtinModules from 'builtin-modules'
-import type {ResolveIdResult} from 'rollup'
+import type { ResolveIdResult } from 'rollup'
 
 export interface RollupPluginNodeResolveOptions {
     rootDir?: string
@@ -25,11 +25,11 @@ export default function (opts: RollupPluginNodeResolveOptions = {}): Plugin {
 
             if (/^\x00/.test(importee)) {
                 // https://github.com/rollup/plugins/blob/6bee5980155df7b73cfbd9746556517c8d7f0ad7/packages/node-resolve/src/index.js#L98
-                return null  // defer to other resolveId functions
+                return null // defer to other resolveId functions
             }
 
-            if(builtins.has(importee)) {
-                return false  // mark as external
+            if (builtins.has(importee)) {
+                return false // mark as external
             }
 
             if (importer && /^\x00/.test(importer)) {
@@ -40,12 +40,13 @@ export default function (opts: RollupPluginNodeResolveOptions = {}): Plugin {
             const cacheKey = importee + '\x00' + baseDir
             const cacheHit = cache.get(cacheKey)
 
-            if(cacheHit !== undefined) {
+            if (cacheHit !== undefined) {
                 return cacheHit
             }
 
             const resolved = await (async () => {
-                if (/^\.{0,2}\//.test(importee)) {  // relative path
+                if (/^\.{0,2}\//.test(importee)) {
+                    // relative path
                     const fullPath = Path.resolve(baseDir, importee)
                     for (const ext of extensions) {
                         // TODO: try extensionless *file* first (if it's a directory, ignore and try file extensions first). See "LOAD_AS_FILE"
@@ -70,24 +71,22 @@ export default function (opts: RollupPluginNodeResolveOptions = {}): Plugin {
                         return fullPath
                     }
 
-
-                    throw new Error(importer
-                        ? `Could not resolve "${importee}" imported by "${importer}"`
-                        : `Could not resolve entry point "${importee}" relative to "${rootDir}"`
+                    throw new Error(
+                        importer
+                            ? `Could not resolve "${importee}" imported by "${importer}"`
+                            : `Could not resolve entry point "${importee}" relative to "${rootDir}"`,
                     )
                 }
 
                 // TODO: prefer loading "module" instead of "main"
-                return require.resolve(importee, {paths: [baseDir]})
+                return require.resolve(importee, { paths: [baseDir] })
             })()
 
             cache.set(cacheKey, resolved)
             return resolved
-        }
+        },
     }
 }
-
-
 
 async function fileStat(path: string) {
     try {
@@ -100,10 +99,9 @@ async function fileStat(path: string) {
     }
 }
 
-
 function debug(...obj: any[]) {
     for (const o of obj) {
-        console.dir(o, {depth: 3, maxStringLength: 255})
+        console.dir(o, { depth: 3, maxStringLength: 255 })
     }
 }
 

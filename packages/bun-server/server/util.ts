@@ -1,13 +1,16 @@
 /**
  * Like Array.prototype.map, but filters out undefined|null values.
  */
-export function mapDefined<TItem, TReturn>(array: TItem[] | nil, callback: (value: TItem, index: number) => TReturn | null | undefined): TReturn[] {
-    if(!array?.length) return []
+export function mapDefined<TItem, TReturn>(
+    array: TItem[] | nil,
+    callback: (value: TItem, index: number) => TReturn | null | undefined,
+): TReturn[] {
+    if (!array?.length) return []
     const accum: TReturn[] = []
-    if(array?.length) {
-        for(let i = 0; i < array.length; ++i) {
+    if (array?.length) {
+        for (let i = 0; i < array.length; ++i) {
             const x = callback(array[i], i)
-            if(x != null) {
+            if (x != null) {
                 accum.push(x)
             }
         }
@@ -15,9 +18,7 @@ export function mapDefined<TItem, TReturn>(array: TItem[] | nil, callback: (valu
     return accum
 }
 
-
 export type nil = null | undefined
-
 
 // export function findMax<T>(array: T[], callback: (value: T, index: number) => number): T {
 //     if(!array?.length) throw new Error("Empty array")
@@ -37,10 +38,10 @@ export type nil = null | undefined
 // }
 
 export type Full<T> = {
-    [P in keyof T]-?: T[P];
+    [P in keyof T]-?: T[P]
 }
 
-export type PartialRecord<V,K extends keyof any=string> = {
+export type PartialRecord<V, K extends keyof any = string> = {
     [P in K]?: V
 }
 
@@ -48,7 +49,9 @@ export type AnyFn = (...args: any[]) => any
 export type UnkFn = (...args: unknown[]) => unknown
 export type VoidFn = () => void
 
-export const NOOP: AnyFn = Object.freeze(() => {/* do nothing*/})
+export const NOOP: AnyFn = Object.freeze(() => {
+    /* do nothing*/
+})
 
 // export const sleep = (ms: number) => new Promise(r => setTimeout(r,ms))
 
@@ -58,7 +61,7 @@ export function byteSize(str: string) {
 
 export function fullWide(n: number): string {
     try {
-        return n.toLocaleString('en-US', {useGrouping: false, maximumFractionDigits: 20})
+        return n.toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 20 })
     } catch {
         return n.toFixed(14).replace(/\.?0+$/, '')
     }

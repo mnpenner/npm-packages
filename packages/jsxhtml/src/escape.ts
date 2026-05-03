@@ -1,12 +1,14 @@
 import entityMap from './entityMap'
-import {classCat} from './classnames'
+import { classCat } from './classnames'
 import * as util from '@mpen/is-type'
-import {isFunction} from '@mpen/is-type'
+import { isFunction } from '@mpen/is-type'
 import styleObjectToString from './styleObjectToString'
-import type {AttrArr, Attributes, AttributeValue, Stringable} from './jsx-types'
+import type { AttrArr, Attributes, AttributeValue, Stringable } from './jsx-types'
 
 function entity(ch: string) {
-    return Object.prototype.hasOwnProperty.call(entityMap, ch) ? `&${entityMap[ch]};` : `&#x${ch.codePointAt(0)!.toString(16)};`
+    return Object.prototype.hasOwnProperty.call(entityMap, ch)
+        ? `&${entityMap[ch]};`
+        : `&#x${ch.codePointAt(0)!.toString(16)};`
 }
 
 // https://www.w3.org/TR/html-markup/syntax.html#tag-name
@@ -24,43 +26,43 @@ export function attrValue(value: Stringable) {
     // TODO: if value is an anonymous function, should we extract it, give it a name and invoke it like
     // <script>function $a(ev){...}</script><button onclick="return $a(event);"> if(isNumber(string)) { return
     // fullWide(string) }
-    if(isFunction(value)) {
+    if (isFunction(value)) {
         // "onclick" attributes are invoked immediately
         // window.event: https://developer.mozilla.org/en-US/docs/Web/API/Window/event
         value = `(${value}).call(this,event)`
     }
     const stringValue = String(value)
     const needsQuoted = stringValue.length === 0 || /[ \t\n\f\r"'=<>`]/u.test(stringValue)
-    if(!needsQuoted) return stringValue
+    if (!needsQuoted) return stringValue
 
-    if(!stringValue.includes('"')) {
+    if (!stringValue.includes('"')) {
         return `"${stringValue.replace(/"/gu, entity)}"`
     }
-    if(!stringValue.includes("'")) {
+    if (!stringValue.includes("'")) {
         return `'${stringValue.replace(/'/gu, entity)}'`
     }
     return `"${stringValue.replace(/"/gu, entity)}"`
 }
 
 export function attrKvPair(rawAttr: string, rawVal: AttributeValue) {
-    if(rawVal === true) {
+    if (rawVal === true) {
         return attrName(rawAttr)
     }
 
-    if(rawVal === false || rawVal == null) {
+    if (rawVal === false || rawVal == null) {
         return null
     }
 
-    if(rawAttr === 'class') {
-        if(!util.isString(rawVal)) {
+    if (rawAttr === 'class') {
+        if (!util.isString(rawVal)) {
             rawVal = classCat(rawVal as any)
         }
-    } else if(rawAttr === 'style') {
-        if(util.isPlainObject(rawVal)) {
+    } else if (rawAttr === 'style') {
+        if (util.isPlainObject(rawVal)) {
             rawVal = styleObjectToString(rawVal)
         }
-    } else if(rawAttr.startsWith('data-')) {
-        if(!util.isString(rawVal)) {
+    } else if (rawAttr.startsWith('data-')) {
+        if (!util.isString(rawVal)) {
             // TODO: should we make a special exception for data- attributes? I guess we want to preserve
             // null/true/false...
             rawVal = JSON.stringify(rawVal)
@@ -71,11 +73,15 @@ export function attrKvPair(rawAttr: string, rawVal: AttributeValue) {
 }
 
 export function attrs(attributes: Attributes) {
-    if(attributes == null) return ''
-    if(util.isPlainObject(attributes)) {
+    if (attributes == null) return ''
+    if (util.isPlainObject(attributes)) {
         attributes = Object.entries(attributes)
     }
-    return (attributes as AttrArr).map(([k, v]) => attrKvPair(k, v)).filter(x => x).map(x => ` ${x}`).join('')
+    return (attributes as AttrArr)
+        .map(([k, v]) => attrKvPair(k, v))
+        .filter((x) => x)
+        .map((x) => ` ${x}`)
+        .join('')
 }
 
 // https://www.w3.org/TR/html-markup/syntax.html#text-syntax
@@ -88,11 +94,11 @@ export function htmlComment(string: Stringable) {
 }
 
 export function escapeScript(string: Stringable) {
-    return String(string).replace(/<\/(script)/igu, '<\\/$1')
+    return String(string).replace(/<\/(script)/giu, '<\\/$1')
 }
 
 export function escapeStyle(string: Stringable) {
-    return String(string).replace(/<\/(style)/igu, '<\\/$1')
+    return String(string).replace(/<\/(style)/giu, '<\\/$1')
 }
 
 /**

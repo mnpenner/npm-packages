@@ -1,7 +1,11 @@
-import type {Props} from "../../ModalDialog";
-import ModalDialog from "../../ModalDialog";
-import React,{lazy} from "react";
+import type { Props } from '../../ModalDialog'
+import ModalDialog from '../../ModalDialog'
+import React, { lazy } from 'react'
 
-const CorgiInfo = lazy(() => import(/* webpackPrefetch: true */ './CorgiInfo'));
+const CorgiInfo = lazy(() => import(/* webpackPrefetch: true */ './CorgiInfo'))
 
-export default (props: Omit<Props,'title'|'children'>) => <ModalDialog title="Pembroke Welsh Corgi" {...props}><CorgiInfo/></ModalDialog>
+export default (props: Omit<Props, 'title' | 'children'>) => (
+    <ModalDialog title="Pembroke Welsh Corgi" {...props}>
+        <CorgiInfo />
+    </ModalDialog>
+)

@@ -487,4 +487,4 @@ module.exports = {
     ychannelselector: 'yChannelSelector',
     z: 'z',
     zoomandpan: 'zoomAndPan',
-};
+}

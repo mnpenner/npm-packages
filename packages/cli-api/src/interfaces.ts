@@ -1,5 +1,5 @@
-import type {ChalkInstance, ColorSupportLevel} from 'chalk'
-import {createChalk, type ColorMode} from './color'
+import type { ChalkInstance, ColorSupportLevel } from 'chalk'
+import { createChalk, type ColorMode } from './color'
 
 // union -> intersection
 type U2I<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never
@@ -18,31 +18,46 @@ type Simplify<T> = {
     [K in OptionalKeys<T>]?: Exclude<T[K], undefined>
 }
 
-type PrimitiveOfOptType<T extends AnyOptType | undefined> =
-    T extends undefined ? string :
-        T extends OptType.STRING ? string :
-            T extends OptType.BOOL ? boolean :
-                T extends OptType.INT | OptType.FLOAT ? number :
-                    T extends OptType.INPUT_FILE | OptType.INPUT_DIRECTORY | OptType.OUTPUT_FILE |
-                        OptType.OUTPUT_DIRECTORY | OptType.EMPTY_DIRECTORY ? string :
-                        T extends readonly (infer L)[] ? (L extends string ? L : string) :
-                            string
+type PrimitiveOfOptType<T extends AnyOptType | undefined> = T extends undefined
+    ? string
+    : T extends OptType.STRING
+      ? string
+      : T extends OptType.BOOL
+        ? boolean
+        : T extends OptType.INT | OptType.FLOAT
+          ? number
+          : T extends
+                  | OptType.INPUT_FILE
+                  | OptType.INPUT_DIRECTORY
+                  | OptType.OUTPUT_FILE
+                  | OptType.OUTPUT_DIRECTORY
+                  | OptType.EMPTY_DIRECTORY
+            ? string
+            : T extends readonly (infer L)[]
+              ? L extends string
+                  ? L
+                  : string
+              : string
 
 // literal property name: prefer `propName`, else `name`
-type KeyOfItem<I> =
-    I extends { propName: infer K extends string } ? K :
-        I extends { name: infer N extends string } ? N :
-            never
+type KeyOfItem<I> = I extends { propName: infer K extends string }
+    ? K
+    : I extends { name: infer N extends string }
+      ? N
+      : never
 
 // ----- options & flags -----
 type TypeOfItem<I> = I extends { type: infer T extends AnyOptType } ? T : undefined
 type IsRepeatable<I> = I extends { repeatable: true | number } ? true : false
 type IsRequired<I> = I extends { required: true | number } ? true : false
 type IsAlwaysPresent<I> =
-    IsRepeatable<I> extends true ? true :
-        IsRequired<I> extends true ? true :
-            TypeOfItem<I> extends OptType.BOOL ? true :
-                false
+    IsRepeatable<I> extends true
+        ? true
+        : IsRequired<I> extends true
+          ? true
+          : TypeOfItem<I> extends OptType.BOOL
+            ? true
+            : false
 
 type ValueOfOption<O extends Option> =
     IsRepeatable<O> extends true
@@ -55,17 +70,20 @@ type FlagPropMap<F extends Flag> = { [K in KeyOfItem<F>]: boolean }
 type MergeOptionProps<IU extends Option> = U2I<IU extends any ? OptionPropMap<IU> : never>
 type MergeFlagProps<FU extends Flag> = U2I<FU extends any ? FlagPropMap<FU> : never>
 
-type RequiredOptions<I extends Option> = I extends any ? (IsAlwaysPresent<I> extends true ? I : never) : never
+type RequiredOptions<I extends Option> = I extends any
+    ? IsAlwaysPresent<I> extends true
+        ? I
+        : never
+    : never
 type OptionalOptions<I extends Option> = Exclude<I, RequiredOptions<I>>
 
 export type OptionsOf<
     Opts extends readonly Option[] | undefined,
-    Flags extends readonly Flag[] | undefined
-> =
-    (Opts extends readonly any[] ? (
-        MergeOptionProps<RequiredOptions<Opts[number]>> &
-        Partial<MergeOptionProps<OptionalOptions<Opts[number]>>>
-    ) : {}) &
+    Flags extends readonly Flag[] | undefined,
+> = (Opts extends readonly any[]
+    ? MergeOptionProps<RequiredOptions<Opts[number]>> &
+          Partial<MergeOptionProps<OptionalOptions<Opts[number]>>>
+    : {}) &
     (Flags extends readonly any[] ? MergeFlagProps<Flags[number]> : {})
 
 // ----- arguments (never boolean) -----
@@ -74,30 +92,39 @@ type ValueOfArg<A extends Argument> =
         ? PrimitiveOfOptType<TypeOfItem<A>>[]
         : PrimitiveOfOptType<TypeOfItem<A>>
 
-type _ArgsFixed<As extends readonly Argument[], Acc extends unknown[] = []> =
-    As extends readonly [infer A, ...infer R]
-        ? A extends Argument
-            ? IsRepeatable<A> extends true ? Acc
-                : _ArgsFixed<R & readonly Argument[], [...Acc, ValueOfArg<A>]>
-            : Acc
+type _ArgsFixed<As extends readonly Argument[], Acc extends unknown[] = []> = As extends readonly [
+    infer A,
+    ...infer R,
+]
+    ? A extends Argument
+        ? IsRepeatable<A> extends true
+            ? Acc
+            : _ArgsFixed<R & readonly Argument[], [...Acc, ValueOfArg<A>]>
         : Acc
+    : Acc
 
-type _ArgsTailRepeat<As extends readonly Argument[]> =
-    As extends readonly [...infer _, infer L]
-        ? L extends Argument ? (IsRepeatable<L> extends true ? PrimitiveOfOptType<TypeOfItem<L>> : never) : never
+type _ArgsTailRepeat<As extends readonly Argument[]> = As extends readonly [...infer _, infer L]
+    ? L extends Argument
+        ? IsRepeatable<L> extends true
+            ? PrimitiveOfOptType<TypeOfItem<L>>
+            : never
         : never
+    : never
 
 type ArgumentPropMap<I extends Argument> = { [K in KeyOfItem<I>]: ValueOfArg<I> }
 type MergeArgumentProps<IU extends Argument> = U2I<IU extends any ? ArgumentPropMap<IU> : never>
-type RequiredArguments<I extends Argument> = I extends any ? (IsAlwaysPresent<I> extends true ? I : never) : never
+type RequiredArguments<I extends Argument> = I extends any
+    ? IsAlwaysPresent<I> extends true
+        ? I
+        : never
+    : never
 type OptionalArguments<I extends Argument> = Exclude<I, RequiredArguments<I>>
 
-export type ArgsOf<As extends readonly Argument[] | undefined> =
-    As extends readonly Argument[]
-        ? _ArgsTailRepeat<As> extends never
-            ? _ArgsFixed<As>
-            : [..._ArgsFixed<As>, ..._ArgsTailRepeat<As>[]]
-        : unknown[]
+export type ArgsOf<As extends readonly Argument[] | undefined> = As extends readonly Argument[]
+    ? _ArgsTailRepeat<As> extends never
+        ? _ArgsFixed<As>
+        : [..._ArgsFixed<As>, ..._ArgsTailRepeat<As>[]]
+    : unknown[]
 
 export type OptsOf<
     Opts extends readonly Option[] | undefined,
@@ -105,10 +132,10 @@ export type OptsOf<
     As extends readonly Argument[] | undefined,
 > = Simplify<
     OptionsOf<Opts, Flags> &
-    (As extends readonly any[] ? (
-        MergeArgumentProps<RequiredArguments<As[number]>> &
-        Partial<MergeArgumentProps<OptionalArguments<As[number]>>>
-    ) : {})
+        (As extends readonly any[]
+            ? MergeArgumentProps<RequiredArguments<As[number]>> &
+                  Partial<MergeArgumentProps<OptionalArguments<As[number]>>>
+            : {})
 >
 
 export type MaybePromise<V> = V | PromiseLike<V>
@@ -167,8 +194,7 @@ export interface Flag extends ArgumentOrOptionOrFlag, OptionOrFlag {
 }
 
 /** Argument. */
-export interface Argument extends ArgumentOrOption {
-}
+export interface Argument extends ArgumentOrOption {}
 
 interface OptionOrFlag {
     /** Add a `--no-${name}` long-form alias that uses `valueIfNoPrefix` or `false`. */
@@ -206,9 +232,7 @@ export type LeafCommand<
     As extends readonly Argument[] | undefined = undefined,
 > = LeafCommandInput<Opts, Flags, As>
 
-export type BranchCommand<
-    Cs extends CommandChildren = CommandChildren,
-> = BranchCommandInput<Cs>
+export type BranchCommand<Cs extends CommandChildren = CommandChildren> = BranchCommandInput<Cs>
 
 export type CommandShape<
     Opts extends readonly Option[] | undefined = undefined,
@@ -234,7 +258,8 @@ export interface LeafCommandInput<
     Opts extends readonly Option[] | undefined,
     Flags extends readonly Flag[] | undefined,
     As extends readonly Argument[] | undefined,
-> extends CommandBase, ExecutableInput<Opts, Flags, As> {
+>
+    extends CommandBase, ExecutableInput<Opts, Flags, As> {
     subCommands?: never
 }
 
@@ -252,9 +277,7 @@ export type LeafApp<
     As extends readonly Argument[] | undefined = undefined,
 > = LeafAppInput<Opts, Flags, As>
 
-export type BranchApp<
-    Cs extends CommandChildren = CommandChildren,
-> = BranchAppInput<Cs>
+export type BranchApp<Cs extends CommandChildren = CommandChildren> = BranchAppInput<Cs>
 
 export type AppShape<
     Opts extends readonly Option[] | undefined = undefined,
@@ -325,7 +348,8 @@ export interface LeafAppInput<
     Opts extends readonly Option[] | undefined,
     Flags extends readonly Flag[] | undefined,
     As extends readonly Argument[] | undefined,
-> extends AppBase, ExecutableInput<Opts, Flags, As> {
+>
+    extends AppBase, ExecutableInput<Opts, Flags, As> {
     subCommands?: never
 }
 
@@ -360,28 +384,25 @@ type OptionConfigInput = Omit<Option, 'name'>
 type ArgumentConfigInput = Omit<Argument, 'name'>
 
 function normalizeOptionDefinition<T extends Option>(option: T): T {
-    if(option.type === OptType.BOOL && option.valueNotRequired === undefined) {
+    if (option.type === OptType.BOOL && option.valueNotRequired === undefined) {
         return {
             ...option,
-            ...(option.valueNotRequired === undefined ? {valueNotRequired: true} : {}),
+            ...(option.valueNotRequired === undefined ? { valueNotRequired: true } : {}),
         }
     }
     return option
 }
 
 type BuildFlag<Name extends string, Config extends FlagConfigInput | undefined> = Flatten<
-    { name: Name } &
-    (Config extends undefined ? {} : Config)
+    { name: Name } & (Config extends undefined ? {} : Config)
 >
 
 type BuildOption<Name extends string, Config extends OptionConfigInput | undefined> = Flatten<
-    { name: Name } &
-    (Config extends undefined ? {} : Config)
+    { name: Name } & (Config extends undefined ? {} : Config)
 >
 
 type BuildArgument<Name extends string, Config extends ArgumentConfigInput | undefined> = Flatten<
-    { name: Name } &
-    (Config extends undefined ? {} : Config)
+    { name: Name } & (Config extends undefined ? {} : Config)
 >
 
 export type RunHandler<
@@ -468,7 +489,7 @@ export class Command<
      */
     describe(description: string, longDescription?: string): this {
         this.description = description
-        if(longDescription !== undefined) {
+        if (longDescription !== undefined) {
             this.longDescription = longDescription
         }
         return this
@@ -485,8 +506,20 @@ export class Command<
         name: Name,
         config?: Config,
     ): Command<Opts, [...Flags, BuildFlag<Name, Config>], As, Cs, Executable> {
-        ;(this._options ??= []).push({name, ...(config ?? {}), valueNotRequired: true, defaultValue: false, type: OptType.BOOL})
-        return this as unknown as Command<Opts, [...Flags, BuildFlag<Name, Config>], As, Cs, Executable>
+        ;(this._options ??= []).push({
+            name,
+            ...(config ?? {}),
+            valueNotRequired: true,
+            defaultValue: false,
+            type: OptType.BOOL,
+        })
+        return this as unknown as Command<
+            Opts,
+            [...Flags, BuildFlag<Name, Config>],
+            As,
+            Cs,
+            Executable
+        >
     }
 
     /**
@@ -500,8 +533,14 @@ export class Command<
         name: Name,
         config?: Config,
     ): Command<[...Opts, BuildOption<Name, Config>], Flags, As, Cs, Executable> {
-        ;(this._options ??= []).push(normalizeOptionDefinition({name, ...(config ?? {})}))
-        return this as unknown as Command<[...Opts, BuildOption<Name, Config>], Flags, As, Cs, Executable>
+        ;(this._options ??= []).push(normalizeOptionDefinition({ name, ...(config ?? {}) }))
+        return this as unknown as Command<
+            [...Opts, BuildOption<Name, Config>],
+            Flags,
+            As,
+            Cs,
+            Executable
+        >
     }
 
     /**
@@ -513,7 +552,9 @@ export class Command<
     options<const Items extends readonly Option[]>(
         items: Items,
     ): Command<[...Opts, ...Items], Flags, As, Cs, Executable> {
-        ;(this._options ??= []).push(...items.map(option => normalizeOptionDefinition({...option})))
+        ;(this._options ??= []).push(
+            ...items.map((option) => normalizeOptionDefinition({ ...option })),
+        )
         return this as unknown as Command<[...Opts, ...Items], Flags, As, Cs, Executable>
     }
 
@@ -524,12 +565,21 @@ export class Command<
      * @param config Optional metadata such as coercion and requiredness.
      * @returns A fluent command builder whose inferred argument tuple includes the new argument.
      */
-    arg<const Name extends string, const Config extends ArgumentConfigInput | undefined = undefined>(
+    arg<
+        const Name extends string,
+        const Config extends ArgumentConfigInput | undefined = undefined,
+    >(
         name: Name,
         config?: Config,
     ): Command<Opts, Flags, [...As, BuildArgument<Name, Config>], Cs, Executable> {
-        ;(this._arguments ??= []).push({name, ...(config ?? {})})
-        return this as unknown as Command<Opts, Flags, [...As, BuildArgument<Name, Config>], Cs, Executable>
+        ;(this._arguments ??= []).push({ name, ...(config ?? {}) })
+        return this as unknown as Command<
+            Opts,
+            Flags,
+            [...As, BuildArgument<Name, Config>],
+            Cs,
+            Executable
+        >
     }
 
     /**
@@ -541,7 +591,7 @@ export class Command<
     arguments<const Items extends readonly Argument[]>(
         items: Items,
     ): Command<Opts, Flags, [...As, ...Items], Cs, Executable> {
-        ;(this._arguments ??= []).push(...items.map(argument => ({...argument})))
+        ;(this._arguments ??= []).push(...items.map((argument) => ({ ...argument })))
         return this as unknown as Command<Opts, Flags, [...As, ...Items], Cs, Executable>
     }
 
@@ -569,7 +619,7 @@ export class Command<
         this: Command<Opts, Flags, As, Cs, false>,
         items: readonly (AnyCmd | Command<any, any, any, any, any>)[],
     ): Command<Opts, Flags, As, CommandChildren, false> {
-        ;(this._subCommands ??= []).push(...items as readonly AnyCmd[])
+        ;(this._subCommands ??= []).push(...(items as readonly AnyCmd[]))
         return this as unknown as Command<Opts, Flags, As, CommandChildren, false>
     }
 
@@ -583,7 +633,7 @@ export class Command<
         this: Command<Opts, Flags, As, [], false>,
         handler: RunHandler<Opts, Flags, As>,
     ): Command<Opts, Flags, As, [], true> {
-        this._handler = function(opts: OptsOf<Opts, Flags, As>, context: ExecutionContext) {
+        this._handler = function (opts: OptsOf<Opts, Flags, As>, context: ExecutionContext) {
             return handler(opts, context)
         }
         return this as unknown as Command<Opts, Flags, As, [], true>
@@ -619,18 +669,18 @@ export class App<
      * @returns The same fluent app builder with the metadata applied.
      */
     meta(config: AppMetaConfig): this {
-        if(config.bin !== undefined) {
+        if (config.bin !== undefined) {
             this.bin(config.bin)
         }
-        if(config.version !== undefined) {
+        if (config.version !== undefined) {
             this.version(config.version)
         }
-        if(config.author !== undefined) {
+        if (config.author !== undefined) {
             this.author(config.author)
         }
-        if(config.description !== undefined) {
+        if (config.description !== undefined) {
             this.describe(config.description, config.longDescription)
-        } else if(config.longDescription !== undefined) {
+        } else if (config.longDescription !== undefined) {
             this.setLongDescription(config.longDescription)
         }
 
@@ -663,7 +713,7 @@ export class App<
      */
     version(config: BuiltinEntryConfig): this
     version(versionOrConfig: string | BuiltinEntryConfig): this {
-        if(typeof versionOrConfig === 'string') {
+        if (typeof versionOrConfig === 'string') {
             this._version = versionOrConfig
             return this
         }
@@ -741,11 +791,20 @@ export class App<
      * @param config Optional metadata such as aliases and descriptions.
      * @returns A fluent app builder whose inferred option shape includes the new flag.
      */
-    override flag<const Name extends string, const Config extends FlagConfigInput | undefined = undefined>(
+    override flag<
+        const Name extends string,
+        const Config extends FlagConfigInput | undefined = undefined,
+    >(
         name: Name,
         config?: Config,
     ): App<Opts, [...Flags, BuildFlag<Name, Config>], As, Cs, Executable> {
-        return super.flag(name, config) as unknown as App<Opts, [...Flags, BuildFlag<Name, Config>], As, Cs, Executable>
+        return super.flag(name, config) as unknown as App<
+            Opts,
+            [...Flags, BuildFlag<Name, Config>],
+            As,
+            Cs,
+            Executable
+        >
     }
 
     /**
@@ -755,11 +814,20 @@ export class App<
      * @param config Optional metadata such as aliases, descriptions, and coercion rules.
      * @returns A fluent app builder whose inferred option shape includes the new option.
      */
-    override opt<const Name extends string, const Config extends OptionConfigInput | undefined = undefined>(
+    override opt<
+        const Name extends string,
+        const Config extends OptionConfigInput | undefined = undefined,
+    >(
         name: Name,
         config?: Config,
     ): App<[...Opts, BuildOption<Name, Config>], Flags, As, Cs, Executable> {
-        return super.opt(name, config) as unknown as App<[...Opts, BuildOption<Name, Config>], Flags, As, Cs, Executable>
+        return super.opt(name, config) as unknown as App<
+            [...Opts, BuildOption<Name, Config>],
+            Flags,
+            As,
+            Cs,
+            Executable
+        >
     }
 
     /**
@@ -771,7 +839,13 @@ export class App<
     override options<const Items extends readonly Option[]>(
         items: Items,
     ): App<[...Opts, ...Items], Flags, As, Cs, Executable> {
-        return super.options(items) as unknown as App<[...Opts, ...Items], Flags, As, Cs, Executable>
+        return super.options(items) as unknown as App<
+            [...Opts, ...Items],
+            Flags,
+            As,
+            Cs,
+            Executable
+        >
     }
 
     /**
@@ -781,11 +855,11 @@ export class App<
      * @param config Optional metadata such as aliases, descriptions, and coercion rules.
      * @returns A fluent app builder whose global option shape includes the new option.
      */
-    globalOpt<const Name extends string, const Config extends OptionConfigInput | undefined = undefined>(
-        name: Name,
-        config?: Config,
-    ): this {
-        ;(this._globalOptions ??= []).push(normalizeOptionDefinition({name, ...(config ?? {})}))
+    globalOpt<
+        const Name extends string,
+        const Config extends OptionConfigInput | undefined = undefined,
+    >(name: Name, config?: Config): this {
+        ;(this._globalOptions ??= []).push(normalizeOptionDefinition({ name, ...(config ?? {}) }))
         return this
     }
 
@@ -796,7 +870,9 @@ export class App<
      * @returns The same fluent app builder with the global options applied.
      */
     globalOptions(items: readonly Option[]): this {
-        ;(this._globalOptions ??= []).push(...items.map(option => normalizeOptionDefinition({...option})))
+        ;(this._globalOptions ??= []).push(
+            ...items.map((option) => normalizeOptionDefinition({ ...option })),
+        )
         return this
     }
 
@@ -807,11 +883,20 @@ export class App<
      * @param config Optional metadata such as coercion and requiredness.
      * @returns A fluent app builder whose inferred argument tuple includes the new argument.
      */
-    override arg<const Name extends string, const Config extends ArgumentConfigInput | undefined = undefined>(
+    override arg<
+        const Name extends string,
+        const Config extends ArgumentConfigInput | undefined = undefined,
+    >(
         name: Name,
         config?: Config,
     ): App<Opts, Flags, [...As, BuildArgument<Name, Config>], Cs, Executable> {
-        return super.arg(name, config) as unknown as App<Opts, Flags, [...As, BuildArgument<Name, Config>], Cs, Executable>
+        return super.arg(name, config) as unknown as App<
+            Opts,
+            Flags,
+            [...As, BuildArgument<Name, Config>],
+            Cs,
+            Executable
+        >
     }
 
     /**
@@ -823,7 +908,13 @@ export class App<
     override arguments<const Items extends readonly Argument[]>(
         items: Items,
     ): App<Opts, Flags, [...As, ...Items], Cs, Executable> {
-        return super.arguments(items) as unknown as App<Opts, Flags, [...As, ...Items], Cs, Executable>
+        return super.arguments(items) as unknown as App<
+            Opts,
+            Flags,
+            [...As, ...Items],
+            Cs,
+            Executable
+        >
     }
 
     /**
@@ -872,7 +963,7 @@ export class App<
      * @returns The numeric exit code returned by the resolved command handler, or `0` when the handler does not return one.
      */
     async execute(args: string[] = process.argv.slice(2)): Promise<number> {
-        const {executeApp} = await import('./run')
+        const { executeApp } = await import('./run')
         const code = await executeApp(this, args)
         process.exitCode = code
         return code
@@ -885,7 +976,9 @@ export class App<
  * @param value The command or app to inspect.
  * @returns `true` when the value has sub-commands.
  */
-export function hasSubCommands(value: unknown): value is {subCommands: readonly AnyCmd[]} | {_subCommands: readonly AnyCmd[]} {
+export function hasSubCommands(
+    value: unknown,
+): value is { subCommands: readonly AnyCmd[] } | { _subCommands: readonly AnyCmd[] } {
     return Array.isArray((value as any)?.subCommands) || Array.isArray((value as any)?._subCommands)
 }
 
@@ -896,9 +989,11 @@ export function hasSubCommands(value: unknown): value is {subCommands: readonly 
  * @returns `true` when the value has an executable handler.
  */
 export function isExecutable(value: unknown): value is AnyLeafCommand | AnyApp {
-    return typeof (value as any)?.handler === 'function'
-        || typeof (value as any)?._handler === 'function'
-        || Object.prototype.hasOwnProperty.call(value as object, 'execute')
+    return (
+        typeof (value as any)?.handler === 'function' ||
+        typeof (value as any)?._handler === 'function' ||
+        Object.prototype.hasOwnProperty.call(value as object, 'execute')
+    )
 }
 
 /**
@@ -908,15 +1003,15 @@ export function isExecutable(value: unknown): value is AnyLeafCommand | AnyApp {
  * @returns The handler function when one exists, otherwise `undefined`.
  */
 export function getExecuteHandler(value: unknown): AnyLeafCommand['execute'] | undefined {
-    if(typeof (value as any)?.handler === 'function') {
+    if (typeof (value as any)?.handler === 'function') {
         return (value as any).handler as AnyLeafCommand['execute']
     }
 
-    if(typeof (value as any)?._handler === 'function') {
+    if (typeof (value as any)?._handler === 'function') {
         return (value as any)._handler as AnyLeafCommand['execute']
     }
 
-    if(Object.prototype.hasOwnProperty.call(value as object, 'execute')) {
+    if (Object.prototype.hasOwnProperty.call(value as object, 'execute')) {
         return (value as any).execute as AnyLeafCommand['execute']
     }
 
@@ -924,30 +1019,30 @@ export function getExecuteHandler(value: unknown): AnyLeafCommand['execute'] | u
 }
 
 export function getCommandOptions(value: unknown): readonly Option[] | undefined {
-    if(Array.isArray((value as any)?.options)) {
+    if (Array.isArray((value as any)?.options)) {
         return (value as any).options as readonly Option[]
     }
-    if(Array.isArray((value as any)?._options)) {
+    if (Array.isArray((value as any)?._options)) {
         return (value as any)._options as readonly Option[]
     }
     return undefined
 }
 
 export function getCommandArguments(value: unknown): readonly Argument[] | undefined {
-    if(Array.isArray((value as any)?.arguments)) {
+    if (Array.isArray((value as any)?.arguments)) {
         return (value as any).arguments as readonly Argument[]
     }
-    if(Array.isArray((value as any)?._arguments)) {
+    if (Array.isArray((value as any)?._arguments)) {
         return (value as any)._arguments as readonly Argument[]
     }
     return undefined
 }
 
 export function getSubCommands(value: unknown): readonly AnyCmd[] | undefined {
-    if(Array.isArray((value as any)?.subCommands)) {
+    if (Array.isArray((value as any)?.subCommands)) {
         return (value as any).subCommands as readonly AnyCmd[]
     }
-    if(Array.isArray((value as any)?._subCommands)) {
+    if (Array.isArray((value as any)?._subCommands)) {
         return (value as any)._subCommands as readonly AnyCmd[]
     }
     return undefined

@@ -1,10 +1,8 @@
-import type {ConnectionPool} from '../mysql.ts';
-import { sql} from '../mysql.ts'
-import {groupBy, toBool} from './utils'
-
+import type { ConnectionPool } from '../mysql.ts'
+import { sql } from '../mysql.ts'
+import { groupBy, toBool } from './utils'
 
 // const PRIVILEGES = ['Select','Insert','Update','Delete','Create','Drop','Reload','Shutdown','Process','File','References','Index','Alter','Show_db','Super','Create_tmp_table','Lock_tables','Execute','Repl_slave','Repl_client','Create_view','Show_view','Create_routine','Alter_routine','Create_user','Event','Trigger','Create_tablespace','Delete_history']
-
 
 /**
  * https://dev.mysql.com/doc/refman/8.0/en/grant.html
@@ -12,76 +10,76 @@ import {groupBy, toBool} from './utils'
  */
 const GRANTS: Record<string, string> = {
     /** Enable use of ALTER TABLE. Levels: Global, database, table. */
-    'Alter_priv': 'ALTER',
+    Alter_priv: 'ALTER',
     /** Enable stored routines to be altered or dropped. Levels: Global, database, routine. */
-    'Alter_routine_priv': 'ALTER ROUTINE',
+    Alter_routine_priv: 'ALTER ROUTINE',
     /** Enable database and table creation. Levels: Global, database, table. */
-    'Create_priv': 'CREATE',
+    Create_priv: 'CREATE',
     /** Enable role creation. Level: Global. */
-    'Create_role_priv': 'CREATE ROLE',
+    Create_role_priv: 'CREATE ROLE',
     /** Enable stored routine creation. Levels: Global, database. */
-    'Create_routine_priv': 'CREATE ROUTINE',
+    Create_routine_priv: 'CREATE ROUTINE',
     /** Enable tablespaces and log file groups to be created, altered, or dropped. Level: Global. */
-    'Create_tablespace_priv': 'CREATE TABLESPACE',
+    Create_tablespace_priv: 'CREATE TABLESPACE',
     /** Enable use of CREATE TEMPORARY TABLE. Levels: Global, database. */
-    'Create_tmp_table_priv': 'CREATE TEMPORARY TABLES',
+    Create_tmp_table_priv: 'CREATE TEMPORARY TABLES',
     /** Enable use of CREATE USER, DROP USER, RENAME USER, and REVOKE ALL PRIVILEGES. Level: Global. */
-    'Create_user_priv': 'CREATE USER',
+    Create_user_priv: 'CREATE USER',
     /** Enable views to be created or altered. Levels: Global, database, table. */
-    'Create_view_priv': 'CREATE VIEW',
+    Create_view_priv: 'CREATE VIEW',
     /** Enable use of DELETE. Level: Global, database, table. */
-    'Delete_priv': 'DELETE',
+    Delete_priv: 'DELETE',
     /** Enable databases, tables, and views to be dropped. Levels: Global, database, table. */
-    'Drop_priv': 'DROP',
+    Drop_priv: 'DROP',
     /** Enable roles to be dropped. Level: Global. */
-    'Drop_role_priv': 'DROP ROLE',
+    Drop_role_priv: 'DROP ROLE',
     /** Enable use of events for the Event Scheduler. Levels: Global, database. */
-    'Event_priv': 'EVENT',
+    Event_priv: 'EVENT',
     /** Enable the user to execute stored routines. Levels: Global, database, routine. */
-    'Execute_priv': 'EXECUTE',
+    Execute_priv: 'EXECUTE',
     /** Enable the user to cause the server to read or write files. Level: Global. */
-    'File_priv': 'FILE',
+    File_priv: 'FILE',
     /** Enable privileges to be granted to or removed from other accounts. Levels: Global, database, table, routine, proxy. */
-    'Grant_priv': 'GRANT OPTION',
+    Grant_priv: 'GRANT OPTION',
     /** Enable indexes to be created or dropped. Levels: Global, database, table. */
-    'Index_priv': 'INDEX',
+    Index_priv: 'INDEX',
     /** Enable use of INSERT. Levels: Global, database, table, column. */
-    'Insert_priv': 'INSERT',
+    Insert_priv: 'INSERT',
     /** Enable use of LOCK TABLES on tables for which you have the SELECT privilege. Levels: Global, database. */
-    'Lock_tables_priv': 'LOCK TABLES',
+    Lock_tables_priv: 'LOCK TABLES',
     /** Enable the user to see all processes with SHOW PROCESSLIST. Level: Global. */
-    'Process_priv': 'PROCESS',
+    Process_priv: 'PROCESS',
     /** Enable user proxying. Level: From user to user. */
     // 'xxxxxxxxxxxxxxxxx': 'PROXY',
     /** Enable foreign key creation. Levels: Global, database, table, column. */
-    'References_priv': 'REFERENCES',
+    References_priv: 'REFERENCES',
     /** Enable use of FLUSH operations. Level: Global. */
-    'Reload_priv': 'RELOAD',
+    Reload_priv: 'RELOAD',
     /** Enable the user to ask where source or replica servers are. Level: Global. */
-    'Repl_client_priv': 'REPLICATION CLIENT',
+    Repl_client_priv: 'REPLICATION CLIENT',
     /** Enable replicas to read binary log events from the source. Level: Global. */
-    'Repl_slave_priv': 'REPLICATION SLAVE',
+    Repl_slave_priv: 'REPLICATION SLAVE',
     /** Enable use of SELECT. Levels: Global, database, table, column. */
-    'Select_priv': 'SELECT',
+    Select_priv: 'SELECT',
     /** Enable SHOW DATABASES to show all databases. Level: Global. */
-    'Show_db_priv': 'SHOW DATABASES',
+    Show_db_priv: 'SHOW DATABASES',
     /** Enable use of SHOW CREATE VIEW. Levels: Global, database, table. */
-    'Show_view_priv': 'SHOW VIEW',
+    Show_view_priv: 'SHOW VIEW',
     /** Enable use of mysqladmin shutdown. Level: Global. */
-    'Shutdown_priv': 'SHUTDOWN',
+    Shutdown_priv: 'SHUTDOWN',
     /** Enable use of other administrative operations such as CHANGE REPLICATION SOURCE TO, CHANGE MASTER TO, KILL, PURGE BINARY LOGS, SET GLOBAL, and mysqladmin debug command. Level: Global. */
-    'Super_priv': 'SUPER',
+    Super_priv: 'SUPER',
     /** Enable trigger operations. Levels: Global, database, table. */
-    'Trigger_priv': 'TRIGGER',
+    Trigger_priv: 'TRIGGER',
     /** Enable use of UPDATE. Levels: Global, database, table, column. */
-    'Update_priv': 'UPDATE',
+    Update_priv: 'UPDATE',
     /** Synonym for “no privileges” */
     // 'xxxxxxxxxxxxxxxxx': 'USAGE',
     /** Can delete rows created through system versioning. */
-    'Delete_history_priv': 'DELETE HISTORY',
+    Delete_history_priv: 'DELETE HISTORY',
 }
 
-const TABLE_PRIVILEGES: Record<string,string> = {
+const TABLE_PRIVILEGES: Record<string, string> = {
     Select: 'SELECT',
     Insert: 'INSERT',
     Update: 'UPDATE',
@@ -102,13 +100,11 @@ function makeDbKey(x: Record<string, any>) {
     return JSON.stringify([x.User.trimEnd(), x.Host.trimEnd()])
 }
 
-
 export async function getMysqlUsers(conn: ConnectionPool) {
-
     const users = await conn.query<Record<string, string>>(sql`select *
                                                                        from mysql.user`)
 
-    if (!users.length) throw new Error("No users")
+    if (!users.length) throw new Error('No users')
     const rawDb = await conn.query<Record<string, string>>(sql`select *
                                                                        from mysql.db`)
     const rawTablePrivileges = await conn.query<Record<string, string>>(sql`select *
@@ -116,8 +112,8 @@ export async function getMysqlUsers(conn: ConnectionPool) {
 
     let DB_PRIVILEGES: string[] = []
     if (rawDb.length) {
-        const {Grant_priv: __unused2, ...otherDbPriv} = rawDb[0]
-        DB_PRIVILEGES = Object.keys(otherDbPriv).filter(k => k.endsWith('_priv'))
+        const { Grant_priv: __unused2, ...otherDbPriv } = rawDb[0]
+        DB_PRIVILEGES = Object.keys(otherDbPriv).filter((k) => k.endsWith('_priv'))
     }
 
     const userDb = groupBy(rawDb, makeDbKey)
@@ -126,8 +122,8 @@ export async function getMysqlUsers(conn: ConnectionPool) {
     // console.log(userDb)
     // console.log(users)
 
-    const {Grant_priv: __unused1, ...otherUserPriv} = users[0]
-    const USER_PRIVILEGES = Object.keys(otherUserPriv).filter(k => k.endsWith('_priv'))
+    const { Grant_priv: __unused1, ...otherUserPriv } = users[0]
+    const USER_PRIVILEGES = Object.keys(otherUserPriv).filter((k) => k.endsWith('_priv'))
 
     const out: any[] = []
     for (const rawUser of users) {
@@ -137,7 +133,6 @@ export async function getMysqlUsers(conn: ConnectionPool) {
         outUser.grantOption = toBool(rawUser.Grant_priv)
 
         const privileges = []
-
 
         for (const priv of USER_PRIVILEGES) {
             if (toBool(rawUser[priv])) {
@@ -247,7 +242,7 @@ export async function getMysqlUsers(conn: ConnectionPool) {
                 const dbName = tblPriv.Db.trimEnd()
                 const tblName = tblPriv.Table_name.trimEnd()
                 outUser.tablePrivileges[dbName] ??= {}
-                outUser.tablePrivileges[dbName][tblName] = tblPriv.Table_priv.map(p => {
+                outUser.tablePrivileges[dbName][tblName] = tblPriv.Table_priv.map((p) => {
                     if (TABLE_PRIVILEGES[p]) {
                         return TABLE_PRIVILEGES[p]
                     }
@@ -256,15 +251,14 @@ export async function getMysqlUsers(conn: ConnectionPool) {
             }
         }
 
-
         out.push(outUser)
     }
 
-    const grouped = groupBy(out, ({host, ...user}) => JSON.stringify(user))
+    const grouped = groupBy(out, ({ host, ...user }) => JSON.stringify(user))
 
-    const real = Array.from(grouped.values()).map(users => ({
+    const real = Array.from(grouped.values()).map((users) => ({
         ...users[0],
-        host: users.length === 1 ? users[0].host : users.map(u => u.host),
+        host: users.length === 1 ? users[0].host : users.map((u) => u.host),
     }))
 
     return real

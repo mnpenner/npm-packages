@@ -1,5 +1,5 @@
-import {ArgBuilder} from '../lib/arg-builder.ts'
-import {execPodmanStreaming} from '../lib/podman-spawn.ts'
+import { ArgBuilder } from '../lib/arg-builder.ts'
+import { execPodmanStreaming } from '../lib/podman-spawn.ts'
 
 /**
  * Adds one or more additional names to a local image.
@@ -33,12 +33,12 @@ export async function tag(image: string, targetNames: string | string[]): Promis
     const args = new ArgBuilder('tag')
     const targets = Array.isArray(targetNames) ? targetNames : [targetNames]
 
-    if(targets.length === 0) {
+    if (targets.length === 0) {
         throw new Error('podman tag requires at least one target name.')
     }
 
     args.add(image)
-    for(const target of targets) {
+    for (const target of targets) {
         args.add(target)
     }
 

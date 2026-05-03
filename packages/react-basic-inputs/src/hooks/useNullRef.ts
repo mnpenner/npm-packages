@@ -1,6 +1,5 @@
-import {useRef} from "react"
-
+import { useRef } from 'react'
 
 export function useNullRef<T>() {
-    return useRef<T|null>(null)
+    return useRef<T | null>(null)
 }

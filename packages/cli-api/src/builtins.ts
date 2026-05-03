@@ -1,9 +1,9 @@
-import type {AnyApp, AnyCmd, Option} from './interfaces'
-import {Command, getSubCommands, OptType, hasSubCommands} from './interfaces'
-import {sortOptions, getCommand} from './options'
-import {printHelp} from './app-help'
-import {printCommandHelp} from './print-command-help'
-import {printLn, sortBy, toArray} from './utils'
+import type { AnyApp, AnyCmd, Option } from './interfaces'
+import { Command, getSubCommands, OptType, hasSubCommands } from './interfaces'
+import { sortOptions, getCommand } from './options'
+import { printHelp } from './app-help'
+import { printCommandHelp } from './print-command-help'
+import { printLn, sortBy, toArray } from './utils'
 
 type BuiltinEntryConfig = {
     name: string
@@ -33,7 +33,12 @@ const DEFAULT_COLOR_CONFIG: BuiltinOptionConfig = {
 
 function resolveBuiltinConfig(
     defaults: BuiltinEntryConfig,
-    config?: {name?: string, alias?: string | string[], disableCommand?: boolean, disableOption?: boolean},
+    config?: {
+        name?: string
+        alias?: string | string[]
+        disableCommand?: boolean
+        disableOption?: boolean
+    },
 ): BuiltinEntryConfig {
     return {
         ...defaults,
@@ -61,12 +66,12 @@ function createBuiltinOption(
     config: BuiltinEntryConfig,
     description: string,
 ): Option | undefined {
-    if(config.disableOption) {
+    if (config.disableOption) {
         return undefined
     }
     return {
         name: config.name,
-        ...(config.alias !== undefined ? {alias: config.alias} : {}),
+        ...(config.alias !== undefined ? { alias: config.alias } : {}),
         description,
         propName,
         type: OptType.BOOL,
@@ -77,7 +82,7 @@ function createBuiltinOption(
 
 function createHelpCommand(app: AnyApp): AnyCmd | undefined {
     const config = getHelpConfig(app)
-    if(config.disableCommand) {
+    if (config.disableCommand) {
         return undefined
     }
 
@@ -87,13 +92,13 @@ function createHelpCommand(app: AnyApp): AnyCmd | undefined {
             description: 'The command path.',
             repeatable: true,
         })
-        .run(async ({command: commandPath = []}, context) => {
+        .run(async ({ command: commandPath = [] }, context) => {
             const rootCommands = getRootCommands(context.app)
 
-            if(commandPath.length) {
-                const {command, path} = getCommand(commandPath, rootCommands)
+            if (commandPath.length) {
+                const { command, path } = getCommand(commandPath, rootCommands)
                 printCommandHelp(context, command, path)
-            } else if(hasSubCommands(context.app)) {
+            } else if (hasSubCommands(context.app)) {
                 printHelp(context, rootCommands)
             } else {
                 printCommandHelp(context, context.app, [])
@@ -102,7 +107,7 @@ function createHelpCommand(app: AnyApp): AnyCmd | undefined {
         })
 
     const aliases = toArray(config.alias)
-    if(aliases.length) {
+    if (aliases.length) {
         command.aliases(...aliases)
     }
 
@@ -111,7 +116,7 @@ function createHelpCommand(app: AnyApp): AnyCmd | undefined {
 
 function createVersionCommand(app: AnyApp): AnyCmd | undefined {
     const config = getVersionConfig(app)
-    if(config.disableCommand) {
+    if (config.disableCommand) {
         return undefined
     }
 
@@ -123,7 +128,7 @@ function createVersionCommand(app: AnyApp): AnyCmd | undefined {
         })
 
     const aliases = toArray(config.alias)
-    if(aliases.length) {
+    if (aliases.length) {
         command.aliases(...aliases)
     }
 
@@ -140,13 +145,13 @@ export function getVersionOption(app: AnyApp): Option | undefined {
 
 export function getColorOption(app: AnyApp): Option | undefined {
     const config = getColorConfig(app)
-    if(config.disableOption) {
+    if (config.disableOption) {
         return undefined
     }
 
     return {
         name: config.name,
-        ...(config.alias !== undefined ? {alias: config.alias} : {}),
+        ...(config.alias !== undefined ? { alias: config.alias } : {}),
         description: 'Control ANSI color output.',
         propName: 'color',
         type: OptType.ENUM,
@@ -162,19 +167,22 @@ export function getColorOption(app: AnyApp): Option | undefined {
 
 export function getGlobalOptions(app: AnyApp): Option[] {
     return sortOptions([
-        ...[getHelpOption(app), getVersionOption(app), getColorOption(app)].filter((value): value is Option => value !== undefined),
+        ...[getHelpOption(app), getVersionOption(app), getColorOption(app)].filter(
+            (value): value is Option => value !== undefined,
+        ),
         ...(app._globalOptions ?? []),
     ])
 }
 
 export function getRootCommands(app: AnyApp): readonly AnyCmd[] {
     const subCommands = getSubCommands(app)
-    const userCommands = subCommands !== undefined
-        ? sortBy(subCommands as readonly AnyCmd[], c => c.name)
-        : []
+    const userCommands =
+        subCommands !== undefined ? sortBy(subCommands as readonly AnyCmd[], (c) => c.name) : []
 
     return [
         ...userCommands,
-        ...[createVersionCommand(app), createHelpCommand(app)].filter((value): value is AnyCmd => value !== undefined),
+        ...[createVersionCommand(app), createHelpCommand(app)].filter(
+            (value): value is AnyCmd => value !== undefined,
+        ),
     ] as const
 }

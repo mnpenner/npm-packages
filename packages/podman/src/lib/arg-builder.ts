@@ -6,13 +6,13 @@ export class ArgBuilder {
     }
 
     addValue(flag: string, value?: string | number): void {
-        if(value === undefined) return
+        if (value === undefined) return
         this.args.push(flag, String(value))
     }
 
     addBool(flag: string, value?: boolean): void {
-        if(value === undefined) return
-        if(value) {
+        if (value === undefined) return
+        if (value) {
             this.args.push(flag)
             return
         }
@@ -20,10 +20,10 @@ export class ArgBuilder {
     }
 
     addValues(flag: string, values?: string | string[]): void {
-        if(!values) return
+        if (!values) return
         const list = Array.isArray(values) ? values : [values]
-        if(!list.length) return
-        for(const value of list) {
+        if (!list.length) return
+        for (const value of list) {
             this.args.push(flag, value)
         }
     }

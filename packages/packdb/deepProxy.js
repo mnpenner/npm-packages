@@ -1,63 +1,60 @@
 function createDeepProxy(target, handler) {
-    const preproxy = new WeakMap();
-    
+    const preproxy = new WeakMap()
+
     function makeHandler(path) {
         return {
             set(target, key, value, receiver) {
-                if(typeof value === 'object') {
-                    value = proxify(value, [...path, key]);
+                if (typeof value === 'object') {
+                    value = proxify(value, [...path, key])
                 }
-                target[key] = value;
+                target[key] = value
 
-                if(handler.set) {
-                    handler.set(target, [...path, key], value, receiver);
+                if (handler.set) {
+                    handler.set(target, [...path, key], value, receiver)
                 }
-                return true;
+                return true
             },
 
             deleteProperty(target, key) {
-                if(Reflect.has(target, key)) {
-                    unproxy(target, key);
-                    const deleted = Reflect.deleteProperty(target, key);
-                    if(deleted && handler.deleteProperty) {
-                        handler.deleteProperty(target, [...path, key]);
+                if (Reflect.has(target, key)) {
+                    unproxy(target, key)
+                    const deleted = Reflect.deleteProperty(target, key)
+                    if (deleted && handler.deleteProperty) {
+                        handler.deleteProperty(target, [...path, key])
                     }
-                    return deleted;
+                    return deleted
                 }
-                return false;
-            }
+                return false
+            },
         }
     }
-    
+
     function unproxy(obj, key) {
-        if(preproxy.has(obj[key])) {
+        if (preproxy.has(obj[key])) {
             // console.log('unproxy',key);
-            obj[key] = preproxy.get(obj[key]);
-            preproxy.delete(obj[key]);
-        }
-        
-        for(const k of Object.keys(obj[key])) {
-            if(typeof obj[key][k] === 'object') {
-                unproxy(obj[key], k);
-            }
+            obj[key] = preproxy.get(obj[key])
+            preproxy.delete(obj[key])
         }
 
-    }
-    
-    function proxify(obj, path) {
-        for(const key of Object.keys(obj)) {
-            if(typeof obj[key] === 'object') {
-                obj[key] = proxify(obj[key], [...path, key]);
+        for (const k of Object.keys(obj[key])) {
+            if (typeof obj[key][k] === 'object') {
+                unproxy(obj[key], k)
             }
         }
-        const p = new Proxy(obj, makeHandler(path));
-        preproxy.set(p, obj);
-        return p;
     }
-    
-    return proxify(target, []);
+
+    function proxify(obj, path) {
+        for (const key of Object.keys(obj)) {
+            if (typeof obj[key] === 'object') {
+                obj[key] = proxify(obj[key], [...path, key])
+            }
+        }
+        const p = new Proxy(obj, makeHandler(path))
+        preproxy.set(p, obj)
+        return p
+    }
+
+    return proxify(target, [])
 }
 
-
-module.exports = createDeepProxy;
-
+module.exports = createDeepProxy

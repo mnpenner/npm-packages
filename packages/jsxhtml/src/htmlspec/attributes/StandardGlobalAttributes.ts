@@ -2,7 +2,7 @@
 
 // https://html.spec.whatwg.org/multipage/dom.html#global-attributes
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes
-import type {AnyString} from '../../util-types'
+import type { AnyString } from '../../util-types'
 
 export interface StandardGlobalAttributes {
     /**

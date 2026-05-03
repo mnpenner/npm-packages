@@ -1,12 +1,18 @@
-import type {NormalizedOutputOptions, OutputBundle, Plugin, PluginContext} from 'rollup'
+import type { NormalizedOutputOptions, OutputBundle, Plugin, PluginContext } from 'rollup'
 import pkgUp from 'pkg-up'
 import Path from 'path'
-import {constants as FileConst, promises as FileSystem} from 'fs'
+import { constants as FileConst, promises as FileSystem } from 'fs'
 
-const COPY_FILES = ['LICENSE', 'README.md','pnpm-lock.yaml','yarn.lock','package-lock.json','npm-shrinkwrap.json']
-const FILE_FIELDS = ['main','module', 'browser','bin']
-const log = console.error.bind(console);
-
+const COPY_FILES = [
+    'LICENSE',
+    'README.md',
+    'pnpm-lock.yaml',
+    'yarn.lock',
+    'package-lock.json',
+    'npm-shrinkwrap.json',
+]
+const FILE_FIELDS = ['main', 'module', 'browser', 'bin']
+const log = console.error.bind(console)
 
 interface Person {
     name: string
@@ -23,8 +29,8 @@ interface PackageJson {
     enginesStrict?: any
     os?: any
     cpu?: any
-    author?: string|Person
-    contributors?: Array<string|Person>
+    author?: string | Person
+    contributors?: Array<string | Person>
     funding?: any
     bugs?: any
     homepage?: any
@@ -35,14 +41,14 @@ interface PackageJson {
     browser?: string
     types?: string
 
-    dependencies?: Record<string,string>
-    peerDependencies?: Record<string,string>
-    devDependencies?: Record<string,string>
-    optionalDependencies?: Record<string,string>
-    publishConfig?: Record<string,string>
+    dependencies?: Record<string, string>
+    peerDependencies?: Record<string, string>
+    devDependencies?: Record<string, string>
+    optionalDependencies?: Record<string, string>
+    publishConfig?: Record<string, string>
     bundledDependencies?: string[]
 
-    [x:string]: any
+    [x: string]: any
 }
 
 export interface RollupPluginPackageOptions {
@@ -50,28 +56,33 @@ export interface RollupPluginPackageOptions {
 }
 
 const plugin = (opts: RollupPluginPackageOptions = {}): Plugin => {
-    let pkgFile: string;
-    let pkgDir: string;
+    let pkgFile: string
+    let pkgDir: string
     let build = 0
     const isWatch = process.env.ROLLUP_WATCH === 'true'
 
     return {
         name: 'rollup-plugin-package',
         async buildStart(inputOptions) {
-            pkgFile = await pkgUp() ?? ''
-            if(!pkgFile) throw new Error("Could not find package.json")
+            pkgFile = (await pkgUp()) ?? ''
+            if (!pkgFile) throw new Error('Could not find package.json')
             pkgDir = Path.dirname(pkgFile)
             this.addWatchFile(pkgFile)
-            for(const f of COPY_FILES) {
+            for (const f of COPY_FILES) {
                 this.addWatchFile(f)
             }
 
             // console.dir(inputOptions,{depth:1,maxStringLength :32})
         },
-        async generateBundle(this: PluginContext, outputOptions: NormalizedOutputOptions, bundle: OutputBundle, isWrite: boolean): Promise<void> {
-            if(!isWrite) return
-            if(!outputOptions.dir) {
-                return this.warn("Not generating package.json; output.dir not specifeid")
+        async generateBundle(
+            this: PluginContext,
+            outputOptions: NormalizedOutputOptions,
+            bundle: OutputBundle,
+            isWrite: boolean,
+        ): Promise<void> {
+            if (!isWrite) return
+            if (!outputOptions.dir) {
+                return this.warn('Not generating package.json; output.dir not specifeid')
             }
             // console.log(outputOptions, bundle, isWrite)
             // console.log(await pkgUp());
@@ -107,13 +118,14 @@ const plugin = (opts: RollupPluginPackageOptions = {}): Plugin => {
                 bin: undefined,
                 main: undefined,
                 browser: undefined,
-                publishConfig: {  // https://docs.npmjs.com/cli/v6/configuring-npm/package-json#publishconfig
-                    access: 'public'
+                publishConfig: {
+                    // https://docs.npmjs.com/cli/v6/configuring-npm/package-json#publishconfig
+                    access: 'public',
                 },
             })
 
-            if(isWatch) {
-                outPkg.version += `+${++build}`;
+            if (isWatch) {
+                outPkg.version += `+${++build}`
             }
 
             // delete pkg.devDependencies
@@ -121,8 +133,8 @@ const plugin = (opts: RollupPluginPackageOptions = {}): Plugin => {
             // delete pkg.jest
             // console.log(Path.basename(Path.dirname(pkgFile)))
 
-            for(const chunk of Object.values(bundle)) {
-                if(chunk.type === 'chunk') {
+            for (const chunk of Object.values(bundle)) {
+                if (chunk.type === 'chunk') {
                     for (const dep of chunk.imports) {
                         dependencies.add(dep)
                     }
@@ -133,7 +145,9 @@ const plugin = (opts: RollupPluginPackageOptions = {}): Plugin => {
                                 const inputFile = Path.resolve(pkgDir, inPkg[field])
                                 if (facadeModuleId === inputFile) {
                                     outPkg[field] = chunk.fileName
-                                    log(`Rewrote pkg["${field}"]: ${inPkg[field]} → ${chunk.fileName}`)
+                                    log(
+                                        `Rewrote pkg["${field}"]: ${inPkg[field]} → ${chunk.fileName}`,
+                                    )
                                 }
                             }
                         }
@@ -150,7 +164,7 @@ const plugin = (opts: RollupPluginPackageOptions = {}): Plugin => {
                                 outPkg.main = chunk.fileName
                             }
                         }
-                        const types = chunk.fileName.replace(/\.js$/, '.d.ts');
+                        const types = chunk.fileName.replace(/\.js$/, '.d.ts')
                         if (bundle[types]) {
                             outPkg.types = bundle[types].fileName
                             log(`Added package.types: ${bundle[types].fileName}`)
@@ -160,9 +174,9 @@ const plugin = (opts: RollupPluginPackageOptions = {}): Plugin => {
                 }
             }
 
-            if(outPkg.dependencies) {
-                for(const mod of Object.keys(outPkg.dependencies)) {
-                    if(!dependencies.has(mod)) {
+            if (outPkg.dependencies) {
+                for (const mod of Object.keys(outPkg.dependencies)) {
+                    if (!dependencies.has(mod)) {
                         delete outPkg.dependencies[mod]
                         log(`Removed unused dependency "${mod}"`)
                     }
@@ -175,7 +189,7 @@ const plugin = (opts: RollupPluginPackageOptions = {}): Plugin => {
                 source: JSON.stringify(outPkg, null, 2),
             })
 
-            for(const file of COPY_FILES) {
+            for (const file of COPY_FILES) {
                 try {
                     const license = await FileSystem.readFile(Path.join(pkgDir, file))
                     this.emitFile({
@@ -184,33 +198,37 @@ const plugin = (opts: RollupPluginPackageOptions = {}): Plugin => {
                         source: license,
                     })
                     log(`Copied ${file} → ${Path.join(outputOptions.dir, file)}`)
-                } catch(err) {
-                    if(err.code !== 'ENOENT') {
+                } catch (err) {
+                    if (err.code !== 'ENOENT') {
                         return this.error(err)
                     }
                 }
             }
-        }
+        },
     }
 }
 
 function debug(obj: any) {
-    console.dir(obj,{depth:3,maxStringLength :32})
+    console.dir(obj, { depth: 3, maxStringLength: 32 })
 }
 
 function exists(path: string, mode = FileConst.R_OK) {
-    return FileSystem.access(path, mode).then(() => true, () => false)
+    return FileSystem.access(path, mode).then(
+        () => true,
+        () => false,
+    )
 }
 
 function pick(input: any, defaults: any): any {
     const output = Object.create(null)
-    for(const k of Object.keys(defaults)) {
+    for (const k of Object.keys(defaults)) {
         const defaultValue = resolveValue(defaults[k])
-        if(input[k] === undefined) {
+        if (input[k] === undefined) {
             output[k] = defaultValue
-        } else if(typeof defaultValue === 'object') {
-            if(typeof input[k] !== 'object') throw new Error(`defaults["${k}"] is an object, but input is not`)
-            output[k] = {...defaults[k], ...input[k]}
+        } else if (typeof defaultValue === 'object') {
+            if (typeof input[k] !== 'object')
+                throw new Error(`defaults["${k}"] is an object, but input is not`)
+            output[k] = { ...defaults[k], ...input[k] }
         } else {
             output[k] = input[k]
         }

@@ -1,30 +1,28 @@
 #!bun
-import {describe, expect, it, test} from 'bun:test'
-import {NumberEncoder} from './number-encoder'
-import {randomBytes, randomInt} from 'crypto'
-import {u8} from './uint8_util'
-
-
+import { describe, expect, it, test } from 'bun:test'
+import { NumberEncoder } from './number-encoder'
+import { randomBytes, randomInt } from 'crypto'
+import { u8 } from './uint8_util'
 
 function getRandomFloat() {
-    const randomBytes = crypto.getRandomValues(new Uint32Array(1));
-    return randomBytes[0] / (Math.pow(2, 32));
+    const randomBytes = crypto.getRandomValues(new Uint32Array(1))
+    return randomBytes[0] / Math.pow(2, 32)
 }
 
 function randomBigIntBetween(min: bigint, max: bigint): bigint {
-    if (min > max) throw new RangeError("min > max");
-    const range = max - min + 1n;
-    const bits  = range.toString(2).length;
-    const bytes = Math.ceil(bits / 8);
-    const mask  = (1n << BigInt(bytes * 8)) - 1n;
+    if (min > max) throw new RangeError('min > max')
+    const range = max - min + 1n
+    const bits = range.toString(2).length
+    const bytes = Math.ceil(bits / 8)
+    const mask = (1n << BigInt(bytes * 8)) - 1n
 
-    let rnd: bigint;
+    let rnd: bigint
     do {
-        const buf = randomBytes(bytes);
-        rnd = BigInt("0x" + buf.toString("hex")) & mask;
-    } while (rnd >= range);
+        const buf = randomBytes(bytes)
+        rnd = BigInt('0x' + buf.toString('hex')) & mask
+    } while (rnd >= range)
 
-    return rnd + min;
+    return rnd + min
 }
 
 describe(NumberEncoder, () => {
@@ -36,20 +34,25 @@ describe(NumberEncoder, () => {
     const emojiEncoder = new NumberEncoder('🍓🐋🍃')
     const base50encoder = new NumberEncoder('0123456789bcdfghjklmnpqrstvwxzBCDFGHJKLMNPQRSTVWXZ')
     const hexEncoder = new NumberEncoder('0123456789ABCDEF')
-    const base64Encoder = new NumberEncoder('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/')
-    const base64urlEncoder = new NumberEncoder('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_','~',':')
+    const base64Encoder = new NumberEncoder(
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
+    )
+    const base64urlEncoder = new NumberEncoder(
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_',
+        '~',
+        ':',
+    )
 
     const BASE36_ALPHA = '0123456789abcdefghijklmnopqrstuvwxyz'
 
-
     describe(NumberEncoder.prototype.encodeInt, () => {
         it('matches native impl', () => {
-            for(let b = 2; b <= 36; ++b) {
+            for (let b = 2; b <= 36; ++b) {
                 const encoder = new NumberEncoder(BASE36_ALPHA.slice(0, b))
-                for(let i = 0; i < 100; ++i) {
+                for (let i = 0; i < 100; ++i) {
                     expect(encoder.encodeInt(i)).toBe(i.toString(b))
                 }
-                for(let i = 0n; i < BigInt(Number.MAX_SAFE_INTEGER) * 10n; i = i * 2n + 1n) {
+                for (let i = 0n; i < BigInt(Number.MAX_SAFE_INTEGER) * 10n; i = i * 2n + 1n) {
                     expect(encoder.encodeInt(i)).toBe(i.toString(b))
                 }
             }
@@ -58,12 +61,12 @@ describe(NumberEncoder, () => {
 
     describe(NumberEncoder.prototype.decodeInt, () => {
         it('matches native impl', () => {
-            for(let b = 2; b <= 36; ++b) {
+            for (let b = 2; b <= 36; ++b) {
                 const encoder = new NumberEncoder(BASE36_ALPHA.slice(0, b))
-                for(let i = 0; i < 100; ++i) {
+                for (let i = 0; i < 100; ++i) {
                     expect(Number(encoder.decodeInt(i.toString(b)))).toBe(i)
                 }
-                for(let i = 0n; i < BigInt(Number.MAX_SAFE_INTEGER) * 10n; i = i * 2n + 1n) {
+                for (let i = 0n; i < BigInt(Number.MAX_SAFE_INTEGER) * 10n; i = i * 2n + 1n) {
                     expect(encoder.decodeInt(i.toString(b))).toBe(i)
                 }
             }
@@ -74,12 +77,12 @@ describe(NumberEncoder, () => {
         it('encodes', () => {
             expect(base2encoder.encodeFloat(0.5)).toBe('0.1')
             expect(base2encoder.encodeFloat(-2.5)).toBe('-10.1')
-            expect(base64urlEncoder.encodeFloat(-2.5)).toBe("~C:g")
+            expect(base64urlEncoder.encodeFloat(-2.5)).toBe('~C:g')
         })
         it('decodes', () => {
             expect(base2encoder.decodeFloat('0.1')).toBe(0.5)
             expect(base2encoder.decodeFloat('-10.1')).toBe(-2.5)
-            expect(base64urlEncoder.decodeFloat("~C:g")).toBe(-2.5)
+            expect(base64urlEncoder.decodeFloat('~C:g')).toBe(-2.5)
         })
     })
 
@@ -88,7 +91,6 @@ describe(NumberEncoder, () => {
             expect(base50encoder.encodeBuf([0])).toBe('0')
             expect(base50encoder.encodeBuf([49])).toBe('Z')
             expect(base50encoder.encodeBuf([50])).toBe('10')
-
 
             expect(base2encoder.encodeBuf([0])).toBe('0')
             expect(base2encoder.encodeBuf([1])).toBe('1')
@@ -110,27 +112,29 @@ describe(NumberEncoder, () => {
         })
 
         test('base64 encoder', () => {
-            expect(base64Encoder.encodeBuf(Buffer.from("Many hands make light work."))).toBe('TWFueSBoYW5kcyBtYWtlIGxpZ2h0IHdvcmsu')
-            expect(base64Encoder.encodeBuf([0xFF, 0xFF, 0xFF])).toBe('////')
-            expect(base64Encoder.encodeBuf([0x00, 0x00, 0x00])).toBe('AAA')  // Not the same as base64!
-            expect(base64Encoder.encodeBuf([0xFB])).toBe('D7')
-            expect(base64Encoder.encodeBuf([0xFB, 0xFF])).toBe('Pv/')
+            expect(base64Encoder.encodeBuf(Buffer.from('Many hands make light work.'))).toBe(
+                'TWFueSBoYW5kcyBtYWtlIGxpZ2h0IHdvcmsu',
+            )
+            expect(base64Encoder.encodeBuf([0xff, 0xff, 0xff])).toBe('////')
+            expect(base64Encoder.encodeBuf([0x00, 0x00, 0x00])).toBe('AAA') // Not the same as base64!
+            expect(base64Encoder.encodeBuf([0xfb])).toBe('D7')
+            expect(base64Encoder.encodeBuf([0xfb, 0xff])).toBe('Pv/')
         })
 
         test('big-endian', () => {
-            expect(hexEncoder.encodeBuf(u8(0, 0xE3))).toBe('0E3')
+            expect(hexEncoder.encodeBuf(u8(0, 0xe3))).toBe('0E3')
 
             expect(hexEncoder.encodeBuf(u8(0, 0, 0))).toBe('000')
 
-            expect(hexEncoder.encodeBuf(u8(0, 0xF0, 0))).toBe('0F000')
-            expect(hexEncoder.decodeBuf('0F000')).toEqual(u8(0, 0xF0, 0))
+            expect(hexEncoder.encodeBuf(u8(0, 0xf0, 0))).toBe('0F000')
+            expect(hexEncoder.decodeBuf('0F000')).toEqual(u8(0, 0xf0, 0))
 
-            expect(hexEncoder.encodeBuf(u8(0, 0x0F, 0))).toBe('0F00')
-            expect(hexEncoder.decodeBuf('0F00')).toEqual(u8(0, 0x0F, 0))
+            expect(hexEncoder.encodeBuf(u8(0, 0x0f, 0))).toBe('0F00')
+            expect(hexEncoder.decodeBuf('0F00')).toEqual(u8(0, 0x0f, 0))
 
-            expect(hexEncoder.decodeBuf('0E3')).toEqual(u8(0, 0xE3))
-            expect(hexEncoder.decodeBuf('00E3')).toEqual(u8(0, 0, 0xE3))
-            expect(hexEncoder.decodeBuf('000E3')).toEqual(u8(0, 0, 0, 0xE3))
+            expect(hexEncoder.decodeBuf('0E3')).toEqual(u8(0, 0xe3))
+            expect(hexEncoder.decodeBuf('00E3')).toEqual(u8(0, 0, 0xe3))
+            expect(hexEncoder.decodeBuf('000E3')).toEqual(u8(0, 0, 0, 0xe3))
             expect(hexEncoder.decodeBuf('010002')).toEqual(u8(0, 1, 0, 2))
             expect(hexEncoder.encodeBuf(u8(0, 1, 0, 2))).toEqual('010002')
             expect(hexEncoder.decodeBuf('0003')).toEqual(u8(0, 0, 0, 0x03))
@@ -158,7 +162,9 @@ describe(NumberEncoder, () => {
             expect(hexEncoder.decodeBuf('C0FFEE')).toEqual(u8([192, 255, 238]))
             expect(hexEncoder.decodeBuf('B16B00B5')).toEqual(u8([177, 107, 0, 181]))
 
-            expect(base64Encoder.decodeBuf("TWFueSBoYW5kcyBtYWtlIGxpZ2h0IHdvcmsu")).toEqual(new TextEncoder().encode("Many hands make light work."))
+            expect(base64Encoder.decodeBuf('TWFueSBoYW5kcyBtYWtlIGxpZ2h0IHdvcmsu')).toEqual(
+                new TextEncoder().encode('Many hands make light work.'),
+            )
         })
 
         test('decodes multibyte chars', () => {
@@ -171,8 +177,15 @@ describe(NumberEncoder, () => {
 
     describe('round trips', () => {
         test('random bytes', () => {
-            for(const encoder of [base50encoder, base2encoder, emojiEncoder, hexEncoder, base64Encoder, base64urlEncoder]) {
-                for(let i = 0; i < NUM_TESTS; i++) {
+            for (const encoder of [
+                base50encoder,
+                base2encoder,
+                emojiEncoder,
+                hexEncoder,
+                base64Encoder,
+                base64urlEncoder,
+            ]) {
+                for (let i = 0; i < NUM_TESTS; i++) {
                     const buf = randomBytes(randomInt(MIN_BYTES, MAX_BYTES + 1))
                     const encoded = encoder.encodeBuf(buf)
                     const decoded = encoder.decodeBuf(encoded)
@@ -182,19 +195,36 @@ describe(NumberEncoder, () => {
         })
 
         test('random ints', () => {
-            for(const encoder of [base50encoder, base2encoder, emojiEncoder, hexEncoder, base64Encoder, base64urlEncoder]) {
-                for(let i = 0; i < NUM_TESTS; i++) {
-                    const num = randomBigIntBetween(BigInt(Number.MIN_SAFE_INTEGER) * 2n,BigInt(Number.MAX_SAFE_INTEGER) * 2n)
+            for (const encoder of [
+                base50encoder,
+                base2encoder,
+                emojiEncoder,
+                hexEncoder,
+                base64Encoder,
+                base64urlEncoder,
+            ]) {
+                for (let i = 0; i < NUM_TESTS; i++) {
+                    const num = randomBigIntBetween(
+                        BigInt(Number.MIN_SAFE_INTEGER) * 2n,
+                        BigInt(Number.MAX_SAFE_INTEGER) * 2n,
+                    )
                     const encoded = encoder.encodeInt(num)
                     const decoded = encoder.decodeInt(encoded)
-                    expect(decoded,`${num}`).toEqual(num)
+                    expect(decoded, `${num}`).toEqual(num)
                 }
             }
         })
 
         test('random floats', () => {
-            for(const encoder of [base50encoder, base2encoder, emojiEncoder, hexEncoder, base64Encoder, base64urlEncoder]) {
-                for(let i = 0; i < NUM_TESTS; i++) {
+            for (const encoder of [
+                base50encoder,
+                base2encoder,
+                emojiEncoder,
+                hexEncoder,
+                base64Encoder,
+                base64urlEncoder,
+            ]) {
+                for (let i = 0; i < NUM_TESTS; i++) {
                     const num = getRandomFloat()
                     const encoded = encoder.encodeFloat(num)
                     const decoded = encoder.decodeFloat(encoded)
@@ -203,7 +233,6 @@ describe(NumberEncoder, () => {
             }
         })
     })
-
 
     describe(NumberEncoder.prototype.maxLength, () => {
         expect(base50encoder.maxLength(16)).toBe(23)

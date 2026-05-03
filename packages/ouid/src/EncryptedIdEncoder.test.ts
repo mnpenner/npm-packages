@@ -1,9 +1,9 @@
 #!bun test
-import {expect, describe, it} from 'bun:test'
-import {randomBytes} from 'node:crypto'
-import {OrderedTypedIdGenerator} from './OrderedTypedIdGenerator'
-import {EncryptedIdEncoder} from './EncryptedIdEncoder'
-import {shuffleString} from './util'
+import { expect, describe, it } from 'bun:test'
+import { randomBytes } from 'node:crypto'
+import { OrderedTypedIdGenerator } from './OrderedTypedIdGenerator'
+import { EncryptedIdEncoder } from './EncryptedIdEncoder'
+import { shuffleString } from './util'
 
 const enum IdType {
     USER,
@@ -19,7 +19,7 @@ describe('OrderedTypedIdGenerator and EncryptedIdEncoder', () => {
 
     describe('Basic Functionality', () => {
         it('should round-trip random bytes correctly', () => {
-            for(let i = 0; i < 10_000; ++i) {
+            for (let i = 0; i < 10_000; ++i) {
                 const id = randomBytes(16)
                 const encoded = encoder.encode(id)
                 const decoded = encoder.decode(encoded)
@@ -52,7 +52,7 @@ describe('OrderedTypedIdGenerator and EncryptedIdEncoder', () => {
         })
 
         it('should preserve type across all enum values', () => {
-            for(const type of [IdType.USER, IdType.COMMENT, IdType.POST]) {
+            for (const type of [IdType.USER, IdType.COMMENT, IdType.POST]) {
                 const id = generator.generate(type)
                 const formatted = encoder.encode(id)
                 const parsed = encoder.decode(formatted)
@@ -65,7 +65,7 @@ describe('OrderedTypedIdGenerator and EncryptedIdEncoder', () => {
         it('should generate unique formatted IDs', () => {
             const ids = new Set<string>()
             const iterations = 10_000
-            for(let i = 0; i < iterations; i++) {
+            for (let i = 0; i < iterations; i++) {
                 const id = generator.generate(IdType.POST)
                 const formatted = encoder.encode(id)
                 expect(ids.has(formatted)).toBeFalse()
@@ -76,7 +76,7 @@ describe('OrderedTypedIdGenerator and EncryptedIdEncoder', () => {
 
         it('should maintain monotonic timestamps', () => {
             let lastTime = 1740818787459180400n
-            for(let i = 0; i < 100; i++) {
+            for (let i = 0; i < 100; i++) {
                 const id = generator.generate(IdType.COMMENT)
                 const time = generator.extractTimeNs(id)
                 expect(time).toBeGreaterThan(lastTime)
@@ -87,11 +87,11 @@ describe('OrderedTypedIdGenerator and EncryptedIdEncoder', () => {
 
     describe('Edge Cases', () => {
         it('should handle max type value', () => {
-            const id = generator.generate(0xFFF as IdType)
-            expect(generator.extractType(id)).toBe(0xFFF as IdType)
+            const id = generator.generate(0xfff as IdType)
+            expect(generator.extractType(id)).toBe(0xfff as IdType)
             const formatted = encoder.encode(id)
             const parsed = encoder.decode(formatted)
-            expect(generator.extractType(parsed)).toBe(0xFFF as IdType)
+            expect(generator.extractType(parsed)).toBe(0xfff as IdType)
         })
 
         it('should throw on invalid formatted ID', () => {
@@ -170,5 +170,4 @@ describe('OrderedTypedIdGenerator and EncryptedIdEncoder', () => {
     //     console.timeEnd('high volume test');
     //     expect(ids.size).toBe(iterations);
     // }, 30_000);
-
 })

@@ -6,9 +6,9 @@
  * @returns A tuple of [quotient, remainder].
  */
 export function divQR(n: number, d: number): [number, number] {
-    const q = Math.trunc(n / d);
-    const r = n - (q * d);
-    return [q, r];
+    const q = Math.trunc(n / d)
+    const r = n - q * d
+    return [q, r]
 }
 
 /**
@@ -17,8 +17,7 @@ export function divQR(n: number, d: number): [number, number] {
  * @returns A tuple of [whole, fractional].
  */
 export function wholeFrac(n: number): [number, number] {
-    const w = Math.trunc(n);
-    const f = n - w;
-    return [w, f];
+    const w = Math.trunc(n)
+    const f = n - w
+    return [w, f]
 }
-

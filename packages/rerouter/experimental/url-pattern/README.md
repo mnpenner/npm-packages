@@ -7,7 +7,7 @@ bun "packages/server-router/gen-api-client.ts" "packages/server-router/src/examp
 ```
 
 ```ts
-import {CustomApiClient, type Fetcher} from './api-client.gen'
+import { CustomApiClient, type Fetcher } from './api-client.gen'
 
 class BasicFetcher implements Fetcher {
     constructor(private readonly baseUrl: string) {}

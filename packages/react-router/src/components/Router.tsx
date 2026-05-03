@@ -1,6 +1,6 @@
-import {useMemo} from 'react'
-import {useUrlPath} from '../hooks'
-import {match as pathMatch} from 'path-to-regexp'
+import { useMemo } from 'react'
+import { useUrlPath } from '../hooks'
+import { match as pathMatch } from 'path-to-regexp'
 
 export type RouteParams = Record<string, string | undefined>
 
@@ -12,7 +12,11 @@ export type RouteObject = {
     component: RouteComponent<any>
 }
 
-export type RouteTuple = readonly [name: string, pattern: string | URLPattern, component: RouteComponent<any>]
+export type RouteTuple = readonly [
+    name: string,
+    pattern: string | URLPattern,
+    component: RouteComponent<any>,
+]
 
 export type Route = RouteObject | RouteTuple
 
@@ -26,23 +30,23 @@ function isRouteTuple(route: Route): route is RouteTuple {
 
 function toUrlPattern(pattern: string | URLPattern): URLPattern {
     if (typeof pattern !== 'string') return pattern
-    if (pattern === '*') return new URLPattern({pathname: '/*'})
-    return new URLPattern({pathname: pattern})
+    if (pattern === '*') return new URLPattern({ pathname: '/*' })
+    return new URLPattern({ pathname: pattern })
 }
 
-export function Router({routes}: RouterProps) {
+export function Router({ routes }: RouterProps) {
     const pathname = useUrlPath()
 
     const normalizedRoutes = useMemo(
         () =>
-            routes.map(route => {
+            routes.map((route) => {
                 const pattern = isRouteTuple(route) ? route[1] : route.pattern
                 const component = isRouteTuple(route) ? route[2] : route.component
                 if (typeof pattern !== 'string') {
                     const urlPattern = toUrlPattern(pattern)
                     return [
                         (pathnameToMatch: string) => {
-                            const match = urlPattern.exec({pathname: pathnameToMatch} as any)
+                            const match = urlPattern.exec({ pathname: pathnameToMatch } as any)
                             if (!match) return null
                             return ((match as any).pathname?.groups ?? {}) as RouteParams
                         },
@@ -51,10 +55,10 @@ export function Router({routes}: RouterProps) {
                 }
 
                 if (pattern === '*') {
-                    return [(_pathnameToMatch: string) => ({} as RouteParams), component] as const
+                    return [(_pathnameToMatch: string) => ({}) as RouteParams, component] as const
                 }
 
-                const matcher = pathMatch(pattern, {decode: decodeURIComponent})
+                const matcher = pathMatch(pattern, { decode: decodeURIComponent })
                 return [
                     (pathnameToMatch: string) => {
                         const m = matcher(pathnameToMatch)
@@ -81,4 +85,3 @@ export function Router({routes}: RouterProps) {
 
     return null
 }
-

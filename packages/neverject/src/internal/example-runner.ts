@@ -1,21 +1,21 @@
-import {stringWidth} from 'bun'
+import { stringWidth } from 'bun'
 
 export type ExampleFn = () => void | Promise<void>
 export type ExampleNode =
-    | {type: 'example'; title: string; run: ExampleFn}
-    | {type: 'describe'; title: string; children: ExampleNode[]}
+    | { type: 'example'; title: string; run: ExampleFn }
+    | { type: 'describe'; title: string; children: ExampleNode[] }
 
 const stack: ExampleNode[][] = [[]]
 const rootExamples: ExampleNode[] = stack[0]!
 
 function currentList(): ExampleNode[] {
     const list = stack[stack.length - 1]
-    if(!list) throw new Error('Example stack is empty')
+    if (!list) throw new Error('Example stack is empty')
     return list
 }
 
 export function example(title: string, run: ExampleFn) {
-    currentList().push({type: 'example', title, run})
+    currentList().push({ type: 'example', title, run })
 }
 
 export function describe(title: string, register: () => void) {
@@ -23,7 +23,7 @@ export function describe(title: string, register: () => void) {
     stack.push(group)
     register()
     stack.pop()
-    currentList().push({type: 'describe', title, children: group})
+    currentList().push({ type: 'describe', title, children: group })
 }
 
 export function log(label: string, value: unknown) {
@@ -56,8 +56,8 @@ function exampleDivider(title: string, level: number) {
 }
 
 export async function runExamples(list: ExampleNode[] = rootExamples, level = 0) {
-    for(const item of list) {
-        if(item.type === 'describe') {
+    for (const item of list) {
+        if (item.type === 'describe') {
             describeDivider(item.title, level)
             await runExamples(item.children, level + 1)
             continue
@@ -67,5 +67,5 @@ export async function runExamples(list: ExampleNode[] = rootExamples, level = 0)
         await item.run()
     }
 
-    if(level === 0) describeDivider('Done', level)
+    if (level === 0) describeDivider('Done', level)
 }

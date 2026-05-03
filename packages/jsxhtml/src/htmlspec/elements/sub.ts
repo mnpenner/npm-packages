@@ -1,6 +1,4 @@
-import type {CommonAttributes} from '../attributes/ElementAttributes'
-import type {ElementForTag} from './element-types'
+import type { CommonAttributes } from '../attributes/ElementAttributes'
+import type { ElementForTag } from './element-types'
 
-export interface SubAttributes extends CommonAttributes<ElementForTag<'sub'>> {
-}
-
+export interface SubAttributes extends CommonAttributes<ElementForTag<'sub'>> {}

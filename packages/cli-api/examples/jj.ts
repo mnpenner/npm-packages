@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-import type { ExecutionContext} from '../src';
-import {App, Command, OptType, type AnyOptType, type Option} from '../src'
+import type { ExecutionContext } from '../src'
+import { App, Command, OptType, type AnyOptType, type Option } from '../src'
 
 type CommandSpec = {
     name: string
@@ -31,7 +31,9 @@ function lines(...parts: string[]): string {
 
 function logRun(commandName: string) {
     return (opts: Record<string, unknown>, ctx: ExecutionContext) => {
-        console.log({command: commandName, opts,
+        console.log({
+            command: commandName,
+            opts,
             commandPath: ctx.commandPath,
             colorLevel: ctx.colorLevel,
         })
@@ -41,7 +43,7 @@ function logRun(commandName: string) {
 function applySpec(command: Command, spec: CommandSpec): Command {
     const builder = command as CommandBuilder
 
-    if(spec.aliases?.length) {
+    if (spec.aliases?.length) {
         builder.aliases(...spec.aliases)
     }
     builder.describe(spec.description, spec.longDescription)
@@ -111,7 +113,7 @@ const globalOptions: Option[] = [
             '',
             'When loading the repo at an earlier operation, the working copy will be ignored, as if `--ignore-working-copy` had been specified.',
             '',
-            "It is possible to run mutating commands when loading the repo at an earlier operation. Doing that is equivalent to having run",
+            'It is possible to run mutating commands when loading the repo at an earlier operation. Doing that is equivalent to having run',
             "concurrent commands starting at the earlier operation. There's rarely a reason to do that, but it is possible.",
         ),
     },
@@ -144,7 +146,7 @@ const globalOptions: Option[] = [
         description: lines(
             'Additional configuration options (can be repeated)',
             '',
-            'The name should be specified as TOML dotted keys. The value should be specified as a TOML expression. If string value isn\'t',
+            "The name should be specified as TOML dotted keys. The value should be specified as a TOML expression. If string value isn't",
             'enclosed by any TOML constructs (such as array notation), quotes can be omitted.',
         ),
     },
@@ -157,61 +159,59 @@ const globalOptions: Option[] = [
     },
 ]
 
-const fileCommand = new Command('file')
-    .describe('File operations')
-    .commands([
-        leaf({
-            name: 'annotate',
-            description: 'Show the source change for each line of the target file',
-        }),
-        leaf({
-            name: 'chmod',
-            description: 'Sets or removes the executable bit for paths in the repo',
-        }),
-        leaf({
-            name: 'list',
-            description: 'List files in a revision',
-        }),
-        leaf({
-            name: 'show',
-            description: 'Print contents of files in a revision',
-            longDescription: lines(
-                'If the given path is a directory, files in the directory will be visited recursively.',
-            ),
-            options: [
-                {
-                    name: 'revision',
-                    alias: 'r',
-                    valuePlaceholder: 'REVSET',
-                    description: 'The revision to get the file contents from',
-                    defaultValue: '@',
-                    defaultValueText: '@',
-                },
-                {
-                    name: 'template',
-                    alias: 'T',
-                    valuePlaceholder: 'TEMPLATE',
-                    description: 'Render each file metadata using the given template',
-                },
-            ],
-            arguments: [
-                {
-                    name: 'filesets',
-                    description: 'Paths to print',
-                    repeatable: true,
-                    required: true,
-                },
-            ],
-        }),
-        leaf({
-            name: 'track',
-            description: 'Start tracking specified paths in the working copy',
-        }),
-        leaf({
-            name: 'untrack',
-            description: 'Stop tracking specified paths in the working copy',
-        }),
-    ])
+const fileCommand = new Command('file').describe('File operations').commands([
+    leaf({
+        name: 'annotate',
+        description: 'Show the source change for each line of the target file',
+    }),
+    leaf({
+        name: 'chmod',
+        description: 'Sets or removes the executable bit for paths in the repo',
+    }),
+    leaf({
+        name: 'list',
+        description: 'List files in a revision',
+    }),
+    leaf({
+        name: 'show',
+        description: 'Print contents of files in a revision',
+        longDescription: lines(
+            'If the given path is a directory, files in the directory will be visited recursively.',
+        ),
+        options: [
+            {
+                name: 'revision',
+                alias: 'r',
+                valuePlaceholder: 'REVSET',
+                description: 'The revision to get the file contents from',
+                defaultValue: '@',
+                defaultValueText: '@',
+            },
+            {
+                name: 'template',
+                alias: 'T',
+                valuePlaceholder: 'TEMPLATE',
+                description: 'Render each file metadata using the given template',
+            },
+        ],
+        arguments: [
+            {
+                name: 'filesets',
+                description: 'Paths to print',
+                repeatable: true,
+                required: true,
+            },
+        ],
+    }),
+    leaf({
+        name: 'track',
+        description: 'Start tracking specified paths in the working copy',
+    }),
+    leaf({
+        name: 'untrack',
+        description: 'Stop tracking specified paths in the working copy',
+    }),
+])
 
 const rootLeafSpecs: CommandSpec[] = [
     {
@@ -239,7 +239,7 @@ const rootLeafSpecs: CommandSpec[] = [
             'The modification made by `jj absorb` can be reviewed by `jj op show -p`.',
         ),
     },
-    {name: 'bisect', description: 'Find a bad revision by bisection'},
+    { name: 'bisect', description: 'Find a bad revision by bisection' },
     {
         name: 'bookmark',
         description: 'Manage bookmarks',
@@ -285,7 +285,7 @@ const rootLeafSpecs: CommandSpec[] = [
         description: 'Update the change description or other metadata',
         aliases: ['desc'],
         longDescription: lines(
-            'Starts an editor to let you edit the description of changes. The editor will be $EDITOR, or `nano` if that\'s not defined',
+            "Starts an editor to let you edit the description of changes. The editor will be $EDITOR, or `nano` if that's not defined",
             '(`Notepad` on Windows).',
         ),
     },
@@ -317,7 +317,7 @@ const rootLeafSpecs: CommandSpec[] = [
             '`--to` will be updated. Unless `--restore-descendants` is used, descendants will be rebased on top as usual, which may result in',
             'conflicts.',
             '',
-            "See `jj restore` if you want to move entire files from one revision to another. For moving changes between revisions, see",
+            'See `jj restore` if you want to move entire files from one revision to another. For moving changes between revisions, see',
             '`jj squash -i`.',
         ),
     },
@@ -373,7 +373,7 @@ const rootLeafSpecs: CommandSpec[] = [
             'can potentially increase or decrease the number of conflict markers.',
         ),
     },
-    {name: 'gerrit', description: 'Interact with Gerrit Code Review'},
+    { name: 'gerrit', description: 'Interact with Gerrit Code Review' },
     {
         name: 'git',
         description: 'Commands for working with Git remotes and the underlying Git repo',
@@ -397,7 +397,7 @@ const rootLeafSpecs: CommandSpec[] = [
         name: 'log',
         description: 'Show revision history',
         longDescription: lines(
-            'Renders a graphical view of the project\'s history, ordered with children before parents. By default, the output only includes',
+            "Renders a graphical view of the project's history, ordered with children before parents. By default, the output only includes",
             'mutable revisions, along with some additional revisions for context. Use `jj log -r ::` to see all revisions. See',
             '[`jj help -k revsets`] for information about the syntax.',
             '',
@@ -414,7 +414,10 @@ const rootLeafSpecs: CommandSpec[] = [
             '[customized]: https://jj-vcs.github.io/jj/latest/config/#node-style',
         ),
     },
-    {name: 'metaedit', description: 'Modify the metadata of a revision without changing its content'},
+    {
+        name: 'metaedit',
+        description: 'Modify the metadata of a revision without changing its content',
+    },
     {
         name: 'new',
         description: 'Create a new, empty change and (by default) edit it in the working copy',
@@ -515,8 +518,8 @@ const rootLeafSpecs: CommandSpec[] = [
             'There are three different ways of specifying where the revisions should be rebased to:',
             '',
             '* `--destination/-d` to rebase the revisions onto the specified targets',
-            '* `--insert-after/-A` to rebase the revisions onto the specified targets and to rebase the targets\' descendants onto the rebased revisions',
-            '* `--insert-before/-B` to rebase the revisions onto the specified targets\' parents and to rebase the targets and their descendants onto the rebased revisions',
+            "* `--insert-after/-A` to rebase the revisions onto the specified targets and to rebase the targets' descendants onto the rebased revisions",
+            "* `--insert-before/-B` to rebase the revisions onto the specified targets' parents and to rebase the targets and their descendants onto the rebased revisions",
         ),
     },
     {
@@ -565,8 +568,11 @@ const rootLeafSpecs: CommandSpec[] = [
             'The description of the new revisions can be customized with the `templates.revert_description` config variable.',
         ),
     },
-    {name: 'root', description: 'Show the current workspace root directory (shortcut for `jj workspace root`)'},
-    {name: 'show', description: 'Show commit description and changes in a revision'},
+    {
+        name: 'root',
+        description: 'Show the current workspace root directory (shortcut for `jj workspace root`)',
+    },
+    { name: 'show', description: 'Show commit description and changes in a revision' },
     {
         name: 'sign',
         description: 'Cryptographically sign a revision',
@@ -581,13 +587,17 @@ const rootLeafSpecs: CommandSpec[] = [
         description: 'Simplify parent edges for the specified revision(s)',
         longDescription: lines(
             'Removes all parents of each of the specified revisions that are also indirect ancestors of the same revisions through other',
-            'parents. This has no effect on any revision\'s contents, including the working copy.',
+            "parents. This has no effect on any revision's contents, including the working copy.",
             '',
             'In other words, for all (A, B, C) where A has (B, C) as parents and C is an ancestor of B, A will be rewritten to have only B as',
             'a parent instead of B+C.',
         ),
     },
-    {name: 'sparse', description: 'Manage which paths from the working-copy commit are present in the working copy'},
+    {
+        name: 'sparse',
+        description:
+            'Manage which paths from the working-copy commit are present in the working copy',
+    },
     {
         name: 'split',
         description: 'Split a revision in two',
@@ -633,7 +643,7 @@ const rootLeafSpecs: CommandSpec[] = [
             '[Conflicted bookmarks]: https://jj-vcs.github.io/jj/latest/bookmarks/#conflicts',
         ),
     },
-    {name: 'tag', description: 'Manage tags'},
+    { name: 'tag', description: 'Manage tags' },
     {
         name: 'undo',
         description: 'Undo the last operation',
@@ -653,13 +663,16 @@ const rootLeafSpecs: CommandSpec[] = [
             '[commit signing]: https://jj-vcs.github.io/jj/latest/config/#commit-signing',
         ),
     },
-    {name: 'util', description: 'Infrequently used commands such as for generating shell completions'},
+    {
+        name: 'util',
+        description: 'Infrequently used commands such as for generating shell completions',
+    },
     {
         name: 'workspace',
         description: 'Commands for working with workspaces',
         longDescription: lines(
             'Workspaces let you add additional working copies attached to the same repo. A common use case is so you can run a slow build or',
-            'test in one workspace while you\'re continuing to write code in another workspace.',
+            "test in one workspace while you're continuing to write code in another workspace.",
             '',
             'Each workspace has its own working-copy commit. When you have more than one workspace attached to a repo, they are indicated by',
             '`<workspace name>@` in `jj log`.',
@@ -679,15 +692,9 @@ const app = new App('Jujutsu (An experimental VCS)')
             '[`jj help -k tutorial`]: https://jj-vcs.github.io/jj/latest/tutorial/',
         ].join('\n'),
     })
-    .commands([
-        ...rootLeafSpecs.map(leaf),
-        fileCommand,
-    ])
+    .commands([...rootLeafSpecs.map(leaf), fileCommand])
     .globalOptions(globalOptions)
 
-if(import.meta.main) {
+if (import.meta.main) {
     await app.execute()
 }
-
-
-

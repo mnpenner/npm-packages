@@ -100,6 +100,6 @@ export interface EventHandlerMap {
     onwheel: WheelEvent
 }
 
-export type GlobalEventHandlers<E=HTMLElement> = {
+export type GlobalEventHandlers<E = HTMLElement> = {
     [K in keyof EventHandlerMap]?: string | ((this: E, ev: EventHandlerMap[K]) => any)
 }

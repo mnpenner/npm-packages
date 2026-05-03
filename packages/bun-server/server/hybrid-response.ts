@@ -1,9 +1,9 @@
-import {ReadWriteStream} from './read-write-stream'
-import {Deferred} from './promise'
-import type {Chunkable} from './server-api'
+import { ReadWriteStream } from './read-write-stream'
+import { Deferred } from './promise'
+import type { Chunkable } from './server-api'
 import assert from 'assert'
 
-type ResponseOptions = Omit<ResponseInit,'statusText'>
+type ResponseOptions = Omit<ResponseInit, 'statusText'>
 
 export class HybridResponse {
     private _stream?: ReadWriteStream
@@ -34,8 +34,8 @@ export class HybridResponse {
     }
 
     write(chunk: Chunkable) {
-        if(this.bodyClosed) {
-            throw new Error("Response stream already closed")
+        if (this.bodyClosed) {
+            throw new Error('Response stream already closed')
         }
         this._stream ??= new ReadWriteStream()
         this._stream!.write(chunk)
@@ -54,16 +54,16 @@ export class HybridResponse {
     respond(res: Response): void
     respond(...args: ConstructorParameters<typeof Response>): void
     respond(res: any, ...args: any[]) {
-        if(this.bodyClosed) {
-            throw new Error("Response stream already closed")
+        if (this.bodyClosed) {
+            throw new Error('Response stream already closed')
         }
-        if(this._stream) {
-            throw new Error("Response stream already started")
+        if (this._stream) {
+            throw new Error('Response stream already started')
         }
-        if(!res) {
-            throw new Error("Missing response")
+        if (!res) {
+            throw new Error('Missing response')
         }
-        if(res instanceof Response) {
+        if (res instanceof Response) {
             this._response = res
         } else {
             this._response = new Response(res, ...args)
@@ -80,8 +80,8 @@ export class HybridResponse {
         return this.respond(Response.json(body, options))
     }
 
-    text(text: string, status=200) {
-        const encoder = new TextEncoder();
+    text(text: string, status = 200) {
+        const encoder = new TextEncoder()
         const array = encoder.encode(text)
         return this.respond(array, {
             headers: {
@@ -93,7 +93,7 @@ export class HybridResponse {
     }
 
     get headers(): Headers {
-        if(this._response) {
+        if (this._response) {
             return this._response.headers
         }
         this._headers ??= new Headers()
@@ -102,12 +102,12 @@ export class HybridResponse {
 
     setHeader(name: string, value: string | number) {
         assert(name?.length)
-        if(this.headersSent) {
-            throw new Error("Headers already flushed")
+        if (this.headersSent) {
+            throw new Error('Headers already flushed')
         }
-        if(typeof value === 'number') {
-            if(!Number.isSafeInteger(value)) {
-                throw new Error("Unsafe number")
+        if (typeof value === 'number') {
+            if (!Number.isSafeInteger(value)) {
+                throw new Error('Unsafe number')
             }
             value = String(value)
         }
@@ -117,8 +117,8 @@ export class HybridResponse {
 
     setStatus(status: number) {
         assert(status >= 100 && status < 600)
-        if(this._headerDeferred.isSettled) {
-            throw new Error("Headers already flushed")
+        if (this._headerDeferred.isSettled) {
+            throw new Error('Headers already flushed')
         }
         this._status = status
         return this
@@ -129,15 +129,15 @@ export class HybridResponse {
     }
 
     flushHeaders(headers?: HeadersInit) {
-        if(this._headerDeferred.isSettled) {
-            throw new Error("Headers already flushed")
+        if (this._headerDeferred.isSettled) {
+            throw new Error('Headers already flushed')
         }
-        if(headers) {
-            if(this._headers?.count) {
-                throw new Error("Headers already set")
+        if (headers) {
+            if (this._headers?.count) {
+                throw new Error('Headers already set')
             }
             this._headers = new Headers(headers)
-        } else if(!this._headers) {
+        } else if (!this._headers) {
             this._headers = new Headers()
         }
         // Object.freeze(this._headers)
@@ -146,8 +146,8 @@ export class HybridResponse {
     }
 
     end() {
-        if(this.bodyClosed) return false
-        if(this._headerDeferred.isPending) {
+        if (this.bodyClosed) return false
+        if (this._headerDeferred.isPending) {
             this.flushHeaders()
         }
         this._stream?.close()
@@ -156,13 +156,13 @@ export class HybridResponse {
     }
 
     get status(): number {
-        if(this._response) {
+        if (this._response) {
             return this._response.status
         }
-        if(this._status != null) {
+        if (this._status != null) {
             return this._status
         }
-        if(this.bodyClosed && !this._stream) {
+        if (this.bodyClosed && !this._stream) {
             return 204
         }
         return 200
@@ -174,7 +174,7 @@ export class HybridResponse {
      * The body may still be written to.
      */
     async buildResponse(): Promise<Response> {
-        if(this._response) {
+        if (this._response) {
             return this._response
         }
         await this._headerDeferred.promise

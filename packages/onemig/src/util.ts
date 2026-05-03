@@ -1,21 +1,21 @@
-import highlight from "cli-highlight";
-import type {SqlFrag} from './mysql.ts'
-import {isFrag} from './mysql.ts'
+import highlight from 'cli-highlight'
+import type { SqlFrag } from './mysql.ts'
+import { isFrag } from './mysql.ts'
 
-export function printSql(sql: string|SqlFrag) {
-    if(isFrag(sql)) {
+export function printSql(sql: string | SqlFrag) {
+    if (isFrag(sql)) {
         sql = sql.toSqlString()
     }
-    console.log(highlight(sql, {language: 'sql', ignoreIllegals: true}));
+    console.log(highlight(sql, { language: 'sql', ignoreIllegals: true }))
 }
 
 function pick<T, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
     // https://stackoverflow.com/a/47232883/65387
-    const ret: any = {};
-    keys.forEach(key => {
-        ret[key] = obj[key];
+    const ret: any = {}
+    keys.forEach((key) => {
+        ret[key] = obj[key]
     })
-    return ret;
+    return ret
 }
 
 /**
@@ -26,50 +26,56 @@ function pick<T, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
  */
 export function splitValues(subject: string): string[] {
     if (!subject) {
-        return [];
+        return []
     }
-    const terms = [];
-    let term = '';
-    let quoted = false;
-    const q = "'";
-    for (let i = 0; i < subject.length;) {
-        const ch = subject[i];
+    const terms = []
+    let term = ''
+    let quoted = false
+    const q = "'"
+    for (let i = 0; i < subject.length; ) {
+        const ch = subject[i]
         if (ch === q) {
             if (!quoted) {
-                quoted = true;
+                quoted = true
             } else if (subject[i + 1] === q) {
-                term += q;
-                i += 2;
-                continue;
+                term += q
+                i += 2
+                continue
             } else {
-                quoted = false;
+                quoted = false
             }
         } else if (!quoted && ch === ',') {
-            terms.push(term);
-            term = '';
+            terms.push(term)
+            term = ''
         } else {
-            term += ch;
+            term += ch
         }
-        ++i;
+        ++i
     }
-    terms.push(term);
-    return terms;
+    terms.push(term)
+    return terms
 }
 
 type AsyncFunc<T = any> = (...a: any) => Promise<T>
 
 export function parallel(...funcs: AsyncFunc[]) {
-    return Promise.all(funcs.map(call));
+    return Promise.all(funcs.map(call))
 }
 
 function isFunction(x: any): x is Function {
     return typeof x === 'function'
 }
 
-function call<TRet, TArgs extends any[]>(this: any, fn: TRet | ((...a: TArgs) => TRet), ...args: TArgs): TRet {
-    return isFunction(fn) ? fn.call(this, ...args) : fn;
+function call<TRet, TArgs extends any[]>(
+    this: any,
+    fn: TRet | ((...a: TArgs) => TRet),
+    ...args: TArgs
+): TRet {
+    return isFunction(fn) ? fn.call(this, ...args) : fn
 }
 
 export function sortBy<T extends object>(array: T[], prop: keyof T) {
-    return array.sort((a, b) => (a[prop] as unknown as string).localeCompare(b[prop] as unknown as string));
+    return array.sort((a, b) =>
+        (a[prop] as unknown as string).localeCompare(b[prop] as unknown as string),
+    )
 }

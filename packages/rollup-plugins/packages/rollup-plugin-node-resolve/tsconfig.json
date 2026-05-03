@@ -10,7 +10,5 @@
         "target": "es2018",
         "declaration": true
     },
-    "files": [
-        "rollup-plugin-node-resolve.ts"
-    ]
+    "files": ["rollup-plugin-node-resolve.ts"]
 }

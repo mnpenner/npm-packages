@@ -1,11 +1,11 @@
-import type {AnyContext, Handler, Route, RouteSchema} from '../../types'
+import type { AnyContext, Handler, Route, RouteSchema } from '../../types'
 import type {
     ZodHandlerOptions,
     ZodRouteHelperDefaults,
     ZodRouteOptions,
-    ZodRouteSchemaInput
+    ZodRouteSchemaInput,
 } from './zod'
-import {zodHandler, zodPartial, zodRoute} from './zod'
+import { zodHandler, zodPartial, zodRoute } from './zod'
 
 /**
  * Reusable factory for Zod-backed handlers and routes with shared defaults.
@@ -47,55 +47,61 @@ export class ZodRouteFactory {
     }
 
     private _mergeSchema(
-        schema: ZodRouteSchemaInput<any, any, any, any> | undefined
+        schema: ZodRouteSchemaInput<any, any, any, any> | undefined,
     ): ZodRouteSchemaInput<any, any, any, any> | undefined {
         const defaultSchema = this._defaults.schema
         if (!defaultSchema) return schema
         if (!schema) return defaultSchema
 
-        const request = (!defaultSchema.request && !schema.request)
-            ? undefined
-            : {
-                ...defaultSchema.request,
-                ...schema.request,
-            }
+        const request =
+            !defaultSchema.request && !schema.request
+                ? undefined
+                : {
+                      ...defaultSchema.request,
+                      ...schema.request,
+                  }
 
-        const responseBody = (!defaultSchema.response?.body && !schema.response?.body)
-            ? undefined
-            : {
-                ...(defaultSchema.response?.body ?? {}),
-                ...(schema.response?.body ?? {}),
-            }
+        const responseBody =
+            !defaultSchema.response?.body && !schema.response?.body
+                ? undefined
+                : {
+                      ...(defaultSchema.response?.body ?? {}),
+                      ...(schema.response?.body ?? {}),
+                  }
 
-        const response = responseBody ? {body: responseBody} : undefined
+        const response = responseBody ? { body: responseBody } : undefined
 
         return {
-            ...(request ? {request} : {}),
-            ...(response ? {response} : {}),
+            ...(request ? { request } : {}),
+            ...(response ? { response } : {}),
         }
     }
 
     private _mergeHandlerOptions<
         Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
         Ctx extends object,
-    >(options: ZodHandlerOptions<Schema, Ctx>): ZodHandlerOptions<ZodRouteSchemaInput<any, any, any, any>, Ctx> {
+    >(
+        options: ZodHandlerOptions<Schema, Ctx>,
+    ): ZodHandlerOptions<ZodRouteSchemaInput<any, any, any, any>, Ctx> {
         const schema = this._mergeSchema(options.schema)
         return {
             ...this._defaults,
             ...options,
-            ...(schema === undefined ? {} : {schema}),
+            ...(schema === undefined ? {} : { schema }),
         }
     }
 
     private _mergeRouteOptions<
         Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
         Ctx extends object,
-    >(options: ZodRouteOptions<Schema, Ctx>): ZodRouteOptions<ZodRouteSchemaInput<any, any, any, any>, Ctx> {
+    >(
+        options: ZodRouteOptions<Schema, Ctx>,
+    ): ZodRouteOptions<ZodRouteSchemaInput<any, any, any, any>, Ctx> {
         const schema = this._mergeSchema(options.schema)
         return {
             ...this._defaults,
             ...options,
-            ...(schema === undefined ? {} : {schema}),
+            ...(schema === undefined ? {} : { schema }),
         }
     }
 
@@ -121,7 +127,9 @@ export class ZodRouteFactory {
     partial<
         Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
         Ctx extends object = AnyContext,
-    >(options: ZodHandlerOptions<Schema, Ctx>): {handler: Handler<any, Ctx>; schema?: RouteSchema} {
+    >(
+        options: ZodHandlerOptions<Schema, Ctx>,
+    ): { handler: Handler<any, Ctx>; schema?: RouteSchema } {
         return zodPartial(this._mergeHandlerOptions(options))
     }
 

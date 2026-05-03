@@ -1,8 +1,8 @@
-import type {Result} from 'neverject'
-import {isResult} from 'neverject/result'
-import {type ZodType, z} from 'zod'
-import {HttpStatus} from '@mpen/http-helpers'
-import type {Handler, RequestContext} from '@mpen/server-router'
+import type { Result } from 'neverject'
+import { isResult } from 'neverject/result'
+import { type ZodType, z } from 'zod'
+import { HttpStatus } from '@mpen/http-helpers'
+import type { Handler, RequestContext } from '@mpen/server-router'
 
 /**
  * Should roughly map to HTTP status codes but with more granularity.
@@ -22,9 +22,14 @@ export const serverErrorToHttpStatus = new Map<ServerErrorCode, HttpStatus>([
 ])
 
 export type RawError =
-    | { type: ServerErrorCode.REQUEST_FORMAT, error: string }
-    | { type: ServerErrorCode.HANDLER_RESPONSE, error: string }
-    | { type: ServerErrorCode.VALIDATION_ERROR, component: ValidationError, errorTree: ErrorTree, message: string }
+    | { type: ServerErrorCode.REQUEST_FORMAT; error: string }
+    | { type: ServerErrorCode.HANDLER_RESPONSE; error: string }
+    | {
+          type: ServerErrorCode.VALIDATION_ERROR
+          component: ValidationError
+          errorTree: ErrorTree
+          message: string
+      }
 
 /**
  * Specific component that failed validation.
@@ -53,9 +58,11 @@ export interface ServerRequest<TBody, TPathParams, TQueryParams> {
 
 export type MaybePromise<T> = T | PromiseLike<T>
 
-export type ZodHandler<TReqBody, TReqPath, TReqQuery, TOkRes, TErr> =
-    (req: ServerRequest<TReqBody, TReqPath, TReqQuery>) =>
-        | MaybePromise<Result<ServerResponse<TOkRes> | Response, TErr> | ServerResponse<TOkRes> | Response>
+export type ZodHandler<TReqBody, TReqPath, TReqQuery, TOkRes, TErr> = (
+    req: ServerRequest<TReqBody, TReqPath, TReqQuery>,
+) => MaybePromise<
+    Result<ServerResponse<TOkRes> | Response, TErr> | ServerResponse<TOkRes> | Response
+>
 
 export type CreateZodHandlerOptions<
     QuerySchema extends ZodType | undefined,
@@ -64,17 +71,17 @@ export type CreateZodHandlerOptions<
     Success,
     Error,
 > = {
-    query?: QuerySchema;
-    body?: BodySchema;
-    path?: PathSchema;
+    query?: QuerySchema
+    body?: BodySchema
+    path?: PathSchema
     exec: ZodHandler<
         BodySchema extends ZodType ? z.infer<BodySchema> : unknown,
         PathSchema extends ZodType ? z.infer<PathSchema> : unknown,
         QuerySchema extends ZodType ? z.infer<QuerySchema> : unknown,
         Success,
         Error
-    >;
-};
+    >
+}
 
 function toResponse<T>(res: ServerResponse<T>): Response {
     const headers = new Headers(res.headers ?? {})
@@ -121,7 +128,9 @@ export function createZodNeverjectHandler<
     PathSchema extends ZodType | undefined,
     Success,
     Error = RawError,
->(options: CreateZodHandlerOptions<QuerySchema, BodySchema, PathSchema, Success, Error>): Handler<Success> {
+>(
+    options: CreateZodHandlerOptions<QuerySchema, BodySchema, PathSchema, Success, Error>,
+): Handler<Success> {
     return async (ctx: RequestContext) => {
         const queryParams: unknown = ctx.queryParams
         const pathParams: unknown = ctx.pathParams
@@ -130,7 +139,9 @@ export function createZodNeverjectHandler<
         if (options.query) {
             const queryResult = options.query.safeParse(queryParams)
             if (!queryResult.success) {
-                return rawErrorToResponse(zodValidationError(ValidationError.QUERY, queryResult.error))
+                return rawErrorToResponse(
+                    zodValidationError(ValidationError.QUERY, queryResult.error),
+                )
             }
             ;(ctx.queryParams as any) = queryResult.data
         }
@@ -147,7 +158,9 @@ export function createZodNeverjectHandler<
 
             const bodyResult = options.body.safeParse(body)
             if (!bodyResult.success) {
-                return rawErrorToResponse(zodValidationError(ValidationError.BODY, bodyResult.error))
+                return rawErrorToResponse(
+                    zodValidationError(ValidationError.BODY, bodyResult.error),
+                )
             }
             ;(ctx.body as any) = bodyResult.data
         }
@@ -155,7 +168,9 @@ export function createZodNeverjectHandler<
         if (options.path) {
             const pathResult = options.path.safeParse(pathParams)
             if (!pathResult.success) {
-                return rawErrorToResponse(zodValidationError(ValidationError.PATH, pathResult.error))
+                return rawErrorToResponse(
+                    zodValidationError(ValidationError.PATH, pathResult.error),
+                )
             }
             ;(ctx.pathParams as any) = pathResult.data
         }
@@ -178,15 +193,17 @@ export function createZodNeverjectHandler<
                 const result = handlerResult as any
                 if (result.ok) {
                     const value = result.value as any
-                    return value instanceof Response ? value : toResponse(value as ServerResponse<Success>)
+                    return value instanceof Response
+                        ? value
+                        : toResponse(value as ServerResponse<Success>)
                 }
                 const error = result.error as any
                 return error && typeof error === 'object' && 'type' in error
                     ? rawErrorToResponse(error as RawError)
                     : rawErrorToResponse({
-                        type: ServerErrorCode.HANDLER_RESPONSE,
-                        error: String(error),
-                    })
+                          type: ServerErrorCode.HANDLER_RESPONSE,
+                          error: String(error),
+                      })
             }
 
             return toResponse(handlerResult as ServerResponse<Success>)

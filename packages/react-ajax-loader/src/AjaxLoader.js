@@ -1,20 +1,19 @@
-import React from 'react';
-import shallowEqual from 'shallowequal';
-import objectHash from 'object-hash'; // also a good choice: json-stable-stringify
-import * as FP from './FetchPolicy';
+import React from 'react'
+import shallowEqual from 'shallowequal'
+import objectHash from 'object-hash' // also a good choice: json-stable-stringify
+import * as FP from './FetchPolicy'
 
 export default class AjaxLoader {
-
     constructor({
         endpoint,
         cache,
         hash = objectHash,
-        batchSize = 4, 
-        minDelay = 8, 
-        maxDelay = 32, 
+        batchSize = 4,
+        minDelay = 8,
+        maxDelay = 32,
         fetchOptions,
         refreshAllProp,
-        
+
         defaultDataProp = 'ajaxData',
         defaultLoadingProp = 'ajaxLoading',
         defaultErrorProp = 'ajaxError',
@@ -37,24 +36,24 @@ export default class AjaxLoader {
             defaultEqualityCheck,
             defaultHandler,
             defaultFetchPolicy,
-        };
-        
-        this.batch = new Map;
-        this.start = null;
-        this.timer = null;
-        this.reqId = 0;
-        this.rankCounter = 0;
-        this.rankLookup = Object.create(null);
+        }
 
-        if(this.options.batchSize <= 0) {
-            throw new Error(`batchSize must be > 0, got ${this.options.batchSize}`);
+        this.batch = new Map()
+        this.start = null
+        this.timer = null
+        this.reqId = 0
+        this.rankCounter = 0
+        this.rankLookup = Object.create(null)
+
+        if (this.options.batchSize <= 0) {
+            throw new Error(`batchSize must be > 0, got ${this.options.batchSize}`)
         }
     }
 
     hoc(...requests) {
-        const loader = this;
-        
-        for(const req of requests) {
+        const loader = this
+
+        for (const req of requests) {
             setDefaults(req, {
                 equalityCheck: this.options.defaultEqualityCheck,
                 handler: this.options.defaultHandler,
@@ -63,127 +62,126 @@ export default class AjaxLoader {
                 dataProp: this.options.defaultDataProp,
                 refreshProp: null,
                 fetchPolicy: this.options.defaultFetchPolicy,
-                initialData: undefined, 
-            });
+                initialData: undefined,
+            })
         }
 
         return function ajaxLoaderEnhancer(BaseComponent) {
-
             class AjaxEnhanced extends React.Component {
-                static displayName = `ajaxLoader(${BaseComponent.displayName || BaseComponent.name || 'Component'})`;
-                
+                static displayName = `ajaxLoader(${BaseComponent.displayName || BaseComponent.name || 'Component'})`
+
                 constructor(props) {
-                    super(props);
+                    super(props)
                     // *copy* all the requests into the component
-                    this.requests = requests.map(req => ({
+                    this.requests = requests.map((req) => ({
                         ...req,
                         _component: this,
                         _id: ++loader.reqId,
-                    })); 
-                    this.lastData = Object.create(null);
-                    this.state = Object.create(null); // fixes "Cannot read property 'loading' of null" in React 16
+                    }))
+                    this.lastData = Object.create(null)
+                    this.state = Object.create(null) // fixes "Cannot read property 'loading' of null" in React 16
                 }
-                
-                componentWillMount() {
-                    const requests = this.requests.reduce((acc,req) => {
-                        const data = resolveValue.call(this, req.initialData, this.props);
 
-                        if(data !== undefined) {
-                            success(req, data);
+                componentWillMount() {
+                    const requests = this.requests.reduce((acc, req) => {
+                        const data = resolveValue.call(this, req.initialData, this.props)
+
+                        if (data !== undefined) {
+                            success(req, data)
                         } else {
-                            if(typeof req.data === 'function') {
-                                const data = req.data.call(this, this.props);
-                                this.lastData[req._id] = data;
-                                req = {...req, data};
+                            if (typeof req.data === 'function') {
+                                const data = req.data.call(this, this.props)
+                                this.lastData[req._id] = data
+                                req = { ...req, data }
                             }
 
-                            acc.push(req);
+                            acc.push(req)
                         }
 
-                        return acc;
-                    }, []);
-                    
-                    if(requests.length) {
-                        loader._push(requests);
+                        return acc
+                    }, [])
+
+                    if (requests.length) {
+                        loader._push(requests)
                     }
                 }
 
                 componentWillReceiveProps(nextProps) {
                     const updated = this.requests.reduce((acc, req) => {
-                        if(typeof req.data === 'function') {
-                            const data = req.data.call(this, nextProps);
-                            if(!req.equalityCheck(this.lastData[req._id], data)) {
-                                this.lastData[req._id] = data;
-                                acc.push({...req, data});
+                        if (typeof req.data === 'function') {
+                            const data = req.data.call(this, nextProps)
+                            if (!req.equalityCheck(this.lastData[req._id], data)) {
+                                this.lastData[req._id] = data
+                                acc.push({ ...req, data })
                             }
                         }
-                        return acc;
-                    }, []);
+                        return acc
+                    }, [])
 
-                    if(updated.length) {
-                        loader._push(updated);
+                    if (updated.length) {
+                        loader._push(updated)
                     }
                 }
 
                 render() {
-                    const props = {...this.props, ...this.state};
-                    const refreshFuncs = [];
-                    for(let req of this.requests) {
+                    const props = { ...this.props, ...this.state }
+                    const refreshFuncs = []
+                    for (let req of this.requests) {
                         const refresh = () => {
-                            req = {...req, _noCache: true};
-                            if(typeof req.data === 'function') {
-                                req.data = this.lastData[req._id] = req.data.call(this, this.props);
+                            req = { ...req, _noCache: true }
+                            if (typeof req.data === 'function') {
+                                req.data = this.lastData[req._id] = req.data.call(this, this.props)
                             }
-                            loader._push([req]);
-                        };
-                        
-                        if(req.refreshProp) {
-                            props[req.refreshProp] = refresh;
+                            loader._push([req])
                         }
 
-                        refreshFuncs.push(refresh);
+                        if (req.refreshProp) {
+                            props[req.refreshProp] = refresh
+                        }
+
+                        refreshFuncs.push(refresh)
                     }
-                    if(loader.options.refreshAllProp) {
+                    if (loader.options.refreshAllProp) {
                         props[loader.options.refreshAllProp] = () => {
-                            for(const fn of refreshFuncs) {
-                                fn();
+                            for (const fn of refreshFuncs) {
+                                fn()
                             }
-                        };
+                        }
                     }
-                    return React.createElement(BaseComponent, props);
+                    return React.createElement(BaseComponent, props)
                 }
             }
 
-            return AjaxEnhanced;
-        };
+            return AjaxEnhanced
+        }
     }
 
-    _push = requests => {
-        for(const req of requests) {
-            let cacheHit = false;
-            const key = this.options.hash([req.route,req.data]);
-            
-            if(this.options.cache && req.fetchPolicy !== FP.NetworkOnly && !req._noCache) {
-                const res = this.options.cache.get(key);
-                if(res !== undefined) {
-                    success(req, res.payload);
-                    if(req.fetchPolicy !== FP.CacheAndNetwork) {
-                        continue;
+    _push = (requests) => {
+        for (const req of requests) {
+            let cacheHit = false
+            const key = this.options.hash([req.route, req.data])
+
+            if (this.options.cache && req.fetchPolicy !== FP.NetworkOnly && !req._noCache) {
+                const res = this.options.cache.get(key)
+                if (res !== undefined) {
+                    success(req, res.payload)
+                    if (req.fetchPolicy !== FP.CacheAndNetwork) {
+                        continue
                     }
-                    cacheHit = true;
-                    req._etag = res.etag; // fixme: is it safe to mutate the request like this?
+                    cacheHit = true
+                    req._etag = res.etag // fixme: is it safe to mutate the request like this?
                 }
             }
-            
+
             // TODO: unbatching. if a new request comes in with the same _id as an already-queued (in-batch) request, we should
             // replace that one instead of adding both.
-            
+
             // console.log(JSON.stringify(map2obj(this.batch),null,2));
             // this.batch.forEach((breqs,bkey) => {
             //
-            //    
+            //
             //     let oldRequests = breqs.filter(r => r._id === req._id);
-            //    
+            //
             //     if(oldRequests.length) {
             //         for(let or of oldRequests) {
             //             if(or.loadingProp) {
@@ -194,8 +192,8 @@ export default class AjaxLoader {
             //         }
             //         // filterInPlace(breqs, r => r._id !== req._id);
             //     }
-            //    
-            //     // let removed = 
+            //
+            //     // let removed =
             //     // if(removed && req.loadingProp) {
             //     //     console.log('cancelled',removed);
             //     //     req._component.setState(state => ({
@@ -203,106 +201,108 @@ export default class AjaxLoader {
             //     //     }));
             //     // }
             // });
-            
-            const entry = this.batch.get(key);
-            if(entry) {
-                entry.push(req);
+
+            const entry = this.batch.get(key)
+            if (entry) {
+                entry.push(req)
             } else {
-                this.batch.set(key, [req]);
+                this.batch.set(key, [req])
             }
 
-            if(req.loadingProp) { 
-                // if there's a cache hit but fetch policy is cache-and-network, then....should we show the loading or not? <-- I think so. Use it to display a spinner without blocking the entire UI to indicate we're fetching fresh data. 
-                req._component.setState(state => ({
+            if (req.loadingProp) {
+                // if there's a cache hit but fetch policy is cache-and-network, then....should we show the loading or not? <-- I think so. Use it to display a spinner without blocking the entire UI to indicate we're fetching fresh data.
+                req._component.setState((state) => ({
                     [req.loadingProp]: state[req.loadingProp] ? state[req.loadingProp] + 1 : 1,
-                }));
+                }))
             }
         }
 
-        if(this.batch.size >= this.options.batchSize) {
+        if (this.batch.size >= this.options.batchSize) {
             // TODO: if batch size is *exceeded* should we split the batch?
-            this._run();
-        } else if(this.start) {
+            this._run()
+        } else if (this.start) {
             // if the timer has been started...
-            const elapsed = performance.now() - this.start;
-            if(elapsed >= this.options.maxDelay) {
+            const elapsed = performance.now() - this.start
+            if (elapsed >= this.options.maxDelay) {
                 // if max delay is exceeded, send the batch immediately
-                this._run();
+                this._run()
             } else {
                 // otherwise, restart the timer
-                clearTimeout(this.timer);
-                this.timer = setTimeout(this._run, Math.min(this.options.minDelay, this.options.maxDelay - elapsed));
+                clearTimeout(this.timer)
+                this.timer = setTimeout(
+                    this._run,
+                    Math.min(this.options.minDelay, this.options.maxDelay - elapsed),
+                )
             }
         } else {
             // otherwise start the timer and queue the execution
-            this.start = performance.now();
-            this.timer = setTimeout(this._run, this.options.minDelay);
+            this.start = performance.now()
+            this.timer = setTimeout(this._run, this.options.minDelay)
         }
-    };
+    }
 
     _run = () => {
-        clearTimeout(this.timer);
-        this.start = null;
-        this.timer = null;
-        this._send();
-        this.batch.clear();
-    };
+        clearTimeout(this.timer)
+        this.start = null
+        this.timer = null
+        this._send()
+        this.batch.clear()
+    }
 
     _send = () => {
-        let batchIdx = 0;
-        const batch = [];
-        const reqData = [];
-        const keyLookup = Object.create(null);
-        const rank = ++this.rankCounter;
-        
-        this.batch.forEach((reqs,key) => {
-            if(!reqs.length) {
-                return;
+        let batchIdx = 0
+        const batch = []
+        const reqData = []
+        const keyLookup = Object.create(null)
+        const rank = ++this.rankCounter
+
+        this.batch.forEach((reqs, key) => {
+            if (!reqs.length) {
+                return
             }
-            
-            batch[batchIdx] = reqs;
-            keyLookup[batchIdx] = key;
-            
-            for(const req of reqs) {
-                this.rankLookup[req._id] = rank;
+
+            batch[batchIdx] = reqs
+            keyLookup[batchIdx] = key
+
+            for (const req of reqs) {
+                this.rankLookup[req._id] = rank
             }
-            
+
             reqData[batchIdx] = {
                 route: reqs[0].route,
                 data: reqs[0].data,
-            };
-            
-            if(reqs[0]._etag) {
-                reqData[batchIdx].etag = reqs[0]._etag;
-            };
+            }
 
-            ++batchIdx;
-        });
-        
-        
+            if (reqs[0]._etag) {
+                reqData[batchIdx].etag = reqs[0]._etag
+            }
+
+            ++batchIdx
+        })
+
         // let reqData = batch.filter(reqs => reqs.length).map((reqs,key) => {
-        //     let counter = this.pending[key] = this.pending[key] ? this.pending[key] + 1 : 1; 
+        //     let counter = this.pending[key] = this.pending[key] ? this.pending[key] + 1 : 1;
         //     console.log(key,counter);
-        //    
+        //
         //     return {
         //         route: reqs[0].route,
         //         data: reqs[0].data,
         //         counter,
         //     };
         // });
-        
+
         // console.log(reqData);
-        
-        const {headers, ...options} = resolveValue(this.options.fetchOptions) || {};
-        
+
+        const { headers, ...options } = resolveValue(this.options.fetchOptions) || {}
+
         // console.log('send',this.endpoint,reqData);
-        
+
         fetch(this.options.endpoint, {
             method: 'POST',
             credentials: 'same-origin',
             ...options,
             headers: {
-                'Accept': 'application/json, text/plain, */*',
+                Accept: 'application/json, text/plain, */*',
                 'Content-Type': 'application/json',
                 ...headers,
             },
@@ -311,90 +311,93 @@ export default class AjaxLoader {
                 requests: reqData,
             }),
         })
-            .then(res => res.json())
-            .then(fullResponse => {
-                const {
-                    rank: resRank,
-                    responses,
-                } = fullResponse;
-                
-                if(reqData.length !== responses.length) {
-                    throw new Error(`Server error: response length (${responses.length}) does not match request length (${reqData.length})`);
+            .then((res) => res.json())
+            .then((fullResponse) => {
+                const { rank: resRank, responses } = fullResponse
+
+                if (reqData.length !== responses.length) {
+                    throw new Error(
+                        `Server error: response length (${responses.length}) does not match request length (${reqData.length})`,
+                    )
                 }
-                for(let i = 0; i < responses.length; ++i) {
-                    const res = responses[i];
-                    
-                    if(this.options.cache && res.type === 'success') {
+                for (let i = 0; i < responses.length; ++i) {
+                    const res = responses[i]
+
+                    if (this.options.cache && res.type === 'success') {
                         this.options.cache.set(keyLookup[i], {
                             payload: res.payload,
                             etag: res.etag,
-                        });
+                        })
                     }
-                    
-                    for(const req of batch[i]) {
-                        const expectedRank = this.rankLookup[req._id];
-                        
-                        if(!resRank || resRank == expectedRank) {
-                            switch(res.type) {
+
+                    for (const req of batch[i]) {
+                        const expectedRank = this.rankLookup[req._id]
+
+                        if (!resRank || resRank == expectedRank) {
+                            switch (res.type) {
                                 case 'nochange':
                                     // payload is exactly the same as we had cached, do nothing
-                                    break;
+                                    break
                                 case 'success':
-                                    success(req, res.payload); 
-                                    break;
+                                    success(req, res.payload)
+                                    break
                                 case 'error':
-                                    if(process.env.NODE_ENV !== 'production') {
-                                        console.group(`Error in response to route "${req.route}"`);
-                                        console.error(res.payload.message);
-                                        console.info("Request:", req);
-                                        console.info("Response:", res.payload);
-                                        console.groupEnd();
+                                    if (process.env.NODE_ENV !== 'production') {
+                                        console.group(`Error in response to route "${req.route}"`)
+                                        console.error(res.payload.message)
+                                        console.info('Request:', req)
+                                        console.info('Response:', res.payload)
+                                        console.groupEnd()
                                     }
 
-                                    if(req.errorProp) {
+                                    if (req.errorProp) {
                                         req._component.setState({
                                             [req.errorProp]: res.payload,
-                                        });
+                                        })
                                     }
-                                    break;
+                                    break
                                 default:
-                                    throw new Error(`Server error: unexpected response type "${res.type}"`);
+                                    throw new Error(
+                                        `Server error: unexpected response type "${res.type}"`,
+                                    )
                             }
                         } else {
-                            console.group(`Got stale response to route "${req.route}"`);
-                            console.warn(`Expected ${expectedRank}, got ${resRank}`);
-                            console.info("Request:", req);
-                            console.info("Response:", res);
-                            console.groupEnd();
+                            console.group(`Got stale response to route "${req.route}"`)
+                            console.warn(`Expected ${expectedRank}, got ${resRank}`)
+                            console.info('Request:', req)
+                            console.info('Response:', res)
+                            console.groupEnd()
                         }
-                        if(req.loadingProp) {
-                            req._component.setState(state => {
-                                if(state[req.loadingProp] > 0) {
+                        if (req.loadingProp) {
+                            req._component.setState((state) => {
+                                if (state[req.loadingProp] > 0) {
                                     return {
-                                        [req.loadingProp]: state[req.loadingProp] ? state[req.loadingProp] - 1 : 0,
-                                    };
+                                        [req.loadingProp]: state[req.loadingProp]
+                                            ? state[req.loadingProp] - 1
+                                            : 0,
+                                    }
                                 }
-                                return {};
-                            });
+                                return {}
+                            })
                         }
                     }
                 }
-            });
+            })
     }
 }
 
 function success(req, payload) {
-    const newState = req.handler.call(req._component, payload, req);
-    if(newState !== undefined) {
+    const newState = req.handler.call(req._component, payload, req)
+    if (newState !== undefined) {
         // console.log('newState', req, res);
-        req._component.setState(newState);
+        req._component.setState(newState)
     }
 }
 
 function setDefaults(obj, defaults, overwrite) {
-    for(const key of Object.keys(defaults)) {
-        if(obj[key] === undefined) {
-            obj[key] = defaults[key];
+    for (const key of Object.keys(defaults)) {
+        if (obj[key] === undefined) {
+            obj[key] = defaults[key]
         }
     }
 }
@@ -461,11 +464,13 @@ function setDefaults(obj, defaults, overwrite) {
  * @returns {*} The value passed in or the result of calling the function
  */
 function resolveValue(functionOrValue, ...args) {
-    return typeof functionOrValue === 'function' ? functionOrValue.call(this, ...args) : functionOrValue;
+    return typeof functionOrValue === 'function'
+        ? functionOrValue.call(this, ...args)
+        : functionOrValue
 }
 
 function setStateHandler(data, options) {
     this.setState({
         [options.dataProp]: data,
-    });
+    })
 }

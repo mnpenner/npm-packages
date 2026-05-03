@@ -1,10 +1,10 @@
 #!/usr/bin/env -S bun
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import {parseArgs} from 'node:util'
+import { parseArgs } from 'node:util'
 import * as ts from 'typescript'
-import {$} from 'bun'
-import {parse} from 'path-to-regexp'
+import { $ } from 'bun'
+import { parse } from 'path-to-regexp'
 
 type CompileOptions = {
     delimiter?: string
@@ -18,9 +18,13 @@ function escapeString(value: string): string {
 
 function compilePathGenerator(
     pattern: string,
-    {delimiter = '/', encode = 'encodeURIComponent', functionName = 'generate'}: CompileOptions = {},
+    {
+        delimiter = '/',
+        encode = 'encodeURIComponent',
+        functionName = 'generate',
+    }: CompileOptions = {},
 ): string {
-    const {tokens} = parse(pattern)
+    const { tokens } = parse(pattern)
 
     type Prop = { name: string; type: string }
 
@@ -28,7 +32,7 @@ function compilePathGenerator(
     const groupTypes: string[] = []
 
     const typeOfParam = (t: any) => (t.type === 'wildcard' ? '__WildcardType' : '__ParamType')
-    const makeProp = (name: string, t: any): Prop => ({name, type: typeOfParam(t)})
+    const makeProp = (name: string, t: any): Prop => ({ name, type: typeOfParam(t) })
 
     function collectGroupProps(ts2: any[]): Prop[] {
         const props: Prop[] = []
@@ -48,7 +52,7 @@ function compilePathGenerator(
                 if (groupProps.length) {
                     const some = [
                         '{',
-                        ...groupProps.map(p => `    ${escapeString(p.name)}: ${p.type}`),
+                        ...groupProps.map((p) => `    ${escapeString(p.name)}: ${p.type}`),
                         '}',
                     ].join('\n')
                     groupTypes.push(`__AllOrNone<${some}>`)
@@ -62,10 +66,12 @@ function compilePathGenerator(
 
     const baseParamsType = [
         '{',
-        ...baseProps.map(p => `    ${escapeString(p.name)}: ${p.type}`),
+        ...baseProps.map((p) => `    ${escapeString(p.name)}: ${p.type}`),
         '}',
     ].join('\n')
-    const paramsType = groupTypes.length ? `${baseParamsType} & ${groupTypes.join(' & ')}` : baseParamsType
+    const paramsType = groupTypes.length
+        ? `${baseParamsType} & ${groupTypes.join(' & ')}`
+        : baseParamsType
 
     const lines: string[] = []
     const indentUnit = '    '
@@ -119,16 +125,19 @@ function compilePathGenerator(
                     `sb += Array.from(params[${escapeString(t.name)}], v => (${encode})(String(v))).join(${delim})`,
                 )
             } else if (t.type === 'group') {
-                const names = collectNames(t.tokens).map(name => escapeString(name))
+                const names = collectNames(t.tokens).map((name) => escapeString(name))
                 if (!names.length) continue
-                const all = names.map(n => `params[${n}] != null`).join(' && ')
-                const none = names.map(n => `params[${n}] == null`).join(' && ')
+                const all = names.map((n) => `params[${n}] != null`).join(' && ')
+                const none = names.map((n) => `params[${n}] == null`).join(' && ')
                 const list = names.join(', ')
 
                 line(indentLevel, `if (${all}) {`)
                 emitTokens(t.tokens, indentLevel + 1, true)
                 line(indentLevel, `} else if (!(${none})) {`)
-                line(indentLevel + 1, `throw new Error(${escapeString(`Group requires all-or-none: ${list}`)})`)
+                line(
+                    indentLevel + 1,
+                    `throw new Error(${escapeString(`Group requires all-or-none: ${list}`)})`,
+                )
                 line(indentLevel, `}`)
             }
         }
@@ -141,7 +150,9 @@ function compilePathGenerator(
     return lines.join('\n')
 }
 
-function isStringLike(expr: ts.Expression): expr is ts.StringLiteralLike | ts.NoSubstitutionTemplateLiteral {
+function isStringLike(
+    expr: ts.Expression,
+): expr is ts.StringLiteralLike | ts.NoSubstitutionTemplateLiteral {
     return ts.isStringLiteralLike(expr) || ts.isNoSubstitutionTemplateLiteral(expr)
 }
 
@@ -157,7 +168,11 @@ type ExtractedRoute = { name: string; pattern: string }
 
 function getProp(object: ts.ObjectLiteralExpression, propName: string): ts.Expression | undefined {
     for (const prop of object.properties) {
-        if (ts.isPropertyAssignment(prop) && ts.isIdentifier(prop.name) && prop.name.text === propName) {
+        if (
+            ts.isPropertyAssignment(prop) &&
+            ts.isIdentifier(prop.name) &&
+            prop.name.text === propName
+        ) {
             return prop.initializer
         }
     }
@@ -173,7 +188,10 @@ function resolveDefaultExportExpression(sourceFile: ts.SourceFile): ts.Expressio
     return undefined
 }
 
-function findVariableInitializer(sourceFile: ts.SourceFile, name: string): ts.Expression | undefined {
+function findVariableInitializer(
+    sourceFile: ts.SourceFile,
+    name: string,
+): ts.Expression | undefined {
     for (const stmt of sourceFile.statements) {
         if (!ts.isVariableStatement(stmt)) continue
         for (const decl of stmt.declarationList.declarations) {
@@ -189,7 +207,7 @@ function extractRoutesFromDefaultExport(sourceFile: ts.SourceFile): ExtractedRou
     if (!defaultExpr) return []
 
     const rootExpr = ts.isIdentifier(defaultExpr)
-        ? findVariableInitializer(sourceFile, defaultExpr.text) ?? defaultExpr
+        ? (findVariableInitializer(sourceFile, defaultExpr.text) ?? defaultExpr)
         : defaultExpr
 
     if (!ts.isArrayLiteralExpression(rootExpr)) return []
@@ -202,12 +220,12 @@ function extractRoutesFromDefaultExport(sourceFile: ts.SourceFile): ExtractedRou
             const patternExpr = getProp(element, 'pattern')
             if (!nameExpr || !patternExpr) continue
             if (!isStringLike(nameExpr) || !isStringLike(patternExpr)) continue
-            routes.push({name: nameExpr.text, pattern: patternExpr.text})
+            routes.push({ name: nameExpr.text, pattern: patternExpr.text })
         } else if (ts.isArrayLiteralExpression(element)) {
             const [nameExpr, patternExpr] = element.elements
             if (!nameExpr || !patternExpr) continue
             if (!isStringLike(nameExpr) || !isStringLike(patternExpr)) continue
-            routes.push({name: nameExpr.text, pattern: patternExpr.text})
+            routes.push({ name: nameExpr.text, pattern: patternExpr.text })
         }
     }
 
@@ -215,14 +233,14 @@ function extractRoutesFromDefaultExport(sourceFile: ts.SourceFile): ExtractedRou
 }
 
 async function main(argv: string[] = Bun.argv): Promise<void> {
-    const {positionals, values} = parseArgs({
+    const { positionals, values } = parseArgs({
         args: argv,
         allowPositionals: true,
         strict: true,
         options: {
-            output: {type: 'string', short: 'o'},
-            'wildcard-delimiter': {type: 'string'},
-            'encode-function': {type: 'string'},
+            output: { type: 'string', short: 'o' },
+            'wildcard-delimiter': { type: 'string' },
+            'encode-function': { type: 'string' },
         },
     })
 
@@ -235,17 +253,22 @@ async function main(argv: string[] = Bun.argv): Promise<void> {
     }
 
     const routesPath = path.resolve(process.cwd(), routesPathArg)
-    const outputPath =
-        (values.output as string | undefined)
+    const outputPath = (values.output as string | undefined)
         ? path.resolve(process.cwd(), values.output as string)
         : path.join(path.dirname(routesPath), 'routes.gen.ts')
 
     const codeText = await fs.readFile(routesPath, 'utf8')
-    const sourceFile = ts.createSourceFile(routesPath, codeText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
+    const sourceFile = ts.createSourceFile(
+        routesPath,
+        codeText,
+        ts.ScriptTarget.Latest,
+        true,
+        ts.ScriptKind.TSX,
+    )
 
     const routes = extractRoutesFromDefaultExport(sourceFile)
-        .map(r => ({...r, pattern: r.pattern.trim()}))
-        .filter(r => r.pattern.startsWith('/') && r.pattern !== '*')
+        .map((r) => ({ ...r, pattern: r.pattern.trim() }))
+        .filter((r) => r.pattern.startsWith('/') && r.pattern !== '*')
 
     const wildcardDelimiter = (values['wildcard-delimiter'] as string | undefined) ?? '/'
     const encodeFunction = (values['encode-function'] as string | undefined) ?? 'encodeURIComponent'
@@ -254,7 +277,7 @@ async function main(argv: string[] = Bun.argv): Promise<void> {
     if (rawArgs[0] && path.isAbsolute(rawArgs[0])) {
         rawArgs[0] = path.relative(process.cwd(), rawArgs[0]).replace(/\\/g, '/')
     }
-    const commandText = ['bun', ...rawArgs.map(arg => $.escape(arg))].join(' ')
+    const commandText = ['bun', ...rawArgs.map((arg) => $.escape(arg))].join(' ')
 
     const out: string[] = []
     out.push(`// Do not modify this file. It was auto-generated with the following command:`)
@@ -282,7 +305,13 @@ async function main(argv: string[] = Bun.argv): Promise<void> {
             }
             usedNames.add(name)
 
-            out.push(compilePathGenerator(route.pattern, {functionName: name, delimiter: wildcardDelimiter, encode: encodeFunction}))
+            out.push(
+                compilePathGenerator(route.pattern, {
+                    functionName: name,
+                    delimiter: wildcardDelimiter,
+                    encode: encodeFunction,
+                }),
+            )
             out.push(``)
         }
     }
@@ -291,7 +320,7 @@ async function main(argv: string[] = Bun.argv): Promise<void> {
     console.log(`Wrote ${outputPath}`)
 }
 
-main().catch(err => {
+main().catch((err) => {
     console.error(err)
     process.exit(1)
 })

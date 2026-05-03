@@ -18,15 +18,15 @@ yarn add ouid
 Browser support has been dropped.
 
 ```js
-import ouid from 'ouid';
-console.log(ouid()); // <Buffer 14 fb b9 a5 d2 8c d2 40 76 e3 aa 52 89 11 e7 a6>
+import ouid from 'ouid'
+console.log(ouid()) // <Buffer 14 fb b9 a5 d2 8c d2 40 76 e3 aa 52 89 11 e7 a6>
 ```
 
 ### node
 
 ```js
-const ouid = require('ouid');
-console.log(ouid()); // <Buffer 14 fb b9 bd 9e eb 7c ec 00 b8 a4 23 79 ee e4 74>
+const ouid = require('ouid')
+console.log(ouid()) // <Buffer 14 fb b9 bd 9e eb 7c ec 00 b8 a4 23 79 ee e4 74>
 ```
 
 There are no options. Just the one function.

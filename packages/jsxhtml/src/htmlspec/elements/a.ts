@@ -1,6 +1,6 @@
-import type {CommonAttributes} from '../attributes/ElementAttributes'
-import type {ElementForTag} from './element-types'
-import type {AnyString} from '../../util-types'
+import type { CommonAttributes } from '../attributes/ElementAttributes'
+import type { ElementForTag } from './element-types'
+import type { AnyString } from '../../util-types'
 
 export interface AAttributes extends CommonAttributes<ElementForTag<'a'>> {
     /**
@@ -65,7 +65,6 @@ export interface AAttributes extends CommonAttributes<ElementForTag<'a'>> {
      */
     type?: string
 }
-
 
 export const enum ReferrerPolicy {
     NoReferrer = 'no-referrer',

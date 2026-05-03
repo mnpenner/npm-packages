@@ -1,20 +1,15 @@
-import type {nil} from "../types/utility"
-import {assumeProps} from '../util/assert.ts'
-import type {
-    DateValue} from '../util/time.ts';
-import {
-    minutesToOffset,
-    toDateInputValue
-} from '../util/time.ts'
-import type { SelectChangeEvent, SelectOption} from './Select.tsx';
-import {Select} from './Select.tsx'
-import React, {useCallback, useState} from 'react'
-import {usePropChange} from '../hooks/usePropChange.ts'
+import type { nil } from '../types/utility'
+import { assumeProps } from '../util/assert.ts'
+import type { DateValue } from '../util/time.ts'
+import { minutesToOffset, toDateInputValue } from '../util/time.ts'
+import type { SelectChangeEvent, SelectOption } from './Select.tsx'
+import { Select } from './Select.tsx'
+import React, { useCallback, useState } from 'react'
+import { usePropChange } from '../hooks/usePropChange.ts'
 
 export type DatetimeOffsetInputChangeEvent = {
     value: string
 }
-
 
 export type DatetimeOffsetInputProps = {
     min?: DateValue
@@ -26,95 +21,94 @@ export type DatetimeOffsetInputProps = {
     // includeMilliseconds?: boolean
 }
 
-
 const DATETIME_OFFSETS: SelectOption<number>[] = [
     // United States Minor Outlying Islands
-    {value: -12 * 60, text: "-12:00"},
+    { value: -12 * 60, text: '-12:00' },
     // New Zealand, United States
-    {value: -11 * 60, text: "-11:00"},
+    { value: -11 * 60, text: '-11:00' },
     // United States, French Polynesia, New Zealand
-    {value: -10 * 60, text: "-10:00"},
+    { value: -10 * 60, text: '-10:00' },
     // France (Marquesas Islands)
-    {value: -9.5 * 60, text: "-09:30"},
+    { value: -9.5 * 60, text: '-09:30' },
     // United States, Canada, Mexico
-    {value: -9 * 60, text: "-09:00"},
+    { value: -9 * 60, text: '-09:00' },
     // United States, Canada, Mexico, UK (Pitcairn Islands)
-    {value: -8 * 60, text: "-08:00"},
+    { value: -8 * 60, text: '-08:00' },
     // United States, Canada, Mexico
-    {value: -7 * 60, text: "-07:00"},
+    { value: -7 * 60, text: '-07:00' },
     // United States, Canada, Mexico, Central America
-    {value: -6 * 60, text: "-06:00"},
+    { value: -6 * 60, text: '-06:00' },
     // United States, Canada, Cuba, South America
-    {value: -5 * 60, text: "-05:00"},
+    { value: -5 * 60, text: '-05:00' },
     // Canada, Caribbean, South America
-    {value: -4 * 60, text: "-04:00"},
+    { value: -4 * 60, text: '-04:00' },
     // Canada (Newfoundland)
-    {value: -3.5 * 60, text: "-03:30"},
+    { value: -3.5 * 60, text: '-03:30' },
     // Argentina, Brazil, Chile
-    {value: -3 * 60, text: "-03:00"},
+    { value: -3 * 60, text: '-03:00' },
     // Brazil (Fernando de Noronha), South Georgia
-    {value: -2 * 60, text: "-02:00"},
+    { value: -2 * 60, text: '-02:00' },
     // Cape Verde
-    {value: -1 * 60, text: "-01:00"},
+    { value: -1 * 60, text: '-01:00' },
     // UK, Portugal, Iceland
-    {value: 0, text: "±00:00"},
+    { value: 0, text: '±00:00' },
     // Central Europe
-    {value: 1 * 60, text: "+01:00"},
+    { value: 1 * 60, text: '+01:00' },
     // Eastern Europe, Egypt
-    {value: 2 * 60, text: "+02:00"},
+    { value: 2 * 60, text: '+02:00' },
     // East Africa, Middle East
-    {value: 3 * 60, text: "+03:00"},
+    { value: 3 * 60, text: '+03:00' },
     // Iran
-    {value: 3.5 * 60, text: "+03:30"},
+    { value: 3.5 * 60, text: '+03:30' },
     // UAE, Russia (Moscow)
-    {value: 4 * 60, text: "+04:00"},
+    { value: 4 * 60, text: '+04:00' },
     // Afghanistan
-    {value: 4.5 * 60, text: "+04:30"},
+    { value: 4.5 * 60, text: '+04:30' },
     // Pakistan
-    {value: 5 * 60, text: "+05:00"},
+    { value: 5 * 60, text: '+05:00' },
     // India, Sri Lanka
-    {value: 5.5 * 60, text: "+05:30"},
+    { value: 5.5 * 60, text: '+05:30' },
     // Nepal
-    {value: 5.75 * 60, text: "+05:45"},
+    { value: 5.75 * 60, text: '+05:45' },
     // Bangladesh, Bhutan
-    {value: 6 * 60, text: "+06:00"},
+    { value: 6 * 60, text: '+06:00' },
     // Myanmar
-    {value: 6.5 * 60, text: "+06:30"},
+    { value: 6.5 * 60, text: '+06:30' },
     // Thailand, Vietnam
-    {value: 7 * 60, text: "+07:00"},
+    { value: 7 * 60, text: '+07:00' },
     // China, Singapore
-    {value: 8 * 60, text: "+08:00"},
+    { value: 8 * 60, text: '+08:00' },
     // Australia (Western)
-    {value: 8.75 * 60, text: "+08:45"},
+    { value: 8.75 * 60, text: '+08:45' },
     // Japan, South Korea
-    {value: 9 * 60, text: "+09:00"},
+    { value: 9 * 60, text: '+09:00' },
     // Australia (Central)
-    {value: 9.5 * 60, text: "+09:30"},
+    { value: 9.5 * 60, text: '+09:30' },
     // Australia (Eastern)
-    {value: 10 * 60, text: "+10:00"},
+    { value: 10 * 60, text: '+10:00' },
     // Australia (Lord Howe Island)
-    {value: 10.5 * 60, text: "+10:30"},
+    { value: 10.5 * 60, text: '+10:30' },
     // Solomon Islands, Vanuatu
-    {value: 11 * 60, text: "+11:00"},
+    { value: 11 * 60, text: '+11:00' },
     // Fiji, New Zealand
-    {value: 12 * 60, text: "+12:00"},
+    { value: 12 * 60, text: '+12:00' },
     // New Zealand (Chatham Islands)
-    {value: 12.75 * 60, text: "+12:45"},
+    { value: 12.75 * 60, text: '+12:45' },
     // Tonga, Samoa
-    {value: 13 * 60, text: "+13:00"},
+    { value: 13 * 60, text: '+13:00' },
     // Kiribati
-    {value: 14 * 60, text: "+14:00"},
+    { value: 14 * 60, text: '+14:00' },
 ]
 
 function extractOffset(date: DateValue | nil): number | null {
-    if(typeof date !== 'string' || date === '') return null
+    if (typeof date !== 'string' || date === '') return null
 
     // Match the offset part of the ISO string and capture the sign, hours, and minutes
     const match = date.match(/([+-])(\d{2}):(\d{2})|Z$/)
-    if(!match) return null
+    if (!match) return null
 
     // If the match is "Z", the offset is 0
-    if(match[0] === 'Z') return 0
+    if (match[0] === 'Z') return 0
 
     // Destructure the match to get sign, hours, and minutes
     const [, sign, hours, minutes] = match
@@ -125,7 +119,7 @@ function extractOffset(date: DateValue | nil): number | null {
 }
 
 function localDateToOffset(date: string): number | null {
-    if(date === '') return null
+    if (date === '') return null
     return -new Date(date).getTimezoneOffset()
 }
 
@@ -134,16 +128,13 @@ function localDateToOffset(date: string): number | null {
 //     return new Date(v).toISOString().slice(0, -1)
 // }
 
-function computeOffsetMinutes(offsetEnabled:boolean,offset:number|null,dateValue:string) {
-    return offsetEnabled
-        ? offset
-        : localDateToOffset(dateValue)
+function computeOffsetMinutes(offsetEnabled: boolean, offset: number | null, dateValue: string) {
+    return offsetEnabled ? offset : localDateToOffset(dateValue)
 }
 
-function computeOffsetString(offsetEnabled:boolean,offset:number|null,dateValue:string) {
-    return minutesToOffset(computeOffsetMinutes(offsetEnabled,offset,dateValue))
+function computeOffsetString(offsetEnabled: boolean, offset: number | null, dateValue: string) {
+    return minutesToOffset(computeOffsetMinutes(offsetEnabled, offset, dateValue))
 }
-
 
 export function DatetimeOffsetInput({
     value,
@@ -154,9 +145,13 @@ export function DatetimeOffsetInput({
     ...props
 }: DatetimeOffsetInputProps) {
     assumeProps<'input'>(props)
-    const [offsetEnabled, setOffsetEnabled] = useState<boolean>(() => extractOffset(value ?? defaultValue) !== null)
+    const [offsetEnabled, setOffsetEnabled] = useState<boolean>(
+        () => extractOffset(value ?? defaultValue) !== null,
+    )
     const [offset, setOffset] = useState<number | null>(() => extractOffset(value ?? defaultValue))
-    const [dateValue, setDateValue] = useState<string>(() => toDateInputValue(value ?? defaultValue))
+    const [dateValue, setDateValue] = useState<string>(() =>
+        toDateInputValue(value ?? defaultValue),
+    )
 
     const updateRef = usePropChange(value, () => {
         setOffsetEnabled(extractOffset(value) !== null)
@@ -164,29 +159,30 @@ export function DatetimeOffsetInput({
         setDateValue(toDateInputValue(value))
     })
 
-    const triggerChange = useCallback((newValue: string) => {
-        updateRef(newValue)
-        // TODO: include unix timestamp if it's a full ISO date w/ offset?
-        onChange?.({
-            value: newValue,
-        })
-    }, [onChange, updateRef])
+    const triggerChange = useCallback(
+        (newValue: string) => {
+            updateRef(newValue)
+            // TODO: include unix timestamp if it's a full ISO date w/ offset?
+            onChange?.({
+                value: newValue,
+            })
+        },
+        [onChange, updateRef],
+    )
 
     const minProp = min != null ? toDateInputValue(min) : props.min
     const maxProp = max != null ? toDateInputValue(max) : props.max
 
-    const computedOffset = offsetEnabled
-        ? offset
-        : localDateToOffset(dateValue)
+    const computedOffset = offsetEnabled ? offset : localDateToOffset(dateValue)
 
     const handleDateChange = useCallback(
         (ev: React.ChangeEvent<HTMLInputElement>) => {
             const newValue = ev.currentTarget.value
             // console.log(newValue,computedOffset,minutesToOffset(computedOffset))
             setDateValue(newValue)
-            triggerChange(newValue + computeOffsetString(offsetEnabled,offset,newValue))
+            triggerChange(newValue + computeOffsetString(offsetEnabled, offset, newValue))
         },
-        [triggerChange, offsetEnabled, offset]
+        [triggerChange, offsetEnabled, offset],
     )
 
     const handleOffsetChange = useCallback(
@@ -194,16 +190,16 @@ export function DatetimeOffsetInput({
             setOffset(ev.value)
             triggerChange(dateValue + minutesToOffset(ev.value))
         },
-        [triggerChange, dateValue]
+        [triggerChange, dateValue],
     )
 
     const handleCheckboxChange = useCallback(
         (ev: React.ChangeEvent<HTMLInputElement>) => {
             const isChecked = ev.currentTarget.checked
             setOffsetEnabled(isChecked)
-            let computedOffset: number|nil
-            if(isChecked) {
-                if(dateValue && offset === null) {
+            let computedOffset: number | nil
+            if (isChecked) {
+                if (dateValue && offset === null) {
                     computedOffset = localDateToOffset(dateValue)
                     setOffset(computedOffset)
                 } else {
@@ -214,22 +210,26 @@ export function DatetimeOffsetInput({
             }
             triggerChange(dateValue + minutesToOffset(computedOffset))
         },
-        [offset, dateValue, triggerChange]
+        [offset, dateValue, triggerChange],
     )
 
     return (
         <span>
-                <input
-                    type="datetime-local"
-                    {...props}
-                    min={minProp}
-                    max={maxProp}
-                    value={dateValue}
-                    onChange={handleDateChange}
-                />
+            <input
+                type="datetime-local"
+                {...props}
+                min={minProp}
+                max={maxProp}
+                value={dateValue}
+                onChange={handleDateChange}
+            />
             <input
                 type="checkbox"
-                title={offsetEnabled ? "Use UTC offset from this device" : "Enable UTC offset selection"}
+                title={
+                    offsetEnabled
+                        ? 'Use UTC offset from this device'
+                        : 'Enable UTC offset selection'
+                }
                 checked={offsetEnabled}
                 onChange={handleCheckboxChange}
             />

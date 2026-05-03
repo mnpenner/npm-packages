@@ -1,16 +1,14 @@
 {
-  "compilerOptions": {
-    "strict": true,
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "lib": ["ESNext", "DOM"],
-    "types": ["bun"],
-    "declaration": true,
-    "noEmit": true,
-    "skipLibCheck": true
-  },
-  "files": [
-    "src/index.ts"
-  ]
+    "compilerOptions": {
+        "strict": true,
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "lib": ["ESNext", "DOM"],
+        "types": ["bun"],
+        "declaration": true,
+        "noEmit": true,
+        "skipLibCheck": true
+    },
+    "files": ["src/index.ts"]
 }

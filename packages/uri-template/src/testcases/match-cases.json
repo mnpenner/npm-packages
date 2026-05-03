@@ -1,44 +1,41 @@
 {
-    "Level 1 Examples" :
-    {
+    "Level 1 Examples": {
         "level": 1,
         "variables": {
-            "var"   : "value",
-            "hello" : "Hello World!"
+            "var": "value",
+            "hello": "Hello World!"
         },
-        "testcases" : [
+        "testcases": [
             ["{var}", "value"],
             ["{hello}", "Hello%20World%21"]
         ]
     },
-    "Level 2 Examples" :
-    {
+    "Level 2 Examples": {
         "level": 2,
         "variables": {
-            "var"   : "value",
-            "hello" : "Hello World!",
-            "path"  : "/foo/bar"
+            "var": "value",
+            "hello": "Hello World!",
+            "path": "/foo/bar"
         },
-        "testcases" : [
+        "testcases": [
             ["{+var}", "value"],
             ["{+hello}", "Hello%20World!"],
             ["{+path}/here", "/foo/bar/here"],
             ["here?ref={+path}", "here?ref=/foo/bar"]
         ]
     },
-    "Level 3 Examples" :
-    {
+    "Level 3 Examples": {
         "level": 3,
         "variables": {
-            "var"   : "value",
-            "hello" : "Hello World!",
-            "empty" : "",
-            "null" : null,
-            "path"  : "/foo/bar",
-            "x"     : "1024",
-            "y"     : "768"
+            "var": "value",
+            "hello": "Hello World!",
+            "empty": "",
+            "null": null,
+            "path": "/foo/bar",
+            "x": "1024",
+            "y": "768"
         },
-        "testcases" : [
+        "testcases": [
             ["map?{x,y}", "map?1024,768"],
             ["{x,hello,y}", "1024,Hello%20World%21,768"],
             ["{+x,hello,y}", "1024,Hello%20World!,768"],
@@ -57,15 +54,14 @@
             ["{&x,y,empty}", "&x=1024&y=768&empty="]
         ]
     },
-    "Level 4 Examples" :
-    {
+    "Level 4 Examples": {
         "level": 4,
         "variables": {
             "var": "value",
             "hello": "Hello World!",
             "path": "/foo/bar",
             "list": ["red", "green", "blue"],
-            "keys": {"semi": ";", "dot": ".", "comma":","}
+            "keys": { "semi": ";", "dot": ".", "comma": "," }
         },
         "testcases": [
             ["{var:5}", "value"],
@@ -81,32 +77,41 @@
             ["{/list*,path}", "/red/green/blue/%2Ffoo%2Fbar"],
             ["{/list*,path:8}", "/red/green/blue/%2Ffoo%2Fbar"],
             ["{;hello:12}", ";hello=Hello World!"],
-            ["{;keys*}", [
-                ";comma=%2C;dot=.;semi=%3B",
-                ";comma=%2C;semi=%3B;dot=.",
-                ";dot=.;comma=%2C;semi=%3B",
-                ";dot=.;semi=%3B;comma=%2C",
-                ";semi=%3B;comma=%2C;dot=.",
-                ";semi=%3B;dot=.;comma=%2C"
-            ]],
+            [
+                "{;keys*}",
+                [
+                    ";comma=%2C;dot=.;semi=%3B",
+                    ";comma=%2C;semi=%3B;dot=.",
+                    ";dot=.;comma=%2C;semi=%3B",
+                    ";dot=.;semi=%3B;comma=%2C",
+                    ";semi=%3B;comma=%2C;dot=.",
+                    ";semi=%3B;dot=.;comma=%2C"
+                ]
+            ],
             ["{?var:5}", "?var=value"],
-            ["{?keys*}", [
-                "?comma=%2C&dot=.&semi=%3B",
-                "?comma=%2C&semi=%3B&dot=.",
-                "?dot=.&comma=%2C&semi=%3B",
-                "?dot=.&semi=%3B&comma=%2C",
-                "?semi=%3B&comma=%2C&dot=.",
-                "?semi=%3B&dot=.&comma=%2C"
-            ]],
+            [
+                "{?keys*}",
+                [
+                    "?comma=%2C&dot=.&semi=%3B",
+                    "?comma=%2C&semi=%3B&dot=.",
+                    "?dot=.&comma=%2C&semi=%3B",
+                    "?dot=.&semi=%3B&comma=%2C",
+                    "?semi=%3B&comma=%2C&dot=.",
+                    "?semi=%3B&dot=.&comma=%2C"
+                ]
+            ],
             ["{&var:5}", "&var=value"],
-            ["{&keys*}", [
-                "&comma=%2C&dot=.&semi=%3B",
-                "&comma=%2C&semi=%3B&dot=.",
-                "&dot=.&comma=%2C&semi=%3B",
-                "&dot=.&semi=%3B&comma=%2C",
-                "&semi=%3B&comma=%2C&dot=.",
-                "&semi=%3B&dot=.&comma=%2C"
-            ]]
+            [
+                "{&keys*}",
+                [
+                    "&comma=%2C&dot=.&semi=%3B",
+                    "&comma=%2C&semi=%3B&dot=.",
+                    "&dot=.&comma=%2C&semi=%3B",
+                    "&dot=.&semi=%3B&comma=%2C",
+                    "&semi=%3B&comma=%2C&dot=.",
+                    "&semi=%3B&dot=.&comma=%2C"
+                ]
+            ]
         ]
     }
 }

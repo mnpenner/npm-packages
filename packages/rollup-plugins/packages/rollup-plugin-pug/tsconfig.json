@@ -9,7 +9,5 @@
         "target": "es2018",
         "declaration": true
     },
-    "files": [
-        "rollup-plugin-pug.ts"
-    ]
+    "files": ["rollup-plugin-pug.ts"]
 }

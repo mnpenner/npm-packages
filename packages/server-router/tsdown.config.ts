@@ -1,4 +1,4 @@
-import {defineConfig} from 'tsdown'
+import { defineConfig } from 'tsdown'
 
 // https://tsdown.dev/reference/api/Interface.UserConfig
 export default defineConfig({

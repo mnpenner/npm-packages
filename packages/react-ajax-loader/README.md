@@ -14,7 +14,7 @@ Create a file that exports an instance of `AjaxLoader`.
 
 ```js
 // ajax-loader.js
-import {AjaxLoader, MemoryCache} from 'react-ajax-loader';
+import { AjaxLoader, MemoryCache } from 'react-ajax-loader'
 
 export default new AjaxLoader({
     endpoint: '/path/to/your/special/endpoint.php',
@@ -26,17 +26,18 @@ export default new AjaxLoader({
     defaultLoadingProp: 'loading', // Put count of pending requests into "loading" prop
     defaultErrorProp: 'error', // Put errors here
     refreshAllProp: 'refresh', // Re-send all requests when this.props.refresh() is called (skip cache)
-    fetchOptions: () => { // <-- Merged into window.fetch()
-        if(window.csrfToken) {
+    fetchOptions: () => {
+        // <-- Merged into window.fetch()
+        if (window.csrfToken) {
             return {
                 headers: {
                     'X-Csrf-Token': window.csrfToken, // Pass a CSRF token with every request if you need to
-                }
-            };
+                },
+            }
         }
-        return {};
-    }
-});
+        return {}
+    },
+})
 ```
 
 Write a special endpoint to handle batch requests. Here's an example in PHP from our project, but you can use any server-side language:
@@ -98,25 +99,27 @@ Use the HOC in all of your components:
 
 ```jsx
 // UserSelect.jsx
-import ajaxLoader from './ajax-loader.js';
-import pick from 'lodash/fp/pick';
+import ajaxLoader from './ajax-loader.js'
+import pick from 'lodash/fp/pick'
 
 const UserSelect = ajaxLoader.hoc({
     route: 'getUsers', // <-- Use to determine what function to call on the server
     data: pick(['programId']), // <-- Choose some props to pass along; ajax request will be re-sent whenever these change
-})(({loading,data}) => {
-    if(loading) {
-        return <span>Loading...</span>;
+})(({ loading, data }) => {
+    if (loading) {
+        return <span>Loading...</span>
     }
-    
+
     return (
         <select>
-            {data.map(opt => (
-                <option key={opt.id} value={opt.id}>{opt.name}</option>
+            {data.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                    {opt.name}
+                </option>
             ))}
         </select>
-    );
-});
+    )
+})
 ```
 
 ### API
@@ -128,22 +131,21 @@ const UserSelect = ajaxLoader.hoc({
     endpoint,
     cache,
     hash = objectHash,
-    batchSize = 4, 
-    minDelay = 8, 
-    maxDelay = 32, 
+    batchSize = 4,
+    minDelay = 8,
+    maxDelay = 32,
     fetchOptions,
     refreshAllProp,
-    
+
     defaultDataProp = 'ajaxData',
     defaultLoadingProp = 'ajaxLoading',
     defaultErrorProp = 'ajaxError',
     defaultEqualityCheck = shallowEqual,
     defaultHandler = setStateHandler,
     defaultFetchPolicy = FP.CacheAndNetwork,
-  
-}) 
-```
 
+})
+```
 
 #### AjaxLoader.hoc(...requests)
 
@@ -163,4 +165,3 @@ const UserSelect = ajaxLoader.hoc({
 ### License
 
 MIT.
-

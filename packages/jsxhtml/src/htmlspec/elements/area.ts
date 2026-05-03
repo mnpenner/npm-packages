@@ -1,5 +1,5 @@
-import type {CommonAttributes} from '../attributes/ElementAttributes'
-import type {ElementForTag} from './element-types'
+import type { CommonAttributes } from '../attributes/ElementAttributes'
+import type { ElementForTag } from './element-types'
 
 export interface AreaAttributes extends CommonAttributes<ElementForTag<'area'>> {
     /**
@@ -45,7 +45,15 @@ export interface AreaAttributes extends CommonAttributes<ElementForTag<'area'>> 
      * - strict-origin-when-cross-origin
      * - unsafe-url
      */
-    referrerpolicy?: 'no-referrer' | 'no-referrer-when-downgrade' | 'origin' | 'origin-when-cross-origin' | 'same-origin' | 'strict-origin' | 'strict-origin-when-cross-origin' | 'unsafe-url'
+    referrerpolicy?:
+        | 'no-referrer'
+        | 'no-referrer-when-downgrade'
+        | 'origin'
+        | 'origin-when-cross-origin'
+        | 'same-origin'
+        | 'strict-origin'
+        | 'strict-origin-when-cross-origin'
+        | 'unsafe-url'
     /**
      * The **`rel`** attribute defines the relationship between a linked resource and the current document. Valid on link, a, area, and form, the supported values depend on the element on which the attribute is found.
      */
@@ -65,4 +73,3 @@ export interface AreaAttributes extends CommonAttributes<ElementForTag<'area'>> 
      */
     target?: '_self' | '_blank' | '_parent' | '_top'
 }
-

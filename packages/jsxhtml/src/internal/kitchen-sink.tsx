@@ -7,13 +7,19 @@ import {
     FileInput,
     HtmlDocument,
     NumberInput,
-    PasswordInput, RadioButton, SearchInput, TelephoneInput, TimeInput, UrlInput, WeekInput
+    PasswordInput,
+    RadioButton,
+    SearchInput,
+    TelephoneInput,
+    TimeInput,
+    UrlInput,
+    WeekInput,
 } from '../custom'
-import {css} from '../template-strings'
+import { css } from '../template-strings'
 import Path from 'path'
 
 const tagLine = 'Kitchen Sink'
-const user = {name: 'Ada', id: 'u-1'}
+const user = { name: 'Ada', id: 'u-1' }
 const items = ['alpha', 'beta', 'gamma']
 
 export const kitchenSink = (
@@ -27,7 +33,12 @@ export const kitchenSink = (
             <link rel="stylesheet" href="/kitchen-sink.css" media="all" />
             <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
             <link rel="icon" type="image/png" href="/static/favicon-96x96.png" sizes="96x96" />
-            <link rel="icon" type="image/png" href="/static/favicon-multi.png" sizes="64x64 96X96" />
+            <link
+                rel="icon"
+                type="image/png"
+                href="/static/favicon-multi.png"
+                sizes="64x64 96X96"
+            />
             <link rel="icon" type="image/png" href="/static/favicon-any.png" sizes="any" />
             <link rel="preload" as="image" href="/hero.jpg" fetchpriority="high" />
             <style>{css`
@@ -62,16 +73,27 @@ export const kitchenSink = (
 
             <nav class="box" aria-label="Primary" tabindex={0}>
                 <ul>
-                    <li><a href="#forms">Forms</a></li>
-                    <li><a href="#media">Media</a></li>
-                    <li><a href="#tables">Tables</a></li>
+                    <li>
+                        <a href="#forms">Forms</a>
+                    </li>
+                    <li>
+                        <a href="#media">Media</a>
+                    </li>
+                    <li>
+                        <a href="#tables">Tables</a>
+                    </li>
                 </ul>
             </nav>
 
             <main class="box" id="main" data-user={user.id}>
                 <section id="forms" class="box">
                     <h2>Forms</h2>
-                    <form action="/submit" method="post" enctype="multipart/form-data" autocomplete="on">
+                    <form
+                        action="/submit"
+                        method="post"
+                        enctype="multipart/form-data"
+                        autocomplete="on"
+                    >
                         <fieldset>
                             <legend>Profile</legend>
                             <label for="name">Name</label>
@@ -94,17 +116,29 @@ export const kitchenSink = (
                             <label for="age">Age</label>
                             <input id="age" name="age" type="number" min="0" max="120" step="1" />
                             <label for="avatar">Avatar</label>
-                            <input id="avatar" name="avatar" type="file" accept="image/*" capture="user" />
+                            <input
+                                id="avatar"
+                                name="avatar"
+                                type="file"
+                                accept="image/*"
+                                capture="user"
+                            />
                             <label for="color">Favorite color</label>
                             <input id="color" name="color" type="color" value="#ff00aa" />
                             <label for="bio">Bio</label>
-                            <textarea id="bio" name="bio" rows="4" cols="40" placeholder="Tell us something..."></textarea>
+                            <textarea
+                                id="bio"
+                                name="bio"
+                                rows="4"
+                                cols="40"
+                                placeholder="Tell us something..."
+                            ></textarea>
                         </fieldset>
 
                         <fieldset>
                             <legend>Preferences</legend>
                             <label>
-                            <input type="checkbox" name="subscribe" checked /> Subscribe
+                                <input type="checkbox" name="subscribe" checked /> Subscribe
                             </label>
                             <label>
                                 <input type="radio" name="plan" value="basic" checked /> Basic
@@ -120,7 +154,9 @@ export const kitchenSink = (
                             </select>
                         </fieldset>
 
-                        <button type="submit" value="submit">Submit</button>
+                        <button type="submit" value="submit">
+                            Submit
+                        </button>
                         <button type="reset">Reset</button>
                     </form>
                 </section>
@@ -145,7 +181,13 @@ export const kitchenSink = (
                         <figcaption>Responsive image</figcaption>
                     </figure>
 
-                    <video controls width="320" height={180} poster="/poster.jpg" preload="metadata">
+                    <video
+                        controls
+                        width="320"
+                        height={180}
+                        poster="/poster.jpg"
+                        preload="metadata"
+                    >
                         <source src="/clip.mp4" type="video/mp4" />
                         <track kind="captions" src="/captions.vtt" srclang="en" label="English" />
                     </video>
@@ -190,8 +232,9 @@ export const kitchenSink = (
                 <section class="box" aria-live="polite">
                     <h2>Text</h2>
                     <p>
-                        <strong>Bold</strong>, <em>emphasis</em>, <mark>highlight</mark>, <code>code</code>,
-                        <kbd>Cmd</kbd>, <samp>output</samp>, <var>x</var>, and <small>small text</small>.
+                        <strong>Bold</strong>, <em>emphasis</em>, <mark>highlight</mark>,{' '}
+                        <code>code</code>,<kbd>Cmd</kbd>, <samp>output</samp>, <var>x</var>, and{' '}
+                        <small>small text</small>.
                     </p>
                     <blockquote cite="/quote">
                         <p>We can only see a short distance ahead.</p>
@@ -201,19 +244,19 @@ export const kitchenSink = (
 
                 <section>
                     <h2>Custom Inputs</h2>
-                    <Checkbox checked/>
-                    <ColorInput/>
-                    <DateInput/>
-                    <EmailInput/>
-                    <FileInput/>
-                    <NumberInput/>
-                    <PasswordInput/>
-                    <RadioButton/>
-                    <SearchInput/>
-                    <TelephoneInput/>
-                    <TimeInput/>
-                    <UrlInput/>
-                    <WeekInput/>
+                    <Checkbox checked />
+                    <ColorInput />
+                    <DateInput />
+                    <EmailInput />
+                    <FileInput />
+                    <NumberInput />
+                    <PasswordInput />
+                    <RadioButton />
+                    <SearchInput />
+                    <TelephoneInput />
+                    <TimeInput />
+                    <UrlInput />
+                    <WeekInput />
                 </section>
             </main>
 
@@ -231,7 +274,7 @@ export const kitchenSink = (
     </HtmlDocument>
 )
 
-if(import.meta.main) {
+if (import.meta.main) {
     const html = kitchenSink.toString()
     console.log(html)
     const outputFile = Path.normalize(`${__dirname}/../dist/kitchen-sink.html`)

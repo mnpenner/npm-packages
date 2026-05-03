@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-import type { ExecutionContext} from '../src';
-import {App, Command, OptType, type AnyOptType, type Option} from '../src'
+import type { ExecutionContext } from '../src'
+import { App, Command, OptType, type AnyOptType, type Option } from '../src'
 
 type ArgumentSpec = {
     name: string
@@ -45,7 +45,7 @@ function logRun(commandName: string) {
 function applySpec(command: Command, spec: CommandSpec): Command {
     const builder = command as CommandBuilder
 
-    if(spec.aliases?.length) {
+    if (spec.aliases?.length) {
         builder.aliases(...spec.aliases)
     }
 
@@ -64,7 +64,7 @@ function passthroughLeaf(name: string, description: string, longDescription?: st
     return leaf({
         name,
         description,
-        ...(longDescription === undefined ? {} : {longDescription}),
+        ...(longDescription === undefined ? {} : { longDescription }),
         arguments: [
             {
                 name: 'args',
@@ -79,14 +79,16 @@ const globalOptions: Option[] = [
     {
         name: 'as',
         valuePlaceholder: 'USER',
-        description: 'Username to impersonate for the operation. User could be a regular user or a service account in a namespace.',
+        description:
+            'Username to impersonate for the operation. User could be a regular user or a service account in a namespace.',
     },
     {
         name: 'as-group',
         valuePlaceholder: 'GROUP',
         repeatable: true,
         defaultValueText: '[]',
-        description: 'Group to impersonate for the operation, this flag can be repeated to specify multiple groups.',
+        description:
+            'Group to impersonate for the operation, this flag can be repeated to specify multiple groups.',
     },
     {
         name: 'as-uid',
@@ -136,7 +138,8 @@ const globalOptions: Option[] = [
     {
         name: 'insecure-skip-tls-verify',
         type: OptType.BOOL,
-        description: 'If true, the server\'s certificate will not be checked for validity. This will make your HTTPS connections insecure',
+        description:
+            "If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure",
     },
     {
         name: 'kubeconfig',
@@ -148,7 +151,8 @@ const globalOptions: Option[] = [
         name: 'kuberc',
         type: OptType.INPUT_FILE,
         valuePlaceholder: 'FILE',
-        description: 'Path to the kuberc file to use for preferences. This can be disabled by exporting KUBECTL_KUBERC=false feature gate or turning off the feature KUBERC=off.',
+        description:
+            'Path to the kuberc file to use for preferences. This can be disabled by exporting KUBECTL_KUBERC=false feature gate or turning off the feature KUBERC=off.',
     },
     {
         name: 'log-flush-frequency',
@@ -195,7 +199,8 @@ const globalOptions: Option[] = [
         valuePlaceholder: 'DURATION',
         // defaultValueText: '\'0\'',
         defaultValue: '0',
-        description: 'The length of time to wait before giving up on a single server request. Non-zero values should contain a corresponding time unit (e.g. 1s, 2m, 3h). A value of zero means don\'t timeout requests.',
+        description:
+            "The length of time to wait before giving up on a single server request. Non-zero values should contain a corresponding time unit (e.g. 1s, 2m, 3h). A value of zero means don't timeout requests.",
     },
     {
         name: 'server',
@@ -206,7 +211,8 @@ const globalOptions: Option[] = [
     {
         name: 'tls-server-name',
         valuePlaceholder: 'NAME',
-        description: 'Server name to use for server certificate validation. If it is not provided, the hostname used to contact the server is used',
+        description:
+            'Server name to use for server certificate validation. If it is not provided, the hostname used to contact the server is used',
     },
     {
         name: 'token',
@@ -236,12 +242,14 @@ const globalOptions: Option[] = [
         name: 'vmodule',
         valuePlaceholder: 'PATTERN=N,...',
         // defaultValueText: '',
-        description: 'comma-separated list of pattern=N settings for file-filtered logging (only works for the default text log format)',
+        description:
+            'comma-separated list of pattern=N settings for file-filtered logging (only works for the default text log format)',
     },
     {
         name: 'warnings-as-errors',
         type: OptType.BOOL,
-        description: 'Treat warnings received from the server as errors and exit with a non-zero exit code',
+        description:
+            'Treat warnings received from the server as errors and exit with a non-zero exit code',
     },
 ]
 
@@ -250,14 +258,16 @@ const getOptions: Option[] = [
         name: 'all-namespaces',
         alias: 'A',
         type: OptType.BOOL,
-        description: 'If present, list the requested object(s) across all namespaces. Namespace in current context is ignored even if specified with --namespace.',
+        description:
+            'If present, list the requested object(s) across all namespaces. Namespace in current context is ignored even if specified with --namespace.',
     },
     {
         name: 'allow-missing-template-keys',
         type: OptType.BOOL,
         // defaultValueText: 'true',
         defaultValue: true,
-        description: 'If true, ignore any errors in templates when a field or map key is missing in the template. Only applies to golang and jsonpath output formats.',
+        description:
+            'If true, ignore any errors in templates when a field or map key is missing in the template. Only applies to golang and jsonpath output formats.',
     },
     {
         name: 'chunk-size',
@@ -265,12 +275,14 @@ const getOptions: Option[] = [
         valuePlaceholder: 'SIZE',
         // defaultValueText: '500',
         defaultValue: 500,
-        description: 'Return large lists in chunks rather than all at once. Pass 0 to disable. This flag is beta and may change in the future.',
+        description:
+            'Return large lists in chunks rather than all at once. Pass 0 to disable. This flag is beta and may change in the future.',
     },
     {
         name: 'field-selector',
         valuePlaceholder: 'SELECTOR',
-        description: 'Selector (field query) to filter on, supports \'=\', \'==\', and \'!=\'.(e.g. --field-selector key1=value1,key2=value2). The server only supports a limited number of field queries per type.',
+        description:
+            "Selector (field query) to filter on, supports '=', '==', and '!='.(e.g. --field-selector key1=value1,key2=value2). The server only supports a limited number of field queries per type.",
     },
     {
         name: 'filename',
@@ -278,19 +290,22 @@ const getOptions: Option[] = [
         valuePlaceholder: 'FILE',
         repeatable: true,
         // defaultValueText: '[]',
-        description: 'Filename, directory, or URL to files identifying the resource to get from a server.',
+        description:
+            'Filename, directory, or URL to files identifying the resource to get from a server.',
     },
     {
         name: 'ignore-not-found',
         type: OptType.BOOL,
-        description: 'If set to true, suppresses NotFound error for specific objects that do not exist. Using this flag with commands that query for collections of resources has no effect when no resources are found.',
+        description:
+            'If set to true, suppresses NotFound error for specific objects that do not exist. Using this flag with commands that query for collections of resources has no effect when no resources are found.',
     },
     {
         name: 'kustomize',
         alias: 'k',
         type: OptType.INPUT_DIRECTORY,
         valuePlaceholder: 'DIR',
-        description: 'Process the kustomization directory. This flag can\'t be used together with -f or -R.',
+        description:
+            "Process the kustomization directory. This flag can't be used together with -f or -R.",
     },
     {
         name: 'label-columns',
@@ -298,47 +313,55 @@ const getOptions: Option[] = [
         valuePlaceholder: 'LABEL',
         repeatable: true,
         defaultValueText: '[]',
-        description: 'Accepts a comma separated list of labels that are going to be presented as columns. Names are case-sensitive. You can also use multiple flag options like -L label1 -L label2...',
+        description:
+            'Accepts a comma separated list of labels that are going to be presented as columns. Names are case-sensitive. You can also use multiple flag options like -L label1 -L label2...',
     },
     {
         name: 'no-headers',
         type: OptType.BOOL,
-        description: 'When using the default or custom-column output format, don\'t print headers (default print headers).',
+        description:
+            "When using the default or custom-column output format, don't print headers (default print headers).",
     },
     {
         name: 'output',
         alias: 'o',
         valuePlaceholder: 'FORMAT',
-        description: 'Output format. One of: (json, yaml, name, go-template, go-template-file, template, templatefile, jsonpath, jsonpath-as-json, jsonpath-file, custom-columns, custom-columns-file, wide).',
+        description:
+            'Output format. One of: (json, yaml, name, go-template, go-template-file, template, templatefile, jsonpath, jsonpath-as-json, jsonpath-file, custom-columns, custom-columns-file, wide).',
     },
     {
         name: 'output-watch-events',
         type: OptType.BOOL,
-        description: 'Output watch event objects when --watch or --watch-only is used. Existing objects are output as initial ADDED events.',
+        description:
+            'Output watch event objects when --watch or --watch-only is used. Existing objects are output as initial ADDED events.',
     },
     {
         name: 'raw',
         valuePlaceholder: 'URI',
-        description: 'Raw URI to request from the server. Uses the transport specified by the kubeconfig file.',
+        description:
+            'Raw URI to request from the server. Uses the transport specified by the kubeconfig file.',
     },
     {
         name: 'recursive',
         alias: 'R',
         type: OptType.BOOL,
-        description: 'Process the directory used in -f, --filename recursively. Useful when you want to manage related manifests organized within the same directory.',
+        description:
+            'Process the directory used in -f, --filename recursively. Useful when you want to manage related manifests organized within the same directory.',
     },
     {
         name: 'selector',
         alias: 'l',
         valuePlaceholder: 'SELECTOR',
-        description: 'Selector (label query) to filter on, supports \'=\', \'==\', \'!=\', \'in\', \'notin\'.(e.g. -l key1=value1,key2=value2,key3 in (value3)). Matching objects must satisfy all of the specified label constraints.',
+        description:
+            "Selector (label query) to filter on, supports '=', '==', '!=', 'in', 'notin'.(e.g. -l key1=value1,key2=value2,key3 in (value3)). Matching objects must satisfy all of the specified label constraints.",
     },
     {
         name: 'server-print',
         type: OptType.BOOL,
         defaultValueText: 'true',
         defaultValue: true,
-        description: 'If true, have the server return the appropriate table output. Supports extension APIs and CRDs.',
+        description:
+            'If true, have the server return the appropriate table output. Supports extension APIs and CRDs.',
     },
     {
         name: 'show-kind',
@@ -348,17 +371,20 @@ const getOptions: Option[] = [
     {
         name: 'show-labels',
         type: OptType.BOOL,
-        description: 'When printing, show all labels as the last column (default hide labels column)',
+        description:
+            'When printing, show all labels as the last column (default hide labels column)',
     },
     {
         name: 'show-managed-fields',
         type: OptType.BOOL,
-        description: 'If true, keep the managedFields when printing objects in JSON or YAML format.',
+        description:
+            'If true, keep the managedFields when printing objects in JSON or YAML format.',
     },
     {
         name: 'sort-by',
         valuePlaceholder: 'JSONPATH',
-        description: 'If non-empty, sort list types using this field specification. The field specification is expressed as a JSONPath expression (e.g. \'{.metadata.name}\'). The field in the API resource specified by this JSONPath expression must be an integer or a string.',
+        description:
+            "If non-empty, sort list types using this field specification. The field specification is expressed as a JSONPath expression (e.g. '{.metadata.name}'). The field in the API resource specified by this JSONPath expression must be an integer or a string.",
     },
     {
         name: 'subresource',
@@ -368,7 +394,8 @@ const getOptions: Option[] = [
     {
         name: 'template',
         valuePlaceholder: 'TEMPLATE',
-        description: 'Template string or path to template file to use when -o=go-template, -o=go-template-file. The template format is golang templates.',
+        description:
+            'Template string or path to template file to use when -o=go-template, -o=go-template-file. The template format is golang templates.',
     },
     {
         name: 'watch',
@@ -409,7 +436,8 @@ const configCommand = new Command('config')
                 {
                     name: 'no-headers',
                     type: OptType.BOOL,
-                    description: 'When using the default or custom-column output format, don\'t print headers (default print headers).',
+                    description:
+                        "When using the default or custom-column output format, don't print headers (default print headers).",
                 },
                 {
                     name: 'output',
@@ -436,15 +464,22 @@ const configCommand = new Command('config')
         passthroughLeaf('set-credentials', 'Set a user entry in kubeconfig'),
         passthroughLeaf('unset', 'Unset an individual value in a kubeconfig file'),
         passthroughLeaf('use-context', 'Set the current-context in a kubeconfig file'),
-        passthroughLeaf('view', 'Display merged kubeconfig settings or a specified kubeconfig file'),
+        passthroughLeaf(
+            'view',
+            'Display merged kubeconfig settings or a specified kubeconfig file',
+        ),
     ])
 
 const rootLeafSpecs: CommandSpec[] = [
-    {name: 'create', description: 'Create a resource from a file or from stdin'},
-    {name: 'expose', description: 'Take a replication controller, service, deployment or pod and expose it as a new Kubernetes service'},
-    {name: 'run', description: 'Run a particular image on the cluster'},
-    {name: 'set', description: 'Set specific features on objects'},
-    {name: 'explain', description: 'Get documentation for a resource'},
+    { name: 'create', description: 'Create a resource from a file or from stdin' },
+    {
+        name: 'expose',
+        description:
+            'Take a replication controller, service, deployment or pod and expose it as a new Kubernetes service',
+    },
+    { name: 'run', description: 'Run a particular image on the cluster' },
+    { name: 'set', description: 'Set specific features on objects' },
+    { name: 'explain', description: 'Get documentation for a resource' },
     {
         name: 'get',
         description: 'Display one or many resources',
@@ -462,39 +497,57 @@ const rootLeafSpecs: CommandSpec[] = [
             },
         ],
     },
-    {name: 'edit', description: 'Edit a resource on the server'},
-    {name: 'delete', description: 'Delete resources by file names, stdin, resources and names, or by resources and label selector'},
-    {name: 'rollout', description: 'Manage the rollout of a resource'},
-    {name: 'scale', description: 'Set a new size for a deployment, replica set, or replication controller'},
-    {name: 'autoscale', description: 'Auto-scale a deployment, replica set, stateful set, or replication controller'},
-    {name: 'certificate', description: 'Modify certificate resources'},
-    {name: 'cluster-info', description: 'Display cluster information'},
-    {name: 'top', description: 'Display resource (CPU/memory) usage'},
-    {name: 'cordon', description: 'Mark node as unschedulable'},
-    {name: 'uncordon', description: 'Mark node as schedulable'},
-    {name: 'drain', description: 'Drain node in preparation for maintenance'},
-    {name: 'taint', description: 'Update the taints on one or more nodes'},
-    {name: 'describe', description: 'Show details of a specific resource or group of resources'},
-    {name: 'logs', description: 'Print the logs for a container in a pod'},
-    {name: 'attach', description: 'Attach to a running container'},
-    {name: 'exec', description: 'Execute a command in a container'},
-    {name: 'port-forward', description: 'Forward one or more local ports to a pod'},
-    {name: 'proxy', description: 'Run a proxy to the Kubernetes API server'},
-    {name: 'cp', description: 'Copy files and directories to and from containers'},
-    {name: 'auth', description: 'Inspect authorization'},
-    {name: 'debug', description: 'Create debugging sessions for troubleshooting workloads and nodes'},
-    {name: 'events', description: 'List events'},
-    {name: 'diff', description: 'Diff the live version against a would-be applied version'},
-    {name: 'apply', description: 'Apply a configuration to a resource by file name or stdin'},
-    {name: 'patch', description: 'Update fields of a resource'},
-    {name: 'replace', description: 'Replace a resource by file name or stdin'},
-    {name: 'wait', description: 'Experimental: Wait for a specific condition on one or many resources'},
-    {name: 'kustomize', description: 'Build a kustomization target from a directory or URL'},
-    {name: 'label', description: 'Update the labels on a resource'},
-    {name: 'annotate', description: 'Update the annotations on a resource'},
+    { name: 'edit', description: 'Edit a resource on the server' },
+    {
+        name: 'delete',
+        description:
+            'Delete resources by file names, stdin, resources and names, or by resources and label selector',
+    },
+    { name: 'rollout', description: 'Manage the rollout of a resource' },
+    {
+        name: 'scale',
+        description: 'Set a new size for a deployment, replica set, or replication controller',
+    },
+    {
+        name: 'autoscale',
+        description:
+            'Auto-scale a deployment, replica set, stateful set, or replication controller',
+    },
+    { name: 'certificate', description: 'Modify certificate resources' },
+    { name: 'cluster-info', description: 'Display cluster information' },
+    { name: 'top', description: 'Display resource (CPU/memory) usage' },
+    { name: 'cordon', description: 'Mark node as unschedulable' },
+    { name: 'uncordon', description: 'Mark node as schedulable' },
+    { name: 'drain', description: 'Drain node in preparation for maintenance' },
+    { name: 'taint', description: 'Update the taints on one or more nodes' },
+    { name: 'describe', description: 'Show details of a specific resource or group of resources' },
+    { name: 'logs', description: 'Print the logs for a container in a pod' },
+    { name: 'attach', description: 'Attach to a running container' },
+    { name: 'exec', description: 'Execute a command in a container' },
+    { name: 'port-forward', description: 'Forward one or more local ports to a pod' },
+    { name: 'proxy', description: 'Run a proxy to the Kubernetes API server' },
+    { name: 'cp', description: 'Copy files and directories to and from containers' },
+    { name: 'auth', description: 'Inspect authorization' },
+    {
+        name: 'debug',
+        description: 'Create debugging sessions for troubleshooting workloads and nodes',
+    },
+    { name: 'events', description: 'List events' },
+    { name: 'diff', description: 'Diff the live version against a would-be applied version' },
+    { name: 'apply', description: 'Apply a configuration to a resource by file name or stdin' },
+    { name: 'patch', description: 'Update fields of a resource' },
+    { name: 'replace', description: 'Replace a resource by file name or stdin' },
+    {
+        name: 'wait',
+        description: 'Experimental: Wait for a specific condition on one or many resources',
+    },
+    { name: 'kustomize', description: 'Build a kustomization target from a directory or URL' },
+    { name: 'label', description: 'Update the labels on a resource' },
+    { name: 'annotate', description: 'Update the annotations on a resource' },
     {
         name: 'completion',
-        description: 'Output shell completion code for the specified shell (bash, zsh, fish, or powershell)',
+        description:
+            'Output shell completion code for the specified shell (bash, zsh, fish, or powershell)',
         arguments: [
             {
                 name: 'shell',
@@ -504,10 +557,14 @@ const rootLeafSpecs: CommandSpec[] = [
             },
         ],
     },
-    {name: 'api-resources', description: 'Print the supported API resources on the server'},
-    {name: 'api-versions', description: 'Print the supported API versions on the server, in the form of "group/version"'},
-    {name: 'plugin', description: 'Provides utilities for interacting with plugins'},
-    {name: 'version', description: 'Print the client and server version information'},
+    { name: 'api-resources', description: 'Print the supported API resources on the server' },
+    {
+        name: 'api-versions',
+        description:
+            'Print the supported API versions on the server, in the form of "group/version"',
+    },
+    { name: 'plugin', description: 'Provides utilities for interacting with plugins' },
+    { name: 'version', description: 'Print the client and server version information' },
 ]
 
 const app = new App('Kubernetes Control')
@@ -527,7 +584,6 @@ const app = new App('Kubernetes Control')
     ])
     .globalOptions(globalOptions)
 
-if(import.meta.main) {
+if (import.meta.main) {
     await app.execute()
 }
-

@@ -1,6 +1,6 @@
-import type {CommonAttributes} from '../attributes/ElementAttributes'
-import type {ElementForTag} from './element-types'
-import type {Numeric} from '../attributes/StandardGlobalAttributes'
+import type { CommonAttributes } from '../attributes/ElementAttributes'
+import type { ElementForTag } from './element-types'
+import type { Numeric } from '../attributes/StandardGlobalAttributes'
 
 /**
  * @experimental
@@ -24,4 +24,3 @@ export interface FencedframeAttributes extends CommonAttributes<ElementForTag<'f
      */
     width?: Numeric
 }
-

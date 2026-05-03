@@ -1,4 +1,3 @@
-
 ```ts
 export const Command: new (name: string) => FluentCommand<[], [], [], [], false> = FluentCommand
 export const App: new (name: string) => FluentApp<[], [], [], [], false> = FluentApp

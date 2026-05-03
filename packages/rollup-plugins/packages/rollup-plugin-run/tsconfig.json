@@ -10,7 +10,5 @@
         "target": "es2018",
         "declaration": true
     },
-    "files": [
-        "rollup-plugin-run.ts"
-    ]
+    "files": ["rollup-plugin-run.ts"]
 }

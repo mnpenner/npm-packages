@@ -1,21 +1,18 @@
-
-
 export enum PromiseStatus {
     PENDING = 'pending',
     FULFILLED = 'fulfilled',
     REJECTED = 'rejected',
 }
 
-
 // Similar to jQuery's Deferred or AbortController
-export class Deferred<TValue=void, TError extends Error = Error> {
+export class Deferred<TValue = void, TError extends Error = Error> {
     readonly promise: Promise<TValue>
     resolve!: (x: TValue) => void
     reject!: (x: TError) => void
     status: PromiseStatus = PromiseStatus.PENDING
 
     constructor() {
-        this.promise = new Promise<TValue>((resolve,reject) => {
+        this.promise = new Promise<TValue>((resolve, reject) => {
             this.resolve = (x: TValue) => {
                 this.status = PromiseStatus.FULFILLED
                 resolve(x)

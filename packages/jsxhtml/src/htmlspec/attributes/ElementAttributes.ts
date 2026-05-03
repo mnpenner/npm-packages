@@ -1,13 +1,13 @@
-import type {ClassNames} from '../../classnames'
-import type {Properties, PropertiesHyphen} from 'csstype'
-import type {AllGlobalAttributes} from './GlobalAttributes'
-import type {Override} from '../../util-types'
+import type { ClassNames } from '../../classnames'
+import type { Properties, PropertiesHyphen } from 'csstype'
+import type { AllGlobalAttributes } from './GlobalAttributes'
+import type { Override } from '../../util-types'
 
 export interface Stringable {
     toString(): string
 }
 
-export type {ClassNames}
+export type { ClassNames }
 export type StyleObject = Properties | PropertiesHyphen
 export type AttributeValue = Stringable | StyleObject | ClassNames
 export type AttrKvPair = [name: string, value: AttributeValue]
@@ -28,6 +28,9 @@ export interface SpecialAttributes {
     class?: ClassNames
 }
 
-export interface CommonAttributes<E=HTMLElement> extends Override<AllGlobalAttributes<E>, SpecialAttributes> {}
+export interface CommonAttributes<E = HTMLElement> extends Override<
+    AllGlobalAttributes<E>,
+    SpecialAttributes
+> {}
 
-export interface AnyAttributes<E=HTMLElement> extends Override<AttrObj, CommonAttributes<E>> {}
+export interface AnyAttributes<E = HTMLElement> extends Override<AttrObj, CommonAttributes<E>> {}

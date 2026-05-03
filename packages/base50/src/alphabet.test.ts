@@ -1,6 +1,5 @@
-import {describe, expect, it} from 'bun:test'
-import {charToNum} from './alphabet'
-
+import { describe, expect, it } from 'bun:test'
+import { charToNum } from './alphabet'
 
 describe('charToBase50', () => {
     it('works', () => {

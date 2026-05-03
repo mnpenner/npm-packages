@@ -1,5 +1,5 @@
 # YourLib
-    
+
 Created with [`ctslib`](https://yarnpkg.com/en/package/create-tslib).
 
 ## Getting Started

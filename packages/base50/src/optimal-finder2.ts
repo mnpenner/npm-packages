@@ -11,13 +11,11 @@ function sortByKey<T>(arr: T[], key: keyof T, ascending = true): T[] {
         const aVal = a[key]
         const bVal = b[key]
 
-        if(aVal === bVal) return 0
-        if(aVal == null) return 1
-        if(bVal == null) return -1
+        if (aVal === bVal) return 0
+        if (aVal == null) return 1
+        if (bVal == null) return -1
 
-        return ascending
-            ? (aVal > bVal ? 1 : -1)
-            : (aVal < bVal ? 1 : -1)
+        return ascending ? (aVal > bVal ? 1 : -1) : aVal < bVal ? 1 : -1
     })
 }
 
@@ -29,16 +27,16 @@ function findOptimal(alphaSize: number): Record<string, number> {
     // let i = 1
     let minWasted = Infinity
     let best
-    for(let c = 1; c <= MAX_CHAR_LEN; ++c) {
+    for (let c = 1; c <= MAX_CHAR_LEN; ++c) {
         const maxVal = alphaSize ** c
         const bits = log2(maxVal)
         const rounded = roundDown(bits)
         bytes = rounded / 8
-        if(bytes >= MAX_BYTE_LEN) break
+        if (bytes >= MAX_BYTE_LEN) break
         const wasted = bits - rounded
         // console.log(alphaSize, i, bits, rounded, bytes, wasted)
 
-        const overhead = (c/bytes-1)*100
+        const overhead = (c / bytes - 1) * 100
 
         const ret = {
             base: alphaSize,
@@ -49,11 +47,11 @@ function findOptimal(alphaSize: number): Record<string, number> {
             overhead,
         }
 
-        if(wasted === 0) {
+        if (wasted === 0) {
             return ret
         }
 
-        if(wasted < minWasted) {
+        if (wasted < minWasted) {
             minWasted = wasted
             best = ret
         }
@@ -64,32 +62,37 @@ function findOptimal(alphaSize: number): Record<string, number> {
     return best!
 }
 
-
 async function main(argv: string[]): Promise<number | void> {
-    const formatter = Intl.NumberFormat(undefined, {maximumFractionDigits: 3})
+    const formatter = Intl.NumberFormat(undefined, { maximumFractionDigits: 3 })
 
     const results = []
 
-    for(let i = 2; i <= 256; ++i) {
+    for (let i = 2; i <= 256; ++i) {
         results.push(findOptimal(i))
         // console.log(i, findOptimal(i))
     }
 
     sortByKey(results, 'wasted')
 
-    for(const [i, r] of results.entries()) {
-        const maxVal = r.maxVal > 999_999_999 ? '2^'+formatter.format(log2(r.maxVal)) : formatter.format(r.maxVal)
-        console.log(`${String(i + 1).padStart(3, ' ')}. Base ${String(r.base).padEnd(3, ' ')} : ${r.bytes} bytes <-> ${r.chars} chars; MaxVal=${maxVal}, WastedBits=${formatter.format(r.wasted)}, Overhead=${formatter.format(r.overhead)}%`)
+    for (const [i, r] of results.entries()) {
+        const maxVal =
+            r.maxVal > 999_999_999
+                ? '2^' + formatter.format(log2(r.maxVal))
+                : formatter.format(r.maxVal)
+        console.log(
+            `${String(i + 1).padStart(3, ' ')}. Base ${String(r.base).padEnd(3, ' ')} : ${r.bytes} bytes <-> ${r.chars} chars; MaxVal=${maxVal}, WastedBits=${formatter.format(r.wasted)}, Overhead=${formatter.format(r.overhead)}%`,
+        )
     }
 }
 
-
-if(import.meta.main) {
-    main(process.argv.slice(2))
-        .then(exitCode => {
+if (import.meta.main) {
+    main(process.argv.slice(2)).then(
+        (exitCode) => {
             process.exitCode = exitCode!
-        }, err => {
-            console.error(err || "an unknown error occurred")
+        },
+        (err) => {
+            console.error(err || 'an unknown error occurred')
             process.exitCode = 1
-        })
+        },
+    )
 }

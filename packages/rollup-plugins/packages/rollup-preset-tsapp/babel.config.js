@@ -3,19 +3,19 @@ module.exports = (api) => {
     api.cache(isDev)
 
     const presets = [
-        "@babel/preset-typescript",
+        '@babel/preset-typescript',
         [
-            "@babel/preset-env",
+            '@babel/preset-env',
             {
-                "targets": {
-                    "node": isDev ? "current" : '10',
+                targets: {
+                    node: isDev ? 'current' : '10',
                 },
-                "loose": true
-            }
-        ]
+                loose: true,
+            },
+        ],
     ]
 
     const plugins = []
 
-    return {presets, plugins}
+    return { presets, plugins }
 }

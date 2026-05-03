@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bun test
-import {describe, expect, it} from 'bun:test'
-import {joinPrefixPathname, stripPrefixPathname} from './pathname'
+import { describe, expect, it } from 'bun:test'
+import { joinPrefixPathname, stripPrefixPathname } from './pathname'
 
 describe('pathname helpers', function () {
     it('joins prefixes and pathnames', function () {

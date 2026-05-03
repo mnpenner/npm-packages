@@ -1,4 +1,4 @@
-import {EMPTY} from '../jsx-elements'
+import { EMPTY } from '../jsx-elements'
 
 /**
  * No output.

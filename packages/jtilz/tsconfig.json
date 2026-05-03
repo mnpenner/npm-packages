@@ -1,11 +1,11 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "lib": ["ESNext", "DOM"],
-    "types": ["bun-types", "node"],
-    "noEmit": true,
-    "declaration": true
-  },
-  "include": ["src/**/*.ts"],
-  "exclude": ["dist", "node_modules"]
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "lib": ["ESNext", "DOM"],
+        "types": ["bun-types", "node"],
+        "noEmit": true,
+        "declaration": true
+    },
+    "include": ["src/**/*.ts"],
+    "exclude": ["dist", "node_modules"]
 }

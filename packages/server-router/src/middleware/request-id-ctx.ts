@@ -1,12 +1,19 @@
-import type {AnyContext, ContextMiddleware, HandlerBody, HandlerYield, OneOrMany, RequestContext} from '../types'
-import {toArray} from '@mpen/server-router/lib/collections'
+import type {
+    AnyContext,
+    ContextMiddleware,
+    HandlerBody,
+    HandlerYield,
+    OneOrMany,
+    RequestContext,
+} from '../types'
+import { toArray } from '@mpen/server-router/lib/collections'
 
 declare global {
     var _reloadCounter: number
     var _globalRequestCounter: number
 }
 
-globalThis._reloadCounter = globalThis._reloadCounter == null ? 0 : globalThis._reloadCounter+1
+globalThis._reloadCounter = globalThis._reloadCounter == null ? 0 : globalThis._reloadCounter + 1
 globalThis._globalRequestCounter ??= 0
 
 interface ExtraContext {
@@ -49,13 +56,17 @@ function isBodyChunk(value: unknown): value is Uint8Array | string {
 }
 
 function isAsyncGenerator(value: unknown): value is AsyncGenerator<HandlerYield, HandlerBody> {
-    return !!value && typeof (value as AsyncGenerator<HandlerYield, HandlerBody>)[Symbol.asyncIterator] === 'function'
+    return (
+        !!value &&
+        typeof (value as AsyncGenerator<HandlerYield, HandlerBody>)[Symbol.asyncIterator] ===
+            'function'
+    )
 }
 
 function wrapGeneratorWithRequestId(
     generator: AsyncGenerator<HandlerYield, HandlerBody>,
     headerName: string,
-    requestId: string
+    requestId: string,
 ): AsyncGenerator<HandlerYield, HandlerBody> {
     const apply = (headers: Headers) => {
         headers.set(headerName, requestId)
@@ -82,11 +93,11 @@ function wrapGeneratorWithRequestId(
                 continue
             }
             if (value && typeof value === 'object' && 'headers' in value) {
-                const entry = value as {status?: number; headers?: HeadersInit}
+                const entry = value as { status?: number; headers?: HeadersInit }
                 const headers = new Headers(entry.headers)
                 apply(headers)
                 headersInjected = true
-                yield {...entry, headers}
+                yield { ...entry, headers }
                 continue
             }
             if (!headersInjected && isBodyChunk(value)) {
@@ -102,14 +113,14 @@ function wrapGeneratorWithRequestId(
     return wrapped()
 }
 
-export const isHMR = import.meta.hot !== undefined || process.execArgv.includes("--hot")
+export const isHMR = import.meta.hot !== undefined || process.execArgv.includes('--hot')
 
 function defaultRequestIdGenerator(ctx: RequestContext, extra: ExtraContext) {
     let requestId = extra.requestCounter.toString(36)
-    if(isHMR) {
-        requestId = extra.hotReloadCounter.toString(36) + '.'+requestId
+    if (isHMR) {
+        requestId = extra.hotReloadCounter.toString(36) + '.' + requestId
     }
-    if(extra.prefix) requestId = `${extra.prefix}.${requestId}`
+    if (extra.prefix) requestId = `${extra.prefix}.${requestId}`
     return requestId
 }
 
@@ -132,12 +143,15 @@ function defaultRequestIdGenerator(ctx: RequestContext, extra: ExtraContext) {
  * @returns Middleware that populates `requestId` on the context.
  */
 export function requestIdCtx<Ctx extends object = AnyContext>(
-    options: RequestIdCtxOptions<Ctx> = {}
+    options: RequestIdCtxOptions<Ctx> = {},
 ): ContextMiddleware<{ requestId: string }> {
     const prefix = options.prefix ?? ''
-    const headers = options.readHeaderName === undefined
-        ? ['x-request-id', 'x-trace-id', 'traceparent']
-        : (options.readHeaderName ? toArray(options.readHeaderName) : [])
+    const headers =
+        options.readHeaderName === undefined
+            ? ['x-request-id', 'x-trace-id', 'traceparent']
+            : options.readHeaderName
+              ? toArray(options.readHeaderName)
+              : []
 
     let requestCounter = 0
     const hotReloadCounter = globalThis._reloadCounter
@@ -148,11 +162,11 @@ export function requestIdCtx<Ctx extends object = AnyContext>(
             requestCounter: ++requestCounter,
             globalRequestCounter: ++globalThis._globalRequestCounter,
         }
-        return (options.generate as any ?? defaultRequestIdGenerator)(ctx, extra)
+        return ((options.generate as any) ?? defaultRequestIdGenerator)(ctx, extra)
     }
 
     if (!options.writeHeaderName) {
-        return ctx => {
+        return (ctx) => {
             let headerId: string | null = null
 
             // FIXME: we shouldn't read the headers if options.generate is defined. User can impl this themselves. `readHeaderName` should be mutually exclusive with `generate`
@@ -195,7 +209,7 @@ export function requestIdCtx<Ctx extends object = AnyContext>(
         if (isBodyChunk(result) || result instanceof ReadableStream) {
             const headers = new Headers()
             headers.set(writeHeaderName, requestId)
-            return new Response(result as BodyInit, {headers})
+            return new Response(result as BodyInit, { headers })
         }
 
         return result

@@ -4,15 +4,15 @@ add a `meta` field to the `Route` interface to store arbitrary metadata like
 
 ```json
 {
-    pattern: "/pets",
-    method: "GET",
-    meta: {
-        openapi: {
+    "pattern": "/pets",
+    "method": "GET",
+    "meta": {
+        "openapi": {
             "description": "Returns all pets from the system that the user has access to",
-            responses: {
-                200: {
-                    description: "A list of pets",
-                    content: {
+            "responses": {
+                "200": {
+                    "description": "A list of pets",
+                    "content": {
                         "application/json": {
                             "schema": {}
                         }
@@ -28,13 +28,12 @@ implement packages/server-router/src/response/openapi.ts which can be used like
 
 ```ts
 router.add({
-    pattern: "/swagger.json",
-    method: openapi(options)
+    pattern: '/swagger.json',
+    method: openapi(options),
 })
 ```
 
 `openapi()` will use `this` to iterate over the routes and generate a response like
-
 
 ```
 {
@@ -97,7 +96,6 @@ router.add({
 ```
 
 The paths and HTTP methods can be determined from the routes. The "info" and "servers" can be taken as options. The path summary, parameters and responses can be read from meta.openapi if it's available.
-
 
 also implement packages/server-router/src/routes/zod.ts. It should have a method called `zodRoute` which takes in an object that extends `Route`.
 It should add additional options like

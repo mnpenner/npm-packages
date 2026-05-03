@@ -1,4 +1,3 @@
-
 // https://github.com/Microsoft/TypeScript/issues/1024#issuecomment-68059662
 // https://github.com/Microsoft/TypeScript/issues/5453
 
@@ -9,7 +8,7 @@
  */
 export default function chain(fn: (...args: any[]) => any) {
     return function chainWrap(this: any, ...args: any[]) {
-        return fn.call(this, this, ...args);
+        return fn.call(this, this, ...args)
     }
 }
 
@@ -19,7 +18,7 @@ export default function chain(fn: (...args: any[]) => any) {
  * @returns The result of the callback.
  */
 export function thru(this: any, callback: (...args: any[]) => any) {
-    return callback(this);
+    return callback(this)
 }
 
 /**
@@ -28,7 +27,6 @@ export function thru(this: any, callback: (...args: any[]) => any) {
  * @returns The value.
  */
 export function tap(this: any, callback: (...args: any[]) => any) {
-    callback(this);
-    return this;
+    callback(this)
+    return this
 }
-

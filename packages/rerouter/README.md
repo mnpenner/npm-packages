@@ -1,7 +1,7 @@
 # @mpen/rerouter
 
 An implementation of [RFC 6570: URI Template](https://tools.ietf.org/html/rfc6570).
-    
+
 ## Installation
 
 ```sh
@@ -20,7 +20,7 @@ console.log(templ.match('/query?firstName=Bj%c3%b6rk&lastName=Gu%c3%b0mundsd%c3%
 //     lastName: "Guðmundsdóttir"
 //   }
 // }
-console.log(templ.expand({firstName: 'Mark', lastName: 'Penner'}))
+console.log(templ.expand({ firstName: 'Mark', lastName: 'Penner' }))
 // /query?firstName=Mark&lastName=Penner
 ```
 

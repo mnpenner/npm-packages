@@ -1,6 +1,6 @@
-import type {AnchorHTMLAttributes, MouseEvent} from 'react'
-import {pushUrl, replaceUrl} from '../lib/url'
-import {mergeSearch} from '../lib/mergeSearch'
+import type { AnchorHTMLAttributes, MouseEvent } from 'react'
+import { pushUrl, replaceUrl } from '../lib/url'
+import { mergeSearch } from '../lib/mergeSearch'
 
 export type SearchParamsInit =
     | string
@@ -8,13 +8,16 @@ export type SearchParamsInit =
     | Record<string, string | number | boolean | undefined | null>
     | URLSearchParams
 
-export interface LinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href' | 'onClick'> {
+export interface LinkProps extends Omit<
+    AnchorHTMLAttributes<HTMLAnchorElement>,
+    'href' | 'onClick'
+> {
     to: string
     search?: SearchParamsInit
     replace?: boolean
 }
 
-export function Link({to, search, children, replace, ...rest}: LinkProps) {
+export function Link({ to, search, children, replace, ...rest }: LinkProps) {
     const href = search ? mergeSearch(to, search) : to
 
     const onClick = (ev: MouseEvent<HTMLAnchorElement>) => {
@@ -30,4 +33,3 @@ export function Link({to, search, children, replace, ...rest}: LinkProps) {
         </a>
     )
 }
-

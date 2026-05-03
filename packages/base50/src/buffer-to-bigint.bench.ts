@@ -1,15 +1,14 @@
-import {bench, run, group, summary, barplot} from 'mitata'
-import {bufToInt} from './buffer-to-bigint'
-import {randomBytes, randomInt} from 'crypto'
+import { bench, run, group, summary, barplot } from 'mitata'
+import { bufToInt } from './buffer-to-bigint'
+import { randomBytes, randomInt } from 'crypto'
 
-
-console.log("Starting benchmarks...\n")
+console.log('Starting benchmarks...\n')
 
 const arrays: number[][] = []
 const buffers: Buffer[] = []
 const typedArrays: Uint8Array[] = []
 
-for(let i = 0; i < 1000; ++i) {
+for (let i = 0; i < 1000; ++i) {
     const len = randomInt(1, 4096)
     const buf = randomBytes(len)
     buffers.push(buf)
@@ -23,19 +22,19 @@ group('beBufToBigInt', () => {
     barplot(() => {
         summary(() => {
             bench('Array', () => {
-                for(const arr of arrays) {
+                for (const arr of arrays) {
                     bufToInt(arr)
                 }
             })
 
             bench('Buffer', () => {
-                for(const arr of buffers) {
+                for (const arr of buffers) {
                     bufToInt(arr)
                 }
             })
 
             bench('Uint8Array', () => {
-                for(const arr of typedArrays) {
+                for (const arr of typedArrays) {
                     bufToInt(arr)
                 }
             })
@@ -43,7 +42,6 @@ group('beBufToBigInt', () => {
     })
 })
 
-
 await run({})
 
-console.log("\nBenchmark run finished.")
+console.log('\nBenchmark run finished.')

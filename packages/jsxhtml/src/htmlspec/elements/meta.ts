@@ -1,5 +1,5 @@
-import type {CommonAttributes} from '../attributes/ElementAttributes'
-import type {ElementForTag} from './element-types'
+import type { CommonAttributes } from '../attributes/ElementAttributes'
+import type { ElementForTag } from './element-types'
 
 export interface MetaAttributes extends CommonAttributes<ElementForTag<'meta'>> {
     /**

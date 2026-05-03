@@ -1,38 +1,34 @@
-import {describe, it, expect} from 'bun:test'
-import {deepEqual} from './collections.ts'
+import { describe, it, expect } from 'bun:test'
+import { deepEqual } from './collections.ts'
 
-function _func1() {
-}
+function _func1() {}
 
-function _func2() {
-}
+function _func2() {}
 
 const _skipBigInt = false
-const emptyObj = {};
+const emptyObj = {}
 
 class MyMap extends Map {}
 class MySet extends Set {}
 
 function map(obj: any, Class?: any) {
-    const a = new (Class || Map);
-    for (const key in obj)
-        a.set(key, obj[key]);
-    return a;
+    const a = new (Class || Map)()
+    for (const key in obj) a.set(key, obj[key])
+    return a
 }
 
 function myMap(obj: any) {
-    return map(obj, MyMap);
+    return map(obj, MyMap)
 }
 
 function set(arr: any, Class?: any) {
-    const a = new (Class || Set);
-    for (const value of arr)
-        a.add(value);
-    return a;
+    const a = new (Class || Set)()
+    for (const value of arr) a.add(value)
+    return a
 }
 
 function mySet(arr: any) {
-    return set(arr, MySet);
+    return set(arr, MySet)
 }
 
 const testCases = [
@@ -43,105 +39,105 @@ const testCases = [
                 description: 'equal numbers',
                 value1: 1,
                 value2: 1,
-                equal: true
+                equal: true,
             },
             {
                 description: 'not equal numbers',
                 value1: 1,
                 value2: 2,
-                equal: false
+                equal: false,
             },
             {
                 description: 'number and array are not equal',
                 value1: 1,
                 value2: [],
-                equal: false
+                equal: false,
             },
             {
                 description: '0 and null are not equal',
                 value1: 0,
                 value2: null,
-                equal: false
+                equal: false,
             },
             {
                 description: 'equal strings',
                 value1: 'a',
                 value2: 'a',
-                equal: true
+                equal: true,
             },
             {
                 description: 'not equal strings',
                 value1: 'a',
                 value2: 'b',
-                equal: false
+                equal: false,
             },
             {
                 description: 'empty string and null are not equal',
                 value1: '',
                 value2: null,
-                equal: false
+                equal: false,
             },
             {
                 description: 'null is equal to null',
                 value1: null,
                 value2: null,
-                equal: true
+                equal: true,
             },
             {
                 description: 'equal booleans (true)',
                 value1: true,
                 value2: true,
-                equal: true
+                equal: true,
             },
             {
                 description: 'equal booleans (false)',
                 value1: false,
                 value2: false,
-                equal: true
+                equal: true,
             },
             {
                 description: 'not equal booleans',
                 value1: true,
                 value2: false,
-                equal: false
+                equal: false,
             },
             {
                 description: '1 and true are not equal',
                 value1: 1,
                 value2: true,
-                equal: false
+                equal: false,
             },
             {
                 description: '0 and false are not equal',
                 value1: 0,
                 value2: false,
-                equal: false
+                equal: false,
             },
             {
                 description: 'NaN and NaN are equal',
                 value1: NaN,
                 value2: NaN,
-                equal: true
+                equal: true,
             },
             {
                 description: '0 and -0 are equal',
                 value1: 0,
                 value2: -0,
-                equal: true
+                equal: true,
             },
             {
                 description: 'Infinity and Infinity are equal',
                 value1: Infinity,
                 value2: Infinity,
-                equal: true
+                equal: true,
             },
             {
                 description: 'Infinity and -Infinity are not equal',
                 value1: Infinity,
                 value2: -Infinity,
-                equal: false
-            }
-        ]
+                equal: false,
+            },
+        ],
     },
 
     {
@@ -151,103 +147,103 @@ const testCases = [
                 description: 'empty objects are equal',
                 value1: {},
                 value2: {},
-                equal: true
+                equal: true,
             },
             {
                 description: 'equal objects (same properties "order")',
-                value1: {a: 1, b: '2'},
-                value2: {a: 1, b: '2'},
-                equal: true
+                value1: { a: 1, b: '2' },
+                value2: { a: 1, b: '2' },
+                equal: true,
             },
             {
                 description: 'equal objects (different properties "order")',
-                value1: {a: 1, b: '2'},
-                value2: {b: '2', a: 1},
-                equal: true
+                value1: { a: 1, b: '2' },
+                value2: { b: '2', a: 1 },
+                equal: true,
             },
             {
                 description: 'not equal objects (extra property)',
-                value1: {a: 1, b: '2'},
-                value2: {a: 1, b: '2', c: []},
-                equal: false
+                value1: { a: 1, b: '2' },
+                value2: { a: 1, b: '2', c: [] },
+                equal: false,
             },
             {
                 description: 'not equal objects (different property values)',
-                value1: {a: 1, b: '2', c: 3},
-                value2: {a: 1, b: '2', c: 4},
-                equal: false
+                value1: { a: 1, b: '2', c: 3 },
+                value2: { a: 1, b: '2', c: 4 },
+                equal: false,
             },
             {
                 description: 'not equal objects (different properties)',
-                value1: {a: 1, b: '2', c: 3},
-                value2: {a: 1, b: '2', d: 3},
-                equal: false
+                value1: { a: 1, b: '2', c: 3 },
+                value2: { a: 1, b: '2', d: 3 },
+                equal: false,
             },
             {
                 description: 'equal objects (same sub-properties)',
-                value1: {a: [{b: 'c'}]},
-                value2: {a: [{b: 'c'}]},
-                equal: true
+                value1: { a: [{ b: 'c' }] },
+                value2: { a: [{ b: 'c' }] },
+                equal: true,
             },
             {
                 description: 'not equal objects (different sub-property value)',
-                value1: {a: [{b: 'c'}]},
-                value2: {a: [{b: 'd'}]},
-                equal: false
+                value1: { a: [{ b: 'c' }] },
+                value2: { a: [{ b: 'd' }] },
+                equal: false,
             },
             {
                 description: 'not equal objects (different sub-property)',
-                value1: {a: [{b: 'c'}]},
-                value2: {a: [{c: 'c'}]},
-                equal: false
+                value1: { a: [{ b: 'c' }] },
+                value2: { a: [{ c: 'c' }] },
+                equal: false,
             },
             {
                 description: 'empty array and empty object are not equal',
                 value1: {},
                 value2: [],
-                equal: false
+                equal: false,
             },
             {
                 description: 'object with extra undefined properties are not equal #1',
                 value1: {},
-                value2: {foo: undefined},
-                equal: false
+                value2: { foo: undefined },
+                equal: false,
             },
             {
                 description: 'object with extra undefined properties are not equal #2',
-                value1: {foo: undefined},
+                value1: { foo: undefined },
                 value2: {},
-                equal: false
+                equal: false,
             },
             {
                 description: 'object with extra undefined properties are not equal #3',
-                value1: {foo: undefined},
-                value2: {bar: undefined},
-                equal: false
+                value1: { foo: undefined },
+                value2: { bar: undefined },
+                equal: false,
             },
             {
                 description: 'nulls are equal',
                 value1: null,
                 value2: null,
-                equal: true
+                equal: true,
             },
             {
                 description: 'null and undefined are not equal',
                 value1: null,
                 value2: undefined,
-                equal: false
+                equal: false,
             },
             {
                 description: 'null and empty object are not equal',
                 value1: null,
                 value2: {},
-                equal: false
+                equal: false,
             },
             {
                 description: 'undefined and empty object are not equal',
                 value1: undefined,
                 value2: {},
-                equal: false
+                equal: false,
             },
             // {
             //     description: 'objects with different `toString` functions returning same values are equal',
@@ -261,7 +257,7 @@ const testCases = [
             //     value2: {toString: () => 'Hi!'},
             //     equal: false
             // }
-        ]
+        ],
     },
 
     {
@@ -271,45 +267,45 @@ const testCases = [
                 description: 'two empty arrays are equal',
                 value1: [],
                 value2: [],
-                equal: true
+                equal: true,
             },
             {
                 description: 'equal arrays',
                 value1: [1, 2, 3],
                 value2: [1, 2, 3],
-                equal: true
+                equal: true,
             },
             {
                 description: 'not equal arrays (different item)',
                 value1: [1, 2, 3],
                 value2: [1, 2, 4],
-                equal: false
+                equal: false,
             },
             {
                 description: 'not equal arrays (different length)',
                 value1: [1, 2, 3],
                 value2: [1, 2],
-                equal: false
+                equal: false,
             },
             {
                 description: 'equal arrays of objects',
-                value1: [{a: 'a'}, {b: 'b'}],
-                value2: [{a: 'a'}, {b: 'b'}],
-                equal: true
+                value1: [{ a: 'a' }, { b: 'b' }],
+                value2: [{ a: 'a' }, { b: 'b' }],
+                equal: true,
             },
             {
                 description: 'not equal arrays of objects',
-                value1: [{a: 'a'}, {b: 'b'}],
-                value2: [{a: 'a'}, {b: 'c'}],
-                equal: false
+                value1: [{ a: 'a' }, { b: 'b' }],
+                value2: [{ a: 'a' }, { b: 'c' }],
+                equal: false,
             },
             {
                 description: 'pseudo array and equivalent array are not equal',
-                value1: {'0': 0, '1': 1, length: 2},
+                value1: { '0': 0, '1': 1, length: 2 },
                 value2: [0, 1],
-                equal: false
-            }
-        ]
+                equal: false,
+            },
+        ],
     },
     {
         description: 'Date objects',
@@ -318,27 +314,27 @@ const testCases = [
                 description: 'equal date objects',
                 value1: new Date('2017-06-16T21:36:48.362Z'),
                 value2: new Date('2017-06-16T21:36:48.362Z'),
-                equal: true
+                equal: true,
             },
             {
                 description: 'not equal date objects',
                 value1: new Date('2017-06-16T21:36:48.362Z'),
                 value2: new Date('2017-01-01T00:00:00.000Z'),
-                equal: false
+                equal: false,
             },
             {
                 description: 'date and string are not equal',
                 value1: new Date('2017-06-16T21:36:48.362Z'),
                 value2: '2017-06-16T21:36:48.362Z',
-                equal: false
+                equal: false,
             },
             {
                 description: 'date and object are not equal',
                 value1: new Date('2017-06-16T21:36:48.362Z'),
                 value2: {},
-                equal: false
-            }
-        ]
+                equal: false,
+            },
+        ],
     },
     // {
     //     description: 'RegExp objects',
@@ -405,11 +401,11 @@ const testCases = [
                         subProp1: 'sub value1',
                         subProp2: {
                             subSubProp1: 'sub sub value1',
-                            subSubProp2: [1, 2, {prop2: 1, prop: 2}, 4, 5]
-                        }
+                            subSubProp2: [1, 2, { prop2: 1, prop: 2 }, 4, 5],
+                        },
                     },
                     prop5: 1000,
-                    prop6: new Date(2016, 2, 10)
+                    prop6: new Date(2016, 2, 10),
                 },
                 value2: {
                     prop5: 1000,
@@ -420,14 +416,14 @@ const testCases = [
                     prop4: {
                         subProp2: {
                             subSubProp1: 'sub sub value1',
-                            subSubProp2: [1, 2, {prop2: 1, prop: 2}, 4, 5]
+                            subSubProp2: [1, 2, { prop2: 1, prop: 2 }, 4, 5],
                         },
-                        subProp1: 'sub value1'
-                    }
+                        subProp1: 'sub value1',
+                    },
                 },
-                equal: true
-            }
-        ]
+                equal: true,
+            },
+        ],
     },
 
     {
@@ -444,8 +440,8 @@ const testCases = [
                 value1: 1n,
                 value2: 2n,
                 equal: false,
-            }
-        ]
+            },
+        ],
     },
 
     {
@@ -453,9 +449,9 @@ const testCases = [
         tests: [
             {
                 description: 'empty maps are equal',
-                value1: new Map,
-                value2: new Map,
-                equal: true
+                value1: new Map(),
+                value2: new Map(),
+                equal: true,
             },
             // {
             //     description: 'empty maps of different class are not equal',
@@ -465,9 +461,9 @@ const testCases = [
             // },
             {
                 description: 'equal maps (same key "order")',
-                value1: map({a: 1, b: '2'}),
-                value2: map({a: 1, b: '2'}),
-                equal: true
+                value1: map({ a: 1, b: '2' }),
+                value2: map({ a: 1, b: '2' }),
+                equal: true,
             },
             // {
             //     description: 'not equal maps (same key "order" - instances of different classes)',
@@ -477,87 +473,93 @@ const testCases = [
             // },
             {
                 description: 'equal maps (different key order)',
-                value1: new Map<any, any>([['a', 1], ['b', '2']]),
-                value2: new Map<any, any>([['b', '2'],['a', 1]]),
-                equal: true
+                value1: new Map<any, any>([
+                    ['a', 1],
+                    ['b', '2'],
+                ]),
+                value2: new Map<any, any>([
+                    ['b', '2'],
+                    ['a', 1],
+                ]),
+                equal: true,
             },
             {
                 description: 'equal maps (different key "order" - instances of the same subclass)',
-                value1: myMap({a: 1, b: '2'}),
-                value2: myMap({b: '2', a: 1}),
-                equal: true
+                value1: myMap({ a: 1, b: '2' }),
+                value2: myMap({ b: '2', a: 1 }),
+                equal: true,
             },
             {
                 description: 'not equal maps (extra key)',
-                value1: map({a: 1, b: '2'}),
-                value2: map({a: 1, b: '2', c: []}),
-                equal: false
+                value1: map({ a: 1, b: '2' }),
+                value2: map({ a: 1, b: '2', c: [] }),
+                equal: false,
             },
             {
                 description: 'not equal maps (different key value)',
-                value1: map({a: 1, b: '2', c: 3}),
-                value2: map({a: 1, b: '2', c: 4}),
-                equal: false
+                value1: map({ a: 1, b: '2', c: 3 }),
+                value2: map({ a: 1, b: '2', c: 4 }),
+                equal: false,
             },
             {
                 description: 'not equal maps (different keys)',
-                value1: map({a: 1, b: '2', c: 3}),
-                value2: map({a: 1, b: '2', d: 3}),
-                equal: false
+                value1: map({ a: 1, b: '2', c: 3 }),
+                value2: map({ a: 1, b: '2', d: 3 }),
+                equal: false,
             },
             {
                 description: 'equal maps (same sub-keys)',
-                value1: map({ a: [ map({ b: 'c' }) ] }),
-                value2: map({ a: [ map({ b: 'c' }) ] }),
-                equal: true
+                value1: map({ a: [map({ b: 'c' })] }),
+                value2: map({ a: [map({ b: 'c' })] }),
+                equal: true,
             },
             {
                 description: 'not equal maps (different sub-key value)',
-                value1: map({ a: [ map({ b: 'c' }) ] }),
-                value2: map({ a: [ map({ b: 'd' }) ] }),
-                equal: false
+                value1: map({ a: [map({ b: 'c' })] }),
+                value2: map({ a: [map({ b: 'd' })] }),
+                equal: false,
             },
             {
                 description: 'not equal maps (different sub-key)',
-                value1: map({ a: [ map({ b: 'c' }) ] }),
-                value2: map({ a: [ map({ c: 'c' }) ] }),
-                equal: false
+                value1: map({ a: [map({ b: 'c' })] }),
+                value2: map({ a: [map({ c: 'c' })] }),
+                equal: false,
             },
             {
                 description: 'empty map and empty object are not equal',
                 value1: {},
-                value2: new Map,
-                equal: false
+                value2: new Map(),
+                equal: false,
             },
             {
                 description: 'map with extra undefined key is not equal #1',
                 value1: map({}),
-                value2: map({foo: undefined}),
-                equal: false
+                value2: map({ foo: undefined }),
+                equal: false,
             },
             {
                 description: 'map with extra undefined key is not equal #2',
-                value1: map({foo: undefined}),
+                value1: map({ foo: undefined }),
                 value2: map({}),
-                equal: false
+                equal: false,
             },
             {
                 description: 'maps with extra undefined keys are not equal #3',
-                value1: map({foo: undefined}),
-                value2: map({bar: undefined}),
-                equal: false
+                value1: map({ foo: undefined }),
+                value2: map({ bar: undefined }),
+                equal: false,
             },
             {
                 description: 'null and empty map are not equal',
                 value1: null,
-                value2: new Map,
-                equal: false
+                value2: new Map(),
+                equal: false,
             },
             {
                 description: 'undefined and empty map are not equal',
                 value1: undefined,
-                value2: new Map,
-                equal: false
+                value2: new Map(),
+                equal: false,
             },
             {
                 description: 'map and a pseudo map are not equal',
@@ -568,9 +570,9 @@ const testCases = [
                     has: () => true,
                     get: () => 1,
                 },
-                equal: false
+                equal: false,
             },
-        ]
+        ],
     },
 
     {
@@ -578,9 +580,9 @@ const testCases = [
         tests: [
             {
                 description: 'empty sets are equal',
-                value1: new Set,
-                value2: new Set,
-                equal: true
+                value1: new Set(),
+                value2: new Set(),
+                equal: true,
             },
             // {
             //     description: 'empty sets of different class are not equal',
@@ -592,7 +594,7 @@ const testCases = [
                 description: 'equal sets (same value "order")',
                 value1: set(['a', 'b']),
                 value2: set(['a', 'b']),
-                equal: true
+                equal: true,
             },
             // {
             //     description: 'not equal sets (same value "order" - instances of different classes)',
@@ -604,81 +606,82 @@ const testCases = [
                 description: 'equal sets (different value "order")',
                 value1: set(['a', 'b']),
                 value2: set(['b', 'a']),
-                equal: true
+                equal: true,
             },
             {
-                description: 'equal sets (different value "order" - instances of the same subclass)',
+                description:
+                    'equal sets (different value "order" - instances of the same subclass)',
                 value1: mySet(['a', 'b']),
                 value2: mySet(['b', 'a']),
-                equal: true
+                equal: true,
             },
             {
                 description: 'not equal sets (extra value)',
                 value1: set(['a', 'b']),
                 value2: set(['a', 'b', 'c']),
-                equal: false
+                equal: false,
             },
             {
                 description: 'not equal sets (different values)',
                 value1: set(['a', 'b', 'c']),
                 value2: set(['a', 'b', 'd']),
-                equal: false
+                equal: false,
             },
             {
                 description: 'not equal sets (different instances of objects)',
-                value1: set([ 'a', {} ]),
-                value2: set([ 'a', {} ]),
-                equal: false
+                value1: set(['a', {}]),
+                value2: set(['a', {}]),
+                equal: false,
             },
             {
                 description: 'equal sets (same instances of objects)',
-                value1: set([ 'a', emptyObj ]),
-                value2: set([ 'a', emptyObj ]),
-                equal: true
+                value1: set(['a', emptyObj]),
+                value2: set(['a', emptyObj]),
+                equal: true,
             },
             {
                 description: 'empty set and empty object are not equal',
                 value1: {},
-                value2: new Set,
-                equal: false
+                value2: new Set(),
+                equal: false,
             },
             {
                 description: 'empty set and empty array are not equal',
                 value1: [],
-                value2: new Set,
-                equal: false
+                value2: new Set(),
+                equal: false,
             },
             {
                 description: 'set with extra undefined value is not equal #1',
                 value1: set([]),
                 value2: set([undefined]),
-                equal: false
+                equal: false,
             },
             {
                 description: 'set with extra undefined value is not equal #2',
                 value1: set([undefined]),
                 value2: set([]),
-                equal: false
+                equal: false,
             },
             {
                 description: 'set and pseudo set are not equal',
-                value1: new Set,
+                value1: new Set(),
                 value2: {
                     constructor: Set,
                     size: 0,
                     has: () => true,
                 },
-                equal: false
+                equal: false,
             },
-        ]
+        ],
     },
 ]
 
-for(const tc of testCases) {
+for (const tc of testCases) {
     describe(tc.description, () => {
-        for(const t of tc.tests) {
+        for (const t of tc.tests) {
             it(t.description, () => {
-                if(t.equal) {
+                if (t.equal) {
                     expect(deepEqual(t.value1, t.value2)).toBeTrue()
                 } else {
                     expect(deepEqual(t.value1, t.value2)).toBeFalse()

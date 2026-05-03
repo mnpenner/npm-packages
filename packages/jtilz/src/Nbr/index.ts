@@ -4,6 +4,5 @@
  * @returns The hexadecimal string.
  */
 export function decToHex(num: number): string {
-    return num.toString(16);
+    return num.toString(16)
 }
-

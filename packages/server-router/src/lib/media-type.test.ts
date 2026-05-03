@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bun test
-import {describe, expect, it} from 'bun:test'
-import {mediaTypeMatches, parseAcceptHeader, parseMediaType} from './media-type'
+import { describe, expect, it } from 'bun:test'
+import { mediaTypeMatches, parseAcceptHeader, parseMediaType } from './media-type'
 
 describe(parseMediaType.name, function () {
     it('parses types with parameters', function () {
@@ -63,10 +63,10 @@ describe(parseAcceptHeader.name, function () {
             'text/plain;q=0.5, application/json, text/html;q=0.9, image/png;q=0.9',
         )
         expect(accept).toEqual([
-            {type: 'application/json', q: 1},
-            {type: 'text/html', q: 0.9},
-            {type: 'image/png', q: 0.9},
-            {type: 'text/plain', q: 0.5},
+            { type: 'application/json', q: 1 },
+            { type: 'text/html', q: 0.9 },
+            { type: 'image/png', q: 0.9 },
+            { type: 'text/plain', q: 0.5 },
         ])
     })
 })

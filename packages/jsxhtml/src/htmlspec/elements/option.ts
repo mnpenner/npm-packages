@@ -1,6 +1,6 @@
-import type {CommonAttributes} from '../attributes/ElementAttributes'
-import type {ElementForTag} from './element-types'
-import type {Numeric} from '../attributes/StandardGlobalAttributes'
+import type { CommonAttributes } from '../attributes/ElementAttributes'
+import type { ElementForTag } from './element-types'
+import type { Numeric } from '../attributes/StandardGlobalAttributes'
 
 export interface OptionAttributes extends CommonAttributes<ElementForTag<'option'>> {
     /**
@@ -20,4 +20,3 @@ export interface OptionAttributes extends CommonAttributes<ElementForTag<'option
      */
     value?: string | Numeric
 }
-

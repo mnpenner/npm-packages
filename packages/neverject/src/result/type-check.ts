@@ -1,4 +1,4 @@
-import type {Result} from '../result.ts'
+import type { Result } from '../result.ts'
 
 export const _INTERNAL_RESULT_MARKER = Symbol('Result')
 
@@ -14,9 +14,5 @@ export const _INTERNAL_RESULT_MARKER = Symbol('Result')
  * console.assert(!isResult({ok: true, value: 1}))
  */
 export function isResult(x: unknown): x is Result<unknown, unknown> {
-    return (
-        typeof x === 'object' &&
-        x !== null &&
-        _INTERNAL_RESULT_MARKER in x
-    )
+    return typeof x === 'object' && x !== null && _INTERNAL_RESULT_MARKER in x
 }

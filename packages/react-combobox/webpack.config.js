@@ -20,7 +20,7 @@ module.exports = {
                     useBabel: true,
                     useCache: false,
                     babelCore: '@babel/core',
-                }
+                },
             },
         ],
     },
@@ -29,7 +29,7 @@ module.exports = {
     },
     plugins: [
         new HtmlWebpackPlugin({
-            title: "ComboBox",
+            title: 'ComboBox',
         }),
     ],
     serve: {
@@ -37,6 +37,6 @@ module.exports = {
         http2: false,
         devMiddleware: {
             stats: 'errors-only',
-        }
-    }
+        },
+    },
 }

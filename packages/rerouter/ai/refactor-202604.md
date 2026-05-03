@@ -21,7 +21,6 @@ Each route should take an optional `match` function. It takes as input the reque
 
 Each route should have a `schema` prop.
 
-
 ```ts
 {
     schema: {
@@ -65,7 +64,7 @@ Let's define 3 sorts of things, and organize the src/ code accordingly:
 - addons: extras/addons/utilities that help build routes or work with the router without injecting anything into the router. e.g. zod
 - middleware: can be added in the router. They run before or after the handler. They can add things into the context or modify the response. e.g. csrf, loggers, body transformers.
 - plugins: similar to middelware, but can add brand new routes by introspecting other routes. e.g. openapi/swagger.
-  - note: if when used like `handler: openapi({...})` that would be an "addon".
+    - note: if when used like `handler: openapi({...})` that would be an "addon".
 
 ---
 
@@ -73,10 +72,9 @@ When adding in middleware, its unclear if middleware will be inherited from the 
 
 - `.addGroup` vs `.replaceGroup`. Or maybe `.group({inherit:true,middleware:[]}`
 - `.mount` --> `.mount({prefix:'/api',middleware:[],inherit:true}, subRouter); I think .group` and `.mount` can be combined if we just add these options in.
-  - Maybe by default if you use `subrouter => { ... }` syntax then it will inherit (subrouter will have the middleware in it), but if you do `.mount(new Router().get('/foo',...))` it will not inherit because it's a "new" router (and probably coming from another file). Or maybe this is the *only* way to specify inheritance.
+    - Maybe by default if you use `subrouter => { ... }` syntax then it will inherit (subrouter will have the middleware in it), but if you do `.mount(new Router().get('/foo',...))` it will not inherit because it's a "new" router (and probably coming from another file). Or maybe this is the _only_ way to specify inheritance.
 - What does `.use` do? Modify the current group? What about groups/mounts? Can/should we drop `.use`? Maybe the only way to set the middleware is via the c'tor or `.mount`.
 - What's the difference between `.mount` and `.group`? I think the only difference is that `.mount` adds a path prefix.
-
 
 ---
 

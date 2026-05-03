@@ -1,4 +1,4 @@
-import {parse} from 'path-to-regexp'
+import { parse } from 'path-to-regexp'
 import jsSerialize from 'js-serialize'
 import { writeFile } from 'node:fs/promises'
 
@@ -7,46 +7,49 @@ import { writeFile } from 'node:fs/promises'
 /**
  * Either all keys of T are present (and required), or none are present.
  */
-type AllOrNone<T> =
-    | Required<T>
-    | { [K in keyof T]?: never };
+type AllOrNone<T> = Required<T> | { [K in keyof T]?: never }
 
 type ParamType = string | number | boolean
 type WilcardType = Iterable<ParamType>
 
 function compile(
     pattern: string,
-    {delimiter = '/', encode = 'encodeURIComponent'}: { delimiter?: string; encode?: string } = {}
+    {
+        delimiter = '/',
+        encode = 'encodeURIComponent',
+    }: { delimiter?: string; encode?: string } = {},
 ): string {
-    const {tokens} = parse(pattern)
+    const { tokens } = parse(pattern)
 
     type Prop = { name: string; type: string }
 
     const baseProps: Prop[] = []
     const groupTypes: string[] = [] // each: AllOrNone<{...}>
 
-    const typeOfParam = (t: any) =>
-        t.type === 'wildcard' ? 'WilcardType' : 'ParamType'
+    const typeOfParam = (t: any) => (t.type === 'wildcard' ? 'WilcardType' : 'ParamType')
 
-    const makeProp = (name: string, t: any): Prop => ({name, type: typeOfParam(t)})
+    const makeProp = (name: string, t: any): Prop => ({ name, type: typeOfParam(t) })
 
     function collectGroupProps(ts: any[]): Prop[] {
         const props: Prop[] = []
-        for(const t of ts) {
-            if(t.type === 'param' || t.type === 'wildcard') props.push(makeProp(t.name, t))
-            else if(t.type === 'group') props.push(...collectGroupProps(t.tokens))
+        for (const t of ts) {
+            if (t.type === 'param' || t.type === 'wildcard') props.push(makeProp(t.name, t))
+            else if (t.type === 'group') props.push(...collectGroupProps(t.tokens))
         }
         return props
     }
 
     function collectTypes(ts: any[], intoBase = true) {
-        for(const t of ts) {
-            if((t.type === 'param' || t.type === 'wildcard') && intoBase) {
+        for (const t of ts) {
+            if ((t.type === 'param' || t.type === 'wildcard') && intoBase) {
                 baseProps.push(makeProp(t.name, t))
-            } else if(t.type === 'group') {
+            } else if (t.type === 'group') {
                 const groupProps = collectGroupProps(t.tokens)
-                if(groupProps.length) {
-                    const some = '{' + groupProps.map(p => `${jsSerialize(p.name)}: ${p.type}`).join(',') + '}'
+                if (groupProps.length) {
+                    const some =
+                        '{' +
+                        groupProps.map((p) => `${jsSerialize(p.name)}: ${p.type}`).join(',') +
+                        '}'
                     groupTypes.push(`AllOrNone<${some}>`)
                 }
                 collectTypes(t.tokens, false)
@@ -57,8 +60,8 @@ function compile(
     collectTypes(tokens)
 
     // {base} & (AllOrNone<G1> & AllOrNone<G2> & ...)
-    let paramsType = '{' + baseProps.map(p => `${jsSerialize(p.name)}: ${p.type}`).join(',') + '}'
-    if(groupTypes.length) paramsType += ' & ' + groupTypes.join(' & ')
+    let paramsType = '{' + baseProps.map((p) => `${jsSerialize(p.name)}: ${p.type}`).join(',') + '}'
+    if (groupTypes.length) paramsType += ' & ' + groupTypes.join(' & ')
 
     // --- runtime codegen (unchanged) ---
     let ts = `function generate(params:${paramsType}):string {\n`
@@ -68,34 +71,34 @@ function compile(
 
     function collectNames(ts2: any[]): string[] {
         const out: string[] = []
-        for(const t of ts2) {
-            if(t.type === 'param' || t.type === 'wildcard') out.push(t.name)
-            else if(t.type === 'group') out.push(...collectNames(t.tokens))
+        for (const t of ts2) {
+            if (t.type === 'param' || t.type === 'wildcard') out.push(t.name)
+            else if (t.type === 'group') out.push(...collectNames(t.tokens))
         }
         return out
     }
 
     function appendStr(ts2: any[], optional = false) {
-        if(!optional) {
-            for(const t of ts2) {
-                if(t.type === 'param' || t.type === 'wildcard') {
+        if (!optional) {
+            for (const t of ts2) {
+                if (t.type === 'param' || t.type === 'wildcard') {
                     ts += `if(params[${jsSerialize(t.name)}]==null) throw new Error(${jsSerialize('Missing param: ' + t.name)})\n`
                 }
             }
         }
 
-        for(const t of ts2) {
-            if(t.type === 'text') {
+        for (const t of ts2) {
+            if (t.type === 'text') {
                 ts += 'sb+=' + jsSerialize(t.value) + '\n'
-            } else if(t.type === 'param') {
+            } else if (t.type === 'param') {
                 ts += `sb+=${encode}(params[${jsSerialize(t.name)}])\n`
-            } else if(t.type === 'wildcard') {
+            } else if (t.type === 'wildcard') {
                 ts += `sb+=Array.from(params[${jsSerialize(t.name)}],${encode}).join(${delim})\n`
-            } else if(t.type === 'group') {
-                const names = collectNames(t.tokens).map(name => jsSerialize(name))
-                if(!names.length) continue
-                const all = names.map(n => `params[${n}]!=null`).join(' && ')
-                const none = names.map(n => `params[${n}]==null`).join(' && ')
+            } else if (t.type === 'group') {
+                const names = collectNames(t.tokens).map((name) => jsSerialize(name))
+                if (!names.length) continue
+                const all = names.map((n) => `params[${n}]!=null`).join(' && ')
+                const none = names.map((n) => `params[${n}]==null`).join(' && ')
                 const list = names.join(', ')
                 ts += `if(${all}){\n`
                 appendStr(t.tokens, true)
@@ -121,10 +124,10 @@ type AllOrNone<T> =
 type ParamType = string | number | boolean
 type WilcardType = Iterable<ParamType>
 
-${compile(`/hello/:foo/bar/:baz/*splat/xxx{/:optional/lol/:two}`, {delimiter: ','})}
+${compile(`/hello/:foo/bar/:baz/*splat/xxx{/:optional/lol/:two}`, { delimiter: ',' })}
 `
 
-await writeFile(`${__dirname}/dist/path-to-regexp.gen.ts`, code, {encoding:'utf8'})
+await writeFile(`${__dirname}/dist/path-to-regexp.gen.ts`, code, { encoding: 'utf8' })
 
 // console.log(compile(`/hello/:foo/bar/:baz/*splat/xxx{/:optional/lol/:two}`, {delimiter: ','}))
 //

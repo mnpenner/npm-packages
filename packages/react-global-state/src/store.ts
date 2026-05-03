@@ -22,14 +22,14 @@ export interface SubscribeOptions<T> {
 const identity = <T>(value: T) => value
 
 export function resolveInitializer<T>(value: Initializer<T>): T {
-    if(typeof value === 'function') {
+    if (typeof value === 'function') {
         return (value as () => T)()
     }
     return value
 }
 
 export function resolveStateUpdater<T>(value: StateUpdater<T>, previousValue: T): T {
-    if(typeof value === 'function') {
+    if (typeof value === 'function') {
         return (value as (previousValue: T) => T)(previousValue)
     }
     return value
@@ -53,13 +53,13 @@ export class Store<T> implements StoreSnapshot<T> {
         const previousValue = this.#value
         const nextValue = resolveStateUpdater(state, previousValue)
 
-        if(this.#isEqual(previousValue, nextValue)) {
+        if (this.#isEqual(previousValue, nextValue)) {
             return this.#value
         }
 
         this.#value = nextValue
 
-        for(const listener of [...this.#listeners]) {
+        for (const listener of [...this.#listeners]) {
             listener(nextValue, previousValue)
         }
 
@@ -68,10 +68,7 @@ export class Store<T> implements StoreSnapshot<T> {
 
     set = this.setState
 
-    subscribe = (
-        listener: StoreListener<T>,
-        options?: SubscribeOptions<T>,
-    ): Unsubscribe => {
+    subscribe = (listener: StoreListener<T>, options?: SubscribeOptions<T>): Unsubscribe => {
         return this.subscribeSelector(identity, listener, options)
     }
 
@@ -84,10 +81,10 @@ export class Store<T> implements StoreSnapshot<T> {
         const isEqual = options?.isEqual ?? Object.is
         let selectedValue = select(this.#value)
 
-        const storeListener: StoreListener<T> = value => {
+        const storeListener: StoreListener<T> = (value) => {
             const nextSelectedValue = select(value)
 
-            if(isEqual(selectedValue, nextSelectedValue)) {
+            if (isEqual(selectedValue, nextSelectedValue)) {
                 return
             }
 
@@ -98,7 +95,7 @@ export class Store<T> implements StoreSnapshot<T> {
 
         this.#listeners.add(storeListener)
 
-        if(options?.fireImmediately) {
+        if (options?.fireImmediately) {
             listener(selectedValue, selectedValue)
         }
 

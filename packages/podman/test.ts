@@ -1,15 +1,15 @@
 #!/usr/bin/env -S bun -i
-import {parseArgs, type ParseArgsConfig} from "node:util"
-import {forceStartMachine} from './src'
+import { parseArgs, type ParseArgsConfig } from 'node:util'
+import { forceStartMachine } from './src'
 
 const PARSE_CONFIG = {
     args: process.argv,
     options: {
         flag1: {
-            type: "boolean",
+            type: 'boolean',
         },
         flag2: {
-            type: "string",
+            type: 'string',
         },
     },
     strict: true,
@@ -20,22 +20,21 @@ async function main(values: Values, positionals: Positionals): Promise<number | 
     console.log(await forceStartMachine('foo'))
 }
 
-
 type Parsed = ReturnType<typeof parseArgs<typeof PARSE_CONFIG>>
-type Values = Parsed["values"]
-type Positionals = Parsed["positionals"]
+type Values = Parsed['values']
+type Positionals = Parsed['positionals']
 
-if(import.meta.main) {
-    const {values, positionals} = parseArgs(PARSE_CONFIG)
+if (import.meta.main) {
+    const { values, positionals } = parseArgs(PARSE_CONFIG)
 
     main(values, positionals).then(
         (exitCode) => {
-            if(typeof exitCode === "number") {
+            if (typeof exitCode === 'number') {
                 process.exitCode = exitCode
             }
         },
         (err) => {
-            console.error(err ?? "An unknown error occurred")
+            console.error(err ?? 'An unknown error occurred')
             process.exitCode = 1
         },
     )

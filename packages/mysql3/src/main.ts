@@ -1,5 +1,5 @@
 #!bun
-import {sql, createPool, type ConnectionPool} from '.'
+import { sql, createPool, type ConnectionPool } from '.'
 
 async function main(pool: ConnectionPool) {
     // const result = await pool.transaction([
@@ -27,19 +27,20 @@ async function main(pool: ConnectionPool) {
                          limit 100`
     const count = await pool.count(imgQuery)
     let i = 0
-    for await(const img of pool.stream<{ starred: boolean | null, date_taken_local: Date | null }>(imgQuery)) {
+    for await (const img of pool.stream<{ starred: boolean | null; date_taken_local: Date | null }>(
+        imgQuery,
+    )) {
         console.log(`${++i}/${count}`, img.date_taken_local)
     }
 
     console.log('transaction...')
 
-    await pool.transaction(async conn => {
+    await pool.transaction(async (conn) => {
         const ans = await conn.query(sql`select 69
                                          from dual`)
         console.log(ans)
     })
 }
-
 
 const pool = createPool({
     host: process.env.DB_HOST,
@@ -49,7 +50,9 @@ const pool = createPool({
     connectionLimit: 5,
 })
 
-main(pool).finally(() => pool.close()).catch(err => {
-    console.error(err)
-    process.exit(1)
-})
+main(pool)
+    .finally(() => pool.close())
+    .catch((err) => {
+        console.error(err)
+        process.exit(1)
+    })

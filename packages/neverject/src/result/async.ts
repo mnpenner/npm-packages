@@ -1,5 +1,5 @@
-import {NeverjectPromise} from '../neverject-promise.ts'
-import {err, ok} from '../result.ts'
+import { NeverjectPromise } from '../neverject-promise.ts'
+import { err, ok } from '../result.ts'
 
 /**
  * Wrap a value in an [`Ok`]{@link Ok} inside a resolved [`NeverjectPromise`]{@link NeverjectPromise}.

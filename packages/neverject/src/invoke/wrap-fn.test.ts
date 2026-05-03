@@ -1,11 +1,11 @@
 #!/usr/bin/env -S bun test
-import {describe, expect, it} from 'bun:test'
-import {wrapAsyncFn, wrapFn, wrapSafeAsyncFn} from './wrap-fn.ts'
-import {err, ok, type Result} from '../result.ts'
-import {expectType, type TypeEqual} from '../internal/type-assert.ts'
-import type {DetailedError} from '../detailed-error.ts'
-import {mayFail1} from '../internal/test-functions.ts'
-import type {NeverjectPromise} from '../neverject-promise.ts'
+import { describe, expect, it } from 'bun:test'
+import { wrapAsyncFn, wrapFn, wrapSafeAsyncFn } from './wrap-fn.ts'
+import { err, ok, type Result } from '../result.ts'
+import { expectType, type TypeEqual } from '../internal/type-assert.ts'
+import type { DetailedError } from '../detailed-error.ts'
+import { mayFail1 } from '../internal/test-functions.ts'
+import type { NeverjectPromise } from '../neverject-promise.ts'
 
 describe('wrapFn', () => {
     it('defers invocation and wraps returned values', () => {
@@ -15,14 +15,16 @@ describe('wrapFn', () => {
             return value * 2
         })
 
-        expectType<TypeEqual<typeof wrapped, (value: number) => Result<number, DetailedError<unknown>>>>(true)
+        expectType<
+            TypeEqual<typeof wrapped, (value: number) => Result<number, DetailedError<unknown>>>
+        >(true)
 
         expect(calls).toBe(0)
         const result = wrapped(3)
         expect(calls).toBe(1)
 
         expect(result.ok).toBe(true)
-        if(!result.ok) return
+        if (!result.ok) return
 
         expect(result.value).toBe(6)
     })
@@ -35,28 +37,35 @@ describe('wrapFn', () => {
 
     it('captures thrown errors when invoked', () => {
         const reason = 'boom'
-        const wrapped = wrapFn(() => { throw reason })
+        const wrapped = wrapFn(() => {
+            throw reason
+        })
 
         const result = wrapped()
         expect(result.ok).toBe(false)
-        if(result.ok) return
+        if (result.ok) return
 
         expect(result.error).toBeInstanceOf(Error)
-        expect((result.error as {details?: unknown}).details).toBe(reason)
+        expect((result.error as { details?: unknown }).details).toBe(reason)
     })
 
     it('uses a custom error mapper', () => {
-        type ParseError = {message: string}
-        const toParseError = (): ParseError => ({message: 'Parse Error'})
-        const safeJsonParse = wrapFn((input: string) => JSON.parse(input) as {id: number}, toParseError)
+        type ParseError = { message: string }
+        const toParseError = (): ParseError => ({ message: 'Parse Error' })
+        const safeJsonParse = wrapFn(
+            (input: string) => JSON.parse(input) as { id: number },
+            toParseError,
+        )
 
-        expectType<TypeEqual<typeof safeJsonParse, (input: string) => Result<{id: number}, ParseError>>>(true)
+        expectType<
+            TypeEqual<typeof safeJsonParse, (input: string) => Result<{ id: number }, ParseError>>
+        >(true)
 
         const result = safeJsonParse('{')
         expect(result.ok).toBe(false)
-        if(result.ok) return
+        if (result.ok) return
 
-        expect(result.error).toEqual({message: 'Parse Error'})
+        expect(result.error).toEqual({ message: 'Parse Error' })
     })
 })
 
@@ -68,7 +77,12 @@ describe('wrapAsyncFn', () => {
             return value + 1
         })
 
-        expectType<TypeEqual<typeof wrapped, (value: number) => NeverjectPromise<number, DetailedError<unknown>>>>(true)
+        expectType<
+            TypeEqual<
+                typeof wrapped,
+                (value: number) => NeverjectPromise<number, DetailedError<unknown>>
+            >
+        >(true)
 
         expect(calls).toBe(0)
         const asyncResult = wrapped(4)
@@ -76,7 +90,7 @@ describe('wrapAsyncFn', () => {
 
         const settled = await asyncResult
         expect(settled.ok).toBe(true)
-        if(!settled.ok) return
+        if (!settled.ok) return
 
         expect(settled.value).toBe(5)
     })
@@ -88,37 +102,47 @@ describe('wrapAsyncFn', () => {
 
         const settled = await wrapped()
         expect(settled.ok).toBe(false)
-        if(settled.ok) return
+        if (settled.ok) return
 
         expect(settled.error).toBe('boom')
     })
 
     it('captures thrown errors on invocation', async () => {
         const reason = 'boom'
-        const wrapped = wrapAsyncFn(async () => { throw reason })
+        const wrapped = wrapAsyncFn(async () => {
+            throw reason
+        })
 
         const settled = await wrapped()
         expectType<TypeEqual<typeof settled, Result<never, DetailedError<unknown>>>>(true)
 
         expect(settled.ok).toBe(false)
-        if(settled.ok) return
+        if (settled.ok) return
 
         expect(settled.error).toBeInstanceOf(Error)
         expect(settled.error.details).toBe(reason)
     })
 
     it('uses a custom error mapper', async () => {
-        type ParseError = {message: string}
-        const toParseError = (): ParseError => ({message: 'Parse Error'})
-        const safeJsonParse = wrapAsyncFn(async (input: string) => JSON.parse(input) as {id: number}, toParseError)
+        type ParseError = { message: string }
+        const toParseError = (): ParseError => ({ message: 'Parse Error' })
+        const safeJsonParse = wrapAsyncFn(
+            async (input: string) => JSON.parse(input) as { id: number },
+            toParseError,
+        )
 
-        expectType<TypeEqual<typeof safeJsonParse, (input: string) => NeverjectPromise<{id: number}, ParseError>>>(true)
+        expectType<
+            TypeEqual<
+                typeof safeJsonParse,
+                (input: string) => NeverjectPromise<{ id: number }, ParseError>
+            >
+        >(true)
 
         const settled = await safeJsonParse('{')
         expect(settled.ok).toBe(false)
-        if(settled.ok) return
+        if (settled.ok) return
 
-        expect(settled.error).toEqual({message: 'Parse Error'})
+        expect(settled.error).toEqual({ message: 'Parse Error' })
     })
 })
 
@@ -130,31 +154,33 @@ describe('wrapSafeAsyncFn', () => {
             return ok(value * 3)
         })
 
-        expectType<TypeEqual<typeof wrapped, (value: number) => NeverjectPromise<number, never>>>(true)
+        expectType<TypeEqual<typeof wrapped, (value: number) => NeverjectPromise<number, never>>>(
+            true,
+        )
 
         expect(calls).toBe(0)
         const settled = await wrapped(3)
         expect(calls).toBe(1)
 
         expect(settled.ok).toBe(true)
-        if(!settled.ok) return
+        if (!settled.ok) return
 
         expect(settled.value).toBe(9)
     })
 
     it('passes through safe Result-returning functions', async () => {
-        const wrapped = wrapSafeAsyncFn(async (flag: boolean) => flag ? err('boom') : ok(flag))
+        const wrapped = wrapSafeAsyncFn(async (flag: boolean) => (flag ? err('boom') : ok(flag)))
 
         expectType<TypeEqual<Awaited<ReturnType<typeof wrapped>>, Result<false, string>>>(true)
 
         const failure = await wrapped(true)
         expect(failure.ok).toBe(false)
-        if(failure.ok) return
+        if (failure.ok) return
         expect(failure.error).toBe('boom')
 
         const success = await wrapped(false)
         expect(success.ok).toBe(true)
-        if(!success.ok) return
+        if (!success.ok) return
         expect(success.value).toBe(false)
     })
 })

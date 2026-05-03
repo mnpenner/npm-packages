@@ -8,8 +8,7 @@ import cssEscape from './css-escape'
 // url`` escapeUriComponent
 
 export class JsFrag {
-    constructor(private readonly str: string) {
-    }
+    constructor(private readonly str: string) {}
 
     toString() {
         return this.str
@@ -17,21 +16,23 @@ export class JsFrag {
 }
 
 function escapeJs(obj: any) {
-    if(obj instanceof JsFrag) {
+    if (obj instanceof JsFrag) {
         return obj
     }
     return jsSerialize(obj)
 }
 
 export function js(strings: TemplateStringsArray, ...values: any[]) {
-    return new JsFrag(strings.reduce((out, str, i) =>
-        out + str + (i < values.length ? escapeJs(values[i]) : ''), ''))
+    return new JsFrag(
+        strings.reduce(
+            (out, str, i) => out + str + (i < values.length ? escapeJs(values[i]) : ''),
+            '',
+        ),
+    )
 }
 
-
 export class CssFrag {
-    constructor(private readonly str: string) {
-    }
+    constructor(private readonly str: string) {}
 
     toString() {
         return this.str
@@ -39,16 +40,17 @@ export class CssFrag {
 }
 
 function escapeCssValue(obj: any): string {
-    if(obj instanceof CssFrag) {
+    if (obj instanceof CssFrag) {
         return obj.toString()
     }
     return cssEscape(String(obj))
 }
 
 export function css(strings: TemplateStringsArray, ...values: any[]): CssFrag {
-    return new CssFrag(strings.reduce((out, str, i) =>
-        out + str + (i < values.length ? escapeCssValue(values[i]) : ''), ''))
+    return new CssFrag(
+        strings.reduce(
+            (out, str, i) => out + str + (i < values.length ? escapeCssValue(values[i]) : ''),
+            '',
+        ),
+    )
 }
-
-
-

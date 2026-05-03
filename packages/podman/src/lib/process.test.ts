@@ -1,6 +1,6 @@
-import {describe, expect, test} from 'bun:test'
-import {Process, StreamIn, StreamOut} from './process.ts'
-import type {Readable} from 'node:stream'
+import { describe, expect, test } from 'bun:test'
+import { Process, StreamIn, StreamOut } from './process.ts'
+import type { Readable } from 'node:stream'
 
 const decoder = new TextDecoder()
 
@@ -24,11 +24,12 @@ async function readStream(stream: Readable): Promise<string> {
 }
 
 async function readStdinLink(mode: StreamIn): Promise<string> {
-    if(isWindows) {
+    if (isWindows) {
         return 'no-proc'
     }
 
-    const proc = Process.spawn(bunEval(`
+    const proc = Process.spawn(
+        bunEval(`
         const proc = await import('node:process')
         const fs = await import('node:fs')
         if(fs.existsSync('/proc/self/fd/0')) {
@@ -36,10 +37,12 @@ async function readStdinLink(mode: StreamIn): Promise<string> {
         } else {
             console.log('no-proc')
         }
-    `), {
-        stdin: mode,
-        stdout: StreamOut.PIPE,
-    })
+    `),
+        {
+            stdin: mode,
+            stdout: StreamOut.PIPE,
+        },
+    )
 
     const output = await readStream(proc.stdout)
     await proc.wait()
@@ -48,16 +51,19 @@ async function readStdinLink(mode: StreamIn): Promise<string> {
 
 describe('Process', () => {
     test('spawns and captures stdout/stderr with data events', async () => {
-        const proc = Process.spawn(bunEval("process.stdout.write('out\\n'); process.stderr.write('err\\n')"), {
-            stdout: StreamOut.PIPE,
-            stderr: StreamOut.PIPE,
-        })
+        const proc = Process.spawn(
+            bunEval("process.stdout.write('out\\n'); process.stderr.write('err\\n')"),
+            {
+                stdout: StreamOut.PIPE,
+                stderr: StreamOut.PIPE,
+            },
+        )
 
         let stdout = ''
         let stderr = ''
         proc.on('data', (chunk, fd) => {
             const text = decoder.decode(chunk)
-            if(fd === 1) {
+            if (fd === 1) {
                 stdout += text
             } else {
                 stderr += text
@@ -71,11 +77,16 @@ describe('Process', () => {
     })
 
     test('stdin pipe writes through to the child process', async () => {
-        const proc = Process.spawn(bunEval("const input = await Bun.stdin.text(); process.stdout.write(input.replace(/\\r?\\n$/, ''))"), {
-            stdin: StreamIn.PIPE,
-            stdout: StreamOut.PIPE,
-            stderr: StreamOut.PIPE,
-        })
+        const proc = Process.spawn(
+            bunEval(
+                "const input = await Bun.stdin.text(); process.stdout.write(input.replace(/\\r?\\n$/, ''))",
+            ),
+            {
+                stdin: StreamIn.PIPE,
+                stdout: StreamOut.PIPE,
+                stderr: StreamOut.PIPE,
+            },
+        )
 
         proc.stdin.write('hello')
         proc.stdin.end('\n')
@@ -88,10 +99,15 @@ describe('Process', () => {
     })
 
     test('StreamIn.EMPTY attaches /dev/null to stdin', async () => {
-        const proc = Process.spawn(bunEval("const input = await Bun.stdin.text(); process.stdout.write(input.length ? `read:${input.trimEnd()}\\n` : 'eof\\n')"), {
-            stdin: StreamIn.EMPTY,
-            stdout: StreamOut.PIPE,
-        })
+        const proc = Process.spawn(
+            bunEval(
+                "const input = await Bun.stdin.text(); process.stdout.write(input.length ? `read:${input.trimEnd()}\\n` : 'eof\\n')",
+            ),
+            {
+                stdin: StreamIn.EMPTY,
+                stdout: StreamOut.PIPE,
+            },
+        )
 
         let sawError = false
         proc.stdin.on('error', () => {
@@ -110,7 +126,7 @@ describe('Process', () => {
 
     test('StreamIn.EMPTY keeps stdin open as /dev/null', async () => {
         const link = await readStdinLink(StreamIn.EMPTY)
-        if(link === 'no-proc') {
+        if (link === 'no-proc') {
             return
         }
         expect(link).toBe('/dev/null')
@@ -120,10 +136,15 @@ describe('Process', () => {
         const previous = process.env.PROC_TEST_PARENT
         process.env.PROC_TEST_PARENT = 'present'
         try {
-            const proc = Process.spawn(bunEval("process.stdout.write(`${process.env.FOO ?? ''}|${process.env.PROC_TEST_PARENT ?? ''}`)"), {
-                stdout: StreamOut.PIPE,
-                env: {FOO: 'bar'},
-            })
+            const proc = Process.spawn(
+                bunEval(
+                    "process.stdout.write(`${process.env.FOO ?? ''}|${process.env.PROC_TEST_PARENT ?? ''}`)",
+                ),
+                {
+                    stdout: StreamOut.PIPE,
+                    env: { FOO: 'bar' },
+                },
+            )
 
             const output = await readStream(proc.stdout)
             const code = await proc.wait()
@@ -131,7 +152,7 @@ describe('Process', () => {
             expect(code).toBe(0)
             expect(output).toBe('bar|')
         } finally {
-            if(previous === undefined) {
+            if (previous === undefined) {
                 delete process.env.PROC_TEST_PARENT
             } else {
                 process.env.PROC_TEST_PARENT = previous
@@ -153,7 +174,9 @@ describe('Process', () => {
     })
 
     test('wait timeout kills the process', async () => {
-        const proc = Process.spawn(bunEval('await new Promise(resolve => setTimeout(resolve, 5000))'))
+        const proc = Process.spawn(
+            bunEval('await new Promise(resolve => setTimeout(resolve, 5000))'),
+        )
 
         const code = await proc.wait(50)
         expect(code).not.toBe(0)

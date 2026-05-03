@@ -1,12 +1,11 @@
 import assert from 'assert'
 
-
 function calcCharsPerChunk(bytesPerChunk: number, base: bigint): number {
     const min = 2n ** BigInt(8 * bytesPerChunk)
     let c = 1
     let val = base
-    for(; ;) {
-        if(val >= min) return c
+    for (;;) {
+        if (val >= min) return c
         val *= base
         ++c
     }
@@ -23,18 +22,16 @@ function toArray<T>(arr: ArrayLike<T>): T[] {
  */
 function padUint8ArrayRight(buf: Uint8Array, length: number): Uint8Array {
     // return buf.slice(start, start + length)
-    if(buf.length >= length) return buf
+    if (buf.length >= length) return buf
     const padded = new Uint8Array(length)
     padded.set(buf, 0)
     return padded
 }
 
-
 function padArrayRight<T>(chunk: T[], maxLength: number, fill: T): T[] {
-    if(chunk.length >= maxLength) return chunk
+    if (chunk.length >= maxLength) return chunk
     return chunk.concat(Array(maxLength - chunk.length).fill(fill))
 }
-
 
 export class ChunkedBufferEncoder {
     private readonly _alphabet: string[]
@@ -49,13 +46,16 @@ export class ChunkedBufferEncoder {
         this._reverse = new Map(this._alphabet.map((ch, i) => [ch, BigInt(i)]))
         this._base = BigInt(this._alphabet.length)
         this._bytesPerChunk = bytesPerChunk
-        if(charsPerChunk == null) {
+        if (charsPerChunk == null) {
             this._charsPerChunk = calcCharsPerChunk(bytesPerChunk, this._base)
         } else {
             this._charsPerChunk = charsPerChunk
             assert(this._alphabet.length ** this._charsPerChunk >= 2 ** (8 * bytesPerChunk))
         }
-        assert(this._charsPerChunk >= this._bytesPerChunk, `Compression is currently not supported. bytesPerChunk=${bytesPerChunk}, charsPerChunk=${this._charsPerChunk}`)
+        assert(
+            this._charsPerChunk >= this._bytesPerChunk,
+            `Compression is currently not supported. bytesPerChunk=${bytesPerChunk}, charsPerChunk=${this._charsPerChunk}`,
+        )
     }
 
     get base() {
@@ -75,9 +75,8 @@ export class ChunkedBufferEncoder {
     }
 
     encode(input: string | ArrayLike<number>): string {
-        const buf = typeof input === 'string'
-            ? new TextEncoder().encode(input)
-            : Uint8Array.from(input)
+        const buf =
+            typeof input === 'string' ? new TextEncoder().encode(input) : Uint8Array.from(input)
         const { _bytesPerChunk: B, _charsPerChunk: C, _alphabet: A, _base: BASE } = this
         if (buf.length === 0) return ''
 
@@ -112,7 +111,6 @@ export class ChunkedBufferEncoder {
         return out.join('')
     }
 
-
     decode(input: string | ArrayLike<string>): Uint8Array {
         const arr = Array.from(input as any) as string[]
         const len = arr.length
@@ -124,9 +122,9 @@ export class ChunkedBufferEncoder {
         const REV = this._reverse
         const LAST = this._alphabet[this._alphabet.length - 1]
 
-        const full  = Math.floor(len / C)
-        const rem   = len - full * C
-        const miss  = rem ? C - rem : 0
+        const full = Math.floor(len / C)
+        const rem = len - full * C
+        const miss = rem ? C - rem : 0
         const outLen = full * B + (rem ? B - miss : 0)
         const out = new Uint8Array(outLen)
 
@@ -146,11 +144,10 @@ export class ChunkedBufferEncoder {
 
             const count = isLast ? B - miss : B
             for (let b = count - 1; b >= 0; --b) {
-                out[pos++] = Number((num >> (8n * BigInt(b))) & 0xFFn)
+                out[pos++] = Number((num >> (8n * BigInt(b))) & 0xffn)
             }
         }
 
         return out
     }
 }
-

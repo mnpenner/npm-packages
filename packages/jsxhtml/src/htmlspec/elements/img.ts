@@ -1,6 +1,6 @@
-import type {CommonAttributes, CrossOrigin} from '../attributes/ElementAttributes'
-import type {ElementForTag} from './element-types'
-import type {Numeric} from '../attributes/StandardGlobalAttributes'
+import type { CommonAttributes, CrossOrigin } from '../attributes/ElementAttributes'
+import type { ElementForTag } from './element-types'
+import type { Numeric } from '../attributes/StandardGlobalAttributes'
 
 export interface ImgAttributes extends CommonAttributes<ElementForTag<'img'>> {
     /**
@@ -63,7 +63,15 @@ export interface ImgAttributes extends CommonAttributes<ElementForTag<'img'>> {
      * - strict-origin-when-cross-origin
      * - unsafe-url
      */
-    referrerpolicy?: 'no-referrer' | 'no-referrer-when-downgrade' | 'origin' | 'origin-when-cross-origin' | 'same-origin' | 'strict-origin' | 'strict-origin-when-cross-origin' | 'unsafe-url'
+    referrerpolicy?:
+        | 'no-referrer'
+        | 'no-referrer-when-downgrade'
+        | 'origin'
+        | 'origin-when-cross-origin'
+        | 'same-origin'
+        | 'strict-origin'
+        | 'strict-origin-when-cross-origin'
+        | 'unsafe-url'
     /**
      * One or more values separated by commas, which can be source sizes or the `auto` keyword. The spec requires that the `sizes` attribute to only be present when `srcset` uses width descriptors. A **source size** consists of: 1. A media condition, omitted for the last item in the list. 2. A source size value. Media conditions describe properties of the _viewport_, not the _image_. For example, `(height <= 500px) 1000px` proposes using an image source of 1000px width if the _viewport_ height is 500px or less. Because a source size descriptor specifies the width to use for the image during layout, the media condition is typically (but not necessarily) based on the @media/width. Source size values specify the intended display size of the image. User agents use the current source size to select one of the sources supplied by the `srcset` attribute, when those sources are described using width (`w`) descriptors. The selected source size affects the intrinsic size of the image (the image's display size if no CSS styling is applied). A source size value can be any non-negative length. It must not use CSS functions other than the math functions. Units are interpreted in the same way as media queries, meaning that all relative length units are relative to the document root rather than the `<img ` element. For example, an `em` value is relative to the root font size, not the font size of the image. Percentage values are not allowed. If the `sizes` attribute is not provided, it has a default value of `100vw` (the viewport width). The `auto` keyword can replace the whole list of sizes or the first entry in the list. It is only valid when combined with `loading="lazy"`, and resolves to the concrete size of the image. Since the intrinsic size of the image is not yet known, `width` and `height` attributes (or CSS equivalents) should also be specified to prevent the browser from assuming the default image width of 300px. For better backward compatibility with browsers that do not support `auto`, you can include fallback sizes after `auto` in the `sizes` attribute:
      */
@@ -94,5 +102,4 @@ export interface ImgAttributes extends CommonAttributes<ElementForTag<'img'>> {
      * - right
      */
     top?: 'middle' | 'bottom' | 'left' | 'right'
-
 }

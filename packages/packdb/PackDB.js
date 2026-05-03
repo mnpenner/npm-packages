@@ -1,14 +1,14 @@
-const FS = require('fs');
+const FS = require('fs')
 
-const createDeepProxy = require('./deepProxy');
-const debounce = require('lodash.debounce');
+const createDeepProxy = require('./deepProxy')
+const debounce = require('lodash.debounce')
 // const inspect = o => require('util').inspect(o, {colors: true, showHidden: true, depth: 5});
 // const Chalk = require('chalk');
 
-const DATA = Symbol('data');
-const OPT = Symbol('options');
-const WRITE = Symbol('writeFn');
-const PATH = Symbol('filePath');
+const DATA = Symbol('data')
+const OPT = Symbol('options')
+const WRITE = Symbol('writeFn')
+const PATH = Symbol('filePath')
 
 class PackDB {
     constructor(path, options) {
@@ -19,62 +19,59 @@ class PackDB {
                 minWait: 10,
                 maxWait: 5000,
             },
-            options
-        );
+            options,
+        )
 
-        let obj = Object.create(null);
+        let obj = Object.create(null)
 
         try {
-            const buf = FS.readFileSync(path);
-            if(buf.length > 0) {
-                obj = this[OPT].deserialize(buf);
+            const buf = FS.readFileSync(path)
+            if (buf.length > 0) {
+                obj = this[OPT].deserialize(buf)
             }
-        } catch(err) {
-            if(err.code !== 'ENOENT') {
-                throw err;
+        } catch (err) {
+            if (err.code !== 'ENOENT') {
+                throw err
             }
         }
 
         this.write = debounce(this[WRITE].bind(this), this[OPT].minWait, {
             maxWait: this[OPT].maxWait,
-        });
+        })
 
-        this[PATH] = path;
+        this[PATH] = path
         this[DATA] = createDeepProxy(obj, {
             set: (target, path, value, receiver) => {
                 // console.log('set',path);
-                this.write();
+                this.write()
             },
 
             deleteProperty: (target, path) => {
                 // console.log('delete',path);
-                this.write();
-            }
-        });
-        
-   
+                this.write()
+            },
+        })
     }
 
     get data() {
-        return this[DATA];
+        return this[DATA]
     }
 
     [WRITE]() {
         return new Promise((resolve, reject) => {
-            const buf = this[OPT].serialize(this[DATA]);
-            FS.writeFile(this[PATH], buf, err => {
-                if(err) return reject(err);
+            const buf = this[OPT].serialize(this[DATA])
+            FS.writeFile(this[PATH], buf, (err) => {
+                if (err) return reject(err)
                 // console.log('wrote',this[PATH]);
-                resolve();
-            });
-        });
+                resolve()
+            })
+        })
     }
 
     writeNow() {
-        this.write.cancel();
-        return this[WRITE]();
+        this.write.cancel()
+        return this[WRITE]()
     }
 }
 
-
-module.exports = PackDB;
+module.exports = PackDB

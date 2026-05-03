@@ -1,6 +1,6 @@
-import type {CommonAttributes} from '../attributes/ElementAttributes'
-import type {ElementForTag} from './element-types'
-import type {Numeric} from '../attributes/StandardGlobalAttributes'
+import type { CommonAttributes } from '../attributes/ElementAttributes'
+import type { ElementForTag } from './element-types'
+import type { Numeric } from '../attributes/StandardGlobalAttributes'
 
 export interface IframeAttributes extends CommonAttributes<ElementForTag<'iframe'>> {
     /**
@@ -55,7 +55,15 @@ export interface IframeAttributes extends CommonAttributes<ElementForTag<'iframe
      * - strict-origin-when-cross-origin
      * - unsafe-url
      */
-    referrerpolicy?: 'no-referrer' | 'no-referrer-when-downgrade' | 'origin' | 'origin-when-cross-origin' | 'same-origin' | 'strict-origin' | 'strict-origin-when-cross-origin' | 'unsafe-url'
+    referrerpolicy?:
+        | 'no-referrer'
+        | 'no-referrer-when-downgrade'
+        | 'origin'
+        | 'origin-when-cross-origin'
+        | 'same-origin'
+        | 'strict-origin'
+        | 'strict-origin-when-cross-origin'
+        | 'unsafe-url'
     /**
      * Controls the restrictions applied to the content embedded in the `<iframe `. The value of the attribute can either be empty to apply all restrictions, or space-separated tokens to lift particular restrictions: Allows downloading files through an a or area element with the download attribute, as well as through the navigation that leads to a download of a file. This works regardless of whether the user clicked on the link, or JS code initiated it without user interaction. Allows the page to submit forms. If this keyword is not used, a form will be displayed as normal, but submitting it will not trigger input validation, send data to a web server, or close a dialog. Allows the page to open modal windows by Window.alert(), Window.confirm(), Window.print() and Window.prompt(), while opening a dialog is allowed regardless of this keyword. It also allows the page to receive BeforeUnloadEvent event. Lets the resource lock the screen orientation. Allows the page to use the Pointer Lock API. Allows popups (created, for example, by Window.open() or `target="_blank"`). If this keyword is not used, such functionality will silently fail. Allows a sandboxed document to open a new browsing context without forcing the sandboxing flags upon it. This will allow, for example, a third-party advertisement to be safely sandboxed without forcing the same restrictions upon the page the ad links to. If this flag is not included, a redirected page, popup window, or new tab will be subject to the same sandbox restrictions as the originating `<iframe `. Allows embedders to have control over whether an iframe can start a presentation session. If this token is not used, the resource is treated as being from a special origin that always fails the same-origin policy (potentially preventing access to data storage/cookies and some JavaScript APIs). Allows the page to run scripts (but not create pop-up windows). If this keyword is not used, this operation is not allowed. Allows a document loaded in the `<iframe ` to use the Storage Access API to request access to unpartitioned cookies. Lets the resource navigate the top-level browsing context (the one named `_top`). Lets the resource navigate the top-level browsing context, but only if initiated by a user gesture. Allows navigations to non-`http` protocols built into browser or registered by a website. This feature is also activated by `allow-popups` or `allow-top-navigation` keyword.
      */
@@ -80,5 +88,4 @@ export interface IframeAttributes extends CommonAttributes<ElementForTag<'iframe
      * - no
      */
     auto?: 'yes' | 'no'
-
 }

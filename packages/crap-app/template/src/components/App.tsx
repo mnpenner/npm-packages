@@ -1,13 +1,12 @@
-import {lazy} from 'react'
-import {hot} from 'react-hot-loader/root'
-import styled, {css} from 'styled-components';
+import { lazy } from 'react'
+import { hot } from 'react-hot-loader/root'
+import styled, { css } from 'styled-components'
 // import {BrowserRouter, Switch, Route, Link, RouteProps, RouteComponentProps} from 'react-router-dom';
-import type { MatchRenderProps, RouteComponentProps} from "@reach/router";
-import {Router, Link, Match} from "@reach/router";
-import Container from './Container';
-import Boundary from "./Boundary";
+import type { MatchRenderProps, RouteComponentProps } from '@reach/router'
+import { Router, Link, Match } from '@reach/router'
+import Container from './Container'
+import Boundary from './Boundary'
 // import ScrollTop from './helpers/scrollTop';
-
 
 const Crap = styled.span`
     font-style: italic;
@@ -18,7 +17,7 @@ const TabContent = styled.div`
     background-color: #fff;
     border: 1px solid #dee2e6;
     border-top: none;
-    padding: .5rem;
+    padding: 0.5rem;
 `
 
 interface IRoute {
@@ -26,17 +25,17 @@ interface IRoute {
     path: string
     exact?: boolean
     replace?: boolean
-    component: React.ComponentType<any>;
+    component: React.ComponentType<any>
 }
 
 const routes: IRoute[] = [
     {
-        title: "Home",
+        title: 'Home',
         path: '/',
         component: lazy(() => import(/* webpackPrefetch: true */ './pages/Home')),
     },
     {
-        title: "About",
+        title: 'About',
         path: '/about',
         component: lazy(() => import(/* webpackPrefetch: true */ './pages/About')),
     },
@@ -55,7 +54,7 @@ const TabItem = styled.li`
 `
 
 const tab = css`
-    padding: .5rem 1rem;
+    padding: 0.5rem 1rem;
     border: 1px solid transparent;
     display: block;
 `
@@ -65,8 +64,8 @@ const ActiveTab = styled.span`
     background-color: #fff;
     border-color: #dee2e6 #dee2e6 #fff;
     color: #495057;
-    border-top-left-radius: .25rem;
-    border-top-right-radius: .25rem;
+    border-top-left-radius: 0.25rem;
+    border-top-right-radius: 0.25rem;
 `
 
 const TabLink = styled(Link)`
@@ -76,45 +75,66 @@ const TabLink = styled(Link)`
 `
 
 // https://github.com/reach/router/issues/141#issuecomment-457872496
-type RouteProps = {component: React.ComponentType<any>} & RouteComponentProps;
+type RouteProps = { component: React.ComponentType<any> } & RouteComponentProps
 
-const Route: React.FunctionComponent<RouteProps> = ({ component: Component, ...rest }) => <Boundary><Component {...rest} /></Boundary>
+const Route: React.FunctionComponent<RouteProps> = ({ component: Component, ...rest }) => (
+    <Boundary>
+        <Component {...rest} />
+    </Boundary>
+)
 
 const App = () => (
     <Boundary>
+        {/*<ScrollTop>*/}
+        <Container>
+            <h1>Hello World</h1>
 
-            {/*<ScrollTop>*/}
-                <Container>
-                    <h1>Hello World</h1>
+            <p>
+                Welcome to your <Crap>crappy</Crap> app.
+            </p>
 
-                    <p>Welcome to your <Crap>crappy</Crap> app.</p>
+            <p>
+                Debug mode is{' '}
+                {DEBUG ? (
+                    <span css="color:green">ON</span>
+                ) : (
+                    <span
+                        css={css`
+                            color: red;
+                        `}
+                    >
+                        OFF
+                    </span>
+                )}
+                .
+            </p>
 
-                    <p>Debug mode is {DEBUG ? <span css="color:green">ON</span> : <span css={css`color:red`}>OFF</span>}.</p>
-
-                    <TabList>
-                        {routes.map(({path, exact, title}, idx) => (
-                            <Match key={idx} path={path}>
-                                {(routeProps: MatchRenderProps<any>) => (
-                                    <TabItem>
-                                        {routeProps.match ? <ActiveTab>{title}</ActiveTab> : <TabLink to={path}>{title}</TabLink>}
-                                    </TabItem>
+            <TabList>
+                {routes.map(({ path, exact, title }, idx) => (
+                    <Match key={idx} path={path}>
+                        {(routeProps: MatchRenderProps<any>) => (
+                            <TabItem>
+                                {routeProps.match ? (
+                                    <ActiveTab>{title}</ActiveTab>
+                                ) : (
+                                    <TabLink to={path}>{title}</TabLink>
                                 )}
-                            </Match>
-                        ))}
-                    </TabList>
+                            </TabItem>
+                        )}
+                    </Match>
+                ))}
+            </TabList>
 
-                    <TabContent>
-                        <Router>
-                            {routes.map(({path, component}) => (
-                                <Route key={path} path={path} component={component}/>
-                            ))}
-                        </Router>
-                    </TabContent>
-                </Container>
-            {/*</ScrollTop>*/}
-
+            <TabContent>
+                <Router>
+                    {routes.map(({ path, component }) => (
+                        <Route key={path} path={path} component={component} />
+                    ))}
+                </Router>
+            </TabContent>
+        </Container>
+        {/*</ScrollTop>*/}
     </Boundary>
-
 )
 
 export default hot(App)
