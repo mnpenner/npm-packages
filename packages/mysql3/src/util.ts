@@ -1,6 +1,12 @@
-import type mariadb from 'mariadb'
+import type * as mariadb from 'mariadb'
+import type { Buffer } from 'node:buffer'
 import { SqlFrag } from './sql'
-import type * as geojson from 'geojson'
+
+type GeoJsonGeometry = {
+    type: string
+    coordinates?: unknown
+    geometries?: GeoJsonGeometry[]
+}
 
 export function zip<A, B>(a: A[], b: B[]): Array<[A, B]> {
     if (a.length !== b.length) throw new Error('Cannot zip arrays; lengths differ')
@@ -32,6 +38,6 @@ export type DefaultValueType =
     | bigint
     | null
     | /*set*/ string[]
-    | geojson.Geometry
+    | GeoJsonGeometry
 export type DefaultRecordType = Record<string, DefaultValueType>
 export type QueryResult<T> = T[] & { [META]: mariadb.FieldInfo[] }

@@ -5,10 +5,8 @@ const start = BigInt(now) * 1000000n - hrt
 
 /**
  * Generates a 16-byte UUID. The first 8 bytes represent the time it was created.
- *
- * @return {Buffer}
  */
-export function ouid() {
+export function ouid(): Buffer {
     const time = start + process.hrtime.bigint()
     const buf = Buffer.allocUnsafe(16)
     buf.writeBigUInt64BE(time, 0)

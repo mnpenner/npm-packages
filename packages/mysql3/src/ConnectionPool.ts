@@ -1,6 +1,6 @@
 import type { DefaultValueType, QueryResult } from './util'
 import { zip } from './util'
-import mariadb from 'mariadb'
+import * as mariadb from 'mariadb'
 import type { SqlFrag } from './sql'
 import { PoolConnection } from './PoolConnection'
 

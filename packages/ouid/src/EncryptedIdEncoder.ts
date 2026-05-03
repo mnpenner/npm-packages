@@ -78,7 +78,7 @@ export class EncryptedIdEncoder {
         // 2) Convert 128-bit to base-N string
         let x = bytes16ToBigInt(masked)
         let s = ''
-        for (let i = 0; i < this.maxLength; i++) {
+        for (let i = 0; i < this.maxLength; ++i) {
             const d = x % this.base
             s = this.alphabet[Number(d)] + s
             x /= this.base
@@ -88,11 +88,11 @@ export class EncryptedIdEncoder {
         return s // fixed length
     }
 
-    /** Decodes a string (length <= maxLength) back to the original 16-byte ID. */
+    /** Decodes a fixed-length string back to the original 16-byte ID. */
     decode(formattedId: string): Buffer {
         assert(
-            formattedId.length <= this.maxLength,
-            `Formatted ID must be ${this.maxLength} characters or less`,
+            formattedId.length === this.maxLength,
+            `Formatted ID must be exactly ${this.maxLength} characters`,
         )
 
         // 1) Base-N to bigint
@@ -104,7 +104,6 @@ export class EncryptedIdEncoder {
             assert(x < TWO_128, 'value exceeds 128 bits')
         }
 
-        // Left-pad semantics: shorter strings are valid (they represent smaller x).
         const masked = bigIntToBytes16(x)
 
         // 2) AES-ECB unmask

@@ -1,8 +1,9 @@
+import { Buffer } from 'node:buffer'
+
 type PrimitiveValue = string | number | Buffer | bigint | boolean | null | Date
 type SingleValue = PrimitiveValue | SqlFrag
 type InsertValue = SingleValue | undefined
 type Value = SingleValue | SingleValue[]
-type OptionalValue = Value | undefined
 
 type StrictDatabaseId = [database: string]
 type LooseDatabaseId = StrictDatabaseId | string
@@ -20,19 +21,6 @@ type ColumnId = LooseColumnId | SqlFrag
 
 type LooseId = LooseColumnId
 type Id = LooseId | SqlFrag
-
-type LatLngPair = [lat: number, lng: number]
-type PointArray = LatLngPair[] | Point[] | LatLngObj[]
-
-interface Point {
-    x: number
-    y: number
-}
-
-interface LatLngObj {
-    lat: number
-    lng: number
-}
 
 const CHARS_REGEX = /[\x00\b\n\r\t\x1A'\\]/gu
 const CHARS_ESCAPE_MAP: Record<string, string> = {
@@ -70,7 +58,7 @@ function frag(sql: string): SqlFrag {
 
 export function escapeValue(value: Value): SqlFrag {
     if (isFrag(value)) return value
-    return frag(_escapeValue(value))
+    return frag(escapeValueRaw(value))
 }
 
 export function sql(strings: TemplateStringsArray, ...values: Value[]): SqlFrag {
@@ -83,13 +71,13 @@ export function sql(strings: TemplateStringsArray, ...values: Value[]): SqlFrag 
     return frag(out.join(''))
 }
 
-export function _escapeValue(value: Value): string {
+export function escapeValueRaw(value: Value): string {
     if (isFrag(value)) {
         return value.toSqlString()
     }
     if (Array.isArray(value)) {
         if (!value.length) return '/*emptyArr*/NULL'
-        return value.map((v) => _escapeValue(v)).join(',')
+        return value.map((v) => escapeValueRaw(v)).join(',')
     }
     if (Buffer.isBuffer(value)) {
         return `x'${value.toString('hex')}'`
@@ -98,7 +86,7 @@ export function _escapeValue(value: Value): string {
         return String(value)
     }
     if (typeof value === 'string') {
-        return _escapeString(value)
+        return escapeString(value)
     }
     if (value === true) {
         return '1'
@@ -118,45 +106,26 @@ export function _escapeValue(value: Value): string {
     throw new Error(`Unsupported value type: ${value}`)
 }
 
-function hasOwn(obj: object, key: PropertyKey) {
-    return Object.prototype.hasOwnProperty.call(obj, key)
-}
-
-function _escapeString(value: string): string {
+function escapeString(value: string): string {
     return "'" + String(value).replace(CHARS_REGEX, (m) => CHARS_ESCAPE_MAP[m]) + "'"
 }
 
 function escapeIdStrictFrag(id: Id): SqlFrag {
     if (isFrag(id)) return id
-    if (Array.isArray(id)) return frag(id.map(_escapeIdStrict).join('.'))
-    return frag(_escapeIdStrict(id))
+    if (Array.isArray(id)) return frag(id.map(escapeIdStrictRaw).join('.'))
+    return frag(escapeIdStrictRaw(id))
 }
 
-export function _escapeIdLoose(id: Id): string {
+export function escapeIdLooseRaw(id: Id): string {
     if (isFrag(id)) return id.toSqlString()
-    if (Array.isArray(id)) return id.map(_escapeIdStrict).join('.')
+    if (Array.isArray(id)) return id.map(escapeIdStrictRaw).join('.')
     return '`' + String(id).replace(ID_GLOBAL_REGEXP, '``').replace(QUAL_GLOBAL_REGEXP, '`.`') + '`'
 }
 
-export function _escapeIdStrict(id: Id): string {
+export function escapeIdStrictRaw(id: Id): string {
     if (isFrag(id)) return id.toSqlString()
-    if (Array.isArray(id)) return id.map(_escapeIdStrict).join('.')
+    if (Array.isArray(id)) return id.map(escapeIdStrictRaw).join('.')
     return '`' + String(id).replace(ID_GLOBAL_REGEXP, '``') + '`'
-}
-
-function pointPairs(points: PointArray): LatLngPair[] {
-    if (!points.length) return []
-    const sample = points[0]
-    if (Array.isArray(sample) && sample.length === 2) {
-        return [...points] as LatLngPair[]
-    }
-    if (hasOwn(sample, 'x') && hasOwn(sample, 'y')) {
-        return (points as Point[]).map((pt) => [pt.x, pt.y])
-    }
-    if (hasOwn(sample, 'lat') && hasOwn(sample, 'lng')) {
-        return (points as LatLngObj[]).map((pt) => [pt.lat, pt.lng])
-    }
-    throw new Error('Points are not in an expected format')
 }
 
 export interface InsertOptions {
@@ -181,11 +150,9 @@ export enum DuplicateKey {
 
 // https://stackoverflow.com/questions/65976300/how-to-properly-extend-a-record
 type Columns<T> = keyof T & string
-type TableSchema<T> = Record<Columns<T>, Value>
 type InsertTableSchema<T> = Record<Columns<T>, InsertValue>
 // type TableSchema<T> = {[P in keyof T]?: Value}
 type AnySchema = Record<string, Value>
-type ColumnValueTuple<T> = [column: Columns<T> | ColumnId, value: Value]
 type InsertColumnValueTuple<T> = [column: Columns<T> | ColumnId, value: InsertValue]
 type InsertData<T extends InsertTableSchema<T>> = T | InsertColumnValueTuple<T>[]
 
@@ -207,7 +174,7 @@ export namespace sql {
             if (!filteredFields.length) throw new Error('No fields defined')
             return frag(
                 filteredFields
-                    .map((f) => `${_escapeIdStrict(f[0])}=${_escapeValue(f[1] as Value)}`)
+                    .map((f) => `${escapeIdStrictRaw(f[0])}=${escapeValueRaw(f[1] as Value)}`)
                     .join(', '),
             )
         }
@@ -217,7 +184,7 @@ export namespace sql {
             filteredFields
                 .map(
                     (fieldName) =>
-                        `${_escapeIdLoose(fieldName)}=${_escapeValue((fields as AnySchema)[fieldName])}`,
+                        `${escapeIdLooseRaw(fieldName)}=${escapeValueRaw((fields as AnySchema)[fieldName])}`,
                 )
                 .join(', '),
         )
@@ -236,7 +203,7 @@ export namespace sql {
             } else {
                 firstCol = Object.keys(data)[0]
             }
-            const escCol = frag(_escapeIdLoose(firstCol))
+            const escCol = frag(escapeIdLooseRaw(firstCol))
             q = sql`${q} ON DUPLICATE KEY UPDATE ${escCol}=${escCol}`
         } else if (options.onDuplicateKey === DuplicateKey.UPDATE) {
             let cols: Id[]
@@ -246,7 +213,7 @@ export namespace sql {
                 cols = getFields(data)
             }
             q = sql`${q} ON DUPLICATE KEY UPDATE ${cols.map((col) => {
-                const escCol = frag(_escapeIdLoose(col))
+                const escCol = frag(escapeIdLooseRaw(col))
                 return sql`${escCol}=VALUES(${escCol})`
             })}`
         }
@@ -261,13 +228,15 @@ export namespace sql {
         if (Array.isArray(fields)) {
             return frag(
                 fields
-                    .map((f) => `${_escapeIdStrict(f[0])} AS ${_escapeIdStrict(f[1])}`)
+                    .map((f) => `${escapeIdStrictRaw(f[0])} AS ${escapeIdStrictRaw(f[1])}`)
                     .join(', '),
             )
         }
         return frag(
             getFields(fields)
-                .map((alias) => `${_escapeIdStrict(fields[alias])} AS ${_escapeIdStrict(alias)}`)
+                .map(
+                    (alias) => `${escapeIdStrictRaw(fields[alias])} AS ${escapeIdStrictRaw(alias)}`,
+                )
                 .join(', '),
         )
     }
@@ -328,13 +297,13 @@ export namespace sql {
     }
     export function cols(...columns: Array<ColumnId>): SqlFrag {
         // TODO: make this even stricter? use max array len of 3
-        return frag(columns.map(_escapeIdStrict).join(', '))
+        return frag(columns.map(escapeIdStrictRaw).join(', '))
     }
     /** @deprecated */
     export function columns(columns: Array<ColumnId>): SqlFrag {
-        return frag(columns.map(_escapeIdStrict).join(', '))
+        return frag(columns.map(escapeIdStrictRaw).join(', '))
     }
     export function values(values: Value[][]): SqlFrag {
-        return frag(values.map((row) => `(${row.map(_escapeValue).join(',')})`).join(',\n'))
+        return frag(values.map((row) => `(${row.map(escapeValueRaw).join(',')})`).join(',\n'))
     }
 }

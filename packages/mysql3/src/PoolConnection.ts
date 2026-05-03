@@ -1,6 +1,6 @@
 import type { DefaultValueType, QueryParam, QueryResult } from './util'
 import { makeOptions } from './util'
-import type mariadb from 'mariadb'
+import type * as mariadb from 'mariadb'
 import type { SqlFrag } from './sql'
 import { sql } from './sql'
 
@@ -74,10 +74,10 @@ export class PoolConnection<TDefaultValue = DefaultValueType> {
 
         this.conn
             .queryStream(query.toSqlString())
-            .on('error', (err) => {
+            .on('error', (err: Error) => {
                 throw err
             })
-            .on('data', (row) => {
+            .on('data', (row: TRecord) => {
                 results.push(row)
                 resolve()
             })

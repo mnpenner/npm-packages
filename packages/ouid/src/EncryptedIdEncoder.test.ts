@@ -99,6 +99,19 @@ describe('OrderedTypedIdGenerator and EncryptedIdEncoder', () => {
             expect(() => encoder.decode('x'.repeat(24))).toThrow()
             expect(() => encoder.decode('invalid_chars_here!!!!!!')).toThrow()
         })
+
+        it('should reject non-canonical encoded lengths', () => {
+            const id = generator.generate(IdType.POST)
+            const formatted = encoder.encode(id)
+            expect(formatted.length).toBe(23)
+            expect(() => encoder.decode(formatted.slice(1))).toThrow()
+            expect(() => encoder.decode(alphabet[0] + formatted)).toThrow()
+        })
+
+        it('should encode to a fixed length', () => {
+            const formatted = encoder.encode(Buffer.alloc(16))
+            expect(formatted.length).toBe(23)
+        })
     })
 
     describe('Alphabet Variations', () => {
