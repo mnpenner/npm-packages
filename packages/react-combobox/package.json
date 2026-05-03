@@ -1,4 +1,6 @@
 {
+  "name": "react-combobox",
+  "private": true,
   "scripts": {
     "start": "webpack-serve"
   },
@@ -25,7 +27,6 @@
     "js-serialize": "workspace:*",
     "react-emotion": "^9.2.6"
   },
-  "name": "react-combobox",
   "exports": {
     ".": {
       "bun": "./src/index.tsx",

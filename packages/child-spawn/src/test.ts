@@ -1,6 +1,6 @@
 import { awk, json, nl, txt, split0, escDash } from './index'
 
-async function main(args: string[]): Promise<number | void> {
+async function main(_args: string[]): Promise<number | void> {
   const text = await txt`echo ${'foo\nbar'}`
   console.log(text)
 

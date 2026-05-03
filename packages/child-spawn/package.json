@@ -1,6 +1,7 @@
 {
   "name": "child-spawn",
   "version": "0.1.2",
+  "private": true,
   "packageManager": "yarn@3.3.1",
   "exports": {
     ".": {

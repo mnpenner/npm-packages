@@ -1,6 +1,7 @@
 {
   "name": "packdb",
   "version": "0.9.1",
+  "private": true,
   "main": "PackDB.js",
   "directories": {
     "test": "tests"

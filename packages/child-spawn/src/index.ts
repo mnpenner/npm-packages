@@ -89,7 +89,6 @@ function escapeBashString(obj: string) {
 }
 
 type StringEscapeFn = (str: string) => string
-type ArgEscapeFn = (arg: CommandArg) => string
 
 function escapeArg(str: CommandArg, escapeString: StringEscapeFn): string {
   if (Array.isArray(str)) {
@@ -138,7 +137,7 @@ function execParse<T>(
 
     const start = process.hrtime()
 
-    const proc = exec(cmd, { shell }, (error, stdout, stderr) => {
+    exec(cmd, { shell }, (error, stdout, stderr) => {
       const [sec, ns] = process.hrtime(start)
       process.stdout.write(
         '  ' + chalk.gray(durationFormatter.format(sec * 1000 + ns / 1e6) + 'ms') + '\n',

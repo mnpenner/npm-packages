@@ -29,7 +29,7 @@ import { execPodmanStreaming } from '../lib/podman-spawn.ts'
  * await tag('httpd', 'myregistryhost:5000/fedora/httpd:v2')
  * ```
  */
-export async function tag(image: string, targetNames: string | string[]): Promise<void> {
+export function tag(image: string, targetNames: string | string[]): Promise<void> {
     const args = new ArgBuilder('tag')
     const targets = Array.isArray(targetNames) ? targetNames : [targetNames]
 

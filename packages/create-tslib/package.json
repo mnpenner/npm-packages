@@ -1,6 +1,7 @@
 {
   "name": "ctslib",
   "version": "0.1.5",
+  "private": true,
   "license": "MIT",
   "bin": "index.js",
   "dependencies": {

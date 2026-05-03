@@ -16,7 +16,7 @@ const PARSE_CONFIG = {
     allowPositionals: true,
 } satisfies ParseArgsConfig
 
-async function main(values: Values, positionals: Positionals): Promise<number | void> {
+async function main(unusedValues: Values, unusedPositionals: Positionals): Promise<number | void> {
     console.log(await forceStartMachine('foo'))
 }
 

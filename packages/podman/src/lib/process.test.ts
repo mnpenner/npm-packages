@@ -170,7 +170,7 @@ describe('Process', () => {
     test('waitOrThrow rejects on non-zero exit codes', async () => {
         const proc = Process.spawn(bunEval('process.exit(3)'))
 
-        expect(proc.waitOrThrow()).rejects.toThrow('process exited with code 3')
+        await expect(proc.waitOrThrow()).rejects.toThrow('process exited with code 3')
     })
 
     test('wait timeout kills the process', async () => {
@@ -207,7 +207,9 @@ describe('Process', () => {
             sawData = true
         })
 
-        await new Promise((resolve) => setImmediate(resolve))
+        await new Promise<void>((resolve) => {
+            setImmediate(resolve)
+        })
         expect(proc.stdout.destroyed).toBe(true)
 
         await proc.wait(1000)
@@ -224,7 +226,9 @@ describe('Process', () => {
             sawData = true
         })
 
-        await new Promise((resolve) => setImmediate(resolve))
+        await new Promise<void>((resolve) => {
+            setImmediate(resolve)
+        })
         expect(proc.stderr.destroyed).toBe(true)
 
         await proc.wait(1000)

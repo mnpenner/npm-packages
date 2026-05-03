@@ -45,7 +45,7 @@ type PodmanPushOptions = {
  * await push({image: 'my-app:latest', destination: 'docker://registry.example.com/my-app:latest'})
  * ```
  */
-export async function push(options: PodmanPushOptions): Promise<void> {
+export function push(options: PodmanPushOptions): Promise<void> {
     const args = new ArgBuilder('push')
 
     args.addValue('--authfile', options.authfile)

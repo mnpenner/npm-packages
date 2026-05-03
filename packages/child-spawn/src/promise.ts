@@ -1,4 +1,4 @@
-export class ErrPromise<TSuccess, TError> extends Promise<TSuccess> {
+export class ErrPromise<TSuccess, TError = unknown> extends Promise<TSuccess> {
   constructor(
     executor: (
       resolve: (value: TSuccess | PromiseLike<TSuccess>) => void,
@@ -8,15 +8,17 @@ export class ErrPromise<TSuccess, TError> extends Promise<TSuccess> {
     super(executor)
     // Object.setPrototypeOf(this, new.target.prototype);  // restore prototype chain
   }
-}
 
-export interface ErrPromise<TSuccess, TError = unknown> {
   then<TResult1 = TSuccess, TResult2 = never>(
     onfulfilled?: ((value: TSuccess) => TResult1 | PromiseLike<TResult1>) | undefined | null,
     onrejected?: ((reason: TError) => TResult2 | PromiseLike<TResult2>) | undefined | null,
-  ): Promise<TResult1 | TResult2>
+  ): Promise<TResult1 | TResult2> {
+    return super.then(onfulfilled, onrejected)
+  }
 
   catch<TResult = never>(
     onrejected?: ((reason: TError) => TResult | PromiseLike<TResult>) | undefined | null,
-  ): Promise<TSuccess | TResult>
+  ): Promise<TSuccess | TResult> {
+    return super.catch(onrejected)
+  }
 }
