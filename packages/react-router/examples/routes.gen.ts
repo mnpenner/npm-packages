@@ -1,5 +1,5 @@
 // Do not modify this file. It was auto-generated with the following command:
-// $ react-router ./examples/routes.tsx -w
+// $ react-router ./examples/routes.ts -w
 
 type AllOrNone<T> =
     | Required<T>

@@ -2,10 +2,10 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { parseArgs, type ParseArgsConfig } from 'node:util'
 import { parse } from 'path-to-regexp'
-import * as ts from 'typescript'
+import { normalizeRoutes, type Route } from './lib/routes'
 
 const PARSE_CONFIG = {
     options: {
@@ -167,12 +167,6 @@ function compilePathGenerator(
     return lines.join('\n')
 }
 
-function isStringLike(
-    expr: ts.Expression,
-): expr is ts.StringLiteralLike | ts.NoSubstitutionTemplateLiteral {
-    return ts.isStringLiteralLike(expr) || ts.isNoSubstitutionTemplateLiteral(expr)
-}
-
 function toRouteFunctionName(routeName: string): string {
     const ident = routeName
         .trim()
@@ -183,70 +177,18 @@ function toRouteFunctionName(routeName: string): string {
 
 type ExtractedRoute = { name: string; pattern: string }
 
-function getProp(object: ts.ObjectLiteralExpression, propName: string): ts.Expression | undefined {
-    for (const prop of object.properties) {
-        if (
-            ts.isPropertyAssignment(prop) &&
-            ts.isIdentifier(prop.name) &&
-            prop.name.text === propName
-        ) {
-            return prop.initializer
-        }
+async function importRoutes(routesPath: string): Promise<readonly Route[]> {
+    const mod = (await import(pathToFileURL(routesPath).href)) as { default?: unknown }
+    if (!Array.isArray(mod.default)) {
+        throw new Error('Routes file must default export an array of routes.')
     }
-    return undefined
+    return mod.default as readonly Route[]
 }
 
-function resolveDefaultExportExpression(sourceFile: ts.SourceFile): ts.Expression | undefined {
-    for (const stmt of sourceFile.statements) {
-        if (!ts.isExportAssignment(stmt)) continue
-        if (stmt.isExportEquals) continue
-        return stmt.expression
-    }
-    return undefined
-}
-
-function findVariableInitializer(
-    sourceFile: ts.SourceFile,
-    name: string,
-): ts.Expression | undefined {
-    for (const stmt of sourceFile.statements) {
-        if (!ts.isVariableStatement(stmt)) continue
-        for (const decl of stmt.declarationList.declarations) {
-            if (!ts.isIdentifier(decl.name) || decl.name.text !== name) continue
-            return decl.initializer
-        }
-    }
-    return undefined
-}
-
-function extractRoutesFromDefaultExport(sourceFile: ts.SourceFile): ExtractedRoute[] {
-    const defaultExpr = resolveDefaultExportExpression(sourceFile)
-    if (!defaultExpr) return []
-
-    const rootExpr = ts.isIdentifier(defaultExpr)
-        ? (findVariableInitializer(sourceFile, defaultExpr.text) ?? defaultExpr)
-        : defaultExpr
-
-    if (!ts.isArrayLiteralExpression(rootExpr)) return []
-
-    const routes: ExtractedRoute[] = []
-
-    for (const element of rootExpr.elements) {
-        if (ts.isObjectLiteralExpression(element)) {
-            const nameExpr = getProp(element, 'name')
-            const patternExpr = getProp(element, 'pattern')
-            if (!nameExpr || !patternExpr) continue
-            if (!isStringLike(nameExpr) || !isStringLike(patternExpr)) continue
-            routes.push({ name: nameExpr.text, pattern: patternExpr.text })
-        } else if (ts.isArrayLiteralExpression(element)) {
-            const [nameExpr, patternExpr] = element.elements
-            if (!nameExpr || !patternExpr) continue
-            if (!isStringLike(nameExpr) || !isStringLike(patternExpr)) continue
-            routes.push({ name: nameExpr.text, pattern: patternExpr.text })
-        }
-    }
-
-    return routes
+function extractRoutes(routes: readonly Route[]): ExtractedRoute[] {
+    return normalizeRoutes(routes)
+        .filter((route) => typeof route.pattern === 'string')
+        .map((route) => ({ name: route.name, pattern: route.pattern as string }))
 }
 
 async function main(options: Options, positionals: Positionals): Promise<number | void> {
@@ -269,16 +211,7 @@ async function main(options: Options, positionals: Positionals): Promise<number 
         )
     }
 
-    const codeText = await fs.readFile(routesPath, 'utf8')
-    const sourceFile = ts.createSourceFile(
-        routesPath,
-        codeText,
-        ts.ScriptTarget.Latest,
-        true,
-        ts.ScriptKind.TSX,
-    )
-
-    const routes = extractRoutesFromDefaultExport(sourceFile)
+    const routes = extractRoutes(await importRoutes(routesPath))
         .map((r) => ({ ...r, pattern: r.pattern.trim() }))
         .filter((r) => r.pattern.startsWith('/') && r.pattern !== '*')
 

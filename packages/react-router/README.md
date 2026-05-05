@@ -8,7 +8,7 @@ A lightweight, type-safe router for React with a CLI for generating URL helpers.
 ## Features
 
 - **Small footprint**: Focuses only on the essentials of routing.
-- **Type-safe URL generation**: CLI tool generates helper functions for your routes, ensuring you never have broken links.
+- **Type-safe URL generation**: CLI tool imports your route file and generates helper functions, ensuring you never have broken links.
 - **Support for `path-to-regexp`**: Familiar syntax for route patterns.
 - **Native `URLPattern` support**: Can use the browser's native `URLPattern` API.
 - **Hooks-based**: Easy access to current path and search parameters.
@@ -25,20 +25,22 @@ The package includes a CLI tool to generate type-safe route helpers from your ro
 
 ### Usage
 
-1. Define your routes in a `.tsx` (or `.ts`) file:
+1. Define your routes in a dedicated `.ts` file:
 
-```tsx
-// routes.tsx
+```ts
+// routes.ts
 export default [
-    { name: 'home', pattern: '/', component: Home },
-    { name: 'userProfile', pattern: '/user/:id', component: UserProfile },
+    { name: 'home', pattern: '/', component: () => import('./pages/Home') },
+    { name: 'userProfile', pattern: '/user/:id', component: () => import('./pages/UserProfile') },
 ]
 ```
+
+Keep this file side-effect-free. The CLI imports and evaluates the route file to extract route names and patterns, so avoid top-level browser access, data fetching, app bootstrapping, or eager page component imports. Put route components behind `() => import('./pages/...')` loaders so generation does not pull page modules into the CLI process.
 
 2. Run the generator:
 
 ```bash
-bunx @mpen/react-router routes.tsx -o src/routes.gen.ts
+bunx @mpen/react-router routes.ts -o src/routes.gen.ts
 ```
 
 3. Use the generated helpers:
@@ -59,7 +61,7 @@ import { Router } from '@mpen/react-router'
 import ROUTES from './routes'
 
 function App() {
-    return <Router routes={ROUTES} />
+    return <Router routes={ROUTES} loading={<div>Loading...</div>} />
 }
 ```
 

@@ -29,7 +29,7 @@
   },
   "scripts": {
     "build": "tsdown",
-    "gen": "bun src/bin.ts ./examples/routes.tsx -w",
+    "gen": "bun src/bin.ts ./examples/routes.ts -w",
     "serve": "bun --hot examples/index.html",
     "dev": "bun run --sequential gen serve"
   },
