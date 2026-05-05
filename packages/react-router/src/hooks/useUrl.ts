@@ -12,7 +12,6 @@ function subscribe(cb: () => void): () => void {
     }
 }
 
-
 export function useUrlPath(): string {
     return useSyncExternalStore(subscribe, getPathname, getPathname)
 }

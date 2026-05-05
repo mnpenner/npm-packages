@@ -1,1 +1,1 @@
-export { useAbsoluteUrl, useUrl, useUrlPath, useUrlSearchParams } from './useUrl'
+export { useUrlPath, useUrlSearchParams } from './useUrl'
