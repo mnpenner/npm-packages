@@ -201,6 +201,9 @@ async function main(options: Options, positionals: Positionals): Promise<number 
 
     printSummary(results)
 
+    console.log('\nUpdating README.md...')
+    await $`bun run scripts/update-readme.ts`.nothrow()
+
     if (failed) {
         return 1
     }

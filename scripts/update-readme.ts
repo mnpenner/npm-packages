@@ -13,7 +13,7 @@ import { mkdtemp, readdir, readFile, writeFile, unlink, rm } from 'node:fs/promi
 import { join } from 'node:path'
 import { br } from './lib/shell-exec'
 
-async function main(options: Options, positionals: Positionals): Promise<number | void> {
+async function main(_options: Options, _positionals: Positionals): Promise<number | void> {
     const packagesDir = 'packages'
     const packages = (await readdir(packagesDir, { withFileTypes: true }))
         .filter((dirent) => dirent.isDirectory())
@@ -24,9 +24,16 @@ async function main(options: Options, positionals: Positionals): Promise<number 
         displayName: string
         version: string
         hasDocs: boolean
+        hasTypes: boolean
         packSize: string
         funcs: number | null
         lines: number | null
+        status: {
+            lint: boolean
+            typecheck: boolean
+            format: boolean
+            test: boolean | 'none'
+        }
     }> = []
 
     const tempPackDir = await mkdtemp(join(tmpdir(), 'bun-pack-'))
@@ -38,14 +45,17 @@ async function main(options: Options, positionals: Positionals): Promise<number 
             let displayName = pkg
             let version = '—'
             let hasDocs = false
+            let hasTypes = false
             let packSize = '—'
             const pkgPath = join(packagesDir, pkg)
+
             try {
                 const pkgJson = JSON.parse(await readFile(join(pkgPath, 'package.json'), 'utf-8'))
                 displayName = pkgJson.name || pkg
                 version = pkgJson.version || '—'
                 const s = pkgJson.scripts || {}
                 hasDocs = !!(s.docs || s['build:docs'])
+                hasTypes = !!(pkgJson.types || pkgJson.typings)
 
                 // bun pm pack
                 const { stdout: packStdout, stderr: packStderr } =
@@ -67,14 +77,34 @@ async function main(options: Options, positionals: Positionals): Promise<number 
                 // No package.json or invalid
             }
 
+            // Run status checks
+            const [lintRes, typecheckRes, formatRes] = await Promise.all([
+                $`bun run lint packages/${pkg}`.nothrow().quiet(),
+                $`bun run typecheck ${pkg}`.nothrow().quiet(),
+                $`bun run --bun prettier packages/${pkg} --check`.nothrow().quiet(),
+            ])
+
             try {
-                const { stdout, stderr } = await $`bun test --coverage`
+                const { stdout, stderr, exitCode } = await $`bun test --coverage`
                     .cwd(pkgPath)
                     .nothrow()
                     .quiet()
                 const output = stdout.toString() + stderr.toString()
                 // Look for "All files                         |   XX.XX |   YY.YY |"
                 const match = output.match(/All files\s+\|\s+([\d.]+)\s+\|\s+([\d.]+)\s+\|/)
+
+                const status: {
+                    lint: boolean
+                    typecheck: boolean
+                    format: boolean
+                    test: boolean | 'none'
+                } = {
+                    lint: lintRes.exitCode === 0,
+                    typecheck: typecheckRes.exitCode === 0,
+                    format: formatRes.exitCode === 0,
+                    test: output.includes('No tests found!') ? 'none' : exitCode === 0,
+                }
+
                 if (match) {
                     const funcs = parseFloat(match[1])
                     const lines = parseFloat(match[2])
@@ -83,9 +113,11 @@ async function main(options: Options, positionals: Positionals): Promise<number 
                         displayName,
                         version,
                         hasDocs,
+                        hasTypes,
                         packSize,
                         funcs,
                         lines,
+                        status,
                     })
                     console.log(`Cov: ${funcs.toFixed(0)}%/${lines.toFixed(0)}% Size: ${packSize}`)
                 } else {
@@ -94,9 +126,11 @@ async function main(options: Options, positionals: Positionals): Promise<number 
                         displayName,
                         version,
                         hasDocs,
+                        hasTypes,
                         packSize,
                         funcs: null,
                         lines: null,
+                        status,
                     })
                     console.log(`Size: ${packSize}`)
                 }
@@ -106,9 +140,11 @@ async function main(options: Options, positionals: Positionals): Promise<number 
                     displayName,
                     version,
                     hasDocs,
+                    hasTypes,
                     packSize,
                     funcs: null,
                     lines: null,
+                    status: { lint: false, typecheck: false, format: false, test: false },
                 })
                 console.log('Error')
             }
@@ -120,19 +156,46 @@ async function main(options: Options, positionals: Positionals): Promise<number 
     results.sort((a, b) => a.displayName.localeCompare(b.displayName))
 
     let table =
-        '| Package | Version | Directory | Size (Packed/Unp.) | Coverage | Documentation |\n'
-    table += '| :--- | :--- | :--- | :--- | :--- | :--- |\n'
-    for (const { dirName, displayName, version, hasDocs, packSize, funcs, lines } of results) {
+        '| Package | Version | Directory | Size (Packed/Unp.) | Coverage | Status | Documentation |\n'
+    table += '| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n'
+    for (const {
+        dirName,
+        displayName,
+        version,
+        hasDocs,
+        hasTypes,
+        packSize,
+        funcs,
+        lines,
+        status,
+    } of results) {
         const funcsStr = funcs === null ? '—' : `${funcs.toFixed(0)}% 𝑓`
         const linesStr = lines === null ? '—' : `${lines.toFixed(0)}% L`
         const coverageStr = funcs === null && lines === null ? '—' : `${funcsStr} / ${linesStr}`
         const dirLink = `[${dirName}](https://github.com/mnpenner/npm-packages/tree/main/packages/${dirName})`
-        const docsLink = hasDocs
-            ? `[Docs](https://mnpenner.github.io/npm-packages/${dirName}/) `
-            : '—'
+
+        const docsLinks: string[] = []
+        if (hasTypes) {
+            docsLinks.push(`[npmx](https://npmx.dev/package-docs/${displayName})`)
+        }
+        if (hasDocs) {
+            docsLinks.push(`[TypeDoc](https://mnpenner.github.io/npm-packages/${dirName}/)`)
+        }
+        const docsStr = docsLinks.length > 0 ? docsLinks.join(' ') : '—'
+
+        const testIcon = status.test === 'none' ? 'Ø' : status.test ? '✓' : '✗'
+        const statusStr = [
+            status.lint ? '✓' : '✗',
+            status.typecheck ? '✓' : '✗',
+            status.format ? '✓' : '✗',
+            testIcon,
+        ].join(' ')
+
         const pkgLink = `[\`${displayName}\`](https://npmx.dev/package/${displayName})`
-        table += `| ${pkgLink} | ${version} | ${dirLink} | ${packSize} | ${coverageStr} | ${docsLink} |\n`
+        table += `| ${pkgLink} | ${version} | ${dirLink} | ${packSize} | ${coverageStr} | ${statusStr} | ${docsStr} |\n`
     }
+
+    table += '\n**Status Legend:** lint, typecheck, format, tests\n'
 
     const readmePath = 'README.md'
     let readme = await readFile(readmePath, 'utf-8')
@@ -184,3 +247,4 @@ if (import.meta.main) {
     )
 }
 //#endregion
+
