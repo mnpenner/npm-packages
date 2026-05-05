@@ -156,7 +156,7 @@ async function main(_options: Options, _positionals: Positionals): Promise<numbe
     results.sort((a, b) => a.displayName.localeCompare(b.displayName))
 
     let table =
-        '| Package | Version | Directory | Size (Packed/Unp.) | Coverage | Status | Documentation |\n'
+        '| Package | Version | Directory | Size (Packed/Unp.) | Coverage | Status | API Docs |\n'
     table += '| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n'
     for (const {
         dirName,

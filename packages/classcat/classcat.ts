@@ -1,5 +1,8 @@
-// https://github.com/jorgebucaran/classcat/blob/b4aa45aae2f026071164981dd065efc42e805023/index.js
-// https://github.com/lukeed/clsx/blob/925494cf31bcd97d3337aacd34e659e80cae7fe2/src/index.js
+// https://github.com/jorgebucaran/classcat/blob/b4aa45aae2f026071164981dd065efc42e805023/index.js#L1
+// https://github.com/lukeed/clsx/blob/925494cf31bcd97d3337aacd34e659e80cae7fe2/src/index.js#L30
+// https://github.com/lukeed/clsx/blob/925494cf31bcd97d3337aacd34e659e80cae7fe2/src/lite.js#L1
+// https://github.com/JedWatson/classnames/blob/6e3d26f6d7af060e1b4514c4405120ae8ed055d8/index.js#L3
+
 export type ClassValue = string | number | boolean | null | undefined | ClassArray | ClassObject
 export interface ClassArray extends Array<ClassValue> {}
 export type ClassObject = Record<string, any>
