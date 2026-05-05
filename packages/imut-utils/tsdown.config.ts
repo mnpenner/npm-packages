@@ -2,7 +2,7 @@ import { defineConfig } from 'tsdown'
 
 export default defineConfig({
   entry: {
-    index: './src/index.ts',
+    index: './src/imp/index.ts',
     fp: './src/fp/index.ts',
   },
   platform: 'neutral',

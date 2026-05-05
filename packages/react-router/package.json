@@ -1,13 +1,14 @@
 {
   "name": "@mpen/react-router",
-  "module": "./dist/index.js",
+  "version": "0.1.0",
   "exports": {
     ".": "./dist/index.js",
+    "./bin": "./dist/bin.js",
     "./hooks": "./dist/hooks.js",
     "./package.json": "./package.json"
   },
   "bin": {
-    "react-router-gen-routes": "./src/bin/gen-routes.ts"
+    "react-router": "./dist/bin.js"
   },
   "type": "module",
   "dependencies": {
@@ -18,6 +19,7 @@
     "typescript": "^5"
   },
   "devDependencies": {
+    "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19.2.3",
     "react-dom": "^19.2.3",
@@ -25,12 +27,13 @@
   },
   "scripts": {
     "build": "tsdown",
-    "gen": "bun ./src/bin/gen-routes.ts ./examples/routes.tsx -o ./examples/routes.gen.ts && bun ./src/bin/gen-routes.ts ./examples/routes.tsx -o ./examples/routes-options.gen.ts --wildcard-delimiter \",\" --encode-function encodeURI",
+    "gen": "bun src/bin.ts ./examples/routes.tsx -w && bun ./src/bin.ts ./examples/routes.tsx -o ./examples/routes-options.gen.ts --wildcard-delimiter \",\" --encode-function encodeURI",
     "dev": "bun --hot examples/index.html"
   },
-  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js"
 }

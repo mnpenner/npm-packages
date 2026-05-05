@@ -6,13 +6,16 @@ export default defineConfig({
         index: 'src/index.ts',
         hooks: 'src/hooks/index.ts',
     },
+    format: 'esm',
     platform: 'browser',
-    format: ['esm'],
     deps: {
         neverBundle: [/^(node|bun):/, 'react'],
     },
     exports: {
         legacy: true,
+        bin: {
+            'react-router': './src/bin.ts',
+        },
     },
     dts: true, // The client must use "moduleResolution": "bundler", "node16" or "nodenext". "node" will not resolve the types properly.
 })

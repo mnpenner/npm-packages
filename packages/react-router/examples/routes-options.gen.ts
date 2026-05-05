@@ -1,10 +1,10 @@
 // Do not modify this file. It was auto-generated with the following command:
-// $ bun src/bin/gen-routes.ts ./examples/routes.tsx -o ./examples/routes-options.gen.ts --wildcard-delimiter "," --encode-function encodeURI
+// $ react-router ./examples/routes.tsx -o ./examples/routes-options.gen.ts --wildcard-delimiter ',' --encode-function encodeURI
 
-type __AllOrNone<T> = Required<T> | { [K in keyof T]?: never }
+type AllOrNone<T> = Required<T> | { [K in keyof T]?: never }
 
-type __ParamType = string | number | boolean
-type __WildcardType = Iterable<__ParamType>
+type ParamType = string | number | boolean
+type WildcardType = Iterable<ParamType>
 
 export function home(): string {
     let sb = ''
@@ -16,12 +16,12 @@ export function home(): string {
 
 export function kitchenSink(
     params: {
-        foo: __ParamType
-        baz: __ParamType
-        splat: __WildcardType
-    } & __AllOrNone<{
-        optional: __ParamType
-        two: __ParamType
+        foo: ParamType
+        baz: ParamType
+        splat: WildcardType
+    } & AllOrNone<{
+        optional: ParamType
+        two: ParamType
     }>,
 ): string {
     let sb = ''
@@ -56,7 +56,7 @@ export function login(): string {
     return sb
 }
 
-export function match(params: { id: __ParamType }): string {
+export function match(params: { id: ParamType }): string {
     let sb = ''
 
     if (params['id'] == null) throw new Error('Missing param: id')

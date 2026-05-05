@@ -1,10 +1,22 @@
-#!/usr/bin/env -S bun
+#!/usr/bin/env node
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { parseArgs } from 'node:util'
-import * as ts from 'typescript'
-import { $ } from 'bun'
+import process from 'node:process'
+import { fileURLToPath } from 'node:url'
+import { parseArgs, type ParseArgsConfig } from 'node:util'
 import { parse } from 'path-to-regexp'
+import * as ts from 'typescript'
+
+const PARSE_CONFIG = {
+    options: {
+        output: { type: 'string', short: 'o' },
+        write: { type: 'boolean', short: 'w' },
+        'wildcard-delimiter': { type: 'string' },
+        'encode-function': { type: 'string' },
+    },
+    allowPositionals: true,
+    strict: true,
+} satisfies ParseArgsConfig
 
 type CompileOptions = {
     delimiter?: string
@@ -14,6 +26,11 @@ type CompileOptions = {
 
 function escapeString(value: string): string {
     return JSON.stringify(value)
+}
+
+function shellEscape(arg: string): string {
+    if (/^[a-z0-9/_.-]+$/i.test(arg)) return arg
+    return `'${arg.replace(/'/g, "'\\''")}'`
 }
 
 function compilePathGenerator(
@@ -31,7 +48,7 @@ function compilePathGenerator(
     const baseProps: Prop[] = []
     const groupTypes: string[] = []
 
-    const typeOfParam = (t: any) => (t.type === 'wildcard' ? '__WildcardType' : '__ParamType')
+    const typeOfParam = (t: any) => (t.type === 'wildcard' ? 'WildcardType' : 'ParamType')
     const makeProp = (name: string, t: any): Prop => ({ name, type: typeOfParam(t) })
 
     function collectGroupProps(ts2: any[]): Prop[] {
@@ -55,7 +72,7 @@ function compilePathGenerator(
                         ...groupProps.map((p) => `    ${escapeString(p.name)}: ${p.type}`),
                         '}',
                     ].join('\n')
-                    groupTypes.push(`__AllOrNone<${some}>`)
+                    groupTypes.push(`AllOrNone<${some}>`)
                 }
                 collectTypes(t.tokens, false)
             }
@@ -232,30 +249,25 @@ function extractRoutesFromDefaultExport(sourceFile: ts.SourceFile): ExtractedRou
     return routes
 }
 
-async function main(argv: string[] = Bun.argv): Promise<void> {
-    const { positionals, values } = parseArgs({
-        args: argv,
-        allowPositionals: true,
-        strict: true,
-        options: {
-            output: { type: 'string', short: 'o' },
-            'wildcard-delimiter': { type: 'string' },
-            'encode-function': { type: 'string' },
-        },
-    })
-
-    const [, , routesPathArg] = positionals
+async function main(options: Options, positionals: Positionals): Promise<number | void> {
+    const [routesPathArg] = positionals
     if (!routesPathArg) {
         console.error(
-            'Usage: bun src/bin/gen-routes.ts <routes-file> [-o <output-file>] [--wildcard-delimiter <string>] [--encode-function <identifier>]',
+            'Usage: react-router <routes-file> [-o <output-file>] [-w] [--wildcard-delimiter <string>] [--encode-function <identifier>]',
         )
-        process.exit(1)
+        return 1
     }
 
     const routesPath = path.resolve(process.cwd(), routesPathArg)
-    const outputPath = (values.output as string | undefined)
-        ? path.resolve(process.cwd(), values.output as string)
-        : path.join(path.dirname(routesPath), 'routes.gen.ts')
+    let outputPath: string | undefined
+    if (options.output) {
+        outputPath = path.resolve(process.cwd(), options.output as string)
+    } else if (options.write) {
+        outputPath = path.join(
+            path.dirname(routesPath),
+            path.basename(routesPath, path.extname(routesPath)) + '.gen.ts',
+        )
+    }
 
     const codeText = await fs.readFile(routesPath, 'utf8')
     const sourceFile = ts.createSourceFile(
@@ -270,25 +282,24 @@ async function main(argv: string[] = Bun.argv): Promise<void> {
         .map((r) => ({ ...r, pattern: r.pattern.trim() }))
         .filter((r) => r.pattern.startsWith('/') && r.pattern !== '*')
 
-    const wildcardDelimiter = (values['wildcard-delimiter'] as string | undefined) ?? '/'
-    const encodeFunction = (values['encode-function'] as string | undefined) ?? 'encodeURIComponent'
+    const wildcardDelimiter = (options['wildcard-delimiter'] as string | undefined) ?? '/'
+    const encodeFunction =
+        (options['encode-function'] as string | undefined) ?? 'encodeURIComponent'
 
-    const rawArgs = argv.slice(1)
-    if (rawArgs[0] && path.isAbsolute(rawArgs[0])) {
-        rawArgs[0] = path.relative(process.cwd(), rawArgs[0]).replace(/\\/g, '/')
-    }
-    const commandText = ['bun', ...rawArgs.map((arg) => $.escape(arg))].join(' ')
+    const argv = process.argv
+    const rawArgs = argv.slice(2)
+    const commandText = ['react-router', ...rawArgs.map(shellEscape)].join(' ')
 
     const out: string[] = []
     out.push(`// Do not modify this file. It was auto-generated with the following command:`)
     out.push(`// $ ${commandText}`)
     out.push(``)
-    out.push(`type __AllOrNone<T> =`)
+    out.push(`type AllOrNone<T> =`)
     out.push(`    | Required<T>`)
     out.push(`    | { [K in keyof T]?: never }`)
     out.push(``)
-    out.push(`type __ParamType = string | number | boolean`)
-    out.push(`type __WildcardType = Iterable<__ParamType>`)
+    out.push(`type ParamType = string | number | boolean`)
+    out.push(`type WildcardType = Iterable<ParamType>`)
     out.push(``)
 
     if (!routes.length) {
@@ -316,11 +327,33 @@ async function main(argv: string[] = Bun.argv): Promise<void> {
         }
     }
 
-    await fs.writeFile(outputPath, out.join('\n'), 'utf8')
-    console.log(`Wrote ${outputPath}`)
+    const finalOutput = out.join('\n')
+    if (outputPath) {
+        await fs.writeFile(outputPath, finalOutput, 'utf8')
+        console.error(`Wrote ${outputPath}`)
+    } else {
+        process.stdout.write(finalOutput)
+    }
 }
 
-main().catch((err) => {
-    console.error(err)
-    process.exit(1)
-})
+//#region Invoke main
+type ParsedConfig = ReturnType<typeof parseArgs<typeof PARSE_CONFIG>>
+type Options = ParsedConfig['values']
+type Positionals = ParsedConfig['positionals']
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+    const { values, positionals } = parseArgs(PARSE_CONFIG)
+
+    main(values, positionals).then(
+        (exitCode) => {
+            if (typeof exitCode === 'number') {
+                process.exitCode = exitCode
+            }
+        },
+        (err) => {
+            console.error(err ?? 'An unknown error occurred')
+            process.exitCode = 1
+        },
+    )
+}
+//#endregion
