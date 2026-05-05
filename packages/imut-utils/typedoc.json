@@ -1,6 +1,6 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "entryPoints": ["./src/index.ts", "./src/secondary-entry.ts"],
+  "entryPoints": ["./src/index.ts", "./src/fp/index.ts"],
   "out": "docs",
   "gitRemote": "default",
   "gitRevision": "default",

@@ -13,7 +13,7 @@
 - Target esnext/bundler/module
 - This is a Mercurial (hg) repo. Do not try to run git commands.
 - For new packages, update the root `tsconfig.json` and `eslint.config.ts` as needed
-  - `scripts/tspaths.ts` can be reused to refresh `paths` in `tsconfig.json`
+    - `scripts/tspaths.ts` can be reused to refresh `paths` in `tsconfig.json`
 - Add detailed [TSDoc](https://tsdoc.org) comments including @example blocks, @param and @returns to all public APIs,
   including all function overloads
     - The public API is the `entry` point(s) listed in `tsdown.config.ts`

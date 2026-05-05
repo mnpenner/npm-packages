@@ -242,12 +242,14 @@ export async function getMysqlUsers(conn: ConnectionPool) {
                 const dbName = tblPriv.Db.trimEnd()
                 const tblName = tblPriv.Table_name.trimEnd()
                 outUser.tablePrivileges[dbName] ??= {}
-                outUser.tablePrivileges[dbName][tblName] = tblPriv.Table_priv.split(',').map((p: string) => {
-                    if (TABLE_PRIVILEGES[p]) {
-                        return TABLE_PRIVILEGES[p]
-                    }
-                    throw new Error(`Unknown privilege: ${p}`)
-                })
+                outUser.tablePrivileges[dbName][tblName] = tblPriv.Table_priv.split(',').map(
+                    (p: string) => {
+                        if (TABLE_PRIVILEGES[p]) {
+                            return TABLE_PRIVILEGES[p]
+                        }
+                        throw new Error(`Unknown privilege: ${p}`)
+                    },
+                )
             }
         }
 

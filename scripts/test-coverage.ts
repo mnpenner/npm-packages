@@ -11,7 +11,7 @@ const PARSE_CONFIG = {
 import { tmpdir } from 'node:os'
 import { mkdtemp, readdir, readFile, writeFile, unlink, rm } from 'node:fs/promises'
 import { join } from 'node:path'
-import { br, sh } from './lib/shell-exec'
+import { br } from './lib/shell-exec'
 
 async function main(options: Options, positionals: Positionals): Promise<number | void> {
     const packagesDir = 'packages'

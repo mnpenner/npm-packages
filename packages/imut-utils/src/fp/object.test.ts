@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'bun:test'
-import { fpObjSet, fpRelaxedMerge, fpShallowMerge } from './object'
-import { fpMapSet } from './map'
-import type { Next } from './resolvable'
+import { objSet, relaxedMerge, shallowMerge } from './object'
+import { mapSet } from '../fp/map'
+import type { Next } from '../resolvable'
 
-describe(fpShallowMerge.name, () => {
+describe('shallowMerge', () => {
   it('uses expected precedence', () => {
     expect(
-      fpShallowMerge<Record<string, number>>({ b: 2, c: 9 }, { c: 3, d: 4 })({ a: 1, d: 9 }),
+      shallowMerge<Record<string, number>>({ b: 2, c: 9 }, { c: 3, d: 4 })({ a: 1, d: 9 }),
     ).toEqual({
       a: 1,
       b: 2,
@@ -15,19 +15,19 @@ describe(fpShallowMerge.name, () => {
     })
   })
   it('allows undefined input', () => {
-    expect(
-      fpRelaxedMerge<Record<string, number>>({ b: 2, c: 9 }, { c: 3, d: 4 })(undefined),
-    ).toEqual({
-      b: 2,
-      c: 3,
-      d: 4,
-    })
+    expect(relaxedMerge<Record<string, number>>({ b: 2, c: 9 }, { c: 3, d: 4 })(undefined)).toEqual(
+      {
+        b: 2,
+        c: 3,
+        d: 4,
+      },
+    )
   })
   it('resolves values in order', () => {
     expect(
-      fpShallowMerge<Record<string, number>>(
-        { a: 2, b: (b) => b * 2 },
-        { a: (a) => a + 1, b: (b) => b + 1 },
+      shallowMerge<Record<string, number>>(
+        { a: 2, b: (b: number) => b * 2 },
+        { a: (a: number) => a + 1, b: (b: number) => b + 1 },
       )({
         a: 1,
         b: 2,
@@ -41,7 +41,7 @@ describe(fpShallowMerge.name, () => {
     type ObjType = { alpha: string; beta: string; gamma: string }
     const dasherize = (value: string, key: string) => `${key}-${value}`
     expect(
-      fpShallowMerge<ObjType>({ alpha: dasherize, beta: dasherize })({
+      shallowMerge<ObjType>({ alpha: dasherize, beta: dasherize })({
         alpha: 'a',
         beta: 'b',
         gamma: 'c',
@@ -55,7 +55,7 @@ describe(fpShallowMerge.name, () => {
   it('merge in undefined if you want', () => {
     type ObjType = { alpha: string; beta: string; gamma: string }
     const orig: ObjType = { alpha: 'a', beta: 'b', gamma: 'c' }
-    const ret = fpRelaxedMerge<ObjType>(undefined, null)(orig)
+    const ret = relaxedMerge<ObjType>(undefined, null)(orig)
     expect(ret).toEqual({
       alpha: 'a',
       beta: 'b',
@@ -65,7 +65,7 @@ describe(fpShallowMerge.name, () => {
   })
   it('default is null', () => {
     type ObjType = { alpha: string; beta: string; gamma: string }
-    expect(fpRelaxedMerge<ObjType>({ alpha: 'a', beta: 'b' }, { gamma: 'c' })(null)).toEqual({
+    expect(relaxedMerge<ObjType>({ alpha: 'a', beta: 'b' }, { gamma: 'c' })(null)).toEqual({
       alpha: 'a',
       beta: 'b',
       gamma: 'c',
@@ -74,7 +74,7 @@ describe(fpShallowMerge.name, () => {
   it("doesn't mutate", () => {
     type ObjType = { alpha: string; beta: string; gamma: string }
     const orig: ObjType = { alpha: 'a', beta: 'b', gamma: 'c' }
-    const ret = fpShallowMerge<ObjType>({ alpha: 'foo' })(orig)
+    const ret = shallowMerge<ObjType>({ alpha: 'foo' })(orig)
     expect(orig).toStrictEqual({
       alpha: 'a',
       beta: 'b',
@@ -96,9 +96,7 @@ describe(fpShallowMerge.name, () => {
     const setState = (fn: (prev: State) => State) => {
       state = fn(state)
     }
-    // I can't get this to work without explicitly setting the <Type>
-    // https://stackoverflow.com/questions/75432863/how-to-get-typescript-to-infer-type-from-the-function-its-being-passed-to
-    setState(fpShallowMerge<State>({ xOffset: 2, yOffset: 3 }))
+    setState(shallowMerge<State>({ xOffset: 2, yOffset: 3 }))
   })
   it('handles disjunct types', () => {
     type Key = string
@@ -126,8 +124,8 @@ describe(fpShallowMerge.name, () => {
       ]),
     }
 
-    const result = fpShallowMerge<Store>({
-      data: fpMapSet<Key, Value>('b', {
+    const result = shallowMerge<Store>({
+      data: mapSet<Key, Value>('b', {
         type: 'B',
         b: 2,
       }),
@@ -158,7 +156,7 @@ describe(fpShallowMerge.name, () => {
     const s2 = Symbol()
     const s3 = Symbol()
 
-    const result = fpShallowMerge<any>({
+    const result = shallowMerge<any>({
       b: 2,
       [s2]: 'xxx',
       [s3]: 's3',
@@ -177,7 +175,7 @@ describe(fpShallowMerge.name, () => {
   })
 })
 
-describe(fpObjSet.name, () => {
+describe('objSet', () => {
   type Size = {
     width: number
     height: number
@@ -185,7 +183,7 @@ describe(fpObjSet.name, () => {
 
   it('basic', () => {
     const oldSize: Size = { width: 512, height: 768 }
-    const newSize = fpObjSet<Size>('width', (w) => w + 64)(oldSize)
+    const newSize = objSet<Size>('width', (w) => w + 64)(oldSize)
     expect(newSize).toEqual({
       width: 576,
       height: 768,
@@ -211,10 +209,10 @@ describe(fpObjSet.name, () => {
       output: 0.01,
     }
     setState(
-      fpShallowMerge<UsageState>({
-        usage: fpObjSet(
+      shallowMerge<UsageState>({
+        usage: objSet(
           info.id,
-          fpShallowMerge<UsageType>({
+          shallowMerge<UsageType>({
             output: (o) => (o ?? 0) + tokensUsed,
           }),
         ),
@@ -222,10 +220,4 @@ describe(fpObjSet.name, () => {
       }),
     )
   })
-  // it('creates objects', () => {
-  //     const newSize = fpObjSet<Size>('width', 128)(null)
-  //     expect(newSize).toEqual({
-  //         width: 128,
-  //     })
-  // })
 })

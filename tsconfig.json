@@ -97,7 +97,9 @@
             "neverject/invoke": ["./packages/neverject/src/invoke/index.ts"],
             "neverject/result": ["./packages/neverject/src/result/index.ts"],
             "@mpen/react-router/hooks": ["./packages/react-router/src/hooks/index.ts"],
-            "@mpen/server-router/helpers/zod": ["./packages/server-router/src/helpers/zod/index.ts"],
+            "@mpen/server-router/helpers/zod": [
+                "./packages/server-router/src/helpers/zod/index.ts"
+            ],
             "@mpen/server-router/middleware": ["./packages/server-router/src/middleware/index.ts"],
             "@mpen/server-router/plugins/openapi": [
                 "./packages/server-router/src/plugins/openapi/index.ts"

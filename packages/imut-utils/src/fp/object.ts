@@ -1,6 +1,6 @@
-import type { Resolvable } from './resolvable'
-import { resolveValue } from './resolvable'
-import type { AnyFn, nil } from './types'
+import type { Resolvable } from '../resolvable'
+import { resolveValue } from '../resolvable'
+import type { AnyFn, nil } from '../types'
 
 const ownKeys: <T extends object>(o: T) => Array<keyof T> = Reflect.ownKeys as AnyFn
 
@@ -11,7 +11,7 @@ const ownKeys: <T extends object>(o: T) => Array<keyof T> = Reflect.ownKeys as A
  * The target object *should* be the full object (with all keys defined), and the objects to be merged may be partial.
  * If the target and objects to be merged do not sum up to the full object then the return type will be invalid.
  */
-export function fpShallowMerge<T extends {}>(
+export function shallowMerge<T extends {}>(
   ...objects: Array<{
     [K in keyof T]?: Resolvable<T[K], [T[K], K]>
   }>
@@ -21,7 +21,6 @@ export function fpShallowMerge<T extends {}>(
     if (!filtered.length) {
       return obj
     }
-    // const ret = Object.assign(Object.create(null), obj)
     const ret = { __proto__: null, ...obj } as T
     for (const o of filtered) {
       for (const k of ownKeys(o)) {
@@ -33,12 +32,12 @@ export function fpShallowMerge<T extends {}>(
 }
 
 /**
- * Exactly the same as {@link fpShallowMerge} but the types are relaxed to accept `undefined` and `null`. You may want
+ * Exactly the same as {@link shallowMerge} but the types are relaxed to accept `undefined` and `null`. You may want
  * to use this version when the target object is potentially undefined but you know that the to-be merged objects will
  * result in a full object. This version is harder for TypeScript to infer the proper type, so you may need to
  * explicitly pass `<T>`.
  */
-export const fpRelaxedMerge: {
+export const relaxedMerge: {
   <T>(
     ...objects: Array<
       | {
@@ -47,9 +46,9 @@ export const fpRelaxedMerge: {
       | nil
     >
   ): (obj: T | nil) => T & {}
-} = fpShallowMerge as any
+} = shallowMerge as any
 
-export function fpObjSet<T extends {}>(
+export function objSet<T extends {}>(
   key: keyof T,
   value: Resolvable<T[typeof key], [T[typeof key]]>,
 ) {

@@ -1,17 +1,13 @@
-import type { nil } from './types'
-import { assert, binarySearch } from './extra'
-import type { Resolvable } from './resolvable'
-import { resolveValue } from './resolvable'
+import type { nil } from '../types'
+import { assert, binarySearch } from '../extra'
+import type { Resolvable } from '../resolvable'
+import { resolveValue } from '../resolvable'
 
 /**
  * Appends elements onto the end of the array.
  */
 export function arrayPush<T>(array: T[] | nil, ...values: T[]): T[] {
   return [...(array ?? []), ...values]
-}
-
-export function fpArrayPush<T>(...values: T[]) {
-  return (a: T[] | nil) => arrayPush(a, ...values)
 }
 
 /**
@@ -25,10 +21,6 @@ export function arrayPop<T>(array: T[] | nil, howMany = 1): T[] {
   return array.slice(0, -howMany)
 }
 
-export function fpArrayPop<T>(howMany = 1) {
-  return (a: T[] | nil) => arrayPop(a, howMany)
-}
-
 /**
  * Insert one or more elements into an array at the given position.
  */
@@ -36,10 +28,6 @@ export function arrayInsert<T>(array: T[] | nil, index: number, ...values: T[]):
   const copy = array ? [...array] : []
   copy.splice(index, 0, ...values)
   return copy
-}
-
-export function fpArrayInsert<T>(index: number, ...values: T[]) {
-  return (a: T[] | nil) => arrayInsert(a, index, ...values)
 }
 
 /**
@@ -57,19 +45,11 @@ export function arrayInsertSorted(array: number[] | nil, ...values: number[]): n
   return copy
 }
 
-export function fpArrayInsertSorted<T>(...values: number[]) {
-  return (a: number[] | nil) => arrayInsertSorted(a, ...values)
-}
-
 /**
  * Prepends elements onto the end of the array.
  */
 export function arrayUnshift<T>(array: T[] | nil, ...values: T[]): T[] {
   return [...values, ...(array ?? [])]
-}
-
-export function fpArrayUnshift<T>(...values: T[]) {
-  return (a: T[] | nil) => arrayUnshift(a, ...values)
 }
 
 /**
@@ -83,14 +63,6 @@ export function arrayDeleteIndex<T>(array: T[] | nil, ...indices: number[]): T[]
     ret.splice(i, 1)
   }
   return ret
-}
-
-export function fpArrayDeleteIndex<T>(...indices: number[]) {
-  return (a: T[] | nil) => arrayDeleteIndex(a, ...indices)
-}
-
-function looseEq(a: any, b: any) {
-  return a == b
 }
 
 function fpLooseEq(value: any) {
@@ -112,13 +84,6 @@ export function arrayDeleteOneValue<T>(array: T[] | nil, value: T, strict: boole
 }
 
 /**
- * @deprecated
- */
-export function fpArrayDeleteOneValue<T>(value: T, strict: boolean) {
-  return (a: T[] | nil) => arrayDeleteOneValue(a, value, strict)
-}
-
-/**
  * Deletes up to one element from an array, searching by value.
  */
 export function arrayDeleteValue<T>(
@@ -128,10 +93,6 @@ export function arrayDeleteValue<T>(
   limit?: number,
 ): T[] {
   return arrayReject(array, strict ? (x) => Object.is(x, value) : (x) => x == value, limit)
-}
-
-export function fpArrayDeleteValue<T>(value: T, strict: boolean, limit?: number) {
-  return (a: T[] | nil) => arrayDeleteValue(a, value, strict, limit)
 }
 
 /**
@@ -158,10 +119,6 @@ export function arraySelect<T>(
   return selected
 }
 
-export function fpArraySelect<T>(predicate: (v: T, i: number) => boolean, limit?: number) {
-  return (a: T[] | nil) => arraySelect(a, predicate, limit)
-}
-
 /**
  * Removes elements that do *not* pass the predicate.
  * If limit is provided, at most that many elements will be deleted. i.e. new length will be >= array.length - limit.
@@ -186,10 +143,6 @@ export function arrayReject<T>(
     }
   }
   return selected
-}
-
-export function fpArrayReject<T>(predicate: (v: T, i: number) => boolean, limit?: number) {
-  return (a: T[]) => arrayReject(a, predicate, limit)
 }
 
 export function arraySort<T>(array: T[] | nil, compareFn: (a: T, b: T) => number) {
@@ -248,12 +201,8 @@ export function arraySplice<T>(
   return [...array.slice(0, index), ...replaceWith, ...array.slice(index + count)]
 }
 
-export function fpArraySplice<T>(index: number, count = 1, ...replaceWith: T[]) {
-  return (a: T[] | nil) => arraySplice(a, index, count, ...replaceWith)
-}
-
-type ArrayPredicate<T> = (v: T, i: number) => boolean
-type ArrayElementResolvable<T> = Resolvable<T, [T, number]>
+export type ArrayPredicate<T> = (v: T, i: number) => boolean
+export type ArrayElementResolvable<T> = Resolvable<T, [T, number]>
 
 export function arrayFindAndReplace<T>(
   array: T[],
@@ -263,13 +212,6 @@ export function arrayFindAndReplace<T>(
   const idx = array.findIndex(predicate)
   if (idx < 0) return array
   return arraySplice(array, idx, 1, resolveValue(replaceWith, array[idx], idx))
-}
-
-export function fpArrayFindAndReplace<T>(
-  predicate: ArrayPredicate<T>,
-  replaceWith: ArrayElementResolvable<T>,
-) {
-  return (a: T[] | nil) => arrayFindAndReplace(a ?? [], predicate, replaceWith)
 }
 
 /**

@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'bun:test'
-import { fpMapDelete, fpMapSet, fpMapUpdate, fpMergeMap, mapPush } from './map'
-import { fpArrayDeleteOneValue, fpArrayPush, fpArraySelect, fpArrayUnshift } from './array'
+import { mapDelete, mapSet, mapUpdate, mergeMap } from './map'
+import { arrayDeleteOneValue, arrayPush, arraySelect, arrayUnshift } from '../fp/array'
 
-describe(fpMapSet.name, () => {
+describe('mapSet', () => {
   it('overwrites values', () => {
     const map = new Map([
       ['a', 1],
       ['b', 2],
     ])
-    const out = fpMapSet<string, number>('b', 3)(map)
+    const out = mapSet<string, number>('b', 3)(map)
     expect(out).not.toBe(map)
     expect(out).toStrictEqual(
       new Map([
@@ -22,7 +22,7 @@ describe(fpMapSet.name, () => {
       ['a', 1],
       ['b', 2],
     ])
-    const out = fpMapSet<string, number>('c', 3)(map)
+    const out = mapSet<string, number>('c', 3)(map)
     expect(out).not.toBe(map)
     expect(out).toStrictEqual(
       new Map([
@@ -37,7 +37,7 @@ describe(fpMapSet.name, () => {
       ['a', 1],
       ['b', 2],
     ])
-    const out = fpMapSet<string, number>('b', (v) => (v ?? 0) * 2)(map)
+    const out = mapSet<string, number>('b', (v) => (v ?? 0) * 2)(map)
     expect(out).not.toBe(map)
     expect(out).toStrictEqual(
       new Map([
@@ -48,13 +48,13 @@ describe(fpMapSet.name, () => {
   })
 })
 
-describe(fpMapUpdate.name, () => {
+describe('mapUpdate', () => {
   it('sets', () => {
     const map = new Map([
       ['a', 1],
       ['b', 2],
     ])
-    const out = fpMapUpdate<string, number>('b', 3)(map)
+    const out = mapUpdate<string, number>('b', 3)(map)
     expect(out).not.toBe(map)
     expect(out).toStrictEqual(
       new Map([
@@ -65,7 +65,7 @@ describe(fpMapUpdate.name, () => {
   })
   it("doesn't set values that don't already exist", () => {
     expect(
-      fpMapUpdate<string, number>(
+      mapUpdate<string, number>(
         'b',
         3,
       )(
@@ -81,7 +81,7 @@ describe(fpMapUpdate.name, () => {
       ]),
     )
     expect(
-      fpMapUpdate<string, number>(
+      mapUpdate<string, number>(
         'c',
         3,
       )(
@@ -102,7 +102,7 @@ describe(fpMapUpdate.name, () => {
       ['a', 1],
       ['b', 2],
     ])
-    const out = fpMapUpdate<string, number>('b', (v) => v * 2)(map)
+    const out = mapUpdate<string, number>('b', (v) => v * 2)(map)
     expect(out).not.toBe(map)
     expect(out).toStrictEqual(
       new Map([
@@ -113,23 +113,23 @@ describe(fpMapUpdate.name, () => {
   })
 })
 
-describe(fpMapDelete.name, () => {
+describe('mapDelete', () => {
   it('deletes', () => {
     const map = new Map([
       ['a', 1],
       ['b', 2],
     ])
-    const out = fpMapDelete('b')(map)
+    const out = mapDelete('b')(map)
     expect(out).not.toBe(map)
     expect(out).toStrictEqual(new Map([['a', 1]]))
   })
   it('works with nil map', () => {
-    expect(fpMapDelete('a')(null)).toStrictEqual(new Map())
-    expect(fpMapDelete('b')(undefined)).toStrictEqual(new Map())
+    expect(mapDelete('a')(null)).toStrictEqual(new Map())
+    expect(mapDelete('b')(undefined)).toStrictEqual(new Map())
   })
   it("works when doesn't match", () => {
     expect(
-      fpMapDelete('c')(
+      mapDelete('c')(
         new Map([
           ['a', 1],
           ['b', 2],
@@ -144,7 +144,7 @@ describe(fpMapDelete.name, () => {
   })
   it('deletes multiple', () => {
     expect(
-      fpMapDelete(
+      mapDelete(
         'a',
         'c',
       )(
@@ -158,7 +158,7 @@ describe(fpMapDelete.name, () => {
   })
 })
 
-describe(fpMergeMap.name, () => {
+describe('mergeMap', () => {
   it('merges', () => {
     const map1 = new Map([
       ['a', 1],
@@ -168,7 +168,7 @@ describe(fpMergeMap.name, () => {
       ['b', 3],
       ['c', 4],
     ])
-    const out = fpMergeMap(map2)(map1)
+    const out = mergeMap(map2)(map1)
     expect(out).toStrictEqual(
       new Map([
         ['a', 1],
@@ -182,7 +182,7 @@ describe(fpMergeMap.name, () => {
       ['a', 1],
       ['b', 2],
     ])
-    const out = fpMergeMap<string, number>((m) => [
+    const out = mergeMap<string, number>((m) => [
       ['b', (v) => (v ?? 0) * 2],
       ['a', (m.get('b') ?? 0) * 3],
     ])(map)
@@ -199,11 +199,11 @@ describe(fpMergeMap.name, () => {
       ['b', [2, 3]],
       ['d', [4, 5, 6]],
     ])
-    const out = fpMergeMap<string, number[]>([
-      ['a', fpArrayPush(1)],
-      ['b', fpArrayDeleteOneValue(3, true)],
-      ['c', fpArrayUnshift(3, 4)],
-      ['d', fpArraySelect((v) => v > 4)],
+    const out = mergeMap<string, number[]>([
+      ['a', arrayPush(1)],
+      ['b', arrayDeleteOneValue(3, true)],
+      ['c', arrayUnshift(3, 4)],
+      ['d', arraySelect((v) => v > 4)],
     ])(map)
     expect(out).toStrictEqual(
       new Map([
@@ -220,7 +220,7 @@ describe(fpMergeMap.name, () => {
       ['a', 'alpha'],
       ['b', 'beta'],
     ])
-    const out = fpMergeMap<string, string>((m) => [
+    const out = mergeMap<string, string>((m) => [
       ['a', setValueToKey],
       ['b', setValueToKey],
       ['c', setValueToKey],
@@ -230,25 +230,6 @@ describe(fpMergeMap.name, () => {
         ['a', 'a-alpha'],
         ['b', 'b-beta'],
         ['c', 'c-undefined'],
-      ]),
-    )
-  })
-})
-
-describe(mapPush.name, () => {
-  it('works', () => {
-    const map = new Map([
-      ['a', []],
-      ['b', [2, 3]],
-    ])
-    mapPush(map, 'a', 1)
-    mapPush(map, 'b', 4, 5)
-    mapPush(map, 'c', 6)
-    expect(map).toStrictEqual(
-      new Map([
-        ['a', [1]],
-        ['b', [2, 3, 4, 5]],
-        ['c', [6]],
       ]),
     )
   })
