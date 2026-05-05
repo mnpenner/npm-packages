@@ -2,8 +2,8 @@
 
 A lightweight, type-safe router for React with a CLI for generating URL helpers.
 
-> [!IMPORTANT]
-> This package is **NOT** related to the official [React Router](https://reactrouter.com/) library. It is a much smaller, independent implementation focused on simplicity and type safety through code generation.
+> [!NOTE]
+> This package is **NOT** related to [React Router](https://reactrouter.com/) library. It is a much smaller, independent implementation focused on simplicity and type safety through code generation.
 
 ## Features
 

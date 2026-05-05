@@ -7,6 +7,7 @@ import process from 'node:process'
 import { pathToFileURL } from 'node:url'
 
 const TEMP_DIR = path.resolve(import.meta.dirname, 'temp_bin_test')
+const FIXTURES_DIR = path.resolve(import.meta.dirname, 'fixtures/bin')
 const BIN_PATH = path.resolve(import.meta.dirname, 'bin.ts')
 const BUN_PATH = process.execPath
 
@@ -20,17 +21,15 @@ describe('react-router bin', () => {
     })
 
     test('writes to stdout by default', async () => {
-        const routesFile = path.join(TEMP_DIR, 'stdout-test.tsx')
-        await fs.writeFile(routesFile, `export default [{ name: 'home', pattern: '/' }]`)
+        const routesFile = path.join(FIXTURES_DIR, 'simple.tsx')
 
         const result = await $`${BUN_PATH} ${BIN_PATH} ${routesFile}`.text()
         expect(result).toContain('export function home()')
     })
 
     test('writes to file with -o', async () => {
-        const routesFile = path.join(TEMP_DIR, 'o-test.tsx')
+        const routesFile = path.join(FIXTURES_DIR, 'simple.tsx')
         const outputFile = path.join(TEMP_DIR, 'explicit-output.ts')
-        await fs.writeFile(routesFile, `export default [{ name: 'home', pattern: '/' }]`)
 
         await $`${BUN_PATH} ${BIN_PATH} ${routesFile} -o ${outputFile}`.quiet()
 
@@ -39,9 +38,9 @@ describe('react-router bin', () => {
     })
 
     test('writes to adjacent file with -w', async () => {
-        const routesFile = path.join(TEMP_DIR, 'w-test.tsx')
-        const expectedOutputFile = path.join(TEMP_DIR, 'w-test.gen.ts')
-        await fs.writeFile(routesFile, `export default [{ name: 'home', pattern: '/' }]`)
+        const routesFile = path.join(TEMP_DIR, 'write-adjacent.tsx')
+        const expectedOutputFile = path.join(TEMP_DIR, 'write-adjacent.gen.ts')
+        await fs.copyFile(path.join(FIXTURES_DIR, 'simple.tsx'), routesFile)
 
         await $`${BUN_PATH} ${BIN_PATH} ${routesFile} -w`.quiet()
 
@@ -50,11 +49,7 @@ describe('react-router bin', () => {
     })
 
     test('handles optional groups', async () => {
-        const routesFile = path.join(TEMP_DIR, 'optional.tsx')
-        await fs.writeFile(
-            routesFile,
-            `export default [{ name: 'optional', pattern: '/foo{/:bar}' }]`,
-        )
+        const routesFile = path.join(FIXTURES_DIR, 'optional.tsx')
 
         const outputContent = await $`${BUN_PATH} ${BIN_PATH} ${routesFile}`.text()
 
@@ -64,27 +59,8 @@ describe('react-router bin', () => {
     })
 
     test('generates importable path helpers', async () => {
-        const routesFile = path.join(TEMP_DIR, 'importable.tsx')
+        const routesFile = path.join(FIXTURES_DIR, 'kitchen-sink.tsx')
         const outputFile = path.join(TEMP_DIR, 'importable.gen.ts')
-        await fs.writeFile(
-            routesFile,
-            `
-                import type { RouteObject } from '@mpen/rerouter'
-
-                const ROUTES: readonly RouteObject[] = [
-                    { name: 'home', pattern: '/' },
-                    {
-                        name: 'kitchenSink',
-                        pattern: '/hello/:foo/bar/:baz/*splat/xxx{/:optional/lol/:two}',
-                    },
-                    { name: 'login', pattern: '/login' },
-                    { name: 'match', pattern: '/matches/:id' },
-                    { name: 'notFound', pattern: '*' },
-                ]
-
-                export default ROUTES
-            `,
-        )
 
         await $`${BUN_PATH} ${BIN_PATH} ${routesFile} -o ${outputFile} --wildcard-delimiter ${','} --encode-function ${'encodeURI'}`.quiet()
 
@@ -120,27 +96,8 @@ describe('react-router bin', () => {
         }) => string
 
         beforeAll(async () => {
-            const routesFile = path.join(TEMP_DIR, 'importable-defaults.tsx')
+            const routesFile = path.join(FIXTURES_DIR, 'kitchen-sink.tsx')
             const outputFile = path.join(TEMP_DIR, 'importable-defaults.gen.ts')
-            await fs.writeFile(
-                routesFile,
-                `
-                    import type { RouteObject } from '@mpen/rerouter'
-
-                    const ROUTES: readonly RouteObject[] = [
-                        { name: 'home', pattern: '/' },
-                        {
-                            name: 'kitchenSink',
-                            pattern: '/hello/:foo/bar/:baz/*splat/xxx{/:optional/lol/:two}',
-                        },
-                        { name: 'login', pattern: '/login' },
-                        { name: 'match', pattern: '/matches/:id' },
-                        { name: 'notFound', pattern: '*' },
-                    ]
-
-                    export default ROUTES
-                `,
-            )
 
             await $`${BUN_PATH} ${BIN_PATH} ${routesFile} > ${outputFile}`.quiet()
 
