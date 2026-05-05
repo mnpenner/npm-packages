@@ -1,5 +1,5 @@
 #!/usr/bin/env bun test
-import { expect, test, describe, afterAll, beforeAll } from 'bun:test'
+import { expect, test, describe, it, afterAll, beforeAll } from 'bun:test'
 import { $ } from 'bun'
 import fs from 'node:fs/promises'
 import path from 'node:path'
@@ -69,7 +69,7 @@ describe('react-router bin', () => {
         await fs.writeFile(
             routesFile,
             `
-                import type { RouteObject } from '../index'
+                import type { RouteObject } from '@mpen/rerouter'
 
                 const ROUTES: readonly RouteObject[] = [
                     { name: 'home', pattern: '/' },
@@ -105,6 +105,91 @@ describe('react-router bin', () => {
                 two: 'two',
             }),
         ).toBe('/hello/a/b/bar/c/x,y/xxx/opt/lol/two')
+    })
+
+    describe('generated path helpers with default options', () => {
+        let home: () => string
+        let login: () => string
+        let match: (params: { id: string }) => string
+        let kitchenSink: (params: {
+            foo: string
+            baz: string
+            splat: string[]
+            optional?: string
+            two?: string
+        }) => string
+
+        beforeAll(async () => {
+            const routesFile = path.join(TEMP_DIR, 'importable-defaults.tsx')
+            const outputFile = path.join(TEMP_DIR, 'importable-defaults.gen.ts')
+            await fs.writeFile(
+                routesFile,
+                `
+                    import type { RouteObject } from '@mpen/rerouter'
+
+                    const ROUTES: readonly RouteObject[] = [
+                        { name: 'home', pattern: '/' },
+                        {
+                            name: 'kitchenSink',
+                            pattern: '/hello/:foo/bar/:baz/*splat/xxx{/:optional/lol/:two}',
+                        },
+                        { name: 'login', pattern: '/login' },
+                        { name: 'match', pattern: '/matches/:id' },
+                        { name: 'notFound', pattern: '*' },
+                    ]
+
+                    export default ROUTES
+                `,
+            )
+
+            await $`${BUN_PATH} ${BIN_PATH} ${routesFile} > ${outputFile}`.quiet()
+
+            const generated = await import(pathToFileURL(outputFile).href)
+            home = generated.home
+            login = generated.login
+            match = generated.match
+            kitchenSink = generated.kitchenSink
+        })
+
+        it('home()', () => {
+            expect(home()).toBe('/')
+        })
+
+        it('login()', () => {
+            expect(login()).toBe('/login')
+        })
+
+        it('match()', () => {
+            expect(match({ id: '123' })).toBe('/matches/123')
+        })
+
+        it('match() uses encodeURIComponent', () => {
+            expect(match({ id: 'a/b' })).toBe('/matches/a%2Fb')
+        })
+
+        it('kitchenSink() without optional group', () => {
+            expect(kitchenSink({ foo: 'a', baz: 'b', splat: ['x', 'y'] })).toBe(
+                '/hello/a/bar/b/x/y/xxx',
+            )
+        })
+
+        it('kitchenSink() with optional group', () => {
+            expect(
+                kitchenSink({
+                    foo: 'a',
+                    baz: 'b',
+                    splat: ['x', 'y'],
+                    optional: 'opt',
+                    two: 'two',
+                }),
+            ).toBe('/hello/a/bar/b/x/y/xxx/opt/lol/two')
+        })
+
+        it('kitchenSink() requires all-or-none optional group', () => {
+            expect(() =>
+                kitchenSink({ foo: 'a', baz: 'b', splat: ['x', 'y'], optional: 'opt' } as any),
+            ).toThrow('Group requires all-or-none: "optional", "two"')
+        })
     })
 
     afterAll(async () => {

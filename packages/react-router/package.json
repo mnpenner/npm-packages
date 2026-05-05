@@ -28,7 +28,6 @@
   "scripts": {
     "build": "tsdown",
     "gen": "bun src/bin.ts ./examples/routes.tsx -w",
-    "gen-o": "bun ./src/bin.ts ./examples/routes.tsx -o ./examples/routes-options.gen.ts --wildcard-delimiter \",\" --encode-function encodeURI",
     "serve": "bun --hot examples/index.html",
     "dev": "bun run --sequential gen serve"
   },
