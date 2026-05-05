@@ -1,67 +1,73 @@
 // Do not modify this file. It was auto-generated with the following command:
 // $ react-router ./examples/routes.tsx -w
 
-type AllOrNone<T> = Required<T> | { [K in keyof T]?: never }
+type AllOrNone<T> =
+    | Required<T>
+    | { [K in keyof T]?: never }
 
 type ParamType = string | number | boolean
 type WildcardType = Iterable<ParamType>
 
 export function home(): string {
-    let sb = ''
+    let sb = ""
 
-    sb += '/'
+    sb += "/"
 
     return sb
 }
 
 export function kitchenSink(
     params: {
-        foo: ParamType
-        baz: ParamType
-        splat: WildcardType
-    } & AllOrNone<{
-        optional: ParamType
-        two: ParamType
-    }>,
+    "foo": ParamType
+    "baz": ParamType
+    "splat": WildcardType
+} & AllOrNone<{
+    "optional": ParamType
+    "two": ParamType
+}>
 ): string {
-    let sb = ''
+    let sb = ""
 
-    if (params['foo'] == null) throw new Error('Missing param: foo')
-    if (params['baz'] == null) throw new Error('Missing param: baz')
-    if (params['splat'] == null) throw new Error('Missing param: splat')
-    sb += '/hello/'
-    sb += encodeURIComponent(String(params['foo']))
-    sb += '/bar/'
-    sb += encodeURIComponent(String(params['baz']))
-    sb += '/'
-    sb += Array.from(params['splat'], (v) => encodeURIComponent(String(v))).join('/')
-    sb += '/xxx'
-    if (params['optional'] != null && params['two'] != null) {
-        sb += '/'
-        sb += encodeURIComponent(String(params['optional']))
-        sb += '/lol/'
-        sb += encodeURIComponent(String(params['two']))
-    } else if (!(params['optional'] == null && params['two'] == null)) {
-        throw new Error('Group requires all-or-none: "optional", "two"')
+    if (params["foo"] == null) throw new Error("Missing param: foo")
+    if (params["baz"] == null) throw new Error("Missing param: baz")
+    if (params["splat"] == null) throw new Error("Missing param: splat")
+    sb += "/hello/"
+    sb += (encodeURIComponent)(String(params["foo"]))
+    sb += "/bar/"
+    sb += (encodeURIComponent)(String(params["baz"]))
+    sb += "/"
+    sb += Array.from(params["splat"], v => (encodeURIComponent)(String(v))).join("/")
+    sb += "/xxx"
+    if (params["optional"] != null && params["two"] != null) {
+        sb += "/"
+        sb += (encodeURIComponent)(String(params["optional"]))
+        sb += "/lol/"
+        sb += (encodeURIComponent)(String(params["two"]))
+    } else if (!(params["optional"] == null && params["two"] == null)) {
+        throw new Error("Group requires all-or-none: \"optional\", \"two\"")
     }
 
     return sb
 }
 
 export function login(): string {
-    let sb = ''
+    let sb = ""
 
-    sb += '/login'
+    sb += "/login"
 
     return sb
 }
 
-export function match(params: { id: ParamType }): string {
-    let sb = ''
+export function match(
+    params: {
+    "id": ParamType
+}
+): string {
+    let sb = ""
 
-    if (params['id'] == null) throw new Error('Missing param: id')
-    sb += '/matches/'
-    sb += encodeURIComponent(String(params['id']))
+    if (params["id"] == null) throw new Error("Missing param: id")
+    sb += "/matches/"
+    sb += (encodeURIComponent)(String(params["id"]))
 
     return sb
 }
