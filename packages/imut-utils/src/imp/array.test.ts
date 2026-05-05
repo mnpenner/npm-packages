@@ -1,5 +1,6 @@
 import { describe, expect, it, test } from 'bun:test'
 import { arraySortNumbers, arraySortStrings, arrayPush } from './array'
+import { arraySwap, arrayReplace } from './array'
 
 describe('arraySortNumbers', () => {
   it('sorts ascending', () => {
@@ -41,4 +42,16 @@ describe('arraySortStrings', () => {
 
 test('arrayPush', () => {
   expect(arrayPush([1], 2)).toEqual([1, 2])
+})
+
+test('arraySwap', () => {
+  const arr = [1, 2, 3]
+  expect(arraySwap(arr, 0, 2)).toEqual([3, 2, 1])
+  expect(arraySwap(arr, 1, 1)).toBe(arr) // No swap, return same instance
+})
+
+test('arrayReplace', () => {
+  const arr = [1, 2, 3]
+  expect(arrayReplace(arr, 1, 99)).toEqual([1, 99, 3])
+  expect(arrayReplace(arr, 1, 7, 8)).toEqual([1, 7, 8, 3])
 })

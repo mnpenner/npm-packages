@@ -33,6 +33,7 @@ export class AssertionError extends Error {
   }
 }
 
+/** @internal */
 export function assert(condition: any): void | never {
   if (!condition) throw new AssertionError('Assertion failed')
 }
