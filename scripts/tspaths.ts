@@ -4,7 +4,9 @@ import { $ } from 'bun'
 import { applyEdits, modify, parse, type ParseError } from 'jsonc-parser'
 import fg from 'fast-glob'
 import { readFileSync, writeFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { dirname, join, relative } from 'node:path/posix'
+import { pathToFileURL } from 'node:url'
 
 const PARSE_CONFIG = {
     options: {},
@@ -17,7 +19,7 @@ async function main(_options: Options, _positionals: Positionals): Promise<numbe
     let tsconfigText = readFileSync(tsconfigPath, 'utf8')
 
     const parseErrors: ParseError[] = []
-    parse(tsconfigText, parseErrors)
+    const tsconfig = parse(tsconfigText, parseErrors)
     if (parseErrors.length > 0) {
         throw new Error(
             `Unable to parse ${tsconfigPath}: ${parseErrors.length} JSONC parse error(s)`,
@@ -25,8 +27,8 @@ async function main(_options: Options, _positionals: Positionals): Promise<numbe
     }
 
     const formattingOptions = {
-        // insertSpaces: true,
-        // tabSize: 2,
+        insertSpaces: true,
+        tabSize: 4,
     }
 
     const tsdownConfigPaths = await fg('packages/*/tsdown.config.ts')
@@ -43,6 +45,11 @@ async function main(_options: Options, _positionals: Positionals): Promise<numbe
     }
 
     for (const [alias, entryPaths] of pathAliases) {
+        const existingEntryPaths = readExistingEntryPaths(tsconfig, alias)
+        if (existingEntryPaths !== undefined && arraysEqual(existingEntryPaths, entryPaths)) {
+            continue
+        }
+
         tsconfigText = applyEdits(
             tsconfigText,
             modify(tsconfigText, ['compilerOptions', 'paths', alias], entryPaths, {
@@ -89,7 +96,7 @@ function readPackageName(packageJsonPath: string): string {
 
 async function readTsdownEntry(tsdownConfigPath: string): Promise<unknown> {
     try {
-        const configModule = await import(tsdownConfigPath)
+        const configModule = await import(pathToFileURL(resolve(tsdownConfigPath)).href)
         return configModule.default?.entry
     } catch (error) {
         throw new Error(`Unable to import ${tsdownConfigPath}: ${formatError(error)}`, {
@@ -141,6 +148,29 @@ function resolvePathAliases(
     return aliases
 }
 
+function readExistingEntryPaths(tsconfig: unknown, alias: string): string[] | undefined {
+    if (!isRecord(tsconfig)) {
+        return undefined
+    }
+
+    const { compilerOptions } = tsconfig
+    if (!isRecord(compilerOptions)) {
+        return undefined
+    }
+
+    const { paths } = compilerOptions
+    if (!isRecord(paths)) {
+        return undefined
+    }
+
+    const entryPaths = paths[alias]
+    if (!isStringArray(entryPaths)) {
+        return undefined
+    }
+
+    return entryPaths
+}
+
 function resolveEntryPaths(packageDirectory: string, entryValue: string | string[]): string[] {
     const entries = Array.isArray(entryValue) ? entryValue : [entryValue]
 
@@ -190,8 +220,16 @@ function isEntryValue(value: unknown): value is string | string[] {
     )
 }
 
+function isStringArray(value: unknown): value is string[] {
+    return Array.isArray(value) && value.every((entry) => typeof entry === 'string')
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function arraysEqual(left: readonly string[], right: readonly string[]): boolean {
+    return left.length === right.length && left.every((value, index) => value === right[index])
 }
 
 function formatError(error: unknown): string {

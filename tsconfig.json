@@ -16,7 +16,7 @@
         "paths": {
             "@mpen/base50": ["./packages/base50/src/bundle.ts"],
             "@mpen/http-helpers": ["./packages/http-helpers/src/index.ts"],
-            "@mpen/imut-utils": ["./packages/imut-utils/src/index.ts"],
+            "@mpen/imut-utils": ["./packages/imut-utils/src/imp/index.ts"],
             "@mpen/is-type": ["./packages/is-type/src/index.ts"],
             "@mpen/jsxhtml": ["./packages/jsxhtml/src/index.ts"],
             "@mpen/react-basic-inputs": ["./packages/react-basic-inputs/src/bundle.ts"],
@@ -105,7 +105,9 @@
                 "./packages/server-router/src/plugins/openapi/index.ts"
             ],
             "@mpen/server-router/response": ["./packages/server-router/src/response/index.ts"],
-            "@mpen/server-router/routes": ["./packages/server-router/src/routes/index.ts"]
+            "@mpen/server-router/routes": ["./packages/server-router/src/routes/index.ts"],
+            "@mpen/imut-utils/fp": ["./packages/imut-utils/src/fp/index.ts"],
+            "@mpen/react-router/bin": ["./packages/react-router/src/bin.ts"]
         }
     },
 
