@@ -8,6 +8,7 @@
 **/coverage/
 scratch/
 **.tsbuildinfo
+**/*.gen.*
 package-lock.json
 packages/svg2fonts/test/
 

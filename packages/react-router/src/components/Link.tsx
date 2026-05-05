@@ -24,7 +24,11 @@ export function Link({ to, search, children, replace, ...rest }: LinkProps) {
         if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return
         if (ev.button !== 0) return
         ev.preventDefault()
-        replace ? replaceUrl(href) : pushUrl(href)
+        if (replace) {
+            replaceUrl(href)
+        } else {
+            pushUrl(href)
+        }
     }
 
     return (
