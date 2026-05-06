@@ -91,7 +91,6 @@ export type NormalizedRoute = {
 
 function toUrlPattern(pattern: string | URLPattern): URLPattern {
     if (typeof pattern !== 'string') return pattern
-    if (pattern === '*') return new URLPattern({ pathname: '/*' })
     return new URLPattern({ pathname: pattern })
 }
 
@@ -197,7 +196,7 @@ export function normalizeRoutes(routes: readonly Route[]): NormalizedRoute[] {
             }
         }
 
-        if (pattern === '*') {
+        if (pattern === '*' || pattern === '/*') {
             return {
                 name,
                 pattern,

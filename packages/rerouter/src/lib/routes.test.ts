@@ -18,6 +18,21 @@ describe('normalizeRoutes', () => {
         expect(route.matches('/fetch-loading/abc-123')).toEqual({ id: 'abc-123' })
     })
 
+    test('matches catch-all routes', () => {
+        for (const pattern of ['*', '/*']) {
+            const [route] = normalizeRoutes([
+                {
+                    pattern,
+                    component: loadComponent,
+                },
+            ])
+
+            expect(route.matches('/')).toEqual({})
+            expect(route.matches('/anything')).toEqual({})
+            expect(route.matches('/nested/path')).toEqual({})
+        }
+    })
+
     test('matches regexp params with optional groups', () => {
         const [route] = normalizeRoutes([
             {
