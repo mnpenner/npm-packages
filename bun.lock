@@ -458,6 +458,7 @@
         "rerouter": "./dist/bin.js",
       },
       "dependencies": {
+        "@mpen/classcat": "workspace:*",
         "path-to-regexp": "^8.3.0",
       },
       "devDependencies": {
