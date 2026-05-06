@@ -1,6 +1,7 @@
 {
   "name": "@mpen/uri-template",
-  "version": "0.1.12",
+  "description": "RFC 6570 URI template expansion and matching utilities.",
+  "version": "0.1.13",
   "repository": {
     "type": "git",
     "url": "https://github.com/mnpenner/npm-packages.git",

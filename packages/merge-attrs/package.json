@@ -1,7 +1,7 @@
 {
   "name": "merge-attrs",
-  "version": "0.1.8",
   "description": "Merge HTML attributes",
+  "version": "0.1.8",
   "type": "module",
   "sideEffects": false,
   "files": [

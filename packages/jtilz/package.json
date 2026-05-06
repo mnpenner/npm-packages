@@ -1,7 +1,7 @@
 {
   "name": "jtilz",
-  "version": "0.4.1",
   "description": "Utility library for Node.js and Browser",
+  "version": "0.4.1",
   "author": "Mark Penner <npm@mpen.ca>",
   "license": "MIT",
   "type": "module",

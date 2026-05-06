@@ -1,10 +1,10 @@
 {
   "name": "crap-app",
+  "description": "Creating React apps sucks. This makes it a little bit easier.",
   "version": "0.3.4",
   "private": true,
   "license": "MIT",
   "bin": "index.js",
-  "description": "Creating React apps sucks. This makes it a little bit easier.",
   "dependencies": {
     "chalk": "^2.4.1",
     "inquirer": "^7",
