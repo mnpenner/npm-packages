@@ -5,6 +5,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
 import { pathToFileURL } from 'node:url'
+import { runRerouterBin } from './bin'
 
 const TEMP_DIR = path.resolve(import.meta.dirname, 'temp_bin_test')
 const FIXTURES_DIR = path.resolve(import.meta.dirname, 'fixtures/bin')
@@ -23,18 +24,20 @@ describe('rerouter bin', () => {
     test('writes to stdout by default', async () => {
         const routesFile = path.join(FIXTURES_DIR, 'simple.tsx')
 
-        const result = await $`${BUN_PATH} ${BIN_PATH} ${routesFile}`.text()
-        expect(result).toContain('export function home()')
+        const result = await runRerouterBin([routesFile])
+        expect(result.stdout).toContain('export function home()')
+        expect(result.stderr).toBe('')
     })
 
     test('writes to file with -o', async () => {
         const routesFile = path.join(FIXTURES_DIR, 'simple.tsx')
         const outputFile = path.join(TEMP_DIR, 'explicit-output.ts')
 
-        await $`${BUN_PATH} ${BIN_PATH} ${routesFile} -o ${outputFile}`.quiet()
+        const result = await runRerouterBin([routesFile, '-o', outputFile])
 
         const outputContent = await fs.readFile(outputFile, 'utf8')
         expect(outputContent).toContain('export function home()')
+        expect(result.stderr).toContain(`Wrote ${outputFile}`)
     })
 
     test('writes to adjacent file with -w', async () => {
@@ -42,7 +45,7 @@ describe('rerouter bin', () => {
         const expectedOutputFile = path.join(TEMP_DIR, 'write-adjacent.gen.ts')
         await fs.copyFile(path.join(FIXTURES_DIR, 'simple.tsx'), routesFile)
 
-        await $`${BUN_PATH} ${BIN_PATH} ${routesFile} -w`.quiet()
+        await runRerouterBin([routesFile, '-w'])
 
         const outputContent = await fs.readFile(expectedOutputFile, 'utf8')
         expect(outputContent).toContain('export function home()')
@@ -51,7 +54,7 @@ describe('rerouter bin', () => {
     test('handles optional groups', async () => {
         const routesFile = path.join(FIXTURES_DIR, 'optional.tsx')
 
-        const outputContent = await $`${BUN_PATH} ${BIN_PATH} ${routesFile}`.text()
+        const { stdout: outputContent } = await runRerouterBin([routesFile])
 
         expect(outputContent).toContain('export function optional(')
         expect(outputContent).toContain('AllOrNone<')
@@ -59,20 +62,9 @@ describe('rerouter bin', () => {
     })
 
     test('skips unnamed routes', async () => {
-        const routesFile = path.join(TEMP_DIR, 'unnamed.tsx')
-        await fs.writeFile(
-            routesFile,
-            [
-                `export default [`,
-                `    { name: 'home', pattern: '/', component: () => import('./pages/Home') },`,
-                `    { pattern: '/layout/:id', component: () => import('./pages/Home') },`,
-                `]`,
-                ``,
-            ].join('\n'),
-            'utf8',
-        )
+        const routesFile = path.join(FIXTURES_DIR, 'unnamed.tsx')
 
-        const outputContent = await $`${BUN_PATH} ${BIN_PATH} ${routesFile}`.text()
+        const { stdout: outputContent } = await runRerouterBin([routesFile])
 
         expect(outputContent).toContain('export function home()')
         expect(outputContent).not.toContain('layout')
@@ -82,7 +74,7 @@ describe('rerouter bin', () => {
         const routesFile = path.join(FIXTURES_DIR, 'regexp-groups.tsx')
         const outputFile = path.join(TEMP_DIR, 'regexp-groups.gen.ts')
 
-        await $`${BUN_PATH} ${BIN_PATH} ${routesFile} -o ${outputFile}`.quiet()
+        await runRerouterBin([routesFile, '-o', outputFile])
 
         const outputContent = await fs.readFile(outputFile, 'utf8')
         expect(outputContent).toContain('export function blogPost(')
@@ -98,7 +90,15 @@ describe('rerouter bin', () => {
         const routesFile = path.join(FIXTURES_DIR, 'kitchen-sink.tsx')
         const outputFile = path.join(TEMP_DIR, 'importable.gen.ts')
 
-        await $`${BUN_PATH} ${BIN_PATH} ${routesFile} -o ${outputFile} --wildcard-delimiter ${','} --encode-function ${'encodeURI'}`.quiet()
+        await runRerouterBin([
+            routesFile,
+            '-o',
+            outputFile,
+            '--wildcard-delimiter',
+            ',',
+            '--encode-function',
+            'encodeURI',
+        ])
 
         const { home, kitchenSink, login, match } = await import(pathToFileURL(outputFile).href)
 
@@ -135,7 +135,8 @@ describe('rerouter bin', () => {
             const routesFile = path.join(FIXTURES_DIR, 'kitchen-sink.tsx')
             const outputFile = path.join(TEMP_DIR, 'importable-defaults.gen.ts')
 
-            await $`${BUN_PATH} ${BIN_PATH} ${routesFile} > ${outputFile}`.quiet()
+            const result = await runRerouterBin([routesFile])
+            await fs.writeFile(outputFile, result.stdout, 'utf8')
 
             const generated = await import(pathToFileURL(outputFile).href)
             home = generated.home
@@ -183,6 +184,13 @@ describe('rerouter bin', () => {
                 kitchenSink({ foo: 'a', baz: 'b', splat: ['x', 'y'], optional: 'opt' } as any),
             ).toThrow('Group requires all-or-none: "optional", "two"')
         })
+    })
+
+    test('can be invoked as a CLI script', async () => {
+        const routesFile = path.join(FIXTURES_DIR, 'simple.tsx')
+
+        const result = await $`${BUN_PATH} ${BIN_PATH} ${routesFile}`.text()
+        expect(result).toContain('export function home()')
     })
 
     afterAll(async () => {

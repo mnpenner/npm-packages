@@ -24,6 +24,18 @@ type CompileOptions = {
     functionName?: string
 }
 
+type RunOptions = {
+    cwd?: string
+    commandName?: string
+    commandArgs?: readonly string[]
+}
+
+type RunResult = {
+    exitCode?: number
+    stdout: string
+    stderr: string
+}
+
 function escapeString(value: string): string {
     return JSON.stringify(value)
 }
@@ -192,19 +204,28 @@ function extractRoutes(routes: readonly Route[]): ExtractedRoute[] {
     })
 }
 
-async function main(options: Options, positionals: Positionals): Promise<number | void> {
+async function main(
+    options: Options,
+    positionals: Positionals,
+    {
+        cwd = process.cwd(),
+        commandName = 'rerouter',
+        commandArgs = process.argv.slice(2),
+    }: RunOptions = {},
+): Promise<RunResult> {
     const [routesPathArg] = positionals
     if (!routesPathArg) {
-        console.error(
-            'Usage: rerouter <routes-file> [-o <output-file>] [-w] [--wildcard-delimiter <string>] [--encode-function <identifier>]',
-        )
-        return 1
+        return {
+            exitCode: 1,
+            stdout: '',
+            stderr: 'Usage: rerouter <routes-file> [-o <output-file>] [-w] [--wildcard-delimiter <string>] [--encode-function <identifier>]\n',
+        }
     }
 
-    const routesPath = path.resolve(process.cwd(), routesPathArg)
+    const routesPath = path.resolve(cwd, routesPathArg)
     let outputPath: string | undefined
     if (options.output) {
-        outputPath = path.resolve(process.cwd(), options.output as string)
+        outputPath = path.resolve(cwd, options.output as string)
     } else if (options.write) {
         outputPath = path.join(
             path.dirname(routesPath),
@@ -220,9 +241,7 @@ async function main(options: Options, positionals: Positionals): Promise<number 
     const encodeFunction =
         (options['encode-function'] as string | undefined) ?? 'encodeURIComponent'
 
-    const argv = process.argv
-    const rawArgs = argv.slice(2)
-    const commandText = ['rerouter', ...rawArgs.map(shellEscape)].join(' ')
+    const commandText = [commandName, ...commandArgs.map(shellEscape)].join(' ')
 
     const out: string[] = []
     out.push(`// Do not modify this file. It was auto-generated with the following command:`)
@@ -264,10 +283,33 @@ async function main(options: Options, positionals: Positionals): Promise<number 
     const finalOutput = out.join('\n')
     if (outputPath) {
         await fs.writeFile(outputPath, finalOutput, 'utf8')
-        console.error(`Wrote ${outputPath}`)
+        return { stdout: '', stderr: `Wrote ${outputPath}\n` }
     } else {
-        process.stdout.write(finalOutput)
+        return { stdout: finalOutput, stderr: '' }
     }
+}
+
+/**
+ * Runs the rerouter CLI implementation without spawning a separate process.
+ *
+ * @param args - Command line arguments, excluding the binary name.
+ * @param options - Runtime options used to resolve paths and render the command comment.
+ * @returns Captured stdout, stderr, and an optional process exit code.
+ *
+ * @example
+ * ```ts
+ * const result = await runRerouterBin(['./routes.ts'])
+ * process.stdout.write(result.stdout)
+ * ```
+ *
+ * @internal
+ */
+export async function runRerouterBin(
+    args: readonly string[],
+    options: RunOptions = {},
+): Promise<RunResult> {
+    const { values, positionals } = parseArgs({ ...PARSE_CONFIG, args: [...args] })
+    return main(values, positionals, { ...options, commandArgs: args })
 }
 
 //#region Invoke main
@@ -276,13 +318,11 @@ type Options = ParsedConfig['values']
 type Positionals = ParsedConfig['positionals']
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-    const { values, positionals } = parseArgs(PARSE_CONFIG)
-
-    main(values, positionals).then(
-        (exitCode) => {
-            if (typeof exitCode === 'number') {
-                process.exitCode = exitCode
-            }
+    runRerouterBin(process.argv.slice(2)).then(
+        (result) => {
+            if (result.stdout) process.stdout.write(result.stdout)
+            if (result.stderr) process.stderr.write(result.stderr)
+            if (typeof result.exitCode === 'number') process.exitCode = result.exitCode
         },
         (err) => {
             console.error(err ?? 'An unknown error occurred')
