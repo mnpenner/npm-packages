@@ -7,6 +7,11 @@ import { Link, type LinkProps } from './Link'
  */
 export interface NavLinkProps extends Omit<LinkProps, 'className'> {
     /**
+     * Classes to apply whether the link is active or inactive.
+     */
+    className?: ClassValue
+
+    /**
      * Classes to apply when the link target matches the current path.
      */
     activeClass?: ClassValue
@@ -34,10 +39,11 @@ export interface NavLinkProps extends Omit<LinkProps, 'className'> {
  * @param props - Link props plus active and inactive class values.
  * @returns An anchor element that navigates through rerouter.
  */
-export function NavLink({ activeClass, inactiveClass, to, ...props }: NavLinkProps) {
+export function NavLink({ activeClass, className, inactiveClass, to, ...props }: NavLinkProps) {
     const pathname = useUrlPath()
-    const target = new URL(to, window.location.origin)
-    const className = cc(pathname === target.pathname ? activeClass : inactiveClass)
+    const target = new URL(to, window.location.href)
+    const active = pathname === target.pathname
+    const linkClassName = cc(className, active ? activeClass : inactiveClass)
 
-    return <Link {...props} className={className || undefined} to={to} />
+    return <Link {...props} className={linkClassName || undefined} to={to} />
 }

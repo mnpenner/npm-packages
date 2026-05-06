@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { Link, Router, useUrlPath } from '../src'
+import { NavLink, Router, useUrlPath } from '../src'
 import routes from './routes'
 import * as routesGen from './routes.gen'
 
@@ -23,19 +23,28 @@ function CurrentPath() {
                     </div>
                 </div>
                 <div className="nav">
-                    <Link className="pill" to={routesGen.home()}>
+                    <NavLink activeClass="active" className="pill" to={routesGen.home()}>
                         Home
-                    </Link>
-                    <Link className="pill" to={routesGen.login()}>
+                    </NavLink>
+                    <NavLink activeClass="active" className="pill" to={routesGen.login()}>
                         Login
-                    </Link>
-                    <Link className="pill" to={routesGen.match({ id: '123' })}>
+                    </NavLink>
+                    <NavLink
+                        activeClass="active"
+                        className="pill"
+                        to={routesGen.match({ id: '123' })}
+                    >
                         Match 123
-                    </Link>
-                    <Link className="pill" to={routesGen.match({ id: 'a/b' })}>
+                    </NavLink>
+                    <NavLink
+                        activeClass="active"
+                        className="pill"
+                        to={routesGen.match({ id: 'a/b' })}
+                    >
                         Match a/b (encoded)
-                    </Link>
-                    <Link
+                    </NavLink>
+                    <NavLink
+                        activeClass="active"
                         className="pill"
                         to={routesGen.kitchenSink({
                             foo: 'a/b',
@@ -44,7 +53,7 @@ function CurrentPath() {
                         })}
                     >
                         KitchenSink
-                    </Link>
+                    </NavLink>
                 </div>
             </div>
         </div>

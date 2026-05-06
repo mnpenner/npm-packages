@@ -37,7 +37,7 @@ describe(Link.name, () => {
         render(
             <Link
                 aria-label="Match details"
-                className="match-link"
+                className={['match-link', { selected: true, pending: false }]}
                 to="/matches?sort=asc"
                 search={{ page: 2, sort: 'desc' }}
             >
@@ -48,7 +48,7 @@ describe(Link.name, () => {
         const link = screen.getByRole('link', { name: 'Match details' })
 
         expect(link.textContent).toBe('View match')
-        expect(link.getAttribute('class')).toBe('match-link')
+        expect(link.getAttribute('class')).toBe('match-link selected')
         expect(link.getAttribute('href')).toBe('/matches?sort=desc&page=2')
     })
 
