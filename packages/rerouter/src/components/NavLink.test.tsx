@@ -76,4 +76,44 @@ describe(NavLink.name, () => {
             'pill active',
         )
     })
+
+    test('renders active classes for prefix matches', () => {
+        window.history.replaceState(null, '', '/fetch-loading/abc-123')
+
+        const { getByRole } = render(
+            <NavLink
+                activeClass="active"
+                className="pill"
+                inactiveClass="muted"
+                match="prefix"
+                to="/fetch-loading"
+            >
+                Fetch Loading
+            </NavLink>,
+        )
+
+        expect(getByRole('link', { name: 'Fetch Loading' }).getAttribute('class')).toBe(
+            'pill active',
+        )
+    })
+
+    test('does not render active classes for partial segment prefix matches', () => {
+        window.history.replaceState(null, '', '/fetch-loading-old')
+
+        const { getByRole } = render(
+            <NavLink
+                activeClass="active"
+                className="pill"
+                inactiveClass="muted"
+                match="prefix"
+                to="/fetch-loading"
+            >
+                Fetch Loading
+            </NavLink>,
+        )
+
+        expect(getByRole('link', { name: 'Fetch Loading' }).getAttribute('class')).toBe(
+            'pill muted',
+        )
+    })
 })
