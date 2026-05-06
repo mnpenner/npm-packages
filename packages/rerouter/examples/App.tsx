@@ -46,6 +46,20 @@ function CurrentPath() {
                     <NavLink
                         activeClass="active"
                         className="pill"
+                        to={routesGen.blogPost({ id: 123 })}
+                    >
+                        Blog 123
+                    </NavLink>
+                    <NavLink
+                        activeClass="active"
+                        className="pill"
+                        to={routesGen.blogPost({ id: 123, title: 'hello world' })}
+                    >
+                        Blog 123 Title
+                    </NavLink>
+                    <NavLink
+                        activeClass="active"
+                        className="pill"
                         to={routesGen.kitchenSink({
                             foo: 'a/b',
                             baz: 'c',

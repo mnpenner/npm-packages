@@ -50,6 +50,28 @@ export function kitchenSink(
     return sb
 }
 
+export function blogPost(
+    params: {
+    "id": ParamType
+} & AllOrNone<{
+    "title": ParamType
+}>
+): string {
+    let sb = ""
+
+    if (params["id"] == null) throw new Error("Missing param: id")
+    sb += "/blog/"
+    sb += (encodeURIComponent)(String(params["id"]))
+    if (params["title"] != null) {
+        sb += "-"
+        sb += (encodeURIComponent)(String(params["title"]))
+    } else if (!(params["title"] == null)) {
+        throw new Error("Group requires all-or-none: \"title\"")
+    }
+
+    return sb
+}
+
 export function login(): string {
     let sb = ""
 

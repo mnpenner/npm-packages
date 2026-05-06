@@ -114,6 +114,15 @@ function toUrlPattern(pattern: string | URLPattern): URLPattern {
     return new URLPattern({ pathname: pattern })
 }
 
+function decodeRouteParams(groups: Record<string, unknown>): RouteParams {
+    const params: RouteParams = {}
+    for (const [key, value] of Object.entries(groups)) {
+        if (value == null) params[key] = undefined
+        else params[key] = decodeURIComponent(String(value))
+    }
+    return params
+}
+
 function stripLegacyParamPattern(pattern: string, startIndex: number): number {
     let depth = 1
     let endIndex = startIndex + 1
@@ -239,7 +248,7 @@ export function normalizeRoutes(routes: readonly Route[]): NormalizedRoute[] {
                 if (urlPattern) {
                     const match = urlPattern.exec({ pathname } as any)
                     if (!match) return null
-                    return ((match as any).pathname?.groups ?? {}) as RouteParams
+                    return decodeRouteParams((match as any).pathname?.groups ?? {})
                 }
 
                 if (!matcher) return null

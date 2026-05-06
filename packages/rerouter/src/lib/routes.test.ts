@@ -16,7 +16,10 @@ describe('normalizeRoutes', () => {
         ])
 
         expect(route.matches('/blog/123')).toEqual({ id: '123' })
-        expect(route.matches('/blog/123-hello')).toEqual({ id: '123', title: 'hello' })
+        expect(route.matches('/blog/123-hello%20world')).toEqual({
+            id: '123',
+            title: 'hello world',
+        })
         expect(route.matches('/blog/not-a-number')).toBeNull()
     })
 })
