@@ -58,6 +58,22 @@ describe('rerouter bin', () => {
         expect(outputContent).toContain('"bar": ParamType')
     })
 
+    test('handles regexp params with optional groups', async () => {
+        const routesFile = path.join(FIXTURES_DIR, 'regexp-groups.tsx')
+        const outputFile = path.join(TEMP_DIR, 'regexp-groups.gen.ts')
+
+        await $`${BUN_PATH} ${BIN_PATH} ${routesFile} -o ${outputFile}`.quiet()
+
+        const outputContent = await fs.readFile(outputFile, 'utf8')
+        expect(outputContent).toContain('export function blogPost(')
+        expect(outputContent).toContain('"id": ParamType')
+        expect(outputContent).toContain('"title": ParamType')
+
+        const { blogPost } = await import(pathToFileURL(outputFile).href)
+        expect(blogPost({ id: 123 })).toBe('/blog/123')
+        expect(blogPost({ id: 123, title: 'hello world' })).toBe('/blog/123-hello%20world')
+    })
+
     test('generates importable path helpers', async () => {
         const routesFile = path.join(FIXTURES_DIR, 'kitchen-sink.tsx')
         const outputFile = path.join(TEMP_DIR, 'importable.gen.ts')

@@ -114,6 +114,69 @@ function toUrlPattern(pattern: string | URLPattern): URLPattern {
     return new URLPattern({ pathname: pattern })
 }
 
+function stripLegacyParamPattern(pattern: string, startIndex: number): number {
+    let depth = 1
+    let endIndex = startIndex + 1
+    while (endIndex < pattern.length && depth > 0) {
+        const char = pattern[endIndex]
+        if (char === '\\') {
+            endIndex += 2
+            continue
+        }
+        if (char === '(') depth++
+        else if (char === ')') depth--
+        endIndex++
+    }
+    return endIndex
+}
+
+/**
+ * Converts legacy `path-to-regexp` syntax that is ignored by URL generation into syntax accepted
+ * by the current parser.
+ *
+ * @param pattern - The route pattern to normalize.
+ * @returns The pattern with custom regexp constraints stripped and optional group suffixes removed.
+ *
+ * @example
+ * ```ts
+ * normalizeLegacyPathToRegexpSyntax('/blog/:id(\\d+){-:title}?')
+ * // '/blog/:id{-:title}'
+ * ```
+ *
+ * @internal
+ */
+export function normalizeLegacyPathToRegexpSyntax(pattern: string): string {
+    let normalized = ''
+    for (let i = 0; i < pattern.length; i++) {
+        const char = pattern[i]
+        if (char === '\\') {
+            normalized += char
+            if (i + 1 < pattern.length) normalized += pattern[++i]
+            continue
+        }
+
+        if (char === ':' || char === '*') {
+            normalized += char
+            while (i + 1 < pattern.length && /[$_\p{ID_Continue}]/u.test(pattern[i + 1])) {
+                normalized += pattern[++i]
+            }
+            if (pattern[i + 1] === '(') {
+                i = stripLegacyParamPattern(pattern, i + 1) - 1
+            }
+            continue
+        }
+
+        if (char === '}' && pattern[i + 1] === '?') {
+            normalized += char
+            i++
+            continue
+        }
+
+        normalized += char
+    }
+    return normalized
+}
+
 /**
  * Normalizes routes into objects with a shared matcher implementation.
  *
@@ -155,12 +218,31 @@ export function normalizeRoutes(routes: readonly Route[]): NormalizedRoute[] {
             }
         }
 
-        const matcher = pathMatch(pattern, { decode: decodeURIComponent })
+        let matcher: ReturnType<typeof pathMatch> | undefined
+        let urlPattern: URLPattern | undefined
+        try {
+            matcher = pathMatch(pattern, { decode: decodeURIComponent })
+        } catch {
+            try {
+                urlPattern = toUrlPattern(pattern)
+            } catch {
+                matcher = pathMatch(normalizeLegacyPathToRegexpSyntax(pattern), {
+                    decode: decodeURIComponent,
+                })
+            }
+        }
         return {
             name,
             pattern,
             component,
             matches(pathname: string) {
+                if (urlPattern) {
+                    const match = urlPattern.exec({ pathname } as any)
+                    if (!match) return null
+                    return ((match as any).pathname?.groups ?? {}) as RouteParams
+                }
+
+                if (!matcher) return null
                 const match = matcher(pathname)
                 if (!match) return null
                 const params: RouteParams = {}

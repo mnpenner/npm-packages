@@ -5,7 +5,7 @@ import process from 'node:process'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { parseArgs, type ParseArgsConfig } from 'node:util'
 import { parse } from 'path-to-regexp'
-import { normalizeRoutes, type Route } from './lib/routes'
+import { normalizeLegacyPathToRegexpSyntax, normalizeRoutes, type Route } from './lib/routes'
 
 const PARSE_CONFIG = {
     options: {
@@ -41,7 +41,7 @@ function compilePathGenerator(
         functionName = 'generate',
     }: CompileOptions = {},
 ): string {
-    const { tokens } = parse(pattern)
+    const { tokens } = parse(normalizeLegacyPathToRegexpSyntax(pattern))
 
     type Prop = { name: string; type: string }
 
