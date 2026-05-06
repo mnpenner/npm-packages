@@ -6,6 +6,18 @@ const loadComponent: RouteObject['component'] = async () => ({
 })
 
 describe('normalizeRoutes', () => {
+    test('matches routes without names', () => {
+        const [route] = normalizeRoutes([
+            {
+                pattern: '/fetch-loading/:id',
+                component: loadComponent,
+            },
+        ])
+
+        expect(route.name).toBeUndefined()
+        expect(route.matches('/fetch-loading/abc-123')).toEqual({ id: 'abc-123' })
+    })
+
     test('matches regexp params with optional groups', () => {
         const [route] = normalizeRoutes([
             {

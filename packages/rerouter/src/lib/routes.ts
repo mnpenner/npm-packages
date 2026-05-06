@@ -55,57 +55,38 @@ export type RouteComponentLoader<TParams extends RouteParams = RouteParams> = ()
  * ```
  */
 export type RouteObject = {
-    name: string
+    /**
+     * Optional route name used by the CLI to generate a URL helper.
+     *
+     * Routes without a name still participate in runtime matching, but are skipped by the
+     * helper generator.
+     */
+    name?: string
     pattern: string | URLPattern
     component: RouteComponentLoader<any>
 }
 
 /**
- * Tuple route definition consumed by [`Router`]{@link Router}.
- *
- * @example
- * ```tsx
- * const route: RouteTuple = ['userProfile', '/users/:id', () => import('./pages/UserProfile')]
- * ```
- */
-export type RouteTuple = readonly [
-    name: string,
-    pattern: string | URLPattern,
-    component: RouteComponentLoader<any>,
-]
-
-/**
- * A route definition in object or tuple form.
+ * Route definition consumed by [`Router`]{@link Router}.
  *
  * @example
  * ```tsx
  * const routes: readonly Route[] = [
  *     { name: 'home', pattern: '/', component: () => import('./pages/Home') },
+ *     { pattern: '/users/:id', component: () => import('./pages/UserLayout') },
  * ]
  * ```
  */
-export type Route = RouteObject | RouteTuple
+export type Route = RouteObject
 
 /**
  * Route definition normalized into a single object shape with a pathname matcher.
  */
 export type NormalizedRoute = {
-    name: string
+    name?: string
     pattern: string | URLPattern
     component: RouteComponentLoader<any>
     matches(pathname: string): RouteParams | null
-}
-
-/**
- * Returns whether a route definition uses tuple form.
- *
- * @param route - The route definition to inspect.
- * @returns `true` when the route is a tuple.
- *
- * @internal
- */
-export function isRouteTuple(route: Route): route is RouteTuple {
-    return Array.isArray(route)
 }
 
 function toUrlPattern(pattern: string | URLPattern): URLPattern {
@@ -200,9 +181,7 @@ export function normalizeLegacyPathToRegexpSyntax(pattern: string): string {
  */
 export function normalizeRoutes(routes: readonly Route[]): NormalizedRoute[] {
     return routes.map((route) => {
-        const name = isRouteTuple(route) ? route[0] : route.name
-        const pattern = isRouteTuple(route) ? route[1] : route.pattern
-        const component = isRouteTuple(route) ? route[2] : route.component
+        const { name, pattern, component } = route
 
         if (typeof pattern !== 'string') {
             const urlPattern = toUrlPattern(pattern)

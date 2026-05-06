@@ -1,5 +1,7 @@
 import type { RouteObject } from '../src'
 
+const loadFetchLoading = () => import('./pages/FetchLoading')
+
 const ROUTES: readonly RouteObject[] = [
     { name: 'home', pattern: '/', component: () => import('./pages/Home') },
     {
@@ -23,7 +25,12 @@ const ROUTES: readonly RouteObject[] = [
     {
         name: 'fetchLoading',
         pattern: '/fetch-loading',
-        component: () => import('./pages/FetchLoading'),
+        component: loadFetchLoading,
+    },
+    {
+        name: 'fetchLoadingItem',
+        pattern: '/fetch-loading/:id',
+        component: loadFetchLoading,
     },
     { name: 'login', pattern: '/login', component: () => import('./pages/Login') },
     { name: 'match', pattern: '/matches/:id', component: () => import('./pages/Match') },

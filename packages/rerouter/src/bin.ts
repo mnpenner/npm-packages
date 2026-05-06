@@ -186,9 +186,10 @@ async function importRoutes(routesPath: string): Promise<readonly Route[]> {
 }
 
 function extractRoutes(routes: readonly Route[]): ExtractedRoute[] {
-    return normalizeRoutes(routes)
-        .filter((route) => typeof route.pattern === 'string')
-        .map((route) => ({ name: route.name, pattern: route.pattern as string }))
+    return normalizeRoutes(routes).flatMap((route) => {
+        if (!route.name || typeof route.pattern !== 'string') return []
+        return [{ name: route.name, pattern: route.pattern }]
+    })
 }
 
 async function main(options: Options, positionals: Positionals): Promise<number | void> {

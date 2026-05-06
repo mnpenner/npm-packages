@@ -2,6 +2,19 @@ import { lazy, Suspense, useMemo, type ReactNode } from 'react'
 import { useUrlPath } from '../hooks'
 import { normalizeRoutes, type Route } from '../lib/routes'
 
+type LazyRouteComponent = ReturnType<typeof lazy>
+
+const lazyRouteComponents = new WeakMap<Route['component'], LazyRouteComponent>()
+
+function getLazyRouteComponent(component: Route['component']): LazyRouteComponent {
+    let LazyComponent = lazyRouteComponents.get(component)
+    if (!LazyComponent) {
+        LazyComponent = lazy(component)
+        lazyRouteComponents.set(component, LazyComponent)
+    }
+    return LazyComponent
+}
+
 /**
  * Props for [`Router`]{@link Router}.
  *
@@ -43,7 +56,7 @@ export function Router({ routes, loading = null }: RouterProps) {
         () =>
             normalizeRoutes(routes).map((route) => ({
                 ...route,
-                Component: lazy(route.component),
+                Component: getLazyRouteComponent(route.component),
             })),
         [routes],
     )

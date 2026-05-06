@@ -88,6 +88,20 @@ export function fetchLoading(): string {
     return sb
 }
 
+export function fetchLoadingItem(
+    params: {
+    "id": ParamType
+}
+): string {
+    let sb = ""
+
+    if (params["id"] == null) throw new Error("Missing param: id")
+    sb += "/fetch-loading/"
+    sb += (encodeURIComponent)(String(params["id"]))
+
+    return sb
+}
+
 export function login(): string {
     let sb = ""
 

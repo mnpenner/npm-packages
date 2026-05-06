@@ -58,6 +58,26 @@ describe('rerouter bin', () => {
         expect(outputContent).toContain('"bar": ParamType')
     })
 
+    test('skips unnamed routes', async () => {
+        const routesFile = path.join(TEMP_DIR, 'unnamed.tsx')
+        await fs.writeFile(
+            routesFile,
+            [
+                `export default [`,
+                `    { name: 'home', pattern: '/', component: () => import('./pages/Home') },`,
+                `    { pattern: '/layout/:id', component: () => import('./pages/Home') },`,
+                `]`,
+                ``,
+            ].join('\n'),
+            'utf8',
+        )
+
+        const outputContent = await $`${BUN_PATH} ${BIN_PATH} ${routesFile}`.text()
+
+        expect(outputContent).toContain('export function home()')
+        expect(outputContent).not.toContain('layout')
+    })
+
     test('handles regexp params with optional groups', async () => {
         const routesFile = path.join(FIXTURES_DIR, 'regexp-groups.tsx')
         const outputFile = path.join(TEMP_DIR, 'regexp-groups.gen.ts')
