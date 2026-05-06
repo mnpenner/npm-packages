@@ -45,6 +45,7 @@ export type LinkProps = OverrideProps<
          * Whether navigation should replace the current history entry instead of pushing a new one.
          */
         replace?: boolean
+
         href: never
         onClick: never
     }

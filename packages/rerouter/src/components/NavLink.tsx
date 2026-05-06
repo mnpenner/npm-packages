@@ -1,26 +1,25 @@
 import { cc, type ClassValue } from '@mpen/classcat'
+import type { Override } from '@mpen/ts-types'
 import { useUrlPath } from '../hooks/useUrl'
 import { Link, type LinkProps } from './Link'
 
 /**
  * Props for [`NavLink`]{@link NavLink}.
  */
-export interface NavLinkProps extends Omit<LinkProps, 'className'> {
-    /**
-     * Classes to apply whether the link is active or inactive.
-     */
-    className?: ClassValue
+export type NavLinkProps = Override<
+    LinkProps,
+    {
+        /**
+         * Classes to apply when the link target matches the current path.
+         */
+        activeClass?: ClassValue
 
-    /**
-     * Classes to apply when the link target matches the current path.
-     */
-    activeClass?: ClassValue
-
-    /**
-     * Classes to apply when the link target does not match the current path.
-     */
-    inactiveClass?: ClassValue
-}
+        /**
+         * Classes to apply when the link target does not match the current path.
+         */
+        inactiveClass?: ClassValue
+    }
+>
 
 /**
  * Renders a [`Link`]{@link Link} with classes selected from the current route.
