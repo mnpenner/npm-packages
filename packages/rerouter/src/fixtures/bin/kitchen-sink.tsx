@@ -1,4 +1,4 @@
-import type { RouteObject } from '@mpen/react-router'
+import type { RouteObject } from '@mpen/rerouter'
 
 const ROUTES: readonly RouteObject[] = [
     { name: 'home', pattern: '/', component: () => import('./pages/Home') },

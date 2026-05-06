@@ -55,7 +55,7 @@ function Layout() {
     return (
         <div className="app">
             <div className="card">
-                <h1 style={{ margin: 0 }}>react-router examples</h1>
+                <h1 style={{ margin: 0 }}>rerouter examples</h1>
                 <div style={{ opacity: 0.8, marginTop: 8 }}>
                     Client-only dev server using <code>bun --hot examples/index.html</code>.
                 </div>

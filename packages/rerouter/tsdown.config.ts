@@ -15,7 +15,7 @@ export default defineConfig({
     exports: {
         legacy: true,
         bin: {
-            'react-router': './src/bin.ts',
+            rerouter: './src/bin.ts',
         },
     },
     dts: true, // The client must use "moduleResolution": "bundler", "node16" or "nodenext". "node" will not resolve the types properly.

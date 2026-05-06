@@ -28,7 +28,7 @@ const browserPackageFiles = [
     'packages/react-combobox/**/*.{js,jsx,ts,tsx}',
     'packages/react-datepicker/**/*.{js,jsx,ts,tsx}',
     'packages/react-global-state/**/*.{js,jsx,ts,tsx}',
-    'packages/react-router/**/*.{js,jsx,ts,tsx}',
+    'packages/rerouter/**/*.{js,jsx,ts,tsx}',
 ]
 
 const reactPackageFiles = [
@@ -38,7 +38,7 @@ const reactPackageFiles = [
     'packages/react-combobox/**/*.{js,jsx,ts,tsx}',
     'packages/react-datepicker/**/*.{js,jsx,ts,tsx}',
     'packages/react-global-state/**/*.{js,jsx,ts,tsx}',
-    'packages/react-router/**/*.{js,jsx,ts,tsx}',
+    'packages/rerouter/**/*.{js,jsx,ts,tsx}',
     'packages/ts-types/src/react.ts',
 ]
 

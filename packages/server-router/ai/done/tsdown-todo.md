@@ -1,4 +1,4 @@
-add a `tsdown.config.ts` to packages/server-router and packages/react-router. they should look something like this:
+add a `tsdown.config.ts` to packages/server-router and packages/rerouter. they should look something like this:
 
 ```ts
 import { defineConfig } from 'tsdown'
@@ -27,7 +27,7 @@ run `bun add --dev tsdown` in the 2 package dirs
 
 ---
 
-add packages/react-router/examples.
+add packages/rerouter/examples.
 
 an example is like
 

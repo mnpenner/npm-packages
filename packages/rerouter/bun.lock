@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "@mpen/react-router",
+      "name": "@mpen/rerouter",
       "devDependencies": {
         "@types/bun": "latest",
       },

@@ -1,4 +1,4 @@
-# @mpen/react-router
+# @mpen/rerouter
 
 A lightweight, type-safe router for React with a CLI for generating URL helpers.
 
@@ -16,10 +16,10 @@ A lightweight, type-safe router for React with a CLI for generating URL helpers.
 ## Installation
 
 ```bash
-bun add @mpen/react-router
+bun add @mpen/rerouter
 ```
 
-## CLI: `react-router`
+## CLI: `rerouter`
 
 The package includes a CLI tool to generate type-safe route helpers from your route definitions.
 
@@ -40,7 +40,7 @@ Keep this file side-effect-free. The CLI imports and evaluates the route file to
 2. Run the generator:
 
 ```bash
-bunx @mpen/react-router routes.ts -o src/routes.gen.ts
+bunx @mpen/rerouter routes.ts -o src/routes.gen.ts
 ```
 
 3. Use the generated helpers:
@@ -57,7 +57,7 @@ const url = userProfile({ id: 123 })
 ### Router
 
 ```tsx
-import { Router } from '@mpen/react-router'
+import { Router } from '@mpen/rerouter'
 import ROUTES from './routes'
 
 function App() {
@@ -68,7 +68,7 @@ function App() {
 ### Link
 
 ```tsx
-import { Link } from '@mpen/react-router'
+import { Link } from '@mpen/rerouter'
 import { userProfile } from './routes.gen'
 
 function Navigation() {
@@ -79,7 +79,7 @@ function Navigation() {
 ### Hooks
 
 ```tsx
-import { useUrlPath, useUrlSearchParams } from '@mpen/react-router'
+import { useUrlPath, useUrlSearchParams } from '@mpen/rerouter'
 
 function MyComponent() {
     const path = useUrlPath()

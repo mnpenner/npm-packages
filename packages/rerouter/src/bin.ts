@@ -195,7 +195,7 @@ async function main(options: Options, positionals: Positionals): Promise<number 
     const [routesPathArg] = positionals
     if (!routesPathArg) {
         console.error(
-            'Usage: react-router <routes-file> [-o <output-file>] [-w] [--wildcard-delimiter <string>] [--encode-function <identifier>]',
+            'Usage: rerouter <routes-file> [-o <output-file>] [-w] [--wildcard-delimiter <string>] [--encode-function <identifier>]',
         )
         return 1
     }
@@ -221,7 +221,7 @@ async function main(options: Options, positionals: Positionals): Promise<number 
 
     const argv = process.argv
     const rawArgs = argv.slice(2)
-    const commandText = ['react-router', ...rawArgs.map(shellEscape)].join(' ')
+    const commandText = ['rerouter', ...rawArgs.map(shellEscape)].join(' ')
 
     const out: string[] = []
     out.push(`// Do not modify this file. It was auto-generated with the following command:`)

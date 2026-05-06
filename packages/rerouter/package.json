@@ -1,5 +1,5 @@
 {
-  "name": "@mpen/react-router",
+  "name": "@mpen/rerouter",
   "version": "0.2.0",
   "exports": {
     ".": "./dist/index.js",
@@ -8,7 +8,7 @@
     "./package.json": "./package.json"
   },
   "bin": {
-    "react-router": "./dist/bin.js"
+    "rerouter": "./dist/bin.js"
   },
   "type": "module",
   "dependencies": {

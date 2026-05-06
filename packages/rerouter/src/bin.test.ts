@@ -15,7 +15,7 @@ async function ensureDir(dir: string) {
     await fs.mkdir(dir, { recursive: true })
 }
 
-describe('react-router bin', () => {
+describe('rerouter bin', () => {
     beforeAll(async () => {
         await ensureDir(TEMP_DIR)
     })
