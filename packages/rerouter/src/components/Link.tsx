@@ -1,5 +1,6 @@
 import { cc, type ClassValue } from '@mpen/classcat'
-import type { AnchorHTMLAttributes, MouseEvent } from 'react'
+import type { OverrideProps } from '@mpen/ts-types/react'
+import type { MouseEvent } from 'react'
 import { pushUrl, replaceUrl } from '../lib/url'
 import { mergeSearch } from '../lib/mergeSearch'
 
@@ -22,30 +23,32 @@ export type SearchParamsInit =
 /**
  * Props for [`Link`]{@link Link}.
  */
-export interface LinkProps extends Omit<
-    AnchorHTMLAttributes<HTMLAnchorElement>,
-    'className' | 'href' | 'onClick'
-> {
-    /**
-     * Classes to apply to the rendered anchor.
-     */
-    className?: ClassValue
+export type LinkProps = OverrideProps<
+    'a',
+    {
+        /**
+         * Classes to apply to the rendered anchor.
+         */
+        className?: ClassValue
 
-    /**
-     * Destination URL passed to the rendered anchor's `href` attribute.
-     */
-    to: string
+        /**
+         * Destination URL passed to the rendered anchor's `href` attribute.
+         */
+        to: string
 
-    /**
-     * Query parameters to merge into [`LinkProps.to`]{@link LinkProps#to}.
-     */
-    search?: SearchParamsInit
+        /**
+         * Query parameters to merge into [`LinkProps.to`]{@link LinkProps#to}.
+         */
+        search?: SearchParamsInit
 
-    /**
-     * Whether navigation should replace the current history entry instead of pushing a new one.
-     */
-    replace?: boolean
-}
+        /**
+         * Whether navigation should replace the current history entry instead of pushing a new one.
+         */
+        replace?: boolean
+        href: never
+        onClick: never
+    }
+>
 
 /**
  * Renders an anchor that navigates with rerouter history updates on ordinary clicks.
