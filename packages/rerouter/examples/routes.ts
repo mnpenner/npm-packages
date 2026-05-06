@@ -20,6 +20,11 @@ const ROUTES: readonly RouteObject[] = [
                 setTimeout(resolve, 2000)
             }).then(() => import('./pages/SlowLoading')),
     },
+    {
+        name: 'fetchLoading',
+        pattern: '/fetch-loading',
+        component: () => import('./pages/FetchLoading'),
+    },
     { name: 'login', pattern: '/login', component: () => import('./pages/Login') },
     { name: 'match', pattern: '/matches/:id', component: () => import('./pages/Match') },
     { name: 'notFound', pattern: '*', component: () => import('./pages/NotFound') },

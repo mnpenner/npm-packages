@@ -80,6 +80,14 @@ export function slowLoading(): string {
     return sb
 }
 
+export function fetchLoading(): string {
+    let sb = ""
+
+    sb += "/fetch-loading"
+
+    return sb
+}
+
 export function login(): string {
     let sb = ""
 

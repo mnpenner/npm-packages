@@ -60,6 +60,9 @@ function CurrentPath() {
                     <NavLink activeClass="active" className="pill" to={routesGen.slowLoading()}>
                         Slow Loading
                     </NavLink>
+                    <NavLink activeClass="active" className="pill" to={routesGen.fetchLoading()}>
+                        Fetch Loading
+                    </NavLink>
                     <NavLink
                         activeClass="active"
                         className="pill"
