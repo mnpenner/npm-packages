@@ -22,4 +22,19 @@ describe('normalizeRoutes', () => {
         })
         expect(route.matches('/blog/not-a-number')).toBeNull()
     })
+
+    test('matches named wildcards', () => {
+        const [route] = normalizeRoutes([
+            {
+                name: 'files',
+                pattern: '/files/*path',
+                component: loadComponent,
+            },
+        ])
+
+        expect(route.matches('/files/docs/api')).toEqual({ path: 'docs/api' })
+        expect(route.matches('/files/docs%20and%20api/reference')).toEqual({
+            path: 'docs and api/reference',
+        })
+    })
 })

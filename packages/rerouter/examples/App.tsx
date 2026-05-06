@@ -57,6 +57,9 @@ function CurrentPath() {
                     >
                         Blog 123 Title
                     </NavLink>
+                    <NavLink activeClass="active" className="pill" to={routesGen.slowLoading()}>
+                        Slow Loading
+                    </NavLink>
                     <NavLink
                         activeClass="active"
                         className="pill"
@@ -87,7 +90,7 @@ function Layout() {
             <CurrentPath />
 
             <div className="card">
-                <Router routes={routes} />
+                <Router routes={routes} loading={<div>Loading route...</div>} />
             </div>
         </div>
     )

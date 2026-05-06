@@ -72,6 +72,14 @@ export function blogPost(
     return sb
 }
 
+export function slowLoading(): string {
+    let sb = ""
+
+    sb += "/slow-loading"
+
+    return sb
+}
+
 export function login(): string {
     let sb = ""
 

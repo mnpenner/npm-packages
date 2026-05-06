@@ -12,6 +12,14 @@ const ROUTES: readonly RouteObject[] = [
         pattern: '/blog/:id(\\d+){-:title}?',
         component: () => import('./pages/BlogPost'),
     },
+    {
+        name: 'slowLoading',
+        pattern: '/slow-loading',
+        component: () =>
+            new Promise((resolve) => {
+                setTimeout(resolve, 2000)
+            }).then(() => import('./pages/SlowLoading')),
+    },
     { name: 'login', pattern: '/login', component: () => import('./pages/Login') },
     { name: 'match', pattern: '/matches/:id', component: () => import('./pages/Match') },
     { name: 'notFound', pattern: '*', component: () => import('./pages/NotFound') },
