@@ -2,11 +2,16 @@ import {
     createContext as createReactContext,
     useContext,
     useMemo,
-    useState,
+    useState as useReactState,
     useSyncExternalStore,
 } from 'react'
 import type { ReactNode } from 'react'
-import { createStore, resolveInitializer, resolveStateUpdater, Store } from './store'
+import {
+    createStore as createBaseStore,
+    resolveInitializer,
+    resolveStateUpdater,
+    Store,
+} from './store'
 import type {
     EqualityFn,
     Initializer,
@@ -21,8 +26,8 @@ export interface UseStoreOptions<S> {
 }
 
 export interface ReactStore<T> extends Store<T> {
-    use(): T
-    use<S>(selector: Selector<T, S>, options?: UseStoreOptions<S>): S
+    useValue(): T
+    useValue<S>(selector: Selector<T, S>, options?: UseStoreOptions<S>): S
 }
 
 export interface StoreProviderProps<T> {
@@ -62,13 +67,13 @@ function createSelectedSnapshot<T, S>(
     }
 }
 
-export function useStore<T>(store: StoreSnapshot<T>): T
-export function useStore<T, S>(
+function useStoreValue<T>(store: StoreSnapshot<T>): T
+function useStoreValue<T, S>(
     store: StoreSnapshot<T>,
     selector: Selector<T, S>,
     options?: UseStoreOptions<S>,
 ): S
-export function useStore<T, S = T>(
+function useStoreValue<T, S = T>(
     store: StoreSnapshot<T>,
     selector: Selector<T, S> = identity as Selector<T, S>,
     options?: UseStoreOptions<S>,
@@ -85,19 +90,19 @@ export function useStore<T, S = T>(
     )
 }
 
-export function createReactStore<T>(
+export function createStore<T>(
     initialValue: Initializer<T>,
     options?: StoreOptions<T>,
 ): ReactStore<T> {
-    const store = createStore(initialValue, options) as ReactStore<T>
+    const store = createBaseStore(initialValue, options) as ReactStore<T>
 
-    function useReactStore(): T
-    function useReactStore<S>(selector: Selector<T, S>, useOptions?: UseStoreOptions<S>): S
-    function useReactStore<S = T>(selector?: Selector<T, S>, useOptions?: UseStoreOptions<S>) {
-        return useStore(store, selector ?? (identity as Selector<T, S>), useOptions)
+    function useValue(): T
+    function useValue<S>(selector: Selector<T, S>, useOptions?: UseStoreOptions<S>): S
+    function useValue<S = T>(selector?: Selector<T, S>, useOptions?: UseStoreOptions<S>) {
+        return useStoreValue(store, selector ?? (identity as Selector<T, S>), useOptions)
     }
 
-    store.use = useReactStore
+    store.useValue = useValue
 
     return store
 }
@@ -116,7 +121,7 @@ export function createStoreContext<T>(defaultValue: Initializer<T>, options?: St
     }
 
     function Provider({ children, initialValue }: StoreProviderProps<T>) {
-        const [store] = useState(() => {
+        const [store] = useReactState(() => {
             const resolvedDefaultValue = resolveInitializer(defaultValue)
             const resolvedInitialValue =
                 initialValue === undefined
@@ -128,18 +133,26 @@ export function createStoreContext<T>(defaultValue: Initializer<T>, options?: St
         return <Context.Provider value={store}>{children}</Context.Provider>
     }
 
-    function useContextStore(): T
-    function useContextStore<S>(selector: Selector<T, S>, useOptions?: UseStoreOptions<S>): S
-    function useContextStore<S = T>(selector?: Selector<T, S>, useOptions?: UseStoreOptions<S>) {
-        return useStore(useStoreInstance(), selector ?? (identity as Selector<T, S>), useOptions)
+    function useValue(): T
+    function useValue<S>(selector: Selector<T, S>, useOptions?: UseStoreOptions<S>): S
+    function useValue<S = T>(selector?: Selector<T, S>, useOptions?: UseStoreOptions<S>) {
+        return useStoreValue(
+            useStoreInstance(),
+            selector ?? (identity as Selector<T, S>),
+            useOptions,
+        )
+    }
+
+    function useState() {
+        const store = useStoreInstance()
+        return [useStoreValue(store), store.setState] as const
     }
 
     return {
         Context,
         Provider,
-        use: useContextStore,
-        useStore: useContextStore,
+        useValue,
+        useState,
         useStoreInstance,
-        useSetState: () => useStoreInstance().setState,
     }
 }

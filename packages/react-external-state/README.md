@@ -45,15 +45,15 @@ const unsubscribe = counter.subscribeSelector(
 ## React
 
 ```tsx
-import { createReactStore } from '@mpen/react-external-state'
+import { createStore } from '@mpen/react-external-state'
 
-const session = createReactStore({
+const session = createStore({
     userId: null as string | null,
     theme: 'system' as 'light' | 'dark' | 'system',
 })
 
 export function ThemeButton() {
-    const theme = session.use((state) => state.theme)
+    const theme = session.useValue((state) => state.theme)
 
     return (
         <button
@@ -76,15 +76,15 @@ session.setState((state) => ({
 }))
 ```
 
-You can also use an existing store with `useStore`.
+You can also pass the store around and subscribe from any component.
 
 ```tsx
-import { createStore, useStore } from '@mpen/react-external-state'
+import { createStore } from '@mpen/react-external-state'
 
 const counter = createStore({ count: 0 })
 
 export function Counter() {
-    const count = useStore(counter, (state) => state.count)
+    const count = counter.useValue((state) => state.count)
 
     return (
         <button
@@ -149,8 +149,8 @@ export function DraftEditor() {
 }
 
 function TitleInput() {
-    const title = DraftContext.use((state) => state.title)
-    const setDraft = DraftContext.useSetState()
+    const title = DraftContext.useValue((state) => state.title)
+    const [, setDraft] = DraftContext.useState()
 
     return (
         <input
@@ -166,7 +166,7 @@ function TitleInput() {
 }
 
 function Preview() {
-    const draft = DraftContext.use()
+    const draft = DraftContext.useValue()
 
     return <article>{draft.title}</article>
 }
@@ -181,6 +181,8 @@ function Preview() {
 - `store.set(valueOrUpdater)` / `store.setState(valueOrUpdater)`
 - `store.subscribe(listener, options?)`
 - `store.subscribeSelector(selector, listener, options?)`
-- `useStore(store, selector?, options?)`
-- `createReactStore(initialValue, options?)`
 - `createStoreContext(defaultValue, options?)`
+- `reactStore.useValue(selector?, options?)`
+- `storeContext.useValue(selector?, options?)`
+- `storeContext.useState()`
+- `storeContext.useStoreInstance()`
