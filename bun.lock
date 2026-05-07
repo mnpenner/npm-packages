@@ -416,7 +416,10 @@
       "devDependencies": {
         "@types/bun": "latest",
         "@types/react": "^19",
+        "@types/react-dom": "catalog:",
+        "happy-dom": "^20.9.0",
         "react": "catalog:",
+        "react-dom": "catalog:",
         "tsdown": "catalog:",
         "typescript": "^6.0.2",
       },

@@ -191,6 +191,8 @@ export interface StoreContext<T> {
      * ```
      *
      * @returns The scoped store instance.
+     *
+     * @experimental Not sure if it's a good idea to expose the Store instance. Should maybe be called `useStore`.
      */
     useStoreInstance(): Store<T>
 }

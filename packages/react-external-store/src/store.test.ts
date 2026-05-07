@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { createLocalStorageStore, createStore } from './index'
+import { createLocalStorageStore, createStore, type StorageLike } from './index'
 
 class MemoryStorage implements StorageLike {
     readonly items = new Map<string, string>()
@@ -11,11 +11,6 @@ class MemoryStorage implements StorageLike {
     setItem(key: string, value: string) {
         this.items.set(key, value)
     }
-}
-
-interface StorageLike {
-    getItem(key: string): string | null
-    setItem(key: string, value: string): void
 }
 
 describe('Store', () => {
@@ -60,5 +55,98 @@ describe('createLocalStorageStore', () => {
         store.setState({ theme: 'system' })
 
         expect(storage.getItem('settings')).toBe(JSON.stringify({ theme: 'system' }))
+    })
+
+    test('uses the initial value without storage', () => {
+        const store = createLocalStorageStore('settings', () => ({ theme: 'light' }), {
+            storage: null,
+        })
+
+        expect(store.getSnapshot()).toEqual({ theme: 'light' })
+
+        store.setState({ theme: 'dark' })
+
+        expect(store.getSnapshot()).toEqual({ theme: 'dark' })
+    })
+
+    test('uses global localStorage by default', () => {
+        const storage = new MemoryStorage()
+        const previousLocalStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
+
+        Object.defineProperty(globalThis, 'localStorage', {
+            configurable: true,
+            value: storage,
+        })
+
+        try {
+            const store = createLocalStorageStore('settings', { theme: 'light' })
+
+            store.setState({ theme: 'dark' })
+
+            expect(storage.getItem('settings')).toBe(JSON.stringify({ theme: 'dark' }))
+        } finally {
+            if (previousLocalStorage === undefined) {
+                delete (globalThis as { localStorage?: Storage }).localStorage
+            } else {
+                Object.defineProperty(globalThis, 'localStorage', previousLocalStorage)
+            }
+        }
+    })
+
+    test('reports read and write errors', () => {
+        const readError = new Error('read failed')
+        const writeError = new Error('write failed')
+        const errors: Array<[unknown, 'read' | 'write']> = []
+        const storage: StorageLike = {
+            getItem() {
+                throw readError
+            },
+            setItem() {
+                throw writeError
+            },
+        }
+
+        const store = createLocalStorageStore(
+            'settings',
+            { theme: 'light' },
+            {
+                onError(error, operation) {
+                    errors.push([error, operation])
+                },
+                storage,
+            },
+        )
+
+        store.setState({ theme: 'dark' })
+
+        expect(store.getSnapshot()).toEqual({ theme: 'dark' })
+        expect(errors).toEqual([
+            [readError, 'read'],
+            [writeError, 'write'],
+        ])
+    })
+
+    test('uses custom serialization', () => {
+        const storage = new MemoryStorage()
+        storage.setItem('settings', 'dark')
+
+        const store = createLocalStorageStore(
+            'settings',
+            { theme: 'light' },
+            {
+                deserialize(value) {
+                    return { theme: value }
+                },
+                serialize(value) {
+                    return value.theme
+                },
+                storage,
+            },
+        )
+
+        store.setState({ theme: 'system' })
+
+        expect(store.getSnapshot()).toEqual({ theme: 'system' })
+        expect(storage.getItem('settings')).toBe('system')
     })
 })
