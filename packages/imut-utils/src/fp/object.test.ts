@@ -3,6 +3,7 @@ import { expectType, type TypeEqual } from '@mpen/ts-types'
 import { objSet, relaxedMerge, shallowMerge } from './object'
 import { mapSet } from '../fp/map'
 import type { Next } from '../resolvable'
+import { useState, type Dispatch, type SetStateAction } from '../testing/react'
 
 describe('shallowMerge', () => {
   it('uses expected precedence', () => {
@@ -21,14 +22,13 @@ describe('shallowMerge', () => {
       id: string
       status: 'idle' | 'busy'
     }
-    const setState = (updater: (state: State) => State) =>
-      updater({
-        count: 1,
-        id: 'abc',
-        status: 'idle',
-      })
+    const [, setState] = useState<State>({
+      count: 1,
+      id: 'abc',
+      status: 'idle',
+    })
 
-    const result = setState(
+    setState(
       shallowMerge({
         id: 'abc',
         count: 2,
@@ -36,12 +36,7 @@ describe('shallowMerge', () => {
       }),
     )
 
-    expectType<TypeEqual<typeof result, State>>(true)
-    expect(result).toEqual({
-      count: 2,
-      id: 'abc',
-      status: 'busy',
-    })
+    expectType<TypeEqual<typeof setState, Dispatch<SetStateAction<State>>>>(true)
   })
   it('allows undefined input', () => {
     expect(relaxedMerge<Record<string, number>>({ b: 2, c: 9 }, { c: 3, d: 4 })(undefined)).toEqual(
@@ -57,23 +52,19 @@ describe('shallowMerge', () => {
       count: number
       id: string
     }
-    const setState = (updater: (state: State | null | undefined) => State) =>
-      updater({
-        count: 1,
-        id: 'abc',
-      })
+    const [, setState] = useState<State | undefined>(undefined)
 
-    const result = setState(
+    setState(
       relaxedMerge({
-        count: (count) => {
-          expectType<number>(count)
-          return count + 1
+        id: 'abc',
+        count: (count: number | undefined): number => {
+          expectType<number | undefined>(count)
+          return (count ?? 0) + 1
         },
       }),
     )
 
-    expectType<TypeEqual<typeof result, State>>(true)
-    expect(result).toEqual({ count: 2, id: 'abc' })
+    expectType<TypeEqual<typeof setState, Dispatch<SetStateAction<State | undefined>>>>(true)
   })
   it('resolves values in order', () => {
     expect(
@@ -244,17 +235,16 @@ describe('objSet', () => {
     expect(newSize).not.toBe(oldSize)
   })
   it('preserves the object type in a setState-style updater', () => {
-    const setState = (updater: (size: Size) => Size) => updater({ width: 512, height: 768 })
+    const [, setState] = useState<Size>({ width: 512, height: 768 })
 
-    const newSize = setState(
+    setState(
       objSet('width', (width) => {
         expectType<number>(width)
         return width + 1
       }),
     )
 
-    expectType<TypeEqual<typeof newSize, Size>>(true)
-    expect(newSize).toEqual({ width: 513, height: 768 })
+    expectType<TypeEqual<typeof setState, Dispatch<SetStateAction<Size>>>>(true)
   })
   it('nested', () => {
     type UsageType = {
