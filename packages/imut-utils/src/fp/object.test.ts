@@ -16,7 +16,7 @@ describe('shallowMerge', () => {
       d: 4,
     })
   })
-  it('infers the object type from value patches', () => {
+  it('infers the object type from a React-style dispatch', () => {
     type State = {
       count: number
       id: string
@@ -28,11 +28,7 @@ describe('shallowMerge', () => {
       status: 'idle',
     })
 
-    const patch: Partial<State> = {
-      count: 2,
-      status: 'busy',
-    }
-    setState(shallowMerge(patch))
+    setState(shallowMerge({ status: 'busy' }))
 
     expectType<TypeEqual<typeof setState, Dispatch<SetStateAction<State>>>>(true)
   })
