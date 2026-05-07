@@ -29,6 +29,14 @@ describe('shallowMerge', () => {
     })
 
     setState(shallowMerge({ status: 'busy' }))
+    setState(
+      shallowMerge({
+        status: (oldStatus) => {
+          expectType<State['status']>(oldStatus)
+          return 'busy'
+        },
+      }),
+    )
 
     expectType<TypeEqual<typeof setState, Dispatch<SetStateAction<State>>>>(true)
   })

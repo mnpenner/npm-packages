@@ -24,7 +24,16 @@ type MergeTarget<T> = {
 type MergeObject<T> = {
   [K in keyof T]?: Resolvable<T[K], [T[K], K]>
 }
+type FunctionMergeObject<T> = {
+  [K in keyof T]?: (value: T[K], key: K) => T[K]
+}
 type IsAny<T> = 0 extends 1 & T ? true : false
+type HasFunctionValue<T> = true extends {
+  [K in keyof T]-?: T[K] extends (...args: any[]) => any ? true : false
+}[keyof T]
+  ? true
+  : false
+type HasFunctionPatch<T> = true extends (T extends T ? HasFunctionValue<T> : never) ? true : false
 
 /**
  * Merge one or more objects into a target object, similar to
@@ -33,8 +42,9 @@ type IsAny<T> = 0 extends 1 & T ? true : false
  * The target object *should* be the full object (with all keys defined), and the objects to be merged may be partial.
  * If the target and objects to be merged do not sum up to the full object, then the return type will be invalid.
  */
+export function shallowMerge<T extends {}>(...objects: Array<FunctionMergeObject<T>>): (obj: T) => T
 export function shallowMerge<const T extends ReadonlyArray<object>>(
-  ...objects: IsAny<T> extends true ? never : T
+  ...objects: IsAny<T> extends true ? never : HasFunctionPatch<T[number]> extends true ? never : T
 ): <TObj extends MergeTarget<T[number]>>(obj: TObj) => TObj
 export function shallowMerge<T extends {}>(...objects: Array<MergeObject<T>>): (obj: T) => T
 export function shallowMerge<T extends {}>(...objects: Array<MergeObject<T>>): (obj: T) => T {
