@@ -17,9 +17,8 @@
     - Use `hg mv` to rename files (to maintain version history)
 - For new packages, update the root `tsconfig.json` and `eslint.config.ts` as needed
     - `scripts/tspaths.ts` can be reused to refresh `paths` in `tsconfig.json`
-- Add detailed [TSDoc](https://tsdoc.org) comments including @example blocks, @param and @returns to all public APIs,
-  including all function overloads
-    - The public API is the `entry` point(s) listed in `tsdown.config.ts`
+- Add detailed [TSDoc](https://tsdoc.org) comments including @example blocks, @param and @returns to all public APIs
+  (exported from the package), including all function overloads
     - Link to other functions and classes using this syntax: [`exampleFunc`]{@link exampleFunc}
     - Link to methods using this syntax: [`Class.method`]{@link Class#method}
     - Put an empty line between the description and the `@tags`

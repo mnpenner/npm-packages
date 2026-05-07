@@ -13,4 +13,4 @@ export type {
 export { createLocalStorageStore } from './local-storage'
 export type { LocalStorageStoreOptions, StorageLike } from './local-storage'
 export { createStore, createStoreContext } from './react'
-export type { ReactStore, StoreProviderProps, UseStoreOptions } from './react'
+export type { ReactStore, StoreContext, StoreProviderProps, UseStoreOptions } from './react'
