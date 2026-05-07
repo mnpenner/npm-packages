@@ -31,6 +31,7 @@ describe('shallowMerge', () => {
     setState(shallowMerge({ status: 'busy' }))
     setState(
       shallowMerge({
+        count: 2,
         status: (oldStatus) => {
           expectType<State['status']>(oldStatus)
           return 'busy'
