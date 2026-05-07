@@ -1,6 +1,7 @@
 {
   "name": "@mpen/jsxhtml",
-  "version": "0.5.7",
+  "description": "Render JSX to HTML strings without hydration.",
+  "version": "0.5.8",
   "packageManager": "bun@1.3.7",
   "exports": {
     ".": "./dist/index.js",

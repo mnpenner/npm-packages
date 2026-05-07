@@ -1,5 +1,6 @@
 {
   "name": "@mpen/rollup-plugin-package",
+  "description": "Rollup plugin that emits package metadata and copied package files.",
   "version": "0.1.9",
   "main": "dist/rollup-plugin-package.js",
   "module": "dist/rollup-plugin-package.mjs",

@@ -1,5 +1,6 @@
 {
   "name": "@mpen/rollup-plugin-clean",
+  "description": "Rollup plugin that cleans the output directory before writing bundles.",
   "version": "0.1.9",
   "main": "dist/rollup-plugin-clean.js",
   "module": "dist/rollup-plugin-clean.mjs",

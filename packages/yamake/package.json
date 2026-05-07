@@ -1,8 +1,8 @@
 {
   "name": "yamake",
+  "description": "Task runner utilities for JavaScript projects.",
   "version": "0.1.13",
   "private": true,
-  "description": "",
   "bin": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

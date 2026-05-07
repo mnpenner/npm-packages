@@ -1,5 +1,6 @@
 {
   "name": "@mpen/rerouter",
+  "description": "Lightweight type-safe router for React with URL helper generation.",
   "version": "0.3.0",
   "exports": {
     ".": "./dist/index.js",

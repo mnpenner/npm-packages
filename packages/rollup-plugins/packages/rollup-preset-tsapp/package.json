@@ -1,5 +1,6 @@
 {
   "name": "@mpen/rollup-preset-tsapp",
+  "description": "Rollup preset for TypeScript Node applications.",
   "version": "0.1.9",
   "main": "dist/rollup-preset-tsapp.js",
   "module": "dist/rollup-preset-tsapp.mjs",

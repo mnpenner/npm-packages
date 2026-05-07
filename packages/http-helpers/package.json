@@ -1,5 +1,6 @@
 {
   "name": "@mpen/http-helpers",
+  "description": "HTTP status, header, and request helper utilities.",
   "private": true,
   "type": "module",
   "exports": {

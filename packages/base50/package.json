@@ -1,5 +1,6 @@
 {
   "name": "@mpen/base50",
+  "description": "Base conversion utilities for compact string encodings.",
   "version": "0.2.2",
   "packageManager": "bun@1.2.10",
   "type": "module",

@@ -1,5 +1,6 @@
 {
   "name": "register-pretty-error",
+  "description": "Register pretty error output for development.",
   "version": "0.1.2",
   "private": true,
   "license": "MIT",

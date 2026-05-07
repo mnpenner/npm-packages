@@ -1,7 +1,8 @@
 {
   "name": "@mpen/react-basic-inputs",
+  "description": "React wrappers around native inputs with improved behavior.",
+  "version": "0.5.1",
   "private": false,
-  "version": "0.5.0",
   "type": "module",
   "files": [
     "dist"

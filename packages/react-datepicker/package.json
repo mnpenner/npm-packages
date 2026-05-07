@@ -1,7 +1,8 @@
 {
   "name": "@mpen/react-datepicker",
-  "private": true,
+  "description": "Date and time picker components for React.",
   "version": "0.1.0",
+  "private": true,
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build"

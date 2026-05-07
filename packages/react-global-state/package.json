@@ -1,7 +1,7 @@
 {
   "name": "@mpen/react-global-state",
-  "version": "0.1.0",
   "description": "Small external state stores with React hooks and localStorage persistence.",
+  "version": "0.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/mnpenner/npm-packages.git",

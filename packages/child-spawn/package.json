@@ -1,5 +1,6 @@
 {
   "name": "child-spawn",
+  "description": "Execute shell commands and parse stdout from TypeScript.",
   "version": "0.1.2",
   "private": true,
   "packageManager": "yarn@3.3.1",

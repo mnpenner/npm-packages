@@ -1,5 +1,6 @@
 {
   "name": "bun-server",
+  "description": "Bun server experiments and utilities.",
   "private": true,
   "dependencies": {
     "@mpen/rerouter": "workspace:*",

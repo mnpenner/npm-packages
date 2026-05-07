@@ -1,5 +1,6 @@
 {
   "name": "onemig",
+  "description": "Database migration tooling.",
   "version": "0.2.3",
   "license": "UNLICENSED",
   "private": true,

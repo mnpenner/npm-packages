@@ -1,5 +1,6 @@
 {
   "name": "cli-api",
+  "description": "Build command-line apps with typed commands and options.",
   "version": "0.3.0",
   "license": "UNLICENSED",
   "private": false,

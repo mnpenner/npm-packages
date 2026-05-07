@@ -1,5 +1,6 @@
 {
   "name": "@mpen/logger",
+  "description": "Lightweight logging utilities.",
   "private": true,
   "publishConfig": {
     "access": "public"

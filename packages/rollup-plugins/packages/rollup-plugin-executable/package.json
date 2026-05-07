@@ -1,5 +1,6 @@
 {
   "name": "@mpen/rollup-plugin-executable",
+  "description": "Rollup plugin that adds executable Node shebangs to entry chunks.",
   "version": "0.1.9",
   "main": "dist/rollup-plugin-executable.js",
   "module": "dist/rollup-plugin-executable.mjs",

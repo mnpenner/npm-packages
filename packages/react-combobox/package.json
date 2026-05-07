@@ -1,5 +1,6 @@
 {
   "name": "react-combobox",
+  "description": "Combobox components for React.",
   "private": true,
   "scripts": {
     "start": "webpack-serve"

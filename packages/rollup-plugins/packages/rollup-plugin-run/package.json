@@ -1,5 +1,6 @@
 {
   "name": "@mpen/rollup-plugin-run",
+  "description": "Rollup plugin that runs built output during watch mode.",
   "version": "0.1.9",
   "main": "dist/rollup-plugin-run.js",
   "module": "dist/rollup-plugin-run.mjs",

@@ -1,5 +1,6 @@
 {
   "name": "neverject",
+  "description": "Promise helpers for values that never reject.",
   "version": "0.2.4",
   "module": "./dist/index.js",
   "type": "module",

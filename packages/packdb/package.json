@@ -1,5 +1,6 @@
 {
   "name": "packdb",
+  "description": "Simple single-file object database.",
   "version": "0.9.1",
   "private": true,
   "main": "PackDB.js",
@@ -16,7 +17,6 @@
     "url": "https://bitbucket.org/mnpenner/packdb"
   },
   "homepage": "https://bitbucket.org/mnpenner/packdb#readme",
-  "description": "",
   "engines": {
     "node": ">=6"
   },

@@ -1,5 +1,6 @@
 {
   "name": "@mpen/progressbar",
+  "description": "Terminal progress bar utilities.",
   "private": true,
   "publishConfig": {
     "access": "public"

@@ -1,5 +1,6 @@
 {
   "name": "mpen-npm-packages",
+  "description": "Mark Penner's npm package monorepo.",
   "private": true,
   "repository": {
     "type": "git",

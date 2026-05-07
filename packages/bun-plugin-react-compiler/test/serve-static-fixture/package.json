@@ -1,4 +1,5 @@
 {
+  "description": "Test fixture for the bun-plugin-react-compiler static server.",
   "devDependencies": {
     "bun-plugin-react-compiler": "^0.3.1"
   },

@@ -1,5 +1,6 @@
 {
   "name": "@mpen/server-router-zod-neverject",
+  "description": "Zod and neverject helpers for server-router.",
   "type": "module",
   "exports": {
     ".": {
