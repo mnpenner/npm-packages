@@ -21,6 +21,14 @@ type ResolvedPatchValue<T> = T extends (...args: any[]) => infer R ? R : T
 type MergeTarget<T> = {
   [K in KeysOfUnion<T>]: Widen<ResolvedPatchValue<PatchValue<T, K>>>
 }
+type InvalidPatchKeys<TObj, TPatch> = {
+  [K in KeysOfUnion<TPatch>]: K extends keyof TObj
+    ? PatchValue<TPatch, K> extends TObj[K]
+      ? never
+      : K
+    : K
+}[KeysOfUnion<TPatch>]
+type PatchTarget<TObj, TPatch> = [InvalidPatchKeys<TObj, TPatch>] extends [never] ? TObj : never
 type MergeObject<T> = {
   [K in keyof T]?: T[K] | ((value: T[K], key: K) => T[K] | Widen<T[K]>)
 }
@@ -44,7 +52,7 @@ export function shallowMerge<T extends {}>(
 ): (obj: T) => T
 export function shallowMerge<const T extends ReadonlyArray<object>>(
   ...objects: IsAny<T> extends true ? never : ValueMergeObjects<T>
-): <TObj extends MergeTarget<T[number]>>(obj: TObj) => TObj
+): <TObj extends object>(obj: PatchTarget<TObj, T[number]>) => TObj
 export function shallowMerge<T extends {}>(...objects: Array<MergeObject<T>>): (obj: T) => T {
   return (obj: T) => {
     const filtered = objects.filter((o) => o != null)

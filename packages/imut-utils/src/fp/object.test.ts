@@ -28,7 +28,9 @@ describe('shallowMerge', () => {
       status: 'idle',
     })
 
-    setState(shallowMerge({ status: 'busy' }))
+    // @ts-expect-error Should reject invalid statuses
+    setState(shallowMerge({ status: 'invalid status' }))
+    setState(shallowMerge({ count: 2, status: 'busy' }))
     setState(
       shallowMerge({
         count: 2,
