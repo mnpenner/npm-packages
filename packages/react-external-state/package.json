@@ -1,6 +1,6 @@
 {
   "name": "@mpen/react-external-state",
-  "description": "Small external state stores with React hooks and localStorage persistence.",
+  "description": "Small React external state stores with localStorage persistence.",
   "version": "0.1.0",
   "repository": {
     "type": "git",
@@ -21,17 +21,11 @@
   },
   "exports": {
     ".": "./dist/index.js",
-    "./react": "./dist/react.js",
     "./package.json": "./package.json"
   },
   "types": "./dist/index.d.ts",
   "peerDependencies": {
     "react": "^19"
-  },
-  "peerDependenciesMeta": {
-    "react": {
-      "optional": true
-    }
   },
   "devDependencies": {
     "@types/bun": "latest",
