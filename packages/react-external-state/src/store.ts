@@ -47,8 +47,6 @@ export class Store<T> implements StoreSnapshot<T> {
 
     getSnapshot = () => this.#value
 
-    get = () => this.#value
-
     setState = (state: StateUpdater<T>) => {
         const previousValue = this.#value
         const nextValue = resolveStateUpdater(state, previousValue)
@@ -65,8 +63,6 @@ export class Store<T> implements StoreSnapshot<T> {
 
         return nextValue
     }
-
-    set = this.setState
 
     subscribe = (listener: StoreListener<T>, options?: SubscribeOptions<T>): Unsubscribe => {
         return this.subscribeSelector(identity, listener, options)

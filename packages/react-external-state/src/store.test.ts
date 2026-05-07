@@ -29,12 +29,12 @@ describe('Store', () => {
         )
 
         store.setState((state) => ({ count: state.count + 1 }))
-        store.set({ count: 1 })
-        store.set({ count: 2 })
+        store.setState({ count: 1 })
+        store.setState({ count: 2 })
         unsubscribe()
-        store.set({ count: 3 })
+        store.setState({ count: 3 })
 
-        expect(store.get()).toEqual({ count: 3 })
+        expect(store.getSnapshot()).toEqual({ count: 3 })
         expect(values).toEqual([1, 2])
     })
 
@@ -55,9 +55,9 @@ describe('createLocalStorageStore', () => {
 
         const store = createLocalStorageStore('settings', { theme: 'light' }, { storage })
 
-        expect(store.get()).toEqual({ theme: 'dark' })
+        expect(store.getSnapshot()).toEqual({ theme: 'dark' })
 
-        store.set({ theme: 'system' })
+        store.setState({ theme: 'system' })
 
         expect(storage.getItem('settings')).toBe(JSON.stringify({ theme: 'system' }))
     })

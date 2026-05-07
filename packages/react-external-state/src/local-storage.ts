@@ -1,5 +1,5 @@
-import { createStore } from './store'
 import type { Initializer, StoreOptions } from './store'
+import { createStore } from './react'
 
 export type StorageLike = Pick<Storage, 'getItem' | 'setItem'>
 

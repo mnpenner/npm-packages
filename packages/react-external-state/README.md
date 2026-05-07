@@ -23,9 +23,9 @@ counter.setState((state) => ({
     count: state.count + 1,
 }))
 
-counter.set({ count: 10 })
+counter.setState({ count: 10 })
 
-console.log(counter.get())
+console.log(counter.getSnapshot())
 
 unsubscribe()
 ```
@@ -177,8 +177,8 @@ function Preview() {
 - `createStore(initialValue, options?)`
 - `createLocalStorageStore(key, initialValue, options?)`
 - `Store`
-- `store.get()` / `store.getSnapshot()`
-- `store.set(valueOrUpdater)` / `store.setState(valueOrUpdater)`
+- `store.getSnapshot()`
+- `store.setState(valueOrUpdater)`
 - `store.subscribe(listener, options?)`
 - `store.subscribeSelector(selector, listener, options?)`
 - `createStoreContext(defaultValue, options?)`
