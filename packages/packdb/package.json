@@ -13,8 +13,9 @@
   "author": "Mark Penner <mark@mpen.ca>",
   "license": "MIT",
   "repository": {
-    "type": "hg",
-    "url": "https://bitbucket.org/mnpenner/packdb"
+    "type": "git",
+    "url": "git+https://github.com/mnpenner/npm-packages.git",
+    "directory": "packages/packdb"
   },
   "homepage": "https://bitbucket.org/mnpenner/packdb#readme",
   "engines": {

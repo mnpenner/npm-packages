@@ -4,7 +4,7 @@
   "version": "0.1.3",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mnpenner/npm-packages.git",
+    "url": "git+https://github.com/mnpenner/npm-packages.git",
     "directory": "packages/classcat"
   },
   "license": "MIT",

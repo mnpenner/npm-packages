@@ -410,8 +410,8 @@
         "vite": "^5.2.0",
       },
     },
-    "packages/react-global-state": {
-      "name": "@mpen/react-global-state",
+    "packages/react-external-state": {
+      "name": "@mpen/react-external-state",
       "version": "0.1.0",
       "devDependencies": {
         "@types/bun": "latest",
@@ -1050,7 +1050,7 @@
 
     "@mpen/react-datepicker": ["@mpen/react-datepicker@workspace:packages/react-datepicker"],
 
-    "@mpen/react-global-state": ["@mpen/react-global-state@workspace:packages/react-global-state"],
+    "@mpen/react-external-state": ["@mpen/react-external-state@workspace:packages/react-external-state"],
 
     "@mpen/rerouter": ["@mpen/rerouter@workspace:packages/rerouter"],
 

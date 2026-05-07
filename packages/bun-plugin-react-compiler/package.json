@@ -4,7 +4,8 @@
   "version": "0.3.4",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mnpenner/bun-plugin-react-compiler.git"
+    "url": "git+https://github.com/mnpenner/npm-packages.git",
+    "directory": "packages/bun-plugin-react-compiler"
   },
   "author": "Mark Penner <git@mpen.ca>",
   "module": "./dist/react-compiler.js",

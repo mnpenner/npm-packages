@@ -24,8 +24,9 @@
     "typescript": "catalog:"
   },
   "repository": {
-    "type": "hg",
-    "url": "https://bitbucket.org/mnpenner/jtilz"
+    "type": "git",
+    "url": "git+https://github.com/mnpenner/npm-packages.git",
+    "directory": "packages/jtilz"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org",

@@ -1,19 +1,19 @@
-# @mpen/react-global-state
+# @mpen/react-external-state
 
 Small external state stores with optional React bindings and localStorage persistence.
 
-The base store does not depend on React. Use `@mpen/react-global-state/react` only when you want hooks or context-scoped stores.
+The base store does not depend on React. Use `@mpen/react-external-state/react` only when you want hooks or context-scoped stores.
 
 ## Install
 
 ```sh
-bun add @mpen/react-global-state
+bun add @mpen/react-external-state
 ```
 
 ## Store
 
 ```ts
-import { createStore } from '@mpen/react-global-state'
+import { createStore } from '@mpen/react-external-state'
 
 const counter = createStore({ count: 0 })
 
@@ -47,7 +47,7 @@ const unsubscribe = counter.subscribeSelector(
 ## React
 
 ```tsx
-import { createReactStore } from '@mpen/react-global-state/react'
+import { createReactStore } from '@mpen/react-external-state/react'
 
 const session = createReactStore({
     userId: null as string | null,
@@ -81,8 +81,8 @@ session.setState((state) => ({
 You can also use an existing store with `useStore`.
 
 ```tsx
-import { createStore } from '@mpen/react-global-state'
-import { useStore } from '@mpen/react-global-state/react'
+import { createStore } from '@mpen/react-external-state'
+import { useStore } from '@mpen/react-external-state/react'
 
 const counter = createStore({ count: 0 })
 
@@ -103,7 +103,7 @@ export function Counter() {
 ## localStorage
 
 ```ts
-import { createLocalStorageStore } from '@mpen/react-global-state'
+import { createLocalStorageStore } from '@mpen/react-external-state'
 
 const settings = createLocalStorageStore('app.settings', {
     theme: 'system' as 'light' | 'dark' | 'system',
@@ -135,7 +135,7 @@ const settings = createLocalStorageStore(
 Use `createStoreContext` when state should be scoped to a React subtree instead of global module state.
 
 ```tsx
-import { createStoreContext } from '@mpen/react-global-state/react'
+import { createStoreContext } from '@mpen/react-external-state/react'
 
 const DraftContext = createStoreContext({
     title: '',
@@ -184,6 +184,6 @@ function Preview() {
 - `store.set(valueOrUpdater)` / `store.setState(valueOrUpdater)`
 - `store.subscribe(listener, options?)`
 - `store.subscribeSelector(selector, listener, options?)`
-- `useStore(store, selector?, options?)` from `@mpen/react-global-state/react`
-- `createReactStore(initialValue, options?)` from `@mpen/react-global-state/react`
-- `createStoreContext(defaultValue, options?)` from `@mpen/react-global-state/react`
+- `useStore(store, selector?, options?)` from `@mpen/react-external-state/react`
+- `createReactStore(initialValue, options?)` from `@mpen/react-external-state/react`
+- `createStoreContext(defaultValue, options?)` from `@mpen/react-external-state/react`

@@ -33,7 +33,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mnpenner/npm-packages.git",
+    "url": "git+https://github.com/mnpenner/npm-packages.git",
     "directory": "packages/imut-utils"
   },
   "types": "./dist/index.d.ts",

@@ -15,8 +15,9 @@
     "access": "public"
   },
   "repository": {
-    "type": "hg",
-    "url": "https://bitbucket.org/nucleuslabs/react-ajax-loader"
+    "type": "git",
+    "url": "git+https://github.com/mnpenner/npm-packages.git",
+    "directory": "packages/react-ajax-loader"
   },
   "dependencies": {
     "lru-cache": "^4.1.1",

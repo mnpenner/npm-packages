@@ -35,8 +35,9 @@
     "typescript": "^6.0.2"
   },
   "repository": {
-    "type": "hg",
-    "url": "https://bitbucket.org/mnpenner/merge-attrs"
+    "type": "git",
+    "url": "git+https://github.com/mnpenner/npm-packages.git",
+    "directory": "packages/merge-attrs"
   },
   "types": "./dist/index.d.ts",
   "exports": {

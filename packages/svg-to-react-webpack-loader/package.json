@@ -11,8 +11,9 @@
     "js-serialize": "workspace:*"
   },
   "repository": {
-    "type": "hg",
-    "url": "https://github.com/mnpenner/svg-to-react-webpack-loader"
+    "type": "git",
+    "url": "git+https://github.com/mnpenner/npm-packages.git",
+    "directory": "packages/svg-to-react-webpack-loader"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org",

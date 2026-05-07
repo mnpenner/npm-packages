@@ -1,11 +1,11 @@
 {
-  "name": "@mpen/react-global-state",
+  "name": "@mpen/react-external-state",
   "description": "Small external state stores with React hooks and localStorage persistence.",
   "version": "0.1.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mnpenner/npm-packages.git",
-    "directory": "packages/react-global-state"
+    "url": "git+https://github.com/mnpenner/npm-packages.git",
+    "directory": "packages/react-external-state"
   },
   "license": "MIT",
   "author": "Mark Penner <npm@mpen.ca>",
@@ -44,7 +44,7 @@
     "build": "bun run --bun tsdown",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "bun run build && bun run test"
+    "_prepublishOnly": "bun run build && bun run test"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js"

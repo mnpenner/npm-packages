@@ -13,6 +13,6 @@ package-lock.json
 packages/svg2fonts/test/
 
 # Temporary reference material
-packages/react-global-state/examples/
+packages/react-external-state/examples/
 packages/react-datepicker/public/bundle.js
 packages/progressbar/progress.mjs
