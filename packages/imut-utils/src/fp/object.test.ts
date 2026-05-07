@@ -28,13 +28,11 @@ describe('shallowMerge', () => {
       status: 'idle',
     })
 
-    setState(
-      shallowMerge({
-        id: 'abc',
-        count: 2,
-        status: 'busy' as State['status'],
-      }),
-    )
+    const patch: Partial<State> = {
+      count: 2,
+      status: 'busy',
+    }
+    setState(shallowMerge(patch))
 
     expectType<TypeEqual<typeof setState, Dispatch<SetStateAction<State>>>>(true)
   })
