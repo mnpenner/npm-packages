@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { expectType, type TypeEqual } from '@mpen/ts-types'
 import { objSet, relaxedMerge, shallowMerge } from './object'
 import { mapSet } from '../fp/map'
 import type { Next } from '../resolvable'
@@ -14,6 +15,34 @@ describe('shallowMerge', () => {
       d: 4,
     })
   })
+  it('infers the object type from value patches', () => {
+    type State = {
+      count: number
+      id: string
+      status: 'idle' | 'busy'
+    }
+    const setState = (updater: (state: State) => State) =>
+      updater({
+        count: 1,
+        id: 'abc',
+        status: 'idle',
+      })
+
+    const result = setState(
+      shallowMerge({
+        id: 'abc',
+        count: 2,
+        status: 'busy' as State['status'],
+      }),
+    )
+
+    expectType<TypeEqual<typeof result, State>>(true)
+    expect(result).toEqual({
+      count: 2,
+      id: 'abc',
+      status: 'busy',
+    })
+  })
   it('allows undefined input', () => {
     expect(relaxedMerge<Record<string, number>>({ b: 2, c: 9 }, { c: 3, d: 4 })(undefined)).toEqual(
       {
@@ -22,6 +51,29 @@ describe('shallowMerge', () => {
         d: 4,
       },
     )
+  })
+  it('returns a concrete object type from relaxedMerge in a setState-style updater', () => {
+    type State = {
+      count: number
+      id: string
+    }
+    const setState = (updater: (state: State | null | undefined) => State) =>
+      updater({
+        count: 1,
+        id: 'abc',
+      })
+
+    const result = setState(
+      relaxedMerge({
+        count: (count) => {
+          expectType<number>(count)
+          return count + 1
+        },
+      }),
+    )
+
+    expectType<TypeEqual<typeof result, State>>(true)
+    expect(result).toEqual({ count: 2, id: 'abc' })
   })
   it('resolves values in order', () => {
     expect(
@@ -191,6 +243,19 @@ describe('objSet', () => {
     expect(oldSize).toEqual({ width: 512, height: 768 })
     expect(newSize).not.toBe(oldSize)
   })
+  it('preserves the object type in a setState-style updater', () => {
+    const setState = (updater: (size: Size) => Size) => updater({ width: 512, height: 768 })
+
+    const newSize = setState(
+      objSet('width', (width) => {
+        expectType<number>(width)
+        return width + 1
+      }),
+    )
+
+    expectType<TypeEqual<typeof newSize, Size>>(true)
+    expect(newSize).toEqual({ width: 513, height: 768 })
+  })
   it('nested', () => {
     type UsageType = {
       input: number
@@ -201,7 +266,7 @@ describe('objSet', () => {
       cost: number
     }
 
-    function setState(state: Next<UsageState>) {}
+    function setState(_state: Next<UsageState>) {}
 
     const tokensUsed = 100
     const info = {

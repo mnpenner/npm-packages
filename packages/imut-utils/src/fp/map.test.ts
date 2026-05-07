@@ -220,7 +220,7 @@ describe('mergeMap', () => {
       ['a', 'alpha'],
       ['b', 'beta'],
     ])
-    const out = mergeMap<string, string>((m) => [
+    const out = mergeMap<string, string>((_m) => [
       ['a', setValueToKey],
       ['b', setValueToKey],
       ['c', setValueToKey],
