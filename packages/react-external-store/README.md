@@ -1,17 +1,17 @@
-# @mpen/react-external-state
+# @mpen/react-external-store
 
 Small React external state stores with localStorage persistence.
 
 ## Install
 
 ```sh
-bun add @mpen/react-external-state
+bun add @mpen/react-external-store
 ```
 
 ## Store
 
 ```ts
-import { createStore } from '@mpen/react-external-state'
+import { createStore } from '@mpen/react-external-store'
 
 const counter = createStore({ count: 0 })
 
@@ -45,7 +45,7 @@ const unsubscribe = counter.subscribeSelector(
 ## React
 
 ```tsx
-import { createStore } from '@mpen/react-external-state'
+import { createStore } from '@mpen/react-external-store'
 
 const session = createStore({
     userId: null as string | null,
@@ -79,7 +79,7 @@ session.setState((state) => ({
 You can also pass the store around and subscribe from any component.
 
 ```tsx
-import { createStore } from '@mpen/react-external-state'
+import { createStore } from '@mpen/react-external-store'
 
 const counter = createStore({ count: 0 })
 
@@ -100,7 +100,7 @@ export function Counter() {
 ## localStorage
 
 ```ts
-import { createLocalStorageStore } from '@mpen/react-external-state'
+import { createLocalStorageStore } from '@mpen/react-external-store'
 
 const settings = createLocalStorageStore('app.settings', {
     theme: 'system' as 'light' | 'dark' | 'system',
@@ -132,7 +132,7 @@ const settings = createLocalStorageStore(
 Use `createStoreContext` when state should be scoped to a React subtree instead of global module state.
 
 ```tsx
-import { createStoreContext } from '@mpen/react-external-state'
+import { createStoreContext } from '@mpen/react-external-store'
 
 const DraftContext = createStoreContext({
     title: '',

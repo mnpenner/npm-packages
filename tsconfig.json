@@ -20,7 +20,7 @@
             "@mpen/is-type": ["./packages/is-type/src/index.ts"],
             "@mpen/jsxhtml": ["./packages/jsxhtml/src/index.ts"],
             "@mpen/react-basic-inputs": ["./packages/react-basic-inputs/src/bundle.ts"],
-            "@mpen/react-external-state": ["./packages/react-external-state/src/index.ts"],
+            "@mpen/react-external-store": ["./packages/react-external-store/src/index.ts"],
             "@mpen/rollup-plugin-clean": [
                 "./packages/rollup-plugins/packages/rollup-plugin-clean/rollup-plugin-clean.ts"
             ],

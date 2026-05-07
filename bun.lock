@@ -410,8 +410,8 @@
         "vite": "^5.2.0",
       },
     },
-    "packages/react-external-state": {
-      "name": "@mpen/react-external-state",
+    "packages/react-external-store": {
+      "name": "@mpen/react-external-store",
       "version": "0.1.0",
       "devDependencies": {
         "@types/bun": "latest",
@@ -1047,7 +1047,7 @@
 
     "@mpen/react-datepicker": ["@mpen/react-datepicker@workspace:packages/react-datepicker"],
 
-    "@mpen/react-external-state": ["@mpen/react-external-state@workspace:packages/react-external-state"],
+    "@mpen/react-external-store": ["@mpen/react-external-store@workspace:packages/react-external-store"],
 
     "@mpen/rerouter": ["@mpen/rerouter@workspace:packages/rerouter"],
 

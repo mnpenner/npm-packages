@@ -27,7 +27,7 @@ const browserPackageFiles = [
     'packages/react-basic-inputs/**/*.{js,jsx,ts,tsx}',
     'packages/react-combobox/**/*.{js,jsx,ts,tsx}',
     'packages/react-datepicker/**/*.{js,jsx,ts,tsx}',
-    'packages/react-external-state/**/*.{js,jsx,ts,tsx}',
+    'packages/react-external-store/**/*.{js,jsx,ts,tsx}',
     'packages/rerouter/**/*.{js,jsx,ts,tsx}',
 ]
 
@@ -37,7 +37,7 @@ const reactPackageFiles = [
     'packages/react-basic-inputs/**/*.{js,jsx,ts,tsx}',
     'packages/react-combobox/**/*.{js,jsx,ts,tsx}',
     'packages/react-datepicker/**/*.{js,jsx,ts,tsx}',
-    'packages/react-external-state/**/*.{js,jsx,ts,tsx}',
+    'packages/react-external-store/**/*.{js,jsx,ts,tsx}',
     'packages/rerouter/**/*.{js,jsx,ts,tsx}',
     'packages/ts-types/src/react.ts',
 ]

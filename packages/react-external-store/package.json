@@ -1,11 +1,11 @@
 {
-  "name": "@mpen/react-external-state",
+  "name": "@mpen/react-external-store",
   "description": "Small React external state stores with localStorage persistence.",
   "version": "0.1.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mnpenner/npm-packages.git",
-    "directory": "packages/react-external-state"
+    "directory": "packages/react-external-store"
   },
   "license": "MIT",
   "author": "Mark Penner <npm@mpen.ca>",
