@@ -1,138 +1,186 @@
-import { spawnSync } from 'node:child_process'
-import { dirname, join, isAbsolute, relative, resolve } from 'node:path'
-import { existsSync, readdirSync, statSync, readFileSync } from 'node:fs'
+#!/usr/bin/env -S bun -i
+import { readdir, readFile, stat } from 'node:fs/promises'
+import { isAbsolute, join, relative, resolve } from 'node:path'
+import { parseArgs, type ParseArgsConfig } from 'node:util'
+import { $ } from 'bun'
 
-const args = process.argv.slice(2)
+const PARSE_CONFIG = {
+    options: {},
+    strict: true,
+    allowPositionals: true,
+} satisfies ParseArgsConfig
 
-function readReferences(configPath: string): string[] {
-    const config = JSON.parse(readFileSync(configPath, 'utf-8')) as {
-        references?: Array<{ path?: string }>
-    }
-    const configDir = dirname(configPath)
+const IGNORED_DIRS = new Set([
+    '.git',
+    '.hg',
+    '.idea',
+    'coverage',
+    'dist',
+    'docs',
+    'node_modules',
+    'scratch',
+])
 
-    return (config.references ?? [])
-        .map((ref) => {
-            if (!ref.path) return undefined
-            const refPath = resolve(configDir, ref.path)
-            if (!existsSync(refPath)) return undefined
-            if (statSync(refPath).isDirectory()) return join(refPath, 'tsconfig.json')
-            return refPath
-        })
-        .filter((path): path is string => !!path && existsSync(path))
+type TsConfig = {
+    references?: Array<{ path?: string }>
 }
 
-function runTsc(configPath?: string, seen = new Set<string>()) {
-    const resolvedConfigPath = configPath ? resolve(configPath) : resolve('tsconfig.json')
+function isProjectConfig(filename: string): boolean {
+    return /^tsconfig(?:\.[^.]+)?\.json$/.test(filename) && filename !== 'tsconfig.base.json'
+}
+
+async function pathExists(path: string): Promise<boolean> {
+    try {
+        await stat(path)
+        return true
+    } catch {
+        return false
+    }
+}
+
+async function readReferences(configPath: string): Promise<string[]> {
+    const config = JSON.parse(await readFile(configPath, 'utf-8')) as TsConfig
+    const configDir = resolve(configPath, '..')
+    const references: string[] = []
+
+    for (const ref of config.references ?? []) {
+        if (!ref.path) continue
+
+        const refPath = resolve(configDir, ref.path)
+        if (!(await pathExists(refPath))) continue
+
+        const refStats = await stat(refPath)
+        references.push(refStats.isDirectory() ? join(refPath, 'tsconfig.json') : refPath)
+    }
+
+    return references
+}
+
+async function findTsConfigsInDir(dir: string): Promise<string[]> {
+    const configs: string[] = []
+
+    for (const entry of await readdir(dir, { withFileTypes: true })) {
+        const fullPath = join(dir, entry.name)
+        if (entry.isFile() && isProjectConfig(entry.name)) {
+            configs.push(fullPath)
+            continue
+        }
+        if (!entry.isDirectory() || IGNORED_DIRS.has(entry.name)) continue
+
+        configs.push(...(await findTsConfigsInDir(fullPath)))
+    }
+
+    return configs
+}
+
+async function findTsConfigsByPackageName(target: string): Promise<string[]> {
+    const packagesDir = resolve('packages')
+    if (!(await pathExists(packagesDir))) return []
+
+    async function search(dir: string): Promise<string[]> {
+        for (const entry of await readdir(dir, { withFileTypes: true })) {
+            if (!entry.isDirectory() || IGNORED_DIRS.has(entry.name)) continue
+
+            const fullPath = join(dir, entry.name)
+            if (entry.name === target) return findTsConfigsInDir(fullPath)
+
+            const pkgJsonPath = join(fullPath, 'package.json')
+            if (await pathExists(pkgJsonPath)) {
+                try {
+                    const pkgJson = JSON.parse(await readFile(pkgJsonPath, 'utf-8')) as {
+                        name?: string
+                    }
+                    if (pkgJson.name === target) return findTsConfigsInDir(fullPath)
+                } catch {
+                    // ignore malformed package files during discovery
+                }
+            }
+
+            const found = await search(fullPath)
+            if (found.length) return found
+        }
+
+        return []
+    }
+
+    return search(packagesDir)
+}
+
+async function findTsConfigs(target: string): Promise<string[]> {
+    const directPath = isAbsolute(target) ? target : resolve(target)
+
+    if (await pathExists(directPath)) {
+        const targetStats = await stat(directPath)
+        if (targetStats.isDirectory()) return findTsConfigsInDir(directPath)
+        if (isProjectConfig(target)) return [directPath]
+    }
+
+    return findTsConfigsByPackageName(target)
+}
+
+async function runTsc(configPath: string, seen: Set<string>): Promise<number | void> {
+    const resolvedConfigPath = resolve(configPath)
     if (seen.has(resolvedConfigPath)) return
     seen.add(resolvedConfigPath)
 
-    const tscArgs = ['--noEmit']
-    if (configPath) {
-        tscArgs.push('-p', configPath)
-    }
-
-    const label = configPath ? relative(process.cwd(), configPath) : 'root'
+    const label = relative(process.cwd(), resolvedConfigPath) || 'root'
     console.log(`\x1b[34mTypechecking ${label}...\x1b[0m`)
 
-    const result = spawnSync('bun', ['run', 'tsc', ...tscArgs], {
-        stdio: 'inherit',
-        shell: true,
-    })
-
-    if (result.status !== 0) {
+    const result = await $`bun run tsc --noEmit -p ${resolvedConfigPath}`.nothrow()
+    if (result.exitCode !== 0) {
         console.error(`\x1b[31mTypecheck failed for ${label}\x1b[0m`)
-        process.exit(result.status ?? 1)
+        return result.exitCode
     }
 
     console.log(`\x1b[32mTypecheck passed for ${label}: no errors\x1b[0m`)
 
-    for (const referencePath of readReferences(resolvedConfigPath)) {
-        runTsc(referencePath, seen)
+    for (const referencePath of await readReferences(resolvedConfigPath)) {
+        const exitCode = await runTsc(referencePath, seen)
+        if (typeof exitCode === 'number') return exitCode
     }
 }
 
-function findTsConfigsInDir(dir: string): string[] {
-    const configs: string[] = []
-    const rootConfig = join(dir, 'tsconfig.json')
-    if (existsSync(rootConfig)) configs.push(rootConfig)
+async function main(_options: Options, positionals: Positionals): Promise<number | void> {
+    const seen = new Set<string>()
+    const targets = positionals.length ? positionals : ['.']
 
-    const ignoredDirs = new Set(['node_modules', 'dist', '.hg'])
-    const search = (currentDir: string): void => {
-        for (const entry of readdirSync(currentDir, { withFileTypes: true })) {
-            if (!entry.isDirectory() || ignoredDirs.has(entry.name)) continue
+    for (const target of targets) {
+        const configPaths = await findTsConfigs(target)
+        if (!configPaths.length) {
+            console.error(`\x1b[31mError: Could not find tsconfig.json for "${target}"\x1b[0m`)
+            return 1
+        }
 
-            const fullPath = join(currentDir, entry.name)
-            const config = join(fullPath, 'tsconfig.json')
-            if (existsSync(config)) configs.push(config)
-            else search(fullPath)
+        for (const configPath of configPaths) {
+            const exitCode = await runTsc(configPath, seen)
+            if (typeof exitCode === 'number') return exitCode
         }
     }
-
-    search(dir)
-    return configs
 }
 
-function findTsConfigs(target: string): string[] {
-    // 1. Direct path
-    const directPath = isAbsolute(target) ? target : join(process.cwd(), target)
-    if (existsSync(directPath)) {
-        if (statSync(directPath).isDirectory()) {
-            return findTsConfigsInDir(directPath)
-        } else if (target.endsWith('tsconfig.json')) {
-            return [directPath]
-        }
-    }
+//#region Invoke main
+type ParsedConfig = ReturnType<typeof parseArgs<typeof PARSE_CONFIG>>
+type Options = ParsedConfig['values']
+type Positionals = ParsedConfig['positionals']
 
-    // 2. Search in packages/
-    const packagesDir = join(process.cwd(), 'packages')
-    if (existsSync(packagesDir)) {
-        const search = (dir: string): string[] | null => {
-            const entries = readdirSync(dir, { withFileTypes: true })
-            for (const entry of entries) {
-                if (entry.isDirectory()) {
-                    const fullPath = join(dir, entry.name)
-                    // Match by directory name
-                    if (entry.name === target) {
-                        const configs = findTsConfigsInDir(fullPath)
-                        if (configs.length) return configs
-                    }
-                    // Match by package name
-                    const pkgJsonPath = join(fullPath, 'package.json')
-                    if (existsSync(pkgJsonPath)) {
-                        try {
-                            const pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf-8'))
-                            if (pkgJson.name === target) {
-                                const configs = findTsConfigsInDir(fullPath)
-                                if (configs.length) return configs
-                            }
-                        } catch {
-                            // ignore
-                        }
-                    }
-                    const found = search(fullPath)
-                    if (found) return found
-                }
+if (import.meta.main) {
+    const { values, positionals } = parseArgs(PARSE_CONFIG)
+
+    main(values, positionals).then(
+        (exitCode) => {
+            if (typeof exitCode === 'number') {
+                process.exitCode = exitCode
             }
-            return null
-        }
-        return search(packagesDir) ?? []
-    }
-
-    return []
-}
-
-if (args.length === 0) {
-    runTsc()
-} else {
-    for (const arg of args) {
-        const configPaths = findTsConfigs(arg)
-        if (configPaths.length) {
-            for (const configPath of configPaths) {
-                runTsc(configPath)
+        },
+        (err) => {
+            if (err instanceof $.ShellError) {
+                console.error(`Command failed with exit code ${err.exitCode}`)
+                process.exitCode = err.exitCode
+            } else {
+                console.error(err ?? 'An unknown error occurred')
+                process.exitCode = 1
             }
-        } else {
-            console.error(`\x1b[31mError: Could not find tsconfig.json for "${arg}"\x1b[0m`)
-            process.exit(1)
-        }
-    }
+        },
+    )
 }
+//#endregion
