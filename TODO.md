@@ -23,7 +23,7 @@
 - Add `--react` flag to `svg2fonts`; it should output a React component for each icon
 - [x] Drop `"ignoreDeprecations": "6.0"` from `tsconfig.json`
 - packages/rerouter
-  - [x] For `examples`, make the current page/tab button "active"
-  - Create `<RouteContext routes={ROUTES}>`, then inside we can do `<RouteLink name="routeName" params={{id:123}} />`. It can "active" when there's an exact match (id is 123) *or* when the route generally matches.
-  - Mouseover to start fetching page JS (but not data)
+    - [x] For `examples`, make the current page/tab button "active"
+    - Create `<RouteContext routes={ROUTES}>`, then inside we can do `<RouteLink name="routeName" params={{id:123}} />`. It can "active" when there's an exact match (id is 123) _or_ when the route generally matches.
+    - Mouseover to start fetching page JS (but not data)
 - Rename `react-external-store` to `react-external-store` ?

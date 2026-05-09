@@ -1,6 +1,6 @@
 import { cc, type ClassValue } from '@mpen/classcat'
 import type { OverrideProps } from '@mpen/ts-types/react'
-import type { MouseEvent } from 'react'
+import { startTransition, type MouseEvent } from 'react'
 import { pushUrl, replaceUrl } from '../lib/url'
 import { mergeSearch } from '../lib/mergeSearch'
 
@@ -72,11 +72,13 @@ export function Link({ to, search, children, className, replace, ...rest }: Link
         if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return
         if (ev.button !== 0) return
         ev.preventDefault()
-        if (replace) {
-            replaceUrl(href)
-        } else {
-            pushUrl(href)
-        }
+        startTransition(() => {
+            if (replace) {
+                replaceUrl(href)
+            } else {
+                pushUrl(href)
+            }
+        })
     }
 
     return (

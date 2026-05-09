@@ -104,12 +104,8 @@
             "@mpen/server-router/response": ["./packages/server-router/src/response/index.ts"],
             "@mpen/server-router/routes": ["./packages/server-router/src/routes/index.ts"],
             "@mpen/imut-utils/fp": ["./packages/imut-utils/src/fp/index.ts"],
-            "@mpen/rerouter/bin": [
-                "./packages/rerouter/src/bin.ts"
-            ],
-            "@mpen/rerouter": [
-                "./packages/rerouter/src/index.ts"
-            ]
+            "@mpen/rerouter/bin": ["./packages/rerouter/cli/bin.ts"],
+            "@mpen/rerouter": ["./packages/rerouter/src/index.ts"]
         }
     },
 

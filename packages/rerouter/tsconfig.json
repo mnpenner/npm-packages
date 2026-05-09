@@ -3,7 +3,8 @@
     "compilerOptions": {
         "jsx": "react-jsx",
         "lib": ["DOM", "DOM.Iterable", "ESNext"],
-        "types": ["bun", "node", "react", "react-dom"]
+        "types": ["react", "react-dom"]
     },
-    "include": ["src/**/*", "examples/**/*"]
+    "include": ["src/**/*", "cli/**/*", "examples/**/*"],
+    "exclude": ["examples/dist/**/*"]
 }

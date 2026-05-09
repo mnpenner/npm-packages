@@ -1,11 +1,13 @@
 #!/usr/bin/env node
+/// <reference types="node" />
+
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { parseArgs, type ParseArgsConfig } from 'node:util'
 import { parse } from 'path-to-regexp'
-import { normalizeLegacyPathToRegexpSyntax, normalizeRoutes, type Route } from './lib/routes'
+import { normalizeLegacyPathToRegexpSyntax, normalizeRoutes, type Route } from '../src/lib/routes'
 
 const PARSE_CONFIG = {
     options: {

@@ -91,7 +91,7 @@ function Layout() {
             <div className="card">
                 <h1 style={{ margin: 0 }}>rerouter examples</h1>
                 <div style={{ opacity: 0.8, marginTop: 8 }}>
-                    Client-only dev server using <code>bun --hot examples/index.html</code>.
+                    Client-only production build served from <code>examples/dist</code>.
                 </div>
             </div>
 
