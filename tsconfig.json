@@ -109,5 +109,5 @@
         }
     },
     "files": [],
-    "references": [{ "path": "./tsconfig.test.json" }]
+    "references": [{ "path": "./tsconfig.root.json" }, { "path": "./tsconfig.test.json" }]
 }
