@@ -1,6 +1,3 @@
-/// <reference types="bun" />
-/// <reference types="node" />
-
 import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 

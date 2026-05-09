@@ -1,7 +1,4 @@
 #!/usr/bin/env bun test
-/// <reference types="bun" />
-/// <reference types="node" />
-
 import { expect, test, describe, it, afterAll, beforeAll } from 'bun:test'
 import { $ } from 'bun'
 import fs from 'node:fs/promises'

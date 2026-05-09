@@ -5,6 +5,6 @@
         "lib": ["DOM", "DOM.Iterable", "ESNext"],
         "types": ["react", "react-dom"]
     },
-    "include": ["src/**/*", "cli/**/*", "examples/**/*"],
-    "exclude": ["examples/dist/**/*"]
+    "include": ["src/**/*", "examples/**/*.ts", "examples/**/*.tsx"],
+    "exclude": ["**/*.test.*", "cli/**/*", "examples/dist/**/*", "examples/serve-dist.ts"]
 }
