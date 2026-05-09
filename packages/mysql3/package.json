@@ -1,7 +1,7 @@
 {
   "name": "mysql3",
   "description": "Small object-oriented wrapper around the MariaDB client.",
-  "version": "0.7.8",
+  "version": "0.7.9",
   "license": "LGPL-3.0-or-later",
   "packageManager": "bun@1.3.13",
   "exports": {
@@ -45,7 +45,7 @@
     "access": "public"
   },
   "publishHash": {
-    "hash": "dbb3073c10b20210904691bcf22684b0a8e4e7beb99dfac38a22366be4bc47fa",
-    "version": "0.7.8"
+    "hgChangesetId": "d98e94266bbc+",
+    "sha256": "cdff4d21030d26f80fb32682cd400053b55290438aadf62958c33f795d7b6813"
   }
 }

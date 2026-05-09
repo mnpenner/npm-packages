@@ -1,7 +1,7 @@
 {
   "name": "bun-plugin-react-compiler",
   "description": "Bun plugin for React Compiler.",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mnpenner/npm-packages.git",
@@ -42,7 +42,7 @@
     "access": "public"
   },
   "publishHash": {
-    "hash": "71dac6e861187ea1544187a743a5699072d94fd9cff31b72521c61c310016c69",
-    "version": "0.3.6"
+    "hgChangesetId": "d98e94266bbc+",
+    "sha256": "1b95785ef9e873ccf67e7650950c9865fc9f7c91c4504561ac86b916a8b6d47c"
   }
 }

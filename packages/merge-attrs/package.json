@@ -1,7 +1,7 @@
 {
   "name": "merge-attrs",
   "description": "Merge HTML attributes",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "type": "module",
   "sideEffects": false,
   "files": [
@@ -47,7 +47,7 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "publishHash": {
-    "hash": "ee1398e5b98824b23bf0d0b5092273e5547f8e8cc3c11f566240c45cf4682d7e",
-    "version": "0.1.10"
+    "hgChangesetId": "d98e94266bbc+",
+    "sha256": "c3fee68884e2784d798f31488d3e403a01b4547ac326372e248bfd5c5e57ad0b"
   }
 }

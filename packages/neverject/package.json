@@ -1,7 +1,7 @@
 {
   "name": "neverject",
   "description": "Promise helpers for values that never reject.",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "module": "./dist/index.js",
   "type": "module",
   "devDependencies": {
@@ -37,7 +37,7 @@
     "access": "public"
   },
   "publishHash": {
-    "hash": "a6ebf8ec3d0d68ddf0b727eab05f37cd46f5bbf502274f4ddc36b38bcdae5998",
-    "version": "0.2.6"
+    "hgChangesetId": "d98e94266bbc+",
+    "sha256": "914bfe128cf2f1e7fe60a3fd247037e149b95fdceae326ba624782c5079de02d"
   }
 }

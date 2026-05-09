@@ -1,7 +1,7 @@
 {
   "name": "@mpen/uri-template",
   "description": "RFC 6570 URI template expansion and matching utilities.",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mnpenner/npm-packages.git",
@@ -41,7 +41,7 @@
   "module": "./dist/bundle.js",
   "types": "./dist/bundle.d.ts",
   "publishHash": {
-    "hash": "0543e7aedd29cd4a2d807a266332dd94c35f5ee29fe45fbfab5778b09f0810a7",
-    "version": "0.1.15"
+    "hgChangesetId": "d98e94266bbc+",
+    "sha256": "a58c9ce3301c7f454fead8f8f4721e2836c78a6e9f2b2fc0dc2c38caea8c22d9"
   }
 }

@@ -34,7 +34,7 @@ type PackageJson = {
     name?: string
     version?: string
     private?: boolean
-    publishHash?: CachedReleaseHash
+    publishHash?: PublishHash
     publishConfig?: {
         access?: string
         registry?: string
@@ -53,9 +53,9 @@ type RegistryRelease = {
     version: string
 }
 
-type CachedReleaseHash = {
-    hash: string
-    version: string
+type PublishHash = {
+    hgChangesetId: string
+    sha256: string
 }
 
 type RunOptions = {
@@ -155,6 +155,8 @@ async function main(options: Options, positionals: Positionals): Promise<number 
                 throw new Error(`${packageName} is published but does not have a build script.`)
             }
 
+            const hgChangesetId = await getHgChangesetId()
+
             console.log('build')
             await runQuietStep({
                 args: ['run', 'build'],
@@ -167,8 +169,8 @@ async function main(options: Options, positionals: Positionals): Promise<number 
             const cachedReleaseHash = getPackagePublishHash(packageDir.packageJson)
 
             if (
-                cachedReleaseHash?.version === release.version &&
-                localHash === cachedReleaseHash.hash
+                packageDir.packageJson.version === release.version &&
+                localHash === cachedReleaseHash?.sha256
             ) {
                 console.log(
                     chalk.green(`Packed output matches ${release.version}; skipping publish.`),
@@ -181,10 +183,16 @@ async function main(options: Options, positionals: Positionals): Promise<number 
                 continue
             }
 
-            if (cachedReleaseHash?.version !== release.version) {
+            if (packageDir.packageJson.version !== release.version) {
                 console.log(
                     chalk.yellow(
-                        `No package.json publishHash for ${release.version}; publishing a new version.`,
+                        `package.json version does not match ${release.version}; publishing a new version.`,
+                    ),
+                )
+            } else if (localHash !== cachedReleaseHash?.sha256) {
+                console.log(
+                    chalk.yellow(
+                        `No matching package.json publishHash for ${release.version}; publishing a new version.`,
                     ),
                 )
             }
@@ -203,19 +211,7 @@ async function main(options: Options, positionals: Positionals): Promise<number 
                 continue
             }
 
-            await setPackageVersion(packageDir.packageJsonPath, nextVersion)
-            packageDir.packageJson.version = nextVersion
-
-            const publishedHash = await createLocalPackageHash(packageDir.path)
-            await setPackagePublishHash(packageDir.packageJsonPath, {
-                hash: publishedHash,
-                version: nextVersion,
-            })
-            packageDir.packageJson.publishHash = {
-                hash: publishedHash,
-                version: nextVersion,
-            }
-            await publishPackage(packageDir, registry)
+            await publishPackageVersion(packageDir, registry, nextVersion, hgChangesetId)
             results.push({ name: packageName, status: 'published', version: nextVersion })
         } catch (err) {
             failed = true
@@ -626,16 +622,16 @@ function sortJson(value: unknown): unknown {
     return value
 }
 
-function isCachedReleaseHash(value: unknown): value is CachedReleaseHash {
-    return isRecord(value) && typeof value.hash === 'string' && typeof value.version === 'string'
+function isPublishHash(value: unknown): value is PublishHash {
+    return isRecord(value) && typeof value.sha256 === 'string'
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return value !== null && typeof value === 'object' && !Array.isArray(value)
 }
 
-function getPackagePublishHash(packageJson: PackageJson): CachedReleaseHash | undefined {
-    return isCachedReleaseHash(packageJson.publishHash) ? packageJson.publishHash : undefined
+function getPackagePublishHash(packageJson: PackageJson): PublishHash | undefined {
+    return isPublishHash(packageJson.publishHash) ? packageJson.publishHash : undefined
 }
 
 async function setPackageVersion(packageJsonPath: string, version: string): Promise<void> {
@@ -650,7 +646,7 @@ async function setPackageVersion(packageJsonPath: string, version: string): Prom
 
 async function setPackagePublishHash(
     packageJsonPath: string,
-    publishHash: CachedReleaseHash,
+    publishHash: PublishHash,
 ): Promise<void> {
     const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8')) as Record<
         string,
@@ -659,6 +655,42 @@ async function setPackagePublishHash(
     packageJson.publishHash = publishHash
 
     await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`)
+}
+
+async function getHgChangesetId(): Promise<string> {
+    return (await run('hg', ['id', '-i'], { capture: true })).trim()
+}
+
+async function publishPackageVersion(
+    packageDir: PackageDir,
+    registry: string,
+    version: string,
+    hgChangesetId: string,
+): Promise<void> {
+    const originalPackageJson = await readFile(packageDir.packageJsonPath, 'utf8')
+    const originalPackageJsonObject = JSON.parse(originalPackageJson) as PackageJson
+
+    try {
+        await setPackageVersion(packageDir.packageJsonPath, version)
+        packageDir.packageJson.version = version
+
+        const publishedHash = await createLocalPackageHash(packageDir.path)
+        await setPackagePublishHash(packageDir.packageJsonPath, {
+            hgChangesetId,
+            sha256: publishedHash,
+        })
+        packageDir.packageJson.publishHash = {
+            hgChangesetId,
+            sha256: publishedHash,
+        }
+
+        await publishPackage(packageDir, registry)
+    } catch (error) {
+        await writeFile(packageDir.packageJsonPath, originalPackageJson)
+        packageDir.packageJson = originalPackageJsonObject
+
+        throw error
+    }
 }
 
 async function publishPackage(packageDir: PackageDir, registry: string): Promise<void> {

@@ -1,7 +1,7 @@
 {
   "name": "ouid",
   "description": "Ordered UUIDs for Node & Bun",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "exports": {
     ".": {
       "import": "./dist/index.mjs",
@@ -41,7 +41,7 @@
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.cts",
   "publishHash": {
-    "hash": "fb614cc361b1b19bd1b251ed0ec3fdf401eab26e91da59f9fe2311837bc30e89",
-    "version": "0.9.3"
+    "hgChangesetId": "d98e94266bbc+",
+    "sha256": "d18717b867fc58cb43a242c7947f15367e3a0805937cb74452a0422c43fccc9a"
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "@mpen/react-external-store",
   "description": "Small React external state stores with localStorage persistence.",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mnpenner/npm-packages.git",
@@ -46,7 +46,7 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "publishHash": {
-    "hash": "24e24469e0a452ebef899bd325029b419e1adb8ff100b9ab9ac61b80ad9bc857",
-    "version": "0.1.3"
+    "hgChangesetId": "d98e94266bbc+",
+    "sha256": "4432769ce25af37ebfcc30f2f6d0eb127fb231794206750e6cbe0ac1fd509fbd"
   }
 }

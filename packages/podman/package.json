@@ -1,7 +1,7 @@
 {
   "name": "podman",
   "description": "Utilities for starting a Podman machine from Bun/Node.",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "author": "Mark Penner <npm@mpen.ca>",
   "module": "index.ts",
   "type": "module",
@@ -40,7 +40,7 @@
     "access": "public"
   },
   "publishHash": {
-    "hash": "a376e3647de4b1f470c698488b91884e1942f7b4be92f065d3480acac1494c98",
-    "version": "0.3.5"
+    "hgChangesetId": "d98e94266bbc+",
+    "sha256": "310bc036fd9df4808d403ef52d4c5b777b574673fa076c751b6207b73e13e947"
   }
 }

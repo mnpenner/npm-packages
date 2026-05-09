@@ -1,7 +1,7 @@
 {
   "name": "cli-api",
   "description": "Build command-line apps with typed commands and options.",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "UNLICENSED",
   "private": false,
   "type": "module",
@@ -53,7 +53,7 @@
     "access": "public"
   },
   "publishHash": {
-    "hash": "5830b25f32a01591bda566eb9b0edadebfff68f491df8b22cabb19ac25d91905",
-    "version": "0.3.0"
+    "hgChangesetId": "d98e94266bbc+",
+    "sha256": "282c924d08ad7172ad891fe96b64551520e37f2f76cd6ceae3dc68873fbd03ed"
   }
 }

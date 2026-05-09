@@ -1,7 +1,7 @@
 {
   "name": "@mpen/react-basic-inputs",
   "description": "React wrappers around native inputs with improved behavior.",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "private": false,
   "type": "module",
   "files": [
@@ -53,7 +53,7 @@
     "access": "public"
   },
   "publishHash": {
-    "hash": "8fd65ca28ba552f60caf61b0d28ab14fa0d949a11a039ace6775242ba1e5b2d5",
-    "version": "0.5.3"
+    "hgChangesetId": "d98e94266bbc+",
+    "sha256": "3c4891c21ba07dcf753dbbccffe32b30c7fc90bf8e6f095b99cf93be8690d05c"
   }
 }
