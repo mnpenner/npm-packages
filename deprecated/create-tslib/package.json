@@ -1,5 +1,5 @@
 {
-  "name": "ctslib",
+  "name": "create-tslib",
   "description": "Scaffold TypeScript library packages.",
   "version": "0.1.5",
   "private": true,
