@@ -1,22 +1,15 @@
 {
+    "extends": "../../tsconfig.json",
     "compilerOptions": {
         "lib": ["ESNext"],
         "types": ["bun-types"],
-        "target": "ES2022",
-        "module": "ESNext",
-        "moduleResolution": "bundler",
         "declaration": true,
         "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
-        "strict": true,
         "exactOptionalPropertyTypes": true,
         "skipLibCheck": true,
         "noUncheckedIndexedAccess": false,
         "resolveJsonModule": true,
-        "outDir": "./dist"
+        "outDir": "./server/dist"
     }
-    //  "files": [
-    //    "./serve.ts"
-    //  ],
-    //  "include": ["server/**.ts"]
 }

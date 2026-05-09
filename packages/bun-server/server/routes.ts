@@ -1,4 +1,4 @@
-import { UriTemplate } from '@mpen/rerouter'
+import { UriTemplate } from '@mpen/uri-template'
 import { Router } from './router'
 
 const router = new Router()

@@ -1,5 +1,5 @@
 import type { HttpRequestMethod } from './server-api'
-import type { UriParams } from '@mpen/rerouter'
+import type { UriParams } from '@mpen/uri-template'
 
 interface BunUrl<P extends UriParams> extends URL {
     params: P

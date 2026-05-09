@@ -1,4 +1,4 @@
-import type { UriTemplate, UriParams } from '@mpen/rerouter'
+import type { UriTemplate, UriParams } from '@mpen/uri-template'
 
 import type { HybridResponse } from './hybrid-response'
 import type { BunRequest } from './bun-request'
