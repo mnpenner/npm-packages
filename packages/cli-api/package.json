@@ -51,5 +51,9 @@
   "module": "./dist/index.mjs",
   "publishConfig": {
     "access": "public"
+  },
+  "publishHash": {
+    "hash": "5830b25f32a01591bda566eb9b0edadebfff68f491df8b22cabb19ac25d91905",
+    "version": "0.3.0"
   }
 }

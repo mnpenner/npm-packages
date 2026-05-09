@@ -1,7 +1,7 @@
 {
   "name": "@mpen/jsxhtml",
   "description": "Render JSX to HTML strings without hydration.",
-  "version": "0.5.9",
+  "version": "0.5.10",
   "packageManager": "bun@1.3.7",
   "exports": {
     ".": "./dist/index.js",
@@ -73,5 +73,9 @@
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
-  "types": "./dist/index.d.ts"
+  "types": "./dist/index.d.ts",
+  "publishHash": {
+    "hash": "223998e4e3807ffeb9e8c431e38b12c4de50dfc1ee3ac6aacd16980549b1f0fd",
+    "version": "0.5.10"
+  }
 }

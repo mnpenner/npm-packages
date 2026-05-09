@@ -1,7 +1,7 @@
 {
   "name": "@mpen/is-type",
   "description": "Runtime type checks with TypeScript type guards.",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "packageManager": "bun@1.1.23",
   "type": "module",
   "files": [
@@ -40,5 +40,9 @@
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
-  "types": "./dist/index.d.ts"
+  "types": "./dist/index.d.ts",
+  "publishHash": {
+    "hash": "e1b44ed34a5ee750bfe467617fea428aa21585ed705898cf896ebb98f5aa3cd0",
+    "version": "0.2.3"
+  }
 }

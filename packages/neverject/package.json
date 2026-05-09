@@ -1,7 +1,7 @@
 {
   "name": "neverject",
   "description": "Promise helpers for values that never reject.",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "module": "./dist/index.js",
   "type": "module",
   "devDependencies": {
@@ -35,5 +35,9 @@
   "author": "Mark Penner <npm@mpen.ca>",
   "publishConfig": {
     "access": "public"
+  },
+  "publishHash": {
+    "hash": "a6ebf8ec3d0d68ddf0b727eab05f37cd46f5bbf502274f4ddc36b38bcdae5998",
+    "version": "0.2.6"
   }
 }

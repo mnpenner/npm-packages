@@ -1,7 +1,7 @@
 {
   "name": "@mpen/classcat",
   "description": "Conditionally concatenate class names.",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mnpenner/npm-packages.git",
@@ -36,5 +36,9 @@
     "build": "bun run --bun tsdown",
     "test": "bun test",
     "prepublishOnly": "bun run build && bun run test"
+  },
+  "publishHash": {
+    "hash": "dcc837da6e675b6a482553718bb84560c06364a4f9476c7b57c49ff99d586a0f",
+    "version": "0.1.5"
   }
 }

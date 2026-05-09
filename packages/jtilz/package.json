@@ -1,7 +1,7 @@
 {
   "name": "jtilz",
   "description": "Utility library for Node.js and Browser",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "author": "Mark Penner <npm@mpen.ca>",
   "license": "MIT",
   "type": "module",
@@ -43,5 +43,9 @@
   },
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
-  "types": "./dist/index.d.mts"
+  "types": "./dist/index.d.mts",
+  "publishHash": {
+    "hash": "241b278bffdc5216ebe870fd1445ee101de207bbb42fcfdf2a6eb252cd4f339b",
+    "version": "0.4.3"
+  }
 }

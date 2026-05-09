@@ -1,7 +1,7 @@
 {
   "name": "@mpen/rerouter",
   "description": "Lightweight type-safe router for React with URL helper generation.",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "exports": {
     ".": "./dist/index.js",
     "./bin": "./dist/bin.js",
@@ -45,5 +45,9 @@
   "inlinedDependencies": {
     "prettier": "3.8.3",
     "process": "0.11.10"
+  },
+  "publishHash": {
+    "hash": "b674cedc524ab800bb86a7b6222ee8e0d4d483f2b59d579d59944a10fe0d7162",
+    "version": "0.3.2"
   }
 }

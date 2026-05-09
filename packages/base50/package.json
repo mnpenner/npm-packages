@@ -1,7 +1,7 @@
 {
   "name": "@mpen/base50",
   "description": "Base conversion utilities for compact string encodings.",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "packageManager": "bun@1.2.10",
   "type": "module",
   "exports": {
@@ -35,5 +35,9 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "publishHash": {
+    "hash": "9823cf80be0fd4ddd54be7286ef84a033e788e32b31ddaf558975f1db7e2079f",
+    "version": "0.2.4"
   }
 }

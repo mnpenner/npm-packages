@@ -1,7 +1,7 @@
 {
   "name": "@mpen/ts-types",
   "description": "Shared TypeScript utility types.",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "type": "module",
   "exports": {
     ".": "./dist/index.js",
@@ -34,5 +34,9 @@
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
-  "types": "./dist/index.d.ts"
+  "types": "./dist/index.d.ts",
+  "publishHash": {
+    "hash": "7de55874b043bec06480a21e20bba96361c25ea07682f2d230dd7d582dc0ce00",
+    "version": "0.1.4"
+  }
 }

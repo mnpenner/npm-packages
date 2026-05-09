@@ -31,6 +31,7 @@ type PackageJson = {
     name?: string
     version?: string
     private?: boolean
+    publishHash?: CachedReleaseHash
     publishConfig?: {
         access?: string
         registry?: string
@@ -46,7 +47,11 @@ type PackageDir = {
 }
 
 type RegistryRelease = {
-    tarball: string
+    version: string
+}
+
+type CachedReleaseHash = {
+    hash: string
     version: string
 }
 
@@ -155,12 +160,13 @@ async function main(options: Options, positionals: Positionals): Promise<number 
                 label: 'build',
             })
 
-            const [localHash, releaseHash] = await Promise.all([
-                createLocalPackageHash(packageDir.path),
-                createReleasePackageHash(release.tarball),
-            ])
+            const localHash = await createLocalPackageHash(packageDir.path)
+            const cachedReleaseHash = getPackagePublishHash(packageDir.packageJson)
 
-            if (localHash === releaseHash) {
+            if (
+                cachedReleaseHash?.version === release.version &&
+                localHash === cachedReleaseHash.hash
+            ) {
                 console.log(
                     chalk.green(`Packed output matches ${release.version}; skipping publish.`),
                 )
@@ -170,6 +176,14 @@ async function main(options: Options, positionals: Positionals): Promise<number 
                     status: 'skipped',
                 })
                 continue
+            }
+
+            if (cachedReleaseHash?.version !== release.version) {
+                console.log(
+                    chalk.yellow(
+                        `No package.json publishHash for ${release.version}; publishing a new version.`,
+                    ),
+                )
             }
 
             const nextVersion = getNextPublishVersion(
@@ -189,6 +203,15 @@ async function main(options: Options, positionals: Positionals): Promise<number 
             await setPackageVersion(packageDir.packageJsonPath, nextVersion)
             packageDir.packageJson.version = nextVersion
 
+            const publishedHash = await createLocalPackageHash(packageDir.path)
+            await setPackagePublishHash(packageDir.packageJsonPath, {
+                hash: publishedHash,
+                version: nextVersion,
+            })
+            packageDir.packageJson.publishHash = {
+                hash: publishedHash,
+                version: nextVersion,
+            }
             await publishPackage(packageDir, registry)
             results.push({ name: packageName, status: 'published', version: nextVersion })
         } catch (err) {
@@ -413,16 +436,14 @@ async function getLatestRelease(
 
     const metadata = (await response.json()) as {
         'dist-tags'?: Record<string, string>
-        versions?: Record<string, { dist?: { tarball?: string } }>
     }
     const version = metadata['dist-tags']?.latest
-    const tarball = version ? metadata.versions?.[version]?.dist?.tarball : undefined
 
-    if (!version || !tarball) {
-        throw new Error(`${packageName} is missing a latest release tarball.`)
+    if (!version) {
+        throw new Error(`${packageName} is missing a latest version.`)
     }
 
-    return { tarball, version }
+    return { version }
 }
 
 async function createLocalPackageHash(packagePath: string): Promise<string> {
@@ -446,27 +467,6 @@ async function createLocalPackageHash(packagePath: string): Promise<string> {
     }
 }
 
-async function createReleasePackageHash(tarballUrl: string): Promise<string> {
-    const tempPath = await mkdtemp(join(tmpdir(), 'npm-packages-publish-release-'))
-
-    try {
-        const tarballPath = join(tempPath, 'release.tgz')
-        const response = await fetch(tarballUrl)
-
-        if (!response.ok) {
-            throw new Error(
-                `Failed to download latest release tarball: ${response.status} ${response.statusText}`,
-            )
-        }
-
-        await writeFile(tarballPath, Buffer.from(await response.arrayBuffer()))
-
-        return await createTarballHash(tarballPath)
-    } finally {
-        await rm(tempPath, { force: true, recursive: true })
-    }
-}
-
 async function createTarballHash(tarballPath: string): Promise<string> {
     const entries = readTarEntries(gunzipSync(await readFile(tarballPath)))
 
@@ -479,7 +479,7 @@ function hashPackageEntries(entries: TarEntry[]): string {
     for (const entry of entries.sort((a, b) => a.path.localeCompare(b.path))) {
         const contents =
             entry.path === 'package.json'
-                ? normalizePackageJson(entry.contents.toString('utf8'))
+                ? normalizePackageJsonForHash(entry.contents.toString('utf8'))
                 : entry.contents
 
         hash.update(entry.path)
@@ -598,15 +598,11 @@ function readPaxHeaders(contents: Buffer): Record<string, string> {
     return headers
 }
 
-function normalizePackageJson(rawPackageJson: string): Buffer {
+function normalizePackageJsonForHash(rawPackageJson: string): Buffer {
     const packageJson = JSON.parse(rawPackageJson) as Record<string, unknown>
-    delete packageJson.version
+    delete packageJson.publishHash
 
-    return Buffer.from(`${stableStringify(packageJson)}\n`)
-}
-
-function stableStringify(value: unknown): string {
-    return JSON.stringify(sortJson(value))
+    return Buffer.from(`${JSON.stringify(sortJson(packageJson))}\n`)
 }
 
 function sortJson(value: unknown): unknown {
@@ -625,12 +621,37 @@ function sortJson(value: unknown): unknown {
     return value
 }
 
+function isCachedReleaseHash(value: unknown): value is CachedReleaseHash {
+    return isRecord(value) && typeof value.hash === 'string' && typeof value.version === 'string'
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return value !== null && typeof value === 'object' && !Array.isArray(value)
+}
+
+function getPackagePublishHash(packageJson: PackageJson): CachedReleaseHash | undefined {
+    return isCachedReleaseHash(packageJson.publishHash) ? packageJson.publishHash : undefined
+}
+
 async function setPackageVersion(packageJsonPath: string, version: string): Promise<void> {
     const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8')) as Record<
         string,
         unknown
     >
     packageJson.version = version
+
+    await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`)
+}
+
+async function setPackagePublishHash(
+    packageJsonPath: string,
+    publishHash: CachedReleaseHash,
+): Promise<void> {
+    const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8')) as Record<
+        string,
+        unknown
+    >
+    packageJson.publishHash = publishHash
 
     await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`)
 }

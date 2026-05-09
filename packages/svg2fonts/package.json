@@ -1,7 +1,7 @@
 {
   "name": "svg2fonts",
   "description": "Convert SVG icon directories into webfont assets.",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "type": "module",
   "packageManager": "bun@1.3.13",
   "files": [
@@ -46,5 +46,9 @@
   },
   "main": "./dist/bin.mjs",
   "module": "./dist/bin.mjs",
-  "types": "./dist/bin.d.mts"
+  "types": "./dist/bin.d.mts",
+  "publishHash": {
+    "hash": "663587d470a8461ebad449be9904ada2171b9bd66675b4d0d8f5958b69d17d03",
+    "version": "0.4.2"
+  }
 }

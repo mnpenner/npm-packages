@@ -1,7 +1,7 @@
 {
   "name": "js-serialize",
   "description": "Serialize JavaScript values beyond JSON.stringify.",
-  "version": "0.7.8",
+  "version": "0.7.9",
   "author": "Mark Penner <npm@mpen.ca>",
   "dependencies": {
     "@mpen/is-type": "workspace:*"
@@ -42,5 +42,9 @@
   "types": "./dist/index.d.cts",
   "publishConfig": {
     "access": "public"
+  },
+  "publishHash": {
+    "hash": "e2f99c78ab99a27bb3a04b7554f10df1c65158698b272798a4edba736ac6514b",
+    "version": "0.7.9"
   }
 }
