@@ -54,6 +54,7 @@ type RegistryRelease = {
 }
 
 type PublishHash = {
+    buildDate: string
     hgChangesetId: string
     sha256: string
 }
@@ -145,12 +146,6 @@ async function main(options: Options, positionals: Positionals): Promise<number 
                 continue
             }
 
-            if (options.force) {
-                console.log(chalk.yellow('Skipping checks because --force was provided.'))
-            } else {
-                await checkPackage(packageDir)
-            }
-
             if (!packageDir.packageJson.scripts?.build) {
                 throw new Error(`${packageName} is published but does not have a build script.`)
             }
@@ -195,6 +190,12 @@ async function main(options: Options, positionals: Positionals): Promise<number 
                         `No matching package.json publishHash for ${release.version}; publishing a new version.`,
                     ),
                 )
+            }
+
+            if (options.force) {
+                console.log(chalk.yellow('Skipping checks because --force was provided.'))
+            } else {
+                await checkPackage(packageDir)
             }
 
             const nextVersion = getNextPublishVersion(
@@ -661,6 +662,20 @@ async function getHgChangesetId(): Promise<string> {
     return (await run('hg', ['id', '-i'], { capture: true })).trim()
 }
 
+function formatLocalIsoDate(date: Date): string {
+    const offsetMinutes = -date.getTimezoneOffset()
+    const offsetSign = offsetMinutes >= 0 ? '+' : '-'
+    const absoluteOffsetMinutes = Math.abs(offsetMinutes)
+    const offsetHours = Math.floor(absoluteOffsetMinutes / 60)
+    const offsetRemainingMinutes = absoluteOffsetMinutes % 60
+
+    return `${date.getFullYear()}-${padDatePart(date.getMonth() + 1)}-${padDatePart(date.getDate())}T${padDatePart(date.getHours())}:${padDatePart(date.getMinutes())}:${padDatePart(date.getSeconds())}.${String(date.getMilliseconds()).padStart(3, '0')}${offsetSign}${padDatePart(offsetHours)}:${padDatePart(offsetRemainingMinutes)}`
+}
+
+function padDatePart(value: number): string {
+    return String(value).padStart(2, '0')
+}
+
 async function publishPackageVersion(
     packageDir: PackageDir,
     registry: string,
@@ -675,14 +690,14 @@ async function publishPackageVersion(
         packageDir.packageJson.version = version
 
         const publishedHash = await createLocalPackageHash(packageDir.path)
-        await setPackagePublishHash(packageDir.packageJsonPath, {
-            hgChangesetId,
-            sha256: publishedHash,
-        })
-        packageDir.packageJson.publishHash = {
+        const publishHash = {
+            buildDate: formatLocalIsoDate(new Date()),
             hgChangesetId,
             sha256: publishedHash,
         }
+
+        await setPackagePublishHash(packageDir.packageJsonPath, publishHash)
+        packageDir.packageJson.publishHash = publishHash
 
         await publishPackage(packageDir, registry)
     } catch (error) {
