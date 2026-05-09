@@ -3,9 +3,12 @@ import { readdir, readFile, stat } from 'node:fs/promises'
 import { isAbsolute, join, relative, resolve } from 'node:path'
 import { parseArgs, type ParseArgsConfig } from 'node:util'
 import { $ } from 'bun'
+import { parse } from 'jsonc-parser'
 
 const PARSE_CONFIG = {
-    options: {},
+    options: {
+        bail: { type: 'boolean', default: false },
+    },
     strict: true,
     allowPositionals: true,
 } satisfies ParseArgsConfig
@@ -39,7 +42,7 @@ async function pathExists(path: string): Promise<boolean> {
 }
 
 async function readReferences(configPath: string): Promise<string[]> {
-    const config = JSON.parse(await readFile(configPath, 'utf-8')) as TsConfig
+    const config = parse(await readFile(configPath, 'utf-8')) as TsConfig
     const configDir = resolve(configPath, '..')
     const references: string[] = []
 
@@ -87,7 +90,7 @@ async function findTsConfigsByPackageName(target: string): Promise<string[]> {
             const pkgJsonPath = join(fullPath, 'package.json')
             if (await pathExists(pkgJsonPath)) {
                 try {
-                    const pkgJson = JSON.parse(await readFile(pkgJsonPath, 'utf-8')) as {
+                    const pkgJson = parse(await readFile(pkgJsonPath, 'utf-8')) as {
                         name?: string
                     }
                     if (pkgJson.name === target) return findTsConfigsInDir(fullPath)
@@ -118,7 +121,12 @@ async function findTsConfigs(target: string): Promise<string[]> {
     return findTsConfigsByPackageName(target)
 }
 
-async function runTsc(configPath: string, seen: Set<string>): Promise<number | void> {
+type TypecheckFailure = {
+    configPath: string
+    exitCode: number
+}
+
+async function runTsc(configPath: string, seen: Set<string>, failures: TypecheckFailure[]) {
     const resolvedConfigPath = resolve(configPath)
     if (seen.has(resolvedConfigPath)) return
     seen.add(resolvedConfigPath)
@@ -129,19 +137,29 @@ async function runTsc(configPath: string, seen: Set<string>): Promise<number | v
     const result = await $`bun run tsc --noEmit -p ${resolvedConfigPath}`.nothrow()
     if (result.exitCode !== 0) {
         console.error(`\x1b[31mTypecheck failed for ${label}\x1b[0m`)
-        return result.exitCode
+        failures.push({ configPath: resolvedConfigPath, exitCode: result.exitCode })
+        return
     }
 
     console.log(`\x1b[32mTypecheck passed for ${label}: no errors\x1b[0m`)
 
     for (const referencePath of await readReferences(resolvedConfigPath)) {
-        const exitCode = await runTsc(referencePath, seen)
-        if (typeof exitCode === 'number') return exitCode
+        await runTsc(referencePath, seen, failures)
     }
 }
 
-async function main(_options: Options, positionals: Positionals): Promise<number | void> {
+function printFailureSummary(failures: readonly TypecheckFailure[]) {
+    if (!failures.length) return
+
+    console.error(`\n\x1b[31mTypecheck failed for ${failures.length} project(s):\x1b[0m`)
+    for (const failure of failures) {
+        console.error(`  - ${relative(process.cwd(), failure.configPath)}`)
+    }
+}
+
+async function main(options: Options, positionals: Positionals): Promise<number | void> {
     const seen = new Set<string>()
+    const failures: TypecheckFailure[] = []
     const targets = positionals.length ? positionals : ['.']
 
     for (const target of targets) {
@@ -152,9 +170,17 @@ async function main(_options: Options, positionals: Positionals): Promise<number
         }
 
         for (const configPath of configPaths) {
-            const exitCode = await runTsc(configPath, seen)
-            if (typeof exitCode === 'number') return exitCode
+            await runTsc(configPath, seen, failures)
+            if (options.bail && failures.length) {
+                printFailureSummary(failures)
+                return failures[0]!.exitCode
+            }
         }
+    }
+
+    if (failures.length) {
+        printFailureSummary(failures)
+        return 1
     }
 }
 
