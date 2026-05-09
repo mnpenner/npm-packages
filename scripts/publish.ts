@@ -8,6 +8,7 @@ import { parseArgs, type ParseArgsConfig } from 'node:util'
 import { gunzipSync } from 'node:zlib'
 import { $ } from 'bun'
 import chalk from 'chalk'
+import { readPackageNameDirMap } from './lib/package-dirs'
 import { getNextPublishVersion } from './publish-version'
 
 const PARSE_CONFIG = {
@@ -352,8 +353,15 @@ async function findPackageDirs(positionals: readonly string[]): Promise<PackageD
     }
 
     const selected = new Set<string>()
+    const packageNameDirMap = await readPackageNameDirMap()
 
     for (const positional of positionals) {
+        const packageDirByName = packageNameDirMap.get(positional)
+        if (packageDirByName) {
+            selected.add(packageDirByName)
+            continue
+        }
+
         const resolved = resolve(positional)
         const relativePath = relative(process.cwd(), resolved)
         const pathParts = relativePath.split(sep)
@@ -361,7 +369,6 @@ async function findPackageDirs(positionals: readonly string[]): Promise<PackageD
         for (const packageDir of allPackages) {
             if (
                 positional === packageDir.dirName ||
-                positional === packageDir.packageJson.name ||
                 resolved === packageDir.path ||
                 (pathParts[0] === 'packages' && pathParts[1] === packageDir.dirName)
             ) {

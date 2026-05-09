@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bun -i
 import { parseArgs, type ParseArgsConfig } from 'node:util'
 import { $ } from 'bun'
+import chalk from 'chalk'
+import { resolvePackagePathTargets } from './lib/package-dirs'
 import { sh } from './lib/shell-exec'
 
 type PackageJson = {
@@ -15,18 +17,19 @@ const PARSE_CONFIG = {
 
 async function main(options: Options, positionals: Positionals): Promise<number | void> {
     const packageJson = (await Bun.file('package.json').json()) as PackageJson
+    const targets = await resolvePackagePathTargets(positionals)
     const scriptNames = Object.keys(packageJson.scripts ?? {})
         .filter((scriptName) => scriptName.startsWith('fix:'))
         .sort()
 
     if (scriptNames.length === 0) {
-        console.error('No fix:* scripts found.')
+        console.error(chalk.red('No fix:* scripts found.'))
         return 1
     }
 
     const commands = scriptNames.map((scriptName) => {
         return {
-            process: sh`${process.execPath} run ${scriptName} ${positionals}`.nothrow(),
+            process: sh`${process.execPath} run ${scriptName} ${targets}`.nothrow(),
             scriptName,
         }
     })
@@ -41,7 +44,7 @@ async function main(options: Options, positionals: Positionals): Promise<number 
     const failure = results.find((result) => result.exitCode !== 0)
 
     if (failure) {
-        console.error(`${failure.scriptName} exited with code ${failure.exitCode}`)
+        console.error(chalk.red(`${failure.scriptName} exited with code ${failure.exitCode}`))
         return failure.exitCode
     }
 }

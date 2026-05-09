@@ -1,8 +1,9 @@
 #!/usr/bin/env -S bun -i
-import { readdir } from 'node:fs/promises'
 import { join, resolve, relative, sep } from 'node:path'
 import { $ } from 'bun'
+import chalk from 'chalk'
 import { parseArgs, type ParseArgsConfig } from 'node:util'
+import { readPackageDirNames, readPackageNameDirMap } from './lib/package-dirs'
 
 const PARSE_CONFIG = {
     options: {},
@@ -15,24 +16,8 @@ const PARSE_CONFIG = {
  */
 async function main(_options: Options, positionals: Positionals): Promise<number | void> {
     const packagesDir = 'packages'
-    const packageDirs = (await readdir(packagesDir, { withFileTypes: true }))
-        .filter((dirent) => dirent.isDirectory())
-        .map((dirent) => dirent.name)
-
-    const packageNamesMap = new Map<string, string>()
-    await Promise.all(
-        packageDirs.map(async (dirName) => {
-            try {
-                const pkgPath = join(packagesDir, dirName, 'package.json')
-                const pkgJson = await Bun.file(pkgPath).json()
-                if (pkgJson.name) {
-                    packageNamesMap.set(pkgJson.name, dirName)
-                }
-            } catch {
-                // ignore
-            }
-        }),
-    )
+    const packageDirs = await readPackageDirNames()
+    const packageNamesMap = await readPackageNameDirMap()
 
     if (positionals.length === 0) {
         console.log('Running full check (test, lint, typecheck, format)...')
@@ -65,10 +50,10 @@ async function main(_options: Options, positionals: Positionals): Promise<number
 
     for (const arg of positionals) {
         let resolvedDir: string | undefined
-        if (packageDirs.includes(arg)) {
-            resolvedDir = arg
-        } else if (packageNamesMap.has(arg)) {
+        if (packageNamesMap.has(arg)) {
             resolvedDir = packageNamesMap.get(arg)
+        } else if (packageDirs.includes(arg)) {
+            resolvedDir = arg
         }
 
         if (resolvedDir) {
@@ -120,10 +105,10 @@ async function main(_options: Options, positionals: Positionals): Promise<number
     }
 
     if (failed) {
-        console.log('\n\x1b[31mCheck failed.\x1b[0m')
+        console.log(chalk.red('\nCheck failed.'))
         return 1
     } else {
-        console.log('\n\x1b[32mCheck passed.\x1b[0m')
+        console.log(chalk.green('\nCheck passed.'))
         return 0
     }
 }

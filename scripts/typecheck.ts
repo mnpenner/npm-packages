@@ -3,7 +3,9 @@ import { readdir, readFile, stat } from 'node:fs/promises'
 import { isAbsolute, join, relative, resolve } from 'node:path'
 import { parseArgs, type ParseArgsConfig } from 'node:util'
 import { $ } from 'bun'
+import chalk from 'chalk'
 import { parse } from 'jsonc-parser'
+import { resolvePackageDirName } from './lib/package-dirs'
 
 const PARSE_CONFIG = {
     options: {
@@ -76,40 +78,10 @@ async function findTsConfigsInDir(dir: string): Promise<string[]> {
     return configs
 }
 
-async function findTsConfigsByPackageName(target: string): Promise<string[]> {
-    const packagesDir = resolve('packages')
-    if (!(await pathExists(packagesDir))) return []
-
-    async function search(dir: string): Promise<string[]> {
-        for (const entry of await readdir(dir, { withFileTypes: true })) {
-            if (!entry.isDirectory() || IGNORED_DIRS.has(entry.name)) continue
-
-            const fullPath = join(dir, entry.name)
-            if (entry.name === target) return findTsConfigsInDir(fullPath)
-
-            const pkgJsonPath = join(fullPath, 'package.json')
-            if (await pathExists(pkgJsonPath)) {
-                try {
-                    const pkgJson = parse(await readFile(pkgJsonPath, 'utf-8')) as {
-                        name?: string
-                    }
-                    if (pkgJson.name === target) return findTsConfigsInDir(fullPath)
-                } catch {
-                    // ignore malformed package files during discovery
-                }
-            }
-
-            const found = await search(fullPath)
-            if (found.length) return found
-        }
-
-        return []
-    }
-
-    return search(packagesDir)
-}
-
 async function findTsConfigs(target: string): Promise<string[]> {
+    const packageDirName = await resolvePackageDirName(target)
+    if (packageDirName) return findTsConfigsInDir(resolve('packages', packageDirName))
+
     const directPath = isAbsolute(target) ? target : resolve(target)
 
     if (await pathExists(directPath)) {
@@ -118,7 +90,7 @@ async function findTsConfigs(target: string): Promise<string[]> {
         if (isProjectConfig(target)) return [directPath]
     }
 
-    return findTsConfigsByPackageName(target)
+    return []
 }
 
 type TypecheckFailure = {
@@ -132,16 +104,16 @@ async function runTsc(configPath: string, seen: Set<string>, failures: Typecheck
     seen.add(resolvedConfigPath)
 
     const label = relative(process.cwd(), resolvedConfigPath) || 'root'
-    console.log(`\x1b[34mTypechecking ${label}...\x1b[0m`)
+    console.log(chalk.blue(`Typechecking ${label}...`))
 
     const result = await $`bun run tsc --noEmit -p ${resolvedConfigPath}`.nothrow()
     if (result.exitCode !== 0) {
-        console.error(`\x1b[31mTypecheck failed for ${label}\x1b[0m`)
+        console.error(chalk.red(`Typecheck failed for ${label}`))
         failures.push({ configPath: resolvedConfigPath, exitCode: result.exitCode })
         return
     }
 
-    console.log(`\x1b[32mTypecheck passed for ${label}: no errors\x1b[0m`)
+    console.log(chalk.green(`Typecheck passed for ${label}: no errors`))
 
     for (const referencePath of await readReferences(resolvedConfigPath)) {
         await runTsc(referencePath, seen, failures)
@@ -151,7 +123,7 @@ async function runTsc(configPath: string, seen: Set<string>, failures: Typecheck
 function printFailureSummary(failures: readonly TypecheckFailure[]) {
     if (!failures.length) return
 
-    console.error(`\n\x1b[31mTypecheck failed for ${failures.length} project(s):\x1b[0m`)
+    console.error(chalk.red(`\nTypecheck failed for ${failures.length} project(s):`))
     for (const failure of failures) {
         console.error(`  - ${relative(process.cwd(), failure.configPath)}`)
     }
@@ -165,7 +137,7 @@ async function main(options: Options, positionals: Positionals): Promise<number 
     for (const target of targets) {
         const configPaths = await findTsConfigs(target)
         if (!configPaths.length) {
-            console.error(`\x1b[31mError: Could not find tsconfig.json for "${target}"\x1b[0m`)
+            console.error(chalk.red(`Error: Could not find tsconfig.json for "${target}"`))
             return 1
         }
 
