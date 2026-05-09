@@ -59,7 +59,7 @@
   "scripts": {
     "test": "run-p -c -s 'test:*'",
     "test:unit": "bun run --silent scripts/test.ts",
-    "lint": "bun run --bun eslint --format ./scripts/eslint-relative-formatter.ts --",
+    "lint": "bun scripts/lint.ts",
     "typecheck": "bun scripts/typecheck.ts",
     "fix:lint": "bun scripts/eslint-fix.ts",
     "check-format": "bun run --bun prettier . --check",

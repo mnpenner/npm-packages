@@ -76,7 +76,9 @@ describe('rerouter bin', () => {
 
         const { stdout: outputContent } = await runRerouterBin([routesFile])
 
-        expect(outputContent).toContain('export function optional(')
+        expect(outputContent).toContain(
+            'export function optional(params: {} & AllOrNone<{ "bar": ParamType }>): string {',
+        )
         expect(outputContent).toContain('AllOrNone<')
         expect(outputContent).toContain('"bar": ParamType')
     })

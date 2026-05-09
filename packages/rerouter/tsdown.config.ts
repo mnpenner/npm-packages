@@ -4,7 +4,6 @@ import { defineConfig } from 'tsdown'
 export default defineConfig({
     entry: {
         index: 'src/index.ts',
-        hooks: 'src/hooks/index.ts',
         bin: 'cli/bin.ts',
     },
     format: 'esm',

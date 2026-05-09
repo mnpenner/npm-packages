@@ -1,7 +1,7 @@
 {
   "name": "@mpen/is-type",
   "description": "Runtime type checks with TypeScript type guards.",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "packageManager": "bun@1.1.23",
   "type": "module",
   "files": [

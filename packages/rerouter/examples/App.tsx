@@ -1,8 +1,12 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { NavLink, Router, useUrlPath } from '../src'
+import { NavLink, type NavLinkProps, Router, useUrlPath } from '../src'
 import routes from './routes'
 import * as routesGen from './routes.gen'
+
+function PillNavLink(props: Omit<NavLinkProps, 'activeClass' | 'className' | 'match'>) {
+    return <NavLink activeClass="active" className="pill" match="prefix" {...props} />
+}
 
 function CurrentPath() {
     const path = useUrlPath()
@@ -23,54 +27,19 @@ function CurrentPath() {
                     </div>
                 </div>
                 <div className="nav">
-                    <NavLink activeClass="active" className="pill" to={routesGen.home()}>
-                        Home
-                    </NavLink>
-                    <NavLink activeClass="active" className="pill" to={routesGen.login()}>
-                        Login
-                    </NavLink>
-                    <NavLink
-                        activeClass="active"
-                        className="pill"
-                        to={routesGen.match({ id: '123' })}
-                    >
-                        Match 123
-                    </NavLink>
-                    <NavLink
-                        activeClass="active"
-                        className="pill"
-                        to={routesGen.match({ id: 'a/b' })}
-                    >
+                    <PillNavLink to={routesGen.home()}>Home</PillNavLink>
+                    <PillNavLink to={routesGen.login()}>Login</PillNavLink>
+                    <PillNavLink to={routesGen.match({ id: '123' })}>Match 123</PillNavLink>
+                    <PillNavLink to={routesGen.match({ id: 'a/b' })}>
                         Match a/b (encoded)
-                    </NavLink>
-                    <NavLink
-                        activeClass="active"
-                        className="pill"
-                        to={routesGen.blogPost({ id: 123 })}
-                    >
-                        Blog 123
-                    </NavLink>
-                    <NavLink
-                        activeClass="active"
-                        className="pill"
-                        to={routesGen.blogPost({ id: 123, title: 'hello world' })}
-                    >
+                    </PillNavLink>
+                    <PillNavLink to={routesGen.blogPost({ id: 123 })}>Blog 123</PillNavLink>
+                    <PillNavLink to={routesGen.blogPost({ id: 123, title: 'hello world' })}>
                         Blog 123 Title
-                    </NavLink>
-                    <NavLink activeClass="active" className="pill" to={routesGen.slowLoading()}>
-                        Slow Loading
-                    </NavLink>
-                    <NavLink
-                        activeClass="active"
-                        className="pill"
-                        match="prefix"
-                        to={routesGen.fetchLoading()}
-                    >
-                        Fetch Loading
-                    </NavLink>
-                    <NavLink
-                        activeClass="active"
-                        className="pill"
+                    </PillNavLink>
+                    <PillNavLink to={routesGen.slowLoading()}>Slow Loading</PillNavLink>
+                    <PillNavLink to={routesGen.fetchLoading()}>Fetch Loading</PillNavLink>
+                    <PillNavLink
                         to={routesGen.kitchenSink({
                             foo: 'a/b',
                             baz: 'c',
@@ -78,7 +47,7 @@ function CurrentPath() {
                         })}
                     >
                         KitchenSink
-                    </NavLink>
+                    </PillNavLink>
                 </div>
             </div>
         </div>

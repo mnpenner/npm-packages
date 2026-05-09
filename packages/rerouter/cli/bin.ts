@@ -63,6 +63,10 @@ function compilePathGenerator(
 
     const typeOfParam = (t: any) => (t.type === 'wildcard' ? 'WildcardType' : 'ParamType')
     const makeProp = (name: string, t: any): Prop => ({ name, type: typeOfParam(t) })
+    const renderPropsType = (props: readonly Prop[]): string =>
+        props.length
+            ? `{ ${props.map((p) => `${escapeString(p.name)}: ${p.type}`).join('; ')} }`
+            : '{}'
 
     function collectGroupProps(ts2: any[]): Prop[] {
         const props: Prop[] = []
@@ -80,12 +84,7 @@ function compilePathGenerator(
             } else if (t.type === 'group') {
                 const groupProps = collectGroupProps(t.tokens)
                 if (groupProps.length) {
-                    const some = [
-                        '{',
-                        ...groupProps.map((p) => `    ${escapeString(p.name)}: ${p.type}`),
-                        '}',
-                    ].join('\n')
-                    groupTypes.push(`AllOrNone<${some}>`)
+                    groupTypes.push(`AllOrNone<${renderPropsType(groupProps)}>`)
                 }
                 collectTypes(t.tokens, false)
             }
@@ -94,11 +93,7 @@ function compilePathGenerator(
 
     collectTypes(tokens)
 
-    const baseParamsType = [
-        '{',
-        ...baseProps.map((p) => `    ${escapeString(p.name)}: ${p.type}`),
-        '}',
-    ].join('\n')
+    const baseParamsType = renderPropsType(baseProps)
     const paramsType = groupTypes.length
         ? `${baseParamsType} & ${groupTypes.join(' & ')}`
         : baseParamsType
@@ -112,9 +107,7 @@ function compilePathGenerator(
     const hasAnyParams = baseProps.length > 0 || groupTypes.length > 0
 
     if (hasAnyParams) {
-        lines.push(`export function ${functionName}(`)
-        lines.push(`    params: ${paramsType}`)
-        lines.push(`): string {`)
+        lines.push(`export function ${functionName}(params: ${paramsType}): string {`)
     } else {
         lines.push(`export function ${functionName}(): string {`)
     }

@@ -15,11 +15,7 @@ export function home(): string {
 }
 
 export function kitchenSink(
-  params: {
-    foo: ParamType
-    baz: ParamType
-    splat: WildcardType
-  } & AllOrNone<{
+  params: { foo: ParamType; baz: ParamType; splat: WildcardType } & AllOrNone<{
     optional: ParamType
     two: ParamType
   }>,
@@ -48,13 +44,7 @@ export function kitchenSink(
   return sb
 }
 
-export function blogPost(
-  params: {
-    id: ParamType
-  } & AllOrNone<{
-    title: ParamType
-  }>,
-): string {
+export function blogPost(params: { id: ParamType } & AllOrNone<{ title: ParamType }>): string {
   let sb = ''
 
   if (params['id'] == null) throw new Error('Missing param: id')

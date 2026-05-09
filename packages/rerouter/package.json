@@ -1,11 +1,10 @@
 {
   "name": "@mpen/rerouter",
   "description": "Lightweight type-safe router for React with URL helper generation.",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "exports": {
     ".": "./dist/index.js",
     "./bin": "./dist/bin.js",
-    "./hooks": "./dist/hooks.js",
     "./package.json": "./package.json"
   },
   "bin": {
@@ -42,5 +41,9 @@
     "access": "public"
   },
   "main": "./dist/index.js",
-  "module": "./dist/index.js"
+  "module": "./dist/index.js",
+  "inlinedDependencies": {
+    "prettier": "3.8.3",
+    "process": "0.11.10"
+  }
 }

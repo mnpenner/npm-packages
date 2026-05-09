@@ -66,6 +66,8 @@ export type RouteObject = {
     component: RouteComponentLoader<any>
 }
 
+export type Routes = RouteObject[]
+
 /**
  * Route definition consumed by [`Router`]{@link Router}.
  *

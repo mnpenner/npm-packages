@@ -1,7 +1,7 @@
 {
   "name": "mysql3",
   "description": "Small object-oriented wrapper around the MariaDB client.",
-  "version": "0.7.6",
+  "version": "0.7.7",
   "license": "LGPL-3.0-or-later",
   "packageManager": "bun@1.3.13",
   "exports": {

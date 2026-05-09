@@ -1,8 +1,8 @@
-import type { RouteObject } from '../src'
+import type { Routes } from '@mpen/rerouter'
 
 const loadFetchLoading = () => import('./pages/FetchLoading')
 
-const ROUTES: readonly RouteObject[] = [
+const ROUTES: Routes = [
     { name: 'home', pattern: '/', component: () => import('./pages/Home') },
     {
         name: 'kitchenSink',

@@ -429,7 +429,11 @@ async function spawn(
         const spawnOpts: SpawnOptionsWithoutStdio = {
             stdio: (opts.suppressOutput
                 ? 'ignore'
-                : [opts.interactive ? 'inherit' : 'ignore', 'pipe', 'pipe']) as SpawnOptionsWithoutStdio['stdio'],
+                : [
+                      opts.interactive ? 'inherit' : 'ignore',
+                      'pipe',
+                      'pipe',
+                  ]) as SpawnOptionsWithoutStdio['stdio'],
             shell: opts.shell,
             cwd: opts.cwd,
             // windowsVerbatimArguments: false,
