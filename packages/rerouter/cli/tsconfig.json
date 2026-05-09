@@ -1,0 +1,9 @@
+{
+    "extends": "../tsconfig.json",
+    "compilerOptions": {
+        "lib": ["DOM", "DOM.Iterable", "ESNext"],
+        "types": ["bun", "node", "react", "react-dom"]
+    },
+    "include": ["**/*"],
+    "exclude": ["**/*.test.*"]
+}

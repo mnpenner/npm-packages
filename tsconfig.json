@@ -108,19 +108,6 @@
             "@mpen/rerouter": ["./packages/rerouter/src/index.ts"]
         }
     },
-
-    "exclude": [
-        "**/node_modules/**",
-        "**/dist/**",
-        "**/example/**",
-        "**/examples/**",
-        "**/experimental/**",
-        "**/test/**",
-        "packages/yamake/**",
-        "packages/svg-to-react-webpack-loader/**",
-        "packages/rollup-plugins/**",
-        "packages/react-datepicker/**",
-        "packages/react-combobox/**",
-        "packages/packdb/**"
-    ]
+    "files": [],
+    "references": [{ "path": "./tsconfig.test.json" }]
 }

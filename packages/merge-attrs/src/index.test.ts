@@ -118,8 +118,8 @@ describe(mergeAttrs.name, () => {
         const handler1 = jest.fn(() => val)
         const handler2 = jest.fn()
         const result2 = mergeAttrs({ ref: handler1 }, { ref: handler2 })
-        const node = {}
-        result2.ref(node)
+        const node = {} as Element
+        result2.ref?.(node)
         expect(handler1).toBeCalledWith(node)
         expect(handler2).toBeCalledWith(node, val)
     })

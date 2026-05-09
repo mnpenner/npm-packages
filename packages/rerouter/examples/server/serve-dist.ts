@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 
-const distPath = fileURLToPath(new URL('./dist/', import.meta.url))
+const distPath = fileURLToPath(new URL('../dist/', import.meta.url))
 const index = Bun.file(join(distPath, 'index.html'))
 
 async function fileForPath(pathname: string) {

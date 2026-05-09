@@ -97,11 +97,7 @@ export function err<E>(error: E): Err<E> {
 }
 
 // --- Add [nodejs.util.inspect.custom] methods.
-declare global {
-    var window: typeof globalThis | undefined
-}
-
-if (typeof window === 'undefined') {
+if (!('window' in globalThis)) {
     // Allow tree-shaking for the browser. Maybe. Or at least skip execution.
     const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom')
 

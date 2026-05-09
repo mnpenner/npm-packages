@@ -6,5 +6,5 @@
         "types": ["react", "react-dom"]
     },
     "include": ["src/**/*", "examples/**/*.ts", "examples/**/*.tsx"],
-    "exclude": ["**/*.test.*", "cli/**/*", "examples/dist/**/*", "examples/serve-dist.ts"]
+    "exclude": ["**/*.test.*", "cli/**/*", "examples/dist/**/*", "examples/server/**/*"]
 }

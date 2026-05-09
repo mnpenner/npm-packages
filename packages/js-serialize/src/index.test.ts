@@ -206,7 +206,7 @@ describe('symbols', () => {
     })
 
     it('serializes well-known symbols', () => {
-        const wellKnownSymbols = [
+        const wellKnownSymbols: Array<keyof SymbolConstructor> = [
             'hasInstance',
             'isConcatSpreadable',
             'iterator',
@@ -245,14 +245,14 @@ describe('functions', () => {
 
     it('serializes functions', () => {
         expect(jsSerialize(() => 1)).toEqual('() => 1')
-        expect(jsSerialize((x) => x * 2)).toEqual('(x) => x * 2')
+        expect(jsSerialize((x: number) => x * 2)).toEqual('(x) => x * 2')
         expect(
-            jsSerialize(function (x, y) {
+            jsSerialize(function (x: number, y: number) {
                 return x + y
             }),
         ).toWse('function(x, y) { return x + y; }')
         expect(
-            jsSerialize(function mult(x, y) {
+            jsSerialize(function mult(x: number, y: number) {
                 return x * y
             }),
         ).toWse('function mult(x, y) { return x * y; }')
