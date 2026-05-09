@@ -37,7 +37,27 @@ describe('rerouter bin', () => {
 
         const outputContent = await fs.readFile(outputFile, 'utf8')
         expect(outputContent).toContain('export function home()')
-        expect(result.stderr).toContain(`Wrote ${outputFile}`)
+        expect(result.stderr).toBe(`Wrote ${path.relative(process.cwd(), outputFile)}\n`)
+    })
+
+    test('formats output files with --pretty', async () => {
+        const routesFile = path.join(FIXTURES_DIR, 'simple.tsx')
+        const outputFile = path.join(TEMP_DIR, 'pretty-output.ts')
+
+        await runRerouterBin([routesFile, '-o', outputFile, '--pretty'])
+
+        const outputContent = await fs.readFile(outputFile, 'utf8')
+        expect(outputContent).toContain("export function home(): string {\n  let sb = ''")
+        expect(outputContent).toContain("  sb += '/'")
+    })
+
+    test('ignores --pretty when writing to stdout', async () => {
+        const routesFile = path.join(FIXTURES_DIR, 'simple.tsx')
+
+        const { stdout } = await runRerouterBin([routesFile, '-p'])
+
+        expect(stdout).toContain('export function home(): string {\n    let sb = ""')
+        expect(stdout).toContain('    sb += "/"')
     })
 
     test('writes to adjacent file with -w', async () => {

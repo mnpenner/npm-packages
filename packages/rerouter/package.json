@@ -32,10 +32,10 @@
   },
   "scripts": {
     "build": "tsdown",
-    "gen": "bun cli/bin.ts ./examples/routes.ts -w",
+    "gen": "bun cli/bin.ts ./examples/routes.ts -w -p",
     "serve": "bun --hot examples/index.html",
     "dev": "bun run --sequential gen serve",
-    "prod": "bun build --production --splitting examples/index.html --outdir examples/dist && bun examples/server/serve-dist.ts"
+    "prod": "bun run gen && bun build --production --splitting examples/index.html --outdir examples/dist && bun examples/server/serve-dist.ts"
   },
   "types": "./dist/index.d.ts",
   "publishConfig": {

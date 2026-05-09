@@ -11,6 +11,7 @@ const PARSE_CONFIG = {
     options: {
         output: { type: 'string', short: 'o' },
         write: { type: 'boolean', short: 'w' },
+        pretty: { type: 'boolean', short: 'p' },
         'wildcard-delimiter': { type: 'string' },
         'encode-function': { type: 'string' },
     },
@@ -197,6 +198,18 @@ async function importRoutes(routesPath: string): Promise<readonly Route[]> {
     return mod.default as readonly Route[]
 }
 
+async function formatWithPrettier(source: string, outputPath: string): Promise<string> {
+    let prettier: typeof import('prettier')
+    try {
+        prettier = await import('prettier')
+    } catch (cause) {
+        throw new Error('The --pretty option requires prettier to be installed.', { cause })
+    }
+
+    const options = (await prettier.resolveConfig(outputPath)) ?? {}
+    return prettier.format(source, { ...options, filepath: outputPath })
+}
+
 function extractRoutes(routes: readonly Route[]): ExtractedRoute[] {
     return normalizeRoutes(routes).flatMap((route) => {
         if (!route.name || typeof route.pattern !== 'string') return []
@@ -218,7 +231,7 @@ async function main(
         return {
             exitCode: 1,
             stdout: '',
-            stderr: 'Usage: rerouter <routes-file> [-o <output-file>] [-w] [--wildcard-delimiter <string>] [--encode-function <identifier>]\n',
+            stderr: 'Usage: rerouter <routes-file> [-o <output-file>] [-w] [-p|--pretty] [--wildcard-delimiter <string>] [--encode-function <identifier>]\n',
         }
     }
 
@@ -280,10 +293,13 @@ async function main(
         }
     }
 
-    const finalOutput = out.join('\n')
+    let finalOutput = out.join('\n')
     if (outputPath) {
+        if (options.pretty) {
+            finalOutput = await formatWithPrettier(finalOutput, outputPath)
+        }
         await fs.writeFile(outputPath, finalOutput, 'utf8')
-        return { stdout: '', stderr: `Wrote ${outputPath}\n` }
+        return { stdout: '', stderr: `Wrote ${path.relative(cwd, outputPath) || '.'}\n` }
     } else {
         return { stdout: finalOutput, stderr: '' }
     }
