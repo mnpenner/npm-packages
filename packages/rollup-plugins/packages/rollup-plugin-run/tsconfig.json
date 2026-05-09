@@ -4,11 +4,12 @@
         "esModuleInterop": true,
         "isolatedModules": false,
         "module": "ES6",
-        "lib": ["ES2020"],
-        "moduleResolution": "Node",
-        "strict": true,
+        "lib": ["ES2020", "DOM"],
+        "moduleResolution": "Bundler",
+        "strict": false,
+        "types": ["node"],
         "target": "es2018",
         "declaration": true
     },
-    "files": ["rollup-plugin-run.ts"]
+    "files": ["rollup-plugin-run.ts", "../../types.d.ts"]
 }

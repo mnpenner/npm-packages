@@ -2,6 +2,7 @@
     "extends": "../../tsconfig.json",
     "compilerOptions": {
         "strict": true,
+        "noCheck": true,
         "importHelpers": false,
         "inlineSources": true,
         "noEmitOnError": true,
@@ -10,7 +11,6 @@
         "noImplicitAny": true,
         "suppressImplicitAnyIndexErrors": false,
         "removeComments": true,
-        "preserveConstEnums": false,
         "sourceMap": true,
         "lib": ["es2018", "dom"],
         "skipLibCheck": true,
@@ -18,9 +18,9 @@
         "target": "es2018",
         "declaration": true,
         "resolveJsonModule": false,
-        "esModuleInterop": false,
         "jsx": "react",
-        "moduleResolution": "node"
+        "moduleResolution": "bundler",
+        "types": ["node"]
     },
     "files": ["src/index.tsx"],
     "include": ["src/types/**/*.d.ts"],

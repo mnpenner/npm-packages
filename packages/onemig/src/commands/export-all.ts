@@ -48,6 +48,10 @@ export const exportAllCmd = app
         },
     ])
     .run(async ({ args, flags }) => {
+        if (!args.outdir) {
+            throw new Error('Missing outdir argument')
+        }
+
         const conn = await createConnection(flags)
 
         let skipDbRegex: RegExp | null = null

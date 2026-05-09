@@ -86,6 +86,10 @@ export const exportTypescriptCmd = app
         },
     ])
     .run(async ({ args, flags }) => {
+        if (!args.outfile) {
+            throw new Error('Missing outfile argument')
+        }
+
         const conn = await createConnection(flags)
 
         const tblStream = conn.stream<{ name: string }>(getTableNamesQuery(flags.database!))
@@ -236,7 +240,7 @@ export const exportTypescriptCmd = app
         }
 
         await conn.close()
-        await fs.writeFile(args.out!file, lines.join('\n'))
+        await fs.writeFile(args.outfile, lines.join('\n'))
     })
 
 function dumbScape(name: string) {

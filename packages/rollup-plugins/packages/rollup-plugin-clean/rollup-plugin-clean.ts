@@ -32,7 +32,7 @@ const plugin = (): Plugin => ({
             if (entry.isSymbolicLink() || !entry.isDirectory()) {
                 deleting.push(FileSystem.unlink(filePath))
             } else {
-                deleting.push(FileSystem.rmdir(filePath, { recursive: true }))
+                deleting.push(FileSystem.rm(filePath, { recursive: true }))
             }
         }
 

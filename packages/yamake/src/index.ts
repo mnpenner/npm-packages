@@ -84,7 +84,7 @@ interface ParsedArgs {
     opts: Record<string, string>
 }
 
-const SHORT_FLAGS = {
+const SHORT_FLAGS: Record<string, string> = {
     i: 'interactive',
 }
 
@@ -427,9 +427,9 @@ async function spawn(
 ): Promise<number> {
     return new Promise(async (resolve, reject) => {
         const spawnOpts: SpawnOptionsWithoutStdio = {
-            stdio: opts.suppressOutput
+            stdio: (opts.suppressOutput
                 ? 'ignore'
-                : [opts.interactive ? 'inherit' : 'ignore', 'pipe', 'pipe'],
+                : [opts.interactive ? 'inherit' : 'ignore', 'pipe', 'pipe']) as SpawnOptionsWithoutStdio['stdio'],
             shell: opts.shell,
             cwd: opts.cwd,
             // windowsVerbatimArguments: false,

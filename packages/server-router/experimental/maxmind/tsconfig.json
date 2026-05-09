@@ -1,8 +1,9 @@
 {
     "compilerOptions": {
         "target": "ESNext",
-        "module": "commonjs",
+        "module": "esnext",
         "moduleResolution": "bundler",
-        "allowArbitraryExtensions": true
+        "allowArbitraryExtensions": true,
+        "types": ["node"]
     }
 }

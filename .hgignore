@@ -7,6 +7,7 @@ syntax: rootglob
 scratch/
 **.tsbuildinfo
 packages/svg2fonts/test/
+typecheck-errors.txt
 
 # Temporary reference material
 packages/react-external-state/examples/

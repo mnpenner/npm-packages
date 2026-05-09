@@ -38,8 +38,8 @@ export const exportSchemaCmd = app
         const elapsed = Date.now() - startedAt
         const yaml = dumpAllYaml(tables)
 
-        if (args.out!file) {
-            await fs.writeFile(args.out!file, yaml)
+        if (args.outfile) {
+            await fs.writeFile(args.outfile, yaml)
             spinner.succeed(`Exported ${flags.database!} in ${elapsed} ms`)
         } else {
             spinner.stop()

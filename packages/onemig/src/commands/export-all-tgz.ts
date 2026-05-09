@@ -50,6 +50,10 @@ export const exportAllTgzCmd = app
         },
     })
     .run(async ({ flags }) => {
+        if (!flags.file) {
+            throw new Error('Missing --file option')
+        }
+
         let skipDbRegex: RegExp | null = null
         if (flags.skipDatabaseRegex) {
             skipDbRegex = new RegExp(flags.skipDatabaseRegex)

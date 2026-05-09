@@ -57,7 +57,7 @@ export const exportDataCmd = app
             process.stdout.write(`  Exporting table ${Chalk.yellow(tbl)} ...`)
             const tblTime = Date.now()
 
-            await exportTableDataToFile(conn, flags.database!, tbl, `${args.out!dir}/${tbl}.csv`)
+            await exportTableDataToFile(conn, flags.database!, tbl, `${args.outdir}/${tbl}.csv`)
 
             process.stdout.write(` ${Chalk.green(Date.now() - tblTime)}ms\n`)
         }

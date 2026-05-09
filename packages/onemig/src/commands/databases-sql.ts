@@ -24,6 +24,10 @@ export const databasesSqlCmd = app
         },
     ])
     .run(async ({ args, flags }) => {
+        if (!args.schemaFile) {
+            throw new Error('Missing schemaFile argument')
+        }
+
         const schemaYaml = await fs.readFile(args.schemaFile, { encoding: 'utf8' })
         const schema = yaml.load(schemaYaml) as Array<Record<string, any>>
 
