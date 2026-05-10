@@ -7,7 +7,7 @@ import {
     type RouteComponent,
 } from '../lib/routes'
 
-const DEFAULT_LOADING_DELAY_MS = 400
+const DEFAULT_LOADING_DELAY_MS = 300
 const loadedRouteComponents = new WeakMap<Route['component'], RouteComponent<any>>()
 const loadingRouteComponents = new WeakMap<Route['component'], Promise<RouteComponent<any>>>()
 

@@ -65,7 +65,7 @@ function App() {
 }
 ```
 
-`loading` is delayed by 400ms by default to avoid flashing fallback UI during quick route
+`loading` is delayed by 300ms by default to avoid flashing fallback UI during quick route
 loads. Pass `loadingDelayMs={0}` to show it immediately, or another millisecond value to tune
 the delay.
 
