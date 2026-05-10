@@ -1,7 +1,7 @@
 {
   "name": "@mpen/progressbar",
+  "version": "0.1.1",
   "description": "Terminal progress bar utilities.",
-  "private": true,
   "type": "module",
   "sideEffects": false,
   "files": [
@@ -28,5 +28,10 @@
   "scripts": {
     "build": "bun run --bun tsdown",
     "dev": "bun src/dev.ts"
+  },
+  "publishHash": {
+    "buildDate": "2026-05-09T19:27:51.534-07:00",
+    "hgChangesetId": "933434f0c184+",
+    "sha256": "57f4a6f3c3268785f2abbe913880089ffed984d8daa30c4613637d8cd0a8fb82"
   }
 }
