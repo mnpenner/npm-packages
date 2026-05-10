@@ -140,7 +140,10 @@ export default class ProgressBar {
     partialBlocks: string
 
     private intFmt: Intl.NumberFormat
-    private fracFmt: Intl.NumberFormat
+    private fastRateFmt: Intl.NumberFormat
+    private slowRateFmt: Intl.NumberFormat
+    private fastSecondsFmt: Intl.NumberFormat
+    private slowSecondsFmt: Intl.NumberFormat
     private lastLine?: string
     private lastRenderTime?: number
     private lastStrLength?: number
@@ -182,14 +185,25 @@ export default class ProgressBar {
             typeof maxOrOptions === 'object' ? maxOrOptions : { max: maxOrOptions, width, start }
 
         this.max = options.max ?? 1
-        this.width = options.width || Math.max((process.stdout.columns ?? 80) - 50, 16)
+        this.width = options.width || Math.max((process.stdout.columns ?? 80) - 40, 16)
         this.msPerFrame = 1000 / (options.fps ?? 30)
         this.partialBlocks = options.partialBlocks ?? ProgressBarPartialBlocks.smooth
         this.intFmt = Intl.NumberFormat(undefined, {})
-        this.fracFmt = Intl.NumberFormat(undefined, {
+        this.fastRateFmt = Intl.NumberFormat(undefined, {
             minimumFractionDigits: 1,
-            // maximumFractionDigits: 1.
-            maximumSignificantDigits: 3,
+            maximumFractionDigits: 1,
+        })
+        this.slowRateFmt = Intl.NumberFormat(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        })
+        this.fastSecondsFmt = Intl.NumberFormat(undefined, {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
+        })
+        this.slowSecondsFmt = Intl.NumberFormat(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
         })
 
         if (options.start ?? true) {
@@ -282,11 +296,14 @@ export default class ProgressBar {
                 const seconds = Math.floor(estimatedRemaining % 60)
                 fullLine += ` │ ${minutes}m${String(seconds).padStart(2, '0')}s`
             } else {
-                fullLine += ` │ ${estimatedRemaining.toFixed(1)}s`
+                const secondsFmt =
+                    estimatedRemaining < 10 ? this.slowSecondsFmt : this.fastSecondsFmt
+                fullLine += ` │ ${secondsFmt.format(estimatedRemaining)}s`
             }
 
             const itemsPerSecond = this.current > 0 ? this.current / elapsedSeconds : 0
-            fullLine += ` │ ${this.fracFmt.format(itemsPerSecond)} it/s`
+            const rateFmt = itemsPerSecond < 10 ? this.slowRateFmt : this.fastRateFmt
+            fullLine += ` │ ${rateFmt.format(itemsPerSecond)} it/s`
         }
 
         if (fullLine === this.lastLine) {

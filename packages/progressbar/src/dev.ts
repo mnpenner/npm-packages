@@ -97,7 +97,8 @@ try {
 
         const progress = new ProgressBar({
             max,
-            width: process.stdout.columns - 40,
+            // width: process.stdout.columns - 40,
+            // fps: 144,
             partialBlocks,
         })
 
