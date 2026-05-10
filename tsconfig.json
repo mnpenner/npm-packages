@@ -19,6 +19,7 @@
             "@mpen/imut-utils": ["./packages/imut-utils/src/imp/index.ts"],
             "@mpen/is-type": ["./packages/is-type/src/index.ts"],
             "@mpen/jsxhtml": ["./packages/jsxhtml/src/index.ts"],
+            "@mpen/progressbar": ["./packages/progressbar/src/index.ts"],
             "@mpen/react-basic-inputs": ["./packages/react-basic-inputs/src/bundle.ts"],
             "@mpen/react-external-store": ["./packages/react-external-store/src/index.ts"],
             "@mpen/rollup-plugin-clean": [

@@ -2,7 +2,32 @@
   "name": "@mpen/progressbar",
   "description": "Terminal progress bar utilities.",
   "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "publishConfig": {
     "access": "public"
+  },
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.mts",
+  "dependencies": {
+    "chalk": "catalog:",
+    "string-width": "^8.2.0"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
+  },
+  "scripts": {
+    "build": "bun run --bun tsdown",
+    "test": "bun test",
+    "prepublishOnly": "bun run build && bun run test"
   }
 }
