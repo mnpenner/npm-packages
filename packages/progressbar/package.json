@@ -26,8 +26,6 @@
     "typescript": "catalog:"
   },
   "scripts": {
-    "build": "bun run --bun tsdown",
-    "test": "bun test",
-    "prepublishOnly": "bun run build && bun run test"
+    "build": "bun run --bun tsdown"
   }
 }

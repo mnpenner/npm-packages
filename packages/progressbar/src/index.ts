@@ -1,7 +1,44 @@
 import chalk from 'chalk'
 import stringWidth from 'string-width'
 
-const defaultPartialBlocks = '▏▎▍▌▋▊▉█'
+/**
+ * Preset character sets for fractional progress bar segments.
+ *
+ * @example
+ * ```ts
+ * const progress = new ProgressBar({
+ *     max: 100,
+ *     partialBlocks: ProgressBarPartialBlocks.shades,
+ * })
+ * ```
+ */
+export const ProgressBarPartialBlocks = {
+    /**
+     * Left-to-right eighth-block segments.
+     */
+    blocks: '▏▎▍▌▋▊▉█',
+
+    /**
+     * Bottom-to-top block segments.
+     */
+    vertical: '▁▂▃▄▅▆▇█',
+
+    /**
+     * Light-to-heavy shade segments.
+     */
+    shades: '░▒▓█',
+} as const
+
+/**
+ * Built-in fractional progress bar segment character sets.
+ *
+ * @example
+ * ```ts
+ * const blocks: ProgressBarPartialBlockPreset = ProgressBarPartialBlocks.blocks
+ * ```
+ */
+export type ProgressBarPartialBlockPreset =
+    (typeof ProgressBarPartialBlocks)[keyof typeof ProgressBarPartialBlocks]
 
 type ProgressBarColor = 'blueBright' | 'greenBright' | 'redBright'
 
@@ -12,7 +49,7 @@ type ProgressBarColor = 'blueBright' | 'greenBright' | 'redBright'
  * ```ts
  * const progress = new ProgressBar({
  *     max: 100,
- *     partialBlocks: '░▒▓█',
+ *     partialBlocks: ProgressBarPartialBlocks.shades,
  * })
  * ```
  */
@@ -35,7 +72,7 @@ export interface ProgressBarOptions {
     /**
      * Characters used for fractional bar segments between whole terminal cells.
      */
-    partialBlocks?: string
+    partialBlocks?: ProgressBarPartialBlockPreset | string
 }
 
 /**
@@ -93,7 +130,7 @@ export default class ProgressBar {
      *
      * @example
      * ```ts
-     * progress.partialBlocks = '░▒▓█'
+     * progress.partialBlocks = ProgressBarPartialBlocks.shades
      * ```
      */
     partialBlocks: string
@@ -143,7 +180,7 @@ export default class ProgressBar {
         this.max = options.max ?? 1
         this.width = options.width || Math.max((process.stdout.columns ?? 80) - 50, 16)
         this.msPerFrame = 1000 / 5
-        this.partialBlocks = options.partialBlocks ?? defaultPartialBlocks
+        this.partialBlocks = options.partialBlocks ?? ProgressBarPartialBlocks.blocks
         this.intFmt = Intl.NumberFormat(undefined, {})
         this.fracFmt = Intl.NumberFormat(undefined, {
             minimumFractionDigits: 1,
