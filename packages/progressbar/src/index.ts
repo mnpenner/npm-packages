@@ -16,7 +16,7 @@ export const ProgressBarPartialBlocks = {
     /**
      * Left-to-right eighth-block segments.
      */
-    blocks: '▏▎▍▌▋▊▉█',
+    smooth: '▏▎▍▌▋▊▉█',
 
     /**
      * Bottom-to-top block segments.
@@ -34,7 +34,7 @@ export const ProgressBarPartialBlocks = {
  *
  * @example
  * ```ts
- * const blocks: ProgressBarPartialBlockPreset = ProgressBarPartialBlocks.blocks
+ * const smooth: ProgressBarPartialBlockPreset = ProgressBarPartialBlocks.smooth
  * ```
  */
 export type ProgressBarPartialBlockPreset =
@@ -70,6 +70,11 @@ export interface ProgressBarOptions {
     start?: boolean
 
     /**
+     * Maximum render frames per second.
+     */
+    fps?: number
+
+    /**
      * Characters used for fractional bar segments between whole terminal cells.
      */
     partialBlocks?: ProgressBarPartialBlockPreset | string
@@ -96,8 +101,7 @@ export default class ProgressBar {
      *
      * @example
      * ```ts
-     * progress.current = 5
-     * progress.render()
+     * progress.update(5)
      * ```
      */
     current = 0
@@ -179,13 +183,13 @@ export default class ProgressBar {
 
         this.max = options.max ?? 1
         this.width = options.width || Math.max((process.stdout.columns ?? 80) - 50, 16)
-        this.msPerFrame = 1000 / 5
-        this.partialBlocks = options.partialBlocks ?? ProgressBarPartialBlocks.blocks
+        this.msPerFrame = 1000 / (options.fps ?? 30)
+        this.partialBlocks = options.partialBlocks ?? ProgressBarPartialBlocks.smooth
         this.intFmt = Intl.NumberFormat(undefined, {})
         this.fracFmt = Intl.NumberFormat(undefined, {
             minimumFractionDigits: 1,
             // maximumFractionDigits: 1.
-            maximumSignificantDigits: 5,
+            maximumSignificantDigits: 3,
         })
 
         if (options.start ?? true) {
@@ -209,18 +213,7 @@ export default class ProgressBar {
         this.render()
     }
 
-    /**
-     * Render the progress bar if enough time has elapsed since the last frame.
-     *
-     * @example
-     * ```ts
-     * progress.current = 5
-     * progress.render()
-     * ```
-     *
-     * @returns Nothing.
-     */
-    render() {
+    private render() {
         if (!this.lastRenderTime || Date.now() - this.lastRenderTime > this.msPerFrame) {
             this.renderNow()
         }
@@ -242,22 +235,11 @@ export default class ProgressBar {
         this.update(this.current + items)
     }
 
-    /**
-     * Render the progress bar immediately using the normal completion color.
-     *
-     * @example
-     * ```ts
-     * progress.renderNow()
-     * ```
-     *
-     * @returns Nothing.
-     */
-    renderNow() {
-        this._renderNow('greenBright')
+    private renderNow() {
+        this.renderNowWithColor('greenBright')
     }
 
-    /** @internal */
-    _renderNow(fgColor: ProgressBarColor) {
+    private renderNowWithColor(fgColor: ProgressBarColor) {
         const percent = this.current < this.max ? this.current / this.max : 1
         const innerWidth = this.width - 6
         const percentStr = `${String(Math.floor(percent * 100 + 0.25)).padStart(4, ' ')}%`
@@ -316,18 +298,7 @@ export default class ProgressBar {
         this.lastRenderTime = Date.now()
     }
 
-    /**
-     * Write a full progress line to stdout.
-     *
-     * @example
-     * ```ts
-     * progress.writeLine('done')
-     * ```
-     *
-     * @param str - Line content to write.
-     * @returns Nothing.
-     */
-    writeLine(str: string) {
+    private writeLine(str: string) {
         const len = stringWidth(str)
 
         if (this.lastStrLength) {
@@ -340,6 +311,26 @@ export default class ProgressBar {
 
         process.stdout.write(str)
         this.lastStrLength = len
+    }
+
+    /**
+     * Write a log line without permanently disrupting the active progress bar.
+     *
+     * @example
+     * ```ts
+     * progress.logLine('Downloaded manifest')
+     * progress.tick()
+     * ```
+     *
+     * @param line - Log line to write above the redrawn progress bar.
+     * @returns Nothing.
+     */
+    logLine(line: string) {
+        this.clear()
+        process.stdout.write(`${line}\n`)
+        this.lastLine = undefined
+        this.lastStrLength = undefined
+        this.renderNow()
     }
 
     /**
@@ -369,7 +360,7 @@ export default class ProgressBar {
      * @returns Nothing.
      */
     interrupt() {
-        this._renderNow('redBright')
+        this.renderNowWithColor('redBright')
         process.stdout.write('\n')
     }
 
@@ -401,7 +392,7 @@ export default class ProgressBar {
      */
     complete() {
         this.current = this.max
-        this._renderNow('blueBright')
+        this.renderNowWithColor('blueBright')
 
         process.stdout.write('\n')
     }
