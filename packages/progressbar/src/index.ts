@@ -140,10 +140,8 @@ export default class ProgressBar {
     partialBlocks: string
 
     private intFmt: Intl.NumberFormat
-    private fastRateFmt: Intl.NumberFormat
-    private slowRateFmt: Intl.NumberFormat
-    private fastSecondsFmt: Intl.NumberFormat
-    private slowSecondsFmt: Intl.NumberFormat
+    private oneDecimalFmt: Intl.NumberFormat
+    private twoDecimalFmt: Intl.NumberFormat
     private lastLine?: string
     private lastRenderTime?: number
     private lastStrLength?: number
@@ -189,19 +187,11 @@ export default class ProgressBar {
         this.msPerFrame = 1000 / (options.fps ?? 30)
         this.partialBlocks = options.partialBlocks ?? ProgressBarPartialBlocks.smooth
         this.intFmt = Intl.NumberFormat(undefined, {})
-        this.fastRateFmt = Intl.NumberFormat(undefined, {
+        this.oneDecimalFmt = Intl.NumberFormat(undefined, {
             minimumFractionDigits: 1,
             maximumFractionDigits: 1,
         })
-        this.slowRateFmt = Intl.NumberFormat(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        })
-        this.fastSecondsFmt = Intl.NumberFormat(undefined, {
-            minimumFractionDigits: 1,
-            maximumFractionDigits: 1,
-        })
-        this.slowSecondsFmt = Intl.NumberFormat(undefined, {
+        this.twoDecimalFmt = Intl.NumberFormat(undefined, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
         })
@@ -296,13 +286,12 @@ export default class ProgressBar {
                 const seconds = Math.floor(estimatedRemaining % 60)
                 fullLine += ` │ ${minutes}m${String(seconds).padStart(2, '0')}s`
             } else {
-                const secondsFmt =
-                    estimatedRemaining < 10 ? this.slowSecondsFmt : this.fastSecondsFmt
+                const secondsFmt = estimatedRemaining < 10 ? this.twoDecimalFmt : this.oneDecimalFmt
                 fullLine += ` │ ${secondsFmt.format(estimatedRemaining)}s`
             }
 
             const itemsPerSecond = this.current > 0 ? this.current / elapsedSeconds : 0
-            const rateFmt = itemsPerSecond < 10 ? this.slowRateFmt : this.fastRateFmt
+            const rateFmt = itemsPerSecond < 10 ? this.twoDecimalFmt : this.oneDecimalFmt
             fullLine += ` │ ${rateFmt.format(itemsPerSecond)} it/s`
         }
 
