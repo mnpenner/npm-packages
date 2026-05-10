@@ -26,6 +26,7 @@
     "typescript": "catalog:"
   },
   "scripts": {
-    "build": "bun run --bun tsdown"
+    "build": "bun run --bun tsdown",
+    "dev": "bun src/dev.ts"
   }
 }
