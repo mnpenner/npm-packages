@@ -25,6 +25,7 @@
     "@types/bun": "latest",
     "tsdown": "catalog:",
     "zod": "^4.3.5",
+    "@mpen/ts-types": "workspace:*",
     "maxmind": "^5"
   },
   "peerDependencies": {

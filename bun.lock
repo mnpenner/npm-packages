@@ -281,6 +281,7 @@
     },
     "packages/progressbar": {
       "name": "@mpen/progressbar",
+      "version": "0.1.1",
       "dependencies": {
         "chalk": "catalog:",
         "string-width": "^8.2.0",
@@ -383,27 +384,25 @@
     },
     "packages/rerouter": {
       "name": "@mpen/rerouter",
-      "version": "0.3.3",
+      "version": "0.4.0",
       "bin": {
         "rerouter": "./dist/bin.js",
       },
-      "dependencies": {
+      "devDependencies": {
         "@mpen/classcat": "workspace:*",
         "@mpen/ts-types": "workspace:*",
-        "path-to-regexp": "^8.3.0",
-      },
-      "devDependencies": {
         "@testing-library/react": "^16.3.2",
         "@types/node": "^22",
         "@types/react": "^19",
         "@types/react-dom": "^19.2.3",
         "happy-dom": "^20.9.0",
+        "path-to-regexp": "^8.3.0",
         "react-dom": "^19.2.3",
         "tsdown": "catalog:",
       },
       "peerDependencies": {
         "react": "^19",
-        "typescript": "^5",
+        "typescript": ">=5",
       },
     },
     "packages/server-router": {
@@ -417,6 +416,7 @@
         "json-schema-to-typescript": "^15.0.4",
       },
       "devDependencies": {
+        "@mpen/ts-types": "workspace:*",
         "@types/bun": "latest",
         "maxmind": "^5",
         "tsdown": "catalog:",
