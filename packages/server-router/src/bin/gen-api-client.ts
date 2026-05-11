@@ -62,6 +62,7 @@ Arguments:
 Options:
   -o, --output <file>         File to write. Prints to stdout when omitted.
   -w, --write                 Write to <router-file>.gen.ts beside the router file.
+  -p, --pretty                Format written output with Prettier.
   --client-name <Name>        Generated client class name. Defaults to ApiClient.
   --import-type <Type:module> Import a type used by generated schemas. Can be repeated.
   --response-type <Type>      Generic response wrapper type. Defaults to PromisedResponse.
@@ -196,6 +197,18 @@ async function compileSchemaType(name: string, schema: JsonSchema): Promise<stri
             },
         })
     ).trim()
+}
+
+async function formatWithPrettier(source: string, outputPath: string): Promise<string> {
+    let prettier
+    try {
+        prettier = await import('prettier')
+    } catch (cause) {
+        throw new Error('The --pretty option requires prettier to be installed.', { cause })
+    }
+
+    const options = (await prettier.resolveConfig(outputPath)) ?? {}
+    return prettier.format(source, { ...options, filepath: outputPath })
 }
 
 function responseStatusAlias(typeBase: string, status: string): string {
@@ -438,6 +451,10 @@ export async function main() {
                 type: 'boolean',
                 short: 'w',
             },
+            pretty: {
+                type: 'boolean',
+                short: 'p',
+            },
             'client-name': {
                 type: 'string',
             },
@@ -501,7 +518,7 @@ export async function main() {
     }
     const commandText = ['bun', ...rawArgs.map((arg) => $.escape(arg))].join(' ')
 
-    const client = await buildApiClientSource(routes, {
+    let client = await buildApiClientSource(routes, {
         clientName,
         responseType,
         importTypes,
@@ -509,8 +526,11 @@ export async function main() {
     })
 
     if (outputPath) {
+        if (values.pretty) {
+            client = await formatWithPrettier(client, outputPath)
+        }
         fs.writeFileSync(outputPath, client, 'utf8')
-        console.log(`Wrote API client to ${outputPath}`)
+        console.log(`Wrote API client to ${path.relative(process.cwd(),outputPath)}`)
     } else {
         console.log(client)
     }
