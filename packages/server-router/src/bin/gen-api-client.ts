@@ -396,7 +396,7 @@ async function buildApiClientSource(
 
     if (needsQueryHelper) {
         lines.push(``)
-        lines.push(`function withQuery(url: string, query: Record<string, unknown>): string {`)
+        lines.push(`function withQuery(url: string, query: object): string {`)
         lines.push(`    const searchParams = new URLSearchParams()`)
         lines.push(`    for (const [key, value] of Object.entries(query)) {`)
         lines.push(`        if (value == null) continue`)
@@ -530,7 +530,7 @@ export async function main() {
             client = await formatWithPrettier(client, outputPath)
         }
         fs.writeFileSync(outputPath, client, 'utf8')
-        console.log(`Wrote API client to ${path.relative(process.cwd(),outputPath)}`)
+        console.log(`Wrote API client to ${path.relative(process.cwd(), outputPath)}`)
     } else {
         console.log(client)
     }

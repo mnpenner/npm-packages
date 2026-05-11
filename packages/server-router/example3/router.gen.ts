@@ -12,7 +12,7 @@ type SinglePathParam<TParams, TKey extends string> = TParams extends { [K in TKe
   ? V
   : unknown
 
-function withQuery(url: string, query: Record<string, unknown>): string {
+function withQuery(url: string, query: object): string {
   const searchParams = new URLSearchParams()
   for (const [key, value] of Object.entries(query)) {
     if (value == null) continue
