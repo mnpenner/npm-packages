@@ -3,6 +3,7 @@
 
 import {
   FetchTransport,
+  resolveApiResponse,
   withQuery,
   type ClientCallOptions,
   type ClientTransport,
@@ -80,17 +81,19 @@ class ApiClient_Widgets_ById {
       typeof path === 'object' && path !== null && !Array.isArray(path)
         ? path
         : ({ id: path } as any)
-    return this.transport.request<PostWidgetsByIdResponse, PostWidgetsByIdRequest>({
-      routeId: 'postWidgetsById',
-      url: withQuery(`/widgets/${encodeURIComponent(String(_path.id))}`, query),
-      init: {
-        ...callOptions.init,
-        method: 'POST',
-        headers: callOptions.headers,
-        signal: callOptions.signal,
-      },
-      body,
-      bodyCodec: callOptions.bodyCodec,
-    })
+    return resolveApiResponse(
+      this.transport.request<PostWidgetsByIdResponse, PostWidgetsByIdRequest>({
+        routeId: 'postWidgetsById',
+        url: withQuery(`/widgets/${encodeURIComponent(String(_path.id))}`, query),
+        init: {
+          ...callOptions.init,
+          method: 'POST',
+          headers: callOptions.headers,
+          signal: callOptions.signal,
+        },
+        body,
+        bodyCodec: callOptions.bodyCodec,
+      }),
+    )
   }
 }

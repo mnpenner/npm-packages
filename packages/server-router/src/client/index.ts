@@ -24,14 +24,12 @@ export type MaybePromise<T> = T | Promise<T>
  * @typeParam T - The parsed response body type.
  */
 export interface ApiResponse<T> {
-    /** The unmodified platform response returned by the transport. */
-    response: Response
+    /** The unmodified platform response, when the transport has one. */
+    response?: Response
     /** Whether the response status is in the successful 200-299 range. */
     ok: boolean
     /** The response status code. */
     status: number
-    /** The response status text. */
-    statusText: string
     /** The response headers. */
     headers: Headers
 
@@ -54,6 +52,47 @@ export interface ApiResponse<T> {
  * @typeParam T - The parsed response body type.
  */
 export type ApiResponsePromise<T> = Promise<ApiResponse<T>>
+
+/**
+ * A minimal response returned by client transports.
+ *
+ * @example
+ * ```ts
+ * const response: ApiTransportResponse<{ ok: true }> = {
+ *     status: 200,
+ *     parseBody: async () => ({ ok: true }),
+ * }
+ * ```
+ *
+ * @typeParam T - The parsed response body type.
+ */
+export interface ApiTransportResponse<T> {
+    /** The unmodified platform response, when the transport has one. */
+    response?: Response
+    /** The response status code. */
+    status: number
+    /** The response headers, when available. */
+    headers?: HeadersInit
+
+    /**
+     * Parse the response body with the transport's active body codec.
+     *
+     * @returns The parsed response body.
+     */
+    parseBody(): Promise<T>
+}
+
+/**
+ * The async response wrapper returned by client transports.
+ *
+ * @example
+ * ```ts
+ * const response: ApiTransportResponsePromise<{ ok: true }> = transport.request(request)
+ * ```
+ *
+ * @typeParam T - The parsed response body type.
+ */
+export type ApiTransportResponsePromise<T> = Promise<ApiTransportResponse<T>>
 
 /**
  * Context passed to body serializers.
@@ -213,7 +252,7 @@ export interface ClientRequest<TBody = unknown> {
  * @example
  * ```ts
  * class AxiosTransport implements ClientTransport {
- *     async request<TResponse>(request: ClientRequest): ApiResponsePromise<TResponse> {
+ *     async request<TResponse>(request: ClientRequest): ApiTransportResponsePromise<TResponse> {
  *         throw new Error('Adapt Axios into a Response-shaped object here')
  *     }
  * }
@@ -230,7 +269,7 @@ export interface ClientTransport {
      */
     request<TResponse, TBody = unknown>(
         request: ClientRequest<TBody>,
-    ): ApiResponsePromise<TResponse>
+    ): ApiTransportResponsePromise<TResponse>
 }
 
 /**
@@ -346,7 +385,7 @@ export class FetchTransport implements ClientTransport {
      */
     async request<TResponse, TBody = unknown>(
         request: ClientRequest<TBody>,
-    ): ApiResponsePromise<TResponse> {
+    ): ApiTransportResponsePromise<TResponse> {
         const codec = request.bodyCodec ?? this.#bodyCodec
         const init: RequestInit = { ...request.init }
         const headerContext = { routeId: request.routeId, url: request.url, init }
@@ -377,9 +416,7 @@ export class FetchTransport implements ClientTransport {
         const response = await this.#fetch(resolveUrl(request.url, this.#baseUrl), init)
         return {
             response,
-            ok: response.ok,
             status: response.status,
-            statusText: response.statusText,
             headers: response.headers,
             parseBody: () =>
                 codec.deserialize<TResponse>(response.clone(), {
@@ -389,6 +426,31 @@ export class FetchTransport implements ClientTransport {
                     contentType: response.headers.get('content-type'),
                 }),
         }
+    }
+}
+
+/**
+ * Normalize a transport response into the public generated API response shape.
+ *
+ * @example
+ * ```ts
+ * const response = await resolveApiResponse(transport.request(request))
+ * ```
+ *
+ * @param response - A transport response or transport response promise.
+ * @returns The normalized API response.
+ * @typeParam T - The parsed response body type.
+ */
+export async function resolveApiResponse<T>(
+    response: ApiTransportResponse<T> | ApiTransportResponsePromise<T>,
+): ApiResponsePromise<T> {
+    const resolved = await response
+    return {
+        response: resolved.response,
+        ok: resolved.status >= 200 && resolved.status < 300,
+        status: resolved.status,
+        headers: new Headers(resolved.headers),
+        parseBody: resolved.parseBody,
     }
 }
 

@@ -317,8 +317,10 @@ function buildMethodLines(
     }
     const urlExpr = patternToUrlTemplate(route.path, pathVar)
     const finalUrlExpr = queryType ? `withQuery(${urlExpr}, query)` : urlExpr
+    const requestExpression = `this.transport.request<${route.typeBase}Response${bodyType ? `, ${bodyType}` : ''}>`
+    const shouldResolveApiResponse = options.responseType === DEFAULT_RESPONSE_TYPE
     lines.push(
-        `${indent}    return this.transport.request<${route.typeBase}Response${bodyType ? `, ${bodyType}` : ''}>({`,
+        `${indent}    return ${shouldResolveApiResponse ? 'resolveApiResponse(' : ''}${requestExpression}({`,
     )
     lines.push(`${indent}        routeId: ${JSON.stringify(lowerFirst(route.typeBase))},`)
     lines.push(`${indent}        url: ${finalUrlExpr},`)
@@ -332,8 +334,11 @@ function buildMethodLines(
         lines.push(`${indent}        body,`)
     }
     lines.push(`${indent}        bodyCodec: callOptions.bodyCodec,`)
-    const castReturnType = options.responseType === DEFAULT_RESPONSE_TYPE ? '' : ` as ${returnType}`
-    lines.push(`${indent}    })${castReturnType}`)
+    if (shouldResolveApiResponse) {
+        lines.push(`${indent}    }))`)
+    } else {
+        lines.push(`${indent}    }) as ${returnType}`)
+    }
     lines.push(`${indent}}`)
 
     return lines
@@ -434,6 +439,7 @@ async function buildApiClientSource(
 
     const clientImports = [
         'FetchTransport',
+        options.responseType === DEFAULT_RESPONSE_TYPE ? 'resolveApiResponse' : undefined,
         needsQueryHelper ? 'withQuery' : undefined,
         'type ClientCallOptions',
         'type ClientTransport',

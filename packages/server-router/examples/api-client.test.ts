@@ -63,25 +63,25 @@ describe('api-client.gen', () => {
         expect(jsonHelperZodData).toEqual({ ok: true, tag: 'alpha' })
 
         const healthResponse = await client.health.get()
-        expect(await healthResponse.response.text()).toEqual('ok')
+        expect(await healthResponse.response!.text()).toEqual('ok')
 
         const healthHeadResponse = await client.health.head()
-        expect(await healthHeadResponse.response.text()).toEqual('')
+        expect(await healthHeadResponse.response!.text()).toEqual('')
 
         const submitResponse = await client.submit.post()
-        expect(await submitResponse.response.text()).toEqual('submitted')
+        expect(await submitResponse.response!.text()).toEqual('submitted')
 
         const putResponse = await client.itemsById.put({ path: 123 })
-        expect(await putResponse.response.text()).toEqual('updated')
+        expect(await putResponse.response!.text()).toEqual('updated')
 
         const deleteResponse = await client.itemsById.delete({ path: 123 })
-        expect(await deleteResponse.response.text()).toEqual('deleted')
+        expect(await deleteResponse.response!.text()).toEqual('deleted')
 
         const patchResponse = await client.itemsById.patch({ path: 123 })
-        expect(await patchResponse.response.text()).toEqual('patched')
+        expect(await patchResponse.response!.text()).toEqual('patched')
 
         const genResponse = await client.gen.get()
-        expect(await genResponse.response.text()).toEqual('herro')
+        expect(await genResponse.response!.text()).toEqual('herro')
 
         expect(calls).toEqual([
             { url: '/', init: { method: 'GET' } },

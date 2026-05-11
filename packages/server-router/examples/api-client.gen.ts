@@ -1,7 +1,7 @@
 // Do not modify this file. It was auto-generated with the following command:
 // $ bun src/bin/gen-api-client.ts ./examples/router-instance.ts -o ./examples/api-client.gen.ts
 
-import { FetchTransport, type ClientCallOptions, type ClientTransport, type ApiResponsePromise } from '@mpen/server-router/client'
+import { FetchTransport, resolveApiResponse, type ClientCallOptions, type ClientTransport, type ApiResponsePromise } from '@mpen/server-router/client'
 
 type SinglePathParam<TParams, TKey extends string> = TParams extends { [K in TKey]: infer V } ? V : unknown
 
@@ -191,7 +191,7 @@ export class ApiClient {
 
     get(options: GetIndexOptions = {}): ApiResponsePromise<GetIndexResponse> {
         const callOptions = options
-        return this.transport.request<GetIndexResponse>({
+        return resolveApiResponse(this.transport.request<GetIndexResponse>({
             routeId: "getIndex",
             url: "/",
             init: {
@@ -201,7 +201,7 @@ export class ApiClient {
                 signal: callOptions.signal,
             },
             bodyCodec: callOptions.bodyCodec,
-        })
+        }))
     }
 }
 
@@ -209,7 +209,7 @@ class ApiClient_NamedRoute {
     constructor(private readonly transport: ClientTransport) {}
     get(options: GetNamedRouteOptions = {}): ApiResponsePromise<GetNamedRouteResponse> {
         const callOptions = options
-        return this.transport.request<GetNamedRouteResponse>({
+        return resolveApiResponse(this.transport.request<GetNamedRouteResponse>({
             routeId: "getNamedRoute",
             url: "/name/bar",
             init: {
@@ -219,12 +219,12 @@ class ApiClient_NamedRoute {
                 signal: callOptions.signal,
             },
             bodyCodec: callOptions.bodyCodec,
-        })
+        }))
     }
 
     post(options: PostNamedRouteOptions = {}): ApiResponsePromise<PostNamedRouteResponse> {
         const callOptions = options
-        return this.transport.request<PostNamedRouteResponse>({
+        return resolveApiResponse(this.transport.request<PostNamedRouteResponse>({
             routeId: "postNamedRoute",
             url: "/name/bar",
             init: {
@@ -234,7 +234,7 @@ class ApiClient_NamedRoute {
                 signal: callOptions.signal,
             },
             bodyCodec: callOptions.bodyCodec,
-        })
+        }))
     }
 }
 
@@ -250,7 +250,7 @@ class ApiClient_Foo_Bar {
     constructor(private readonly transport: ClientTransport) {}
     post(options: PostFooBarOptions = {}): ApiResponsePromise<PostFooBarResponse> {
         const callOptions = options
-        return this.transport.request<PostFooBarResponse>({
+        return resolveApiResponse(this.transport.request<PostFooBarResponse>({
             routeId: "postFooBar",
             url: "/foo/bar",
             init: {
@@ -260,7 +260,7 @@ class ApiClient_Foo_Bar {
                 signal: callOptions.signal,
             },
             bodyCodec: callOptions.bodyCodec,
-        })
+        }))
     }
 }
 
@@ -269,7 +269,7 @@ class ApiClient_BooksById {
     post(options: PostBooksByIdOptions): ApiResponsePromise<PostBooksByIdResponse> {
         const { path, body, ...callOptions } = options
         const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { id: path } as any
-        return this.transport.request<PostBooksByIdResponse, PostBooksByIdRequest>({
+        return resolveApiResponse(this.transport.request<PostBooksByIdResponse, PostBooksByIdRequest>({
             routeId: "postBooksById",
             url: `/books/${encodeURIComponent(String(_path.id))}`,
             init: {
@@ -280,7 +280,7 @@ class ApiClient_BooksById {
             },
             body,
             bodyCodec: callOptions.bodyCodec,
-        })
+        }))
     }
 }
 
@@ -288,7 +288,7 @@ class ApiClient_JsonHelper {
     constructor(private readonly transport: ClientTransport) {}
     get(options: GetJsonHelperOptions = {}): ApiResponsePromise<GetJsonHelperResponse> {
         const callOptions = options
-        return this.transport.request<GetJsonHelperResponse>({
+        return resolveApiResponse(this.transport.request<GetJsonHelperResponse>({
             routeId: "getJsonHelper",
             url: "/json-helper",
             init: {
@@ -298,7 +298,7 @@ class ApiClient_JsonHelper {
                 signal: callOptions.signal,
             },
             bodyCodec: callOptions.bodyCodec,
-        })
+        }))
     }
 }
 
@@ -306,7 +306,7 @@ class ApiClient_JsonHelperZod {
     constructor(private readonly transport: ClientTransport) {}
     post(options: PostJsonHelperZodOptions): ApiResponsePromise<PostJsonHelperZodResponse> {
         const { body, ...callOptions } = options
-        return this.transport.request<PostJsonHelperZodResponse, PostJsonHelperZodRequest>({
+        return resolveApiResponse(this.transport.request<PostJsonHelperZodResponse, PostJsonHelperZodRequest>({
             routeId: "postJsonHelperZod",
             url: "/json-helper-zod",
             init: {
@@ -317,7 +317,7 @@ class ApiClient_JsonHelperZod {
             },
             body,
             bodyCodec: callOptions.bodyCodec,
-        })
+        }))
     }
 }
 
@@ -325,7 +325,7 @@ class ApiClient_Health {
     constructor(private readonly transport: ClientTransport) {}
     get(options: GetHealthOptions = {}): ApiResponsePromise<GetHealthResponse> {
         const callOptions = options
-        return this.transport.request<GetHealthResponse>({
+        return resolveApiResponse(this.transport.request<GetHealthResponse>({
             routeId: "getHealth",
             url: "/health",
             init: {
@@ -335,12 +335,12 @@ class ApiClient_Health {
                 signal: callOptions.signal,
             },
             bodyCodec: callOptions.bodyCodec,
-        })
+        }))
     }
 
     head(options: HeadHealthOptions = {}): ApiResponsePromise<HeadHealthResponse> {
         const callOptions = options
-        return this.transport.request<HeadHealthResponse>({
+        return resolveApiResponse(this.transport.request<HeadHealthResponse>({
             routeId: "headHealth",
             url: "/health",
             init: {
@@ -350,7 +350,7 @@ class ApiClient_Health {
                 signal: callOptions.signal,
             },
             bodyCodec: callOptions.bodyCodec,
-        })
+        }))
     }
 }
 
@@ -358,7 +358,7 @@ class ApiClient_Submit {
     constructor(private readonly transport: ClientTransport) {}
     post(options: PostSubmitOptions = {}): ApiResponsePromise<PostSubmitResponse> {
         const callOptions = options
-        return this.transport.request<PostSubmitResponse>({
+        return resolveApiResponse(this.transport.request<PostSubmitResponse>({
             routeId: "postSubmit",
             url: "/submit",
             init: {
@@ -368,7 +368,7 @@ class ApiClient_Submit {
                 signal: callOptions.signal,
             },
             bodyCodec: callOptions.bodyCodec,
-        })
+        }))
     }
 }
 
@@ -377,7 +377,7 @@ class ApiClient_ItemsById {
     put(options: PutItemsByIdOptions): ApiResponsePromise<PutItemsByIdResponse> {
         const { path, ...callOptions } = options
         const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { id: path } as any
-        return this.transport.request<PutItemsByIdResponse>({
+        return resolveApiResponse(this.transport.request<PutItemsByIdResponse>({
             routeId: "putItemsById",
             url: `/items/${encodeURIComponent(String(_path.id))}`,
             init: {
@@ -387,13 +387,13 @@ class ApiClient_ItemsById {
                 signal: callOptions.signal,
             },
             bodyCodec: callOptions.bodyCodec,
-        })
+        }))
     }
 
     delete(options: DeleteItemsByIdOptions): ApiResponsePromise<DeleteItemsByIdResponse> {
         const { path, ...callOptions } = options
         const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { id: path } as any
-        return this.transport.request<DeleteItemsByIdResponse>({
+        return resolveApiResponse(this.transport.request<DeleteItemsByIdResponse>({
             routeId: "deleteItemsById",
             url: `/items/${encodeURIComponent(String(_path.id))}`,
             init: {
@@ -403,13 +403,13 @@ class ApiClient_ItemsById {
                 signal: callOptions.signal,
             },
             bodyCodec: callOptions.bodyCodec,
-        })
+        }))
     }
 
     patch(options: PatchItemsByIdOptions): ApiResponsePromise<PatchItemsByIdResponse> {
         const { path, ...callOptions } = options
         const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { id: path } as any
-        return this.transport.request<PatchItemsByIdResponse>({
+        return resolveApiResponse(this.transport.request<PatchItemsByIdResponse>({
             routeId: "patchItemsById",
             url: `/items/${encodeURIComponent(String(_path.id))}`,
             init: {
@@ -419,7 +419,7 @@ class ApiClient_ItemsById {
                 signal: callOptions.signal,
             },
             bodyCodec: callOptions.bodyCodec,
-        })
+        }))
     }
 }
 
@@ -427,7 +427,7 @@ class ApiClient_Gen {
     constructor(private readonly transport: ClientTransport) {}
     get(options: GetGenOptions = {}): ApiResponsePromise<GetGenResponse> {
         const callOptions = options
-        return this.transport.request<GetGenResponse>({
+        return resolveApiResponse(this.transport.request<GetGenResponse>({
             routeId: "getGen",
             url: "/gen",
             init: {
@@ -437,6 +437,6 @@ class ApiClient_Gen {
                 signal: callOptions.signal,
             },
             bodyCodec: callOptions.bodyCodec,
-        })
+        }))
     }
 }
