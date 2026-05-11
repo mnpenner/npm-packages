@@ -8,3 +8,4 @@
 - Drop `pattern` alias for RoutePath
 - Batch fetching? Part of transport or ApiClient?
 - OTel..?
+- Split packages/server-router/src/client/index.ts into multiple files

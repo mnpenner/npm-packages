@@ -2,12 +2,11 @@
 // $ bun src/bin/gen-api-client.ts "./example3/router.ts" -w -p
 
 import {
-  createClientTransport,
+  FetchTransport,
   withQuery,
   type ClientCallOptions,
   type ClientTransport,
-  type FetchTransportOptions,
-  type PromisedResponse,
+  type ApiResponsePromise,
 } from '@mpen/server-router/client'
 
 type SinglePathParam<TParams, TKey extends string> = TParams extends { [K in TKey]: infer V }
@@ -56,8 +55,8 @@ export interface PostWidgetsByIdOptions extends ClientCallOptions {
 export class ApiClient {
   private readonly transport: ClientTransport
 
-  constructor(transport?: ClientTransport | FetchTransportOptions) {
-    this.transport = createClientTransport(transport)
+  constructor(transport?: ClientTransport) {
+    this.transport = transport ?? new FetchTransport()
   }
 
   get widgets(): ApiClient_Widgets {
@@ -75,7 +74,7 @@ class ApiClient_Widgets {
 
 class ApiClient_Widgets_ById {
   constructor(private readonly transport: ClientTransport) {}
-  post(options: PostWidgetsByIdOptions): PromisedResponse<PostWidgetsByIdResponse> {
+  post(options: PostWidgetsByIdOptions): ApiResponsePromise<PostWidgetsByIdResponse> {
     const { path, query, body, ...callOptions } = options
     const _path =
       typeof path === 'object' && path !== null && !Array.isArray(path)

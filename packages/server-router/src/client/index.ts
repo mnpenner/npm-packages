@@ -11,29 +11,49 @@
 export type MaybePromise<T> = T | Promise<T>
 
 /**
- * A response whose JSON body is typed by the generated API client method.
+ * A typed response returned by generated API clients.
  *
  * @example
  * ```ts
- * const response: TypedResponse<{ ok: true }> = await client.health.get()
- * const body = await response.json()
+ * const response: ApiResponse<{ ok: true }> = await client.health.get()
+ * if (response.status === 200) {
+ * const body = await response.parseBody()
+ * }
  * ```
  *
- * @typeParam T - The parsed JSON response body type.
+ * @typeParam T - The parsed response body type.
  */
-export type TypedResponse<T> = Omit<Response, 'json'> & { json(): Promise<T> }
+export interface ApiResponse<T> {
+    /** The unmodified platform response returned by the transport. */
+    response: Response
+    /** Whether the response status is in the successful 200-299 range. */
+    ok: boolean
+    /** The response status code. */
+    status: number
+    /** The response status text. */
+    statusText: string
+    /** The response headers. */
+    headers: Headers
+
+    /**
+     * Parse the response body with the active body codec.
+     *
+     * @returns The parsed response body.
+     */
+    parseBody(): Promise<T>
+}
 
 /**
  * The default async response wrapper used by generated API clients.
  *
  * @example
  * ```ts
- * const response: PromisedResponse<{ id: number }> = client.items.get()
+ * const response: ApiResponsePromise<{ id: number }> = client.items.byId.get({ path: 123 })
  * ```
  *
- * @typeParam T - The parsed JSON response body type.
+ * @typeParam T - The parsed response body type.
  */
-export type PromisedResponse<T> = Promise<TypedResponse<T>>
+export type ApiResponsePromise<T> = Promise<ApiResponse<T>>
 
 /**
  * Context passed to body serializers.
@@ -111,7 +131,7 @@ export interface BodyCodec {
     serialize(value: unknown, context: SerializeBodyContext): BodyInit | null | undefined
 
     /**
-     * Deserialize a response body for typed `response.json()` calls.
+     * Deserialize a response body for typed `response.parseBody()` calls.
      *
      * @param response - The response returned by the transport.
      * @param context - Metadata for the response being deserialized.
@@ -126,7 +146,7 @@ export interface BodyCodec {
  *
  * @example
  * ```ts
- * const client = new ApiClient({ bodyCodec: jsonBodyCodec })
+ * const client = new ApiClient(new FetchTransport({ bodyCodec: jsonBodyCodec }))
  * ```
  */
 export const jsonBodyCodec: BodyCodec = {
@@ -193,7 +213,7 @@ export interface ClientRequest<TBody = unknown> {
  * @example
  * ```ts
  * class AxiosTransport implements ClientTransport {
- *     async request<TResponse>(request: ClientRequest): PromisedResponse<TResponse> {
+ *     async request<TResponse>(request: ClientRequest): ApiResponsePromise<TResponse> {
  *         throw new Error('Adapt Axios into a Response-shaped object here')
  *     }
  * }
@@ -208,7 +228,9 @@ export interface ClientTransport {
      * @typeParam TResponse - The expected response body type.
      * @typeParam TBody - The request body type.
      */
-    request<TResponse, TBody = unknown>(request: ClientRequest<TBody>): PromisedResponse<TResponse>
+    request<TResponse, TBody = unknown>(
+        request: ClientRequest<TBody>,
+    ): ApiResponsePromise<TResponse>
 }
 
 /**
@@ -283,14 +305,6 @@ function resolveUrl(url: string, baseUrl: string | URL | undefined): string {
     return baseUrl ? new URL(url, baseUrl).toString() : url
 }
 
-function isClientTransport(value: unknown): value is ClientTransport {
-    return (
-        !!value &&
-        typeof value === 'object' &&
-        typeof (value as ClientTransport).request === 'function'
-    )
-}
-
 /**
  * Fetch-based transport for generated API clients.
  *
@@ -332,7 +346,7 @@ export class FetchTransport implements ClientTransport {
      */
     async request<TResponse, TBody = unknown>(
         request: ClientRequest<TBody>,
-    ): PromisedResponse<TResponse> {
+    ): ApiResponsePromise<TResponse> {
         const codec = request.bodyCodec ?? this.#bodyCodec
         const init: RequestInit = { ...request.init }
         const headerContext = { routeId: request.routeId, url: request.url, init }
@@ -361,36 +375,21 @@ export class FetchTransport implements ClientTransport {
         }
 
         const response = await this.#fetch(resolveUrl(request.url, this.#baseUrl), init)
-        const typedResponse = response as TypedResponse<TResponse>
-        Object.defineProperty(typedResponse, 'json', {
-            configurable: true,
-            value: () =>
+        return {
+            response,
+            ok: response.ok,
+            status: response.status,
+            statusText: response.statusText,
+            headers: response.headers,
+            parseBody: () =>
                 codec.deserialize<TResponse>(response.clone(), {
                     routeId: request.routeId,
                     url: request.url,
                     status: response.status,
                     contentType: response.headers.get('content-type'),
                 }),
-        })
-        return typedResponse
+        }
     }
-}
-
-/**
- * Create a generated client transport from transport options or an existing transport.
- *
- * @example
- * ```ts
- * const transport = createClientTransport({ baseUrl: 'https://api.example.com' })
- * ```
- *
- * @param transport - Existing transport or Fetch transport options.
- * @returns A client transport.
- */
-export function createClientTransport(
-    transport: ClientTransport | FetchTransportOptions = {},
-): ClientTransport {
-    return isClientTransport(transport) ? transport : new FetchTransport(transport)
 }
 
 /**

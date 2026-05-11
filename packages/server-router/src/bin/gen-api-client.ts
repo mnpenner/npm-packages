@@ -8,6 +8,8 @@ import { compile } from 'json-schema-to-typescript'
 import { HttpMethod } from '@mpen/http-helpers'
 import type { JsonSchema, NormalizedRoute, RouteSchema } from '../types'
 
+const DEFAULT_RESPONSE_TYPE = 'ApiResponsePromise'
+
 type ExtractedRouteMeta = {
     name: string[]
     method: HttpMethod
@@ -65,7 +67,7 @@ Options:
   -p, --pretty                Format written output with Prettier.
   --client-name <Name>        Generated client class name. Defaults to ApiClient.
   --import-type <Type:module> Import a type used by generated schemas. Can be repeated.
-  --response-type <Type>      Generic response wrapper type. Defaults to PromisedResponse.
+  --response-type <Type>      Generic response wrapper type. Defaults to ApiResponsePromise.
   --help                      Show this help message.`)
 }
 
@@ -330,7 +332,7 @@ function buildMethodLines(
         lines.push(`${indent}        body,`)
     }
     lines.push(`${indent}        bodyCodec: callOptions.bodyCodec,`)
-    const castReturnType = options.responseType === 'PromisedResponse' ? '' : ` as ${returnType}`
+    const castReturnType = options.responseType === DEFAULT_RESPONSE_TYPE ? '' : ` as ${returnType}`
     lines.push(`${indent}    })${castReturnType}`)
     lines.push(`${indent}}`)
 
@@ -371,8 +373,8 @@ function emitClass(node: RouteNode, parts: string[], options: BuildOptions, line
     if (parts.length === 0) {
         lines.push(`    private readonly transport: ClientTransport`)
         lines.push(``)
-        lines.push(`    constructor(transport?: ClientTransport | FetchTransportOptions) {`)
-        lines.push(`        this.transport = createClientTransport(transport)`)
+        lines.push(`    constructor(transport?: ClientTransport) {`)
+        lines.push(`        this.transport = transport ?? new FetchTransport()`)
         lines.push(`    }`)
     } else {
         lines.push(`    constructor(private readonly transport: ClientTransport) {}`)
@@ -431,12 +433,11 @@ async function buildApiClientSource(
     }
 
     const clientImports = [
-        'createClientTransport',
+        'FetchTransport',
         needsQueryHelper ? 'withQuery' : undefined,
         'type ClientCallOptions',
         'type ClientTransport',
-        'type FetchTransportOptions',
-        options.responseType === 'PromisedResponse' ? `type ${options.responseType}` : undefined,
+        options.responseType === DEFAULT_RESPONSE_TYPE ? `type ${options.responseType}` : undefined,
     ].filter(Boolean)
     lines.push(`import { ${clientImports.join(', ')} } from '@mpen/server-router/client'`)
 
@@ -527,7 +528,7 @@ export async function main() {
             (values as Record<string, string | string[] | undefined>)['response-type'] as
                 | string
                 | undefined
-        )?.trim() || 'PromisedResponse'
+        )?.trim() || DEFAULT_RESPONSE_TYPE
     const importTypes =
         (
             (values as Record<string, string | string[] | undefined>)['import-type'] as
