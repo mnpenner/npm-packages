@@ -52,15 +52,16 @@ type RoutableModule = {
 }
 
 function printHelp(): void {
-    console.log(`Usage: bun run packages/server-router/src/bin/gen-api-client.ts <router-file> [output-file] [options]
+    console.log(`Usage: bun run packages/server-router/src/bin/gen-api-client.ts <router-file> [options]
 
 Generate a typed API client from a server-router router module.
 
 Arguments:
   router-file                 Router module that exports a router with getRoutes()
-  output-file                 File to write. Prints to stdout when omitted.
 
 Options:
+  -o, --output <file>         File to write. Prints to stdout when omitted.
+  -w, --write                 Write to <router-file>.gen.ts beside the router file.
   --client-name <Name>        Generated client class name. Defaults to ApiClient.
   --import-type <Type:module> Import a type used by generated schemas. Can be repeated.
   --response-type <Type>      Generic response wrapper type. Defaults to PromisedResponse.
@@ -429,6 +430,14 @@ export async function main() {
         allowPositionals: true,
         strict: true,
         options: {
+            output: {
+                type: 'string',
+                short: 'o',
+            },
+            write: {
+                type: 'boolean',
+                short: 'w',
+            },
             'client-name': {
                 type: 'string',
             },
@@ -450,7 +459,7 @@ export async function main() {
         return
     }
 
-    const [routerPathArg, outputPathArg] = positionals
+    const [routerPathArg] = positionals
     if (!routerPathArg) {
         printHelp()
         process.exit(1)
@@ -475,6 +484,16 @@ export async function main() {
         )?.map(parseImportTypeOption) ?? []
 
     const routerPath = path.resolve(routerPathArg)
+    let outputPath: string | undefined
+    if (values.output) {
+        outputPath = path.resolve(values.output as string)
+    } else if (values.write) {
+        outputPath = path.join(
+            path.dirname(routerPath),
+            `${path.basename(routerPath, path.extname(routerPath))}.gen.ts`,
+        )
+    }
+
     const routes = extractRoutes(await loadRuntimeRoutes(routerPath))
     const rawArgs = process.argv.slice(1)
     if (rawArgs[0] && path.isAbsolute(rawArgs[0])) {
@@ -489,8 +508,7 @@ export async function main() {
         commandText,
     })
 
-    if (outputPathArg) {
-        const outputPath = path.resolve(outputPathArg)
+    if (outputPath) {
         fs.writeFileSync(outputPath, client, 'utf8')
         console.log(`Wrote API client to ${outputPath}`)
     } else {
