@@ -134,3 +134,5 @@ router.add(
 )
 
 export default router
+
+// console.dir(router.getRoutes(),{depth: 10})

@@ -51,6 +51,22 @@ type RoutableModule = {
     getRoutes(): NormalizedRoute<any>[]
 }
 
+function printHelp(): void {
+    console.log(`Usage: bun run packages/server-router/src/bin/gen-api-client.ts <router-file> [output-file] [options]
+
+Generate a typed API client from a server-router router module.
+
+Arguments:
+  router-file                 Router module that exports a router with getRoutes()
+  output-file                 File to write. Prints to stdout when omitted.
+
+Options:
+  --client-name <Name>        Generated client class name. Defaults to ApiClient.
+  --import-type <Type:module> Import a type used by generated schemas. Can be repeated.
+  --response-type <Type>      Generic response wrapper type. Defaults to PromisedResponse.
+  --help                      Show this help message.`)
+}
+
 function routeTypeBaseName(route: ExtractedRouteMeta): string {
     const parts = route.name.length > 0 ? route.name : ['index']
     return upperFirst(route.method.toLowerCase()) + parts.map(upperFirst).join('')
@@ -408,9 +424,8 @@ async function buildApiClientSource(
     return lines.join('\n')
 }
 
-export async function main(argv: string[] = Bun.argv) {
+export async function main() {
     const { positionals, values } = parseArgs({
-        args: argv,
         allowPositionals: true,
         strict: true,
         options: {
@@ -424,14 +439,20 @@ export async function main(argv: string[] = Bun.argv) {
             'response-type': {
                 type: 'string',
             },
+            help: {
+                type: 'boolean',
+            },
         },
     })
 
-    const [, , routerPathArg, outputPathArg] = positionals
+    if (values.help) {
+        printHelp()
+        return
+    }
+
+    const [routerPathArg, outputPathArg] = positionals
     if (!routerPathArg) {
-        console.error(
-            'Usage: bun run packages/server-router/src/bin/gen-api-client.ts <router-file> [output-file] [--client-name <Name>] [--import-type "Type:module"] [--response-type <Type>]',
-        )
+        printHelp()
         process.exit(1)
     }
 
@@ -455,7 +476,7 @@ export async function main(argv: string[] = Bun.argv) {
 
     const routerPath = path.resolve(routerPathArg)
     const routes = extractRoutes(await loadRuntimeRoutes(routerPath))
-    const rawArgs = argv.slice(1)
+    const rawArgs = process.argv.slice(1)
     if (rawArgs[0] && path.isAbsolute(rawArgs[0])) {
         rawArgs[0] = path.relative(process.cwd(), rawArgs[0]).replace(/\\/g, '/')
     }
