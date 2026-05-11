@@ -5,7 +5,7 @@ import * as routesGen from '../routes.gen'
 
 const itemRoutes: readonly RouteObject[] = [
     {
-        pattern: '/fetch-loading/:id',
+        path: '/fetch-loading/:id',
         component: async () => ({ default: FetchLoadingItem }),
     },
 ]

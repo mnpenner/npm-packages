@@ -1,1 +1,1 @@
-export default [{ name: 'home', pattern: '/', component: () => import('./pages/Home') }]
+export default [{ name: 'home', path: '/', component: () => import('./pages/Home') }]

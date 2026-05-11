@@ -1,3 +1,3 @@
 export default [
-    { name: 'optional', pattern: '/foo{/:bar}', component: () => import('./pages/Optional') },
+    { name: 'optional', path: '/foo{/:bar}', component: () => import('./pages/Optional') },
 ]

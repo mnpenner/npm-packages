@@ -9,7 +9,7 @@ describe('normalizeRoutes', () => {
     test('matches routes without names', () => {
         const [route] = normalizeRoutes([
             {
-                pattern: '/fetch-loading/:id',
+                path: '/fetch-loading/:id',
                 component: loadComponent,
             },
         ])
@@ -19,10 +19,10 @@ describe('normalizeRoutes', () => {
     })
 
     test('matches catch-all routes', () => {
-        for (const pattern of ['*', '/*']) {
+        for (const path of ['*', '/*']) {
             const [route] = normalizeRoutes([
                 {
-                    pattern,
+                    path,
                     component: loadComponent,
                 },
             ])
@@ -37,7 +37,7 @@ describe('normalizeRoutes', () => {
         const [route] = normalizeRoutes([
             {
                 name: 'blogPost',
-                pattern: '/blog/:id(\\d+){-:title}?',
+                path: '/blog/:id(\\d+){-:title}?',
                 component: loadComponent,
             },
         ])
@@ -54,7 +54,7 @@ describe('normalizeRoutes', () => {
         const [route] = normalizeRoutes([
             {
                 name: 'files',
-                pattern: '/files/*path',
+                path: '/files/*path',
                 component: loadComponent,
             },
         ])

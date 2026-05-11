@@ -181,7 +181,7 @@ function toRouteFunctionName(routeName: string): string {
     return ident || 'route'
 }
 
-type ExtractedRoute = { name: string; pattern: string }
+type ExtractedRoute = { name: string; path: string }
 
 async function importRoutes(routesPath: string): Promise<readonly Route[]> {
     const mod = (await import(pathToFileURL(routesPath).href)) as { default?: unknown }
@@ -205,8 +205,8 @@ async function formatWithPrettier(source: string, outputPath: string): Promise<s
 
 function extractRoutes(routes: readonly Route[]): ExtractedRoute[] {
     return normalizeRoutes(routes).flatMap((route) => {
-        if (!route.name || typeof route.pattern !== 'string') return []
-        return [{ name: route.name, pattern: route.pattern }]
+        if (!route.name || typeof route.path !== 'string') return []
+        return [{ name: route.name, path: route.path }]
     })
 }
 
@@ -240,8 +240,8 @@ async function main(
     }
 
     const routes = extractRoutes(await importRoutes(routesPath))
-        .map((r) => ({ ...r, pattern: r.pattern.trim() }))
-        .filter((r) => r.pattern.startsWith('/') && r.pattern !== '*')
+        .map((r) => ({ ...r, path: r.path.trim() }))
+        .filter((r) => r.path.startsWith('/') && r.path !== '*')
 
     const wildcardDelimiter = (options['wildcard-delimiter'] as string | undefined) ?? '/'
     const encodeFunction =
@@ -262,7 +262,7 @@ async function main(
     out.push(``)
 
     if (!routes.length) {
-        out.push(`// No string route patterns found in the default export.`)
+        out.push(`// No string route paths found in the default export.`)
         out.push(``)
     } else {
         const usedNames = new Set<string>()
@@ -276,7 +276,7 @@ async function main(
             usedNames.add(name)
 
             out.push(
-                compilePathGenerator(route.pattern, {
+                compilePathGenerator(route.path, {
                     functionName: name,
                     delimiter: wildcardDelimiter,
                     encode: encodeFunction,

@@ -27,15 +27,15 @@ The package includes a CLI tool to generate type-safe route helpers from your ro
 ```ts
 // routes.ts
 export default [
-    { name: 'home', pattern: '/', component: () => import('./pages/Home') },
-    { name: 'userProfile', pattern: '/user/:id', component: () => import('./pages/UserProfile') },
-    { pattern: '/user/:id/settings', component: () => import('./pages/UserProfile') },
+    { name: 'home', path: '/', component: () => import('./pages/Home') },
+    { name: 'userProfile', path: '/user/:id', component: () => import('./pages/UserProfile') },
+    { path: '/user/:id/settings', component: () => import('./pages/UserProfile') },
 ]
 ```
 
-Keep this file side-effect-free. The CLI imports and evaluates the route file to extract route names and patterns, so avoid top-level browser access, data fetching, app bootstrapping, or eager page component imports. Put route components behind `() => import('./pages/...')` loaders so generation does not pull page modules into the CLI process.
+Keep this file side-effect-free. The CLI imports and evaluates the route file to extract route names and paths, so avoid top-level browser access, data fetching, app bootstrapping, or eager page component imports. Put route components behind `() => import('./pages/...')` loaders so generation does not pull page modules into the CLI process.
 
-The `name` field is optional. Named string-pattern routes are included in generated URL helpers; unnamed routes still match at runtime but are skipped by the generator.
+The `name` field is optional. Named string-path routes are included in generated URL helpers; unnamed routes still match at runtime but are skipped by the generator.
 
 2. Run the generator:
 

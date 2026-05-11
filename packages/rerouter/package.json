@@ -1,7 +1,7 @@
 {
   "name": "@mpen/rerouter",
   "description": "Lightweight type-safe router for React with URL helper generation.",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "exports": {
     ".": "./dist/index.js",
     "./bin": "./dist/bin.js",
@@ -11,16 +11,15 @@
     "rerouter": "./dist/bin.js"
   },
   "type": "module",
-  "dependencies": {
-    "@mpen/classcat": "workspace:*",
-    "@mpen/ts-types": "workspace:*",
-    "path-to-regexp": "^8.3.0"
-  },
+  "dependencies": {},
   "peerDependencies": {
     "react": "^19",
-    "typescript": "^5"
+    "typescript": ">=5"
   },
   "devDependencies": {
+    "@mpen/classcat": "workspace:*",
+    "@mpen/ts-types": "workspace:*",
+    "path-to-regexp": "^8.3.0",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^22",
     "@types/react": "^19",
@@ -43,6 +42,7 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "inlinedDependencies": {
+    "path-to-regexp": "8.4.2",
     "prettier": "3.8.3",
     "process": "0.11.10"
   },

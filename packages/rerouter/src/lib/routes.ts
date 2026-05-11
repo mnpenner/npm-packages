@@ -49,7 +49,7 @@ export type RouteComponentLoader<TParams extends RouteParams = RouteParams> = ()
  * ```tsx
  * const route: RouteObject = {
  *     name: 'userProfile',
- *     pattern: '/users/:id',
+ *     path: '/users/:id',
  *     component: () => import('./pages/UserProfile'),
  * }
  * ```
@@ -62,7 +62,7 @@ export type RouteObject = {
      * helper generator.
      */
     name?: string
-    pattern: string | URLPattern
+    path: string | URLPattern
     component: RouteComponentLoader<any>
 }
 
@@ -74,8 +74,8 @@ export type Routes = RouteObject[]
  * @example
  * ```tsx
  * const routes: readonly Route[] = [
- *     { name: 'home', pattern: '/', component: () => import('./pages/Home') },
- *     { pattern: '/users/:id', component: () => import('./pages/UserLayout') },
+ *     { name: 'home', path: '/', component: () => import('./pages/Home') },
+ *     { path: '/users/:id', component: () => import('./pages/UserLayout') },
  * ]
  * ```
  */
@@ -86,7 +86,7 @@ export type Route = RouteObject
  */
 export type NormalizedRoute = {
     name?: string
-    pattern: string | URLPattern
+    path: string | URLPattern
     component: RouteComponentLoader<any>
     matches(pathname: string): RouteParams | null
 }
@@ -172,7 +172,7 @@ export function normalizeLegacyPathToRegexpSyntax(pattern: string): string {
  * Normalizes routes into objects with a shared matcher implementation.
  *
  * @param routes - The route definitions to normalize.
- * @returns Routes with stable `name`, `pattern`, `component`, and `matches` fields.
+ * @returns Routes with stable `name`, `path`, `component`, and `matches` fields.
  *
  * @example
  * ```tsx
@@ -182,13 +182,13 @@ export function normalizeLegacyPathToRegexpSyntax(pattern: string): string {
  */
 export function normalizeRoutes(routes: readonly Route[]): NormalizedRoute[] {
     return routes.map((route) => {
-        const { name, pattern, component } = route
+        const { name, path, component } = route
 
-        if (typeof pattern !== 'string') {
-            const urlPattern = toUrlPattern(pattern)
+        if (typeof path !== 'string') {
+            const urlPattern = toUrlPattern(path)
             return {
                 name,
-                pattern,
+                path,
                 component,
                 matches(pathname: string) {
                     const match = urlPattern.exec({ pathname } as any)
@@ -198,10 +198,10 @@ export function normalizeRoutes(routes: readonly Route[]): NormalizedRoute[] {
             }
         }
 
-        if (pattern === '*' || pattern === '/*') {
+        if (path === '*' || path === '/*') {
             return {
                 name,
-                pattern,
+                path,
                 component,
                 matches: (_pathname: string) => ({}),
             }
@@ -210,19 +210,19 @@ export function normalizeRoutes(routes: readonly Route[]): NormalizedRoute[] {
         let matcher: ReturnType<typeof pathMatch> | undefined
         let urlPattern: URLPattern | undefined
         try {
-            matcher = pathMatch(pattern, { decode: decodeURIComponent })
+            matcher = pathMatch(path, { decode: decodeURIComponent })
         } catch {
             try {
-                urlPattern = toUrlPattern(pattern)
+                urlPattern = toUrlPattern(path)
             } catch {
-                matcher = pathMatch(normalizeLegacyPathToRegexpSyntax(pattern), {
+                matcher = pathMatch(normalizeLegacyPathToRegexpSyntax(path), {
                     decode: decodeURIComponent,
                 })
             }
         }
         return {
             name,
-            pattern,
+            path,
             component,
             matches(pathname: string) {
                 if (urlPattern) {

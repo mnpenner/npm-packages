@@ -46,7 +46,7 @@ describe(Router.name, () => {
 
         const routes: readonly RouteObject[] = [
             {
-                pattern: '/slow',
+                path: '/slow',
                 component: () =>
                     new Promise(() => {
                         // Keep the route pending so the fallback delay is observable.
@@ -72,7 +72,7 @@ describe(Router.name, () => {
 
         const routes: readonly RouteObject[] = [
             {
-                pattern: '/quick',
+                path: '/quick',
                 component: () =>
                     wait(5).then(() => ({
                         default: function QuickRoute() {
@@ -98,7 +98,7 @@ describe(Router.name, () => {
     test('keeps the current route visible until a slow next route reaches the delay', async () => {
         const routes: readonly RouteObject[] = [
             {
-                pattern: '/start',
+                path: '/start',
                 component: async () => ({
                     default: function StartRoute() {
                         return <div>Start route</div>
@@ -106,7 +106,7 @@ describe(Router.name, () => {
                 }),
             },
             {
-                pattern: '/slow',
+                path: '/slow',
                 component: () =>
                     new Promise(() => {
                         // Keep the next route pending so the delayed loading state is observable.
@@ -140,7 +140,7 @@ describe(Router.name, () => {
     test('keeps the current route visible until a quick next route is ready', async () => {
         const routes: readonly RouteObject[] = [
             {
-                pattern: '/start',
+                path: '/start',
                 component: async () => ({
                     default: function StartRoute() {
                         return <div>Start route</div>
@@ -148,7 +148,7 @@ describe(Router.name, () => {
                 }),
             },
             {
-                pattern: '/quick',
+                path: '/quick',
                 component: () =>
                     wait(5).then(() => ({
                         default: function QuickRoute() {
