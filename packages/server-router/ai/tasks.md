@@ -1,1 +1,10 @@
 - [ ] Rename `http-helpers` package to `http-enums`
+- Clean up tsdown entrypoints. We should have
+  - @mpen/server-router   # main router
+  - @mpen/server-router/client  # client transports 
+  - @mpen/server-router/plugins  # optional plugins
+  - @mpen/server-router/middleware   # optional middleware -- should maybe be combined with plugins??
+- Reorganize examples. Put them all in one dir, and split client/ and server/ so they can be typed properly
+- Drop `pattern` alias for RoutePath
+- Batch fetching? Part of transport or ApiClient?
+- OTel..?

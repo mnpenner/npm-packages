@@ -3,8 +3,9 @@ import { defineConfig } from 'tsdown'
 // https://tsdown.dev/reference/api/Interface.UserConfig
 export default defineConfig({
     entry: {
+        client: 'src/client/index.ts',
         index: 'src/index.ts',
-        'helpers/zod': 'src/helpers/zod/index.ts',
+        'helpers/zod': 'src/helpers/zod/index.ts', // TODO: clean these up
         'lib/collections': 'src/lib/collections.ts',
         middleware: 'src/middleware/index.ts',
         'plugins/openapi': 'src/plugins/openapi/index.ts',

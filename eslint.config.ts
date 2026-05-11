@@ -29,6 +29,7 @@ const browserPackageFiles = [
     'packages/react-datepicker/**/*.{js,jsx,ts,tsx}',
     'packages/react-external-store/**/*.{js,jsx,ts,tsx}',
     'packages/rerouter/**/*.{js,jsx,ts,tsx}',
+    'packages/server-router/src/client/**/*.{js,jsx,ts,tsx}',
 ]
 
 const reactPackageFiles = [

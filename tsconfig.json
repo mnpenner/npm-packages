@@ -47,6 +47,7 @@
                 "./packages/rollup-plugins/packages/rollup-preset-tslib/rollup-preset-tslib.ts"
             ],
             "@mpen/server-router": ["./packages/server-router/src/index.ts"],
+            "@mpen/server-router/client": ["./packages/server-router/src/client/index.ts"],
             "@mpen/server-router/lib/collections": [
                 "./packages/server-router/src/lib/collections.ts"
             ],

@@ -1,27 +1,25 @@
 #!/usr/bin/env -S bun test
 import { describe, expect, it } from 'bun:test'
-import { ApiClient, type Fetcher } from './api-client.gen'
+import { ApiClient } from './api-client.gen'
 import router from './router-instance'
 import { expectType, type TypeEqual } from '@mpen/ts-types'
+import type { BodyCodec } from '@mpen/server-router/client'
 
 type FetchCall = {
     url: string
     init: RequestInit
 }
 
-class RecordingFetcher implements Fetcher {
-    calls: FetchCall[] = []
-
-    fetch(url: string, init: RequestInit): unknown {
-        this.calls.push({ url, init })
-        return router.fetch(new Request(new URL(url, 'https://example.org'), init))
-    }
-}
-
 describe('api-client.gen', () => {
     it('invokes fetcher with the generated routes', async () => {
-        const fetcher = new RecordingFetcher()
-        const client = new ApiClient(fetcher)
+        const calls: FetchCall[] = []
+        const client = new ApiClient({
+            fetch(url, init) {
+                const href = String(url)
+                calls.push({ url: href, init })
+                return router.fetch(new Request(new URL(href, 'https://example.org'), init))
+            },
+        })
 
         const indexResponse = await client.get()
         expect(await indexResponse.json()).toEqual({ message: 'Hello World!' })
@@ -35,7 +33,10 @@ describe('api-client.gen', () => {
         const fooResponse = await client.foo.bar.post()
         expect(await fooResponse.json()).toEqual({ message: 'Hello World!' })
 
-        const booksResponse = await client.booksById.post(123, { title: 'foo', author: 'bar' })
+        const booksResponse = await client.booksById.post({
+            path: 123,
+            body: { title: 'foo', author: 'bar' },
+        })
         const booksResponseData = await booksResponse.json()
         expectType<
             TypeEqual<
@@ -54,7 +55,7 @@ describe('api-client.gen', () => {
         expectType<TypeEqual<typeof jsonHelperData, { message: string }>>(true)
         expect(jsonHelperData).toEqual({ message: 'Hello Json Helper!' })
 
-        const jsonHelperZodResponse = await client.jsonHelperZod.post({ tag: 'alpha' })
+        const jsonHelperZodResponse = await client.jsonHelperZod.post({ body: { tag: 'alpha' } })
         const jsonHelperZodData = await jsonHelperZodResponse.json()
         expectType<TypeEqual<typeof jsonHelperZodData, { ok: boolean; tag: string }>>(true)
         expect(jsonHelperZodData).toEqual({ ok: true, tag: 'alpha' })
@@ -68,19 +69,19 @@ describe('api-client.gen', () => {
         const submitResponse = await client.submit.post()
         expect(await submitResponse.text()).toEqual('submitted')
 
-        const putResponse = await client.itemsById.put(123)
+        const putResponse = await client.itemsById.put({ path: 123 })
         expect(await putResponse.text()).toEqual('updated')
 
-        const deleteResponse = await client.itemsById.delete(123)
+        const deleteResponse = await client.itemsById.delete({ path: 123 })
         expect(await deleteResponse.text()).toEqual('deleted')
 
-        const patchResponse = await client.itemsById.patch(123)
+        const patchResponse = await client.itemsById.patch({ path: 123 })
         expect(await patchResponse.text()).toEqual('patched')
 
         const genResponse = await client.gen.get()
         expect(await genResponse.text()).toEqual('herro')
 
-        expect(fetcher.calls).toEqual([
+        expect(calls).toEqual([
             { url: '/', init: { method: 'GET' } },
             { url: '/name/bar', init: { method: 'GET' } },
             { url: '/name/bar', init: { method: 'POST' } },
@@ -89,7 +90,7 @@ describe('api-client.gen', () => {
                 url: '/books/123',
                 init: {
                     method: 'POST',
-                    headers: { 'content-type': 'application/json' },
+                    headers: new Headers({ 'content-type': 'application/json' }),
                     body: JSON.stringify({ title: 'foo', author: 'bar' }),
                 },
             },
@@ -98,7 +99,7 @@ describe('api-client.gen', () => {
                 url: '/json-helper-zod',
                 init: {
                     method: 'POST',
-                    headers: { 'content-type': 'application/json' },
+                    headers: new Headers({ 'content-type': 'application/json' }),
                     body: JSON.stringify({ tag: 'alpha' }),
                 },
             },
@@ -109,6 +110,39 @@ describe('api-client.gen', () => {
             { url: '/items/123', init: { method: 'DELETE' } },
             { url: '/items/123', init: { method: 'PATCH' } },
             { url: '/gen', init: { method: 'GET' } },
+        ])
+    })
+
+    it('supports custom body codecs', async () => {
+        const codec: BodyCodec = {
+            contentType: 'application/x-test-json',
+            serialize: (value) => `wrapped:${JSON.stringify(value)}`,
+            deserialize: async (response) => ({
+                raw: await response.text(),
+            }),
+        }
+        const calls: FetchCall[] = []
+        const client = new ApiClient({
+            bodyCodec: codec,
+            fetch(url, init) {
+                const href = String(url)
+                calls.push({ url: href, init })
+                return Promise.resolve(new Response('ok'))
+            },
+        })
+
+        const response = await client.jsonHelperZod.post({ body: { tag: 'alpha' } })
+
+        expect(await response.json()).toEqual({ raw: 'ok' })
+        expect(calls).toEqual([
+            {
+                url: '/json-helper-zod',
+                init: {
+                    method: 'POST',
+                    headers: new Headers({ 'content-type': 'application/x-test-json' }),
+                    body: 'wrapped:{"tag":"alpha"}',
+                },
+            },
         ])
     })
 })

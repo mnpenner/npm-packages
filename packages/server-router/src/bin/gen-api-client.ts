@@ -132,8 +132,15 @@ function upperFirst(str: string): string {
     return str.slice(0, 1).toUpperCase() + str.slice(1)
 }
 
+function lowerFirst(str: string): string {
+    return str.slice(0, 1).toLowerCase() + str.slice(1)
+}
+
 function patternToUrlTemplate(routePath: string, pathVar = 'path'): string {
-    const templated = routePath.replace(/:([a-zA-Z0-9_]+)/g, `\${${pathVar}.$1}`)
+    const templated = routePath.replace(
+        /:([a-zA-Z0-9_]+)/g,
+        `\${encodeURIComponent(String(${pathVar}.$1))}`,
+    )
     if (templated.includes('${')) {
         return '`' + templated + '`'
     }
@@ -268,7 +275,6 @@ function buildMethodLines(
 ): string[] {
     const lines: string[] = []
     const methodName = route.method.toLowerCase()
-    const pathType = route.requestSchema?.path ? `${route.typeBase}PathParams` : undefined
     const bodyType =
         route.requestSchema?.body !== undefined ? `${route.typeBase}Request` : undefined
     const queryType = route.requestSchema?.query ? `${route.typeBase}Query` : undefined
@@ -276,24 +282,32 @@ function buildMethodLines(
     const hasSinglePathParam = route.pathParams.length === 1
     let pathVar = 'path'
 
-    const params: string[] = []
     if (hasPathParams) {
-        let pathParamType = pathType ?? 'any'
         if (hasSinglePathParam) {
-            const singleParamType = pathType
-                ? `SinglePathParam<${pathType}, "${route.pathParams[0]}">`
-                : 'any'
-            pathParamType = `${pathParamType} | ${singleParamType}`
             pathVar = '_path'
         }
-        params.push(`path: ${pathParamType}`)
     }
-    if (queryType) params.push(`query: ${queryType}`)
-    if (bodyType) params.push(`body: ${bodyType}`)
 
+    const optionType = `${route.typeBase}Options`
+    const hasRequiredOptions = hasPathParams || !!queryType || !!bodyType
     const returnType = `${options.responseType}<${route.typeBase}Response>`
 
-    lines.push(`${indent}${methodName}(${params.join(', ')}) {`)
+    lines.push(
+        `${indent}${methodName}(options: ${optionType}${hasRequiredOptions ? '' : ' = {}'}): ${returnType} {`,
+    )
+    if (hasRequiredOptions) {
+        const destructured = [
+            hasPathParams ? 'path' : undefined,
+            queryType ? 'query' : undefined,
+            bodyType ? 'body' : undefined,
+            '...callOptions',
+        ]
+            .filter(Boolean)
+            .join(', ')
+        lines.push(`${indent}    const { ${destructured} } = options`)
+    } else {
+        lines.push(`${indent}    const callOptions = options`)
+    }
     if (hasSinglePathParam) {
         lines.push(
             `${indent}    const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { ${route.pathParams[0]}: path } as any`,
@@ -301,16 +315,52 @@ function buildMethodLines(
     }
     const urlExpr = patternToUrlTemplate(route.path, pathVar)
     const finalUrlExpr = queryType ? `withQuery(${urlExpr}, query)` : urlExpr
-    lines.push(`${indent}    return this.fetcher.fetch(${finalUrlExpr}, {`)
-    lines.push(`${indent}        method: "${route.method}",`)
+    lines.push(
+        `${indent}    return this.transport.request<${route.typeBase}Response${bodyType ? `, ${bodyType}` : ''}>({`,
+    )
+    lines.push(`${indent}        routeId: ${JSON.stringify(lowerFirst(route.typeBase))},`)
+    lines.push(`${indent}        url: ${finalUrlExpr},`)
+    lines.push(`${indent}        init: {`)
+    lines.push(`${indent}            ...callOptions.init,`)
+    lines.push(`${indent}            method: "${route.method}",`)
+    lines.push(`${indent}            headers: callOptions.headers,`)
+    lines.push(`${indent}            signal: callOptions.signal,`)
+    lines.push(`${indent}        },`)
     if (bodyType) {
-        lines.push(`${indent}        headers: { "content-type": "application/json" },`)
-        lines.push(`${indent}        body: JSON.stringify(body),`)
+        lines.push(`${indent}        body,`)
     }
-    lines.push(`${indent}    }) as ${returnType}`)
+    lines.push(`${indent}        bodyCodec: callOptions.bodyCodec,`)
+    const castReturnType = options.responseType === 'PromisedResponse' ? '' : ` as ${returnType}`
+    lines.push(`${indent}    })${castReturnType}`)
     lines.push(`${indent}}`)
 
     return lines
+}
+
+function buildOptionsSource(route: ProcessedRouteMeta): string {
+    const lines: string[] = []
+    const pathType = route.requestSchema?.path ? `${route.typeBase}PathParams` : undefined
+    const bodyType =
+        route.requestSchema?.body !== undefined ? `${route.typeBase}Request` : undefined
+    const queryType = route.requestSchema?.query ? `${route.typeBase}Query` : undefined
+    const hasPathParams = route.pathParams.length > 0
+    const hasSinglePathParam = route.pathParams.length === 1
+
+    lines.push(`export interface ${route.typeBase}Options extends ClientCallOptions {`)
+    if (hasPathParams) {
+        let pathParamType = pathType ?? 'any'
+        if (hasSinglePathParam) {
+            const singleParamType = pathType
+                ? `SinglePathParam<${pathType}, "${route.pathParams[0]}">`
+                : 'any'
+            pathParamType = `${pathParamType} | ${singleParamType}`
+        }
+        lines.push(`    path: ${pathParamType}`)
+    }
+    if (queryType) lines.push(`    query: ${queryType}`)
+    if (bodyType) lines.push(`    body: ${bodyType}`)
+    lines.push(`}`)
+    return lines.join('\n')
 }
 
 function emitClass(node: RouteNode, parts: string[], options: BuildOptions, lines: string[]): void {
@@ -318,7 +368,15 @@ function emitClass(node: RouteNode, parts: string[], options: BuildOptions, line
     const exportKeyword = parts.length === 0 ? 'export ' : ''
 
     lines.push(`${exportKeyword}class ${className} {`)
-    lines.push(`    constructor(private readonly fetcher: Fetcher) {}`)
+    if (parts.length === 0) {
+        lines.push(`    private readonly transport: ClientTransport`)
+        lines.push(``)
+        lines.push(`    constructor(transport?: ClientTransport | FetchTransportOptions) {`)
+        lines.push(`        this.transport = createClientTransport(transport)`)
+        lines.push(`    }`)
+    } else {
+        lines.push(`    constructor(private readonly transport: ClientTransport) {}`)
+    }
 
     if (node.children.size > 0) {
         lines.push(``)
@@ -326,7 +384,7 @@ function emitClass(node: RouteNode, parts: string[], options: BuildOptions, line
         childNames.forEach((childName, idx) => {
             const childClass = classNameForParts([...parts, childName], options.clientName)
             lines.push(`    get ${childName}(): ${childClass} {`)
-            lines.push(`        return new ${childClass}(this.fetcher)`)
+            lines.push(`        return new ${childClass}(this.transport)`)
             lines.push(`    }`)
             if (idx !== childNames.length - 1 || node.routes.length > 0) {
                 lines.push(``)
@@ -372,49 +430,25 @@ async function buildApiClientSource(
         lines.push(`import type { ${importType.names.join(', ')} } from '${importType.module}'`)
     }
 
+    const clientImports = [
+        'createClientTransport',
+        needsQueryHelper ? 'withQuery' : undefined,
+        'type ClientCallOptions',
+        'type ClientTransport',
+        'type FetchTransportOptions',
+        options.responseType === 'PromisedResponse' ? `type ${options.responseType}` : undefined,
+    ].filter(Boolean)
+    lines.push(`import { ${clientImports.join(', ')} } from '@mpen/server-router/client'`)
+
     if (options.importTypes.length > 0) {
         lines.push(``)
     }
-
-    lines.push(`export interface Fetcher {`)
-    lines.push(`    fetch(url: string, init: RequestInit): unknown`)
-    lines.push(`}`)
-
-    const usesDefaultResponseType = options.responseType === 'PromisedResponse'
-    if (usesDefaultResponseType) {
-        lines.push(``)
-        lines.push(`export type TypedResponse<T> = Omit<Response, 'json'> & { json(): Promise<T> }`)
-        lines.push(`export type PromisedResponse<T> = Promise<TypedResponse<T>>`)
-    }
+    lines.push(``)
 
     if (needsSinglePathHelper) {
-        lines.push(``)
         lines.push(
             `type SinglePathParam<TParams, TKey extends string> = TParams extends { [K in TKey]: infer V } ? V : unknown`,
         )
-    }
-
-    if (needsQueryHelper) {
-        lines.push(``)
-        lines.push(`function withQuery(url: string, query: object): string {`)
-        lines.push(`    const searchParams = new URLSearchParams()`)
-        lines.push(`    for (const [key, value] of Object.entries(query)) {`)
-        lines.push(`        if (value == null) continue`)
-        lines.push(`        if (Array.isArray(value)) {`)
-        lines.push(`            for (const item of value) {`)
-        lines.push(
-            `                if (item != null) searchParams.append(key, typeof item === 'object' ? JSON.stringify(item) : String(item))`,
-        )
-        lines.push(`            }`)
-        lines.push(`            continue`)
-        lines.push(`        }`)
-        lines.push(
-            `        searchParams.append(key, typeof value === 'object' ? JSON.stringify(value) : String(value))`,
-        )
-        lines.push(`    }`)
-        lines.push(`    const search = searchParams.toString()`)
-        lines.push(`    return search.length > 0 ? \`\${url}?\${search}\` : url`)
-        lines.push(`}`)
     }
 
     lines.push(``)
@@ -430,6 +464,7 @@ async function buildApiClientSource(
         }
         if (generated.responseTypesByStatusSource)
             lines.push(generated.responseTypesByStatusSource, ``)
+        lines.push(buildOptionsSource(generated.route), ``)
     }
 
     const tree = buildRouteTree(processedRoutes)

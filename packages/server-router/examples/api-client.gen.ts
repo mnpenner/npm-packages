@@ -1,293 +1,442 @@
 // Do not modify this file. It was auto-generated with the following command:
-// $ bun src/bin/gen-api-client.ts ./examples/router-instance.ts ./examples/api-client.gen.ts
+// $ bun src/bin/gen-api-client.ts ./examples/router-instance.ts -o ./examples/api-client.gen.ts
 
-export interface Fetcher {
-    fetch(url: string, init: RequestInit): unknown
-}
+import { createClientTransport, type ClientCallOptions, type ClientTransport, type FetchTransportOptions, type PromisedResponse } from '@mpen/server-router/client'
 
-export type TypedResponse<T> = Omit<Response, 'json'> & { json(): Promise<T> }
-export type PromisedResponse<T> = Promise<TypedResponse<T>>
-
-type SinglePathParam<TParams, TKey extends string> = TParams extends { [K in TKey]: infer V }
-    ? V
-    : unknown
+type SinglePathParam<TParams, TKey extends string> = TParams extends { [K in TKey]: infer V } ? V : unknown
 
 export interface GetIndexResponse200 {
-    message: string
+  message: string;
 }
 
 export interface GetIndexResponsesByStatus {
-    '200': GetIndexResponse200
+    "200": GetIndexResponse200
 }
 export type GetIndexResponse = GetIndexResponsesByStatus[keyof GetIndexResponsesByStatus]
 
+export interface GetIndexOptions extends ClientCallOptions {
+}
+
 export interface GetNamedRouteResponse200 {
-    message: string
+  message: string;
 }
 
 export interface GetNamedRouteResponsesByStatus {
-    '200': GetNamedRouteResponse200
+    "200": GetNamedRouteResponse200
 }
-export type GetNamedRouteResponse =
-    GetNamedRouteResponsesByStatus[keyof GetNamedRouteResponsesByStatus]
+export type GetNamedRouteResponse = GetNamedRouteResponsesByStatus[keyof GetNamedRouteResponsesByStatus]
+
+export interface GetNamedRouteOptions extends ClientCallOptions {
+}
 
 export interface PostNamedRouteResponse200 {
-    message: string
+  message: string;
 }
 
 export interface PostNamedRouteResponsesByStatus {
-    '200': PostNamedRouteResponse200
+    "200": PostNamedRouteResponse200
 }
-export type PostNamedRouteResponse =
-    PostNamedRouteResponsesByStatus[keyof PostNamedRouteResponsesByStatus]
+export type PostNamedRouteResponse = PostNamedRouteResponsesByStatus[keyof PostNamedRouteResponsesByStatus]
+
+export interface PostNamedRouteOptions extends ClientCallOptions {
+}
 
 export interface PostFooBarResponse200 {
-    message: string
+  message: string;
 }
 
 export interface PostFooBarResponsesByStatus {
-    '200': PostFooBarResponse200
+    "200": PostFooBarResponse200
 }
 export type PostFooBarResponse = PostFooBarResponsesByStatus[keyof PostFooBarResponsesByStatus]
 
+export interface PostFooBarOptions extends ClientCallOptions {
+}
+
 export interface PostBooksByIdPathParams {
-    id: number
+  id: number;
 }
 
 export interface PostBooksByIdRequest {
-    title: string
-    author: string
+  title: string;
+  author: string;
 }
 
 export interface PostBooksByIdResponse200 {
-    id: number
-    title: string
-    author: string
+  id: number;
+  title: string;
+  author: string;
 }
 
 export interface PostBooksByIdResponsesByStatus {
-    '200': PostBooksByIdResponse200
+    "200": PostBooksByIdResponse200
 }
-export type PostBooksByIdResponse =
-    PostBooksByIdResponsesByStatus[keyof PostBooksByIdResponsesByStatus]
+export type PostBooksByIdResponse = PostBooksByIdResponsesByStatus[keyof PostBooksByIdResponsesByStatus]
+
+export interface PostBooksByIdOptions extends ClientCallOptions {
+    path: PostBooksByIdPathParams | SinglePathParam<PostBooksByIdPathParams, "id">
+    body: PostBooksByIdRequest
+}
 
 export interface GetJsonHelperResponse200 {
-    message: string
+  message: string;
 }
 
 export interface GetJsonHelperResponsesByStatus {
-    '200': GetJsonHelperResponse200
+    "200": GetJsonHelperResponse200
 }
-export type GetJsonHelperResponse =
-    GetJsonHelperResponsesByStatus[keyof GetJsonHelperResponsesByStatus]
+export type GetJsonHelperResponse = GetJsonHelperResponsesByStatus[keyof GetJsonHelperResponsesByStatus]
+
+export interface GetJsonHelperOptions extends ClientCallOptions {
+}
 
 export interface PostJsonHelperZodRequest {
-    tag: string
+  tag: string;
 }
 
 export interface PostJsonHelperZodResponse200 {
-    ok: boolean
-    tag: string
+  ok: boolean;
+  tag: string;
 }
 
 export interface PostJsonHelperZodResponsesByStatus {
-    '200': PostJsonHelperZodResponse200
+    "200": PostJsonHelperZodResponse200
 }
-export type PostJsonHelperZodResponse =
-    PostJsonHelperZodResponsesByStatus[keyof PostJsonHelperZodResponsesByStatus]
+export type PostJsonHelperZodResponse = PostJsonHelperZodResponsesByStatus[keyof PostJsonHelperZodResponsesByStatus]
+
+export interface PostJsonHelperZodOptions extends ClientCallOptions {
+    body: PostJsonHelperZodRequest
+}
 
 export type GetHealthResponse = unknown
 
+export interface GetHealthOptions extends ClientCallOptions {
+}
+
 export type HeadHealthResponse = never
+
+export interface HeadHealthOptions extends ClientCallOptions {
+}
 
 export type PostSubmitResponse = unknown
 
+export interface PostSubmitOptions extends ClientCallOptions {
+}
+
 export type PutItemsByIdResponse = unknown
+
+export interface PutItemsByIdOptions extends ClientCallOptions {
+    path: any | any
+}
 
 export type DeleteItemsByIdResponse = unknown
 
+export interface DeleteItemsByIdOptions extends ClientCallOptions {
+    path: any | any
+}
+
 export type PatchItemsByIdResponse = unknown
+
+export interface PatchItemsByIdOptions extends ClientCallOptions {
+    path: any | any
+}
 
 export type GetGenResponse = unknown
 
+export interface GetGenOptions extends ClientCallOptions {
+}
+
 export class ApiClient {
-    constructor(private readonly fetcher: Fetcher) {}
+    private readonly transport: ClientTransport
+
+    constructor(transport?: ClientTransport | FetchTransportOptions) {
+        this.transport = createClientTransport(transport)
+    }
 
     get namedRoute(): ApiClient_NamedRoute {
-        return new ApiClient_NamedRoute(this.fetcher)
+        return new ApiClient_NamedRoute(this.transport)
     }
 
     get foo(): ApiClient_Foo {
-        return new ApiClient_Foo(this.fetcher)
+        return new ApiClient_Foo(this.transport)
     }
 
     get booksById(): ApiClient_BooksById {
-        return new ApiClient_BooksById(this.fetcher)
+        return new ApiClient_BooksById(this.transport)
     }
 
     get jsonHelper(): ApiClient_JsonHelper {
-        return new ApiClient_JsonHelper(this.fetcher)
+        return new ApiClient_JsonHelper(this.transport)
     }
 
     get jsonHelperZod(): ApiClient_JsonHelperZod {
-        return new ApiClient_JsonHelperZod(this.fetcher)
+        return new ApiClient_JsonHelperZod(this.transport)
     }
 
     get health(): ApiClient_Health {
-        return new ApiClient_Health(this.fetcher)
+        return new ApiClient_Health(this.transport)
     }
 
     get submit(): ApiClient_Submit {
-        return new ApiClient_Submit(this.fetcher)
+        return new ApiClient_Submit(this.transport)
     }
 
     get itemsById(): ApiClient_ItemsById {
-        return new ApiClient_ItemsById(this.fetcher)
+        return new ApiClient_ItemsById(this.transport)
     }
 
     get gen(): ApiClient_Gen {
-        return new ApiClient_Gen(this.fetcher)
+        return new ApiClient_Gen(this.transport)
     }
 
-    get() {
-        return this.fetcher.fetch('/', {
-            method: 'GET',
-        }) as PromisedResponse<GetIndexResponse>
+    get(options: GetIndexOptions = {}): PromisedResponse<GetIndexResponse> {
+        const callOptions = options
+        return this.transport.request<GetIndexResponse>({
+            routeId: "getIndex",
+            url: "/",
+            init: {
+                ...callOptions.init,
+                method: "GET",
+                headers: callOptions.headers,
+                signal: callOptions.signal,
+            },
+            bodyCodec: callOptions.bodyCodec,
+        })
     }
 }
 
 class ApiClient_NamedRoute {
-    constructor(private readonly fetcher: Fetcher) {}
-    get() {
-        return this.fetcher.fetch('/name/bar', {
-            method: 'GET',
-        }) as PromisedResponse<GetNamedRouteResponse>
+    constructor(private readonly transport: ClientTransport) {}
+    get(options: GetNamedRouteOptions = {}): PromisedResponse<GetNamedRouteResponse> {
+        const callOptions = options
+        return this.transport.request<GetNamedRouteResponse>({
+            routeId: "getNamedRoute",
+            url: "/name/bar",
+            init: {
+                ...callOptions.init,
+                method: "GET",
+                headers: callOptions.headers,
+                signal: callOptions.signal,
+            },
+            bodyCodec: callOptions.bodyCodec,
+        })
     }
 
-    post() {
-        return this.fetcher.fetch('/name/bar', {
-            method: 'POST',
-        }) as PromisedResponse<PostNamedRouteResponse>
+    post(options: PostNamedRouteOptions = {}): PromisedResponse<PostNamedRouteResponse> {
+        const callOptions = options
+        return this.transport.request<PostNamedRouteResponse>({
+            routeId: "postNamedRoute",
+            url: "/name/bar",
+            init: {
+                ...callOptions.init,
+                method: "POST",
+                headers: callOptions.headers,
+                signal: callOptions.signal,
+            },
+            bodyCodec: callOptions.bodyCodec,
+        })
     }
 }
 
 class ApiClient_Foo {
-    constructor(private readonly fetcher: Fetcher) {}
+    constructor(private readonly transport: ClientTransport) {}
 
     get bar(): ApiClient_Foo_Bar {
-        return new ApiClient_Foo_Bar(this.fetcher)
+        return new ApiClient_Foo_Bar(this.transport)
     }
 }
 
 class ApiClient_Foo_Bar {
-    constructor(private readonly fetcher: Fetcher) {}
-    post() {
-        return this.fetcher.fetch('/foo/bar', {
-            method: 'POST',
-        }) as PromisedResponse<PostFooBarResponse>
+    constructor(private readonly transport: ClientTransport) {}
+    post(options: PostFooBarOptions = {}): PromisedResponse<PostFooBarResponse> {
+        const callOptions = options
+        return this.transport.request<PostFooBarResponse>({
+            routeId: "postFooBar",
+            url: "/foo/bar",
+            init: {
+                ...callOptions.init,
+                method: "POST",
+                headers: callOptions.headers,
+                signal: callOptions.signal,
+            },
+            bodyCodec: callOptions.bodyCodec,
+        })
     }
 }
 
 class ApiClient_BooksById {
-    constructor(private readonly fetcher: Fetcher) {}
-    post(
-        path: PostBooksByIdPathParams | SinglePathParam<PostBooksByIdPathParams, 'id'>,
-        body: PostBooksByIdRequest,
-    ) {
-        const _path =
-            typeof path === 'object' && path !== null && !Array.isArray(path)
-                ? path
-                : ({ id: path } as any)
-        return this.fetcher.fetch(`/books/${_path.id}`, {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify(body),
-        }) as PromisedResponse<PostBooksByIdResponse>
+    constructor(private readonly transport: ClientTransport) {}
+    post(options: PostBooksByIdOptions): PromisedResponse<PostBooksByIdResponse> {
+        const { path, body, ...callOptions } = options
+        const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { id: path } as any
+        return this.transport.request<PostBooksByIdResponse, PostBooksByIdRequest>({
+            routeId: "postBooksById",
+            url: `/books/${encodeURIComponent(String(_path.id))}`,
+            init: {
+                ...callOptions.init,
+                method: "POST",
+                headers: callOptions.headers,
+                signal: callOptions.signal,
+            },
+            body,
+            bodyCodec: callOptions.bodyCodec,
+        })
     }
 }
 
 class ApiClient_JsonHelper {
-    constructor(private readonly fetcher: Fetcher) {}
-    get() {
-        return this.fetcher.fetch('/json-helper', {
-            method: 'GET',
-        }) as PromisedResponse<GetJsonHelperResponse>
+    constructor(private readonly transport: ClientTransport) {}
+    get(options: GetJsonHelperOptions = {}): PromisedResponse<GetJsonHelperResponse> {
+        const callOptions = options
+        return this.transport.request<GetJsonHelperResponse>({
+            routeId: "getJsonHelper",
+            url: "/json-helper",
+            init: {
+                ...callOptions.init,
+                method: "GET",
+                headers: callOptions.headers,
+                signal: callOptions.signal,
+            },
+            bodyCodec: callOptions.bodyCodec,
+        })
     }
 }
 
 class ApiClient_JsonHelperZod {
-    constructor(private readonly fetcher: Fetcher) {}
-    post(body: PostJsonHelperZodRequest) {
-        return this.fetcher.fetch('/json-helper-zod', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify(body),
-        }) as PromisedResponse<PostJsonHelperZodResponse>
+    constructor(private readonly transport: ClientTransport) {}
+    post(options: PostJsonHelperZodOptions): PromisedResponse<PostJsonHelperZodResponse> {
+        const { body, ...callOptions } = options
+        return this.transport.request<PostJsonHelperZodResponse, PostJsonHelperZodRequest>({
+            routeId: "postJsonHelperZod",
+            url: "/json-helper-zod",
+            init: {
+                ...callOptions.init,
+                method: "POST",
+                headers: callOptions.headers,
+                signal: callOptions.signal,
+            },
+            body,
+            bodyCodec: callOptions.bodyCodec,
+        })
     }
 }
 
 class ApiClient_Health {
-    constructor(private readonly fetcher: Fetcher) {}
-    get() {
-        return this.fetcher.fetch('/health', {
-            method: 'GET',
-        }) as PromisedResponse<GetHealthResponse>
+    constructor(private readonly transport: ClientTransport) {}
+    get(options: GetHealthOptions = {}): PromisedResponse<GetHealthResponse> {
+        const callOptions = options
+        return this.transport.request<GetHealthResponse>({
+            routeId: "getHealth",
+            url: "/health",
+            init: {
+                ...callOptions.init,
+                method: "GET",
+                headers: callOptions.headers,
+                signal: callOptions.signal,
+            },
+            bodyCodec: callOptions.bodyCodec,
+        })
     }
 
-    head() {
-        return this.fetcher.fetch('/health', {
-            method: 'HEAD',
-        }) as PromisedResponse<HeadHealthResponse>
+    head(options: HeadHealthOptions = {}): PromisedResponse<HeadHealthResponse> {
+        const callOptions = options
+        return this.transport.request<HeadHealthResponse>({
+            routeId: "headHealth",
+            url: "/health",
+            init: {
+                ...callOptions.init,
+                method: "HEAD",
+                headers: callOptions.headers,
+                signal: callOptions.signal,
+            },
+            bodyCodec: callOptions.bodyCodec,
+        })
     }
 }
 
 class ApiClient_Submit {
-    constructor(private readonly fetcher: Fetcher) {}
-    post() {
-        return this.fetcher.fetch('/submit', {
-            method: 'POST',
-        }) as PromisedResponse<PostSubmitResponse>
+    constructor(private readonly transport: ClientTransport) {}
+    post(options: PostSubmitOptions = {}): PromisedResponse<PostSubmitResponse> {
+        const callOptions = options
+        return this.transport.request<PostSubmitResponse>({
+            routeId: "postSubmit",
+            url: "/submit",
+            init: {
+                ...callOptions.init,
+                method: "POST",
+                headers: callOptions.headers,
+                signal: callOptions.signal,
+            },
+            bodyCodec: callOptions.bodyCodec,
+        })
     }
 }
 
 class ApiClient_ItemsById {
-    constructor(private readonly fetcher: Fetcher) {}
-    put(path: any | any) {
-        const _path =
-            typeof path === 'object' && path !== null && !Array.isArray(path)
-                ? path
-                : ({ id: path } as any)
-        return this.fetcher.fetch(`/items/${_path.id}`, {
-            method: 'PUT',
-        }) as PromisedResponse<PutItemsByIdResponse>
+    constructor(private readonly transport: ClientTransport) {}
+    put(options: PutItemsByIdOptions): PromisedResponse<PutItemsByIdResponse> {
+        const { path, ...callOptions } = options
+        const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { id: path } as any
+        return this.transport.request<PutItemsByIdResponse>({
+            routeId: "putItemsById",
+            url: `/items/${encodeURIComponent(String(_path.id))}`,
+            init: {
+                ...callOptions.init,
+                method: "PUT",
+                headers: callOptions.headers,
+                signal: callOptions.signal,
+            },
+            bodyCodec: callOptions.bodyCodec,
+        })
     }
 
-    delete(path: any | any) {
-        const _path =
-            typeof path === 'object' && path !== null && !Array.isArray(path)
-                ? path
-                : ({ id: path } as any)
-        return this.fetcher.fetch(`/items/${_path.id}`, {
-            method: 'DELETE',
-        }) as PromisedResponse<DeleteItemsByIdResponse>
+    delete(options: DeleteItemsByIdOptions): PromisedResponse<DeleteItemsByIdResponse> {
+        const { path, ...callOptions } = options
+        const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { id: path } as any
+        return this.transport.request<DeleteItemsByIdResponse>({
+            routeId: "deleteItemsById",
+            url: `/items/${encodeURIComponent(String(_path.id))}`,
+            init: {
+                ...callOptions.init,
+                method: "DELETE",
+                headers: callOptions.headers,
+                signal: callOptions.signal,
+            },
+            bodyCodec: callOptions.bodyCodec,
+        })
     }
 
-    patch(path: any | any) {
-        const _path =
-            typeof path === 'object' && path !== null && !Array.isArray(path)
-                ? path
-                : ({ id: path } as any)
-        return this.fetcher.fetch(`/items/${_path.id}`, {
-            method: 'PATCH',
-        }) as PromisedResponse<PatchItemsByIdResponse>
+    patch(options: PatchItemsByIdOptions): PromisedResponse<PatchItemsByIdResponse> {
+        const { path, ...callOptions } = options
+        const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { id: path } as any
+        return this.transport.request<PatchItemsByIdResponse>({
+            routeId: "patchItemsById",
+            url: `/items/${encodeURIComponent(String(_path.id))}`,
+            init: {
+                ...callOptions.init,
+                method: "PATCH",
+                headers: callOptions.headers,
+                signal: callOptions.signal,
+            },
+            bodyCodec: callOptions.bodyCodec,
+        })
     }
 }
 
 class ApiClient_Gen {
-    constructor(private readonly fetcher: Fetcher) {}
-    get() {
-        return this.fetcher.fetch('/gen', {
-            method: 'GET',
-        }) as PromisedResponse<GetGenResponse>
+    constructor(private readonly transport: ClientTransport) {}
+    get(options: GetGenOptions = {}): PromisedResponse<GetGenResponse> {
+        const callOptions = options
+        return this.transport.request<GetGenResponse>({
+            routeId: "getGen",
+            url: "/gen",
+            init: {
+                ...callOptions.init,
+                method: "GET",
+                headers: callOptions.headers,
+                signal: callOptions.signal,
+            },
+            bodyCodec: callOptions.bodyCodec,
+        })
     }
 }

@@ -1,33 +1,18 @@
 // Do not modify this file. It was auto-generated with the following command:
 // $ bun src/bin/gen-api-client.ts "./example3/router.ts" -w -p
 
-export interface Fetcher {
-  fetch(url: string, init: RequestInit): unknown
-}
-
-export type TypedResponse<T> = Omit<Response, 'json'> & { json(): Promise<T> }
-export type PromisedResponse<T> = Promise<TypedResponse<T>>
+import {
+  createClientTransport,
+  withQuery,
+  type ClientCallOptions,
+  type ClientTransport,
+  type FetchTransportOptions,
+  type PromisedResponse,
+} from '@mpen/server-router/client'
 
 type SinglePathParam<TParams, TKey extends string> = TParams extends { [K in TKey]: infer V }
   ? V
   : unknown
-
-function withQuery(url: string, query: object): string {
-  const searchParams = new URLSearchParams()
-  for (const [key, value] of Object.entries(query)) {
-    if (value == null) continue
-    if (Array.isArray(value)) {
-      for (const item of value) {
-        if (item != null)
-          searchParams.append(key, typeof item === 'object' ? JSON.stringify(item) : String(item))
-      }
-      continue
-    }
-    searchParams.append(key, typeof value === 'object' ? JSON.stringify(value) : String(value))
-  }
-  const search = searchParams.toString()
-  return search.length > 0 ? `${url}?${search}` : url
-}
 
 export interface PostWidgetsByIdPathParams {
   id: number
@@ -62,37 +47,51 @@ export interface PostWidgetsByIdResponsesByStatus {
 export type PostWidgetsByIdResponse =
   PostWidgetsByIdResponsesByStatus[keyof PostWidgetsByIdResponsesByStatus]
 
+export interface PostWidgetsByIdOptions extends ClientCallOptions {
+  path: PostWidgetsByIdPathParams | SinglePathParam<PostWidgetsByIdPathParams, 'id'>
+  query: PostWidgetsByIdQuery
+  body: PostWidgetsByIdRequest
+}
+
 export class ApiClient {
-  constructor(private readonly fetcher: Fetcher) {}
+  private readonly transport: ClientTransport
+
+  constructor(transport?: ClientTransport | FetchTransportOptions) {
+    this.transport = createClientTransport(transport)
+  }
 
   get widgets(): ApiClient_Widgets {
-    return new ApiClient_Widgets(this.fetcher)
+    return new ApiClient_Widgets(this.transport)
   }
 }
 
 class ApiClient_Widgets {
-  constructor(private readonly fetcher: Fetcher) {}
+  constructor(private readonly transport: ClientTransport) {}
 
   get byId(): ApiClient_Widgets_ById {
-    return new ApiClient_Widgets_ById(this.fetcher)
+    return new ApiClient_Widgets_ById(this.transport)
   }
 }
 
 class ApiClient_Widgets_ById {
-  constructor(private readonly fetcher: Fetcher) {}
-  post(
-    path: PostWidgetsByIdPathParams | SinglePathParam<PostWidgetsByIdPathParams, 'id'>,
-    query: PostWidgetsByIdQuery,
-    body: PostWidgetsByIdRequest,
-  ) {
+  constructor(private readonly transport: ClientTransport) {}
+  post(options: PostWidgetsByIdOptions): PromisedResponse<PostWidgetsByIdResponse> {
+    const { path, query, body, ...callOptions } = options
     const _path =
       typeof path === 'object' && path !== null && !Array.isArray(path)
         ? path
         : ({ id: path } as any)
-    return this.fetcher.fetch(withQuery(`/widgets/${_path.id}`, query), {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(body),
-    }) as PromisedResponse<PostWidgetsByIdResponse>
+    return this.transport.request<PostWidgetsByIdResponse, PostWidgetsByIdRequest>({
+      routeId: 'postWidgetsById',
+      url: withQuery(`/widgets/${encodeURIComponent(String(_path.id))}`, query),
+      init: {
+        ...callOptions.init,
+        method: 'POST',
+        headers: callOptions.headers,
+        signal: callOptions.signal,
+      },
+      body,
+      bodyCodec: callOptions.bodyCodec,
+    })
   }
 }

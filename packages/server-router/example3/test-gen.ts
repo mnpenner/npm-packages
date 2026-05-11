@@ -1,20 +1,26 @@
 #!/usr/bin/env -S bun
 import { expectType } from '@mpen/ts-types'
-import { ApiClient, type Fetcher } from './router.gen'
+import { ApiClient } from './router.gen'
 
-class FakeFetcher implements Fetcher {
-    fetch(url: string, init: RequestInit): Promise<Response> {
+const client = new ApiClient({
+    baseUrl: 'https://api.example.test',
+    fetch(url, init): Promise<Response> {
         console.log('fetching', url, init)
-        return Promise.resolve(new Response(JSON.stringify({"error":"msg"}), { status: 400 }))
-    }
-}
+        return Promise.resolve(
+            new Response(JSON.stringify({ component: 'request_body', message: 'msg' }), {
+                status: 400,
+            }),
+        )
+    },
+})
 
-const client = new ApiClient(new FakeFetcher())
+const res = await client.widgets.byId.post({
+    path: 123,
+    query: { view: 'full' },
+    body: { name: 'Mark', tags: ['foo', 'bar'] },
+})
 
-const res = await client.widgets.byId
-    .post(123, { view: 'full' }, { name: 'Mark', tags: ['foo', 'bar'] })
-
-if(res.status === 400) {
+if (res.status === 400) {
     const body = await res.json()
-    expectType<string>(body.component)
+    expectType<string>(body.message)
 }
