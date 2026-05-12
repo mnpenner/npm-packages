@@ -1,6 +1,6 @@
-import { Router } from '../src/index'
-import { zodRoute } from '../src/helpers/zod'
-import { jsonResponse } from '../src/response/simple'
+import { Router } from '../../../src/index'
+import { zodRoute } from '../../../src/helpers/zod'
+import { jsonResponse } from '../../../src/response/simple'
 import { z } from 'zod'
 import { CommonHeaders, CommonContentTypes, HttpMethod, HttpStatus } from '@mpen/http-helpers'
 

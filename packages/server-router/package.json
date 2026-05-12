@@ -45,8 +45,8 @@
   },
   "scripts": {
     "build": "tsdown",
-    "gen": "bun ./src/bin/gen-api-client.ts ./examples/router-instance.ts -o ./examples/api-client.gen.ts",
-    "gen3": "bun ./src/bin/gen-api-client.ts ./example3/router.ts -w -p"
+    "gen": "bun ./src/bin/gen-api-client.ts ./examples/example1/server/router-instance.ts -o ./examples/example1/client/api-client.gen.ts",
+    "gen3": "bun ./src/bin/gen-api-client.ts ./examples/example3/server/router.ts -o ./examples/example3/client/router.gen.ts -p"
   },
   "main": "./dist/index.mjs",
   "types": "./dist/index.d.mts",

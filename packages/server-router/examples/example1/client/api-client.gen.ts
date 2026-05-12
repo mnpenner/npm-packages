@@ -1,7 +1,7 @@
 // Do not modify this file. It was auto-generated with the following command:
-// $ bun src/bin/gen-api-client.ts ./examples/router-instance.ts -o ./examples/api-client.gen.ts
+// $ bun src/bin/gen-api-client.ts "./examples/example1/server/router-instance.ts" -o "./examples/example1/client/api-client.gen.ts"
 
-import { FetchTransport, resolveApiResponse, type ClientCallOptions, type ClientTransport, type ApiResponsePromise } from '@mpen/server-router/client'
+import { FetchTransport, resolveApiResponse, resolveApiResponseByStatus, type ClientCallOptions, type ClientTransport, type ApiResponseByStatusPromise, type ApiResponsePromise } from '@mpen/server-router/client'
 
 type SinglePathParam<TParams, TKey extends string> = TParams extends { [K in TKey]: infer V } ? V : unknown
 
@@ -189,9 +189,9 @@ export class ApiClient {
         return new ApiClient_Gen(this.transport)
     }
 
-    get(options: GetIndexOptions = {}): ApiResponsePromise<GetIndexResponse> {
+    get(options: GetIndexOptions = {}): ApiResponseByStatusPromise<GetIndexResponsesByStatus> {
         const callOptions = options
-        return resolveApiResponse(this.transport.request<GetIndexResponse>({
+        return resolveApiResponseByStatus<GetIndexResponsesByStatus>(this.transport.request<GetIndexResponse>({
             url: "/",
             init: {
                 ...callOptions.init,
@@ -205,9 +205,9 @@ export class ApiClient {
 
 class ApiClient_NamedRoute {
     constructor(private readonly transport: ClientTransport) {}
-    get(options: GetNamedRouteOptions = {}): ApiResponsePromise<GetNamedRouteResponse> {
+    get(options: GetNamedRouteOptions = {}): ApiResponseByStatusPromise<GetNamedRouteResponsesByStatus> {
         const callOptions = options
-        return resolveApiResponse(this.transport.request<GetNamedRouteResponse>({
+        return resolveApiResponseByStatus<GetNamedRouteResponsesByStatus>(this.transport.request<GetNamedRouteResponse>({
             url: "/name/bar",
             init: {
                 ...callOptions.init,
@@ -218,9 +218,9 @@ class ApiClient_NamedRoute {
         }))
     }
 
-    post(options: PostNamedRouteOptions = {}): ApiResponsePromise<PostNamedRouteResponse> {
+    post(options: PostNamedRouteOptions = {}): ApiResponseByStatusPromise<PostNamedRouteResponsesByStatus> {
         const callOptions = options
-        return resolveApiResponse(this.transport.request<PostNamedRouteResponse>({
+        return resolveApiResponseByStatus<PostNamedRouteResponsesByStatus>(this.transport.request<PostNamedRouteResponse>({
             url: "/name/bar",
             init: {
                 ...callOptions.init,
@@ -242,9 +242,9 @@ class ApiClient_Foo {
 
 class ApiClient_Foo_Bar {
     constructor(private readonly transport: ClientTransport) {}
-    post(options: PostFooBarOptions = {}): ApiResponsePromise<PostFooBarResponse> {
+    post(options: PostFooBarOptions = {}): ApiResponseByStatusPromise<PostFooBarResponsesByStatus> {
         const callOptions = options
-        return resolveApiResponse(this.transport.request<PostFooBarResponse>({
+        return resolveApiResponseByStatus<PostFooBarResponsesByStatus>(this.transport.request<PostFooBarResponse>({
             url: "/foo/bar",
             init: {
                 ...callOptions.init,
@@ -258,10 +258,10 @@ class ApiClient_Foo_Bar {
 
 class ApiClient_BooksById {
     constructor(private readonly transport: ClientTransport) {}
-    post(options: PostBooksByIdOptions): ApiResponsePromise<PostBooksByIdResponse> {
+    post(options: PostBooksByIdOptions): ApiResponseByStatusPromise<PostBooksByIdResponsesByStatus> {
         const { path, body, ...callOptions } = options
         const _path = typeof path === 'object' && path !== null && !Array.isArray(path) ? path : { id: path } as any
-        return resolveApiResponse(this.transport.request<PostBooksByIdResponse, PostBooksByIdRequest>({
+        return resolveApiResponseByStatus<PostBooksByIdResponsesByStatus>(this.transport.request<PostBooksByIdResponse, PostBooksByIdRequest>({
             url: `/books/${encodeURIComponent(String(_path.id))}`,
             init: {
                 ...callOptions.init,
@@ -276,9 +276,9 @@ class ApiClient_BooksById {
 
 class ApiClient_JsonHelper {
     constructor(private readonly transport: ClientTransport) {}
-    get(options: GetJsonHelperOptions = {}): ApiResponsePromise<GetJsonHelperResponse> {
+    get(options: GetJsonHelperOptions = {}): ApiResponseByStatusPromise<GetJsonHelperResponsesByStatus> {
         const callOptions = options
-        return resolveApiResponse(this.transport.request<GetJsonHelperResponse>({
+        return resolveApiResponseByStatus<GetJsonHelperResponsesByStatus>(this.transport.request<GetJsonHelperResponse>({
             url: "/json-helper",
             init: {
                 ...callOptions.init,
@@ -292,9 +292,9 @@ class ApiClient_JsonHelper {
 
 class ApiClient_JsonHelperZod {
     constructor(private readonly transport: ClientTransport) {}
-    post(options: PostJsonHelperZodOptions): ApiResponsePromise<PostJsonHelperZodResponse> {
+    post(options: PostJsonHelperZodOptions): ApiResponseByStatusPromise<PostJsonHelperZodResponsesByStatus> {
         const { body, ...callOptions } = options
-        return resolveApiResponse(this.transport.request<PostJsonHelperZodResponse, PostJsonHelperZodRequest>({
+        return resolveApiResponseByStatus<PostJsonHelperZodResponsesByStatus>(this.transport.request<PostJsonHelperZodResponse, PostJsonHelperZodRequest>({
             url: "/json-helper-zod",
             init: {
                 ...callOptions.init,

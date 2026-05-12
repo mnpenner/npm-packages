@@ -1,5 +1,5 @@
 // Do not modify this file. It was auto-generated with the following command:
-// $ bun src/bin/gen-api-client.ts "./example3/router.ts" -w -p
+// $ bun src/bin/gen-api-client.ts "./examples/example3/server/router.ts" -o "./examples/example3/client/router.gen.ts" -p
 
 import {
   FetchTransport,

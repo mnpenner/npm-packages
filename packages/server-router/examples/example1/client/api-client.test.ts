@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bun test
 import { describe, expect, it } from 'bun:test'
 import { ApiClient } from './api-client.gen'
-import router from './router-instance'
+import router from '../server/router-instance'
 import { expectType, type TypeEqual } from '@mpen/ts-types'
 import { FetchTransport, type BodyCodec, type ResponseBodyReader } from '@mpen/server-router/client'
 
