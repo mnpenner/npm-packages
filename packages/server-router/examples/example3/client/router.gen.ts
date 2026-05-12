@@ -84,7 +84,7 @@ class ApiClient_Widgets_ById {
         ? path
         : ({ id: path } as any)
     return resolveApiResponseByStatus<PostWidgetsByIdResponsesByStatus>(
-      this.transport.request<PostWidgetsByIdResponse, PostWidgetsByIdRequest>({
+      this.transport.request({
         url: withQuery(`/widgets/${encodeURIComponent(String(_path.id))}`, query),
         init: {
           ...callOptions.init,

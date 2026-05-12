@@ -8,9 +8,7 @@ import type {
 } from '@mpen/server-router/client'
 
 class FakeTransport implements ClientTransport {
-    request<TResponse, TBody = unknown>(
-        request: ClientRequest<TBody>,
-    ): ApiTransportResponsePromise<TResponse> {
+    request(request: ClientRequest): ApiTransportResponsePromise {
         console.log('request', request)
         const response = new Response(
             JSON.stringify({ component: 'request_body', message: 'msg' }),
@@ -22,7 +20,7 @@ class FakeTransport implements ClientTransport {
         return Promise.resolve({
             status: response.status,
             headers: response.headers,
-            parseBody: () => new Response(response.body).json() as Promise<TResponse>,
+            parseBody: () => new Response(response.body).json(),
         })
     }
 }

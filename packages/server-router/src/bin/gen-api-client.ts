@@ -319,13 +319,12 @@ function buildMethodLines(
     }
     const urlExpr = patternToUrlTemplate(route.path, pathVar)
     const finalUrlExpr = queryType ? `withQuery(${urlExpr}, query)` : urlExpr
-    const requestExpression = `this.transport.request<${route.typeBase}Response${bodyType ? `, ${bodyType}` : ''}>`
     const resolverExpression =
         shouldResolveApiResponse && hasResponsesByStatus
             ? `resolveApiResponseByStatus<${route.typeBase}ResponsesByStatus>`
             : 'resolveApiResponse'
     lines.push(
-        `${indent}    return ${shouldResolveApiResponse ? `${resolverExpression}(` : ''}${requestExpression}({`,
+        `${indent}    return ${shouldResolveApiResponse ? `${resolverExpression}(` : ''}this.transport.request({`,
     )
     lines.push(`${indent}        url: ${finalUrlExpr},`)
     lines.push(`${indent}        init: {`)

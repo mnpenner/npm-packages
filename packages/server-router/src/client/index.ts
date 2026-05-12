@@ -107,15 +107,13 @@ export type ApiResponseByStatusPromise<T extends object> = Promise<ApiResponseBy
  *
  * @example
  * ```ts
- * const response: ApiTransportResponse<{ ok: true }> = {
+ * const response: ApiTransportResponse = {
  *     status: 200,
  *     parseBody: async () => ({ ok: true }),
  * }
  * ```
- *
- * @typeParam T - The parsed response body type.
  */
-export interface ApiTransportResponse<T> {
+export interface ApiTransportResponse {
     /** The response status code. */
     status: number
     /** The response headers, when available. */
@@ -126,7 +124,7 @@ export interface ApiTransportResponse<T> {
      *
      * @returns The parsed response body.
      */
-    parseBody(): Promise<T>
+    parseBody(): Promise<unknown>
 }
 
 /**
@@ -134,12 +132,10 @@ export interface ApiTransportResponse<T> {
  *
  * @example
  * ```ts
- * const response: ApiTransportResponsePromise<{ ok: true }> = transport.request(request)
+ * const response: ApiTransportResponsePromise = transport.request(request)
  * ```
- *
- * @typeParam T - The parsed response body type.
  */
-export type ApiTransportResponsePromise<T> = Promise<ApiTransportResponse<T>>
+export type ApiTransportResponsePromise = Promise<ApiTransportResponse>
 
 /**
  * The response body stream exposed to response body codecs.
@@ -222,22 +218,20 @@ export interface ClientCallOptions {
  *
  * @example
  * ```ts
- * const request: ClientRequest<{ name: string }> = {
+ * const request: ClientRequest = {
  *     url: '/widgets',
  *     init: { method: 'POST' },
  *     body: { name: 'demo' },
  * }
  * ```
- *
- * @typeParam TBody - The generated request body type.
  */
-export interface ClientRequest<TBody = unknown> {
+export interface ClientRequest {
     /** The URL path generated for the route. */
     url: string
     /** Fetch-compatible request initialization. */
     init: RequestInit
     /** The unencoded request body value. */
-    body?: TBody
+    body?: unknown
 }
 
 /**
@@ -246,7 +240,7 @@ export interface ClientRequest<TBody = unknown> {
  * @example
  * ```ts
  * class AxiosTransport implements ClientTransport {
- *     async request<TResponse>(request: ClientRequest): ApiTransportResponsePromise<TResponse> {
+ *     async request(request: ClientRequest): ApiTransportResponsePromise {
  *         throw new Error('Adapt Axios into a Response-shaped object here')
  *     }
  * }
@@ -257,13 +251,9 @@ export interface ClientTransport {
      * Execute a generated client request.
      *
      * @param request - The generated request metadata and init.
-     * @returns A typed response promise.
-     * @typeParam TResponse - The expected response body type.
-     * @typeParam TBody - The request body type.
+     * @returns A transport response promise.
      */
-    request<TResponse, TBody = unknown>(
-        request: ClientRequest<TBody>,
-    ): ApiTransportResponsePromise<TResponse>
+    request(request: ClientRequest): ApiTransportResponsePromise
 }
 
 /**
@@ -366,13 +356,9 @@ export class FetchTransport implements ClientTransport {
      * Execute a generated client request with Fetch.
      *
      * @param request - The generated client request.
-     * @returns A typed response promise.
-     * @typeParam TResponse - The expected response body type.
-     * @typeParam TBody - The request body type.
+     * @returns A transport response promise.
      */
-    async request<TResponse, TBody = unknown>(
-        request: ClientRequest<TBody>,
-    ): ApiTransportResponsePromise<TResponse> {
+    async request(request: ClientRequest): ApiTransportResponsePromise {
         const codec = this.#bodyCodec
         const init: RequestInit = { ...request.init }
         const headerContext = { url: request.url, init }
@@ -397,8 +383,7 @@ export class FetchTransport implements ClientTransport {
         return {
             status: response.status,
             headers: response.headers,
-            parseBody: () =>
-                codec.deserialize<TResponse>(response.body, response.headers.get('content-type')),
+            parseBody: () => codec.deserialize(response.body, response.headers.get('content-type')),
         }
     }
 }
@@ -416,14 +401,14 @@ export class FetchTransport implements ClientTransport {
  * @typeParam T - The parsed response body type.
  */
 export async function resolveApiResponse<T>(
-    response: ApiTransportResponse<T> | ApiTransportResponsePromise<T>,
+    response: ApiTransportResponse | ApiTransportResponsePromise,
 ): ApiResponsePromise<T> {
     const resolved = await response
     return {
         ok: resolved.status >= 200 && resolved.status < 300,
         status: resolved.status,
         headers: new Headers(resolved.headers),
-        parseBody: resolved.parseBody,
+        parseBody: resolved.parseBody as () => Promise<T>,
     }
 }
 
@@ -442,7 +427,7 @@ export async function resolveApiResponse<T>(
  * @typeParam T - A map from response status codes to parsed response body types.
  */
 export function resolveApiResponseByStatus<T extends object>(
-    response: ApiTransportResponse<T[keyof T]> | ApiTransportResponsePromise<T[keyof T]>,
+    response: ApiTransportResponse | ApiTransportResponsePromise,
 ): ApiResponseByStatusPromise<T> {
     return resolveApiResponse(response) as ApiResponseByStatusPromise<T>
 }
