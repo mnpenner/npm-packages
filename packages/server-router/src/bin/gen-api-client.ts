@@ -292,7 +292,13 @@ function buildMethodLines(
 
     const optionType = `${route.typeBase}Options`
     const hasRequiredOptions = hasPathParams || !!queryType || !!bodyType
-    const returnType = `${options.responseType}<${route.typeBase}Response>`
+    const shouldResolveApiResponse = options.responseType === DEFAULT_RESPONSE_TYPE
+    const hasResponsesByStatus =
+        !!route.responseBodySchemas && Object.keys(route.responseBodySchemas).length > 0
+    const returnType =
+        shouldResolveApiResponse && hasResponsesByStatus
+            ? `ApiResponseByStatusPromise<${route.typeBase}ResponsesByStatus>`
+            : `${options.responseType}<${route.typeBase}Response>`
 
     lines.push(
         `${indent}${methodName}(options: ${optionType}${hasRequiredOptions ? '' : ' = {}'}): ${returnType} {`,
@@ -318,9 +324,12 @@ function buildMethodLines(
     const urlExpr = patternToUrlTemplate(route.path, pathVar)
     const finalUrlExpr = queryType ? `withQuery(${urlExpr}, query)` : urlExpr
     const requestExpression = `this.transport.request<${route.typeBase}Response${bodyType ? `, ${bodyType}` : ''}>`
-    const shouldResolveApiResponse = options.responseType === DEFAULT_RESPONSE_TYPE
+    const resolverExpression =
+        shouldResolveApiResponse && hasResponsesByStatus
+            ? `resolveApiResponseByStatus<${route.typeBase}ResponsesByStatus>`
+            : 'resolveApiResponse'
     lines.push(
-        `${indent}    return ${shouldResolveApiResponse ? 'resolveApiResponse(' : ''}${requestExpression}({`,
+        `${indent}    return ${shouldResolveApiResponse ? `${resolverExpression}(` : ''}${requestExpression}({`,
     )
     lines.push(`${indent}        routeId: ${JSON.stringify(lowerFirst(route.typeBase))},`)
     lines.push(`${indent}        url: ${finalUrlExpr},`)
@@ -426,6 +435,13 @@ async function buildApiClientSource(
     }))
     const needsSinglePathHelper = processedRoutes.some((route) => route.pathParams.length === 1)
     const needsQueryHelper = processedRoutes.some((route) => route.requestSchema?.query)
+    const needsResponseByStatusHelper = processedRoutes.some(
+        (route) => route.responseBodySchemas && Object.keys(route.responseBodySchemas).length > 0,
+    )
+    const needsDefaultResponsePromise = processedRoutes.some(
+        (route) =>
+            !route.responseBodySchemas || Object.keys(route.responseBodySchemas).length === 0,
+    )
     const generatedTypes = await Promise.all(processedRoutes.map(generateRouteTypes))
 
     const lines: string[] = []
@@ -439,11 +455,21 @@ async function buildApiClientSource(
 
     const clientImports = [
         'FetchTransport',
-        options.responseType === DEFAULT_RESPONSE_TYPE ? 'resolveApiResponse' : undefined,
+        options.responseType === DEFAULT_RESPONSE_TYPE && needsDefaultResponsePromise
+            ? 'resolveApiResponse'
+            : undefined,
+        options.responseType === DEFAULT_RESPONSE_TYPE && needsResponseByStatusHelper
+            ? 'resolveApiResponseByStatus'
+            : undefined,
         needsQueryHelper ? 'withQuery' : undefined,
         'type ClientCallOptions',
         'type ClientTransport',
-        options.responseType === DEFAULT_RESPONSE_TYPE ? `type ${options.responseType}` : undefined,
+        options.responseType === DEFAULT_RESPONSE_TYPE && needsResponseByStatusHelper
+            ? 'type ApiResponseByStatusPromise'
+            : undefined,
+        options.responseType === DEFAULT_RESPONSE_TYPE && needsDefaultResponsePromise
+            ? `type ${options.responseType}`
+            : undefined,
     ].filter(Boolean)
     lines.push(`import { ${clientImports.join(', ')} } from '@mpen/server-router/client'`)
 

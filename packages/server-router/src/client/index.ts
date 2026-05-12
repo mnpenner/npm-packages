@@ -24,8 +24,6 @@ export type MaybePromise<T> = T | Promise<T>
  * @typeParam T - The parsed response body type.
  */
 export interface ApiResponse<T> {
-    /** The unmodified platform response, when the transport has one. */
-    response?: Response
     /** Whether the response status is in the successful 200-299 range. */
     ok: boolean
     /** The response status code. */
@@ -41,6 +39,44 @@ export interface ApiResponse<T> {
     parseBody(): Promise<T>
 }
 
+type ApiResponseStatus<TStatus> = TStatus extends number
+    ? TStatus
+    : TStatus extends `${infer TNumber extends number}`
+      ? TNumber
+      : number
+
+/**
+ * A typed response union keyed by HTTP status code.
+ *
+ * @example
+ * ```ts
+ * type WidgetResponse = ApiResponseByStatus<{
+ *     200: { id: number }
+ *     400: { message: string }
+ * }>
+ *
+ * if (response.status === 400) {
+ *     const body = await response.parseBody()
+ *     body.message
+ * }
+ * ```
+ *
+ * @typeParam T - A map from response status codes to parsed response body types.
+ */
+export type ApiResponseByStatus<T extends object> = {
+    [TStatus in keyof T]: Omit<ApiResponse<T[TStatus]>, 'status' | 'parseBody'> & {
+        /** The narrowed response status code. */
+        status: ApiResponseStatus<TStatus>
+
+        /**
+         * Parse the response body for this status code with the active body codec.
+         *
+         * @returns The parsed response body for this status code.
+         */
+        parseBody(): Promise<T[TStatus]>
+    }
+}[keyof T]
+
 /**
  * The default async response wrapper used by generated API clients.
  *
@@ -52,6 +88,19 @@ export interface ApiResponse<T> {
  * @typeParam T - The parsed response body type.
  */
 export type ApiResponsePromise<T> = Promise<ApiResponse<T>>
+
+/**
+ * The async response wrapper used by generated API clients for routes with response body types
+ * keyed by HTTP status code.
+ *
+ * @example
+ * ```ts
+ * const response: ApiResponseByStatusPromise<{ 200: { ok: true } }> = client.health.get()
+ * ```
+ *
+ * @typeParam T - A map from response status codes to parsed response body types.
+ */
+export type ApiResponseByStatusPromise<T extends object> = Promise<ApiResponseByStatus<T>>
 
 /**
  * A minimal response returned by client transports.
@@ -67,8 +116,6 @@ export type ApiResponsePromise<T> = Promise<ApiResponse<T>>
  * @typeParam T - The parsed response body type.
  */
 export interface ApiTransportResponse<T> {
-    /** The unmodified platform response, when the transport has one. */
-    response?: Response
     /** The response status code. */
     status: number
     /** The response headers, when available. */
@@ -272,7 +319,7 @@ export interface FetchTransportOptions {
     /** Base URL used to resolve generated relative route URLs. */
     baseUrl?: string | URL
     /** Fetch implementation to call. Defaults to `globalThis.fetch`. */
-    fetch?: typeof fetch
+    fetch?: (url: string | URL | Request, init?: RequestInit) => Promise<Response>
     /** Global headers, or a function that returns headers for each request. */
     headers?: ClientHeaders
     /** Default body codec. Defaults to [`jsonBodyCodec`]{@link jsonBodyCodec}. */
@@ -358,7 +405,6 @@ export class FetchTransport implements ClientTransport {
 
         const response = await this.#fetch(resolveUrl(request.url, this.#baseUrl), init)
         return {
-            response,
             status: response.status,
             headers: response.headers,
             parseBody: () =>
@@ -384,12 +430,31 @@ export async function resolveApiResponse<T>(
 ): ApiResponsePromise<T> {
     const resolved = await response
     return {
-        response: resolved.response,
         ok: resolved.status >= 200 && resolved.status < 300,
         status: resolved.status,
         headers: new Headers(resolved.headers),
         parseBody: resolved.parseBody,
     }
+}
+
+/**
+ * Normalize a transport response into a generated API response union keyed by status code.
+ *
+ * @example
+ * ```ts
+ * const response = await resolveApiResponseByStatus<{ 200: { ok: true } }>(
+ *     transport.request(request),
+ * )
+ * ```
+ *
+ * @param response - A transport response or transport response promise.
+ * @returns The normalized API response.
+ * @typeParam T - A map from response status codes to parsed response body types.
+ */
+export function resolveApiResponseByStatus<T extends object>(
+    response: ApiTransportResponse<T[keyof T]> | ApiTransportResponsePromise<T[keyof T]>,
+): ApiResponseByStatusPromise<T> {
+    return resolveApiResponse(response) as ApiResponseByStatusPromise<T>
 }
 
 /**

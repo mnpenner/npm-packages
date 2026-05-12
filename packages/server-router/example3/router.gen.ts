@@ -3,11 +3,11 @@
 
 import {
   FetchTransport,
-  resolveApiResponse,
+  resolveApiResponseByStatus,
   withQuery,
   type ClientCallOptions,
   type ClientTransport,
-  type ApiResponsePromise,
+  type ApiResponseByStatusPromise,
 } from '@mpen/server-router/client'
 
 type SinglePathParam<TParams, TKey extends string> = TParams extends { [K in TKey]: infer V }
@@ -75,13 +75,15 @@ class ApiClient_Widgets {
 
 class ApiClient_Widgets_ById {
   constructor(private readonly transport: ClientTransport) {}
-  post(options: PostWidgetsByIdOptions): ApiResponsePromise<PostWidgetsByIdResponse> {
+  post(
+    options: PostWidgetsByIdOptions,
+  ): ApiResponseByStatusPromise<PostWidgetsByIdResponsesByStatus> {
     const { path, query, body, ...callOptions } = options
     const _path =
       typeof path === 'object' && path !== null && !Array.isArray(path)
         ? path
         : ({ id: path } as any)
-    return resolveApiResponse(
+    return resolveApiResponseByStatus<PostWidgetsByIdResponsesByStatus>(
       this.transport.request<PostWidgetsByIdResponse, PostWidgetsByIdRequest>({
         routeId: 'postWidgetsById',
         url: withQuery(`/widgets/${encodeURIComponent(String(_path.id))}`, query),

@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bun
 import { expectType } from '@mpen/ts-types'
-import { ApiClient } from './router.gen'
+import { ApiClient, type PostWidgetsByIdResponse400 } from './router.gen'
 import type {
     ApiTransportResponsePromise,
     ClientRequest,
@@ -20,7 +20,6 @@ class FakeTransport implements ClientTransport {
         )
 
         return Promise.resolve({
-            response,
             status: response.status,
             headers: response.headers,
             parseBody: () => new Response(response.body).json() as Promise<TResponse>,
@@ -38,5 +37,6 @@ const res = await client.widgets.byId.post({
 
 if (res.status === 400) {
     const body = await res.parseBody()
+    expectType<PostWidgetsByIdResponse400>(body)
     expectType<string>(body.message)
 }
