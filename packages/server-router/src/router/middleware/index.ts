@@ -4,7 +4,9 @@ export { startTimeCtx } from './start-time-ctx'
 export { acceptCtx } from './accept-ctx'
 export { cors } from './cors'
 export { rateLimit } from './rate-limit'
+export { loggerCtx } from './logger-context'
 export type { HttpMethod } from '@mpen/http-helpers'
+export type { LoggerCtxOptions } from './logger-context'
 export type {
     AsnClass,
     AsnRecord,

@@ -1,6 +1,6 @@
 import { CommonContentTypes, HttpMethod, HttpStatus } from '@mpen/http-helpers'
-import { Router, type ContextMiddleware } from '../../../src'
-import { ValidationError, ZodRouteFactory } from '../../../src/router/routes/zod'
+import { Router, type ContextMiddleware } from '@mpen/server-router'
+import { ValidationError, ZodRouteFactory } from '@mpen/server-router/routes'
 import { z } from 'zod'
 
 type StructuredBody = Record<string, unknown> | unknown[]

@@ -1,7 +1,6 @@
 #!/usr/bin/env -S bun --hot --no-clear-screen
-import { Router, plainTextResponse } from '../../../src'
-import { requestIdCtx } from '../../../src/router/middleware'
-import { loggerCtx } from '../../../src/router/middleware/logger-context'
+import { Router, plainTextResponse } from '@mpen/server-router'
+import { loggerCtx, requestIdCtx } from '@mpen/server-router/middleware'
 
 const router = new Router()
     .use(requestIdCtx())

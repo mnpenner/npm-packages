@@ -1,5 +1,5 @@
-import { Router, jsonResponse } from '../../../src'
-import { zodRoute } from '../../../src/router/routes/zod'
+import { Router, jsonResponse } from '@mpen/server-router'
+import { zodRoute } from '@mpen/server-router/routes'
 import { z } from 'zod'
 import { CommonHeaders, CommonContentTypes, HttpMethod, HttpStatus } from '@mpen/http-helpers'
 
