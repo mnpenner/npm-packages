@@ -5,13 +5,9 @@ export default defineConfig({
     entry: {
         client: 'src/client/index.ts',
         index: 'src/index.ts',
-        'helpers/zod': 'src/helpers/zod/index.ts', // TODO: clean these up
-        'lib/collections': 'src/lib/collections.ts',
-        middleware: 'src/middleware/index.ts',
-        'plugins/openapi': 'src/plugins/openapi/index.ts',
-        response: 'src/response/index.ts',
-        'response/simple': 'src/response/simple.ts',
-        routes: 'src/routes/index.ts',
+        handlers: 'src/router/handlers/index.ts',
+        middleware: 'src/router/middleware/index.ts',
+        routes: 'src/router/routes/index.ts',
     },
     platform: 'node',
     format: ['esm'],

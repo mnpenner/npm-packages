@@ -1,6 +1,6 @@
 import type { HttpMethod } from '@mpen/http-helpers'
 import { HttpStatus } from '@mpen/http-helpers'
-import { simpleStatus } from '@mpen/server-router/response/simple'
+import { simpleStatus } from '../response/simple'
 import type { AnyContext, Middleware, RequestContext } from '../types'
 
 export interface RateBucket {

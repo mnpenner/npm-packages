@@ -1,4 +1,4 @@
-import type { AnyContext, ContextMiddleware } from '..'
+import type { AnyContext, ContextMiddleware } from '../types'
 import { randomUUID } from 'node:crypto'
 import { inspect } from 'node:util'
 import path from 'node:path'

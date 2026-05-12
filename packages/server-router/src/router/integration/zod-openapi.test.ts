@@ -2,8 +2,8 @@
 import { describe, expect, it } from 'bun:test'
 import { HttpMethod } from '@mpen/http-helpers'
 import { Router } from '../router'
-import { openapi } from '../plugins/openapi'
-import { zodRoute } from '../helpers/zod'
+import { openapi } from '../handlers/openapi'
+import { zodRoute } from '../routes/zod'
 import { z } from 'zod'
 
 describe('openapi', () => {

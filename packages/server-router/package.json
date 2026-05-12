@@ -4,12 +4,8 @@
   "exports": {
     ".": "./dist/index.mjs",
     "./client": "./dist/client.mjs",
-    "./helpers/zod": "./dist/helpers/zod.mjs",
-    "./lib/collections": "./dist/lib/collections.mjs",
+    "./handlers": "./dist/handlers.mjs",
     "./middleware": "./dist/middleware.mjs",
-    "./plugins/openapi": "./dist/plugins/openapi.mjs",
-    "./response": "./dist/response.mjs",
-    "./response/simple": "./dist/response/simple.mjs",
     "./routes": "./dist/routes.mjs",
     "./package.json": "./package.json"
   },

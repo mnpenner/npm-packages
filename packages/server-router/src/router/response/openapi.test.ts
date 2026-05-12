@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'bun:test'
 import { HttpMethod } from '@mpen/http-helpers'
 import { Router } from '../router'
-import { openapi } from '../plugins/openapi'
+import { openapi } from '../handlers/openapi'
 
 describe('openapi', () => {
     it('builds OpenAPI paths from route schemas and metadata', async () => {

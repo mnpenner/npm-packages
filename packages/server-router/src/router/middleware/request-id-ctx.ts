@@ -6,7 +6,7 @@ import type {
     OneOrMany,
     RequestContext,
 } from '../types'
-import { toArray } from '@mpen/server-router/lib/collections'
+import { toArray } from '../lib/collections'
 
 declare global {
     var _reloadCounter: number
