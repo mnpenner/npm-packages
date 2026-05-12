@@ -4,5 +4,5 @@
         "lib": ["DOM", "DOM.Iterable", "ESNext"],
         "types": []
     },
-    "include": ["index.ts"]
+    "include": ["**/*.ts"]
 }

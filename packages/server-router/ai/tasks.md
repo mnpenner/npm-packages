@@ -9,3 +9,4 @@
 - Batch fetching? Part of transport or ApiClient?
 - OTel..?
 - Split packages/server-router/src/client/index.ts into multiple files
+- [x] `ResponseBodyReader` is the wrong shape, it should always be `ReadableStream<Uint8Array<ArrayBufferLike>> | null` to match `Response.body` ... but then we have to `new Response(res.body).json()` to parse it but maybe that's OK?

@@ -95,54 +95,14 @@ export interface ApiTransportResponse<T> {
 export type ApiTransportResponsePromise<T> = Promise<ApiTransportResponse<T>>
 
 /**
- * Context passed to body serializers.
+ * The response body stream exposed to response body codecs.
  *
  * @example
  * ```ts
- * const codec: BodyCodec = {
- *     contentType: 'application/json',
- *     serialize(value, context) {
- *         console.log(context.routeId)
- *         return JSON.stringify(value)
- *     },
- *     deserialize: (response) => response.json(),
- * }
+ * const text = await new Response(body).text()
  * ```
  */
-export interface SerializeBodyContext {
-    /** The generated route identifier, such as `postWidgetsById`. */
-    routeId: string
-    /** The URL path before a transport applies a base URL. */
-    url: string
-    /** The request init object being prepared for the transport. */
-    init: RequestInit
-}
-
-/**
- * Context passed to body deserializers.
- *
- * @example
- * ```ts
- * const codec: BodyCodec = {
- *     contentType: 'application/json',
- *     serialize: JSON.stringify,
- *     deserialize(response, context) {
- *         if (context.status === 204) return Promise.resolve(undefined)
- *         return response.json()
- *     },
- * }
- * ```
- */
-export interface DeserializeBodyContext {
-    /** The generated route identifier, such as `postWidgetsById`. */
-    routeId: string
-    /** The URL path before a transport applies a base URL. */
-    url: string
-    /** The HTTP response status. */
-    status: number
-    /** The response content type, when present. */
-    contentType: string | null
-}
+export type ResponseBodyReader = ReadableStream<Uint8Array<ArrayBufferLike>> | null
 
 /**
  * Serializes request bodies and deserializes response bodies for generated clients.
@@ -150,34 +110,29 @@ export interface DeserializeBodyContext {
  * @example
  * ```ts
  * const textJsonCodec: BodyCodec = {
- *     contentType: 'application/json',
  *     serialize: (value) => JSON.stringify(value),
- *     deserialize: async (response) => JSON.parse(await response.text()),
+ *     deserialize: async (body) => JSON.parse(await new Response(body).text()),
  * }
  * ```
  */
 export interface BodyCodec {
-    /** The content type to apply when the request has a body and no explicit content type. */
-    contentType?: string
-
     /**
      * Serialize a generated client body value into a Fetch-compatible body.
      *
      * @param value - The generated client body value.
-     * @param context - Metadata for the route call being serialized.
      * @returns A Fetch-compatible body, or nullish to omit the request body.
      */
-    serialize(value: unknown, context: SerializeBodyContext): BodyInit | null | undefined
+    serialize(value: unknown): BodyInit | null | undefined
 
     /**
      * Deserialize a response body for typed `response.parseBody()` calls.
      *
-     * @param response - The response returned by the transport.
-     * @param context - Metadata for the response being deserialized.
+     * @param body - The response body stream.
+     * @param contentType - The response content type, when present.
      * @returns The deserialized response body.
      * @typeParam T - The expected response body type.
      */
-    deserialize<T>(response: Response, context: DeserializeBodyContext): Promise<T>
+    deserialize<T>(body: ResponseBodyReader, contentType: string | null): Promise<T>
 }
 
 /**
@@ -189,9 +144,8 @@ export interface BodyCodec {
  * ```
  */
 export const jsonBodyCodec: BodyCodec = {
-    contentType: 'application/json',
     serialize: (value) => JSON.stringify(value),
-    deserialize: (response) => response.json(),
+    deserialize: (body) => new Response(body).json(),
 }
 
 /**
@@ -325,10 +279,6 @@ export interface FetchTransportOptions {
     bodyCodec?: BodyCodec
 }
 
-function hasHeader(headers: Headers, name: string): boolean {
-    return headers.has(name)
-}
-
 function mergeHeaders(...sources: Array<HeadersInit | undefined>): Headers {
     const headers = new Headers()
     for (const source of sources) {
@@ -394,16 +344,9 @@ export class FetchTransport implements ClientTransport {
         const headers = mergeHeaders(providedHeaders, init.headers)
 
         if (Object.hasOwn(request, 'body')) {
-            const body = codec.serialize(request.body, {
-                routeId: request.routeId,
-                url: request.url,
-                init,
-            })
+            const body = codec.serialize(request.body)
             if (body != null) {
                 init.body = body
-            }
-            if (codec.contentType && !hasHeader(headers, 'content-type')) {
-                headers.set('content-type', codec.contentType)
             }
         }
 
@@ -419,12 +362,7 @@ export class FetchTransport implements ClientTransport {
             status: response.status,
             headers: response.headers,
             parseBody: () =>
-                codec.deserialize<TResponse>(response.clone(), {
-                    routeId: request.routeId,
-                    url: request.url,
-                    status: response.status,
-                    contentType: response.headers.get('content-type'),
-                }),
+                codec.deserialize<TResponse>(response.body, response.headers.get('content-type')),
         }
     }
 }

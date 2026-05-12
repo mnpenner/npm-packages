@@ -23,7 +23,7 @@ class FakeTransport implements ClientTransport {
             response,
             status: response.status,
             headers: response.headers,
-            parseBody: () => response.clone().json() as Promise<TResponse>,
+            parseBody: () => new Response(response.body).json() as Promise<TResponse>,
         })
     }
 }

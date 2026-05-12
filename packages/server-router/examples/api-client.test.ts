@@ -15,10 +15,13 @@ describe('api-client.gen', () => {
         const calls: FetchCall[] = []
         const client = new ApiClient(
             new FetchTransport({
-                fetch(url, init) {
+                async fetch(url, init) {
                     const href = String(url)
                     calls.push({ url: href, init })
-                    return router.fetch(new Request(new URL(href, 'https://example.org'), init))
+                    const response = await router.fetch(
+                        new Request(new URL(href, 'https://example.org'), init),
+                    )
+                    return new Response(await response.arrayBuffer(), response)
                 },
             }),
         )
@@ -38,6 +41,7 @@ describe('api-client.gen', () => {
         const booksResponse = await client.booksById.post({
             path: 123,
             body: { title: 'foo', author: 'bar' },
+            headers: { 'content-type': 'application/json' },
         })
         const booksResponseData = await booksResponse.parseBody()
         expectType<
@@ -57,7 +61,10 @@ describe('api-client.gen', () => {
         expectType<TypeEqual<typeof jsonHelperData, { message: string }>>(true)
         expect(jsonHelperData).toEqual({ message: 'Hello Json Helper!' })
 
-        const jsonHelperZodResponse = await client.jsonHelperZod.post({ body: { tag: 'alpha' } })
+        const jsonHelperZodResponse = await client.jsonHelperZod.post({
+            body: { tag: 'alpha' },
+            headers: { 'content-type': 'application/json' },
+        })
         const jsonHelperZodData = await jsonHelperZodResponse.parseBody()
         expectType<TypeEqual<typeof jsonHelperZodData, { ok: boolean; tag: string }>>(true)
         expect(jsonHelperZodData).toEqual({ ok: true, tag: 'alpha' })
@@ -117,16 +124,17 @@ describe('api-client.gen', () => {
 
     it('supports custom body codecs', async () => {
         const codec: BodyCodec = {
-            contentType: 'application/x-test-json',
             serialize: (value) => `wrapped:${JSON.stringify(value)}`,
-            deserialize: async (response) => ({
-                raw: await response.text(),
+            deserialize: async (body, contentType) => ({
+                contentType,
+                raw: await new Response(body).text(),
             }),
         }
         const calls: FetchCall[] = []
         const client = new ApiClient(
             new FetchTransport({
                 bodyCodec: codec,
+                headers: { 'content-type': 'application/x-test-json' },
                 fetch(url, init) {
                     const href = String(url)
                     calls.push({ url: href, init })
@@ -137,7 +145,7 @@ describe('api-client.gen', () => {
 
         const response = await client.jsonHelperZod.post({ body: { tag: 'alpha' } })
 
-        expect(await response.parseBody()).toEqual({ raw: 'ok' })
+        expect(await response.parseBody()).toEqual({ contentType: null, raw: 'ok' })
         expect(calls).toEqual([
             {
                 url: '/json-helper-zod',

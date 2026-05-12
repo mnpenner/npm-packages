@@ -4,5 +4,6 @@
         "lib": ["ESNext"],
         "types": ["bun-types"]
     },
+    "include": ["**/*.ts"],
     "exclude": ["src/client"]
 }
