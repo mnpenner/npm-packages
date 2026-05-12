@@ -3,7 +3,7 @@ import { describe, expect, it } from 'bun:test'
 import { ApiClient } from './api-client.gen'
 import router from './router-instance'
 import { expectType, type TypeEqual } from '@mpen/ts-types'
-import { FetchTransport, type BodyCodec } from '@mpen/server-router/client'
+import { FetchTransport, type BodyCodec, type ResponseBodyReader } from '@mpen/server-router/client'
 
 type FetchCall = {
     url: string
@@ -17,9 +17,9 @@ describe('api-client.gen', () => {
             new FetchTransport({
                 async fetch(url, init) {
                     const href = String(url)
-                    calls.push({ url: href, init })
+                    calls.push({ url: href, init: init ?? {} })
                     const response = await router.fetch(
-                        new Request(new URL(href, 'https://example.org'), init),
+                        new Request(new URL(href, 'https://example.org').toString(), init),
                     )
                     return new Response(await response.arrayBuffer(), response)
                 },
@@ -125,10 +125,11 @@ describe('api-client.gen', () => {
     it('supports custom body codecs', async () => {
         const codec: BodyCodec = {
             serialize: (value) => `wrapped:${JSON.stringify(value)}`,
-            deserialize: async (body, contentType) => ({
-                contentType,
-                raw: await new Response(body).text(),
-            }),
+            deserialize: async <T>(body: ResponseBodyReader, contentType: string | null) =>
+                ({
+                    contentType,
+                    raw: await new Response(body).text(),
+                }) as T,
         }
         const calls: FetchCall[] = []
         const client = new ApiClient(
@@ -137,7 +138,7 @@ describe('api-client.gen', () => {
                 headers: { 'content-type': 'application/x-test-json' },
                 fetch(url, init) {
                     const href = String(url)
-                    calls.push({ url: href, init })
+                    calls.push({ url: href, init: init ?? {} })
                     return Promise.resolve(new Response('ok'))
                 },
             }),
@@ -145,7 +146,7 @@ describe('api-client.gen', () => {
 
         const response = await client.jsonHelperZod.post({ body: { tag: 'alpha' } })
 
-        expect(await response.parseBody()).toEqual({ contentType: null, raw: 'ok' })
+        expect((await response.parseBody()) as unknown).toEqual({ contentType: null, raw: 'ok' })
         expect(calls).toEqual([
             {
                 url: '/json-helper-zod',

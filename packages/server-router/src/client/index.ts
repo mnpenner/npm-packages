@@ -192,7 +192,7 @@ export interface BodyCodec {
  */
 export const jsonBodyCodec: BodyCodec = {
     serialize: (value) => JSON.stringify(value),
-    deserialize: (body) => new Response(body).json(),
+    deserialize: async <T>(body: ResponseBodyReader) => (await new Response(body).json()) as T,
 }
 
 /**
@@ -213,8 +213,6 @@ export interface ClientCallOptions {
     headers?: HeadersInit
     /** Abort signal for this call. */
     signal?: AbortSignal
-    /** Body codec override for this call. */
-    bodyCodec?: BodyCodec
     /** Additional request init fields for this call. */
     init?: Omit<RequestInit, 'body' | 'headers' | 'method' | 'signal'>
 }
@@ -225,7 +223,6 @@ export interface ClientCallOptions {
  * @example
  * ```ts
  * const request: ClientRequest<{ name: string }> = {
- *     routeId: 'postWidgets',
  *     url: '/widgets',
  *     init: { method: 'POST' },
  *     body: { name: 'demo' },
@@ -235,16 +232,12 @@ export interface ClientCallOptions {
  * @typeParam TBody - The generated request body type.
  */
 export interface ClientRequest<TBody = unknown> {
-    /** The generated route identifier, such as `postWidgetsById`. */
-    routeId: string
     /** The URL path generated for the route. */
     url: string
     /** Fetch-compatible request initialization. */
     init: RequestInit
     /** The unencoded request body value. */
     body?: TBody
-    /** Body codec override for this request. */
-    bodyCodec?: BodyCodec
 }
 
 /**
@@ -278,14 +271,11 @@ export interface ClientTransport {
  *
  * @example
  * ```ts
- * const headers = (context: ClientHeaderContext) => ({
- *     'x-route-id': context.routeId,
- * })
+ * const headers = (context: ClientHeaderContext) =>
+ *     context.url.startsWith('/admin') ? { authorization: `Bearer ${token}` } : undefined
  * ```
  */
 export interface ClientHeaderContext {
-    /** The generated route identifier, such as `postWidgetsById`. */
-    routeId: string
     /** The request URL before base URL resolution. */
     url: string
     /** The request init object before execution. */
@@ -383,9 +373,9 @@ export class FetchTransport implements ClientTransport {
     async request<TResponse, TBody = unknown>(
         request: ClientRequest<TBody>,
     ): ApiTransportResponsePromise<TResponse> {
-        const codec = request.bodyCodec ?? this.#bodyCodec
+        const codec = this.#bodyCodec
         const init: RequestInit = { ...request.init }
-        const headerContext = { routeId: request.routeId, url: request.url, init }
+        const headerContext = { url: request.url, init }
         const providedHeaders =
             typeof this.#headers === 'function' ? await this.#headers(headerContext) : this.#headers
         const headers = mergeHeaders(providedHeaders, init.headers)

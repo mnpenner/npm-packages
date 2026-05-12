@@ -134,10 +134,6 @@ function upperFirst(str: string): string {
     return str.slice(0, 1).toUpperCase() + str.slice(1)
 }
 
-function lowerFirst(str: string): string {
-    return str.slice(0, 1).toLowerCase() + str.slice(1)
-}
-
 function patternToUrlTemplate(routePath: string, pathVar = 'path'): string {
     const templated = routePath.replace(
         /:([a-zA-Z0-9_]+)/g,
@@ -331,7 +327,6 @@ function buildMethodLines(
     lines.push(
         `${indent}    return ${shouldResolveApiResponse ? `${resolverExpression}(` : ''}${requestExpression}({`,
     )
-    lines.push(`${indent}        routeId: ${JSON.stringify(lowerFirst(route.typeBase))},`)
     lines.push(`${indent}        url: ${finalUrlExpr},`)
     lines.push(`${indent}        init: {`)
     lines.push(`${indent}            ...callOptions.init,`)
@@ -342,7 +337,6 @@ function buildMethodLines(
     if (bodyType) {
         lines.push(`${indent}        body,`)
     }
-    lines.push(`${indent}        bodyCodec: callOptions.bodyCodec,`)
     if (shouldResolveApiResponse) {
         lines.push(`${indent}    }))`)
     } else {
