@@ -6,7 +6,12 @@ import { parseArgs, type ParseArgsConfig } from 'node:util'
 import { readPackageDirNames, readPackageNameDirMap } from './lib/package-dirs'
 
 const PARSE_CONFIG = {
-    options: {},
+    options: {
+        fix: {
+            type: 'boolean',
+            default: false,
+        },
+    },
     strict: false,
     allowPositionals: true,
 } satisfies ParseArgsConfig
@@ -14,18 +19,21 @@ const PARSE_CONFIG = {
 /**
  * Runs test, lint, and typecheck for the entire repo or specific packages/paths.
  */
-async function main(_options: Options, positionals: Positionals): Promise<number | void> {
+async function main(options: Options, positionals: Positionals): Promise<number | void> {
+    const fix = options.fix === true
     const packagesDir = 'packages'
     const packageDirs = await readPackageDirNames()
     const packageNamesMap = await readPackageNameDirMap()
 
     if (positionals.length === 0) {
-        console.log('Running full check (test, lint, typecheck, format)...')
+        console.log(`Running full check (test, lint${fix ? ' --fix' : ''}, typecheck, format)...`)
         // Run in parallel for full check to match existing behavior of 'bun run check'
         const testPromise = $`bun run test:unit`.nothrow()
-        const lintPromise = $`bun run lint .`.nothrow()
+        const lintPromise = fix ? $`bun run lint . --fix`.nothrow() : $`bun run lint .`.nothrow()
         const typecheckPromise = $`bun run typecheck`.nothrow()
-        const formatPromise = $`bun run check-format`.nothrow()
+        const formatPromise = fix
+            ? $`bun run --bun prettier . --write`.nothrow()
+            : $`bun run check-format`.nothrow()
 
         const [testRes, lintRes, typeRes, formatRes] = await Promise.all([
             testPromise,
@@ -88,11 +96,15 @@ async function main(_options: Options, positionals: Positionals): Promise<number
     }
 
     console.log('\n--- Linting ---')
-    const lintRes = await $`bun run lint ${Array.from(lintTargets)}`.nothrow()
+    const lintRes = fix
+        ? await $`bun run lint ${Array.from(lintTargets)} --fix`.nothrow()
+        : await $`bun run lint ${Array.from(lintTargets)}`.nothrow()
     if (lintRes.exitCode !== 0) failed = true
 
     console.log('\n--- Formatting ---')
-    const formatRes = await $`bun run --bun prettier ${Array.from(lintTargets)} --check`.nothrow()
+    const formatRes = fix
+        ? await $`bun run --bun prettier ${Array.from(lintTargets)} --write`.nothrow()
+        : await $`bun run --bun prettier ${Array.from(lintTargets)} --check`.nothrow()
     if (formatRes.exitCode !== 0) failed = true
 
     if (targetPackages.size > 0 || positionals.length > 0) {
