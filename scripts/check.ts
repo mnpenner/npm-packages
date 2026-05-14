@@ -16,10 +16,22 @@ const PARSE_CONFIG = {
     allowPositionals: true,
 } satisfies ParseArgsConfig
 
+function enableChildProcessColors(): void {
+    if (process.env.FORCE_COLOR !== undefined || process.env.NO_COLOR !== undefined) {
+        return
+    }
+
+    if (chalk.level > 0) {
+        process.env.FORCE_COLOR = String(chalk.level)
+    }
+}
+
 /**
  * Runs test, lint, and typecheck for the entire repo or specific packages/paths.
  */
 async function main(options: Options, positionals: Positionals): Promise<number | void> {
+    enableChildProcessColors()
+
     const fix = options.fix === true
     const packagesDir = 'packages'
     const packageDirs = await readPackageDirNames()
