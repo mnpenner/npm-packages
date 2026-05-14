@@ -2,8 +2,7 @@
     "extends": "../../tsconfig.json",
     "compilerOptions": {
         "jsx": "react-jsx",
-        "lib": ["DOM", "DOM.Iterable", "ESNext"],
-        "types": ["react", "react-dom"]
+        "lib": ["DOM", "DOM.Iterable", "ESNext"]
     },
     "include": ["src/**/*", "examples/**/*.ts", "examples/**/*.tsx"],
     "exclude": ["**/*.test.*", "cli/**/*", "examples/dist/**/*", "examples/server/**/*"]
