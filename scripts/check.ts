@@ -26,14 +26,37 @@ async function main(options: Options, positionals: Positionals): Promise<number 
     const packageNamesMap = await readPackageNameDirMap()
 
     if (positionals.length === 0) {
-        console.log(`Running full check (test, lint${fix ? ' --fix' : ''}, typecheck, format)...`)
+        console.log(
+            `Running full check (test, lint${fix ? ' --fix' : ''}, typecheck, format${fix ? ' --write' : ''})...`,
+        )
+
+        if (fix) {
+            let failed = false
+
+            console.log('\n--- Linting ---')
+            const lintRes = await $`bun run lint . --fix`.nothrow()
+            if (lintRes.exitCode !== 0) failed = true
+
+            console.log('\n--- Formatting ---')
+            const formatRes = await $`bun run --bun prettier . --write`.nothrow()
+            if (formatRes.exitCode !== 0) failed = true
+
+            console.log('\n--- Typechecking ---')
+            const typeRes = await $`bun run typecheck`.nothrow()
+            if (typeRes.exitCode !== 0) failed = true
+
+            console.log('\n--- Testing ---')
+            const testRes = await $`bun run test:unit`.nothrow()
+            if (testRes.exitCode !== 0) failed = true
+
+            return failed ? 1 : 0
+        }
+
         // Run in parallel for full check to match existing behavior of 'bun run check'
         const testPromise = $`bun run test:unit`.nothrow()
-        const lintPromise = fix ? $`bun run lint . --fix`.nothrow() : $`bun run lint .`.nothrow()
+        const lintPromise = $`bun run lint .`.nothrow()
         const typecheckPromise = $`bun run typecheck`.nothrow()
-        const formatPromise = fix
-            ? $`bun run --bun prettier . --write`.nothrow()
-            : $`bun run check-format`.nothrow()
+        const formatPromise = $`bun run check-format`.nothrow()
 
         const [testRes, lintRes, typeRes, formatRes] = await Promise.all([
             testPromise,

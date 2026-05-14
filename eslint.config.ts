@@ -7,15 +7,7 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import unusedImports from 'eslint-plugin-unused-imports'
-
-const ignoredPackages = [
-    'yamake',
-    'svg-to-react-webpack-loader',
-    'rollup-plugins',
-    'react-datepicker',
-    'react-combobox',
-    'packdb',
-]
+import { toolIgnoreGlobs } from './scripts/lib/tool-ignores.ts'
 
 const jsAndTsFiles = ['**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx}']
 const tsFiles = ['**/*.{ts,cts,mts,tsx}']
@@ -85,26 +77,7 @@ const serverPackageFiles = [
 const reactHooksPlugin = reactHooks as unknown as ESLintTypes.Plugin
 
 export default defineConfig([
-    globalIgnores([
-        ...ignoredPackages.map((p) => `packages/${p}/`),
-        '**/.*',
-        '**/dist/',
-        '**/docs/',
-        '**/ai/',
-        '**/prompts/',
-        '**/example/',
-        '**/examples/',
-        '**/node_modules/',
-        '**/experimental/',
-        '**/*.gen.*',
-        'packages/bun-plugin-react-compiler/test/',
-        'packages/ouid/src/timer-test*.mjs',
-        'packages/ouid/test/test.js',
-        'eslint-examples/',
-        'scratch/',
-        'templates/',
-        'deprecated/',
-    ]),
+    globalIgnores(toolIgnoreGlobs),
     {
         name: 'global/recommended',
         files: jsAndTsFiles,
@@ -126,7 +99,7 @@ export default defineConfig([
             },
         },
         rules: {
-            'require-await': 'off',  // Forcing Promise<> return type is usually WAI
+            'require-await': 'off', // Forcing Promise<> return type is usually WAI
             'prefer-const': ['warn', { destructuring: 'all' }],
             'no-control-regex': 'off',
             'prefer-rest-params': 'off',
