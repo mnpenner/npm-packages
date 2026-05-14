@@ -1,7 +1,8 @@
 export { ZodRouteFactory } from './factory'
-export { zodHandler, zodPartial, zodRoute, ValidationError } from './zod'
+export { withZod, zodHandler, zodPartial, zodRoute, ValidationError } from './zod'
 export type {
     ValidationErrorHandler,
+    WithZodOptions,
     ZodHandlerContext,
     ZodHandlerOptions,
     ZodHandlerParams,

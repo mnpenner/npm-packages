@@ -4,7 +4,8 @@ import { HttpMethod, HttpStatus } from '@mpen/http-helpers'
 import { z } from 'zod'
 import { Router } from '../router'
 import { expectType } from '@mpen/ts-types'
-import { ValidationError, ZodRouteFactory, zodHandler, zodPartial, zodRoute } from './zod'
+import { jsonResponse } from '../response'
+import { ValidationError, withZod, ZodRouteFactory, zodHandler, zodPartial, zodRoute } from './zod'
 
 describe('zodHandler', () => {
     it('parses and supplies validated inputs to the handler', async () => {
@@ -273,7 +274,85 @@ describe('zodRoute', () => {
     })
 })
 
+describe('withZod', () => {
+    it('returns route options for method-specific router helpers', async () => {
+        const router = new Router()
+        router.post(
+            '/users/:id',
+            withZod({
+                name: 'user.update',
+                schema: {
+                    request: {
+                        path: z.object({ id: z.coerce.number().int() }),
+                        body: z.object({ name: z.string() }),
+                    },
+                    response: {
+                        body: {
+                            200: z.object({ id: z.number().int(), name: z.string() }),
+                        },
+                    },
+                },
+                validateResponse: true,
+                handler: ({ params }) =>
+                    jsonResponse({ id: params.path.id, name: params.body.name }),
+            }),
+        )
+
+        const response = await router.fetch(
+            new Request('https://example.com/users/123', {
+                method: HttpMethod.POST,
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ name: 'Ada' }),
+            }),
+        )
+
+        expect(response.status).toBe(HttpStatus.OK)
+        expect(await response.json()).toEqual({ id: 123, name: 'Ada' })
+        expect(router.getRoutes()[0]?.name).toEqual(['user', 'update'])
+        expect(router.getRoutes()[0]?.method).toBe(HttpMethod.POST)
+        expect(router.getRoutes()[0]?.schema?.request?.path).toEqual({
+            type: 'object',
+            properties: {
+                id: {
+                    type: 'integer',
+                    minimum: -9007199254740991,
+                    maximum: 9007199254740991,
+                },
+            },
+            required: ['id'],
+            additionalProperties: false,
+        })
+    })
+})
+
 describe('ZodRouteFactory', () => {
+    it('builds method-specific route options with factory defaults', async () => {
+        const factory = new ZodRouteFactory({
+            validateResponse: false,
+            validationError: () =>
+                new Response('factory bad input', { status: HttpStatus.BAD_REQUEST }),
+        })
+        const router = new Router()
+        router.get(
+            '/factory-with-zod/:id',
+            factory.withZod({
+                schema: {
+                    request: {
+                        path: z.object({ id: z.string().uuid() }),
+                    },
+                },
+                handler: () => new Response('ok'),
+            }),
+        )
+
+        const response = await router.fetch(
+            new Request('https://example.com/factory-with-zod/not-a-uuid'),
+        )
+
+        expect(response.status).toBe(HttpStatus.BAD_REQUEST)
+        expect(await response.text()).toBe('factory bad input')
+    })
+
     it('applies factory defaults and allows per-route overrides', async () => {
         const factory = new ZodRouteFactory({
             validateResponse: false,

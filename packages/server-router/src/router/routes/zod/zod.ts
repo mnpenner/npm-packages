@@ -8,6 +8,7 @@ import type {
     JsonObjectSchema,
     JsonSchema,
     Route,
+    RouteOptions,
     RouteSchema,
 } from '../../types'
 import { z } from 'zod'
@@ -184,6 +185,14 @@ export type ZodRouteOptions<
     Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
     Ctx extends object = AnyContext,
 > = Omit<Route<Ctx>, 'handler' | 'schema'> & ZodHandlerOptions<Schema, Ctx>
+
+/**
+ * Method-specific route options used by `withZod`.
+ */
+export type WithZodOptions<
+    Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
+    Ctx extends object = AnyContext,
+> = Omit<RouteOptions<Ctx>, 'handler' | 'schema'> & ZodHandlerOptions<Schema, Ctx>
 
 type ResolvedZodHandlerOptions<
     Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
@@ -555,6 +564,44 @@ export function zodPartial<
     return {
         handler: zodHandler(options),
         ...(schema ? { schema } : {}),
+    }
+}
+
+/**
+ * Build method-specific route options that validate inputs with Zod and expose JSON Schema metadata.
+ *
+ * @example
+ * ```ts
+ * router.post('/users/:id', withZod({
+ *   name: 'user.update',
+ *   schema: {
+ *     request: {
+ *       path: z.object({id: z.string()}),
+ *       body: z.object({name: z.string()}),
+ *     },
+ *   },
+ *   handler: ({params}) => ({id: params.path.id, name: params.body.name}),
+ * }))
+ * ```
+ *
+ * @param options - Method route options extended with Zod request and response schemas.
+ * @returns Route options compatible with method-specific router helpers.
+ */
+export function withZod<
+    Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
+    Ctx extends object = AnyContext,
+>(options: WithZodOptions<Schema, Ctx>): RouteOptions<Ctx> {
+    const { schema, handler, validationError, validateResponse, ...routeOptions } = options
+    const partial = zodPartial<Schema, Ctx>({
+        ...(schema ? { schema } : {}),
+        handler,
+        ...(validationError ? { validationError } : {}),
+        ...(validateResponse === undefined ? {} : { validateResponse }),
+    })
+    return {
+        ...routeOptions,
+        handler: partial.handler,
+        ...(partial.schema ? { schema: partial.schema } : {}),
     }
 }
 

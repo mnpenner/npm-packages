@@ -1,15 +1,14 @@
 import { Router, jsonResponse } from '@mpen/server-router'
-import { zodRoute } from '@mpen/server-router/routes'
+import { withZod } from '@mpen/server-router/routes'
 import { z } from 'zod'
-import { CommonHeaders, CommonContentTypes, HttpMethod, HttpStatus } from '@mpen/http-helpers'
+import { CommonHeaders, CommonContentTypes, HttpStatus } from '@mpen/http-helpers'
 
 export const router = new Router()
 const helloResponseSchema = z.object({ message: z.string() })
 
-router.add(
-    zodRoute({
-        path: '/',
-        method: HttpMethod.GET,
+router.get(
+    '/',
+    withZod({
         schema: {
             response: {
                 body: {
@@ -21,11 +20,10 @@ router.add(
     }),
 )
 
-router.add(
-    zodRoute({
+router.get(
+    '/name/bar',
+    withZod({
         name: 'namedRoute',
-        path: '/name/bar',
-        method: HttpMethod.GET,
         schema: {
             response: {
                 body: {
@@ -37,11 +35,10 @@ router.add(
     }),
 )
 
-router.add(
-    zodRoute({
+router.post(
+    '/name/bar',
+    withZod({
         name: 'namedRoute',
-        path: '/name/bar',
-        method: HttpMethod.POST,
         schema: {
             response: {
                 body: {
@@ -53,11 +50,10 @@ router.add(
     }),
 )
 
-router.add(
-    zodRoute({
+router.post(
+    '/foo/bar',
+    withZod({
         name: 'foo.bar',
-        path: '/foo/bar',
-        method: HttpMethod.POST,
         schema: {
             response: {
                 body: {
@@ -69,10 +65,9 @@ router.add(
     }),
 )
 
-router.add(
-    zodRoute({
-        path: '/books/:id',
-        method: HttpMethod.POST,
+router.post(
+    '/books/:id',
+    withZod({
         schema: {
             request: {
                 path: z.object({ id: z.coerce.number().int() }),
@@ -97,11 +92,10 @@ router.add(
     }),
 )
 
-router.add(
-    zodRoute({
+router.get(
+    '/json-helper',
+    withZod({
         name: 'jsonHelper',
-        path: '/json-helper',
-        method: HttpMethod.GET,
         schema: {
             response: {
                 body: {
@@ -113,11 +107,10 @@ router.add(
     }),
 )
 
-router.add(
-    zodRoute({
+router.post(
+    '/json-helper-zod',
+    withZod({
         name: 'jsonHelperZod',
-        path: '/json-helper-zod',
-        method: HttpMethod.POST,
         schema: {
             request: {
                 body: z.object({ tag: z.string() }),
@@ -150,7 +143,6 @@ function sleep(ms: number): Promise<void> {
 
 router.add({
     path: '/gen',
-    // method: HttpMethod.GET,
     handler: async function* () {
         // console.log('start')
         yield HttpStatus.OK

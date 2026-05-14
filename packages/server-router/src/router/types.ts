@@ -164,6 +164,23 @@ export interface Route<Ctx extends object = AnyContext> {
 }
 
 /**
+ * Route definition fields accepted by method-specific router helpers.
+ *
+ * @example
+ * ```ts
+ * const options: RouteOptions = {
+ *   name: 'user.detail',
+ *   handler: async ({req}) => new Response(req.url),
+ * }
+ * router.get('/users/:id', options)
+ * ```
+ */
+export type RouteOptions<Ctx extends object = AnyContext> = Omit<
+    Route<Ctx>,
+    'method' | 'path' | 'pattern'
+>
+
+/**
  * Normalized route metadata used internally by the router.
  *
  * @example

@@ -15,6 +15,7 @@ import type {
     NormalizedRoute,
     RequestContext,
     Route,
+    RouteOptions,
 } from './types'
 import { simpleStatus } from './response/simple'
 
@@ -47,6 +48,8 @@ type AddedContextFromList<List extends readonly unknown[]> = List extends readon
     ? AddedContextOf<First> & AddedContextFromList<Rest>
     : {}
 
+type MethodRouteInput<Ctx extends object> = Handler<any, Ctx> | RouteOptions<Ctx>
+
 function normalizeMiddlewareList<Ctx extends object>(
     middleware: ContextMiddleware<any, Ctx> | MiddlewareList<Ctx> | null | undefined | false,
 ): ContextMiddleware<any, Ctx>[] {
@@ -55,6 +58,10 @@ function normalizeMiddlewareList<Ctx extends object>(
         return middleware.filter(Boolean) as ContextMiddleware<any, Ctx>[]
     }
     return [middleware as ContextMiddleware<any, Ctx>]
+}
+
+function isHandler<Ctx extends object>(input: MethodRouteInput<Ctx>): input is Handler<any, Ctx> {
+    return typeof input === 'function'
 }
 
 /**
@@ -318,70 +325,136 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         return this
     }
 
+    private _addMethod(
+        method: HttpMethod,
+        path: NonNullable<Route<Ctx>['path']>,
+        input: MethodRouteInput<Ctx>,
+    ): this {
+        return this.add({
+            ...(isHandler(input) ? { handler: input } : input),
+            path,
+            method,
+        })
+    }
+
+    /**
+     * Add a GET route handler to this router.
+     *
+     * @param path - URL path pattern to match.
+     * @param handler - Handler invoked when the route matches.
+     * @returns The router instance for chaining.
+     */
+    get(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, Ctx>): this
     /**
      * Add a GET route definition to this router.
      *
      * @param path - URL path pattern to match.
+     * @param options - Route options registered with the GET method.
+     * @returns The router instance for chaining.
+     */
+    get(path: NonNullable<Route<Ctx>['path']>, options: RouteOptions<Ctx>): this
+    get(path: NonNullable<Route<Ctx>['path']>, input: MethodRouteInput<Ctx>): this {
+        return this._addMethod(HttpMethod.GET, path, input)
+    }
+
+    /**
+     * Add a HEAD route handler to this router.
+     *
+     * @param path - URL path pattern to match.
      * @param handler - Handler invoked when the route matches.
      * @returns The router instance for chaining.
      */
-    get(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, Ctx>): this {
-        return this.add({ path, handler, method: HttpMethod.GET })
-    }
-
+    head(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, Ctx>): this
     /**
      * Add a HEAD route definition to this router.
      *
      * @param path - URL path pattern to match.
+     * @param options - Route options registered with the HEAD method.
+     * @returns The router instance for chaining.
+     */
+    head(path: NonNullable<Route<Ctx>['path']>, options: RouteOptions<Ctx>): this
+    head(path: NonNullable<Route<Ctx>['path']>, input: MethodRouteInput<Ctx>): this {
+        return this._addMethod(HttpMethod.HEAD, path, input)
+    }
+
+    /**
+     * Add a POST route handler to this router.
+     *
+     * @param path - URL path pattern to match.
      * @param handler - Handler invoked when the route matches.
      * @returns The router instance for chaining.
      */
-    head(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, Ctx>): this {
-        return this.add({ path, handler, method: HttpMethod.HEAD })
-    }
-
+    post(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, Ctx>): this
     /**
      * Add a POST route definition to this router.
      *
      * @param path - URL path pattern to match.
+     * @param options - Route options registered with the POST method.
+     * @returns The router instance for chaining.
+     */
+    post(path: NonNullable<Route<Ctx>['path']>, options: RouteOptions<Ctx>): this
+    post(path: NonNullable<Route<Ctx>['path']>, input: MethodRouteInput<Ctx>): this {
+        return this._addMethod(HttpMethod.POST, path, input)
+    }
+
+    /**
+     * Add a PUT route handler to this router.
+     *
+     * @param path - URL path pattern to match.
      * @param handler - Handler invoked when the route matches.
      * @returns The router instance for chaining.
      */
-    post(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, Ctx>): this {
-        return this.add({ path, handler, method: HttpMethod.POST })
-    }
-
+    put(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, Ctx>): this
     /**
      * Add a PUT route definition to this router.
      *
      * @param path - URL path pattern to match.
+     * @param options - Route options registered with the PUT method.
+     * @returns The router instance for chaining.
+     */
+    put(path: NonNullable<Route<Ctx>['path']>, options: RouteOptions<Ctx>): this
+    put(path: NonNullable<Route<Ctx>['path']>, input: MethodRouteInput<Ctx>): this {
+        return this._addMethod(HttpMethod.PUT, path, input)
+    }
+
+    /**
+     * Add a DELETE route handler to this router.
+     *
+     * @param path - URL path pattern to match.
      * @param handler - Handler invoked when the route matches.
      * @returns The router instance for chaining.
      */
-    put(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, Ctx>): this {
-        return this.add({ path, handler, method: HttpMethod.PUT })
-    }
-
+    delete(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, Ctx>): this
     /**
      * Add a DELETE route definition to this router.
      *
      * @param path - URL path pattern to match.
-     * @param handler - Handler invoked when the route matches.
+     * @param options - Route options registered with the DELETE method.
      * @returns The router instance for chaining.
      */
-    delete(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, Ctx>): this {
-        return this.add({ path, handler, method: HttpMethod.DELETE })
+    delete(path: NonNullable<Route<Ctx>['path']>, options: RouteOptions<Ctx>): this
+    delete(path: NonNullable<Route<Ctx>['path']>, input: MethodRouteInput<Ctx>): this {
+        return this._addMethod(HttpMethod.DELETE, path, input)
     }
 
     /**
-     * Add a PATCH route definition to this router.
+     * Add a PATCH route handler to this router.
      *
      * @param path - URL path pattern to match.
      * @param handler - Handler invoked when the route matches.
      * @returns The router instance for chaining.
      */
-    patch(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, Ctx>): this {
-        return this.add({ path, handler, method: HttpMethod.PATCH })
+    patch(path: NonNullable<Route<Ctx>['path']>, handler: Handler<any, Ctx>): this
+    /**
+     * Add a PATCH route definition to this router.
+     *
+     * @param path - URL path pattern to match.
+     * @param options - Route options registered with the PATCH method.
+     * @returns The router instance for chaining.
+     */
+    patch(path: NonNullable<Route<Ctx>['path']>, options: RouteOptions<Ctx>): this
+    patch(path: NonNullable<Route<Ctx>['path']>, input: MethodRouteInput<Ctx>): this {
+        return this._addMethod(HttpMethod.PATCH, path, input)
     }
 
     /**

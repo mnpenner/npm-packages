@@ -1,11 +1,12 @@
-import type { AnyContext, Handler, Route, RouteSchema } from '../../types'
+import type { AnyContext, Handler, Route, RouteOptions, RouteSchema } from '../../types'
 import type {
+    WithZodOptions,
     ZodHandlerOptions,
     ZodRouteHelperDefaults,
     ZodRouteOptions,
     ZodRouteSchemaInput,
 } from './zod'
-import { zodHandler, zodPartial, zodRoute } from './zod'
+import { withZod, zodHandler, zodPartial, zodRoute } from './zod'
 
 /**
  * Reusable factory for Zod-backed handlers and routes with shared defaults.
@@ -23,8 +24,7 @@ import { zodHandler, zodPartial, zodRoute } from './zod'
  *   validateResponse: false,
  * })
  *
- * router.add(factory.route({
- *   path: '/users/:id',
+ * router.get('/users/:id', factory.withZod({
  *   schema: {
  *     request: {
  *       path: z.object({id: z.string()}),
@@ -105,6 +105,20 @@ export class ZodRouteFactory {
         }
     }
 
+    private _mergeWithZodOptions<
+        Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
+        Ctx extends object,
+    >(
+        options: WithZodOptions<Schema, Ctx>,
+    ): WithZodOptions<ZodRouteSchemaInput<any, any, any, any>, Ctx> {
+        const schema = this._mergeSchema(options.schema)
+        return {
+            ...this._defaults,
+            ...options,
+            ...(schema === undefined ? {} : { schema }),
+        }
+    }
+
     /**
      * Build a validated handler using the factory defaults.
      *
@@ -131,6 +145,19 @@ export class ZodRouteFactory {
         options: ZodHandlerOptions<Schema, Ctx>,
     ): { handler: Handler<any, Ctx>; schema?: RouteSchema } {
         return zodPartial(this._mergeHandlerOptions(options))
+    }
+
+    /**
+     * Build method-specific route options using the factory defaults.
+     *
+     * @param options - Per-route options that override the factory defaults.
+     * @returns Route options compatible with method-specific router helpers.
+     */
+    withZod<
+        Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
+        Ctx extends object = AnyContext,
+    >(options: WithZodOptions<Schema, Ctx>): RouteOptions<Ctx> {
+        return withZod(this._mergeWithZodOptions(options))
     }
 
     /**

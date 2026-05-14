@@ -15,8 +15,12 @@ export type {
     Route,
     RouteMatch,
     RouteMeta,
+    RouteOptions,
     RoutePath,
     RouteSchema,
 } from './router/types'
-export type { UniversalFetchResult, UniversalServerInterface } from './router/UniversalServerInterface'
+export type {
+    UniversalFetchResult,
+    UniversalServerInterface,
+} from './router/UniversalServerInterface'
 export type { UniversalExecutionContext } from './router/UniversalServerInterface'

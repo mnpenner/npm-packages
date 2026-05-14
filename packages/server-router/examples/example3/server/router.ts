@@ -1,4 +1,4 @@
-import { CommonContentTypes, HttpMethod, HttpStatus } from '@mpen/http-helpers'
+import { CommonContentTypes, HttpStatus } from '@mpen/http-helpers'
 import { Router, type ContextMiddleware } from '@mpen/server-router'
 import { ValidationError, ZodRouteFactory } from '@mpen/server-router/routes'
 import { z } from 'zod'
@@ -94,11 +94,10 @@ const factory = new ZodRouteFactory({
     },
 })
 
-router.add(
-    factory.route({
+router.post(
+    '/widgets/:id',
+    factory.withZod({
         name: 'widgets.byId',
-        path: '/widgets/:id',
-        method: HttpMethod.POST,
         schema: {
             request: {
                 path: z.object({ id: z.coerce.number().int().positive() }),
