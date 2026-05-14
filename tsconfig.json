@@ -54,9 +54,7 @@
             "@mpen/server-router/middleware": [
                 "./packages/server-router/src/router/middleware/index.ts"
             ],
-            "@mpen/server-router/routes": [
-                "./packages/server-router/src/router/routes/index.ts"
-            ],
+            "@mpen/server-router/routes": ["./packages/server-router/src/router/routes/index.ts"],
             "@mpen/server-router-zod-neverject": [
                 "./packages/rerouter/experimental/server-router-zod-neverject/src/index.ts"
             ],

@@ -20,6 +20,7 @@ export const toolIgnoreGlobs = [
     'packages/rollup-plugins/',
     'packages/svg-to-react-webpack-loader/',
     'packages/yamake/',
+    'packages/onemig/',
     'scratch/',
     'templates/',
 ]

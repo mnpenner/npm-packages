@@ -44,7 +44,7 @@ export namespace JSX {
 
     export interface IntrinsicAttributes {} // eslint-disable-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-empty-interface
 
-    export interface IntrinsicClassAttributes<T> {} // eslint-disable-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-empty-interface, unused-imports/no-unused-vars
+    export interface IntrinsicClassAttributes<T> {} // eslint-disable-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-empty-interface
 
     /**
      * Attributes specific to intrinsic elements (lowercase tags).
