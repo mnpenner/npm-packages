@@ -3,8 +3,9 @@ import { describe, expect, it } from 'bun:test'
 import { HttpMethod } from '@mpen/http-helpers'
 import { Router } from '../router'
 import { requestIdCtx } from './request-id-ctx'
+import type { RouterHeadersInit } from '../fetch-types'
 
-function makeRequest(headers?: HeadersInit): Request {
+function makeRequest(headers?: RouterHeadersInit): Request {
     const init: RequestInit = { method: HttpMethod.GET }
     if (headers) init.headers = headers
     return new Request('https://example.com/', init)

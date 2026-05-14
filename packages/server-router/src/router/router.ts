@@ -18,6 +18,7 @@ import type {
     RouteOptions,
 } from './types'
 import { simpleStatus } from './response/simple'
+import type { RouterBodyInit, RouterHeadersInit } from './fetch-types'
 
 type RouteEntry =
     | { kind: 'route'; route: NormalizedRoute<any> }
@@ -856,7 +857,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         }
     }
 
-    private _toResponseBody(body: HandlerBody | null): BodyInit | null {
+    private _toResponseBody(body: HandlerBody | null): RouterBodyInit | null {
         if (body == null) return null
         if (body instanceof ReadableStream) return body
         if (typeof body === 'string') return body
@@ -917,12 +918,10 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
             resolveResponse?.(response)
         }
 
-        const buildResponseInit = (): ResponseInit => {
-            const responseInit: ResponseInit = {}
-            if (status !== undefined) responseInit.status = status
-            if (headers) responseInit.headers = headers
-            return responseInit
-        }
+        const buildResponseInit = (): ResponseInit => ({
+            ...(status !== undefined ? { status } : {}),
+            ...(headers ? { headers } : {}),
+        })
 
         const ensureStreamResponse = () => {
             if (responseResolved) return
@@ -1012,7 +1011,8 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
                                     : undefined
                             const yieldedHeaders =
                                 'headers' in yielded
-                                    ? (yielded as { headers?: HeadersInit | undefined }).headers
+                                    ? (yielded as { headers?: RouterHeadersInit | undefined })
+                                          .headers
                                     : undefined
                             if (yieldedStatus !== undefined) {
                                 status = yieldedStatus

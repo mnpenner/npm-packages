@@ -543,7 +543,7 @@ async function loadMaxmindModule(): Promise<MaxmindModule> {
     } catch (err) {
         throw new Error(
             'maxmind is required for ASN or country lookups; install it as a peer dependency',
-            { cause: err as Error },
+            { cause: err },
         )
     }
 }

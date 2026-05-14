@@ -36,7 +36,7 @@ export function createAsyncStream<R = any>(
 
 // See also https://bun.sh/docs/api/streams#async-generator-streams
 
-export async function createJsonLinesResponse<T>(generator: AsyncGenerator<T>): Promise<Response> {
+export function createJsonLinesResponse<T>(generator: AsyncGenerator<T>): Response {
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
         async start(controller) {
@@ -59,7 +59,7 @@ export async function createJsonLinesResponse<T>(generator: AsyncGenerator<T>): 
     })
 }
 
-export async function createSseResponse<T>(generator: AsyncGenerator<T>): Promise<Response> {
+export function createSseResponse<T>(generator: AsyncGenerator<T>): Response {
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
         async start(controller) {

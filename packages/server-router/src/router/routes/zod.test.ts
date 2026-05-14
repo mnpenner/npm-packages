@@ -4,7 +4,7 @@ import { HttpMethod, HttpStatus } from '@mpen/http-helpers'
 import { z } from 'zod'
 import { Router } from '../router'
 import { expectType } from '@mpen/ts-types'
-import { jsonResponse } from '../response'
+import { jsonResponse, plainTextResponse } from '../response'
 import { createZodRoutes, ValidationError, withZod, zodHandler, zodPartial, zodRoute } from './zod'
 
 describe('zodHandler', () => {
@@ -31,16 +31,11 @@ describe('zodHandler', () => {
                 expectType<{ id: string }>(params.path)
                 expectType<{ verbose: 'yes' | 'no' }>(params.query)
                 expectType<{ name: string }>(params.body)
-                return new Response(
-                    JSON.stringify({
-                        pathParams: params.path,
-                        query: params.query,
-                        body: params.body,
-                    }),
-                    {
-                        headers: { 'content-type': 'application/json' },
-                    },
-                )
+                return jsonResponse({
+                    pathParams: params.path,
+                    query: params.query,
+                    body: params.body,
+                })
             },
         })
 
@@ -75,7 +70,7 @@ describe('zodHandler', () => {
                 },
             },
             validateResponse: false,
-            handler: () => new Response('ok'),
+            handler: () => plainTextResponse('ok'),
         })
         const router = new Router().add({
             path: '/users/:id',
@@ -93,7 +88,7 @@ describe('zodHandler', () => {
         const body = await response.json()
 
         expect(response.status).toBe(HttpStatus.BAD_REQUEST)
-        expect(body.component).toBe('request_body')
+        expect((body as any).component).toBe('request_body')
     })
 
     it('uses a custom validation error handler when provided', async () => {
@@ -104,7 +99,7 @@ describe('zodHandler', () => {
                 },
             },
             validateResponse: false,
-            handler: () => new Response('ok'),
+            handler: () => plainTextResponse('ok'),
             validationError: (component, error) => {
                 expect(component).toBe(ValidationError.URL_PATH)
                 expect(error).toBeInstanceOf(z.ZodError)
@@ -188,7 +183,7 @@ describe('zodPartial', () => {
                 },
             },
             validateResponse: false,
-            handler: () => new Response('ok'),
+            handler: () => plainTextResponse('ok'),
         })
 
         expect(typeof partial.handler).toBe('function')
@@ -259,7 +254,7 @@ describe('zodRoute', () => {
                 },
             },
             validateResponse: false,
-            handler: ({ params }) => new Response(params.path.id),
+            handler: ({ params }) => jsonResponse({ id: params.path.id }),
         })
 
         expect(route.path).toBe('/users/:id')
@@ -341,7 +336,7 @@ describe('createZodRoutes', () => {
                         path: z.object({ id: z.string().uuid() }),
                     },
                 },
-                handler: () => new Response('ok'),
+                handler: () => plainTextResponse('ok'),
             }),
         )
 
@@ -401,7 +396,7 @@ describe('createZodRoutes', () => {
                 handler: () =>
                     new Response(JSON.stringify({ ok: 'invalid' }), {
                         headers: { 'content-type': 'application/json' },
-                    }),
+                    }) as any,
             }),
         )
 
@@ -446,7 +441,7 @@ describe('createZodRoutes', () => {
                     },
                 },
                 validateResponse: false,
-                handler: () => new Response('ok'),
+                handler: () => plainTextResponse('ok'),
             }),
         )
 

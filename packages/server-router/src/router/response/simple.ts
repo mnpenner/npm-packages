@@ -1,16 +1,20 @@
 import { CommonHeaders, HttpStatus, CommonContentTypes, StatusText } from '@mpen/http-helpers'
 import type { ResponseWithData } from '../types'
 import { fullWide } from '../lib/format'
+import type { RouterHeadersInit } from '../fetch-types'
 
 const utf8encoder = new TextEncoder()
 
 type JsonResponse<T> = ResponseWithData<T>
 type NonJsonResponse = ResponseWithData<never>
+type JsonResponseInit = Omit<ResponseInit, 'headers' | 'status'> & {
+    headers?: RouterHeadersInit
+}
 
 export function jsonResponse<T>(
     data: T,
     status: number | HttpStatus = HttpStatus.OK,
-    init?: Omit<ResponseInit, 'status'>,
+    init?: JsonResponseInit,
 ) {
     const encoded = utf8encoder.encode(JSON.stringify(data))
 

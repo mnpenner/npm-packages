@@ -7,6 +7,7 @@ import type {
     RequestContext,
 } from '../types'
 import { toArray } from '../lib/collections'
+import type { RouterBodyInit, RouterHeadersInit } from '../fetch-types'
 
 declare global {
     var _reloadCounter: number
@@ -93,7 +94,7 @@ function wrapGeneratorWithRequestId(
                 continue
             }
             if (value && typeof value === 'object' && 'headers' in value) {
-                const entry = value as { status?: number; headers?: HeadersInit }
+                const entry = value as { status?: number; headers?: RouterHeadersInit }
                 const headers = new Headers(entry.headers)
                 apply(headers)
                 headersInjected = true
@@ -209,7 +210,7 @@ export function requestIdCtx<Ctx extends object = AnyContext>(
         if (isBodyChunk(result) || result instanceof ReadableStream) {
             const headers = new Headers()
             headers.set(writeHeaderName, requestId)
-            return new Response(result as BodyInit, { headers })
+            return new Response(result as RouterBodyInit, { headers })
         }
 
         return result

@@ -71,7 +71,7 @@ describe('openapi', () => {
         })
 
         const response = await router.fetch(new Request('https://example.com/swagger.json'))
-        const document = await response.json()
+        const document = (await response.json()) as any
 
         expect(document.openapi).toBe('3.0.3')
         expect(document.info).toEqual({

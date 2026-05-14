@@ -106,7 +106,7 @@ export default defineConfig([
             'no-constant-condition': ['error', { checkLoops: false }],
             'unused-imports/no-unused-imports': 'error',
             'unused-imports/no-unused-vars': [
-                'warn',
+                'off',  // Not convinced this is a net benefit. Build tool will probably eliminate these anyway.
                 {
                     ignoreRestSiblings: true,
                     vars: 'local',

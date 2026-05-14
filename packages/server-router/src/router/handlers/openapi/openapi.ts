@@ -1,6 +1,7 @@
 import { HttpMethod, HttpStatus, StatusText } from '@mpen/http-helpers'
 import type { Router } from '../../router'
 import type { Handler, JsonObjectSchema, JsonSchema, NormalizedRoute, RouteMeta } from '../../types'
+import { jsonResponse } from '../../response/simple'
 
 /**
  * OpenAPI document `info` section.
@@ -266,7 +267,7 @@ function buildOperation(route: NormalizedRoute<any>): OpenApiOperation {
  * @returns A route handler that returns the generated OpenAPI JSON document.
  */
 export function openapi(options: OpenApiOptions): Handler<OpenApiDocument> {
-    return function openapiHandler(this: Router<any>): Response {
+    return function openapiHandler(this: Router<any>) {
         const routes = this.getRoutes()
         const paths: OpenApiPaths = {}
 
@@ -290,9 +291,6 @@ export function openapi(options: OpenApiOptions): Handler<OpenApiDocument> {
             ...(options.security ? { security: options.security } : {}),
         }
 
-        return new Response(JSON.stringify(document), {
-            status: HttpStatus.OK,
-            headers: { 'content-type': 'application/json' },
-        })
+        return jsonResponse(document, HttpStatus.OK)
     }
 }

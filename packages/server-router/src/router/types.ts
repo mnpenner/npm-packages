@@ -1,5 +1,6 @@
 import type { HttpMethod, HttpStatus } from '@mpen/http-helpers'
 import type { Router } from './router'
+import type { RouterHeadersInit } from './fetch-types'
 
 export type OneOrMany<T> = T | T[]
 export type MaybePromise<T> = T | Promise<T>
@@ -291,7 +292,7 @@ export type HandlerYield =
     | number
     | HttpStatus
     | Headers
-    | { status?: number | HttpStatus; headers?: HeadersInit }
+    | { status?: number | HttpStatus; headers?: RouterHeadersInit }
     | Buffer
     | Uint8Array
     | string

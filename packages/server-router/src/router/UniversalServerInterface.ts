@@ -5,14 +5,13 @@ export interface UniversalExecutionContext {
     passThroughOnException?(): void
 }
 
-type BunRuntimeServer = import('bun').Server<unknown>
-
 export type DenoServer = {
     fetch(request: Request): UniversalFetchResult
 }
 
 export type BunServer = {
-    fetch(request: Request, server: BunRuntimeServer): UniversalFetchResult
+    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+    fetch(request: Request, server: import('bun').Server<unknown>): UniversalFetchResult
 }
 
 export type CloudflareWorkerServer<Env = unknown, Ctx = UniversalExecutionContext> = {

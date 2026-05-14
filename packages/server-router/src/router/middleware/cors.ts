@@ -9,6 +9,7 @@ import type {
     RequestContext,
 } from '../types'
 import { isLocalhost } from '../lib/host'
+import type { RouterBodyInit, RouterHeadersInit } from '../fetch-types'
 
 type CorsOriginResolver<Ctx extends object> = (
     origin: string | null,
@@ -274,7 +275,7 @@ function wrapGeneratorWithCors(
                 continue
             }
             if (value && typeof value === 'object' && 'headers' in value) {
-                const entry = value as { status?: number; headers?: HeadersInit }
+                const entry = value as { status?: number; headers?: RouterHeadersInit }
                 const headers = new Headers(entry.headers)
                 apply(headers)
                 headersInjected = true
@@ -426,7 +427,7 @@ export function cors<Ctx extends object = AnyContext>(options: CorsOptions<Ctx>)
                 options.exposeHeaders,
                 varyOrigin,
             )
-            return new Response(result as BodyInit, { headers })
+            return new Response(result as RouterBodyInit, { headers })
         }
 
         return result

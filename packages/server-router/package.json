@@ -19,6 +19,7 @@
   "type": "module",
   "devDependencies": {
     "@types/bun": "latest",
+    "bun-types": "catalog:",
     "tsdown": "catalog:",
     "@valibot/to-json-schema": "^1.6.0",
     "valibot": "^1.4.0",

@@ -5,11 +5,12 @@ import { Router } from './router'
 import type { ContextMiddleware, Handler } from './types'
 import { expectType } from '@mpen/ts-types'
 import { requestIdCtx } from './middleware/request-id-ctx'
+import type { RouterHeadersInit } from './fetch-types'
 
 function makeRequest(
     path: string,
     method: HttpMethod = HttpMethod.GET,
-    headers?: HeadersInit,
+    headers?: RouterHeadersInit,
 ): Request {
     const init: RequestInit = { method }
     if (headers) init.headers = headers
@@ -191,7 +192,7 @@ describe('Router', () => {
         router.add({
             method: HttpMethod.GET,
             pattern: '/late',
-            handler: async () => {
+            handler: () => {
                 const stream = new ReadableStream<Uint8Array>({
                     async start(controller) {
                         await writeAllowed

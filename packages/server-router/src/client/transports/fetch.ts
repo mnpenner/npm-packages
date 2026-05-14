@@ -1,9 +1,5 @@
 import type { ClientHeaders } from '../headers'
-import type {
-    ApiTransportResponsePromise,
-    ClientRequest,
-    ClientTransport,
-} from '../transport'
+import type { ApiTransportResponsePromise, ClientRequest, ClientTransport } from '../transport'
 import { jsonBodyCodec, type BodyCodec } from './body-codec'
 
 /**
