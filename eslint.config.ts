@@ -103,6 +103,7 @@ export default defineConfig([
         'eslint-examples/',
         'scratch/',
         'templates/',
+        'deprecated/',
     ]),
     {
         name: 'global/recommended',
