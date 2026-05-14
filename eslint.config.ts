@@ -126,7 +126,7 @@ export default defineConfig([
             },
         },
         rules: {
-            'require-await': 'warn',
+            'require-await': 'off',  // Forcing Promise<> return type is usually WAI
             'prefer-const': ['warn', { destructuring: 'all' }],
             'no-control-regex': 'off',
             'prefer-rest-params': 'off',
