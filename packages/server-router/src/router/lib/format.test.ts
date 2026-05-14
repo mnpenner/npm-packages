@@ -7,6 +7,7 @@ describe(fullWide.name, () => {
         expect(fullWide(1234567)).toBe('1234567')
         expect(fullWide(1e21)).toBe('1000000000000000000000')
         expect(fullWide(1234.5)).toBe('1234.5')
+        expect(fullWide(0.0000001)).toBe('0.0000001')
     })
 
     it('formats bigint values as base-10 strings', () => {

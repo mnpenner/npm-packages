@@ -7,6 +7,13 @@ const FULL_WIDE_FORMAT = new Intl.NumberFormat('en-US', {
 
 const DECIMAL_STRING = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/
 
+/**
+ * Formats a number with full decimal places.
+ *
+ * e.g. `1e21` formats as "1000000000000000000000" instead of "1e+21"
+ *
+ * @param n The number to format.
+ */
 export function fullWide(n: FormattableNumber): string {
     if (typeof n === 'bigint') return n.toString()
 
