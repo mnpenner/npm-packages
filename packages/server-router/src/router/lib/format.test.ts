@@ -50,15 +50,18 @@ describe(fullWide.name, () => {
         )
     })
 
-    it('returns zero for non-finite numeric values', () => {
-        expect(fullWide(Number.POSITIVE_INFINITY)).toBe('0')
-        expect(fullWide(Number.NEGATIVE_INFINITY)).toBe('0')
+    it('returns safe integer bounds for infinite numeric values', () => {
+        expect(fullWide(Number.POSITIVE_INFINITY)).toBe(String(Number.MAX_SAFE_INTEGER))
+        expect(fullWide(Number.NEGATIVE_INFINITY)).toBe(String(Number.MIN_SAFE_INTEGER))
+    })
+
+    it('returns zero for NaN numeric values', () => {
         expect(fullWide(Number.NaN)).toBe('0')
     })
 
-    it('returns zero for non-finite string values', () => {
-        expect(fullWide('Infinity')).toBe('0')
-        expect(fullWide('+Infinity')).toBe('0')
-        expect(fullWide('-Infinity')).toBe('0')
+    it('returns safe integer bounds for infinite string values', () => {
+        expect(fullWide('Infinity')).toBe(String(Number.MAX_SAFE_INTEGER))
+        expect(fullWide('+Infinity')).toBe(String(Number.MAX_SAFE_INTEGER))
+        expect(fullWide('-Infinity')).toBe(String(Number.MIN_SAFE_INTEGER))
     })
 })
