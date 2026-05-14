@@ -1,6 +1,6 @@
 import { CommonContentTypes, HttpStatus } from '@mpen/http-helpers'
 import { Router, type ContextMiddleware } from '@mpen/server-router'
-import { ValidationError, ZodRouteFactory } from '@mpen/server-router/routes'
+import { createZodRoutes, ValidationError } from '@mpen/server-router/routes'
 import { z } from 'zod'
 
 type StructuredBody = Record<string, unknown> | unknown[]
@@ -69,7 +69,7 @@ const structuredResponse: ContextMiddleware = async (ctx, next) => {
 
 export const router = new Router().use(structuredResponse)
 
-const factory = new ZodRouteFactory({
+const zodRoutes = createZodRoutes({
     schema: {
         response: {
             body: {
@@ -96,7 +96,7 @@ const factory = new ZodRouteFactory({
 
 router.post(
     '/widgets/:id',
-    factory.withZod({
+    zodRoutes({
         name: 'widgets.byId',
         schema: {
             request: {

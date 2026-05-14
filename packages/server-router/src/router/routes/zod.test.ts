@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { Router } from '../router'
 import { expectType } from '@mpen/ts-types'
 import { jsonResponse } from '../response'
-import { ValidationError, withZod, ZodRouteFactory, zodHandler, zodPartial, zodRoute } from './zod'
+import { createZodRoutes, ValidationError, withZod, zodHandler, zodPartial, zodRoute } from './zod'
 
 describe('zodHandler', () => {
     it('parses and supplies validated inputs to the handler', async () => {
@@ -325,9 +325,9 @@ describe('withZod', () => {
     })
 })
 
-describe('ZodRouteFactory', () => {
-    it('builds method-specific route options with factory defaults', async () => {
-        const factory = new ZodRouteFactory({
+describe('createZodRoutes', () => {
+    it('builds method-specific route options with shared defaults', async () => {
+        const zod = createZodRoutes({
             validateResponse: false,
             validationError: () =>
                 new Response('factory bad input', { status: HttpStatus.BAD_REQUEST }),
@@ -335,7 +335,7 @@ describe('ZodRouteFactory', () => {
         const router = new Router()
         router.get(
             '/factory-with-zod/:id',
-            factory.withZod({
+            zod({
                 schema: {
                     request: {
                         path: z.object({ id: z.string().uuid() }),
@@ -353,8 +353,8 @@ describe('ZodRouteFactory', () => {
         expect(await response.text()).toBe('factory bad input')
     })
 
-    it('applies factory defaults and allows per-route overrides', async () => {
-        const factory = new ZodRouteFactory({
+    it('applies shared defaults and allows per-route overrides', async () => {
+        const zodRoute = createZodRoutes({
             validateResponse: false,
             schema: {
                 response: {
@@ -368,10 +368,9 @@ describe('ZodRouteFactory', () => {
         })
 
         const router = new Router()
-        router.add(
-            factory.route({
-                path: '/factory/:id',
-                method: HttpMethod.GET,
+        router.get(
+            '/factory/:id',
+            zodRoute({
                 schema: {
                     request: {
                         path: z.object({ id: z.string().uuid() }),
@@ -388,10 +387,9 @@ describe('ZodRouteFactory', () => {
                     }),
             }),
         )
-        router.add(
-            factory.route({
-                path: '/factory-override',
-                method: HttpMethod.GET,
+        router.get(
+            '/factory-override',
+            zodRoute({
                 schema: {
                     response: {
                         body: {
@@ -426,7 +424,7 @@ describe('ZodRouteFactory', () => {
     })
 
     it('merges default schemas into generated route schemas', () => {
-        const factory = new ZodRouteFactory({
+        const zodRoute = createZodRoutes({
             schema: {
                 response: {
                     body: {
@@ -436,21 +434,23 @@ describe('ZodRouteFactory', () => {
             },
         })
 
-        const route = factory.route({
-            path: '/factory-schema',
-            method: HttpMethod.GET,
-            schema: {
-                response: {
-                    body: {
-                        [HttpStatus.OK]: z.object({ ok: z.boolean() }),
+        const router = new Router()
+        router.get(
+            '/factory-schema',
+            zodRoute({
+                schema: {
+                    response: {
+                        body: {
+                            [HttpStatus.OK]: z.object({ ok: z.boolean() }),
+                        },
                     },
                 },
-            },
-            validateResponse: false,
-            handler: () => new Response('ok'),
-        })
+                validateResponse: false,
+                handler: () => new Response('ok'),
+            }),
+        )
 
-        expect(route.schema?.response?.body).toEqual({
+        expect(router.getRoutes()[0]?.schema?.response?.body).toEqual({
             200: {
                 type: 'object',
                 properties: {

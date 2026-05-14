@@ -194,6 +194,16 @@ export type WithZodOptions<
     Ctx extends object = AnyContext,
 > = Omit<RouteOptions<Ctx>, 'handler' | 'schema'> & ZodHandlerOptions<Schema, Ctx>
 
+/**
+ * Zod route builder created by `createZodRoutes`.
+ */
+export type ZodRoutes = <
+    Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
+    Ctx extends object = AnyContext,
+>(
+    options: WithZodOptions<Schema, Ctx>,
+) => RouteOptions<Ctx>
+
 type ResolvedZodHandlerOptions<
     Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
     Ctx extends object,
@@ -356,6 +366,53 @@ function buildRouteSchema(
     return {
         ...(request && Object.keys(request).length > 0 ? { request } : {}),
         ...(response ? { response } : {}),
+    }
+}
+
+function mergeRouteSchema(
+    defaults: ZodRouteHelperDefaults,
+    schema: ZodRouteSchemaInput<any, any, any, any> | undefined,
+): ZodRouteSchemaInput<any, any, any, any> | undefined {
+    const defaultSchema = defaults.schema
+    if (!defaultSchema) return schema
+    if (!schema) return defaultSchema
+
+    const request =
+        !defaultSchema.request && !schema.request
+            ? undefined
+            : {
+                  ...defaultSchema.request,
+                  ...schema.request,
+              }
+
+    const responseBody =
+        !defaultSchema.response?.body && !schema.response?.body
+            ? undefined
+            : {
+                  ...(defaultSchema.response?.body ?? {}),
+                  ...(schema.response?.body ?? {}),
+              }
+
+    const response = responseBody ? { body: responseBody } : undefined
+
+    return {
+        ...(request ? { request } : {}),
+        ...(response ? { response } : {}),
+    }
+}
+
+function mergeWithZodOptions<
+    Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
+    Ctx extends object,
+>(
+    defaults: ZodRouteHelperDefaults,
+    options: WithZodOptions<Schema, Ctx>,
+): WithZodOptions<ZodRouteSchemaInput<any, any, any, any>, Ctx> {
+    const schema = mergeRouteSchema(defaults, options.schema)
+    return {
+        ...defaults,
+        ...options,
+        ...(schema === undefined ? {} : { schema }),
     }
 }
 
@@ -603,6 +660,45 @@ export function withZod<
         handler: partial.handler,
         ...(partial.schema ? { schema: partial.schema } : {}),
     }
+}
+
+/**
+ * Create a Zod route builder with shared defaults.
+ *
+ * @example
+ * ```ts
+ * const zod = createZodRoutes({
+ *   validateResponse: false,
+ *   schema: {
+ *     response: {
+ *       body: {
+ *         400: z.object({message: z.string()}),
+ *       },
+ *     },
+ *   },
+ * })
+ *
+ * router.post('/users/:id', zod({
+ *   name: 'user.update',
+ *   schema: {
+ *     request: {
+ *       path: z.object({id: z.string()}),
+ *     },
+ *   },
+ *   handler: ({params}) => ({id: params.path.id}),
+ * }))
+ * ```
+ *
+ * @param defaults - Default schema fragments, response validation, and request validation error handling.
+ * @returns A route-options builder compatible with method-specific router helpers.
+ */
+export function createZodRoutes(defaults: ZodRouteHelperDefaults = {}): ZodRoutes {
+    return <
+        Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
+        Ctx extends object = AnyContext,
+    >(
+        options: WithZodOptions<Schema, Ctx>,
+    ): RouteOptions<Ctx> => withZod(mergeWithZodOptions(defaults, options))
 }
 
 /**
