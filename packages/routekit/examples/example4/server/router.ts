@@ -1,12 +1,6 @@
-import { Router, jsonResponse, plainTextResponse } from '@mpen/routekit'
+import { Router } from '@mpen/routekit'
+import userRoute from './routes/users.ts'
 
-const router = new Router()
-
-router.get('/', () => plainTextResponse("Hello from RouteKit!"))
-
-router.get('/users/:id', ({ pathParams }) => {
-    const { id } = pathParams as { id: string }
-    return jsonResponse({ id })
-})
+const router = new Router().get('/users/:id', userRoute)
 
 export default router

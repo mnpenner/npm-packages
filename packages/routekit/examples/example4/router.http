@@ -1,0 +1,14 @@
+GET http://localhost:3000/users/123
+
+###
+
+POST http://localhost:3000/users
+Content-Type: application/json
+
+{
+    "name": "Mark",
+    "tags": [
+        "Human",
+        "Male"
+    ]
+}
