@@ -186,19 +186,18 @@ function buildOperationFromSchema(route: NormalizedRoute<any>): OpenApiOperation
     if (schema.response?.body && Object.keys(schema.response.body).length > 0) {
         const contentTypes = openApiResponseContentTypes()
         operation.responses = Object.fromEntries(
-            Object.entries(schema.response.body).map(([status, responseSchema]) => {
+            Object.entries(schema.response.body).flatMap(([status, responseSchema]) => {
+                if (responseSchema === undefined) return []
                 const response: OpenApiResponse = {
                     description: defaultResponseDescription(status),
                 }
-                if (responseSchema !== undefined) {
-                    response.content = Object.fromEntries(
-                        contentTypes.map((contentType) => [
-                            contentType,
-                            { schema: responseSchema },
-                        ]),
-                    )
-                }
-                return [status, response]
+                response.content = Object.fromEntries(
+                    contentTypes.map((contentType) => [
+                        contentType,
+                        { schema: responseSchema },
+                    ]),
+                )
+                return [[status, response]]
             }),
         )
     } else {

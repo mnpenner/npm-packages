@@ -1,5 +1,5 @@
 import { HttpStatus } from '@mpen/http-helpers'
-import { toJsonSchema } from '@valibot/to-json-schema'
+import { toJsonSchema, type ConversionConfig } from '@valibot/to-json-schema'
 import type { Router } from '../../router'
 import type {
     Handler,
@@ -29,8 +29,10 @@ type ValibotObjectSchema = v.ObjectSchema<
     v.ErrorMessage<v.ObjectIssue> | undefined
 >
 type ValibotPathSchema = ValibotObjectSchema | undefined
-type AnyValibotResponseBodySchemas = Record<number, AnyValibotSchema>
+type AnyValibotResponseBodySchemas = Partial<Record<number | 'default', AnyValibotSchema>>
 type ValibotResponseBodySchemas = AnyValibotResponseBodySchemas | undefined
+type ResponseValidationMode = false | 'strict' | 'parse'
+type ResponseValidationOption = boolean | ResponseValidationMode
 
 /**
  * Default validation error payload returned by Valibot-backed routes.
@@ -72,16 +74,17 @@ type InferSchema<Schema extends ValibotSchema> = Schema extends v.GenericSchema
     : unknown
 
 type InferResponseBody<ResponseBodySchemas extends ValibotResponseBodySchemas> =
-    ResponseBodySchemas extends Record<number, v.GenericSchema>
+    ResponseBodySchemas extends AnyValibotResponseBodySchemas
         ? 200 extends keyof ResponseBodySchemas
-            ? v.InferOutput<ResponseBodySchemas[200]>
-            : unknown
+            ? v.InferInput<NonNullable<ResponseBodySchemas[200]>>
+            : 'default' extends keyof ResponseBodySchemas
+              ? v.InferInput<NonNullable<ResponseBodySchemas['default']>>
+              : unknown
         : unknown
 
-type NormalizeSchema<Schema> =
-    Schema extends AnyValibotRouteSchemaInput
-        ? Schema
-        : ValibotRouteSchemaInput<undefined, undefined, undefined, undefined>
+type NormalizeSchema<Schema> = Schema extends AnyValibotRouteSchemaInput
+    ? Schema
+    : ValibotRouteSchemaInput<undefined, undefined, undefined, undefined>
 
 type ExtractBodySchema<Schema extends AnyValibotRouteSchemaInput | undefined> =
     NormalizeSchema<Schema> extends ValibotRouteSchemaInput<
@@ -113,9 +116,7 @@ type ExtractQuerySchema<Schema extends AnyValibotRouteSchemaInput | undefined> =
         ? QuerySchema
         : undefined
 
-type ExtractResponseBodySchemas<
-    Schema extends AnyValibotRouteSchemaInput | undefined,
-> =
+type ExtractResponseBodySchemas<Schema extends AnyValibotRouteSchemaInput | undefined> =
     NormalizeSchema<Schema> extends ValibotRouteSchemaInput<
         infer _BodySchema,
         infer _PathSchema,
@@ -173,10 +174,11 @@ export type ValibotRouteHelperDefaults = {
      */
     schema?: AnyValibotRouteSchemaInput
     /**
-     * Whether to validate handler responses against `schema.response.body`.
-     * Defaults to `process.env.NODE_ENV !== 'production'`.
+     * Whether and how to apply `schema.response.body` to handler responses.
+     * `false` disables response validation, `true` and `'strict'` validate without changing the
+     * response body, and `'parse'` returns the parsed response body. Defaults to `'parse'`.
      */
-    validateResponse?: boolean
+    validateResponse?: ResponseValidationOption
     /**
      * Override the default request validation error response.
      */
@@ -252,13 +254,18 @@ type ResolvedValibotHandlerOptions<
         ExtractResponseBodySchemas<Schema>,
         Ctx
     >
-    validateResponse: boolean
+    validateResponse: ResponseValidationMode
     validationError: ValibotValidationErrorHandler
 }
 
 type ResponseEnvelope = {
     status: number
     body: unknown
+}
+
+type ResponseBodyForValidation = {
+    value: unknown
+    writableJson: boolean
 }
 
 const validationErrorComponentName = new Map<
@@ -269,6 +276,11 @@ const validationErrorComponentName = new Map<
     [ValibotValidationError.URL_PATH, 'url_path'],
     [ValibotValidationError.QUERY_PARAMETERS, 'query_parameters'],
 ])
+
+const jsonSchemaApproximationConfig = {
+    target: 'draft-07',
+    errorMode: 'ignore',
+} satisfies Pick<ConversionConfig, 'target' | 'errorMode'>
 
 class ValibotResponseValidationError extends Error {
     readonly status: number
@@ -297,10 +309,14 @@ function createValidationResponse(
     })
 }
 
-function resolveDefaults<
-    Schema extends AnyValibotRouteSchemaInput | undefined,
-    Ctx extends object,
->(
+function normalizeResponseValidationMode(
+    option: ResponseValidationOption | undefined,
+): ResponseValidationMode | undefined {
+    if (option === true) return 'strict'
+    return option
+}
+
+function resolveDefaults<Schema extends AnyValibotRouteSchemaInput | undefined, Ctx extends object>(
     options: ValibotHandlerOptions<Schema, Ctx>,
     defaults?: ValibotRouteHelperDefaults,
 ): ResolvedValibotHandlerOptions<Schema, Ctx> {
@@ -308,9 +324,9 @@ function resolveDefaults<
         schema: options.schema,
         handler: options.handler,
         validateResponse:
-            options.validateResponse ??
-            defaults?.validateResponse ??
-            process.env.NODE_ENV !== 'production',
+            normalizeResponseValidationMode(options.validateResponse) ??
+            normalizeResponseValidationMode(defaults?.validateResponse) ??
+            'parse',
         validationError:
             options.validationError ?? defaults?.validationError ?? createValidationResponse,
     }
@@ -374,16 +390,21 @@ function sanitizeJsonSchema(schema: JsonSchema): JsonSchema {
 }
 
 function toRequestJsonSchema(schema: v.GenericSchema): JsonSchema {
-    return sanitizeJsonSchema(toJsonSchema(schema, { typeMode: 'input' }) as JsonSchema)
+    return sanitizeJsonSchema(
+        toJsonSchema(schema, { ...jsonSchemaApproximationConfig, typeMode: 'input' }) as JsonSchema,
+    )
 }
 
 function toResponseJsonSchema(schema: v.GenericSchema): JsonSchema {
-    return sanitizeJsonSchema(toJsonSchema(schema, { typeMode: 'output' }) as JsonSchema)
+    return sanitizeJsonSchema(
+        toJsonSchema(schema, {
+            ...jsonSchemaApproximationConfig,
+            typeMode: 'output',
+        }) as JsonSchema,
+    )
 }
 
-function buildRouteSchema(
-    schema?: AnyValibotRouteSchemaInput,
-): RouteSchema | undefined {
+function buildRouteSchema(schema?: AnyValibotRouteSchemaInput): RouteSchema | undefined {
     if (!schema) return undefined
 
     const request = schema.request
@@ -400,10 +421,10 @@ function buildRouteSchema(
 
     const responseBody = schema.response?.body
         ? Object.fromEntries(
-              Object.entries(schema.response.body).map(([status, responseSchema]) => [
-                  Number(status),
-                  toResponseJsonSchema(responseSchema as v.GenericSchema),
-              ]),
+              Object.entries(schema.response.body).map(([status, responseSchema]) => {
+                  const normalizedStatus = status === 'default' ? status : Number(status)
+                  return [normalizedStatus, toResponseJsonSchema(responseSchema as v.GenericSchema)]
+              }),
           )
         : undefined
 
@@ -514,31 +535,53 @@ function getResponseSchemaForStatus(
     schema: AnyValibotRouteSchemaInput | undefined,
     status: number,
 ): v.GenericSchema | undefined {
-    return schema?.response?.body?.[status]
+    return schema?.response?.body?.[status] ?? schema?.response?.body?.default
 }
 
-async function readResponseBodyForValidation(response: Response): Promise<unknown> {
+async function readResponseBodyForValidation(
+    response: Response,
+): Promise<ResponseBodyForValidation | undefined> {
     if (!response.body) return undefined
     const contentType = response.headers.get('content-type') ?? ''
     const clone = response.clone()
     if (contentType.includes('application/json') || /\+json\b/i.test(contentType)) {
-        return await clone.json()
+        return {
+            value: await clone.json(),
+            writableJson: true,
+        }
     }
-    return await clone.text()
+    return {
+        value: await clone.text(),
+        writableJson: false,
+    }
 }
 
-function assertResponseSchema(
+function responseWithJsonBody(response: Response, value: unknown): Response {
+    const headers = new Headers(response.headers)
+    headers.delete('content-length')
+    if (!headers.has('content-type')) {
+        headers.set('content-type', 'application/json')
+    }
+    return new Response(value === undefined ? undefined : JSON.stringify(value), {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+    })
+}
+
+function parseResponseSchema(
     schema: AnyValibotRouteSchemaInput | undefined,
     status: number,
     value: unknown,
-): void {
+    mode: ResponseValidationMode,
+): unknown {
     const responseSchema = getResponseSchemaForStatus(schema, status)
-    if (!responseSchema) return
+    if (!responseSchema) return value
     const result = v.safeParse(responseSchema, value)
     if (!result.success) {
         throw new ValibotResponseValidationError(status, result.issues)
     }
-    if (!jsonValuesEqual(value, result.output)) {
+    if (mode === 'strict' && !jsonValuesEqual(value, result.output)) {
         throw new ValibotResponseValidationError(
             status,
             valibotIssuesFromThrowable(
@@ -546,30 +589,28 @@ function assertResponseSchema(
             ),
         )
     }
+    return mode === 'parse' ? result.output : value
 }
 
 async function validateHandlerResult(
     schema: AnyValibotRouteSchemaInput | undefined,
     result: unknown,
-): Promise<void> {
+    mode: ResponseValidationMode,
+): Promise<unknown> {
     if (result instanceof Response) {
-        await Promise.resolve(
-            assertResponseSchema(
-                schema,
-                result.status,
-                await readResponseBodyForValidation(result),
-            ),
-        )
-        return
+        const body = await readResponseBodyForValidation(result)
+        if (!body) return result
+        const parsed = parseResponseSchema(schema, result.status, body.value, mode)
+        return mode === 'parse' && body.writableJson ? responseWithJsonBody(result, parsed) : result
     }
     if (isResponseEnvelope(result)) {
-        assertResponseSchema(schema, result.status, result.body)
-        return
+        const parsed = parseResponseSchema(schema, result.status, result.body, mode)
+        return mode === 'parse' ? { ...result, body: parsed } : result
     }
     if (isSkippableResponseValidationValue(result)) {
-        return
+        return result
     }
-    assertResponseSchema(schema, HttpStatus.OK, result)
+    return parseResponseSchema(schema, HttpStatus.OK, result, mode)
 }
 
 /**
@@ -610,8 +651,12 @@ export function valibotHandler<
             const validateAndReturn = async (
                 result: HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>,
             ): Promise<HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>> => {
-                if (resolved.validateResponse) {
-                    await validateHandlerResult(resolved.schema, result)
+                if (resolved.validateResponse !== false) {
+                    return (await validateHandlerResult(
+                        resolved.schema,
+                        result,
+                        resolved.validateResponse,
+                    )) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>
                 }
                 return result
             }
@@ -794,10 +839,7 @@ export function withValibot<
  * @returns A route-options builder compatible with method-specific router helpers.
  */
 export function createValibotRoutes(defaults: ValibotRouteHelperDefaults = {}): ValibotRoutes {
-    return <
-        Schema extends AnyValibotRouteSchemaInput | undefined,
-        Ctx extends object = object,
-    >(
+    return <Schema extends AnyValibotRouteSchemaInput | undefined, Ctx extends object = object>(
         options: WithValibotOptions<Schema, Ctx>,
     ): RouteOptions<Ctx> => withValibot(mergeWithValibotOptions(defaults, options))
 }

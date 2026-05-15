@@ -15,7 +15,7 @@ type ExtractedRouteMeta = {
     method: HttpMethod
     path: string
     requestSchema?: RouteSchema['request']
-    responseBodySchemas?: Record<number, JsonSchema>
+    responseBodySchemas?: NonNullable<RouteSchema['response']>['body']
 }
 
 type ProcessedRouteMeta = ExtractedRouteMeta & {
@@ -197,6 +197,7 @@ async function compileSchemaType(name: string, schema: JsonSchema): Promise<stri
     return (
         await compile(schema as Record<string, unknown>, name, {
             bannerComment: '',
+            additionalProperties: false,
             style: {
                 singleQuote: true,
             },
@@ -248,16 +249,20 @@ async function generateRouteTypes(route: ProcessedRouteMeta): Promise<GeneratedR
     if (route.responseBodySchemas && Object.keys(route.responseBodySchemas).length > 0) {
         const responseTypesByStatus: string[] = []
         for (const [status, responseSchema] of Object.entries(route.responseBodySchemas)) {
+            if (responseSchema === undefined) continue
             const alias = responseStatusAlias(route.typeBase, status)
             generated.responseTypeSources.push(await compileSchemaType(alias, responseSchema))
             responseTypesByStatus.push(`    ${JSON.stringify(status)}: ${alias}`)
         }
-        generated.responseTypesByStatusSource = [
-            `export interface ${route.typeBase}ResponsesByStatus {`,
-            ...responseTypesByStatus,
-            `}`,
-            `export type ${route.typeBase}Response = ${route.typeBase}ResponsesByStatus[keyof ${route.typeBase}ResponsesByStatus]`,
-        ].join('\n')
+        generated.responseTypesByStatusSource =
+            responseTypesByStatus.length > 0
+                ? [
+                      `export interface ${route.typeBase}ResponsesByStatus {`,
+                      ...responseTypesByStatus,
+                      `}`,
+                      `export type ${route.typeBase}Response = ${route.typeBase}ResponsesByStatus[keyof ${route.typeBase}ResponsesByStatus]`,
+                  ].join('\n')
+                : `export type ${route.typeBase}Response = unknown`
     } else {
         const fallback = route.method === HttpMethod.HEAD ? 'never' : 'unknown'
         generated.responseTypesByStatusSource = `export type ${route.typeBase}Response = ${fallback}`

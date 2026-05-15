@@ -24,7 +24,10 @@ export const enum ValidationError {
 
 type ErrorTree = ReturnType<typeof z.treeifyError>
 type ZodSchema = z.ZodTypeAny | undefined
-type ZodResponseBodySchemas = Record<number, z.ZodTypeAny> | undefined
+type AnyZodResponseBodySchemas = Partial<Record<number | 'default', z.ZodTypeAny>>
+type ZodResponseBodySchemas = AnyZodResponseBodySchemas | undefined
+type ResponseValidationMode = false | 'strict' | 'parse'
+type ResponseValidationOption = boolean | ResponseValidationMode
 
 /**
  * Default validation error payload returned by Zod-backed routes.
@@ -57,9 +60,11 @@ export type ZodRouteSchemaInput<
 type InferSchema<Schema extends ZodSchema> = Schema extends z.ZodTypeAny ? z.infer<Schema> : unknown
 
 type InferResponseBody<ResponseBodySchemas extends ZodResponseBodySchemas> =
-    ResponseBodySchemas extends Record<number, z.ZodTypeAny>
+    ResponseBodySchemas extends AnyZodResponseBodySchemas
         ? 200 extends keyof ResponseBodySchemas
-            ? z.infer<ResponseBodySchemas[200]>
+            ? z.infer<NonNullable<ResponseBodySchemas[200]>>
+            : 'default' extends keyof ResponseBodySchemas
+              ? z.infer<NonNullable<ResponseBodySchemas['default']>>
             : unknown
         : unknown
 
@@ -137,10 +142,11 @@ export type ZodRouteHelperDefaults = {
      */
     schema?: ZodRouteSchemaInput<any, any, any, any>
     /**
-     * Whether to validate handler responses against `schema.response.body`.
-     * Defaults to `process.env.NODE_ENV !== 'production'`.
+     * Whether and how to apply `schema.response.body` to handler responses.
+     * `false` disables response validation, `true` and `'strict'` validate without changing the
+     * response body, and `'parse'` returns the parsed response body. Defaults to `'parse'`.
      */
-    validateResponse?: boolean
+    validateResponse?: ResponseValidationOption
     /**
      * Override the default request validation error response.
      */
@@ -216,13 +222,18 @@ type ResolvedZodHandlerOptions<
         ExtractResponseBodySchemas<Schema>,
         Ctx
     >
-    validateResponse: boolean
+    validateResponse: ResponseValidationMode
     validationError: ValidationErrorHandler
 }
 
 type ResponseEnvelope = {
     status: number
     body: unknown
+}
+
+type ResponseBodyForValidation = {
+    value: unknown
+    writableJson: boolean
 }
 
 const validationErrorComponentName = new Map<ValidationError, ZodValidationErrorBody['component']>([
@@ -255,6 +266,13 @@ function createValidationResponse(component: ValidationError, error: z.ZodError)
     })
 }
 
+function normalizeResponseValidationMode(
+    option: ResponseValidationOption | undefined,
+): ResponseValidationMode | undefined {
+    if (option === true) return 'strict'
+    return option
+}
+
 function resolveDefaults<
     Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
     Ctx extends object,
@@ -266,9 +284,9 @@ function resolveDefaults<
         schema: options.schema,
         handler: options.handler,
         validateResponse:
-            options.validateResponse ??
-            defaults?.validateResponse ??
-            process.env.NODE_ENV !== 'production',
+            normalizeResponseValidationMode(options.validateResponse) ??
+            normalizeResponseValidationMode(defaults?.validateResponse) ??
+            'parse',
         validationError:
             options.validationError ?? defaults?.validationError ?? createValidationResponse,
     }
@@ -349,10 +367,10 @@ function buildRouteSchema(
 
     const responseBody = schema.response?.body
         ? Object.fromEntries(
-              Object.entries(schema.response.body).map(([status, responseSchema]) => [
-                  Number(status),
-                  toJsonSchema(responseSchema as z.ZodTypeAny),
-              ]),
+              Object.entries(schema.response.body).map(([status, responseSchema]) => {
+                  const normalizedStatus = status === 'default' ? status : Number(status)
+                  return [normalizedStatus, toJsonSchema(responseSchema as z.ZodTypeAny)]
+              }),
           )
         : undefined
 
@@ -463,31 +481,53 @@ function getResponseSchemaForStatus(
     schema: ZodRouteSchemaInput<any, any, any, any> | undefined,
     status: number,
 ): z.ZodTypeAny | undefined {
-    return schema?.response?.body?.[status]
+    return schema?.response?.body?.[status] ?? schema?.response?.body?.default
 }
 
-async function readResponseBodyForValidation(response: Response): Promise<unknown> {
+async function readResponseBodyForValidation(
+    response: Response,
+): Promise<ResponseBodyForValidation | undefined> {
     if (!response.body) return undefined
     const contentType = response.headers.get('content-type') ?? ''
     const clone = response.clone()
     if (contentType.includes('application/json') || /\+json\b/i.test(contentType)) {
-        return await clone.json()
+        return {
+            value: await clone.json(),
+            writableJson: true,
+        }
     }
-    return await clone.text()
+    return {
+        value: await clone.text(),
+        writableJson: false,
+    }
 }
 
-function assertResponseSchema(
+function responseWithJsonBody(response: Response, value: unknown): Response {
+    const headers = new Headers(response.headers)
+    headers.delete('content-length')
+    if (!headers.has('content-type')) {
+        headers.set('content-type', 'application/json')
+    }
+    return new Response(value === undefined ? undefined : JSON.stringify(value), {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+    })
+}
+
+function parseResponseSchema(
     schema: ZodRouteSchemaInput<any, any, any, any> | undefined,
     status: number,
     value: unknown,
-): void {
+    mode: ResponseValidationMode,
+): unknown {
     const responseSchema = getResponseSchemaForStatus(schema, status)
-    if (!responseSchema) return
+    if (!responseSchema) return value
     const result = responseSchema.safeParse(value)
     if (!result.success) {
         throw new ZodResponseValidationError(status, result.error)
     }
-    if (!jsonValuesEqual(value, result.data)) {
+    if (mode === 'strict' && !jsonValuesEqual(value, result.data)) {
         throw new ZodResponseValidationError(
             status,
             new z.ZodError([
@@ -499,30 +539,28 @@ function assertResponseSchema(
             ]),
         )
     }
+    return mode === 'parse' ? result.data : value
 }
 
 async function validateHandlerResult(
     schema: ZodRouteSchemaInput<any, any, any, any> | undefined,
     result: unknown,
-): Promise<void> {
+    mode: ResponseValidationMode,
+): Promise<unknown> {
     if (result instanceof Response) {
-        await Promise.resolve(
-            assertResponseSchema(
-                schema,
-                result.status,
-                await readResponseBodyForValidation(result),
-            ),
-        )
-        return
+        const body = await readResponseBodyForValidation(result)
+        if (!body) return result
+        const parsed = parseResponseSchema(schema, result.status, body.value, mode)
+        return mode === 'parse' && body.writableJson ? responseWithJsonBody(result, parsed) : result
     }
     if (isResponseEnvelope(result)) {
-        assertResponseSchema(schema, result.status, result.body)
-        return
+        const parsed = parseResponseSchema(schema, result.status, result.body, mode)
+        return mode === 'parse' ? { ...result, body: parsed } : result
     }
     if (isSkippableResponseValidationValue(result)) {
-        return
+        return result
     }
-    assertResponseSchema(schema, HttpStatus.OK, result)
+    return parseResponseSchema(schema, HttpStatus.OK, result, mode)
 }
 
 /**
@@ -563,8 +601,12 @@ export function zodHandler<
             const validateAndReturn = async (
                 result: HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>,
             ): Promise<HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>> => {
-                if (resolved.validateResponse) {
-                    await validateHandlerResult(resolved.schema, result)
+                if (resolved.validateResponse !== false) {
+                    return (await validateHandlerResult(
+                        resolved.schema,
+                        result,
+                        resolved.validateResponse,
+                    )) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>
                 }
                 return result
             }

@@ -65,7 +65,7 @@ export interface RouteSchema {
         body?: JsonSchema
     }
     response?: {
-        body?: Record<number, JsonSchema>
+        body?: Partial<Record<number | 'default', JsonSchema>>
     }
 }
 

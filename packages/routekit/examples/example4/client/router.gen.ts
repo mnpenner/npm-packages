@@ -15,16 +15,55 @@ type SinglePathParam<TParams, TKey extends string> = TParams extends { [K in TKe
 
 export interface GetUsersByIdPathParams {
   id: string
-  [k: string]: unknown
 }
+
+export interface GetUsersByIdResponse200 {
+  userId: number
+}
+
+export type NoName = {
+  kind: 'schema' | 'validation' | 'transformation'
+  type: string
+  input: unknown
+  expected: string | null
+  received: string
+  message: string
+  requirement?: unknown
+  path?: unknown
+  issues?: NoName
+  lang?: string
+  abortEarly?: boolean
+  abortPipeEarly?: boolean
+  skipPipe?: boolean
+}[]
 
 export interface GetUsersByIdResponse400 {
   component: number
+  issues: {
+    kind: 'schema' | 'validation' | 'transformation'
+    type: string
+    input: unknown
+    expected: string | null
+    received: string
+    message: string
+    requirement?: unknown
+    path?: unknown
+    issues?: NoName
+    lang?: string
+    abortEarly?: boolean
+    abortPipeEarly?: boolean
+    skipPipe?: boolean
+  }[]
+}
+
+export interface GetUsersByIdResponsedefault {
   [k: string]: unknown
 }
 
 export interface GetUsersByIdResponsesByStatus {
+  '200': GetUsersByIdResponse200
   '400': GetUsersByIdResponse400
+  default: GetUsersByIdResponsedefault
 }
 export type GetUsersByIdResponse =
   GetUsersByIdResponsesByStatus[keyof GetUsersByIdResponsesByStatus]

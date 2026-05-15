@@ -177,6 +177,62 @@ describe('valibotHandler', () => {
 
         expect(response.status).toBe(HttpStatus.INTERNAL_SERVER_ERROR)
     })
+
+    it('parses responses by default', async () => {
+        const router = new Router().add({
+            path: '/parse-error/:id',
+            method: HttpMethod.GET,
+            handler: valibotHandler({
+                schema: {
+                    request: {
+                        path: v.object({
+                            id: v.pipe(v.string(), v.transform(Number), v.integer()),
+                        }),
+                    },
+                    response: {
+                        body: {
+                            [HttpStatus.BAD_REQUEST]: v.object({
+                                component: v.pipe(v.number(), v.integer()),
+                            }),
+                        },
+                    },
+                },
+                validationError: (component, issues) =>
+                    jsonResponse({ component, issues }, HttpStatus.BAD_REQUEST),
+                handler: () => jsonResponse({ ok: true }),
+            }),
+        })
+
+        const response = await router.fetch(new Request('https://example.com/parse-error/123x'))
+
+        expect(response.status).toBe(HttpStatus.BAD_REQUEST)
+        expect(await response.json()).toEqual({
+            component: ValibotValidationError.URL_PATH,
+        })
+    })
+
+    it('uses default response body schemas when no status-specific schema exists', async () => {
+        const router = new Router().add({
+            path: '/default-response',
+            method: HttpMethod.GET,
+            handler: valibotHandler({
+                schema: {
+                    response: {
+                        body: {
+                            default: v.object({ ok: v.string() }),
+                        },
+                    },
+                },
+                handler: () =>
+                    jsonResponse({ ok: 'accepted', extra: 'stripped' }, HttpStatus.ACCEPTED),
+            }),
+        })
+
+        const response = await router.fetch(new Request('https://example.com/default-response'))
+
+        expect(response.status).toBe(HttpStatus.ACCEPTED)
+        expect(await response.json()).toEqual({ ok: 'accepted' })
+    })
 })
 
 describe('valibotPartial', () => {
@@ -214,6 +270,31 @@ describe('valibotPartial', () => {
                 name: { type: 'string' },
             },
             required: ['id', 'name'],
+        })
+    })
+
+    it('approximates unsupported actions when generating route schemas', () => {
+        const partial = valibotPartial({
+            schema: {
+                request: {
+                    path: v.object({
+                        id: v.pipe(v.string(), v.trim(), v.digits(), v.toNumber()),
+                    }),
+                },
+            },
+            validateResponse: false,
+            handler: ({ path }) => jsonResponse({ id: path.id }),
+        })
+
+        expect(partial.schema?.request?.path).toEqual({
+            type: 'object',
+            properties: {
+                id: {
+                    type: 'string',
+                    pattern: '^\\d+$',
+                },
+            },
+            required: ['id'],
         })
     })
 })

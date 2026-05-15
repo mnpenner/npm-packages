@@ -164,6 +164,63 @@ describe('zodHandler', () => {
         expect(response.status).toBe(HttpStatus.INTERNAL_SERVER_ERROR)
     })
 
+    it('parses responses by default', async () => {
+        const router = new Router().add({
+            path: '/parse-error/:id',
+            method: HttpMethod.GET,
+            handler: zodHandler({
+                schema: {
+                    request: {
+                        path: z.object({ id: z.coerce.number().int() }),
+                    },
+                    response: {
+                        body: {
+                            [HttpStatus.BAD_REQUEST]: z.object({
+                                component: z.number().int(),
+                            }),
+                        },
+                    },
+                },
+                validationError: (component, error) =>
+                    jsonResponse(
+                        { component, errorTree: z.treeifyError(error) },
+                        HttpStatus.BAD_REQUEST,
+                    ),
+                handler: () => jsonResponse({ ok: true }),
+            }),
+        })
+
+        const response = await router.fetch(new Request('https://example.com/parse-error/123x'))
+
+        expect(response.status).toBe(HttpStatus.BAD_REQUEST)
+        expect(await response.json()).toEqual({
+            component: ValidationError.URL_PATH,
+        })
+    })
+
+    it('uses default response body schemas when no status-specific schema exists', async () => {
+        const router = new Router().add({
+            path: '/default-response',
+            method: HttpMethod.GET,
+            handler: zodHandler({
+                schema: {
+                    response: {
+                        body: {
+                            default: z.object({ ok: z.string() }),
+                        },
+                    },
+                },
+                handler: () =>
+                    jsonResponse({ ok: 'accepted', extra: 'stripped' }, HttpStatus.ACCEPTED),
+            }),
+        })
+
+        const response = await router.fetch(new Request('https://example.com/default-response'))
+
+        expect(response.status).toBe(HttpStatus.ACCEPTED)
+        expect(await response.json()).toEqual({ ok: 'accepted' })
+    })
+
     it('skips response validation when disabled', async () => {
         const router = new Router().add({
             path: '/skip',

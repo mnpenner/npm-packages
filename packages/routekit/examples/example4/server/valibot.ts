@@ -31,7 +31,7 @@ export const BaseIssueSchema: v.GenericSchema<BaseIssue> = v.object({
 })
 
 export const valibotRoute = createValibotRoutes({
-    validateResponse: IS_DEV,
+    validateResponse: 'parse',
     validationError(component, issues) {
         console.error('validationError', { component, issues })
         return jsonResponse({ component, issues }, HttpStatus.BAD_REQUEST)
@@ -39,9 +39,10 @@ export const valibotRoute = createValibotRoutes({
     schema: {
         response: {
             body: {
+                default: v.unknown(),
                 [HttpStatus.BAD_REQUEST]: v.object({
                     component: v.pipe(v.number(), v.integer()),
-                    // issues: v.array(BaseIssueSchema),
+                    issues: v.array(BaseIssueSchema),
                 }),
             },
         },
