@@ -4,6 +4,7 @@
   "description": "Typed server-side routing utilities for Fetch-compatible runtimes.",
   "exports": {
     ".": "./dist/index.mjs",
+    "./bin": "./dist/bin.mjs",
     "./client": "./dist/client.mjs",
     "./handlers": "./dist/handlers.mjs",
     "./middleware": "./dist/middleware.mjs",
@@ -11,7 +12,7 @@
     "./package.json": "./package.json"
   },
   "bin": {
-    "routekit-gen-api-client": "./src/bin/gen-api-client.ts"
+    "routekit": "./dist/bin.mjs"
   },
   "files": [
     "src"
@@ -19,18 +20,19 @@
   "module": "./dist/index.mjs",
   "type": "module",
   "devDependencies": {
-    "@types/bun": "latest",
-    "bun-types": "catalog:",
-    "tsdown": "catalog:",
-    "@valibot/to-json-schema": "^1.6.0",
-    "valibot": "^1.4.0",
-    "zod": "^4.3.5",
     "@mpen/ts-types": "workspace:*",
-    "maxmind": "^5"
+    "@types/bun": "latest",
+    "@valibot/to-json-schema": "^1.6.0",
+    "bun-types": "catalog:",
+    "maxmind": "^5",
+    "tsdown": "catalog:",
+    "valibot": "^1.4.0",
+    "zod": "^4.3.5"
   },
   "peerDependencies": {
     "@valibot/to-json-schema": "^1.6.0",
     "maxmind": "^5",
+    "prettier": "^3.8.3",
     "typescript": "^5",
     "valibot": "^1.4.0",
     "zod": "^4.3.5"
@@ -46,6 +48,9 @@
       "optional": true
     },
     "zod": {
+      "optional": true
+    },
+    "prettier": {
       "optional": true
     }
   },

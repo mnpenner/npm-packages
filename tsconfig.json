@@ -96,7 +96,12 @@
             "@mpen/rerouter/hooks": ["./packages/rerouter/src/hooks/index.ts"],
             "@mpen/imut-utils/fp": ["./packages/imut-utils/src/fp/index.ts"],
             "@mpen/rerouter/bin": ["./packages/rerouter/cli/bin.ts"],
-            "@mpen/rerouter": ["./packages/rerouter/src/index.ts"]
+            "@mpen/rerouter": [
+                "./packages/rerouter/src/index.ts"
+            ],
+            "@mpen/routekit/bin": [
+                "./packages/routekit/src/bin/gen-api-client.ts"
+            ]
         }
     },
     "files": [],

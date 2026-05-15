@@ -13,6 +13,7 @@
   "type": "module",
   "dependencies": {},
   "peerDependencies": {
+    "prettier": "^3.8.3",
     "react": "^19",
     "typescript": ">=5"
   },
@@ -27,6 +28,11 @@
     "happy-dom": "^20.9.0",
     "react-dom": "^19.2.3",
     "tsdown": "catalog:"
+  },
+  "peerDependenciesMeta": {
+    "prettier": {
+      "optional": true
+    }
   },
   "scripts": {
     "build": "tsdown",
@@ -43,7 +49,6 @@
   "module": "./dist/index.js",
   "inlinedDependencies": {
     "path-to-regexp": "8.4.2",
-    "prettier": "3.8.3",
     "process": "0.11.10"
   },
   "publishHash": {
