@@ -1,0 +1,67 @@
+{
+  "name": "@mpen/routekit",
+  "version": "0.1.0",
+  "description": "Typed server-side routing utilities for Fetch-compatible runtimes.",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./client": "./dist/client.mjs",
+    "./handlers": "./dist/handlers.mjs",
+    "./middleware": "./dist/middleware.mjs",
+    "./routes": "./dist/routes.mjs",
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "routekit-gen-api-client": "./src/bin/gen-api-client.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "module": "./dist/index.mjs",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "bun-types": "catalog:",
+    "tsdown": "catalog:",
+    "@valibot/to-json-schema": "^1.6.0",
+    "valibot": "^1.4.0",
+    "zod": "^4.3.5",
+    "@mpen/ts-types": "workspace:*",
+    "maxmind": "^5"
+  },
+  "peerDependencies": {
+    "@valibot/to-json-schema": "^1.6.0",
+    "maxmind": "^5",
+    "typescript": "^5",
+    "valibot": "^1.4.0",
+    "zod": "^4.3.5"
+  },
+  "peerDependenciesMeta": {
+    "@valibot/to-json-schema": {
+      "optional": true
+    },
+    "maxmind": {
+      "optional": true
+    },
+    "valibot": {
+      "optional": true
+    },
+    "zod": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@mpen/http-helpers": "workspace:*",
+    "chalk": "^5.6.2",
+    "json-schema-to-typescript": "^15.0.4"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "gen": "bun ./src/bin/gen-api-client.ts ./examples/example1/server/router-instance.ts -o ./examples/example1/client/api-client.gen.ts",
+    "gen3": "bun ./src/bin/gen-api-client.ts ./examples/example3/server/router.ts -o ./examples/example3/client/router.gen.ts -p"
+  },
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "@mpen/routekit-zod-neverject",
+  "description": "Zod and neverject helpers for routekit.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "bun": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "module": "src/index.ts",
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@mpen/http-helpers": "workspace:*",
+    "@mpen/routekit": "workspace:*",
+    "neverject": "workspace:*",
+    "zod": "^4.1.13"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

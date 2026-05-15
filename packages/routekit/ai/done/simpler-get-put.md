@@ -1,0 +1,1 @@
+Simplify the Router.{get,head,post,put,delete,patch} API. It should be like `get(pattern,handler)` so we can do `router.get('/ping', ()=>"ok")`. If people want access the other options, they can use `.add`. Don't forget to update packages/routekit/examples/router-instance.ts and packages/routekit/src/bin/gen-api-client.ts to match.

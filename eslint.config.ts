@@ -21,7 +21,7 @@ const browserPackageFiles = [
     'packages/react-datepicker/**/*.{js,jsx,ts,tsx}',
     'packages/react-external-store/**/*.{js,jsx,ts,tsx}',
     'packages/rerouter/**/*.{js,jsx,ts,tsx}',
-    'packages/server-router/src/client/**/*.{js,jsx,ts,tsx}',
+    'packages/routekit/src/client/**/*.{js,jsx,ts,tsx}',
 ]
 
 const reactPackageFiles = [
@@ -64,7 +64,7 @@ const serverPackageFiles = [
     'packages/register-pretty-error/**/*.{js,jsx,ts,tsx}',
     'packages/rerouter/**/*.{js,jsx,ts,tsx}',
     'packages/rollup-plugins/**/*.{js,jsx,ts,tsx}',
-    'packages/server-router/**/*.{js,jsx,ts,tsx}',
+    'packages/routekit/**/*.{js,jsx,ts,tsx}',
     'packages/svg-to-react-webpack-loader/**/*.{js,jsx,ts,tsx}',
     'packages/svg2fonts/**/*.{js,jsx,ts,tsx}',
     'packages/ts-types/**/*.{js,jsx,ts,tsx}',

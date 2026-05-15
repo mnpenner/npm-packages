@@ -12,7 +12,7 @@
 - [x] Freshen `@mpen/is-type`
 - Start `ts-types` package; include `ts-expect` and my fav helpers like `Override`, `assumeType`
     - Have a `react/` subdir for `OverrideProps` et al
-- Create `logger` package (extract from server-router and bookmarks)
+- Create `logger` package (extract from routekit and bookmarks)
 - Create `progressbar` package (extract from scrubber)
 - Create `process` package (extract from `podman`)
 - Uplevel all the `packages/rollup-plugins/packages` packages

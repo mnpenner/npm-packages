@@ -1,0 +1,12 @@
+- [ ] Rename `http-helpers` package to `http-enums`
+- Clean up tsdown entrypoints. We should have
+  - @mpen/routekit   # main router
+  - @mpen/routekit/client  # client transports 
+  - @mpen/routekit/plugins  # optional plugins
+  - @mpen/routekit/middleware   # optional middleware -- should maybe be combined with plugins??
+- Reorganize examples. Put them all in one dir, and split client/ and server/ so they can be typed properly
+- Drop `pattern` alias for RoutePath
+- Batch fetching? Part of transport or ApiClient?
+- OTel..?
+- Split packages/routekit/src/client/index.ts into multiple files
+- [x] `ResponseBodyReader` is the wrong shape, it should always be `ReadableStream<Uint8Array<ArrayBufferLike>> | null` to match `Response.body` ... but then we have to `new Response(res.body).json()` to parse it but maybe that's OK?

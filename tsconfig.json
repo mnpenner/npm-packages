@@ -46,17 +46,17 @@
             "@mpen/rollup-preset-tslib": [
                 "./packages/rollup-plugins/packages/rollup-preset-tslib/rollup-preset-tslib.ts"
             ],
-            "@mpen/server-router": ["./packages/server-router/src/index.ts"],
-            "@mpen/server-router/client": ["./packages/server-router/src/client/index.ts"],
-            "@mpen/server-router/handlers": [
-                "./packages/server-router/src/router/handlers/index.ts"
+            "@mpen/routekit": ["./packages/routekit/src/index.ts"],
+            "@mpen/routekit/client": ["./packages/routekit/src/client/index.ts"],
+            "@mpen/routekit/handlers": [
+                "./packages/routekit/src/router/handlers/index.ts"
             ],
-            "@mpen/server-router/middleware": [
-                "./packages/server-router/src/router/middleware/index.ts"
+            "@mpen/routekit/middleware": [
+                "./packages/routekit/src/router/middleware/index.ts"
             ],
-            "@mpen/server-router/routes": ["./packages/server-router/src/router/routes/index.ts"],
-            "@mpen/server-router-zod-neverject": [
-                "./packages/rerouter/experimental/server-router-zod-neverject/src/index.ts"
+            "@mpen/routekit/routes": ["./packages/routekit/src/router/routes/index.ts"],
+            "@mpen/routekit-zod-neverject": [
+                "./packages/rerouter/experimental/routekit-zod-neverject/src/index.ts"
             ],
             "@mpen/uri-template": ["./packages/uri-template/src/index.ts"],
             "bun-plugin-react-compiler": [
