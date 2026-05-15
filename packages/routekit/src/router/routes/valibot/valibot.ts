@@ -2,7 +2,6 @@ import { HttpStatus } from '@mpen/http-helpers'
 import { toJsonSchema } from '@valibot/to-json-schema'
 import type { Router } from '../../router'
 import type {
-    AnyContext,
     Handler,
     HandlerContext,
     HandlerResult,
@@ -23,8 +22,15 @@ export const enum ValibotValidationError {
     QUERY_PARAMETERS,
 }
 
-type ValibotSchema = v.GenericSchema | undefined
-type ValibotResponseBodySchemas = Record<number, v.GenericSchema> | undefined
+type AnyValibotSchema = v.GenericSchema
+type ValibotSchema = AnyValibotSchema | undefined
+type ValibotObjectSchema = v.ObjectSchema<
+    v.ObjectEntries,
+    v.ErrorMessage<v.ObjectIssue> | undefined
+>
+type ValibotPathSchema = ValibotObjectSchema | undefined
+type AnyValibotResponseBodySchemas = Record<number, AnyValibotSchema>
+type ValibotResponseBodySchemas = AnyValibotResponseBodySchemas | undefined
 
 /**
  * Default validation error payload returned by Valibot-backed routes.
@@ -40,7 +46,7 @@ export type ValibotValidationErrorBody = {
  */
 export type ValibotRouteSchemaInput<
     BodySchema extends ValibotSchema = undefined,
-    PathSchema extends ValibotSchema = undefined,
+    PathSchema extends ValibotPathSchema = undefined,
     QuerySchema extends ValibotSchema = undefined,
     ResponseBodySchemas extends ValibotResponseBodySchemas = undefined,
 > = {
@@ -54,6 +60,13 @@ export type ValibotRouteSchemaInput<
     }
 }
 
+type AnyValibotRouteSchemaInput = ValibotRouteSchemaInput<
+    AnyValibotSchema,
+    ValibotObjectSchema,
+    AnyValibotSchema,
+    AnyValibotResponseBodySchemas
+>
+
 type InferSchema<Schema extends ValibotSchema> = Schema extends v.GenericSchema
     ? v.InferOutput<Schema>
     : unknown
@@ -66,32 +79,47 @@ type InferResponseBody<ResponseBodySchemas extends ValibotResponseBodySchemas> =
         : unknown
 
 type NormalizeSchema<Schema> =
-    Schema extends ValibotRouteSchemaInput<any, any, any, any>
+    Schema extends AnyValibotRouteSchemaInput
         ? Schema
         : ValibotRouteSchemaInput<undefined, undefined, undefined, undefined>
 
-type ExtractBodySchema<Schema extends ValibotRouteSchemaInput<any, any, any, any> | undefined> =
-    NormalizeSchema<Schema> extends ValibotRouteSchemaInput<infer BodySchema, any, any, any>
+type ExtractBodySchema<Schema extends AnyValibotRouteSchemaInput | undefined> =
+    NormalizeSchema<Schema> extends ValibotRouteSchemaInput<
+        infer BodySchema,
+        infer _PathSchema,
+        infer _QuerySchema,
+        infer _ResponseBodySchemas
+    >
         ? BodySchema
         : undefined
 
-type ExtractPathSchema<Schema extends ValibotRouteSchemaInput<any, any, any, any> | undefined> =
-    NormalizeSchema<Schema> extends ValibotRouteSchemaInput<any, infer PathSchema, any, any>
+type ExtractPathSchema<Schema extends AnyValibotRouteSchemaInput | undefined> =
+    NormalizeSchema<Schema> extends ValibotRouteSchemaInput<
+        infer _BodySchema,
+        infer PathSchema,
+        infer _QuerySchema,
+        infer _ResponseBodySchemas
+    >
         ? PathSchema
         : undefined
 
-type ExtractQuerySchema<Schema extends ValibotRouteSchemaInput<any, any, any, any> | undefined> =
-    NormalizeSchema<Schema> extends ValibotRouteSchemaInput<any, any, infer QuerySchema, any>
+type ExtractQuerySchema<Schema extends AnyValibotRouteSchemaInput | undefined> =
+    NormalizeSchema<Schema> extends ValibotRouteSchemaInput<
+        infer _BodySchema,
+        infer _PathSchema,
+        infer QuerySchema,
+        infer _ResponseBodySchemas
+    >
         ? QuerySchema
         : undefined
 
 type ExtractResponseBodySchemas<
-    Schema extends ValibotRouteSchemaInput<any, any, any, any> | undefined,
+    Schema extends AnyValibotRouteSchemaInput | undefined,
 > =
     NormalizeSchema<Schema> extends ValibotRouteSchemaInput<
-        any,
-        any,
-        any,
+        infer _BodySchema,
+        infer _PathSchema,
+        infer _QuerySchema,
         infer ResponseBodySchemas
     >
         ? ResponseBodySchemas
@@ -102,7 +130,7 @@ type ExtractResponseBodySchemas<
  */
 export type ValibotHandlerParams<
     BodySchema extends ValibotSchema,
-    PathSchema extends ValibotSchema,
+    PathSchema extends ValibotPathSchema,
     QuerySchema extends ValibotSchema,
 > = {
     path: InferSchema<PathSchema>
@@ -115,12 +143,13 @@ export type ValibotHandlerParams<
  */
 export type ValibotHandlerContext<
     BodySchema extends ValibotSchema,
-    PathSchema extends ValibotSchema,
+    PathSchema extends ValibotPathSchema,
     QuerySchema extends ValibotSchema,
     Ctx extends object,
-> = Omit<HandlerContext<Ctx>, 'pathParams'> & {
-    params: ValibotHandlerParams<BodySchema, PathSchema, QuerySchema>
-}
+> = Omit<HandlerContext<Ctx>, 'pathParams'> &
+    ValibotHandlerParams<BodySchema, PathSchema, QuerySchema> & {
+        params: ValibotHandlerParams<BodySchema, PathSchema, QuerySchema>
+    }
 
 /**
  * Validation error handler used when request parsing fails.
@@ -142,7 +171,7 @@ export type ValibotRouteHelperDefaults = {
      * Route schema fragments that should be merged into every built route.
      * Route-level schemas override matching request fields and response status codes.
      */
-    schema?: ValibotRouteSchemaInput<any, any, any, any>
+    schema?: AnyValibotRouteSchemaInput
     /**
      * Whether to validate handler responses against `schema.response.body`.
      * Defaults to `process.env.NODE_ENV !== 'production'`.
@@ -159,10 +188,10 @@ export type ValibotRouteHelperDefaults = {
  */
 export type ValibotRouteHandler<
     BodySchema extends ValibotSchema,
-    PathSchema extends ValibotSchema,
+    PathSchema extends ValibotPathSchema,
     QuerySchema extends ValibotSchema,
     ResponseBodySchemas extends ValibotResponseBodySchemas,
-    Ctx extends object = AnyContext,
+    Ctx extends object = object,
 > = (
     this: Router<any>,
     ctx: ValibotHandlerContext<BodySchema, PathSchema, QuerySchema, Ctx>,
@@ -172,8 +201,8 @@ export type ValibotRouteHandler<
  * Shared options used by `valibotHandler` and `valibotPartial`.
  */
 export type ValibotHandlerOptions<
-    Schema extends ValibotRouteSchemaInput<any, any, any, any> | undefined,
-    Ctx extends object = AnyContext,
+    Schema extends AnyValibotRouteSchemaInput | undefined,
+    Ctx extends object = object,
 > = ValibotRouteHelperDefaults & {
     schema?: Schema
     handler: ValibotRouteHandler<
@@ -189,30 +218,30 @@ export type ValibotHandlerOptions<
  * Route options used by `valibotRoute`.
  */
 export type ValibotRouteOptions<
-    Schema extends ValibotRouteSchemaInput<any, any, any, any> | undefined,
-    Ctx extends object = AnyContext,
+    Schema extends AnyValibotRouteSchemaInput | undefined,
+    Ctx extends object = object,
 > = Omit<Route<Ctx>, 'handler' | 'schema'> & ValibotHandlerOptions<Schema, Ctx>
 
 /**
  * Method-specific route options used by `withValibot`.
  */
 export type WithValibotOptions<
-    Schema extends ValibotRouteSchemaInput<any, any, any, any> | undefined,
-    Ctx extends object = AnyContext,
+    Schema extends AnyValibotRouteSchemaInput | undefined,
+    Ctx extends object = object,
 > = Omit<RouteOptions<Ctx>, 'handler' | 'schema'> & ValibotHandlerOptions<Schema, Ctx>
 
 /**
  * Valibot route builder created by `createValibotRoutes`.
  */
 export type ValibotRoutes = <
-    Schema extends ValibotRouteSchemaInput<any, any, any, any> | undefined,
-    Ctx extends object = AnyContext,
+    Schema extends AnyValibotRouteSchemaInput | undefined,
+    Ctx extends object = object,
 >(
     options: WithValibotOptions<Schema, Ctx>,
 ) => RouteOptions<Ctx>
 
 type ResolvedValibotHandlerOptions<
-    Schema extends ValibotRouteSchemaInput<any, any, any, any> | undefined,
+    Schema extends AnyValibotRouteSchemaInput | undefined,
     Ctx extends object,
 > = {
     schema: Schema | undefined
@@ -269,7 +298,7 @@ function createValidationResponse(
 }
 
 function resolveDefaults<
-    Schema extends ValibotRouteSchemaInput<any, any, any, any> | undefined,
+    Schema extends AnyValibotRouteSchemaInput | undefined,
     Ctx extends object,
 >(
     options: ValibotHandlerOptions<Schema, Ctx>,
@@ -353,7 +382,7 @@ function toResponseJsonSchema(schema: v.GenericSchema): JsonSchema {
 }
 
 function buildRouteSchema(
-    schema?: ValibotRouteSchemaInput<any, any, any, any>,
+    schema?: AnyValibotRouteSchemaInput,
 ): RouteSchema | undefined {
     if (!schema) return undefined
 
@@ -393,8 +422,8 @@ function buildRouteSchema(
 
 function mergeRouteSchema(
     defaults: ValibotRouteHelperDefaults,
-    schema: ValibotRouteSchemaInput<any, any, any, any> | undefined,
-): ValibotRouteSchemaInput<any, any, any, any> | undefined {
+    schema: AnyValibotRouteSchemaInput | undefined,
+): AnyValibotRouteSchemaInput | undefined {
     const defaultSchema = defaults.schema
     if (!defaultSchema) return schema
     if (!schema) return defaultSchema
@@ -424,18 +453,18 @@ function mergeRouteSchema(
 }
 
 function mergeWithValibotOptions<
-    Schema extends ValibotRouteSchemaInput<any, any, any, any> | undefined,
+    Schema extends AnyValibotRouteSchemaInput | undefined,
     Ctx extends object,
 >(
     defaults: ValibotRouteHelperDefaults,
     options: WithValibotOptions<Schema, Ctx>,
-): WithValibotOptions<ValibotRouteSchemaInput<any, any, any, any>, Ctx> {
+): WithValibotOptions<Schema, Ctx> {
     const schema = mergeRouteSchema(defaults, options.schema)
     return {
         ...defaults,
         ...options,
         ...(schema === undefined ? {} : { schema }),
-    }
+    } as WithValibotOptions<Schema, Ctx>
 }
 
 function isResponseEnvelope(value: unknown): value is ResponseEnvelope {
@@ -458,7 +487,7 @@ function isSkippableResponseValidationValue(value: unknown): boolean {
 }
 
 function getResponseSchemaForStatus(
-    schema: ValibotRouteSchemaInput<any, any, any, any> | undefined,
+    schema: AnyValibotRouteSchemaInput | undefined,
     status: number,
 ): v.GenericSchema | undefined {
     return schema?.response?.body?.[status]
@@ -475,7 +504,7 @@ async function readResponseBodyForValidation(response: Response): Promise<unknow
 }
 
 function assertResponseSchema(
-    schema: ValibotRouteSchemaInput<any, any, any, any> | undefined,
+    schema: AnyValibotRouteSchemaInput | undefined,
     status: number,
     value: unknown,
 ): void {
@@ -488,7 +517,7 @@ function assertResponseSchema(
 }
 
 async function validateHandlerResult(
-    schema: ValibotRouteSchemaInput<any, any, any, any> | undefined,
+    schema: AnyValibotRouteSchemaInput | undefined,
     result: unknown,
 ): Promise<void> {
     if (result instanceof Response) {
@@ -527,7 +556,7 @@ async function validateHandlerResult(
  *       },
  *     },
  *   },
- *   handler: ({params}) => ({id: params.path.id}),
+ *   handler: ({path}) => ({id: path.id}),
  * })
  * ```
  *
@@ -535,8 +564,8 @@ async function validateHandlerResult(
  * @returns A handler that validates request inputs before invoking the provided handler.
  */
 export function valibotHandler<
-    Schema extends ValibotRouteSchemaInput<any, any, any, any> | undefined,
-    Ctx extends object = AnyContext,
+    Schema extends AnyValibotRouteSchemaInput | undefined,
+    Ctx extends object = object,
 >(
     options: ValibotHandlerOptions<Schema, Ctx>,
 ): Handler<InferResponseBody<ExtractResponseBodySchemas<Schema>>, Ctx> {
@@ -551,13 +580,15 @@ export function valibotHandler<
             const querySchema = resolved.schema?.request?.query
             const queryParams = readQueryParams(ctx.url.searchParams)
 
+            const handlerParams = {
+                path: ctx.pathParams as InferSchema<ExtractPathSchema<Schema>>,
+                query: undefined as InferSchema<ExtractQuerySchema<Schema>>,
+                body: undefined as InferSchema<ExtractBodySchema<Schema>>,
+            }
             const handlerContext = {
                 ...ctx,
-                params: {
-                    path: ctx.pathParams as InferSchema<ExtractPathSchema<Schema>>,
-                    query: undefined as InferSchema<ExtractQuerySchema<Schema>>,
-                    body: undefined as InferSchema<ExtractBodySchema<Schema>>,
-                },
+                ...handlerParams,
+                params: handlerParams,
             } as ValibotHandlerContext<
                 ExtractBodySchema<Schema>,
                 ExtractPathSchema<Schema>,
@@ -576,6 +607,7 @@ export function valibotHandler<
                 handlerContext.params.query = queryResult.output as InferSchema<
                     ExtractQuerySchema<Schema>
                 >
+                handlerContext.query = handlerContext.params.query
             }
 
             if (bodySchema) {
@@ -598,6 +630,7 @@ export function valibotHandler<
                 handlerContext.params.body = bodyResult.output as InferSchema<
                     ExtractBodySchema<Schema>
                 >
+                handlerContext.body = handlerContext.params.body
             }
 
             if (pathSchema) {
@@ -611,6 +644,7 @@ export function valibotHandler<
                 handlerContext.params.path = pathResult.output as InferSchema<
                     ExtractPathSchema<Schema>
                 >
+                handlerContext.path = handlerContext.params.path
             }
 
             const result = await resolved.handler.call(this, handlerContext)
@@ -631,8 +665,8 @@ export function valibotHandler<
  * @returns The validated handler and generated route `schema`.
  */
 export function valibotPartial<
-    Schema extends ValibotRouteSchemaInput<any, any, any, any> | undefined,
-    Ctx extends object = AnyContext,
+    Schema extends AnyValibotRouteSchemaInput | undefined,
+    Ctx extends object = object,
 >(
     options: ValibotHandlerOptions<Schema, Ctx>,
 ): {
@@ -659,7 +693,7 @@ export function valibotPartial<
  *       body: v.object({name: v.string()}),
  *     },
  *   },
- *   handler: ({params}) => ({id: params.path.id, name: params.body.name}),
+ *   handler: ({path, body}) => ({id: path.id, name: body.name}),
  * }))
  * ```
  *
@@ -667,8 +701,8 @@ export function valibotPartial<
  * @returns Route options compatible with method-specific router helpers.
  */
 export function withValibot<
-    Schema extends ValibotRouteSchemaInput<any, any, any, any> | undefined,
-    Ctx extends object = AnyContext,
+    Schema extends AnyValibotRouteSchemaInput | undefined,
+    Ctx extends object = object,
 >(options: WithValibotOptions<Schema, Ctx>): RouteOptions<Ctx> {
     const { schema, handler, validationError, validateResponse, ...routeOptions } = options
     const partial = valibotPartial<Schema, Ctx>({
@@ -707,7 +741,7 @@ export function withValibot<
  *       path: v.object({id: v.string()}),
  *     },
  *   },
- *   handler: ({params}) => ({id: params.path.id}),
+ *   handler: ({path}) => ({id: path.id}),
  * }))
  * ```
  *
@@ -716,8 +750,8 @@ export function withValibot<
  */
 export function createValibotRoutes(defaults: ValibotRouteHelperDefaults = {}): ValibotRoutes {
     return <
-        Schema extends ValibotRouteSchemaInput<any, any, any, any> | undefined,
-        Ctx extends object = AnyContext,
+        Schema extends AnyValibotRouteSchemaInput | undefined,
+        Ctx extends object = object,
     >(
         options: WithValibotOptions<Schema, Ctx>,
     ): RouteOptions<Ctx> => withValibot(mergeWithValibotOptions(defaults, options))
@@ -730,8 +764,8 @@ export function createValibotRoutes(defaults: ValibotRouteHelperDefaults = {}): 
  * @returns A route compatible with the core router.
  */
 export function valibotRoute<
-    Schema extends ValibotRouteSchemaInput<any, any, any, any> | undefined,
-    Ctx extends object = AnyContext,
+    Schema extends AnyValibotRouteSchemaInput | undefined,
+    Ctx extends object = object,
 >(options: ValibotRouteOptions<Schema, Ctx>): Route<Ctx> {
     const { schema, handler, validationError, validateResponse, ...route } = options
     const partial = valibotPartial<Schema, Ctx>({

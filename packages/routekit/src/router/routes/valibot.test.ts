@@ -34,15 +34,18 @@ describe('valibotHandler', () => {
                     },
                 },
             },
-            handler: ({ req, params }) => {
+            handler: ({ req, params, path, query, body }) => {
                 expectType<Request>(req)
                 expectType<{ id: string }>(params.path)
                 expectType<{ verbose: 'yes' | 'no' }>(params.query)
                 expectType<{ name: string }>(params.body)
+                expectType<{ id: string }>(path)
+                expectType<{ verbose: 'yes' | 'no' }>(query)
+                expectType<{ name: string }>(body)
                 return jsonResponse({
-                    pathParams: params.path,
-                    query: params.query,
-                    body: params.body,
+                    pathParams: path,
+                    query,
+                    body,
                 })
             },
         })
@@ -204,7 +207,7 @@ describe('valibotRoute', () => {
                 },
             },
             validateResponse: false,
-            handler: ({ params }) => jsonResponse({ id: params.path.id }),
+            handler: ({ path }) => jsonResponse({ id: path.id }),
         })
 
         expect(route.path).toBe('/users/:id')
@@ -215,6 +218,53 @@ describe('valibotRoute', () => {
             },
             required: ['id'],
         })
+    })
+
+    it('requires path schemas to be Valibot object schemas', () => {
+        if (false) {
+            valibotRoute({
+                path: '/users/:id',
+                method: HttpMethod.GET,
+                schema: {
+                    request: {
+                        // @ts-expect-error Path schemas must be Valibot object schemas.
+                        path: { id: v.number() },
+                    },
+                },
+                validateResponse: false,
+                handler: () => jsonResponse({ id: '1' }),
+            })
+
+            valibotRoute({
+                path: '/users/:id',
+                method: HttpMethod.GET,
+                schema: {
+                    request: {
+                        // @ts-expect-error Path schemas must describe the whole path object.
+                        path: v.string(),
+                    },
+                },
+                validateResponse: false,
+                handler: () => jsonResponse({ id: '1' }),
+            })
+        }
+    })
+
+    it('hides raw pathParams from Valibot handlers', () => {
+        if (false) {
+            valibotRoute({
+                path: '/users/:id',
+                method: HttpMethod.GET,
+                schema: {
+                    request: {
+                        path: v.object({ id: v.string() }),
+                    },
+                },
+                validateResponse: false,
+                // @ts-expect-error Valibot handlers expose validated path values on path.
+                handler: ({ pathParams }) => jsonResponse({ id: pathParams.id }),
+            })
+        }
     })
 })
 
@@ -243,8 +293,7 @@ describe('withValibot', () => {
                     },
                 },
                 validateResponse: true,
-                handler: ({ params }) =>
-                    jsonResponse({ id: params.path.id, name: params.body.name }),
+                handler: ({ path, body }) => jsonResponse({ id: path.id, name: body.name }),
             }),
         )
 
@@ -332,5 +381,46 @@ describe('createValibotRoutes', () => {
             new Request('https://example.com/builder-override'),
         )
         expect(strictResponse.status).toBe(HttpStatus.INTERNAL_SERVER_ERROR)
+    })
+
+    it('preserves strict handler and path schema types on route builders', () => {
+        const valibotRouteBuilder = createValibotRoutes()
+
+        if (false) {
+            valibotRouteBuilder({
+                schema: {
+                    request: {
+                        path: v.object({ id: v.string() }),
+                    },
+                },
+                validateResponse: false,
+                handler: ({ path }) => {
+                    expectType<{ id: string }>(path)
+                    return jsonResponse({ id: path.id })
+                },
+            })
+
+            valibotRouteBuilder({
+                schema: {
+                    request: {
+                        // @ts-expect-error Path schemas must be Valibot object schemas.
+                        path: { id: v.string() },
+                    },
+                },
+                validateResponse: false,
+                handler: () => jsonResponse({ id: '1' }),
+            })
+
+            valibotRouteBuilder({
+                schema: {
+                    request: {
+                        path: v.object({ id: v.string() }),
+                    },
+                },
+                validateResponse: false,
+                // @ts-expect-error Valibot route builders expose validated path values on path.
+                handler: ({ pathParams }) => jsonResponse({ id: pathParams.id }),
+            })
+        }
     })
 })

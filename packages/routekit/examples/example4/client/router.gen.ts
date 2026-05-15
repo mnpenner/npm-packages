@@ -13,6 +13,11 @@ type SinglePathParam<TParams, TKey extends string> = TParams extends { [K in TKe
   ? V
   : unknown
 
+export interface GetUsersByIdPathParams {
+  id: string
+  [k: string]: unknown
+}
+
 export interface GetUsersByIdResponse400 {
   message: string
   [k: string]: unknown
@@ -25,7 +30,7 @@ export type GetUsersByIdResponse =
   GetUsersByIdResponsesByStatus[keyof GetUsersByIdResponsesByStatus]
 
 export interface GetUsersByIdOptions extends ClientCallOptions {
-  path: any | any
+  path: GetUsersByIdPathParams | SinglePathParam<GetUsersByIdPathParams, 'id'>
 }
 
 export class ApiClient {
