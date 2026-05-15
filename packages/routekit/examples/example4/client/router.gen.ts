@@ -14,7 +14,7 @@ type SinglePathParam<TParams, TKey extends string> = TParams extends { [K in TKe
   : unknown
 
 export interface GetUsersByIdPathParams {
-  id: string
+  id: string | number
 }
 
 export interface GetUsersByIdResponse200 {

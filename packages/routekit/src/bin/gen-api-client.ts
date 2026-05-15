@@ -173,6 +173,47 @@ function isNeverJsonSchema(schema: JsonSchema): boolean {
     )
 }
 
+function isJsonSchemaObject(schema: JsonSchema): schema is Record<string, unknown> {
+    return (
+        schema !== true && schema !== false && typeof schema === 'object' && !Array.isArray(schema)
+    )
+}
+
+function isNumericStringSchema(schema: unknown): boolean {
+    if (!schema || typeof schema !== 'object' || Array.isArray(schema)) return false
+    const schemaObject = schema as Record<string, unknown>
+    return (
+        schemaObject.type === 'string' &&
+        typeof schemaObject.pattern === 'string' &&
+        ['^\\d+$', '^[0-9]+$'].includes(schemaObject.pattern)
+    )
+}
+
+function widenNumericStringPathParams(schema: JsonSchema, pathParams: string[]): JsonSchema {
+    if (!isJsonSchemaObject(schema)) return schema
+    const properties = schema.properties
+    if (!properties || typeof properties !== 'object' || Array.isArray(properties)) {
+        return schema
+    }
+
+    const nextProperties: Record<string, unknown> = { ...properties }
+    let widened = false
+    for (const pathParam of pathParams) {
+        const propertySchema = nextProperties[pathParam]
+        if (!isNumericStringSchema(propertySchema)) continue
+        nextProperties[pathParam] = {
+            anyOf: [propertySchema, { type: 'number' }],
+        }
+        widened = true
+    }
+
+    if (!widened) return schema
+    return {
+        ...schema,
+        properties: nextProperties,
+    }
+}
+
 function normalizeMethod(routeMethod: NormalizedRoute<any>['method']): HttpMethod[] {
     if (!routeMethod) return [HttpMethod.GET]
     return Array.isArray(routeMethod) ? routeMethod : [routeMethod]
@@ -261,7 +302,7 @@ async function generateRouteTypes(route: ProcessedRouteMeta): Promise<GeneratedR
     if (route.requestSchema?.path) {
         generated.pathTypeSource = await compileSchemaType(
             `${route.typeBase}PathParams`,
-            route.requestSchema.path,
+            widenNumericStringPathParams(route.requestSchema.path, route.pathParams),
         )
     }
     if (route.requestSchema?.query) {
