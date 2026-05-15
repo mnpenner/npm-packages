@@ -56,9 +56,7 @@ export interface GetUsersByIdResponse400 {
   }[]
 }
 
-export interface GetUsersByIdResponsedefault {
-  [k: string]: unknown
-}
+export type GetUsersByIdResponsedefault = unknown
 
 export interface GetUsersByIdResponsesByStatus {
   '200': GetUsersByIdResponse200

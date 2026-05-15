@@ -149,6 +149,30 @@ function isUnknown(text: string): boolean {
     return text === 'unknown' || text === 'any'
 }
 
+function isUnconstrainedJsonSchema(schema: JsonSchema): boolean {
+    return (
+        schema === true ||
+        (schema !== false &&
+            typeof schema === 'object' &&
+            !Array.isArray(schema) &&
+            Object.keys(schema).length === 0)
+    )
+}
+
+function isNeverJsonSchema(schema: JsonSchema): boolean {
+    return (
+        schema === false ||
+        (schema !== true &&
+            typeof schema === 'object' &&
+            !Array.isArray(schema) &&
+            Object.keys(schema).length === 1 &&
+            typeof schema.not === 'object' &&
+            schema.not !== null &&
+            !Array.isArray(schema.not) &&
+            Object.keys(schema.not).length === 0)
+    )
+}
+
 function normalizeMethod(routeMethod: NormalizedRoute<any>['method']): HttpMethod[] {
     if (!routeMethod) return [HttpMethod.GET]
     return Array.isArray(routeMethod) ? routeMethod : [routeMethod]
@@ -194,6 +218,13 @@ async function loadRuntimeRoutes(routerPath: string): Promise<NormalizedRoute<an
 }
 
 async function compileSchemaType(name: string, schema: JsonSchema): Promise<string> {
+    if (isUnconstrainedJsonSchema(schema)) {
+        return `export type ${name} = unknown`
+    }
+    if (isNeverJsonSchema(schema)) {
+        return `export type ${name} = never`
+    }
+
     return (
         await compile(schema as Record<string, unknown>, name, {
             bannerComment: '',
