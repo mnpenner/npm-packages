@@ -1,5 +1,6 @@
 {
   "name": "@mpen/server-router",
+  "version": "0.1.0",
   "description": "Typed server-side routing utilities for Fetch-compatible runtimes.",
   "exports": {
     ".": "./dist/index.mjs",

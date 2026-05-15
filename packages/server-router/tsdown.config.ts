@@ -8,6 +8,7 @@ export default defineConfig({
         handlers: 'src/router/handlers/index.ts',
         middleware: 'src/router/middleware/index.ts',
         routes: 'src/router/routes/index.ts',
+        bin: 'bin/gen-api-client.ts',
     },
     platform: 'node',
     format: ['esm'],
@@ -16,6 +17,9 @@ export default defineConfig({
     },
     exports: {
         legacy: true,
+        bin: {
+            'server-router': 'bin/gen-api-client.ts',
+        },
     },
     dts: true, // The client must use "moduleResolution": "bundler", "node16" or "nodenext". "node" will not resolve the types properly.
 })
