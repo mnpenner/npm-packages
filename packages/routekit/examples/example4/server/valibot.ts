@@ -1,17 +1,21 @@
 import { createValibotRoutes } from '@mpen/routekit/routes'
 import { jsonResponse } from '@mpen/routekit'
-import { IS_DEV } from './env.ts'
 import * as v from 'valibot'
 import { HttpStatus } from '@mpen/http-helpers'
-import { BaseIssue } from 'valibot'
-import { plainTextResponse } from '@mpen/routekit'
+import type { BaseIssue } from 'valibot'
+
+interface SerializedBaseIssue extends Omit<BaseIssue<unknown>, 'issues' | 'path'> {
+    readonly path?: unknown
+    readonly issues?: SerializedBaseIssue[] | undefined
+    readonly skipPipe?: boolean | undefined
+}
 
 const IssueKindSchema = v.picklist(['schema', 'validation', 'transformation'])
 
 // Keep these opaque unless you want to fully model Valibot internals.
 const IssuePathSchema = v.unknown()
 
-export const BaseIssueSchema: v.GenericSchema<BaseIssue> = v.object({
+export const BaseIssueSchema: v.GenericSchema<unknown, SerializedBaseIssue> = v.object({
     // Required info
     kind: IssueKindSchema,
     type: v.string(),
