@@ -150,6 +150,33 @@ describe('valibotHandler', () => {
 
         expect(response.status).toBe(HttpStatus.INTERNAL_SERVER_ERROR)
     })
+
+    it('validates default validation error responses when response validation is enabled', async () => {
+        const router = new Router().add({
+            path: '/validate-error/:id',
+            method: HttpMethod.GET,
+            handler: valibotHandler({
+                schema: {
+                    request: {
+                        path: v.object({
+                            id: v.pipe(v.string(), v.transform(Number), v.integer()),
+                        }),
+                    },
+                    response: {
+                        body: {
+                            [HttpStatus.BAD_REQUEST]: v.object({ message: v.string() }),
+                        },
+                    },
+                },
+                validateResponse: true,
+                handler: () => jsonResponse({ ok: true }),
+            }),
+        })
+
+        const response = await router.fetch(new Request('https://example.com/validate-error/123x'))
+
+        expect(response.status).toBe(HttpStatus.INTERNAL_SERVER_ERROR)
+    })
 })
 
 describe('valibotPartial', () => {

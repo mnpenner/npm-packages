@@ -139,6 +139,31 @@ describe('zodHandler', () => {
         expect(response.status).toBe(HttpStatus.INTERNAL_SERVER_ERROR)
     })
 
+    it('validates default validation error responses when response validation is enabled', async () => {
+        const router = new Router().add({
+            path: '/validate-error/:id',
+            method: HttpMethod.GET,
+            handler: zodHandler({
+                schema: {
+                    request: {
+                        path: z.object({ id: z.coerce.number().int() }),
+                    },
+                    response: {
+                        body: {
+                            [HttpStatus.BAD_REQUEST]: z.object({ message: z.string() }),
+                        },
+                    },
+                },
+                validateResponse: true,
+                handler: () => jsonResponse({ ok: true }),
+            }),
+        })
+
+        const response = await router.fetch(new Request('https://example.com/validate-error/123x'))
+
+        expect(response.status).toBe(HttpStatus.INTERNAL_SERVER_ERROR)
+    })
+
     it('skips response validation when disabled', async () => {
         const router = new Router().add({
             path: '/skip',

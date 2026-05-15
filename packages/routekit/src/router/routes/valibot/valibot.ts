@@ -486,6 +486,30 @@ function isSkippableResponseValidationValue(value: unknown): boolean {
     )
 }
 
+function jsonValuesEqual(left: unknown, right: unknown): boolean {
+    if (Object.is(left, right)) return true
+    if (typeof left !== typeof right) return false
+    if (!left || !right || typeof left !== 'object') return false
+    if (Array.isArray(left) || Array.isArray(right)) {
+        return (
+            Array.isArray(left) &&
+            Array.isArray(right) &&
+            left.length === right.length &&
+            left.every((value, index) => jsonValuesEqual(value, right[index]))
+        )
+    }
+
+    const leftEntries = Object.entries(left)
+    const rightRecord = right as Record<string, unknown>
+    const rightKeys = new Set(Object.keys(rightRecord))
+    return (
+        leftEntries.length === rightKeys.size &&
+        leftEntries.every(
+            ([key, value]) => rightKeys.has(key) && jsonValuesEqual(value, rightRecord[key]),
+        )
+    )
+}
+
 function getResponseSchemaForStatus(
     schema: AnyValibotRouteSchemaInput | undefined,
     status: number,
@@ -513,6 +537,14 @@ function assertResponseSchema(
     const result = v.safeParse(responseSchema, value)
     if (!result.success) {
         throw new ValibotResponseValidationError(status, result.issues)
+    }
+    if (!jsonValuesEqual(value, result.output)) {
+        throw new ValibotResponseValidationError(
+            status,
+            valibotIssuesFromThrowable(
+                new Error('Response body does not match the parsed schema output.'),
+            ),
+        )
     }
 }
 
@@ -575,6 +607,14 @@ export function valibotHandler<
         const run = async (): Promise<
             HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>
         > => {
+            const validateAndReturn = async (
+                result: HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>,
+            ): Promise<HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>> => {
+                if (resolved.validateResponse) {
+                    await validateHandlerResult(resolved.schema, result)
+                }
+                return result
+            }
             const bodySchema = resolved.schema?.request?.body
             const pathSchema = resolved.schema?.request?.path
             const querySchema = resolved.schema?.request?.query
@@ -599,10 +639,12 @@ export function valibotHandler<
             if (querySchema) {
                 const queryResult = v.safeParse(querySchema, queryParams)
                 if (!queryResult.success) {
-                    return resolved.validationError(
-                        ValibotValidationError.QUERY_PARAMETERS,
-                        queryResult.issues,
-                    ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>
+                    return await validateAndReturn(
+                        resolved.validationError(
+                            ValibotValidationError.QUERY_PARAMETERS,
+                            queryResult.issues,
+                        ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>,
+                    )
                 }
                 handlerContext.params.query = queryResult.output as InferSchema<
                     ExtractQuerySchema<Schema>
@@ -615,17 +657,21 @@ export function valibotHandler<
                 try {
                     rawBody = await readRequestBody(ctx.req)
                 } catch (err) {
-                    return resolved.validationError(
-                        ValibotValidationError.REQUEST_BODY,
-                        valibotIssuesFromThrowable(err),
-                    ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>
+                    return await validateAndReturn(
+                        resolved.validationError(
+                            ValibotValidationError.REQUEST_BODY,
+                            valibotIssuesFromThrowable(err),
+                        ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>,
+                    )
                 }
                 const bodyResult = v.safeParse(bodySchema, rawBody)
                 if (!bodyResult.success) {
-                    return resolved.validationError(
-                        ValibotValidationError.REQUEST_BODY,
-                        bodyResult.issues,
-                    ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>
+                    return await validateAndReturn(
+                        resolved.validationError(
+                            ValibotValidationError.REQUEST_BODY,
+                            bodyResult.issues,
+                        ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>,
+                    )
                 }
                 handlerContext.params.body = bodyResult.output as InferSchema<
                     ExtractBodySchema<Schema>
@@ -636,10 +682,12 @@ export function valibotHandler<
             if (pathSchema) {
                 const pathResult = v.safeParse(pathSchema, ctx.pathParams)
                 if (!pathResult.success) {
-                    return resolved.validationError(
-                        ValibotValidationError.URL_PATH,
-                        pathResult.issues,
-                    ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>
+                    return await validateAndReturn(
+                        resolved.validationError(
+                            ValibotValidationError.URL_PATH,
+                            pathResult.issues,
+                        ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>,
+                    )
                 }
                 handlerContext.params.path = pathResult.output as InferSchema<
                     ExtractPathSchema<Schema>
@@ -648,10 +696,7 @@ export function valibotHandler<
             }
 
             const result = await resolved.handler.call(this, handlerContext)
-            if (resolved.validateResponse) {
-                await validateHandlerResult(resolved.schema, result)
-            }
-            return result
+            return await validateAndReturn(result)
         }
 
         return await run()

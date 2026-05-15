@@ -435,6 +435,30 @@ function isSkippableResponseValidationValue(value: unknown): boolean {
     )
 }
 
+function jsonValuesEqual(left: unknown, right: unknown): boolean {
+    if (Object.is(left, right)) return true
+    if (typeof left !== typeof right) return false
+    if (!left || !right || typeof left !== 'object') return false
+    if (Array.isArray(left) || Array.isArray(right)) {
+        return (
+            Array.isArray(left) &&
+            Array.isArray(right) &&
+            left.length === right.length &&
+            left.every((value, index) => jsonValuesEqual(value, right[index]))
+        )
+    }
+
+    const leftEntries = Object.entries(left)
+    const rightRecord = right as Record<string, unknown>
+    const rightKeys = new Set(Object.keys(rightRecord))
+    return (
+        leftEntries.length === rightKeys.size &&
+        leftEntries.every(
+            ([key, value]) => rightKeys.has(key) && jsonValuesEqual(value, rightRecord[key]),
+        )
+    )
+}
+
 function getResponseSchemaForStatus(
     schema: ZodRouteSchemaInput<any, any, any, any> | undefined,
     status: number,
@@ -462,6 +486,18 @@ function assertResponseSchema(
     const result = responseSchema.safeParse(value)
     if (!result.success) {
         throw new ZodResponseValidationError(status, result.error)
+    }
+    if (!jsonValuesEqual(value, result.data)) {
+        throw new ZodResponseValidationError(
+            status,
+            new z.ZodError([
+                {
+                    code: z.ZodIssueCode.custom,
+                    path: [],
+                    message: 'Response body does not match the parsed schema output.',
+                },
+            ]),
+        )
     }
 }
 
@@ -524,6 +560,14 @@ export function zodHandler<
         const run = async (): Promise<
             HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>
         > => {
+            const validateAndReturn = async (
+                result: HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>,
+            ): Promise<HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>> => {
+                if (resolved.validateResponse) {
+                    await validateHandlerResult(resolved.schema, result)
+                }
+                return result
+            }
             const bodySchema = resolved.schema?.request?.body
             const pathSchema = resolved.schema?.request?.path
             const querySchema = resolved.schema?.request?.query
@@ -546,10 +590,12 @@ export function zodHandler<
             if (querySchema) {
                 const queryResult = querySchema.safeParse(queryParams)
                 if (!queryResult.success) {
-                    return resolved.validationError(
-                        ValidationError.QUERY_PARAMETERS,
-                        queryResult.error,
-                    ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>
+                    return await validateAndReturn(
+                        resolved.validationError(
+                            ValidationError.QUERY_PARAMETERS,
+                            queryResult.error,
+                        ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>,
+                    )
                 }
                 handlerContext.params.query = queryResult.data as InferSchema<
                     ExtractQuerySchema<Schema>
@@ -561,17 +607,21 @@ export function zodHandler<
                 try {
                     rawBody = await readRequestBody(ctx.req)
                 } catch (err) {
-                    return resolved.validationError(
-                        ValidationError.REQUEST_BODY,
-                        zodErrorFromThrowable(err),
-                    ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>
+                    return await validateAndReturn(
+                        resolved.validationError(
+                            ValidationError.REQUEST_BODY,
+                            zodErrorFromThrowable(err),
+                        ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>,
+                    )
                 }
                 const bodyResult = bodySchema.safeParse(rawBody)
                 if (!bodyResult.success) {
-                    return resolved.validationError(
-                        ValidationError.REQUEST_BODY,
-                        bodyResult.error,
-                    ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>
+                    return await validateAndReturn(
+                        resolved.validationError(
+                            ValidationError.REQUEST_BODY,
+                            bodyResult.error,
+                        ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>,
+                    )
                 }
                 handlerContext.params.body = bodyResult.data as InferSchema<
                     ExtractBodySchema<Schema>
@@ -581,10 +631,12 @@ export function zodHandler<
             if (pathSchema) {
                 const pathResult = pathSchema.safeParse(ctx.pathParams)
                 if (!pathResult.success) {
-                    return resolved.validationError(
-                        ValidationError.URL_PATH,
-                        pathResult.error,
-                    ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>
+                    return await validateAndReturn(
+                        resolved.validationError(
+                            ValidationError.URL_PATH,
+                            pathResult.error,
+                        ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>,
+                    )
                 }
                 handlerContext.params.path = pathResult.data as InferSchema<
                     ExtractPathSchema<Schema>
@@ -592,10 +644,7 @@ export function zodHandler<
             }
 
             const result = await resolved.handler.call(this, handlerContext)
-            if (resolved.validateResponse) {
-                await validateHandlerResult(resolved.schema, result)
-            }
-            return result
+            return await validateAndReturn(result)
         }
 
         return await run()

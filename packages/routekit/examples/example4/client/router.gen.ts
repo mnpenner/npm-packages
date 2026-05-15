@@ -19,7 +19,7 @@ export interface GetUsersByIdPathParams {
 }
 
 export interface GetUsersByIdResponse400 {
-  message: string
+  component: number
   [k: string]: unknown
 }
 
