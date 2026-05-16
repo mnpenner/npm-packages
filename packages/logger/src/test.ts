@@ -4,6 +4,27 @@ import {$} from 'bun'
 import { EmojiLogger } from './loggers/emoji.ts'
 import { POSTS } from './test-data.ts'
 
+const COMPACT_ROWS = [
+    { key: 'api', state: 'ok', ms: 12 },
+    { key: 'db', state: 'ok', ms: 8 },
+]
+
+const COMFORTABLE_ROWS = [
+    { owner: 'Ada Lovelace', task: 'review notes', status: 'in progress' },
+    { owner: 'Grace Hopper', task: 'ship build', status: 'ready' },
+]
+
+const BALANCED_ROWS = [
+    {
+        section: 'release notes',
+        summary: 'Draft customer facing copy for the package updates before publishing',
+    },
+    {
+        section: 'validation',
+        summary: 'Run the narrow table example so wrapping is easy to inspect',
+    },
+]
+
 const PARSE_CONFIG = {
     options: {},
     strict: true,
@@ -17,7 +38,18 @@ async function main(options: Options, positionals: Positionals): Promise<number 
     logger.info("info")
     logger.warn("warn")
     logger.error("error")
-    logger.table(POSTS)
+
+    logger.info('compact table')
+    logger.table(COMPACT_ROWS)
+
+    logger.info('comfortable table')
+    logger.table(COMFORTABLE_ROWS)
+
+    logger.info('balanced table')
+    new EmojiLogger({table: {maxWidth: 56}}).table(BALANCED_ROWS)
+
+    // logger.info('post table')
+    // logger.table(POSTS)
 }
 
 //#region Invoke main

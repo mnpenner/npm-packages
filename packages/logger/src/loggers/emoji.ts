@@ -12,6 +12,14 @@ enum TableDensity {
     COMFORTABLE = 'comfortable',
 }
 
+interface TableLayout {
+    density: TableDensity
+    hasHeaderSeparator: boolean
+    hasHorizontalBorders: boolean
+    hasOuterVerticals: boolean
+    padding: number
+}
+
 interface TableOptions {
     density?: TableDensity
     maxWidth?: number
@@ -77,19 +85,21 @@ export class EmojiLogger implements Logger {
         }
 
         const renderedRows = rows.map((row) => columns.map((column) => this.stringifyCell(row[column])))
-        const widths = this.getColumnWidths(columns, renderedRows)
+        const density = this.resolveTableDensity(columns, renderedRows)
+        const layout = this.getTableLayout(density)
+        const widths = this.getColumnWidths(columns, renderedRows, layout)
         const wrappedColumns = columns.map((column, index) => this.wrapCell([column], widths[index]))
         const wrappedRows = renderedRows.map((row) => row.map((cell, index) => this.wrapCell(cell, widths[index])))
 
-        const top = this.createBorder('┌', '┬', '┐', widths)
-        const headerSeparator = this.createBorder('╞', '╪', '╡', widths, '═')
-        const bottom = this.createBorder('└', '┴', '┘', widths)
+        const top = this.createBorder('╔', '╤', '╗', widths, layout, '═')
+        const headerSeparator = this.createBorder('╞', '╪', '╡', widths, layout, '═')
+        const bottom = this.createBorder('└', '┴', '┘', widths, layout)
         const lines = [
-            top,
-            ...this.createRowLines(wrappedColumns, widths),
-            headerSeparator,
-            ...wrappedRows.flatMap((row, index) => this.createRowLines(row, widths).map((line) => this.stripeTableRow(line, index))),
-            bottom,
+            ...(layout.hasHorizontalBorders ? [top] : []),
+            ...this.createRowLines(wrappedColumns, widths, layout).map((line) => this.formatHeaderRow(line, density)),
+            ...(layout.hasHeaderSeparator ? [headerSeparator] : []),
+            ...wrappedRows.flatMap((row, index) => this.createRowLines(row, widths, layout).map((line) => this.stripeTableRow(line, index))),
+            ...(layout.hasHorizontalBorders ? [bottom] : []),
         ]
 
         this._write(lines.join('\n') + '\n')
@@ -101,27 +111,27 @@ export class EmojiLogger implements Logger {
         }
 
         if(Array.isArray(tabularData)) {
-            return tabularData.map((value) => this.toRow(value))
+            return tabularData.map((value, index) => this.toRow(value, index))
         }
 
         if(typeof tabularData === 'object') {
-            return Object.values(tabularData).map((value) => this.toRow(value))
+            return Object.entries(tabularData).map(([key, value]) => this.toRow(value, key))
         }
 
-        return [{ Values: tabularData }]
+        return [this.toRow(tabularData, 0)]
     }
 
-    private toRow(value: unknown): TableRow {
+    private toRow(value: unknown, index: string | number): TableRow {
         if(value != null && typeof value === 'object' && !Array.isArray(value)) {
-            return value as Record<string, unknown>
+            return this._tblIndex ? { '(index)': index, ...(value as Record<string, unknown>) } : value as Record<string, unknown>
         }
 
-        return { Values: value }
+        return this._tblIndex ? { '(index)': index, Values: value } : { Values: value }
     }
 
     private getColumns(rows: TableRow[], properties?: string[]): string[] {
         if(properties != null) {
-            return properties
+            return this._tblIndex ? ['(index)', ...properties] : properties
         }
 
         const columns = new Set<string>()
@@ -163,8 +173,71 @@ export class EmojiLogger implements Logger {
         return [String(value)]
     }
 
-    private getColumnWidths(columns: string[], rows: string[][][]): number[] {
-        const overheadWidth = columns.length * 3 + 1
+    private resolveTableDensity(columns: string[], rows: string[][][]): TableDensity {
+        if(this._tblDensity !== TableDensity.AUTO) {
+            return this._tblDensity
+        }
+
+        const comfortableLayout = this.getTableLayout(TableDensity.COMFORTABLE)
+        const widths = this.getColumnWidths(columns, rows, comfortableLayout)
+        const requiresWrapping = this.requiresWrapping(columns, rows, widths)
+        const containsSpaces = rows.some((row) => row.some((cell) => cell.some((line) => line.includes(' '))))
+
+        if(containsSpaces && requiresWrapping) {
+            return TableDensity.BALANCED
+        }
+
+        if(containsSpaces) {
+            return TableDensity.COMFORTABLE
+        }
+
+        return requiresWrapping ? TableDensity.BALANCED : TableDensity.COMPACT
+    }
+
+    private getTableLayout(density: TableDensity): TableLayout {
+        switch(density) {
+            case TableDensity.COMPACT:
+                return {
+                    density,
+                    hasHeaderSeparator: false,
+                    hasHorizontalBorders: false,
+                    hasOuterVerticals: false,
+                    padding: 0,
+                }
+
+            case TableDensity.BALANCED:
+                return {
+                    density,
+                    hasHeaderSeparator: true,
+                    hasHorizontalBorders: true,
+                    hasOuterVerticals: true,
+                    padding: 0,
+                }
+
+            case TableDensity.AUTO:
+            case TableDensity.COMFORTABLE:
+                return {
+                    density: TableDensity.COMFORTABLE,
+                    hasHeaderSeparator: true,
+                    hasHorizontalBorders: true,
+                    hasOuterVerticals: true,
+                    padding: 1,
+                }
+        }
+    }
+
+    private requiresWrapping(columns: string[], rows: string[][][], widths: number[]): boolean {
+        return columns.some((column, columnIndex) => {
+            if(this.getCellWidth(column) > widths[columnIndex]) {
+                return true
+            }
+
+            return rows.some((row) => row[columnIndex].some((line) => this.getCellWidth(line) > widths[columnIndex]))
+        })
+    }
+
+    private getColumnWidths(columns: string[], rows: string[][][], layout: TableLayout): number[] {
+        const overheadWidth = this.getTableOverheadWidth(columns.length, layout)
         const availableWidth = Math.max(this.getTerminalWidth() - overheadWidth, columns.length)
         const columnMeasurements = columns.map((column, columnIndex) => {
             const widths = [
@@ -204,6 +277,14 @@ export class EmojiLogger implements Logger {
         const scaledWidths = this.scaleWidths(minimumWidths, availableWidth)
 
         return this.distributeRemainingWidth(scaledWidths, columnMeasurements.map((column) => column.max), availableWidth)
+    }
+
+    private getTableOverheadWidth(columnCount: number, layout: TableLayout): number {
+        const paddingWidth = columnCount * layout.padding * 2
+        const separatorWidth = Math.max(0, columnCount - 1)
+        const outerVerticalWidth = layout.hasOuterVerticals ? 2 : 0
+
+        return paddingWidth + separatorWidth + outerVerticalWidth
     }
 
     private distributeProportionalWidth(widths: number[], maxWidths: number[], weights: number[], availableWidth: number): number[] {
@@ -282,10 +363,8 @@ export class EmojiLogger implements Logger {
     }
 
     private getTerminalWidth(): number {
-        const streamColumns = (this.stream as { columns?: number }).columns
-
-        if(streamColumns != null && streamColumns > 0) {
-            return streamColumns
+        if(this._tblMaxWidth != null) {
+            return this._tblMaxWidth
         }
 
         if(process.stdout.columns != null && process.stdout.columns > 0) {
@@ -365,31 +444,44 @@ export class EmojiLogger implements Logger {
         return lines
     }
 
-    private createRowLines(row: string[][], widths: number[]): string[] {
+    private createRowLines(row: string[][], widths: number[], layout: TableLayout): string[] {
         const height = Math.max(...row.map((cell) => cell.length))
         const lines: string[] = []
 
         for(let lineIndex = 0; lineIndex < height; lineIndex++) {
-            lines.push(this.createLine(row.map((cell) => [cell[lineIndex] ?? '']), widths))
+            lines.push(this.createLine(row.map((cell) => [cell[lineIndex] ?? '']), widths, layout))
         }
 
         return lines
     }
 
-    private createLine(cells: string[][], widths: number[]): string {
-        return '│ ' + cells.map((cell, index) => this.padCell(cell[0] ?? '', widths[index])).join(' │ ') + ' │'
+    private createLine(cells: string[][], widths: number[], layout: TableLayout): string {
+        const padding = ' '.repeat(layout.padding)
+        const line = cells.map((cell, index) => padding + this.padCell(cell[0] ?? '', widths[index]) + padding).join('│')
+
+        return layout.hasOuterVerticals ? '│' + line + '│' : line
     }
 
-    private createBorder(left: string, middle: string, right: string, widths: number[], horizontal = '─'): string {
-        return left + widths.map((width) => horizontal.repeat(width + 2)).join(middle) + right
+    private createBorder(left: string, middle: string, right: string, widths: number[], layout: TableLayout, horizontal = '─'): string {
+        const line = widths.map((width) => horizontal.repeat(width + layout.padding * 2)).join(middle)
+
+        return layout.hasOuterVerticals ? left + line + right : line
     }
 
     private stripeTableRow(line: string, index: number): string {
-        if(index % 2 === 0) {
+        if(!this._tblStriped || index % 2 === 0) {
             return line
         }
 
         return this._pc.bgRgb(24, 24, 24)(line)
+    }
+
+    private formatHeaderRow(line: string, density: TableDensity): string {
+        if(density !== TableDensity.COMPACT) {
+            return line
+        }
+
+        return this._pc.bgWhite(this._pc.black(line))
     }
 
     private padCell(value: string, width: number): string {
