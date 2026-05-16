@@ -91,7 +91,7 @@ export class EmojiLogger implements Logger {
         const wrappedColumns = columns.map((column, index) => this.wrapCell([column], widths[index]))
         const wrappedRows = renderedRows.map((row) => row.map((cell, index) => this.wrapCell(cell, widths[index])))
 
-        const top = this.createBorder('╔', '╤', '╗', widths, layout, '═')
+        const top = this.createBorder('╒', '╤', '╕', widths, layout, '═')
         const headerSeparator = this.createBorder('╞', '╪', '╡', widths, layout, '═')
         const bottom = this.createBorder('└', '┴', '┘', widths, layout)
         const lines = [
@@ -481,7 +481,8 @@ export class EmojiLogger implements Logger {
             return line
         }
 
-        return this._pc.bgWhite(this._pc.black(line))
+        // return this._pc.bgHex('#0100A8')(this._pc.bold(this._pc.white(line)))
+        return this._pc.bgWhite(this._pc.bold(this._pc.black(line)))
     }
 
     private padCell(value: string, width: number): string {
