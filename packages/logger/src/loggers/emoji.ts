@@ -6,9 +6,10 @@ import {stringWidth} from 'bun'
 type TableRow = Record<string, unknown>
 
 enum TableDensity {
-    COMPACT,
-    BALANCED,
-    COMFORTABLE,
+    AUTO = 'auto',
+    COMPACT ='compact',
+    BALANCED = 'balanced',
+    COMFORTABLE = 'comfortable',
 }
 
 interface TableOptions {
@@ -33,12 +34,20 @@ interface EmojiLoggerOptions {
 const DEFAULT_WRITE_FN: WriteFn = (str) => process.stdout.write(str + '\n')
 
 export class EmojiLogger implements Logger {
-    private _pc: Colors
-    private _write: WriteFn
+    private readonly  _pc: Colors
+    private readonly  _write: WriteFn
+    private readonly  _tblDensity: TableDensity
+    private readonly  _tblStriped: boolean
+    private readonly  _tblIndex: boolean
+    private readonly  _tblMaxWidth: number|null
 
-    constructor(options: EmojiLoggerOptions = {}) {
-        this._write = options.write ?? DEFAULT_WRITE_FN
-        this._pc = createColors(options.color)
+    constructor(options?: EmojiLoggerOptions) {
+        this._write = options?.write ?? DEFAULT_WRITE_FN
+        this._pc = createColors(options?.color)
+        this._tblDensity = options?.table?.density ?? TableDensity.AUTO
+        this._tblStriped = options?.table?.striped ?? true
+        this._tblMaxWidth = options?.table?.maxWidth ?? null
+        this._tblIndex = options?.table?.showIndex ?? false
     }
 
     info(...data: any[]): void {
