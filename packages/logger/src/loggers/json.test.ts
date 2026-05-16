@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { LogLevel } from '../logger.ts'
 import { JsonLogger } from './json.ts'
 
 describe(JsonLogger.name, () => {
@@ -13,7 +14,7 @@ describe(JsonLogger.name, () => {
 
         const payload = JSON.parse(lines[0]!)
 
-        expect(payload.level).toBe('log')
+        expect(payload.level).toBe('debug')
         expect(payload.data).toEqual(['message', 2, 'Symbol(symbol)', '[undefined]', [3]])
         expect(typeof payload.time).toBe('string')
     })
@@ -31,7 +32,7 @@ describe(JsonLogger.name, () => {
 
         const payload = JSON.parse(lines[0]!)
 
-        expect(payload.level).toBe('log')
+        expect(payload.level).toBe('debug')
         expect(payload.table).toEqual({
             properties: ['id', 'key', 'name', 'title', 'item2', 'item10', 'zebra'],
             values: [
@@ -71,5 +72,22 @@ describe(JsonLogger.name, () => {
                 ['Grace', 2],
             ],
         })
+    })
+
+    it('does not write records below the minimum log level', () => {
+        const lines: string[] = []
+        const logger = new JsonLogger({
+            minLogLevel: LogLevel.WARN,
+            writeLine: (line) => lines.push(line),
+        })
+
+        logger.log('debug')
+        logger.info('info')
+        logger.table([{ id: 1 }])
+        logger.warn('warn')
+        logger.error('error')
+
+        expect(lines).toHaveLength(2)
+        expect(lines.map((line) => JSON.parse(line).level)).toEqual(['warning', 'error'])
     })
 })

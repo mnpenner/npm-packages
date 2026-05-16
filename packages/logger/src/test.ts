@@ -104,6 +104,7 @@ async function main(options: Options, positionals: Positionals): Promise<number 
 
     // defaultLogger.info('compact table')
     defaultLogger.table(COMPACT_ROWS)
+    jsonLogger.table(COMPACT_ROWS)
     // maxWidthLogger.table(COMPACT_ROWS)
     //
     // // defaultLogger.info('comfortable table')
