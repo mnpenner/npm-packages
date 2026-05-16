@@ -1,3 +1,57 @@
+export const SERVICE_ROWS = [
+    { key: 'api', state: 'ok', ms: 12 },
+    { key: 'db', state: 'ok', ms: 8 },
+    { key: 'queue', state: 'degraded', ms: 34 },
+]
+
+export const TASK_ROWS = [
+    { owner: 'Ada Lovelace', task: 'review notes', status: 'in progress' },
+    { owner: 'Grace Hopper', task: 'ship build', status: 'ready' },
+    { owner: 'Katherine Johnson', task: 'verify release math', status: 'blocked' },
+]
+
+export const WRAPPING_ROWS = [
+    {
+        section: 'release notes',
+        description: 'Draft customer facing copy for the package updates before publishing',
+    },
+    {
+        section: 'validation',
+        description: 'Run the narrow table example so wrapping is easy to inspect',
+    },
+]
+
+export const MIXED_VALUE_ROWS = [
+    {
+        number: 1,
+        bigint: 2n,
+        title: 'first',
+        uniqueSymbol: Symbol(),
+        namedSymbol: Symbol('named'),
+        sharedSymbol: Symbol.for('shared'),
+        function: (x: number) => x * 2,
+        object: { n: 1, s: 'x', a: [2, 3] },
+        array: [1, 'b', 3n],
+        null: null,
+        undefined: undefined,
+    },
+    {
+        number: 2,
+        bigint: 4n,
+        title: 'second',
+        uniqueSymbol: Symbol('second'),
+        namedSymbol: Symbol('named-second'),
+        sharedSymbol: Symbol.for('shared'),
+        function: (x: number) => x + 2,
+        object: { n: 2, s: 'y', a: [4, 5] },
+        array: [2, 'c', 4n],
+        null: null,
+        undefined: undefined,
+        true: true,
+        false: false,
+    },
+]
+
 export const POSTS = [
     {
         userId: 1,

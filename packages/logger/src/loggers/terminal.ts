@@ -11,6 +11,7 @@ import {
 } from '../table.ts'
 
 type CellFormatter = (value: string) => string
+type CellAlignment = 'left' | 'right'
 
 interface RenderedLine {
     plain: string
@@ -70,8 +71,13 @@ interface TableOptions {
     striped?: boolean
 }
 
+interface TerminalLogOptions {
+    inspect?: TableInspectOptions
+}
+
 interface TerminalLoggerOptions {
     color?: boolean
+    log?: TerminalLogOptions
     maxWidth?: number
     table?: TableOptions
     write?: WriteFn
@@ -100,6 +106,7 @@ export class TerminalLogger implements Logger {
     private readonly _tblStriped: boolean
     private readonly _tblIndex: boolean
     private readonly _tblInspect: Required<TableInspectOptions>
+    private readonly _logInspect: Required<TableInspectOptions>
     private readonly _maxWidth: number | null
 
     constructor(options?: TerminalLoggerOptions) {
@@ -115,10 +122,20 @@ export class TerminalLogger implements Logger {
             maxObjectKeys: options?.table?.inspect?.maxObjectKeys ?? 8,
             maxStringLength: options?.table?.inspect?.maxStringLength ?? 80,
         }
+        this._logInspect = {
+            depth: options?.log?.inspect?.depth ?? 4,
+            maxArrayLength: options?.log?.inspect?.maxArrayLength ?? 32,
+            maxObjectKeys: options?.log?.inspect?.maxObjectKeys ?? 32,
+            maxStringLength: options?.log?.inspect?.maxStringLength ?? 200,
+        }
     }
 
     log(...data: any[]): void {
-        this._write(data.map((x) => String(x)).join('  ') + '\n')
+        const message = this.stringifyPlainLogData(data)
+        const maxWidth = this.getTerminalWidth()
+        const lines = message.lines.flatMap((line) => this.wrapLine(line, maxWidth))
+
+        this._write(lines.map((line) => line.text).join('\n') + '\n')
     }
 
     info(...data: any[]): void {
@@ -147,6 +164,7 @@ export class TerminalLogger implements Logger {
                 this.stringifyCell(column in row ? row[column] : undefined, !(column in row)),
             ),
         )
+        const alignments = this.getColumnAlignments(columns, rows)
         const density = this.resolveTableDensity(columns, renderedRows)
 
         if (density === TableDensity.VERTICAL) {
@@ -155,7 +173,8 @@ export class TerminalLogger implements Logger {
         }
 
         this._write(
-            this.renderTable(this.getHeaders(columns, density), renderedRows, density) + '\n',
+            this.renderTable(this.getHeaders(columns, density), renderedRows, density, alignments) +
+                '\n',
         )
     }
 
@@ -200,6 +219,20 @@ export class TerminalLogger implements Logger {
         return { lines: lines ?? [this.createRenderedLine('')] }
     }
 
+    private stringifyPlainLogData(data: unknown[]): RenderedCell {
+        const lines = data
+            .map((value) => this.stringifyPlainLogValue(value))
+            .reduce<RenderedLine[] | null>((result, cell) => {
+                if (result == null) {
+                    return cell.lines
+                }
+
+                return this.joinRenderedLineGroups(result, cell.lines, '  ')
+            }, null)
+
+        return { lines: lines ?? [this.createRenderedLine('')] }
+    }
+
     private stringifyLogValue(value: unknown): RenderedCell {
         if (typeof value === 'string') {
             return {
@@ -208,6 +241,24 @@ export class TerminalLogger implements Logger {
         }
 
         return this.stringifyCell(value)
+    }
+
+    private stringifyPlainLogValue(value: unknown): RenderedCell {
+        if (typeof value === 'string') {
+            return {
+                lines: value.split('\n').map((line) => this.createRenderedLine(line)),
+            }
+        }
+
+        if (value instanceof Error) {
+            return this.stringifyError(value)
+        }
+
+        if (value != null && typeof value === 'object') {
+            return { lines: this.inspectPrettyValue(value, 0, new WeakSet()) }
+        }
+
+        return this.formatRenderedCell(this.stringifyCell(value))
     }
 
     private formatRenderedCell(cell: RenderedCell): RenderedCell {
@@ -254,6 +305,7 @@ export class TerminalLogger implements Logger {
         headers: string[],
         renderedRows: RenderedCell[][],
         density: TableDensity,
+        alignments: CellAlignment[],
     ): string {
         const layout = this.getTableLayout(density)
         const allocatedWidths = this.getColumnWidths(headers, renderedRows, layout)
@@ -277,7 +329,7 @@ export class TerminalLogger implements Logger {
             ),
             ...(layout.hasHeaderSeparator ? [headerSeparator] : []),
             ...wrappedRows.flatMap((row, index) =>
-                this.createRowLines(row, widths, layout).map((line) =>
+                this.createRowLines(row, widths, layout, alignments).map((line) =>
                     this.stripeTableRow(line, index),
                 ),
             ),
@@ -351,6 +403,28 @@ export class TerminalLogger implements Logger {
 
     private getHeaders(columns: TableColumn[], density: TableDensity): string[] {
         return columns.map((column) => this.getHeader(column, density))
+    }
+
+    private getColumnAlignments(columns: TableColumn[], rows: TableRow[]): CellAlignment[] {
+        return columns.map((column) => {
+            let hasNumber = false
+
+            for (const row of rows) {
+                const value = column in row ? row[column] : undefined
+
+                if (value === null || value === undefined) {
+                    continue
+                }
+
+                if (typeof value !== 'number') {
+                    return 'left'
+                }
+
+                hasNumber = true
+            }
+
+            return hasNumber ? 'right' : 'left'
+        })
     }
 
     private getHeader(column: TableColumn, density: TableDensity): string {
@@ -435,6 +509,10 @@ export class TerminalLogger implements Logger {
                 ],
                 formatter: this._pc.magentaBright,
             }
+        }
+
+        if (value instanceof Error) {
+            return this.stringifyError(value)
         }
 
         if (value != null && typeof value === 'object') {
@@ -881,6 +959,12 @@ export class TerminalLogger implements Logger {
             return this.createRenderedLine(text, this._pc.magentaBright(text))
         }
 
+        if (value instanceof Error) {
+            const text = this.getErrorSummary(value)
+
+            return this.createRenderedLine(text, this._pc.redBright(text))
+        }
+
         if (depth >= this._tblInspect.depth) {
             const text = Array.isArray(value) ? '[Array]' : '[Object]'
 
@@ -892,6 +976,210 @@ export class TerminalLogger implements Logger {
         }
 
         return this.inspectObject(value as Record<string, unknown>, depth)
+    }
+
+    private stringifyError(error: Error): RenderedCell {
+        const [firstLine = this.getErrorSummary(error), ...stackLines] = this.getErrorLines(error)
+
+        return {
+            lines: [
+                this.createRenderedLine(firstLine, this._pc.redBright(firstLine)),
+                ...stackLines.map((line) =>
+                    this.createRenderedLine(line, this._pc.blackBright(line)),
+                ),
+                ...this.getErrorDetailLines(error),
+            ],
+        }
+    }
+
+    private getErrorLines(error: Error): string[] {
+        return (
+            error.stack == null || error.stack === '' ? this.getErrorSummary(error) : error.stack
+        )
+            .split('\n')
+            .map((line) => line.trimEnd())
+    }
+
+    private getErrorSummary(error: Error): string {
+        if (error.name === '') {
+            return error.message
+        }
+
+        return error.message === '' ? error.name : `${error.name}: ${error.message}`
+    }
+
+    private getErrorDetailLines(error: Error): RenderedLine[] {
+        const lines: RenderedLine[] = []
+        const cause = 'cause' in error ? error.cause : undefined
+
+        if (cause !== undefined) {
+            lines.push(this.createRenderedLine('cause:', this._pc.blackBright('cause:')))
+            lines.push(this.indentRenderedLine(this.inspectValue(cause, 0), '  '))
+        }
+
+        if (error instanceof AggregateError) {
+            const errors = Array.from(error.errors)
+
+            if (errors.length > 0) {
+                lines.push(this.createRenderedLine('errors:', this._pc.blackBright('errors:')))
+
+                for (const item of errors) {
+                    lines.push(this.indentRenderedLine(this.inspectValue(item, 0), '  - '))
+                }
+            }
+        }
+
+        return lines
+    }
+
+    private inspectPrettyValue(
+        value: unknown,
+        depth: number,
+        seen: WeakSet<object>,
+    ): RenderedLine[] {
+        if (value instanceof Error) {
+            return this.stringifyError(value).lines
+        }
+
+        if (value == null || typeof value !== 'object') {
+            return [this.inspectValue(value, depth)]
+        }
+
+        if (seen.has(value)) {
+            return [this.createRenderedLine('[Circular]', this._pc.blackBright('[Circular]'))]
+        }
+
+        if (depth >= this._logInspect.depth) {
+            const text = Array.isArray(value) ? '[Array]' : '[Object]'
+
+            return [this.createRenderedLine(text, this._pc.yellowBright(text))]
+        }
+
+        seen.add(value)
+
+        try {
+            if (Array.isArray(value)) {
+                return this.inspectPrettyArray(value, depth, seen)
+            }
+
+            return this.inspectPrettyObject(value, depth, seen)
+        } finally {
+            seen.delete(value)
+        }
+    }
+
+    private inspectPrettyArray(
+        value: readonly unknown[],
+        depth: number,
+        seen: WeakSet<object>,
+    ): RenderedLine[] {
+        if (value.length === 0) {
+            return [this.createRenderedLine('[]')]
+        }
+
+        const visibleItems = value.slice(0, this._logInspect.maxArrayLength)
+        const hasMore = value.length > visibleItems.length
+        const entries = visibleItems.map((item, index) => {
+            const lines = Object.prototype.hasOwnProperty.call(value, index)
+                ? this.inspectPrettyValue(item, depth + 1, seen)
+                : [this.createRenderedLine('[empty]', this._pc.blackBright('[empty]'))]
+
+            return index === visibleItems.length - 1 && !hasMore
+                ? lines
+                : this.appendToLastRenderedLine(lines, ',')
+        })
+        const suffix = hasMore
+            ? [
+                  [
+                      this.createRenderedLine(
+                          `...${value.length - entries.length} more`,
+                          this._pc.blackBright(`...${value.length - entries.length} more`),
+                      ),
+                  ],
+              ]
+            : []
+
+        return [
+            this.createRenderedLine('['),
+            ...[...entries, ...suffix].flatMap((lines) =>
+                lines.map((line) => this.indentRenderedLine(line, '  ')),
+            ),
+            this.createRenderedLine(']'),
+        ]
+    }
+
+    private inspectPrettyObject(
+        value: object,
+        depth: number,
+        seen: WeakSet<object>,
+    ): RenderedLine[] {
+        const keys = [
+            ...Object.keys(value),
+            ...Object.getOwnPropertySymbols(value).filter((symbol) =>
+                Object.prototype.propertyIsEnumerable.call(value, symbol),
+            ),
+        ]
+
+        if (keys.length === 0) {
+            return [this.createRenderedLine('{}')]
+        }
+
+        const visibleKeys = keys.slice(0, this._logInspect.maxObjectKeys)
+        const hasMore = keys.length > visibleKeys.length
+        const entries = visibleKeys.map((key, index) => {
+            const label = this.createRenderedLine(
+                `${this.formatPropertyKey(key)}: `,
+                this._pc.magentaBright(`${this.formatPropertyKey(key)}: `),
+            )
+            const lines = this.inspectPrettyValue(
+                (value as Record<PropertyKey, unknown>)[key],
+                depth + 1,
+                seen,
+            )
+            const [firstLine = this.createRenderedLine(''), ...remainingLines] =
+                index === visibleKeys.length - 1 && !hasMore
+                    ? lines
+                    : this.appendToLastRenderedLine(lines, ',')
+
+            return [
+                this.joinRenderedLines(label, firstLine),
+                ...remainingLines.map((line) => this.indentRenderedLine(line, '  ')),
+            ]
+        })
+        const suffix = hasMore
+            ? [
+                  [
+                      this.createRenderedLine(
+                          `...${keys.length - entries.length} more`,
+                          this._pc.blackBright(`...${keys.length - entries.length} more`),
+                      ),
+                  ],
+              ]
+            : []
+
+        return [
+            this.createRenderedLine('{'),
+            ...[...entries, ...suffix].flatMap((lines) =>
+                lines.map((line) => this.indentRenderedLine(line, '  ')),
+            ),
+            this.createRenderedLine('}'),
+        ]
+    }
+
+    private formatPropertyKey(key: string | symbol): string {
+        return typeof key === 'symbol' ? `[${key.toString()}]` : this.formatObjectKey(key)
+    }
+
+    private appendToLastRenderedLine(lines: RenderedLine[], suffix: string): RenderedLine[] {
+        if (lines.length === 0) {
+            return [this.createRenderedLine(suffix)]
+        }
+
+        return lines.map((line, index) =>
+            index === lines.length - 1
+                ? this.joinRenderedLines(line, this.createRenderedLine(suffix))
+                : line,
+        )
     }
 
     private inspectArray(value: readonly unknown[], depth: number): RenderedLine {
@@ -1003,6 +1291,10 @@ export class TerminalLogger implements Logger {
             plain: left.plain + right.plain,
             text: left.text + right.text,
         }
+    }
+
+    private indentRenderedLine(line: RenderedLine, indent: string): RenderedLine {
+        return this.joinRenderedLines(this.createRenderedLine(indent), line)
     }
 
     private trimRenderedLineStart(line: RenderedLine): RenderedLine {
@@ -1220,7 +1512,12 @@ export class TerminalLogger implements Logger {
         )
     }
 
-    private createRowLines(row: RenderedLine[][], widths: number[], layout: TableLayout): string[] {
+    private createRowLines(
+        row: RenderedLine[][],
+        widths: number[],
+        layout: TableLayout,
+        alignments?: CellAlignment[],
+    ): string[] {
         const height = Math.max(...row.map((cell) => cell.length))
         const lines: string[] = []
 
@@ -1230,6 +1527,7 @@ export class TerminalLogger implements Logger {
                     row.map((cell) => [cell[lineIndex] ?? this.createRenderedLine('')]),
                     widths,
                     layout,
+                    alignments,
                 ),
             )
         }
@@ -1237,13 +1535,22 @@ export class TerminalLogger implements Logger {
         return lines
     }
 
-    private createLine(cells: RenderedLine[][], widths: number[], layout: TableLayout): string {
+    private createLine(
+        cells: RenderedLine[][],
+        widths: number[],
+        layout: TableLayout,
+        alignments?: CellAlignment[],
+    ): string {
         const padding = ' '.repeat(layout.padding)
         const line = cells
             .map(
                 (cell, index) =>
                     padding +
-                    this.padCell(cell[0] ?? this.createRenderedLine(''), widths[index]) +
+                    this.padCell(
+                        cell[0] ?? this.createRenderedLine(''),
+                        widths[index],
+                        alignments?.[index] ?? 'left',
+                    ) +
                     padding,
             )
             .join('│')
@@ -1283,8 +1590,10 @@ export class TerminalLogger implements Logger {
         return this._pc.bgWhite(this._pc.bold(this._pc.black(line)))
     }
 
-    private padCell(value: RenderedLine, width: number): string {
-        return value.text + ' '.repeat(width - this.getCellWidth(value.plain))
+    private padCell(value: RenderedLine, width: number, alignment: CellAlignment = 'left'): string {
+        const padding = ' '.repeat(width - this.getCellWidth(value.plain))
+
+        return alignment === 'right' ? padding + value.text : value.text + padding
     }
 
     private padPlain(value: string, width: number): string {

@@ -1,6 +1,9 @@
 import { BrowserLogger } from '../../src/loggers/browser.ts'
+import { LogLevel } from '../../src/logger.ts'
+import { MIXED_VALUE_ROWS, SERVICE_ROWS, TASK_ROWS } from '../data.ts'
 
 const logger = new BrowserLogger()
+const warnLogger = new BrowserLogger({ minLogLevel: LogLevel.WARN })
 
 const circular = { name: 'circular root' }
 circular.self = circular
@@ -22,18 +25,20 @@ const sampleUser = {
     [Symbol.for('source')]: 'browser-example',
 }
 
-const rows = [
-    { id: 1, level: 'debug', message: 'Bundled from local source', ms: 8 },
-    { id: 2, level: 'info', message: 'Styled DevTools output', ms: 13 },
-    { id: 3, level: 'warning', message: 'Native console.table is available', ms: 21 },
-]
-
 function runLog() {
-    logger.log('debug payload', 2n, Symbol('local'), Symbol.for('shared'), undefined, null)
+    logger.log(
+        'debug payload',
+        2n,
+        Symbol('local'),
+        Symbol.for('shared'),
+        undefined,
+        null,
+        MIXED_VALUE_ROWS[0],
+    )
 }
 
 function runInfo() {
-    logger.info('user snapshot', sampleUser)
+    logger.info('user snapshot', sampleUser, TASK_ROWS)
 }
 
 function runWarn() {
@@ -45,7 +50,15 @@ function runError() {
 }
 
 function runTable() {
-    logger.table(rows, ['id', 'level', 'message', 'ms'])
+    logger.table(SERVICE_ROWS, ['key', 'state', 'ms'])
+    logger.table(TASK_ROWS, ['owner', 'task', 'status'])
+}
+
+function runFiltering() {
+    warnLogger.log('filtered debug')
+    warnLogger.info('filtered info')
+    warnLogger.warn('visible warning from minLogLevel logger')
+    warnLogger.error('visible error from minLogLevel logger')
 }
 
 function runAll() {
@@ -54,6 +67,7 @@ function runAll() {
     runWarn()
     runError()
     runTable()
+    runFiltering()
 }
 
 document.querySelector('.actions')?.addEventListener('click', (event) => {
@@ -81,6 +95,9 @@ document.querySelector('.actions')?.addEventListener('click', (event) => {
             break
         case 'table':
             runTable()
+            break
+        case 'filtering':
+            runFiltering()
             break
         case 'clear':
             console.clear()

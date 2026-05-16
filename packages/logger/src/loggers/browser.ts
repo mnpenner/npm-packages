@@ -133,7 +133,10 @@ export class BrowserLogger implements Logger {
 }
 
 function formatConsoleArguments(data: unknown[]): unknown[] {
-    return joinFormatted(data.map((value) => formatValue(value, 0, new WeakSet())), ' ')
+    return joinFormatted(
+        data.map((value) => formatValue(value, 0, new WeakSet())),
+        ' ',
+    )
 }
 
 function formatValue(value: unknown, depth: number, seen: WeakSet<object>): unknown[] {

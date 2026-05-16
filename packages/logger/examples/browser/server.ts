@@ -69,6 +69,7 @@ async function main(options: Options): Promise<number | void> {
 
     console.log(`BrowserLogger example: http://${server.hostname}:${server.port}/`)
 
+    setInterval(() => {}, 60_000)
     await new Promise(() => {})
 }
 

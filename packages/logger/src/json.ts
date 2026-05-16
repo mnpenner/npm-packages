@@ -118,12 +118,21 @@ function toJsonValue(value: unknown, seen: WeakSet<object>): JsonValue {
 }
 
 function errorToJsonValue(error: Error, seen: WeakSet<object>): JsonValue {
-    return {
-        name: error.name,
-        message: error.message,
-        stack: error.stack ?? null,
-        ...objectToJsonValue(error, seen),
+    const result = objectToJsonValue(error, seen)
+
+    result.name = error.name
+    result.message = error.message
+    result.stack = error.stack ?? null
+
+    if ('cause' in error) {
+        result.cause = toJsonValue(error.cause, seen)
     }
+
+    if (error instanceof AggregateError) {
+        result.errors = Array.from(error.errors, (item) => toJsonValue(item, seen))
+    }
+
+    return result
 }
 
 function objectToJsonValue(value: object, seen: WeakSet<object>): Record<string, JsonValue> {

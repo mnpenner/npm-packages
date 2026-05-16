@@ -9,6 +9,18 @@ describe(jsonAscii.name, () => {
 
         const error = new TypeError('bad input')
         error.stack = 'TypeError: bad input'
+        const cause = new Error('root cause')
+        cause.stack = 'Error: root cause'
+        error.cause = cause
+        ;(error as Error & { code: string }).code = 'BAD_INPUT'
+
+        const firstAggregateError = new Error('first failure')
+        firstAggregateError.stack = 'Error: first failure'
+        const aggregateError = new AggregateError(
+            [firstAggregateError, 'second failure'],
+            'many failures',
+        )
+        aggregateError.stack = 'AggregateError: many failures'
 
         const value = {
             ascii: 'ok',
@@ -31,6 +43,7 @@ describe(jsonAscii.name, () => {
                 [Symbol.for('key'), 'symbol key'],
             ]),
             error,
+            aggregateError,
             bytes: new Uint8Array([1, 2, 255]),
             buffer: new Uint8Array([3, 4]).buffer,
             weakMap: new WeakMap(),
@@ -61,9 +74,27 @@ describe(jsonAscii.name, () => {
                 'Symbol(key)': 'symbol key',
             },
             error: {
+                code: 'BAD_INPUT',
                 name: 'TypeError',
                 message: 'bad input',
                 stack: 'TypeError: bad input',
+                cause: {
+                    name: 'Error',
+                    message: 'root cause',
+                    stack: 'Error: root cause',
+                },
+            },
+            aggregateError: {
+                name: 'AggregateError',
+                message: 'many failures',
+                stack: 'AggregateError: many failures',
+                errors: [
+                    expect.objectContaining({
+                        name: 'Error',
+                        message: 'first failure',
+                    }),
+                    'second failure',
+                ],
             },
             bytes: [1, 2, 255],
             buffer: [3, 4],
