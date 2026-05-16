@@ -1,10 +1,10 @@
-import type { Logger, WriteFn } from '../logger';
-import {createColors, type Colors} from '@mpen/picocolors'
-import {stringWidth} from 'bun'
+import type { Logger, WriteFn } from '../logger'
+import { createColors, type Colors } from '@mpen/picocolors'
+import { stringWidth } from 'bun'
 
 const INDEX_COLUMN = Symbol('index')
 const PREFERRED_COLUMNS = ['index', 'idx', 'id', 'key', 'name', 'title']
-const COLUMN_COLLATOR = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'})
+const COLUMN_COLLATOR = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
 
 type TableColumn = string | typeof INDEX_COLUMN
 type TableRow = Record<string, unknown> & Partial<Record<typeof INDEX_COLUMN, string | number>>
@@ -41,7 +41,7 @@ interface TableInspectOptions {
 
 export enum TableDensity {
     AUTO = 'auto',
-    COMPACT ='compact',
+    COMPACT = 'compact',
     BALANCED = 'balanced',
     COMFORTABLE = 'comfortable',
     VERTICAL = 'vertical',
@@ -76,10 +76,18 @@ interface EmojiLoggerOptions {
 }
 
 const INFO_ICON = '\u2139\uFE0F'
-const WARN_ICON = '\u26a0\ufe0f'//'\u{1F6A7}'
+const WARN_ICON = '\u26a0\ufe0f' //'\u{1F6A7}'
 const ERROR_ICON = '\u274C'
 
 const DEFAULT_WRITE_FN: WriteFn = (str) => process.stdout.write(str)
+
+function getLogTime(): string {
+    const date = new Date()
+    const hour = date.getHours().toString().padStart(2, '0')
+    const minutes = date.getMinutes().toString().padStart(2, '0')
+
+    return `${hour}:${minutes}`
+}
 
 export class TerminalLogger implements Logger {
     private readonly _pc: Colors
@@ -110,15 +118,36 @@ export class TerminalLogger implements Logger {
     }
 
     info(...data: any[]): void {
-        this._write(INFO_ICON + ' ' + data.map((x) => String(x)).join('  ') + '\n')
+        this._write(
+            INFO_ICON +
+                ' ' +
+                this._pc.blackBright(getLogTime()) +
+                ' ' +
+                data.map((x) => this._pc.blueBright(x)).join('  ') +
+                '\n',
+        )
     }
 
     warn(...data: any[]): void {
-        this._write(WARN_ICON + ' ' + data.map((x) => this._pc.yellow(x)).join('  ') + '\n')
+        this._write(
+            WARN_ICON +
+                ' ' +
+                this._pc.blackBright(getLogTime()) +
+                ' ' +
+                data.map((x) => this._pc.yellow(x)).join('  ') +
+                '\n',
+        )
     }
 
     error(...data: any[]): void {
-        this._write(ERROR_ICON + ' ' + data.map((x) => this._pc.red(x)).join('  ') + '\n')
+        this._write(
+            ERROR_ICON +
+                ' ' +
+                this._pc.blackBright(getLogTime()) +
+                ' ' +
+                data.map((x) => this._pc.red(x)).join('  ') +
+                '\n',
+        )
     }
 
     table(tabularData?: any, properties?: string[]): void {
