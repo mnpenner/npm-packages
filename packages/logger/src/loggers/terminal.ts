@@ -1,8 +1,7 @@
 import type { Logger, WriteFn } from '../logger'
 import { createColors, type Colors } from '@mpen/picocolors'
 import { stringWidth } from 'bun'
-import { jsAscii, jsonAscii } from '../json.ts'
-import jsSerialize from 'js-serialize'
+import { jsAscii } from '../json.ts'
 
 const INDEX_COLUMN = Symbol('index')
 const PREFERRED_COLUMNS = ['index', 'idx', 'id', 'key', 'name', 'title']
@@ -80,6 +79,8 @@ interface EmojiLoggerOptions {
 const INFO_ICON = '\u2139\uFE0F'
 const WARN_ICON = '\u26a0\ufe0f' //'\u{1F6A7}'
 const ERROR_ICON = '\u274C'
+const ANSI_PATTERN = /\x1B\[[0-?]*[ -/]*[@-~]/gu
+const ANSI_RESET = '\x1B[0m'
 
 const DEFAULT_WRITE_FN: WriteFn = (str) => process.stdout.write(str)
 
@@ -167,7 +168,7 @@ export class TerminalLogger implements Logger {
         const message = this.stringifyLogData(data)
         const maxWidth = this.getTerminalWidth()
         const firstLineWidth = Math.max(1, maxWidth - this.getCellWidth(prefix.plain))
-        const continuationIndent = '  '
+        const continuationIndent = '   '
         const continuationWidth = Math.max(1, maxWidth - this.getCellWidth(continuationIndent))
         const wrappedLines = message.lines.flatMap((line) => this.wrapLine(line, firstLineWidth))
         const [firstLine = this.createRenderedLine(''), ...remainingLines] = wrappedLines
@@ -475,7 +476,7 @@ export class TerminalLogger implements Logger {
                         value.name === '' ? '[Function]' : `[Function:${value.name}]`,
                     ),
                 ],
-                formatter: this._pc.yellowBright,
+                formatter: this._pc.magentaBright,
             }
         }
 
@@ -887,7 +888,7 @@ export class TerminalLogger implements Logger {
         }
 
         if (typeof value === 'string') {
-            const text = jsAscii(this.truncateString(value))
+            const text = this.jsAsciiTruncatedString(value)
 
             return this.createRenderedLine(text, this._pc.yellowBright(text))
         }
@@ -1022,6 +1023,20 @@ export class TerminalLogger implements Logger {
         return result + '…'
     }
 
+    private jsAsciiTruncatedString(value: string): string {
+        const truncatedValue = this.truncateString(value)
+
+        if (truncatedValue === value) {
+            return jsAscii(value)
+        }
+
+        return this.appendToStringLiteral(jsAscii(truncatedValue.slice(0, -1)), '…')
+    }
+
+    private appendToStringLiteral(value: string, suffix: string): string {
+        return value.slice(0, -1) + suffix + value.slice(-1)
+    }
+
     private createRenderedLine(plain: string, text = plain): RenderedLine {
         return { plain, text }
     }
@@ -1038,7 +1053,9 @@ export class TerminalLogger implements Logger {
         const removedLength = line.plain.length - trimmedPlain.length
 
         if (removedLength === 0 || line.text !== line.plain) {
-            return line.text === line.plain ? this.createRenderedLine(trimmedPlain) : line
+            return line.text === line.plain
+                ? this.createRenderedLine(trimmedPlain)
+                : this.trimRenderedChars(line, 'start')
         }
 
         return this.createRenderedLine(trimmedPlain)
@@ -1048,15 +1065,31 @@ export class TerminalLogger implements Logger {
         const trimmedPlain = line.plain.trimEnd()
 
         if (line.text !== line.plain) {
-            return line
+            return this.trimRenderedChars(line, 'end')
         }
 
         return this.createRenderedLine(trimmedPlain)
     }
 
+    private trimRenderedChars(line: RenderedLine, side: 'start' | 'end'): RenderedLine {
+        const chars = this.splitRenderedChars(line)
+
+        while (chars.length > 0) {
+            const index = side === 'start' ? 0 : chars.length - 1
+
+            if (!/\s/u.test(chars[index].plain)) {
+                break
+            }
+
+            chars.splice(index, 1)
+        }
+
+        return this.joinRenderedLineParts(chars)
+    }
+
     private splitRenderedLine(line: RenderedLine): RenderedLine[] {
         if (line.text !== line.plain) {
-            return [line]
+            return this.splitRenderedWords(line)
         }
 
         return line.plain.split(/(\s+)/u).map((part) => this.createRenderedLine(part))
@@ -1064,12 +1097,170 @@ export class TerminalLogger implements Logger {
 
     private splitRenderedChars(line: RenderedLine): RenderedLine[] {
         if (line.text !== line.plain) {
-            return [...line.plain].map((char) =>
-                this.createRenderedLine(char, line.text === line.plain ? char : char),
-            )
+            return this.splitAnsiRenderedChars(line)
         }
 
         return [...line.plain].map((char) => this.createRenderedLine(char))
+    }
+
+    private splitRenderedWords(line: RenderedLine): RenderedLine[] {
+        const words: RenderedLine[] = []
+        let currentWord: RenderedLine[] = []
+        let currentIsSpace: boolean | null = null
+
+        for (const char of this.splitRenderedChars(line)) {
+            const isSpace = /\s/u.test(char.plain)
+
+            if (currentIsSpace != null && currentIsSpace !== isSpace) {
+                words.push(this.joinRenderedLineParts(currentWord))
+                currentWord = []
+            }
+
+            currentWord.push(char)
+            currentIsSpace = isSpace
+        }
+
+        if (currentWord.length > 0) {
+            words.push(this.joinRenderedLineParts(currentWord))
+        }
+
+        return words
+    }
+
+    private splitAnsiRenderedChars(line: RenderedLine): RenderedLine[] {
+        const chars: RenderedLine[] = []
+        const activeCodes = new Map<string, string>()
+        let plainIndex = 0
+
+        for (let textIndex = 0; textIndex < line.text.length; ) {
+            ANSI_PATTERN.lastIndex = textIndex
+
+            const match = ANSI_PATTERN.exec(line.text)
+
+            if (match != null && match.index === textIndex) {
+                this.applyAnsiCode(activeCodes, match[0])
+                textIndex += match[0].length
+                continue
+            }
+
+            const char = [...line.text.slice(textIndex)][0]
+
+            if (char == null) {
+                break
+            }
+
+            const plainChar = [...line.plain.slice(plainIndex)][0]
+            const activePrefix = [...activeCodes.values()].join('')
+
+            chars.push(
+                this.createRenderedLine(
+                    plainChar ?? char,
+                    activePrefix === '' ? char : activePrefix + char + ANSI_RESET,
+                ),
+            )
+
+            textIndex += char.length
+            plainIndex += (plainChar ?? char).length
+        }
+
+        return chars
+    }
+
+    private applyAnsiCode(activeCodes: Map<string, string>, code: string): void {
+        if (!code.endsWith('m')) {
+            return
+        }
+
+        const params = code
+            .slice(2, -1)
+            .split(';')
+            .filter((part) => part !== '')
+            .map((part) => Number(part))
+
+        if (params.length === 0 || params.includes(0)) {
+            activeCodes.clear()
+            return
+        }
+
+        for (const param of params) {
+            const category = this.getAnsiCategory(param)
+
+            if (category == null) {
+                continue
+            }
+
+            if (this.isAnsiCloseCode(param)) {
+                activeCodes.delete(category)
+            } else {
+                activeCodes.set(category, code)
+            }
+        }
+    }
+
+    private getAnsiCategory(param: number): string | null {
+        if (param === 1 || param === 2 || param === 22) {
+            return 'intensity'
+        }
+
+        if (param === 3 || param === 23) {
+            return 'italic'
+        }
+
+        if (param === 4 || param === 24) {
+            return 'underline'
+        }
+
+        if (param === 7 || param === 27) {
+            return 'inverse'
+        }
+
+        if (param === 8 || param === 28) {
+            return 'hidden'
+        }
+
+        if (param === 9 || param === 29) {
+            return 'strikethrough'
+        }
+
+        if (
+            (param >= 30 && param <= 37) ||
+            (param >= 90 && param <= 97) ||
+            param === 38 ||
+            param === 39
+        ) {
+            return 'foreground'
+        }
+
+        if (
+            (param >= 40 && param <= 47) ||
+            (param >= 100 && param <= 107) ||
+            param === 48 ||
+            param === 49
+        ) {
+            return 'background'
+        }
+
+        return null
+    }
+
+    private isAnsiCloseCode(param: number): boolean {
+        return (
+            param === 22 ||
+            param === 23 ||
+            param === 24 ||
+            param === 27 ||
+            param === 28 ||
+            param === 29 ||
+            param === 39 ||
+            param === 49
+        )
+    }
+
+    private joinRenderedLineParts(parts: RenderedLine[]): RenderedLine {
+        return parts.reduce(
+            (line, part) => this.joinRenderedLines(line, part),
+            this.createRenderedLine(''),
+        )
     }
 
     private createRowLines(row: RenderedLine[][], widths: number[], layout: TableLayout): string[] {
