@@ -44,7 +44,7 @@ export enum TableDensity {
     COMPACT ='compact',
     BALANCED = 'balanced',
     COMFORTABLE = 'comfortable',
-    TRANSPOSED = 'transposed',
+    VERTICAL = 'vertical',
 }
 
 interface TableLayout {
@@ -130,8 +130,8 @@ export class EmojiLogger implements Logger {
         const renderedRows = rows.map((row) => columns.map((column) => this.stringifyCell(column in row ? row[column] : undefined, !(column in row))))
         const density = this.resolveTableDensity(columns, renderedRows)
 
-        if(density === TableDensity.TRANSPOSED) {
-            this._write(this.renderTransposedTable(columns, renderedRows) + '\n')
+        if(density === TableDensity.VERTICAL) {
+            this._write(this.renderVerticalTable(columns, renderedRows) + '\n')
             return
         }
 
@@ -161,8 +161,8 @@ export class EmojiLogger implements Logger {
         return lines.join('\n')
     }
 
-    private renderTransposedTable(columns: TableColumn[], renderedRows: RenderedCell[][]): string {
-        const labels = this.getHeaders(columns, TableDensity.TRANSPOSED)
+    private renderVerticalTable(columns: TableColumn[], renderedRows: RenderedCell[][]): string {
+        const labels = this.getHeaders(columns, TableDensity.VERTICAL)
         const labelWidth = Math.max(...labels.map((label) => this.getCellWidth(label)), 0)
         const maxWidth = this.getTerminalWidth()
         const valueWidth = Math.max(1, maxWidth - labelWidth - 4)
@@ -251,7 +251,7 @@ export class EmojiLogger implements Logger {
             case TableDensity.COMPACT:
                 return '#'
 
-            case TableDensity.TRANSPOSED:
+            case TableDensity.VERTICAL:
                 return '(index)'
 
             case TableDensity.BALANCED:
@@ -322,8 +322,8 @@ export class EmojiLogger implements Logger {
         const balancedHeaders = this.getHeaders(columns, TableDensity.BALANCED)
         const balancedWidths = this.getColumnWidths(balancedHeaders, rows, balancedLayout)
 
-        if(this.shouldTransposeTable(balancedHeaders, rows, balancedWidths)) {
-            return TableDensity.TRANSPOSED
+        if(this.shouldUseVerticalTable(balancedHeaders, rows, balancedWidths)) {
+            return TableDensity.VERTICAL
         }
 
         const comfortableLayout = this.getTableLayout(TableDensity.COMFORTABLE)
@@ -343,7 +343,7 @@ export class EmojiLogger implements Logger {
         return requiresWrapping ? TableDensity.BALANCED : TableDensity.COMPACT
     }
 
-    private shouldTransposeTable(columns: string[], rows: RenderedCell[][], widths: number[]): boolean {
+    private shouldUseVerticalTable(columns: string[], rows: RenderedCell[][], widths: number[]): boolean {
         const wrappingCellCount = this.getWrappingCellCount(rows, widths)
         const cellCount = rows.length * columns.length
 
@@ -374,7 +374,7 @@ export class EmojiLogger implements Logger {
                 }
 
             case TableDensity.BALANCED:
-            case TableDensity.TRANSPOSED:
+            case TableDensity.VERTICAL:
                 return {
                     density: TableDensity.BALANCED,
                     hasHeaderSeparator: true,

@@ -17,11 +17,11 @@ const COMFORTABLE_ROWS = [
 const BALANCED_ROWS = [
     {
         section: 'release notes',
-        summary: 'Draft customer facing copy for the package updates before publishing',
+        description: 'Draft customer facing copy for the package updates before publishing',
     },
     {
         section: 'validation',
-        summary: 'Run the narrow table example so wrapping is easy to inspect',
+        description: 'Run the narrow table example so wrapping is easy to inspect',
     },
 ]
 
