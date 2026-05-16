@@ -3,6 +3,9 @@
   "description": "Lightweight logging utilities.",
   "private": true,
   "type": "module",
+  "scripts": {
+    "example:browser": "bun examples/browser/server.ts"
+  },
   "publishConfig": {
     "access": "public"
   }

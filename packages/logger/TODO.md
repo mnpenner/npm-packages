@@ -1,4 +1,5 @@
-- `table` is great for Terminal and Browser logging, but won't make much sense for production/json... how do we deal with that?
+- [x] `table` is great for Terminal and Browser logging, but won't make much sense for production/json... how do we deal with that?
+  - It's fine. We'll just log as `DEBUG` log level since that's its primary purpose
 - Sub-loggers
 - Filters
   - Log-level
