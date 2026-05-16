@@ -25,6 +25,29 @@ const BALANCED_ROWS = [
     },
 ]
 
+const FUN_DATA = [
+    {
+        number: 1,
+        bigint: 2n,
+        title: 'first',
+        uniqueSymbol: Symbol(),
+        namedSymbol: Symbol('named'),
+        wellKnownSymbol: Symbol.for('symbol'),
+        function: (x: number) => x * 2,
+        object: { n: 1, s: 'x',a:[2,3] },
+        array: [1, 'b', 3n],
+        null: null,
+        undefined: undefined,
+    },
+    {
+        number: 2,
+        bigint: 4n,
+        title: 'second',
+        true: true,
+        false: false,
+    },
+]
+
 const PARSE_CONFIG = {
     options: {},
     strict: true,
@@ -57,6 +80,8 @@ async function main(options: Options, positionals: Positionals): Promise<number 
     logger.table(BALANCED_ROWS)
     logger.info('balanced table')
     logger2.table(BALANCED_ROWS)
+
+    logger.table(FUN_DATA)
 
     // logger.info('post table')
     // logger.table(POSTS)
