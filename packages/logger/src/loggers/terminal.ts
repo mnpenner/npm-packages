@@ -69,7 +69,7 @@ interface TableOptions {
     striped?: boolean
 }
 
-interface EmojiLoggerOptions {
+interface TerminalLoggerOptions {
     color?: boolean
     maxWidth?: number
     table?: TableOptions
@@ -101,7 +101,7 @@ export class TerminalLogger implements Logger {
     private readonly _tblInspect: Required<TableInspectOptions>
     private readonly _maxWidth: number | null
 
-    constructor(options?: EmojiLoggerOptions) {
+    constructor(options?: TerminalLoggerOptions) {
         this._write = options?.write ?? DEFAULT_WRITE_FN
         this._pc = createColors(options?.color)
         this._tblDensity = options?.table?.density ?? TableDensity.AUTO

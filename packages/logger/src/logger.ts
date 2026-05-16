@@ -2,6 +2,7 @@
 
 
 export enum LogLevel {
+    LOG = 'log',
     INFO = 'info',
     WARN = 'warning',
     ERROR = 'error',
@@ -16,8 +17,8 @@ export interface Logger {
     table(tabularData?: any, properties?: string[]): void
 }
 
-export interface WriteStream {
-    write: WriteFn
-}
+// export interface WriteStream {
+//     write: WriteFn
+// }
 
 export type WriteFn = (buffer: string) =>void
