@@ -2,6 +2,7 @@
 import {parseArgs, type ParseArgsConfig} from "node:util"
 import {$} from 'bun'
 import { EmojiLogger } from './loggers/emoji.ts'
+import { POSTS } from './test-data.ts'
 
 const PARSE_CONFIG = {
     options: {},
@@ -9,12 +10,14 @@ const PARSE_CONFIG = {
     allowPositionals: true,
 } satisfies ParseArgsConfig
 
+
 async function main(options: Options, positionals: Positionals): Promise<number | void> {
     const logger = new EmojiLogger()
 
     logger.info("info")
     logger.warn("warn")
     logger.error("error")
+    logger.table(POSTS)
 }
 
 //#region Invoke main
