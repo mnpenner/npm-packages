@@ -1,6 +1,8 @@
 import type { Logger, WriteFn } from '../logger'
 import { createColors, type Colors } from '@mpen/picocolors'
 import { stringWidth } from 'bun'
+import { jsAscii, jsonAscii } from '../json.ts'
+import jsSerialize from 'js-serialize'
 
 const INDEX_COLUMN = Symbol('index')
 const PREFERRED_COLUMNS = ['index', 'idx', 'id', 'key', 'name', 'title']
@@ -58,7 +60,6 @@ interface TableLayout {
 interface TableOptions {
     density?: TableDensity
     inspect?: TableInspectOptions
-    maxWidth?: number
     /**
      * @defaultValue false
      */
@@ -71,6 +72,7 @@ interface TableOptions {
 
 interface EmojiLoggerOptions {
     color?: boolean
+    maxWidth?: number
     table?: TableOptions
     write?: WriteFn
 }
@@ -96,14 +98,14 @@ export class TerminalLogger implements Logger {
     private readonly _tblStriped: boolean
     private readonly _tblIndex: boolean
     private readonly _tblInspect: Required<TableInspectOptions>
-    private readonly _tblMaxWidth: number | null
+    private readonly _maxWidth: number | null
 
     constructor(options?: EmojiLoggerOptions) {
         this._write = options?.write ?? DEFAULT_WRITE_FN
         this._pc = createColors(options?.color)
         this._tblDensity = options?.table?.density ?? TableDensity.AUTO
         this._tblStriped = options?.table?.striped ?? false
-        this._tblMaxWidth = options?.table?.maxWidth ?? null
+        this._maxWidth = options?.maxWidth ?? null
         this._tblIndex = options?.table?.showIndex ?? false
         this._tblInspect = {
             depth: options?.table?.inspect?.depth ?? 1,
@@ -118,36 +120,15 @@ export class TerminalLogger implements Logger {
     }
 
     info(...data: any[]): void {
-        this._write(
-            INFO_ICON +
-                ' ' +
-                this._pc.blackBright(getLogTime()) +
-                ' ' +
-                data.map((x) => this._pc.blueBright(x)).join('  ') +
-                '\n',
-        )
+        this.writeLogLine(INFO_ICON, data)
     }
 
     warn(...data: any[]): void {
-        this._write(
-            WARN_ICON +
-                ' ' +
-                this._pc.blackBright(getLogTime()) +
-                ' ' +
-                data.map((x) => this._pc.yellow(x)).join('  ') +
-                '\n',
-        )
+        this.writeLogLine(WARN_ICON, data)
     }
 
     error(...data: any[]): void {
-        this._write(
-            ERROR_ICON +
-                ' ' +
-                this._pc.blackBright(getLogTime()) +
-                ' ' +
-                data.map((x) => this._pc.red(x)).join('  ') +
-                '\n',
-        )
+        this.writeLogLine(ERROR_ICON, data)
     }
 
     table(tabularData?: any, properties?: string[]): void {
@@ -174,6 +155,97 @@ export class TerminalLogger implements Logger {
         this._write(
             this.renderTable(this.getHeaders(columns, density), renderedRows, density) + '\n',
         )
+    }
+
+    private writeLogLine(icon: string, data: unknown[]): void {
+        const time = getLogTime()
+        const prefix = this.createRenderedLine(`${icon} ${time} `)
+        const formattedPrefix = this.createRenderedLine(
+            prefix.plain,
+            `${icon} ${this._pc.blackBright(time)} `,
+        )
+        const message = this.stringifyLogData(data)
+        const maxWidth = this.getTerminalWidth()
+        const firstLineWidth = Math.max(1, maxWidth - this.getCellWidth(prefix.plain))
+        const continuationIndent = '  '
+        const continuationWidth = Math.max(1, maxWidth - this.getCellWidth(continuationIndent))
+        const wrappedLines = message.lines.flatMap((line) => this.wrapLine(line, firstLineWidth))
+        const [firstLine = this.createRenderedLine(''), ...remainingLines] = wrappedLines
+
+        this._write(
+            [
+                formattedPrefix.text + firstLine.text,
+                ...remainingLines.flatMap((line) =>
+                    this.wrapLine(line, continuationWidth).map(
+                        (wrappedLine) => continuationIndent + wrappedLine.text,
+                    ),
+                ),
+            ].join('\n') + '\n',
+        )
+    }
+
+    private stringifyLogData(data: unknown[]): RenderedCell {
+        const lines = data
+            .map((value) => this.formatRenderedCell(this.stringifyLogValue(value)))
+            .reduce<RenderedLine[] | null>((result, cell) => {
+                if (result == null) {
+                    return cell.lines
+                }
+
+                return this.joinRenderedLineGroups(result, cell.lines, '  ')
+            }, null)
+
+        return { lines: lines ?? [this.createRenderedLine('')] }
+    }
+
+    private stringifyLogValue(value: unknown): RenderedCell {
+        if (typeof value === 'string') {
+            return {
+                lines: value.split('\n').map((line) => this.createRenderedLine(line)),
+            }
+        }
+
+        return this.stringifyCell(value)
+    }
+
+    private formatRenderedCell(cell: RenderedCell): RenderedCell {
+        if (cell.formatter == null) {
+            return cell
+        }
+
+        return {
+            lines: cell.lines.map((line) =>
+                this.createRenderedLine(line.plain, cell.formatter?.(line.plain) ?? line.text),
+            ),
+        }
+    }
+
+    private joinRenderedLineGroups(
+        left: RenderedLine[],
+        right: RenderedLine[],
+        separator: string,
+    ): RenderedLine[] {
+        const maxLength = Math.max(left.length, right.length)
+        const lines: RenderedLine[] = []
+
+        for (let index = 0; index < maxLength; index++) {
+            const leftLine = left[index]
+            const rightLine = right[index]
+
+            if (leftLine != null && rightLine != null) {
+                lines.push(
+                    this.joinRenderedLines(
+                        this.joinRenderedLines(leftLine, this.createRenderedLine(separator)),
+                        rightLine,
+                    ),
+                )
+                continue
+            }
+
+            lines.push(leftLine ?? rightLine ?? this.createRenderedLine(''))
+        }
+
+        return lines
     }
 
     private renderTable(
@@ -711,8 +783,8 @@ export class TerminalLogger implements Logger {
     }
 
     private getTerminalWidth(): number {
-        if (this._tblMaxWidth != null) {
-            return this._tblMaxWidth
+        if (this._maxWidth != null) {
+            return this._maxWidth
         }
 
         if (process.stdout.columns != null && process.stdout.columns > 0) {
@@ -815,9 +887,9 @@ export class TerminalLogger implements Logger {
         }
 
         if (typeof value === 'string') {
-            const text = JSON.stringify(this.truncateString(value))
+            const text = jsAscii(this.truncateString(value))
 
-            return this.createRenderedLine(text, text)
+            return this.createRenderedLine(text, this._pc.yellowBright(text))
         }
 
         if (typeof value === 'number') {
@@ -848,7 +920,7 @@ export class TerminalLogger implements Logger {
         if (typeof value === 'function') {
             const text = value.name === '' ? '[Function]' : `[Function:${value.name}]`
 
-            return this.createRenderedLine(text, this._pc.yellowBright(text))
+            return this.createRenderedLine(text, this._pc.magentaBright(text))
         }
 
         if (depth >= this._tblInspect.depth) {

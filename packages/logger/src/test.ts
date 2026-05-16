@@ -3,6 +3,7 @@ import { parseArgs, type ParseArgsConfig } from 'node:util'
 import { $ } from 'bun'
 import { TerminalLogger, TableDensity } from './loggers/terminal.ts'
 import jsSerialize from 'js-serialize'
+import { jsonAscii } from './json.ts'
 
 const COMPACT_ROWS = [
     { key: 'api', state: 'ok', ms: 12 },
@@ -61,24 +62,31 @@ async function main(options: Options, positionals: Positionals): Promise<number 
     const defaultLogger = new TerminalLogger()
     const verticalLogger = new TerminalLogger({table:{density:TableDensity.VERTICAL,striped:true}})
     const maxWidthLogger = new TerminalLogger({
+        maxWidth: 56,
         table: {
             showIndex: true,
             striped: true,
-            maxWidth: 56,
         },
     })
     const balancedLogger = new TerminalLogger({
+        maxWidth: 56,
         table: {
             density: TableDensity.BALANCED,
-            maxWidth: 56,
         },
     })
 
-    console.log(jsSerialize('⚠️'))
+    // console.log(jsSerialize('⚠️'))
+    // console.log(JSON.stringify('\u26a0\ufe0f'))
+    console.log(jsonAscii('thr😀ee\n'))
     defaultLogger.log("log")
     defaultLogger.info("info")
     defaultLogger.warn("warn")
     defaultLogger.error("error")
+    defaultLogger.warn(1, 'hello', 2n, (x: number) => x * 2, Symbol(), true, false, null, 'world', [
+        1,
+        2n,
+        "thr😀ee orem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ips",
+    ])
 
     defaultLogger.info(
         "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
