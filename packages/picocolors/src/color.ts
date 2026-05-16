@@ -228,3 +228,6 @@ export default function createColors(enabled = isColorSupported) {
         bgHex: (color: string) => bgRgb(...parseHexColor(color)),
     }
 }
+
+export { createColors }
+export type Colors = ReturnType<typeof createColors>

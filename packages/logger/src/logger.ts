@@ -16,5 +16,7 @@ export interface Logger {
 }
 
 export interface WriteStream {
-    write(buffer: string): void
+    write: WriteFn
 }
+
+export type WriteFn = (buffer: string) =>void

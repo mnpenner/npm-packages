@@ -1,25 +1,49 @@
-import type { WriteStream, Logger} from '../logger';
+import type { Logger, WriteFn } from '../logger';
 import { inspect } from 'node:util'
-import createColors from '@mpen/picocolors'
+import {createColors, type Colors} from '@mpen/picocolors'
 import {stringWidth} from 'bun'
 
 type TableRow = Record<string, unknown>
 
-export class EmojiLogger implements Logger {
-    private pc = createColors()
+enum TableDensity {
+    COMPACT,
+    BALANCED,
+    COMFORTABLE,
+}
 
-    constructor(private readonly stream: WriteStream = process.stdout) {}
+interface TableOptions {
+    density?: TableDensity
+    maxWidth?: number
+    showIndex?: boolean
+}
+
+interface EmojiLoggerOptions {
+    color?: boolean
+    table?: TableOptions
+    write?: WriteFn
+}
+
+const DEFAULT_WRITE_FN: WriteFn = (str) => process.stdout.write(str + '\n')
+
+export class EmojiLogger implements Logger {
+    private _pc: Colors
+    private _write: WriteFn
+
+    constructor(options: EmojiLoggerOptions = {}) {
+        this._write = options.write ?? DEFAULT_WRITE_FN
+        this._pc = createColors(options.color)
+    }
 
     info(...data: any[]): void {
-        this.stream.write('\u2139\uFE0F ' + data.map((x) => String(x)).join('  ') + '\n')
+        this._write('\u2139\uFE0F ' + data.map((x) => String(x)).join('  ') + '\n')
     }
 
     warn(...data: any[]): void {
-        this.stream.write('\u{1F6A7} ' + data.map((x) => this.pc.yellow(x)).join('  ') + '\n')
+        this._write('\u{1F6A7} ' + data.map((x) => this._pc.yellow(x)).join('  ') + '\n')
     }
 
     error(...data: any[]): void {
-        this.stream.write('\u274C ' + data.map((x) => this.pc.red(x)).join('  ') + '\n')
+        this._write('\u274C ' + data.map((x) => this._pc.red(x)).join('  ') + '\n')
     }
 
 
@@ -28,7 +52,7 @@ export class EmojiLogger implements Logger {
         const columns = this.getColumns(rows, properties)
 
         if(columns.length === 0) {
-            this.stream.write('(empty)\n')
+            this._write('(empty)\n')
             return
         }
 
@@ -48,7 +72,7 @@ export class EmojiLogger implements Logger {
             bottom,
         ]
 
-        this.stream.write(lines.join('\n') + '\n')
+        this._write(lines.join('\n') + '\n')
     }
 
     private toRows(tabularData: unknown): TableRow[] {
@@ -345,7 +369,7 @@ export class EmojiLogger implements Logger {
             return line
         }
 
-        return this.pc.bgRgb(24, 24, 24)(line)
+        return this._pc.bgRgb(24, 24, 24)(line)
     }
 
     private padCell(value: string, width: number): string {
