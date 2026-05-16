@@ -3,7 +3,12 @@ import { inspect } from 'node:util'
 import {createColors, type Colors} from '@mpen/picocolors'
 import {stringWidth} from 'bun'
 
-type TableRow = Record<string, unknown>
+const INDEX_COLUMN = Symbol('index')
+const PREFERRED_COLUMNS = ['index', 'idx', 'id', 'name', 'title']
+const COLUMN_COLLATOR = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'})
+
+type TableColumn = string | typeof INDEX_COLUMN
+type TableRow = Record<string, unknown> & Partial<Record<typeof INDEX_COLUMN, string | number>>
 
 enum TableDensity {
     AUTO = 'auto',
@@ -87,8 +92,9 @@ export class EmojiLogger implements Logger {
         const renderedRows = rows.map((row) => columns.map((column) => this.stringifyCell(row[column])))
         const density = this.resolveTableDensity(columns, renderedRows)
         const layout = this.getTableLayout(density)
-        const widths = this.getColumnWidths(columns, renderedRows, layout)
-        const wrappedColumns = columns.map((column, index) => this.wrapCell([column], widths[index]))
+        const headers = this.getHeaders(columns, density)
+        const widths = this.getColumnWidths(headers, renderedRows, layout)
+        const wrappedColumns = headers.map((column, index) => this.wrapCell([column], widths[index]))
         const wrappedRows = renderedRows.map((row) => row.map((cell, index) => this.wrapCell(cell, widths[index])))
 
         const top = this.createBorder('╒', '╤', '╕', widths, layout, '═')
@@ -123,15 +129,15 @@ export class EmojiLogger implements Logger {
 
     private toRow(value: unknown, index: string | number): TableRow {
         if(value != null && typeof value === 'object' && !Array.isArray(value)) {
-            return this._tblIndex ? { '(index)': index, ...(value as Record<string, unknown>) } : value as Record<string, unknown>
+            return this._tblIndex ? { [INDEX_COLUMN]: index, ...(value as Record<string, unknown>) } : value as Record<string, unknown>
         }
 
-        return this._tblIndex ? { '(index)': index, Values: value } : { Values: value }
+        return this._tblIndex ? { [INDEX_COLUMN]: index, Values: value } : { Values: value }
     }
 
-    private getColumns(rows: TableRow[], properties?: string[]): string[] {
+    private getColumns(rows: TableRow[], properties?: string[]): TableColumn[] {
         if(properties != null) {
-            return this._tblIndex ? ['(index)', ...properties] : properties
+            return this._tblIndex ? [INDEX_COLUMN, ...properties] : properties
         }
 
         const columns = new Set<string>()
@@ -142,7 +148,35 @@ export class EmojiLogger implements Logger {
             }
         }
 
-        return [...columns]
+        const sortedColumns = this.sortColumns([...columns])
+
+        return this._tblIndex ? [INDEX_COLUMN, ...sortedColumns] : sortedColumns
+    }
+
+    private sortColumns(columns: string[]): string[] {
+        const columnSet = new Set(columns)
+        const preferredColumns = PREFERRED_COLUMNS.filter((column) => columnSet.delete(column))
+        const remainingColumns = [...columnSet].toSorted((a, b) => COLUMN_COLLATOR.compare(a, b))
+
+        return [...preferredColumns, ...remainingColumns]
+    }
+
+    private getHeaders(columns: TableColumn[], density: TableDensity): string[] {
+        return columns.map((column) => column === INDEX_COLUMN ? this.getIndexHeader(density) : column)
+    }
+
+    private getIndexHeader(density: TableDensity): string {
+        switch(density) {
+            case TableDensity.COMPACT:
+                return '#'
+
+            case TableDensity.BALANCED:
+                return 'idx'
+
+            case TableDensity.AUTO:
+            case TableDensity.COMFORTABLE:
+                return '(index)'
+        }
     }
 
     private stringifyCell(value: unknown): string[] {
@@ -173,14 +207,15 @@ export class EmojiLogger implements Logger {
         return [String(value)]
     }
 
-    private resolveTableDensity(columns: string[], rows: string[][][]): TableDensity {
+    private resolveTableDensity(columns: TableColumn[], rows: string[][][]): TableDensity {
         if(this._tblDensity !== TableDensity.AUTO) {
             return this._tblDensity
         }
 
         const comfortableLayout = this.getTableLayout(TableDensity.COMFORTABLE)
-        const widths = this.getColumnWidths(columns, rows, comfortableLayout)
-        const requiresWrapping = this.requiresWrapping(columns, rows, widths)
+        const headers = this.getHeaders(columns, TableDensity.COMFORTABLE)
+        const widths = this.getColumnWidths(headers, rows, comfortableLayout)
+        const requiresWrapping = this.requiresWrapping(headers, rows, widths)
         const containsSpaces = rows.some((row) => row.some((cell) => cell.some((line) => line.includes(' '))))
 
         if(containsSpaces && requiresWrapping) {

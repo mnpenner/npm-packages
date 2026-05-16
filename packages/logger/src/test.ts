@@ -34,6 +34,13 @@ const PARSE_CONFIG = {
 
 async function main(options: Options, positionals: Positionals): Promise<number | void> {
     const logger = new EmojiLogger()
+    const logger2 = new EmojiLogger({
+        table: {
+            showIndex: true,
+            striped: false,
+            maxWidth: 56,
+        },
+    })
 
     logger.info("info")
     logger.warn("warn")
@@ -41,12 +48,15 @@ async function main(options: Options, positionals: Positionals): Promise<number 
 
     logger.info('compact table')
     logger.table(COMPACT_ROWS)
+    logger2.table(COMPACT_ROWS)
 
     logger.info('comfortable table')
     logger.table(COMFORTABLE_ROWS)
+    logger2.table(COMFORTABLE_ROWS)
 
+    logger.table(BALANCED_ROWS)
     logger.info('balanced table')
-    new EmojiLogger({table: {maxWidth: 56}}).table(BALANCED_ROWS)
+    logger2.table(BALANCED_ROWS)
 
     // logger.info('post table')
     // logger.table(POSTS)
