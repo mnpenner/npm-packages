@@ -38,13 +38,13 @@ export class EmojiLogger implements Logger {
         const wrappedRows = renderedRows.map((row) => row.map((cell, index) => this.wrapCell(cell, widths[index])))
 
         const top = this.createBorder('┌', '┬', '┐', widths)
-        const headerSeparator = this.createBorder('├', '┼', '┤', widths)
+        const headerSeparator = this.createBorder('╞', '╪', '╡', widths, '═')
         const bottom = this.createBorder('└', '┴', '┘', widths)
         const lines = [
             top,
             ...this.createRowLines(wrappedColumns, widths),
             headerSeparator,
-            ...wrappedRows.flatMap((row) => this.createRowLines(row, widths)),
+            ...wrappedRows.flatMap((row, index) => this.createRowLines(row, widths).map((line) => this.stripeTableRow(line, index))),
             bottom,
         ]
 
@@ -57,27 +57,27 @@ export class EmojiLogger implements Logger {
         }
 
         if(Array.isArray(tabularData)) {
-            return tabularData.map((value, index) => this.toRow(index, value))
+            return tabularData.map((value) => this.toRow(value))
         }
 
         if(typeof tabularData === 'object') {
-            return Object.entries(tabularData).map(([key, value]) => this.toRow(key, value))
+            return Object.values(tabularData).map((value) => this.toRow(value))
         }
 
         return [{ Values: tabularData }]
     }
 
-    private toRow(index: string | number, value: unknown): TableRow {
+    private toRow(value: unknown): TableRow {
         if(value != null && typeof value === 'object' && !Array.isArray(value)) {
-            return { '(index)': index, ...(value as Record<string, unknown>) }
+            return value as Record<string, unknown>
         }
 
-        return { '(index)': index, Values: value }
+        return { Values: value }
     }
 
     private getColumns(rows: TableRow[], properties?: string[]): string[] {
         if(properties != null) {
-            return ['(index)', ...properties]
+            return properties
         }
 
         const columns = new Set<string>()
@@ -336,8 +336,16 @@ export class EmojiLogger implements Logger {
         return '│ ' + cells.map((cell, index) => this.padCell(cell[0] ?? '', widths[index])).join(' │ ') + ' │'
     }
 
-    private createBorder(left: string, middle: string, right: string, widths: number[]): string {
-        return left + widths.map((width) => '─'.repeat(width + 2)).join(middle) + right
+    private createBorder(left: string, middle: string, right: string, widths: number[], horizontal = '─'): string {
+        return left + widths.map((width) => horizontal.repeat(width + 2)).join(middle) + right
+    }
+
+    private stripeTableRow(line: string, index: number): string {
+        if(index % 2 === 0) {
+            return line
+        }
+
+        return this.pc.bgRgb(24, 24, 24)(line)
     }
 
     private padCell(value: string, width: number): string {
