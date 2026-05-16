@@ -2,13 +2,14 @@ import type { Logger, WriteFn } from '../logger'
 import { createColors, type Colors } from '@mpen/picocolors'
 import { stringWidth } from 'bun'
 import { jsAsciiString } from '../json.ts'
+import {
+    getTableColumns,
+    TABLE_INDEX_COLUMN,
+    type TableColumn,
+    type TableRow,
+    toTableRows,
+} from '../table.ts'
 
-const INDEX_COLUMN = Symbol('index')
-const PREFERRED_COLUMNS = ['index', 'idx', 'id', 'key', 'name', 'title']
-const COLUMN_COLLATOR = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
-
-type TableColumn = string | typeof INDEX_COLUMN
-type TableRow = Record<string, unknown> & Partial<Record<typeof INDEX_COLUMN, string | number>>
 type CellFormatter = (value: string) => string
 
 interface RenderedLine {
@@ -341,55 +342,11 @@ export class TerminalLogger implements Logger {
     }
 
     private toRows(tabularData: unknown): TableRow[] {
-        if (tabularData == null) {
-            return []
-        }
-
-        if (Array.isArray(tabularData)) {
-            return tabularData.map((value, index) => this.toRow(value, index))
-        }
-
-        if (typeof tabularData === 'object') {
-            return Object.entries(tabularData).map(([key, value]) => this.toRow(value, key))
-        }
-
-        return [this.toRow(tabularData, 0)]
-    }
-
-    private toRow(value: unknown, index: string | number): TableRow {
-        if (value != null && typeof value === 'object' && !Array.isArray(value)) {
-            return this._tblIndex
-                ? { [INDEX_COLUMN]: index, ...(value as Record<string, unknown>) }
-                : (value as Record<string, unknown>)
-        }
-
-        return this._tblIndex ? { [INDEX_COLUMN]: index, Values: value } : { Values: value }
+        return toTableRows(tabularData, this._tblIndex)
     }
 
     private getColumns(rows: TableRow[], properties?: string[]): TableColumn[] {
-        if (properties != null) {
-            return this._tblIndex ? [INDEX_COLUMN, ...properties] : properties
-        }
-
-        const columns = new Set<string>()
-
-        for (const row of rows) {
-            for (const column of Object.keys(row)) {
-                columns.add(column)
-            }
-        }
-
-        const sortedColumns = this.sortColumns([...columns])
-
-        return this._tblIndex ? [INDEX_COLUMN, ...sortedColumns] : sortedColumns
-    }
-
-    private sortColumns(columns: string[]): string[] {
-        const columnSet = new Set(columns)
-        const preferredColumns = PREFERRED_COLUMNS.filter((column) => columnSet.delete(column))
-        const remainingColumns = [...columnSet].toSorted((a, b) => COLUMN_COLLATOR.compare(a, b))
-
-        return [...preferredColumns, ...remainingColumns]
+        return getTableColumns(rows, properties, this._tblIndex)
     }
 
     private getHeaders(columns: TableColumn[], density: TableDensity): string[] {
@@ -397,7 +354,7 @@ export class TerminalLogger implements Logger {
     }
 
     private getHeader(column: TableColumn, density: TableDensity): string {
-        return column === INDEX_COLUMN ? this.getIndexHeader(density) : column
+        return column === TABLE_INDEX_COLUMN ? this.getIndexHeader(density) : column
     }
 
     private getIndexHeader(density: TableDensity): string {

@@ -1,8 +1,10 @@
+type JsonPrimitive = string | number | boolean | null
+type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue }
 
+const CIRCULAR_VALUE = '[Circular]'
 
-// FIXME: needs to handle all data types, even if its not perfect/lossless
 export function jsonAscii(value: unknown): string {
-    return JSON.stringify(value).replace(/[^\x00-\x7F]/gu, (c) => {
+    return JSON.stringify(toJsonValue(value, new WeakSet())).replace(/[^\x00-\x7F]/gu, (c) => {
         const cp = c.codePointAt(0)!
 
         if (cp <= 0xffff) {
@@ -17,6 +19,148 @@ export function jsonAscii(value: unknown): string {
     })
 }
 
+function toJsonValue(value: unknown, seen: WeakSet<object>): JsonValue {
+    if (value === null || typeof value === 'string' || typeof value === 'boolean') {
+        return value
+    }
+
+    if (typeof value === 'number') {
+        return value
+    }
+
+    if (typeof value === 'bigint') {
+        const asNumber = Number(value)
+
+        return Number.isSafeInteger(asNumber) ? asNumber : value.toString()
+    }
+
+    if (typeof value === 'undefined') {
+        return '[undefined]'
+    }
+
+    if (typeof value === 'symbol') {
+        return value.toString()
+    }
+
+    if (typeof value === 'function') {
+        return `[Function${value.name ? `: ${value.name}` : ''}]`
+    }
+
+    if (seen.has(value)) {
+        return CIRCULAR_VALUE
+    }
+
+    seen.add(value)
+
+    try {
+        if (Array.isArray(value)) {
+            return value.map((item) => toJsonValue(item, seen))
+        }
+
+        if (value instanceof Boolean || value instanceof Number || value instanceof String) {
+            return toJsonValue(value.valueOf(), seen)
+        }
+
+        if (value instanceof Date) {
+            return Number.isNaN(value.getTime()) ? '[Invalid Date]' : value.toISOString()
+        }
+
+        if (value instanceof RegExp) {
+            return value.toString()
+        }
+
+        if (value instanceof Error) {
+            return errorToJsonValue(value, seen)
+        }
+
+        if (value instanceof Set) {
+            return Array.from(value, (item) => toJsonValue(item, seen))
+        }
+
+        if (value instanceof Map) {
+            const result: Record<string, JsonValue> = {}
+
+            for (const [key, item] of value) {
+                result[mapKeyToString(key)] = toJsonValue(item, seen)
+            }
+
+            return result
+        }
+
+        if (ArrayBuffer.isView(value)) {
+            return Array.from(new Uint8Array(value.buffer, value.byteOffset, value.byteLength))
+        }
+
+        if (value instanceof ArrayBuffer) {
+            return Array.from(new Uint8Array(value))
+        }
+
+        if (value instanceof WeakMap) {
+            return '[WeakMap]'
+        }
+
+        if (value instanceof WeakSet) {
+            return '[WeakSet]'
+        }
+
+        if (value instanceof Promise) {
+            return '[Promise]'
+        }
+
+        if (value instanceof URL) {
+            return value.toString()
+        }
+
+        return objectToJsonValue(value, seen)
+    } finally {
+        seen.delete(value)
+    }
+}
+
+function errorToJsonValue(error: Error, seen: WeakSet<object>): JsonValue {
+    return {
+        name: error.name,
+        message: error.message,
+        stack: error.stack ?? null,
+        ...objectToJsonValue(error, seen),
+    }
+}
+
+function objectToJsonValue(value: object, seen: WeakSet<object>): Record<string, JsonValue> {
+    const result: Record<string, JsonValue> = {}
+
+    for (const key of Object.keys(value)) {
+        result[key] = toJsonValue((value as Record<string, unknown>)[key], seen)
+    }
+
+    for (const symbol of Object.getOwnPropertySymbols(value)) {
+        if (Object.prototype.propertyIsEnumerable.call(value, symbol)) {
+            result[symbol.toString()] = toJsonValue(
+                (value as Record<symbol, unknown>)[symbol],
+                seen,
+            )
+        }
+    }
+
+    return result
+}
+
+function mapKeyToString(key: unknown): string {
+    if (typeof key === 'string') {
+        return key
+    }
+
+    if (typeof key === 'symbol') {
+        return key.toString()
+    }
+
+    if (typeof key === 'bigint') {
+        return key.toString()
+    }
+
+    return String(key)
+}
+
 export function jsAsciiString(obj: string) {
     let numDouble = 0
     let numSingle = 0
@@ -28,7 +172,7 @@ export function jsAsciiString(obj: string) {
     const quote = useSingle ? "'" : '"'
     const quoteCode = useSingle ? 0x27 : 0x22
 
-    let result =
+    const result =
         quote +
         Array.from(obj)
             .map((ch) => {

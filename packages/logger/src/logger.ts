@@ -2,12 +2,18 @@
 
 
 export enum LogLevel {
-    LOG = 'log',
+    DEBUG = 'debug',
     INFO = 'info',
     WARN = 'warning',
     ERROR = 'error',
 }
 
+export const LogLevelValues = Object.freeze({
+    [LogLevel.DEBUG]: 0,
+    [LogLevel.INFO]: 1,
+    [LogLevel.WARN]: 2,
+    [LogLevel.ERROR]: 3,
+} satisfies Record<LogLevel, number>)
 
 export interface Logger {
     log(...data: any[]): void

@@ -15,6 +15,16 @@ const IssueKindSchema = v.picklist(['schema', 'validation', 'transformation'])
 // Keep these opaque unless you want to fully model Valibot internals.
 const IssuePathSchema = v.unknown()
 
+function utf8mb4Length(str: string): number {
+    let count = 0
+
+    for (const _ch of str) {
+        ++count
+    }
+
+    return count
+}
+
 export const BaseIssueSchema: v.GenericSchema<unknown, SerializedBaseIssue> = v.object({
     // Required info
     kind: IssueKindSchema,
