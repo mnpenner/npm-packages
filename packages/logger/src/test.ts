@@ -1,8 +1,7 @@
 #!/usr/bin/env -S bun -i
-import {parseArgs, type ParseArgsConfig} from "node:util"
-import {$} from 'bun'
+import { parseArgs, type ParseArgsConfig } from 'node:util'
+import { $ } from 'bun'
 import { EmojiLogger, TableDensity } from './loggers/emoji.ts'
-import { POSTS } from './test-data.ts'
 
 const COMPACT_ROWS = [
     { key: 'api', state: 'ok', ms: 12 },
@@ -57,10 +56,11 @@ const PARSE_CONFIG = {
 
 async function main(options: Options, positionals: Positionals): Promise<number | void> {
     const defaultLogger = new EmojiLogger()
+    const verticalLogger = new EmojiLogger({table:{density:TableDensity.VERTICAL,striped:true}})
     const maxWidthLogger = new EmojiLogger({
         table: {
             showIndex: true,
-            striped: false,
+            striped: true,
             maxWidth: 56,
         },
     })
@@ -91,6 +91,7 @@ async function main(options: Options, positionals: Positionals): Promise<number 
     balancedLogger.table(BALANCED_ROWS)
 
     defaultLogger.table(FUN_DATA)
+    verticalLogger.table(FUN_DATA)
 
     // logger.info('post table')
     // logger.table(POSTS)

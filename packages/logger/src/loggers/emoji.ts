@@ -175,17 +175,38 @@ export class EmojiLogger implements Logger {
     }
 
     private createVerticalRecordLines(labels: string[], row: RenderedCell[], labelWidth: number, valueWidth: number): string[] {
-        return row.flatMap((cell, columnIndex) => {
-            const marker = columnIndex === 0 ? '-' : ' '
-            const label = this.padPlain(labels[columnIndex], labelWidth)
+        const lines = row.flatMap((cell, columnIndex) => {
+            const label = this.padPlainStart(labels[columnIndex], labelWidth)
             const wrappedValue = this.wrapCell(cell.lines, valueWidth, cell.formatter)
 
             return wrappedValue.map((line, lineIndex) => {
                 const renderedLabel = lineIndex === 0 ? label : ' '.repeat(labelWidth)
 
-                return `${marker} ${renderedLabel}: ${line.text}`
+                return `${renderedLabel}: ${line.text}`
             })
         })
+
+        return lines.map((line, index) => {
+            const marker = this.getVerticalRecordMarker(index, lines.length)
+
+            return `${marker} ${line}`
+        })
+    }
+
+    private getVerticalRecordMarker(index: number, lineCount: number): string {
+        if(lineCount === 1) {
+            return '◆'
+        }
+
+        if(index === 0) {
+            return '┌'
+        }
+
+        if(index === lineCount - 1) {
+            return '└'
+        }
+
+        return '│'
     }
 
     private toRows(tabularData: unknown): TableRow[] {
@@ -351,7 +372,26 @@ export class EmojiLogger implements Logger {
             return false
         }
 
-        return wrappingCellCount / cellCount > 0.5 || widths.some((width) => width < 4)
+        const wrappingRatio = wrappingCellCount / cellCount
+
+        return wrappingRatio > 0.75 || this.hasCrampedColumn(columns, rows, widths)
+    }
+
+    private hasCrampedColumn(columns: string[], rows: RenderedCell[][], widths: number[]): boolean {
+        return widths.some((width, columnIndex) => {
+            if(width >= 4) {
+                return false
+            }
+
+            return this.getColumnMaxWidth(columns, rows, columnIndex) > width
+        })
+    }
+
+    private getColumnMaxWidth(columns: string[], rows: RenderedCell[][], columnIndex: number): number {
+        return Math.max(
+            this.getCellWidth(columns[columnIndex]),
+            ...rows.flatMap((row) => row[columnIndex].lines.map((line) => this.getCellWidth(line.plain))),
+        )
     }
 
     private getWrappingCellCount(rows: RenderedCell[][], widths: number[]): number {
@@ -830,6 +870,10 @@ export class EmojiLogger implements Logger {
 
     private padPlain(value: string, width: number): string {
         return value + ' '.repeat(width - this.getCellWidth(value))
+    }
+
+    private padPlainStart(value: string, width: number): string {
+        return ' '.repeat(width - this.getCellWidth(value)) + value
     }
 
     private getCellWidth(value: string): number {
