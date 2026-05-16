@@ -1,0 +1,6 @@
+- `table` is great for Terminal and Browser logging, but won't make much sense for production/json... how do we deal with that?
+- Sub-loggers
+- Filters
+  - Log-level
+  - Logger/sub-logger name
+- `write` option in `TerminalLogger` won't match prod logger -- prod/json logger always has to write 1 full line at a time

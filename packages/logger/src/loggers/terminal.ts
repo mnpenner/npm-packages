@@ -76,19 +76,19 @@ interface EmojiLoggerOptions {
 }
 
 const INFO_ICON = '\u2139\uFE0F'
-const WARN_ICON = '\u{1F6A7}'
+const WARN_ICON = '\u26a0\ufe0f'//'\u{1F6A7}'
 const ERROR_ICON = '\u274C'
 
-const DEFAULT_WRITE_FN: WriteFn = (str) => process.stdout.write(str + '\n')
+const DEFAULT_WRITE_FN: WriteFn = (str) => process.stdout.write(str)
 
-export class EmojiLogger implements Logger {
-    private readonly  _pc: Colors
-    private readonly  _write: WriteFn
-    private readonly  _tblDensity: TableDensity
-    private readonly  _tblStriped: boolean
-    private readonly  _tblIndex: boolean
-    private readonly  _tblInspect: Required<TableInspectOptions>
-    private readonly  _tblMaxWidth: number|null
+export class TerminalLogger implements Logger {
+    private readonly _pc: Colors
+    private readonly _write: WriteFn
+    private readonly _tblDensity: TableDensity
+    private readonly _tblStriped: boolean
+    private readonly _tblIndex: boolean
+    private readonly _tblInspect: Required<TableInspectOptions>
+    private readonly _tblMaxWidth: number | null
 
     constructor(options?: EmojiLoggerOptions) {
         this._write = options?.write ?? DEFAULT_WRITE_FN
@@ -105,45 +105,62 @@ export class EmojiLogger implements Logger {
         }
     }
 
+    log(...data: any[]): void {
+        this._write(data.map((x) => String(x)).join('  ') + '\n')
+    }
+
     info(...data: any[]): void {
-        this._write(INFO_ICON+ ' ' + data.map((x) => String(x)).join('  ') + '\n')
+        this._write(INFO_ICON + ' ' + data.map((x) => String(x)).join('  ') + '\n')
     }
 
     warn(...data: any[]): void {
-        this._write(WARN_ICON+' ' + data.map((x) => this._pc.yellow(x)).join('  ') + '\n')
+        this._write(WARN_ICON + ' ' + data.map((x) => this._pc.yellow(x)).join('  ') + '\n')
     }
 
     error(...data: any[]): void {
-        this._write(ERROR_ICON+' ' + data.map((x) => this._pc.red(x)).join('  ') + '\n')
+        this._write(ERROR_ICON + ' ' + data.map((x) => this._pc.red(x)).join('  ') + '\n')
     }
-
 
     table(tabularData?: any, properties?: string[]): void {
         const rows = this.toRows(tabularData)
         const columns = this.getColumns(rows, properties)
 
-        if(columns.length === 0) {
+        if (columns.length === 0) {
             this._write('(empty)\n')
             return
         }
 
-        const renderedRows = rows.map((row) => columns.map((column) => this.stringifyCell(column in row ? row[column] : undefined, !(column in row))))
+        const renderedRows = rows.map((row) =>
+            columns.map((column) =>
+                this.stringifyCell(column in row ? row[column] : undefined, !(column in row)),
+            ),
+        )
         const density = this.resolveTableDensity(columns, renderedRows)
 
-        if(density === TableDensity.VERTICAL) {
+        if (density === TableDensity.VERTICAL) {
             this._write(this.renderVerticalTable(columns, renderedRows) + '\n')
             return
         }
 
-        this._write(this.renderTable(this.getHeaders(columns, density), renderedRows, density) + '\n')
+        this._write(
+            this.renderTable(this.getHeaders(columns, density), renderedRows, density) + '\n',
+        )
     }
 
-    private renderTable(headers: string[], renderedRows: RenderedCell[][], density: TableDensity): string {
+    private renderTable(
+        headers: string[],
+        renderedRows: RenderedCell[][],
+        density: TableDensity,
+    ): string {
         const layout = this.getTableLayout(density)
         const allocatedWidths = this.getColumnWidths(headers, renderedRows, layout)
-        const wrappedColumns = headers.map((column, index) => this.wrapCell([this.createRenderedLine(column)], allocatedWidths[index]))
+        const wrappedColumns = headers.map((column, index) =>
+            this.wrapCell([this.createRenderedLine(column)], allocatedWidths[index]),
+        )
         const wrappedRows = renderedRows.map((row) => {
-            return row.map((cell, index) => this.wrapCell(cell.lines, allocatedWidths[index], cell.formatter))
+            return row.map((cell, index) =>
+                this.wrapCell(cell.lines, allocatedWidths[index], cell.formatter),
+            )
         })
         const widths = this.getRenderedColumnWidths(wrappedColumns, wrappedRows)
 
@@ -152,9 +169,15 @@ export class EmojiLogger implements Logger {
         const bottom = this.createBorder('└', '┴', '┘', widths, layout)
         const lines = [
             ...(layout.hasHorizontalBorders ? [top] : []),
-            ...this.createRowLines(wrappedColumns, widths, layout).map((line) => this.formatHeaderRow(line, density)),
+            ...this.createRowLines(wrappedColumns, widths, layout).map((line) =>
+                this.formatHeaderRow(line, density),
+            ),
             ...(layout.hasHeaderSeparator ? [headerSeparator] : []),
-            ...wrappedRows.flatMap((row, index) => this.createRowLines(row, widths, layout).map((line) => this.stripeTableRow(line, index))),
+            ...wrappedRows.flatMap((row, index) =>
+                this.createRowLines(row, widths, layout).map((line) =>
+                    this.stripeTableRow(line, index),
+                ),
+            ),
             ...(layout.hasHorizontalBorders ? [bottom] : []),
         ]
 
@@ -167,14 +190,20 @@ export class EmojiLogger implements Logger {
         const maxWidth = this.getTerminalWidth()
         const valueWidth = Math.max(1, maxWidth - labelWidth - 4)
         const lines = renderedRows.flatMap((row, rowIndex) => {
-            return this.createVerticalRecordLines(labels, row, labelWidth, valueWidth)
-                .map((line) => this.stripeTableRow(line, rowIndex))
+            return this.createVerticalRecordLines(labels, row, labelWidth, valueWidth).map((line) =>
+                this.stripeTableRow(line, rowIndex),
+            )
         })
 
         return lines.join('\n')
     }
 
-    private createVerticalRecordLines(labels: string[], row: RenderedCell[], labelWidth: number, valueWidth: number): string[] {
+    private createVerticalRecordLines(
+        labels: string[],
+        row: RenderedCell[],
+        labelWidth: number,
+        valueWidth: number,
+    ): string[] {
         const lines = row.flatMap((cell, columnIndex) => {
             const label = this.padPlainStart(labels[columnIndex], labelWidth)
             const wrappedValue = this.wrapCell(cell.lines, valueWidth, cell.formatter)
@@ -194,15 +223,15 @@ export class EmojiLogger implements Logger {
     }
 
     private getVerticalRecordMarker(index: number, lineCount: number): string {
-        if(lineCount === 1) {
+        if (lineCount === 1) {
             return '◆'
         }
 
-        if(index === 0) {
+        if (index === 0) {
             return '┌'
         }
 
-        if(index === lineCount - 1) {
+        if (index === lineCount - 1) {
             return '└'
         }
 
@@ -210,15 +239,15 @@ export class EmojiLogger implements Logger {
     }
 
     private toRows(tabularData: unknown): TableRow[] {
-        if(tabularData == null) {
+        if (tabularData == null) {
             return []
         }
 
-        if(Array.isArray(tabularData)) {
+        if (Array.isArray(tabularData)) {
             return tabularData.map((value, index) => this.toRow(value, index))
         }
 
-        if(typeof tabularData === 'object') {
+        if (typeof tabularData === 'object') {
             return Object.entries(tabularData).map(([key, value]) => this.toRow(value, key))
         }
 
@@ -226,22 +255,24 @@ export class EmojiLogger implements Logger {
     }
 
     private toRow(value: unknown, index: string | number): TableRow {
-        if(value != null && typeof value === 'object' && !Array.isArray(value)) {
-            return this._tblIndex ? { [INDEX_COLUMN]: index, ...(value as Record<string, unknown>) } : value as Record<string, unknown>
+        if (value != null && typeof value === 'object' && !Array.isArray(value)) {
+            return this._tblIndex
+                ? { [INDEX_COLUMN]: index, ...(value as Record<string, unknown>) }
+                : (value as Record<string, unknown>)
         }
 
         return this._tblIndex ? { [INDEX_COLUMN]: index, Values: value } : { Values: value }
     }
 
     private getColumns(rows: TableRow[], properties?: string[]): TableColumn[] {
-        if(properties != null) {
+        if (properties != null) {
             return this._tblIndex ? [INDEX_COLUMN, ...properties] : properties
         }
 
         const columns = new Set<string>()
 
-        for(const row of rows) {
-            for(const column of Object.keys(row)) {
+        for (const row of rows) {
+            for (const column of Object.keys(row)) {
                 columns.add(column)
             }
         }
@@ -268,7 +299,7 @@ export class EmojiLogger implements Logger {
     }
 
     private getIndexHeader(density: TableDensity): string {
-        switch(density) {
+        switch (density) {
             case TableDensity.COMPACT:
                 return '#'
 
@@ -281,53 +312,73 @@ export class EmojiLogger implements Logger {
             case TableDensity.COMFORTABLE:
                 return ''
         }
-        throw new Error("Unhandled density")
+        throw new Error('Unhandled density')
     }
 
     private stringifyCell(value: unknown, isUnset = false): RenderedCell {
-        if(isUnset) {
+        if (isUnset) {
             return { lines: [this.createRenderedLine('')] }
         }
 
-        if(value === undefined) {
-            return { lines: [this.createRenderedLine('undefined')], formatter: this._pc.blackBright }
+        if (value === undefined) {
+            return {
+                lines: [this.createRenderedLine('undefined')],
+                formatter: this._pc.blackBright,
+            }
         }
 
-        if(value === null) {
+        if (value === null) {
             return { lines: [this.createRenderedLine('null')], formatter: this._pc.blackBright }
         }
 
-        if(typeof value === 'string') {
-            return { lines: value.split('\n').map((line) => this.createRenderedLine(this.truncateString(line))) }
+        if (typeof value === 'string') {
+            return {
+                lines: value
+                    .split('\n')
+                    .map((line) => this.createRenderedLine(this.truncateString(line))),
+            }
         }
 
-        if(typeof value === 'number') {
-            return { lines: [this.createRenderedLine(String(value))], formatter: this._pc.blueBright }
+        if (typeof value === 'number') {
+            return {
+                lines: [this.createRenderedLine(String(value))],
+                formatter: this._pc.blueBright,
+            }
         }
 
-        if(typeof value === 'bigint') {
-            return { lines: [this.createRenderedLine(`${value.toString()}n`)], formatter: this._pc.blueBright }
+        if (typeof value === 'bigint') {
+            return {
+                lines: [this.createRenderedLine(`${value.toString()}n`)],
+                formatter: this._pc.blueBright,
+            }
         }
 
-        if(typeof value === 'boolean') {
+        if (typeof value === 'boolean') {
             return {
                 lines: [this.createRenderedLine(String(value))],
                 formatter: value ? this._pc.greenBright : this._pc.redBright,
             }
         }
 
-        if(typeof value === 'symbol') {
-            return { lines: [this.createRenderedLine(value.toString())], formatter: this._pc.magentaBright }
+        if (typeof value === 'symbol') {
+            return {
+                lines: [this.createRenderedLine(value.toString())],
+                formatter: this._pc.magentaBright,
+            }
         }
 
-        if(typeof value === 'function') {
+        if (typeof value === 'function') {
             return {
-                lines: [this.createRenderedLine(value.name === '' ? '[Function]' : `[Function:${value.name}]`)],
+                lines: [
+                    this.createRenderedLine(
+                        value.name === '' ? '[Function]' : `[Function:${value.name}]`,
+                    ),
+                ],
                 formatter: this._pc.yellowBright,
             }
         }
 
-        if(value != null && typeof value === 'object') {
+        if (value != null && typeof value === 'object') {
             return { lines: [this.inspectValue(value, 0)] }
         }
 
@@ -335,7 +386,7 @@ export class EmojiLogger implements Logger {
     }
 
     private resolveTableDensity(columns: TableColumn[], rows: RenderedCell[][]): TableDensity {
-        if(this._tblDensity !== TableDensity.AUTO) {
+        if (this._tblDensity !== TableDensity.AUTO) {
             return this._tblDensity
         }
 
@@ -343,7 +394,7 @@ export class EmojiLogger implements Logger {
         const balancedHeaders = this.getHeaders(columns, TableDensity.BALANCED)
         const balancedWidths = this.getColumnWidths(balancedHeaders, rows, balancedLayout)
 
-        if(this.shouldUseVerticalTable(balancedHeaders, rows, balancedWidths)) {
+        if (this.shouldUseVerticalTable(balancedHeaders, rows, balancedWidths)) {
             return TableDensity.VERTICAL
         }
 
@@ -351,24 +402,30 @@ export class EmojiLogger implements Logger {
         const headers = this.getHeaders(columns, TableDensity.COMFORTABLE)
         const widths = this.getColumnWidths(headers, rows, comfortableLayout)
         const requiresWrapping = this.requiresWrapping(headers, rows, widths)
-        const containsSpaces = rows.some((row) => row.some((cell) => cell.lines.some((line) => line.plain.includes(' '))))
+        const containsSpaces = rows.some((row) =>
+            row.some((cell) => cell.lines.some((line) => line.plain.includes(' '))),
+        )
 
-        if(containsSpaces && requiresWrapping) {
+        if (containsSpaces && requiresWrapping) {
             return TableDensity.BALANCED
         }
 
-        if(containsSpaces) {
+        if (containsSpaces) {
             return TableDensity.COMFORTABLE
         }
 
         return requiresWrapping ? TableDensity.BALANCED : TableDensity.COMPACT
     }
 
-    private shouldUseVerticalTable(columns: string[], rows: RenderedCell[][], widths: number[]): boolean {
+    private shouldUseVerticalTable(
+        columns: string[],
+        rows: RenderedCell[][],
+        widths: number[],
+    ): boolean {
         const wrappingCellCount = this.getWrappingCellCount(rows, widths)
         const cellCount = rows.length * columns.length
 
-        if(wrappingCellCount === 0) {
+        if (wrappingCellCount === 0) {
             return false
         }
 
@@ -379,7 +436,7 @@ export class EmojiLogger implements Logger {
 
     private hasCrampedColumn(columns: string[], rows: RenderedCell[][], widths: number[]): boolean {
         return widths.some((width, columnIndex) => {
-            if(width >= 4) {
+            if (width >= 4) {
                 return false
             }
 
@@ -387,23 +444,34 @@ export class EmojiLogger implements Logger {
         })
     }
 
-    private getColumnMaxWidth(columns: string[], rows: RenderedCell[][], columnIndex: number): number {
+    private getColumnMaxWidth(
+        columns: string[],
+        rows: RenderedCell[][],
+        columnIndex: number,
+    ): number {
         return Math.max(
             this.getCellWidth(columns[columnIndex]),
-            ...rows.flatMap((row) => row[columnIndex].lines.map((line) => this.getCellWidth(line.plain))),
+            ...rows.flatMap((row) =>
+                row[columnIndex].lines.map((line) => this.getCellWidth(line.plain)),
+            ),
         )
     }
 
     private getWrappingCellCount(rows: RenderedCell[][], widths: number[]): number {
         return rows.reduce((count, row) => {
-            return count + row.filter((cell, columnIndex) => {
-                return cell.lines.some((line) => this.getCellWidth(line.plain) > widths[columnIndex])
-            }).length
+            return (
+                count +
+                row.filter((cell, columnIndex) => {
+                    return cell.lines.some(
+                        (line) => this.getCellWidth(line.plain) > widths[columnIndex],
+                    )
+                }).length
+            )
         }, 0)
     }
 
     private getTableLayout(density: TableDensity): TableLayout {
-        switch(density) {
+        switch (density) {
             case TableDensity.COMPACT:
                 return {
                     density,
@@ -437,21 +505,31 @@ export class EmojiLogger implements Logger {
 
     private requiresWrapping(columns: string[], rows: RenderedCell[][], widths: number[]): boolean {
         return columns.some((column, columnIndex) => {
-            if(this.getCellWidth(column) > widths[columnIndex]) {
+            if (this.getCellWidth(column) > widths[columnIndex]) {
                 return true
             }
 
-            return rows.some((row) => row[columnIndex].lines.some((line) => this.getCellWidth(line.plain) > widths[columnIndex]))
+            return rows.some((row) =>
+                row[columnIndex].lines.some(
+                    (line) => this.getCellWidth(line.plain) > widths[columnIndex],
+                ),
+            )
         })
     }
 
-    private getColumnWidths(columns: string[], rows: RenderedCell[][], layout: TableLayout): number[] {
+    private getColumnWidths(
+        columns: string[],
+        rows: RenderedCell[][],
+        layout: TableLayout,
+    ): number[] {
         const overheadWidth = this.getTableOverheadWidth(columns.length, layout)
         const availableWidth = Math.max(this.getTerminalWidth() - overheadWidth, columns.length)
         const columnMeasurements = columns.map((column, columnIndex) => {
             const widths = [
                 this.getCellWidth(column),
-                ...rows.flatMap((row) => row[columnIndex].lines.map((line) => this.getCellWidth(line.plain))),
+                ...rows.flatMap((row) =>
+                    row[columnIndex].lines.map((line) => this.getCellWidth(line.plain)),
+                ),
             ]
 
             return {
@@ -462,7 +540,7 @@ export class EmojiLogger implements Logger {
         })
         const maxTotalWidth = columnMeasurements.reduce((total, column) => total + column.max, 0)
 
-        if(maxTotalWidth <= availableWidth) {
+        if (maxTotalWidth <= availableWidth) {
             return columnMeasurements.map((column) => column.max)
         }
 
@@ -471,7 +549,7 @@ export class EmojiLogger implements Logger {
         })
         const minimumTotalWidth = minimumWidths.reduce((total, width) => total + width, 0)
 
-        if(minimumTotalWidth <= availableWidth) {
+        if (minimumTotalWidth <= availableWidth) {
             const remainingWidth = availableWidth - minimumTotalWidth
             const targetWidths = this.distributeProportionalWidth(
                 minimumWidths,
@@ -480,12 +558,20 @@ export class EmojiLogger implements Logger {
                 remainingWidth,
             )
 
-            return this.distributeRemainingWidth(targetWidths, columnMeasurements.map((column) => column.max), availableWidth)
+            return this.distributeRemainingWidth(
+                targetWidths,
+                columnMeasurements.map((column) => column.max),
+                availableWidth,
+            )
         }
 
         const scaledWidths = this.scaleWidths(minimumWidths, availableWidth)
 
-        return this.distributeRemainingWidth(scaledWidths, columnMeasurements.map((column) => column.max), availableWidth)
+        return this.distributeRemainingWidth(
+            scaledWidths,
+            columnMeasurements.map((column) => column.max),
+            availableWidth,
+        )
     }
 
     private getTableOverheadWidth(columnCount: number, layout: TableLayout): number {
@@ -500,13 +586,20 @@ export class EmojiLogger implements Logger {
         return headers.map((header, columnIndex) => {
             return Math.max(
                 ...header.map((line) => this.getCellWidth(line.plain)),
-                ...rows.flatMap((row) => row[columnIndex].map((line) => this.getCellWidth(line.plain))),
+                ...rows.flatMap((row) =>
+                    row[columnIndex].map((line) => this.getCellWidth(line.plain)),
+                ),
             )
         })
     }
 
-    private distributeProportionalWidth(widths: number[], maxWidths: number[], weights: number[], availableWidth: number): number[] {
-        if(availableWidth <= 0) {
+    private distributeProportionalWidth(
+        widths: number[],
+        maxWidths: number[],
+        weights: number[],
+        availableWidth: number,
+    ): number[] {
+        if (availableWidth <= 0) {
             return widths
         }
 
@@ -514,14 +607,14 @@ export class EmojiLogger implements Logger {
             return widths[index] < maxWidths[index] ? total + weight : total
         }, 0)
 
-        if(totalWeight === 0) {
+        if (totalWeight === 0) {
             return widths
         }
 
         let distributedWidth = 0
 
-        for(let index = 0; index < widths.length; index++) {
-            if(widths[index] >= maxWidths[index]) {
+        for (let index = 0; index < widths.length; index++) {
+            if (widths[index] >= maxWidths[index]) {
                 continue
             }
 
@@ -534,34 +627,42 @@ export class EmojiLogger implements Logger {
             distributedWidth += extraWidth
         }
 
-        return this.distributeRemainingWidth(widths, maxWidths, widths.reduce((total, width) => total + width, 0) + availableWidth - distributedWidth)
+        return this.distributeRemainingWidth(
+            widths,
+            maxWidths,
+            widths.reduce((total, width) => total + width, 0) + availableWidth - distributedWidth,
+        )
     }
 
     private scaleWidths(widths: number[], availableWidth: number): number[] {
         const totalWidth = widths.reduce((total, width) => total + width, 0)
 
-        if(totalWidth === 0) {
+        if (totalWidth === 0) {
             return widths.map(() => 1)
         }
 
         return widths.map((width) => Math.max(1, Math.floor((width / totalWidth) * availableWidth)))
     }
 
-    private distributeRemainingWidth(widths: number[], maxWidths: number[], availableWidth: number): number[] {
+    private distributeRemainingWidth(
+        widths: number[],
+        maxWidths: number[],
+        availableWidth: number,
+    ): number[] {
         let remainingWidth = availableWidth - widths.reduce((total, width) => total + width, 0)
 
-        while(remainingWidth > 0) {
+        while (remainingWidth > 0) {
             let distributed = false
 
-            for(let index = 0; index < widths.length && remainingWidth > 0; index++) {
-                if(widths[index] < maxWidths[index]) {
+            for (let index = 0; index < widths.length && remainingWidth > 0; index++) {
+                if (widths[index] < maxWidths[index]) {
                     widths[index]++
                     remainingWidth--
                     distributed = true
                 }
             }
 
-            if(!distributed) {
+            if (!distributed) {
                 break
             }
         }
@@ -573,7 +674,7 @@ export class EmojiLogger implements Logger {
         const sortedValues = values.toSorted((a, b) => a - b)
         const middle = Math.floor(sortedValues.length / 2)
 
-        if(sortedValues.length % 2 === 1) {
+        if (sortedValues.length % 2 === 1) {
             return sortedValues[middle]
         }
 
@@ -581,41 +682,50 @@ export class EmojiLogger implements Logger {
     }
 
     private getTerminalWidth(): number {
-        if(this._tblMaxWidth != null) {
+        if (this._tblMaxWidth != null) {
             return this._tblMaxWidth
         }
 
-        if(process.stdout.columns != null && process.stdout.columns > 0) {
+        if (process.stdout.columns != null && process.stdout.columns > 0) {
             return process.stdout.columns
         }
 
-        if(process.stderr.columns != null && process.stderr.columns > 0) {
+        if (process.stderr.columns != null && process.stderr.columns > 0) {
             return process.stderr.columns
         }
 
         return 80
     }
 
-    private wrapCell(lines: RenderedLine[], width: number, formatter?: CellFormatter): RenderedLine[] {
-        return lines.flatMap((line) => this.wrapLine(line, width))
-            .map((line) => formatter == null ? line : this.createRenderedLine(line.plain, formatter(line.plain)))
+    private wrapCell(
+        lines: RenderedLine[],
+        width: number,
+        formatter?: CellFormatter,
+    ): RenderedLine[] {
+        return lines
+            .flatMap((line) => this.wrapLine(line, width))
+            .map((line) =>
+                formatter == null
+                    ? line
+                    : this.createRenderedLine(line.plain, formatter(line.plain)),
+            )
     }
 
     private wrapLine(line: RenderedLine, width: number): RenderedLine[] {
-        if(line.plain === '') {
+        if (line.plain === '') {
             return [line]
         }
 
         const wrappedLines: RenderedLine[] = []
         let currentLine = this.createRenderedLine('')
 
-        for(const word of this.splitRenderedLine(line)) {
-            if(word.plain === '') {
+        for (const word of this.splitRenderedLine(line)) {
+            if (word.plain === '') {
                 continue
             }
 
-            if(this.getCellWidth(word.plain) > width) {
-                if(currentLine.plain.trimEnd() !== '') {
+            if (this.getCellWidth(word.plain) > width) {
+                if (currentLine.plain.trimEnd() !== '') {
                     wrappedLines.push(this.trimRenderedLineEnd(currentLine))
                     currentLine = this.createRenderedLine('')
                 }
@@ -626,7 +736,10 @@ export class EmojiLogger implements Logger {
 
             const candidateLine = this.joinRenderedLines(currentLine, word)
 
-            if(currentLine.plain !== '' && this.getCellWidth(candidateLine.plain.trimEnd()) > width) {
+            if (
+                currentLine.plain !== '' &&
+                this.getCellWidth(candidateLine.plain.trimEnd()) > width
+            ) {
                 wrappedLines.push(this.trimRenderedLineEnd(currentLine))
                 currentLine = this.trimRenderedLineStart(word)
             } else {
@@ -634,7 +747,7 @@ export class EmojiLogger implements Logger {
             }
         }
 
-        if(currentLine.plain.trimEnd() !== '') {
+        if (currentLine.plain.trimEnd() !== '') {
             wrappedLines.push(this.trimRenderedLineEnd(currentLine))
         }
 
@@ -645,10 +758,10 @@ export class EmojiLogger implements Logger {
         const lines: RenderedLine[] = []
         let currentLine = this.createRenderedLine('')
 
-        for(const char of this.splitRenderedChars(word)) {
+        for (const char of this.splitRenderedChars(word)) {
             const candidateLine = this.joinRenderedLines(currentLine, char)
 
-            if(currentLine.plain !== '' && this.getCellWidth(candidateLine.plain) > width) {
+            if (currentLine.plain !== '' && this.getCellWidth(candidateLine.plain) > width) {
                 lines.push(currentLine)
                 currentLine = char
             } else {
@@ -656,7 +769,7 @@ export class EmojiLogger implements Logger {
             }
         }
 
-        if(currentLine.plain !== '') {
+        if (currentLine.plain !== '') {
             lines.push(currentLine)
         }
 
@@ -664,55 +777,58 @@ export class EmojiLogger implements Logger {
     }
 
     private inspectValue(value: unknown, depth: number): RenderedLine {
-        if(value === undefined) {
+        if (value === undefined) {
             return this.createRenderedLine('undefined', this._pc.blackBright('undefined'))
         }
 
-        if(value === null) {
+        if (value === null) {
             return this.createRenderedLine('null', this._pc.blackBright('null'))
         }
 
-        if(typeof value === 'string') {
+        if (typeof value === 'string') {
             const text = JSON.stringify(this.truncateString(value))
 
             return this.createRenderedLine(text, text)
         }
 
-        if(typeof value === 'number') {
+        if (typeof value === 'number') {
             return this.createRenderedLine(String(value), this._pc.blueBright(value))
         }
 
-        if(typeof value === 'bigint') {
+        if (typeof value === 'bigint') {
             const text = `${value.toString()}n`
 
             return this.createRenderedLine(text, this._pc.blueBright(text))
         }
 
-        if(typeof value === 'boolean') {
+        if (typeof value === 'boolean') {
             const text = String(value)
 
-            return this.createRenderedLine(text, value ? this._pc.greenBright(text) : this._pc.redBright(text))
+            return this.createRenderedLine(
+                text,
+                value ? this._pc.greenBright(text) : this._pc.redBright(text),
+            )
         }
 
-        if(typeof value === 'symbol') {
+        if (typeof value === 'symbol') {
             const text = value.toString()
 
             return this.createRenderedLine(text, this._pc.magentaBright(text))
         }
 
-        if(typeof value === 'function') {
+        if (typeof value === 'function') {
             const text = value.name === '' ? '[Function]' : `[Function:${value.name}]`
 
             return this.createRenderedLine(text, this._pc.yellowBright(text))
         }
 
-        if(depth >= this._tblInspect.depth) {
+        if (depth >= this._tblInspect.depth) {
             const text = Array.isArray(value) ? '[Array]' : '[Object]'
 
             return this.createRenderedLine(text, this._pc.yellowBright(text))
         }
 
-        if(Array.isArray(value)) {
+        if (Array.isArray(value)) {
             return this.inspectArray(value, depth)
         }
 
@@ -720,9 +836,18 @@ export class EmojiLogger implements Logger {
     }
 
     private inspectArray(value: readonly unknown[], depth: number): RenderedLine {
-        const entries = value.slice(0, this._tblInspect.maxArrayLength).map((item) => this.inspectValue(item, depth + 1))
+        const entries = value
+            .slice(0, this._tblInspect.maxArrayLength)
+            .map((item) => this.inspectValue(item, depth + 1))
         const hasMore = value.length > entries.length
-        const suffix = hasMore ? [this.createRenderedLine(`...${value.length - entries.length} more`, this._pc.blackBright(`...${value.length - entries.length} more`))] : []
+        const suffix = hasMore
+            ? [
+                  this.createRenderedLine(
+                      `...${value.length - entries.length} more`,
+                      this._pc.blackBright(`...${value.length - entries.length} more`),
+                  ),
+              ]
+            : []
 
         return this.joinRenderedParts('[', [...entries, ...suffix], ',', ']')
     }
@@ -730,25 +855,46 @@ export class EmojiLogger implements Logger {
     private inspectObject(value: Record<string, unknown>, depth: number): RenderedLine {
         const keys = Object.keys(value)
         const entries = keys.slice(0, this._tblInspect.maxObjectKeys).map((key) => {
-            return this.joinRenderedLines(this.createRenderedLine(`${this.formatObjectKey(key)}:`), this.inspectValue(value[key], depth + 1))
+            return this.joinRenderedLines(
+                this.createRenderedLine(`${this.formatObjectKey(key)}:`),
+                this.inspectValue(value[key], depth + 1),
+            )
         })
         const hasMore = keys.length > entries.length
-        const suffix = hasMore ? [this.createRenderedLine(`...${keys.length - entries.length} more`, this._pc.blackBright(`...${keys.length - entries.length} more`))] : []
+        const suffix = hasMore
+            ? [
+                  this.createRenderedLine(
+                      `...${keys.length - entries.length} more`,
+                      this._pc.blackBright(`...${keys.length - entries.length} more`),
+                  ),
+              ]
+            : []
 
         return this.joinRenderedParts('{', [...entries, ...suffix], ',', '}')
     }
 
-    private joinRenderedParts(open: string, parts: RenderedLine[], separator: string, close: string): RenderedLine {
+    private joinRenderedParts(
+        open: string,
+        parts: RenderedLine[],
+        separator: string,
+        close: string,
+    ): RenderedLine {
         const content = parts.reduce<RenderedLine | null>((result, part) => {
-            if(result == null) {
+            if (result == null) {
                 return part
             }
 
-            return this.joinRenderedLines(this.joinRenderedLines(result, this.createRenderedLine(separator)), part)
+            return this.joinRenderedLines(
+                this.joinRenderedLines(result, this.createRenderedLine(separator)),
+                part,
+            )
         }, null)
 
         return this.joinRenderedLines(
-            this.joinRenderedLines(this.createRenderedLine(open), content ?? this.createRenderedLine('')),
+            this.joinRenderedLines(
+                this.createRenderedLine(open),
+                content ?? this.createRenderedLine(''),
+            ),
             this.createRenderedLine(close),
         )
     }
@@ -758,14 +904,14 @@ export class EmojiLogger implements Logger {
     }
 
     private truncateString(value: string): string {
-        if(this.getCellWidth(value) <= this._tblInspect.maxStringLength) {
+        if (this.getCellWidth(value) <= this._tblInspect.maxStringLength) {
             return value
         }
 
         let result = ''
 
-        for(const char of value) {
-            if(this.getCellWidth(result + char) > this._tblInspect.maxStringLength - 1) {
+        for (const char of value) {
+            if (this.getCellWidth(result + char) > this._tblInspect.maxStringLength - 1) {
                 break
             }
 
@@ -790,7 +936,7 @@ export class EmojiLogger implements Logger {
         const trimmedPlain = line.plain.trimStart()
         const removedLength = line.plain.length - trimmedPlain.length
 
-        if(removedLength === 0 || line.text !== line.plain) {
+        if (removedLength === 0 || line.text !== line.plain) {
             return line.text === line.plain ? this.createRenderedLine(trimmedPlain) : line
         }
 
@@ -800,7 +946,7 @@ export class EmojiLogger implements Logger {
     private trimRenderedLineEnd(line: RenderedLine): RenderedLine {
         const trimmedPlain = line.plain.trimEnd()
 
-        if(line.text !== line.plain) {
+        if (line.text !== line.plain) {
             return line
         }
 
@@ -808,7 +954,7 @@ export class EmojiLogger implements Logger {
     }
 
     private splitRenderedLine(line: RenderedLine): RenderedLine[] {
-        if(line.text !== line.plain) {
+        if (line.text !== line.plain) {
             return [line]
         }
 
@@ -816,8 +962,10 @@ export class EmojiLogger implements Logger {
     }
 
     private splitRenderedChars(line: RenderedLine): RenderedLine[] {
-        if(line.text !== line.plain) {
-            return [...line.plain].map((char) => this.createRenderedLine(char, line.text === line.plain ? char : char))
+        if (line.text !== line.plain) {
+            return [...line.plain].map((char) =>
+                this.createRenderedLine(char, line.text === line.plain ? char : char),
+            )
         }
 
         return [...line.plain].map((char) => this.createRenderedLine(char))
@@ -827,8 +975,14 @@ export class EmojiLogger implements Logger {
         const height = Math.max(...row.map((cell) => cell.length))
         const lines: string[] = []
 
-        for(let lineIndex = 0; lineIndex < height; lineIndex++) {
-            lines.push(this.createLine(row.map((cell) => [cell[lineIndex] ?? this.createRenderedLine('')]), widths, layout))
+        for (let lineIndex = 0; lineIndex < height; lineIndex++) {
+            lines.push(
+                this.createLine(
+                    row.map((cell) => [cell[lineIndex] ?? this.createRenderedLine('')]),
+                    widths,
+                    layout,
+                ),
+            )
         }
 
         return lines
@@ -836,19 +990,35 @@ export class EmojiLogger implements Logger {
 
     private createLine(cells: RenderedLine[][], widths: number[], layout: TableLayout): string {
         const padding = ' '.repeat(layout.padding)
-        const line = cells.map((cell, index) => padding + this.padCell(cell[0] ?? this.createRenderedLine(''), widths[index]) + padding).join('│')
+        const line = cells
+            .map(
+                (cell, index) =>
+                    padding +
+                    this.padCell(cell[0] ?? this.createRenderedLine(''), widths[index]) +
+                    padding,
+            )
+            .join('│')
 
         return layout.hasOuterVerticals ? '│' + line + '│' : line
     }
 
-    private createBorder(left: string, middle: string, right: string, widths: number[], layout: TableLayout, horizontal = '─'): string {
-        const line = widths.map((width) => horizontal.repeat(width + layout.padding * 2)).join(middle)
+    private createBorder(
+        left: string,
+        middle: string,
+        right: string,
+        widths: number[],
+        layout: TableLayout,
+        horizontal = '─',
+    ): string {
+        const line = widths
+            .map((width) => horizontal.repeat(width + layout.padding * 2))
+            .join(middle)
 
         return layout.hasOuterVerticals ? left + line + right : line
     }
 
     private stripeTableRow(line: string, index: number): string {
-        if(!this._tblStriped || index % 2 === 0) {
+        if (!this._tblStriped || index % 2 === 0) {
             return line
         }
 
@@ -856,7 +1026,7 @@ export class EmojiLogger implements Logger {
     }
 
     private formatHeaderRow(line: string, density: TableDensity): string {
-        if(density !== TableDensity.COMPACT) {
+        if (density !== TableDensity.COMPACT) {
             return line
         }
 

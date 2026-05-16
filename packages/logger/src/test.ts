@@ -1,7 +1,8 @@
 #!/usr/bin/env -S bun -i
 import { parseArgs, type ParseArgsConfig } from 'node:util'
 import { $ } from 'bun'
-import { EmojiLogger, TableDensity } from './loggers/emoji.ts'
+import { TerminalLogger, TableDensity } from './loggers/terminal.ts'
+import jsSerialize from 'js-serialize'
 
 const COMPACT_ROWS = [
     { key: 'api', state: 'ok', ms: 12 },
@@ -47,6 +48,8 @@ const FUN_DATA = [
     },
 ]
 
+
+
 const PARSE_CONFIG = {
     options: {},
     strict: true,
@@ -55,43 +58,45 @@ const PARSE_CONFIG = {
 
 
 async function main(options: Options, positionals: Positionals): Promise<number | void> {
-    const defaultLogger = new EmojiLogger()
-    const verticalLogger = new EmojiLogger({table:{density:TableDensity.VERTICAL,striped:true}})
-    const maxWidthLogger = new EmojiLogger({
+    const defaultLogger = new TerminalLogger()
+    const verticalLogger = new TerminalLogger({table:{density:TableDensity.VERTICAL,striped:true}})
+    const maxWidthLogger = new TerminalLogger({
         table: {
             showIndex: true,
             striped: true,
             maxWidth: 56,
         },
     })
-    const balancedLogger = new EmojiLogger({
+    const balancedLogger = new TerminalLogger({
         table: {
             density: TableDensity.BALANCED,
             maxWidth: 56,
         },
     })
 
+    console.log(jsSerialize('⚠️'))
+    defaultLogger.log("log")
     defaultLogger.info("info")
     defaultLogger.warn("warn")
     defaultLogger.error("error")
 
     // defaultLogger.info('compact table')
     defaultLogger.table(COMPACT_ROWS)
-    maxWidthLogger.table(COMPACT_ROWS)
-
-    // defaultLogger.info('comfortable table')
-    defaultLogger.table(COMFORTABLE_ROWS)
-    maxWidthLogger.table(COMFORTABLE_ROWS)
-
-    console.log('defaultLogger - balanced rows')
-    defaultLogger.table(BALANCED_ROWS)
-    console.log('maxWidthLogger - balanced rows')
-    maxWidthLogger.table(BALANCED_ROWS)
-    console.log('balancedLogger - balanced rows')
-    balancedLogger.table(BALANCED_ROWS)
-
-    defaultLogger.table(FUN_DATA)
-    verticalLogger.table(FUN_DATA)
+    // maxWidthLogger.table(COMPACT_ROWS)
+    //
+    // // defaultLogger.info('comfortable table')
+    // defaultLogger.table(COMFORTABLE_ROWS)
+    // maxWidthLogger.table(COMFORTABLE_ROWS)
+    //
+    // console.log('defaultLogger - balanced rows')
+    // defaultLogger.table(BALANCED_ROWS)
+    // console.log('maxWidthLogger - balanced rows')
+    // maxWidthLogger.table(BALANCED_ROWS)
+    // console.log('balancedLogger - balanced rows')
+    // balancedLogger.table(BALANCED_ROWS)
+    //
+    // defaultLogger.table(FUN_DATA)
+    // verticalLogger.table(FUN_DATA)
 
     // logger.info('post table')
     // logger.table(POSTS)
