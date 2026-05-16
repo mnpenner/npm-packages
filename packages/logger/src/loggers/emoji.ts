@@ -14,7 +14,14 @@ enum TableDensity {
 interface TableOptions {
     density?: TableDensity
     maxWidth?: number
+    /**
+     * @defaultValue false
+     */
     showIndex?: boolean
+    /**
+     * @defaultValue true
+     */
+    striped?: boolean
 }
 
 interface EmojiLoggerOptions {
