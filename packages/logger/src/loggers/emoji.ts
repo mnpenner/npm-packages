@@ -39,11 +39,12 @@ interface TableInspectOptions {
     maxStringLength?: number
 }
 
-enum TableDensity {
+export enum TableDensity {
     AUTO = 'auto',
     COMPACT ='compact',
     BALANCED = 'balanced',
     COMFORTABLE = 'comfortable',
+    TRANSPOSED = 'transposed',
 }
 
 interface TableLayout {
@@ -128,8 +129,17 @@ export class EmojiLogger implements Logger {
 
         const renderedRows = rows.map((row) => columns.map((column) => this.stringifyCell(column in row ? row[column] : undefined, !(column in row))))
         const density = this.resolveTableDensity(columns, renderedRows)
+
+        if(density === TableDensity.TRANSPOSED) {
+            this._write(this.renderTransposedTable(columns, renderedRows) + '\n')
+            return
+        }
+
+        this._write(this.renderTable(this.getHeaders(columns, density), renderedRows, density) + '\n')
+    }
+
+    private renderTable(headers: string[], renderedRows: RenderedCell[][], density: TableDensity): string {
         const layout = this.getTableLayout(density)
-        const headers = this.getHeaders(columns, density)
         const allocatedWidths = this.getColumnWidths(headers, renderedRows, layout)
         const wrappedColumns = headers.map((column, index) => this.wrapCell([this.createRenderedLine(column)], allocatedWidths[index]))
         const wrappedRows = renderedRows.map((row) => {
@@ -148,7 +158,34 @@ export class EmojiLogger implements Logger {
             ...(layout.hasHorizontalBorders ? [bottom] : []),
         ]
 
-        this._write(lines.join('\n') + '\n')
+        return lines.join('\n')
+    }
+
+    private renderTransposedTable(columns: TableColumn[], renderedRows: RenderedCell[][]): string {
+        const labels = this.getHeaders(columns, TableDensity.TRANSPOSED)
+        const labelWidth = Math.max(...labels.map((label) => this.getCellWidth(label)), 0)
+        const maxWidth = this.getTerminalWidth()
+        const valueWidth = Math.max(1, maxWidth - labelWidth - 4)
+        const lines = renderedRows.flatMap((row, rowIndex) => {
+            return this.createVerticalRecordLines(labels, row, labelWidth, valueWidth)
+                .map((line) => this.stripeTableRow(line, rowIndex))
+        })
+
+        return lines.join('\n')
+    }
+
+    private createVerticalRecordLines(labels: string[], row: RenderedCell[], labelWidth: number, valueWidth: number): string[] {
+        return row.flatMap((cell, columnIndex) => {
+            const marker = columnIndex === 0 ? '-' : ' '
+            const label = this.padPlain(labels[columnIndex], labelWidth)
+            const wrappedValue = this.wrapCell(cell.lines, valueWidth, cell.formatter)
+
+            return wrappedValue.map((line, lineIndex) => {
+                const renderedLabel = lineIndex === 0 ? label : ' '.repeat(labelWidth)
+
+                return `${marker} ${renderedLabel}: ${line.text}`
+            })
+        })
     }
 
     private toRows(tabularData: unknown): TableRow[] {
@@ -202,13 +239,20 @@ export class EmojiLogger implements Logger {
     }
 
     private getHeaders(columns: TableColumn[], density: TableDensity): string[] {
-        return columns.map((column) => column === INDEX_COLUMN ? this.getIndexHeader(density) : column)
+        return columns.map((column) => this.getHeader(column, density))
+    }
+
+    private getHeader(column: TableColumn, density: TableDensity): string {
+        return column === INDEX_COLUMN ? this.getIndexHeader(density) : column
     }
 
     private getIndexHeader(density: TableDensity): string {
         switch(density) {
             case TableDensity.COMPACT:
                 return '#'
+
+            case TableDensity.TRANSPOSED:
+                return '(index)'
 
             case TableDensity.BALANCED:
                 return ''
@@ -274,6 +318,14 @@ export class EmojiLogger implements Logger {
             return this._tblDensity
         }
 
+        const balancedLayout = this.getTableLayout(TableDensity.BALANCED)
+        const balancedHeaders = this.getHeaders(columns, TableDensity.BALANCED)
+        const balancedWidths = this.getColumnWidths(balancedHeaders, rows, balancedLayout)
+
+        if(this.shouldTransposeTable(balancedHeaders, rows, balancedWidths)) {
+            return TableDensity.TRANSPOSED
+        }
+
         const comfortableLayout = this.getTableLayout(TableDensity.COMFORTABLE)
         const headers = this.getHeaders(columns, TableDensity.COMFORTABLE)
         const widths = this.getColumnWidths(headers, rows, comfortableLayout)
@@ -291,6 +343,25 @@ export class EmojiLogger implements Logger {
         return requiresWrapping ? TableDensity.BALANCED : TableDensity.COMPACT
     }
 
+    private shouldTransposeTable(columns: string[], rows: RenderedCell[][], widths: number[]): boolean {
+        const wrappingCellCount = this.getWrappingCellCount(rows, widths)
+        const cellCount = rows.length * columns.length
+
+        if(wrappingCellCount === 0) {
+            return false
+        }
+
+        return wrappingCellCount / cellCount > 0.5 || widths.some((width) => width < 4)
+    }
+
+    private getWrappingCellCount(rows: RenderedCell[][], widths: number[]): number {
+        return rows.reduce((count, row) => {
+            return count + row.filter((cell, columnIndex) => {
+                return cell.lines.some((line) => this.getCellWidth(line.plain) > widths[columnIndex])
+            }).length
+        }, 0)
+    }
+
     private getTableLayout(density: TableDensity): TableLayout {
         switch(density) {
             case TableDensity.COMPACT:
@@ -303,8 +374,9 @@ export class EmojiLogger implements Logger {
                 }
 
             case TableDensity.BALANCED:
+            case TableDensity.TRANSPOSED:
                 return {
-                    density,
+                    density: TableDensity.BALANCED,
                     hasHeaderSeparator: true,
                     hasHorizontalBorders: true,
                     hasOuterVerticals: true,
@@ -754,6 +826,10 @@ export class EmojiLogger implements Logger {
 
     private padCell(value: RenderedLine, width: number): string {
         return value.text + ' '.repeat(width - this.getCellWidth(value.plain))
+    }
+
+    private padPlain(value: string, width: number): string {
+        return value + ' '.repeat(width - this.getCellWidth(value))
     }
 
     private getCellWidth(value: string): number {

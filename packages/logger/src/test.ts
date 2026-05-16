@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bun -i
 import {parseArgs, type ParseArgsConfig} from "node:util"
 import {$} from 'bun'
-import { EmojiLogger } from './loggers/emoji.ts'
+import { EmojiLogger, TableDensity } from './loggers/emoji.ts'
 import { POSTS } from './test-data.ts'
 
 const COMPACT_ROWS = [
@@ -56,32 +56,41 @@ const PARSE_CONFIG = {
 
 
 async function main(options: Options, positionals: Positionals): Promise<number | void> {
-    const logger = new EmojiLogger()
-    const logger2 = new EmojiLogger({
+    const defaultLogger = new EmojiLogger()
+    const maxWidthLogger = new EmojiLogger({
         table: {
             showIndex: true,
             striped: false,
             maxWidth: 56,
         },
     })
+    const balancedLogger = new EmojiLogger({
+        table: {
+            density: TableDensity.BALANCED,
+            maxWidth: 56,
+        },
+    })
 
-    logger.info("info")
-    logger.warn("warn")
-    logger.error("error")
+    defaultLogger.info("info")
+    defaultLogger.warn("warn")
+    defaultLogger.error("error")
 
-    logger.info('compact table')
-    logger.table(COMPACT_ROWS)
-    logger2.table(COMPACT_ROWS)
+    // defaultLogger.info('compact table')
+    defaultLogger.table(COMPACT_ROWS)
+    maxWidthLogger.table(COMPACT_ROWS)
 
-    logger.info('comfortable table')
-    logger.table(COMFORTABLE_ROWS)
-    logger2.table(COMFORTABLE_ROWS)
+    // defaultLogger.info('comfortable table')
+    defaultLogger.table(COMFORTABLE_ROWS)
+    maxWidthLogger.table(COMFORTABLE_ROWS)
 
-    logger.table(BALANCED_ROWS)
-    logger.info('balanced table')
-    logger2.table(BALANCED_ROWS)
+    console.log('defaultLogger - balanced rows')
+    defaultLogger.table(BALANCED_ROWS)
+    console.log('maxWidthLogger - balanced rows')
+    maxWidthLogger.table(BALANCED_ROWS)
+    console.log('balancedLogger - balanced rows')
+    balancedLogger.table(BALANCED_ROWS)
 
-    logger.table(FUN_DATA)
+    defaultLogger.table(FUN_DATA)
 
     // logger.info('post table')
     // logger.table(POSTS)
