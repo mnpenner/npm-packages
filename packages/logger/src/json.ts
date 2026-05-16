@@ -1,5 +1,6 @@
 
 
+// FIXME: needs to handle all data types, even if its not perfect/lossless
 export function jsonAscii(value: unknown): string {
     return JSON.stringify(value).replace(/[^\x00-\x7F]/gu, (c) => {
         const cp = c.codePointAt(0)!
@@ -16,7 +17,7 @@ export function jsonAscii(value: unknown): string {
     })
 }
 
-export function jsAscii(obj: string) {
+export function jsAsciiString(obj: string) {
     let numDouble = 0
     let numSingle = 0
     for (let i = 0; i < obj.length; i++) {

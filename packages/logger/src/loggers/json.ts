@@ -17,6 +17,7 @@ export class JsonLogger implements Logger {
         this._writeLn(
             jsonAscii({
                 level,
+                time: new Date().toISOString(),
                 ...(data.length === 1 && typeof data[0] === 'string'
                     ? { message: data[0] }
                     : { data }),

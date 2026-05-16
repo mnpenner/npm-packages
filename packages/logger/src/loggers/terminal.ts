@@ -1,7 +1,7 @@
 import type { Logger, WriteFn } from '../logger'
 import { createColors, type Colors } from '@mpen/picocolors'
 import { stringWidth } from 'bun'
-import { jsAscii } from '../json.ts'
+import { jsAsciiString } from '../json.ts'
 
 const INDEX_COLUMN = Symbol('index')
 const PREFERRED_COLUMNS = ['index', 'idx', 'id', 'key', 'name', 'title']
@@ -1027,10 +1027,10 @@ export class TerminalLogger implements Logger {
         const truncatedValue = this.truncateString(value)
 
         if (truncatedValue === value) {
-            return jsAscii(value)
+            return jsAsciiString(value)
         }
 
-        return this.appendToStringLiteral(jsAscii(truncatedValue.slice(0, -1)), '…')
+        return this.appendToStringLiteral(jsAsciiString(truncatedValue.slice(0, -1)), '…')
     }
 
     private appendToStringLiteral(value: string, suffix: string): string {
