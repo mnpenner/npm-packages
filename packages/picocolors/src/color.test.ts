@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test'
-import { createColors } from './color'
+import createColors from './color'
 
 test('rgb formats foreground colors', () => {
     const pc = createColors(true)

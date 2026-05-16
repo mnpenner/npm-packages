@@ -42,7 +42,8 @@ export type ColorFormatter = (input: unknown) => string
  *
  * @example
  * ```ts
- * const orange = rgb(255, 128, 0)
+ * const colors = createColors()
+ * const orange = colors.rgb(255, 128, 0)
  * orange('warning')
  * ```
  */
@@ -56,89 +57,12 @@ export type RgbColorFactory = (red: number, green: number, blue: number) => Colo
  *
  * @example
  * ```ts
- * const violet = hex('#7c3aed')
+ * const colors = createColors()
+ * const violet = colors.hex('#7c3aed')
  * violet('accent')
  * ```
  */
 export type HexColorFactory = (color: string) => ColorFormatter
-
-/**
- * Color and text-style formatters.
- *
- * @example
- * ```ts
- * import pc from '@mpen/picocolors'
- *
- * console.log(pc.green('ready'))
- * ```
- */
-export type Colors = {
-    /** Whether ANSI color output is enabled for this color set. */
-    isColorSupported: boolean
-    reset: ColorFormatter
-    bold: ColorFormatter
-    dim: ColorFormatter
-    italic: ColorFormatter
-    underline: ColorFormatter
-    inverse: ColorFormatter
-    hidden: ColorFormatter
-    strikethrough: ColorFormatter
-    black: ColorFormatter
-    red: ColorFormatter
-    green: ColorFormatter
-    yellow: ColorFormatter
-    blue: ColorFormatter
-    magenta: ColorFormatter
-    cyan: ColorFormatter
-    white: ColorFormatter
-    gray: ColorFormatter
-    bgBlack: ColorFormatter
-    bgRed: ColorFormatter
-    bgGreen: ColorFormatter
-    bgYellow: ColorFormatter
-    bgBlue: ColorFormatter
-    bgMagenta: ColorFormatter
-    bgCyan: ColorFormatter
-    bgWhite: ColorFormatter
-    blackBright: ColorFormatter
-    redBright: ColorFormatter
-    greenBright: ColorFormatter
-    yellowBright: ColorFormatter
-    blueBright: ColorFormatter
-    magentaBright: ColorFormatter
-    cyanBright: ColorFormatter
-    whiteBright: ColorFormatter
-    bgBlackBright: ColorFormatter
-    bgRedBright: ColorFormatter
-    bgGreenBright: ColorFormatter
-    bgYellowBright: ColorFormatter
-    bgBlueBright: ColorFormatter
-    bgMagentaBright: ColorFormatter
-    bgCyanBright: ColorFormatter
-    bgWhiteBright: ColorFormatter
-    rgb: RgbColorFactory
-    bgRgb: RgbColorFactory
-    hex: HexColorFactory
-    bgHex: HexColorFactory
-}
-
-export type Picocolors = Colors & {
-    /**
-     * Creates a color formatter set with explicit color support.
-     *
-     * @param enabled - Whether the returned formatters should emit ANSI escape sequences.
-     * @returns A color formatter set.
-     *
-     * @example
-     * ```ts
-     * import pc from '@mpen/picocolors'
-     *
-     * const colors = pc.createColors(false)
-     * colors.red('plain text')
-     * ```
-     */
-    createColors: typeof createColors
-}
 
 type FormatterFactory = (open: string, close: string, replace?: string) => ColorFormatter
 type RgbFormatterFactory = (red: number, green: number, blue: number) => ColorFormatter
@@ -152,14 +76,15 @@ const env = processInfo?.env ?? {}
  *
  * @example
  * ```ts
- * import { isColorSupported } from '@mpen/picocolors'
+ * import createColors from '@mpen/picocolors'
  *
- * if (isColorSupported) {
+ * const colors = createColors()
+ * if (colors.isColorSupported) {
  *     console.log('colors are enabled')
  * }
  * ```
  */
-export const isColorSupported =
+const isColorSupported =
     !env.NO_COLOR &&
     (Boolean(env.FORCE_COLOR) ||
         processInfo?.platform === 'win32' ||
@@ -233,18 +158,18 @@ const parseHexColor = (color: string): [red: number, green: number, blue: number
  * Creates a color formatter set.
  *
  * @param enabled - Whether the returned formatters should emit ANSI escape sequences.
- * Defaults to [`isColorSupported`]{@link isColorSupported}.
+ * Defaults to detected color support for the current process.
  * @returns A color formatter set.
  *
  * @example
  * ```ts
- * import { createColors } from '@mpen/picocolors'
+ * import createColors from '@mpen/picocolors'
  *
  * const pc = createColors(true)
  * pc.bold(pc.red('error'))
  * ```
  */
-export const createColors = (enabled = isColorSupported): Colors => {
+export default function createColors(enabled = isColorSupported) {
     const f: FormatterFactory = enabled ? formatter : () => String
     const rgb = rgbFormatter(f, 38, '\x1b[39m')
     const bgRgb = rgbFormatter(f, 48, '\x1b[49m')
@@ -299,11 +224,7 @@ export const createColors = (enabled = isColorSupported): Colors => {
 
         rgb,
         bgRgb,
-        hex: (color) => rgb(...parseHexColor(color)),
-        bgHex: (color) => bgRgb(...parseHexColor(color)),
+        hex: (color: string) => rgb(...parseHexColor(color)),
+        bgHex: (color: string) => bgRgb(...parseHexColor(color)),
     }
 }
-
-const picocolors: Picocolors = Object.assign(createColors(), { createColors })
-
-export default picocolors

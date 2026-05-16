@@ -2,6 +2,7 @@
   "name": "@mpen/logger",
   "description": "Lightweight logging utilities.",
   "private": true,
+  "type": "module",
   "publishConfig": {
     "access": "public"
   }

@@ -101,6 +101,9 @@
             ],
             "@mpen/routekit/bin": [
                 "./packages/routekit/src/bin/gen-api-client.ts"
+            ],
+            "@mpen/picocolors": [
+                "./packages/picocolors/src/color.ts"
             ]
         }
     },

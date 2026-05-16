@@ -1,6 +1,7 @@
 {
   "name": "@mpen/picocolors",
-  "private": true,
+  "version": "0.1.0",
+  "private": false,
   "type": "module",
   "sideEffects": false,
   "files": [
