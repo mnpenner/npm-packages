@@ -31,6 +31,10 @@ interface EmojiLoggerOptions {
     write?: WriteFn
 }
 
+const INFO_ICON = '\u2139\uFE0F'
+const WARN_ICON = '\u{1F6A7}'
+const ERROR_ICON = '\u274C'
+
 const DEFAULT_WRITE_FN: WriteFn = (str) => process.stdout.write(str + '\n')
 
 export class EmojiLogger implements Logger {
@@ -51,15 +55,15 @@ export class EmojiLogger implements Logger {
     }
 
     info(...data: any[]): void {
-        this._write('\u2139\uFE0F ' + data.map((x) => String(x)).join('  ') + '\n')
+        this._write(INFO_ICON+ ' ' + data.map((x) => String(x)).join('  ') + '\n')
     }
 
     warn(...data: any[]): void {
-        this._write('\u{1F6A7} ' + data.map((x) => this._pc.yellow(x)).join('  ') + '\n')
+        this._write(WARN_ICON+' ' + data.map((x) => this._pc.yellow(x)).join('  ') + '\n')
     }
 
     error(...data: any[]): void {
-        this._write('\u274C ' + data.map((x) => this._pc.red(x)).join('  ') + '\n')
+        this._write(ERROR_ICON+' ' + data.map((x) => this._pc.red(x)).join('  ') + '\n')
     }
 
 
