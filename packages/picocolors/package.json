@@ -2,7 +2,24 @@
   "name": "@mpen/picocolors",
   "private": true,
   "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
   "publishConfig": {
     "access": "public"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
+  },
+  "scripts": {
+    "build": "bun run --bun tsdown"
   }
 }

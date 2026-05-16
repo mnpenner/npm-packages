@@ -33,6 +33,36 @@
 export type ColorFormatter = (input: unknown) => string
 
 /**
+ * Creates a formatter for a 24-bit RGB ANSI color.
+ *
+ * @param red - The red channel as an integer from 0 to 255.
+ * @param green - The green channel as an integer from 0 to 255.
+ * @param blue - The blue channel as an integer from 0 to 255.
+ * @returns A formatter for the requested RGB color.
+ *
+ * @example
+ * ```ts
+ * const orange = rgb(255, 128, 0)
+ * orange('warning')
+ * ```
+ */
+export type RgbColorFactory = (red: number, green: number, blue: number) => ColorFormatter
+
+/**
+ * Creates a formatter for a 24-bit hexadecimal ANSI color.
+ *
+ * @param color - The color as `#rgb`, `rgb`, `#rrggbb`, or `rrggbb`.
+ * @returns A formatter for the requested hexadecimal color.
+ *
+ * @example
+ * ```ts
+ * const violet = hex('#7c3aed')
+ * violet('accent')
+ * ```
+ */
+export type HexColorFactory = (color: string) => ColorFormatter
+
+/**
  * Color and text-style formatters.
  *
  * @example
@@ -86,6 +116,10 @@ export type Colors = {
     bgMagentaBright: ColorFormatter
     bgCyanBright: ColorFormatter
     bgWhiteBright: ColorFormatter
+    rgb: RgbColorFactory
+    bgRgb: RgbColorFactory
+    hex: HexColorFactory
+    bgHex: HexColorFactory
 }
 
 export type Picocolors = Colors & {
@@ -107,6 +141,7 @@ export type Picocolors = Colors & {
 }
 
 type FormatterFactory = (open: string, close: string, replace?: string) => ColorFormatter
+type RgbFormatterFactory = (red: number, green: number, blue: number) => ColorFormatter
 
 const processInfo =
     typeof process === 'undefined' ? undefined : (process as Partial<NodeJS.Process>)
@@ -155,6 +190,45 @@ const formatter: FormatterFactory =
             : open + string + close
     }
 
+const assertRgbChannel = (channel: number, name: string) => {
+    if (!Number.isInteger(channel) || channel < 0 || channel > 255) {
+        throw new RangeError(`${name} must be an integer from 0 to 255`)
+    }
+}
+
+const rgbFormatter =
+    (f: FormatterFactory, prefix: 38 | 48, close: string): RgbFormatterFactory =>
+    (red, green, blue) => {
+        assertRgbChannel(red, 'red')
+        assertRgbChannel(green, 'green')
+        assertRgbChannel(blue, 'blue')
+
+        return f(`\x1b[${prefix};2;${red};${green};${blue}m`, close)
+    }
+
+const parseHexColor = (color: string): [red: number, green: number, blue: number] => {
+    const match = /^#?(?<hex>[0-9a-f]{3}|[0-9a-f]{6})$/i.exec(color)
+    const hex = match?.groups?.hex
+
+    if (!hex) {
+        throw new TypeError('color must be a 3- or 6-digit hex color')
+    }
+
+    if (hex.length === 3) {
+        return [
+            Number.parseInt(`${hex[0]}${hex[0]}`, 16),
+            Number.parseInt(`${hex[1]}${hex[1]}`, 16),
+            Number.parseInt(`${hex[2]}${hex[2]}`, 16),
+        ]
+    }
+
+    return [
+        Number.parseInt(hex.slice(0, 2), 16),
+        Number.parseInt(hex.slice(2, 4), 16),
+        Number.parseInt(hex.slice(4, 6), 16),
+    ]
+}
+
 /**
  * Creates a color formatter set.
  *
@@ -172,6 +246,8 @@ const formatter: FormatterFactory =
  */
 export const createColors = (enabled = isColorSupported): Colors => {
     const f: FormatterFactory = enabled ? formatter : () => String
+    const rgb = rgbFormatter(f, 38, '\x1b[39m')
+    const bgRgb = rgbFormatter(f, 48, '\x1b[49m')
 
     return {
         isColorSupported: enabled,
@@ -220,6 +296,11 @@ export const createColors = (enabled = isColorSupported): Colors => {
         bgMagentaBright: f('\x1b[105m', '\x1b[49m'),
         bgCyanBright: f('\x1b[106m', '\x1b[49m'),
         bgWhiteBright: f('\x1b[107m', '\x1b[49m'),
+
+        rgb,
+        bgRgb,
+        hex: (color) => rgb(...parseHexColor(color)),
+        bgHex: (color) => bgRgb(...parseHexColor(color)),
     }
 }
 
