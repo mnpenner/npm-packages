@@ -1,0 +1,8 @@
+{
+  "name": "@mpen/picocolors",
+  "private": true,
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  }
+}
