@@ -1,14 +1,12 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
 import { NavLink, type NavLinkProps, Router, useUrlPath } from '../src'
 import routes from './routes'
 import * as routesGen from './routes.gen'
 
-function PillNavLink(props: Omit<NavLinkProps, 'activeClass' | 'className' | 'match'>) {
+export function PillNavLink(props: Omit<NavLinkProps, 'activeClass' | 'className' | 'match'>) {
     return <NavLink activeClass="active" className="pill" match="prefix" {...props} />
 }
 
-function CurrentPath() {
+export function CurrentPath() {
     const path = useUrlPath()
     return (
         <div className="card">
@@ -54,7 +52,7 @@ function CurrentPath() {
     )
 }
 
-function Layout() {
+export default function App() {
     return (
         <div className="app">
             <div className="card">
@@ -72,9 +70,3 @@ function Layout() {
         </div>
     )
 }
-
-createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-        <Layout />
-    </StrictMode>,
-)
