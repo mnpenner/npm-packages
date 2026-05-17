@@ -11,7 +11,7 @@ const badPort = PortNumber('not a number')
 
 ///
 
-const UserId = makeBrand<number,'UserId'>()
+const UserId = makeBrand<number, 'UserId'>()
 
 const userId = UserId(123)
 

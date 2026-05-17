@@ -32,3 +32,5 @@
   - Simpler API client; none of this `ClientCallOptions` crap. Just do (path,query,body)
   - Include path in packages/routekit/examples/example4/server/routes/users.ts ? Go back to route factory?
   - `validateResponse` naming -- it's now an option of parse, validate or neither/off.
+  - Error sub-types; maybe `rk-error-code` header?
+    - e.g. unauthorized (403), unauthenticated (401), session_expired (401)

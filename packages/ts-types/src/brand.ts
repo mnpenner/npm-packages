@@ -28,16 +28,12 @@ export type BrandData<T extends AnyBranded> = T[typeof BRAND]['data']
 /**
  * @experimental
  */
-export function makeBrand<TBranded extends AnyBranded>(): (
-    value: BrandData<TBranded>,
-) => TBranded
+export function makeBrand<TBranded extends AnyBranded>(): (value: BrandData<TBranded>) => TBranded
 
 /**
  * @experimental
  */
-export function makeBrand<TData, TBrand>(): (
-    value: TData,
-) => Branded<TData, TBrand>
+export function makeBrand<TData, TBrand>(): (value: TData) => Branded<TData, TBrand>
 
 export function makeBrand() {
     return (value: unknown) => value as never
