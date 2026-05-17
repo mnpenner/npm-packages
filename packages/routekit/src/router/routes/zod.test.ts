@@ -357,6 +357,28 @@ describe('zodRoute', () => {
             additionalProperties: false,
         })
     })
+
+    it('types handler results as the union of all declared response schemas', () => {
+        typeTest(() => {
+            zodRoute({
+                path: '/health',
+                method: HttpMethod.GET,
+                schema: {
+                    response: {
+                        body: {
+                            [HttpStatus.IM_A_TEAPOT]: z.object({ tea: z.string() }),
+                            [HttpStatus.OK]: z.object({ ok: z.literal(true) }),
+                        },
+                    },
+                },
+                validateResponse: false,
+                handler: () =>
+                    Math.random() < 0.5
+                        ? routekitResponse({ tea: 'pot' }, { status: HttpStatus.IM_A_TEAPOT })
+                        : ok({ ok: true }),
+            })
+        })
+    })
 })
 
 describe('withZod', () => {

@@ -73,12 +73,24 @@ type InferSchema<Schema extends ValibotSchema> = Schema extends v.GenericSchema
     ? v.InferOutput<Schema>
     : unknown
 
+type InferResponseBodySchemaUnion<ResponseBodySchemas extends AnyValibotResponseBodySchemas> = [
+    keyof ResponseBodySchemas,
+] extends [never]
+    ? unknown
+    : {
+          [Status in keyof ResponseBodySchemas]: NonNullable<
+              ResponseBodySchemas[Status]
+          > extends AnyValibotSchema
+              ? v.InferInput<NonNullable<ResponseBodySchemas[Status]>>
+              : never
+      }[keyof ResponseBodySchemas]
+
 type InferResponseBody<ResponseBodySchemas extends ValibotResponseBodySchemas> =
     ResponseBodySchemas extends AnyValibotResponseBodySchemas
         ? 200 extends keyof ResponseBodySchemas
-            ? v.InferInput<NonNullable<ResponseBodySchemas[200]>>
+            ? InferResponseBodySchemaUnion<ResponseBodySchemas>
             : 'default' extends keyof ResponseBodySchemas
-              ? v.InferInput<NonNullable<ResponseBodySchemas['default']>>
+              ? InferResponseBodySchemaUnion<ResponseBodySchemas>
               : unknown
         : unknown
 

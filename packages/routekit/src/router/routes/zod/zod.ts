@@ -59,12 +59,24 @@ export type ZodRouteSchemaInput<
 
 type InferSchema<Schema extends ZodSchema> = Schema extends z.ZodTypeAny ? z.infer<Schema> : unknown
 
+type InferResponseBodySchemaUnion<ResponseBodySchemas extends AnyZodResponseBodySchemas> = [
+    keyof ResponseBodySchemas,
+] extends [never]
+    ? unknown
+    : {
+          [Status in keyof ResponseBodySchemas]: NonNullable<
+              ResponseBodySchemas[Status]
+          > extends z.ZodTypeAny
+              ? z.infer<NonNullable<ResponseBodySchemas[Status]>>
+              : never
+      }[keyof ResponseBodySchemas]
+
 type InferResponseBody<ResponseBodySchemas extends ZodResponseBodySchemas> =
     ResponseBodySchemas extends AnyZodResponseBodySchemas
         ? 200 extends keyof ResponseBodySchemas
-            ? z.infer<NonNullable<ResponseBodySchemas[200]>>
+            ? InferResponseBodySchemaUnion<ResponseBodySchemas>
             : 'default' extends keyof ResponseBodySchemas
-              ? z.infer<NonNullable<ResponseBodySchemas['default']>>
+              ? InferResponseBodySchemaUnion<ResponseBodySchemas>
               : unknown
         : unknown
 

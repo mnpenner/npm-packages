@@ -336,6 +336,28 @@ describe(valibotRoute.name, () => {
         })
     })
 
+    it('types handler results as the union of all declared response schemas', () => {
+        typeTest(() => {
+            valibotRoute({
+                path: '/health',
+                method: HttpMethod.GET,
+                schema: {
+                    response: {
+                        body: {
+                            [HttpStatus.IM_A_TEAPOT]: v.object({ tea: v.string() }),
+                            [HttpStatus.OK]: v.object({ ok: v.literal(true) }),
+                        },
+                    },
+                },
+                validateResponse: false,
+                handler: () =>
+                    Math.random() < 0.5
+                        ? routekitResponse({ tea: 'pot' }, { status: HttpStatus.IM_A_TEAPOT })
+                        : ok({ ok: true }),
+            })
+        })
+    })
+
     it('requires path schemas to be Valibot object schemas', () => {
         typeTest(() => {
             valibotRoute({
