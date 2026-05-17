@@ -4,7 +4,6 @@ export const toolIgnoreGlobs = [
     '**/ai/',
     '**/dist/',
     '**/docs/',
-    '**/example/',
     '**/experimental/',
     '**/node_modules/',
     '**/prompts/',

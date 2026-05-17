@@ -1,3 +1,4 @@
+/* global document */
 import { BrowserLogger } from '../../src/loggers/browser.ts'
 import { LogLevel } from '../../src/logger.ts'
 import { MIXED_VALUE_ROWS, SERVICE_ROWS, TASK_ROWS } from '../data.ts'
@@ -42,7 +43,7 @@ function runInfo() {
 }
 
 function runWarn() {
-    logger.warn('edge cases', [1, , 3], new Array(4), circular, Math.PI, -0, NaN, Infinity)
+    logger.warn('edge cases', [1, undefined, 3], new Array(4), circular, Math.PI, -0, NaN, Infinity)
 }
 
 function runError() {

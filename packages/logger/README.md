@@ -11,13 +11,7 @@ npm install @mpen/logger
 ## Usage
 
 ```ts
-import {
-    BrowserLogger,
-    JsonLogger,
-    LogLevel,
-    TerminalLogger,
-    type Logger,
-} from '@mpen/logger'
+import { BrowserLogger, JsonLogger, LogLevel, TerminalLogger, type Logger } from '@mpen/logger'
 ```
 
 ## JSON Logger

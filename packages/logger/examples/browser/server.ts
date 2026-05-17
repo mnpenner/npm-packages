@@ -45,7 +45,6 @@ async function main(options: Options): Promise<number | void> {
             if (url.pathname === '/browser-logger.js') {
                 const build = await Bun.build({
                     entrypoints: [MAIN_PATH],
-                    bundle: true,
                     format: 'esm',
                     sourcemap: 'inline',
                     target: 'browser',

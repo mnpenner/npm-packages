@@ -1770,7 +1770,9 @@ export class TerminalLogger implements Logger {
             return this.stripeTableRow(line, index)
         }
 
-        return this._pc.bgRgb(24, 24, 24)(line.slice(0, colonIndex + 1)) + line.slice(colonIndex + 1)
+        return (
+            this._pc.bgRgb(24, 24, 24)(line.slice(0, colonIndex + 1)) + line.slice(colonIndex + 1)
+        )
     }
 
     private formatHeaderRow(line: string, density: TableDensity): string {

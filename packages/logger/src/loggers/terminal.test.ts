@@ -12,12 +12,16 @@ describe(TerminalLogger.name, () => {
         const circular: Record<string, unknown> = { ok: true }
         circular.self = circular
 
-        logger.log('payload', {
-            id: 1,
-            nested: { value: 2 },
-            list: [1, 'two', circular],
-            [Symbol.for('source')]: 'test',
-        }, [3.14, 159n, Symbol('sym')])
+        logger.log(
+            'payload',
+            {
+                id: 1,
+                nested: { value: 2 },
+                list: [1, 'two', circular],
+                [Symbol.for('source')]: 'test',
+            },
+            [3.14, 159n, Symbol('sym')],
+        )
 
         const output = lines.join('')
 

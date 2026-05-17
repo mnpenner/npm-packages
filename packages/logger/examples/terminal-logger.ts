@@ -19,10 +19,10 @@ async function main(options: Options): Promise<number | void> {
         3.14,
         159n,
         Symbol('sym'),
-        {deep:{object:{here:{now:true}}}},
+        { deep: { object: { here: { now: true } } } },
     ])
     logger.log(new Error('No good'))
-    logger.log(Array.from({length:100},(_,i) => 2**i))
+    logger.log(Array.from({ length: 100 }, (_, i) => 2 ** i))
     logger.info('info messages include a timestamp and wrap long text cleanly')
     logger.warn('warning with mixed values', 2n, Symbol.for('shared'), true, false, null, undefined)
     logger.error(new Error('example terminal error'))
