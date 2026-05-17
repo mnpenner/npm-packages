@@ -1,26 +1,39 @@
 {
   "name": "@mpen/http-helpers",
   "description": "HTTP status, header, and request helper utilities.",
-  "private": true,
+  "version": "0.1.0",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mnpenner/npm-packages.git",
+    "directory": "packages/http-helpers"
+  },
+  "homepage": "https://github.com/mnpenner/npm-packages/tree/main/packages/http-helpers",
+  "license": "MIT",
+  "author": "Mark Penner <npm@mpen.ca>",
+  "packageManager": "bun@1.3.13",
   "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "exports": {
-    ".": {
-      "bun": "./src/index.ts",
-      "default": "./dist/index.mjs"
-    },
+    ".": "./dist/index.mjs",
     "./common": "./dist/common.mjs",
     "./package.json": "./package.json"
   },
+  "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "devDependencies": {
     "typescript": "catalog:",
     "tsdown": "catalog:"
   },
   "scripts": {
-    "build": "tsdown"
+    "build": "bun run --bun tsdown",
+    "prepublishOnly": "bun run build"
   },
-  "main": "./dist/index.mjs",
-  "types": "./dist/index.d.mts",
   "publishConfig": {
     "access": "public"
   }

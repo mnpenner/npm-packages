@@ -6,6 +6,7 @@ import * as common from './common'
 
 /**
  * Common HTTP constants.
+ * @deprecated Import directly from @mpen/http-helpers/common
  */
 export { common }
 

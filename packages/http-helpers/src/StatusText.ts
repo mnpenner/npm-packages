@@ -1,6 +1,6 @@
 import { HttpStatus } from './HttpStatus'
 
-export const StatusText: Record<HttpStatus, string> = {
+export const StatusText =  Object.freeze({
     // --- 1xx Informational ---
     [HttpStatus.CONTINUE]: 'Continue',
     [HttpStatus.SWITCHING_PROTOCOLS]: 'Switching Protocols',
@@ -74,4 +74,4 @@ export const StatusText: Record<HttpStatus, string> = {
     [HttpStatus.LOOP_DETECTED]: 'Loop Detected',
     [HttpStatus.NOT_EXTENDED]: 'Not Extended',
     [HttpStatus.NETWORK_AUTHENTICATION_REQUIRED]: 'Network Authentication Required',
-}
+} satisfies Record<HttpStatus, string>)
