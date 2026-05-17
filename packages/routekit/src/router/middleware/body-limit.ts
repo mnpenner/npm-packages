@@ -1,5 +1,5 @@
 import { HttpStatus } from '@mpen/http'
-import { simpleStatus } from '../response/simple'
+import { text } from '../response/simple'
 import type { AnyContext, HandlerResult, MaybePromise, Middleware, RequestContext } from '../types'
 
 type BodyLimitHandler<Ctx extends object = AnyContext> = (
@@ -66,8 +66,11 @@ function chunkByteLength(chunk: Uint8Array | string): number {
 export function bodyLimit<Ctx extends object = AnyContext>(
     options: MaxContentSizeOptions<Ctx>,
 ): Middleware<Ctx> {
-    const tooLargeHandler = options.tooLarge ?? (() => simpleStatus(HttpStatus.PAYLOAD_TOO_LARGE))
-    const sizeMismatchHandler = options.sizeMismatch ?? (() => simpleStatus(HttpStatus.BAD_REQUEST))
+    const tooLargeHandler =
+        options.tooLarge ??
+        (() => text('Payload Too Large', { status: HttpStatus.PAYLOAD_TOO_LARGE }))
+    const sizeMismatchHandler =
+        options.sizeMismatch ?? (() => text('Bad Request', { status: HttpStatus.BAD_REQUEST }))
 
     return async (ctx, next) => {
         const maxSize = options.maxSize

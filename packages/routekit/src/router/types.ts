@@ -1,6 +1,12 @@
-import type { HttpMethod, HttpStatus } from '@mpen/http'
+import type { HttpMethod } from '@mpen/http'
 import type { Router } from './router'
-import type { RouterHeadersInit } from './fetch-types'
+import type { RouterBodyInit } from './fetch-types'
+import type {
+    BodySerializer,
+    RoutekitBody,
+    RoutekitResponse,
+    RoutekitYield,
+} from './response/simple'
 
 export type OneOrMany<T> = T | T[]
 export type MaybePromise<T> = T | Promise<T>
@@ -67,6 +73,21 @@ export interface RouteSchema {
     response?: {
         body?: Partial<Record<number | 'default', JsonSchema>>
     }
+}
+
+/**
+ * Router construction options.
+ *
+ * @example
+ * ```ts
+ * const router = new Router({serializers: [jsonSerializer()]})
+ * ```
+ */
+export interface RouterOptions {
+    /**
+     * Body serializers used when a logical response does not set `Content-Type`.
+     */
+    serializers?: BodySerializer[]
 }
 
 /**
@@ -267,50 +288,37 @@ export type HandlerContext<Ctx extends object = AnyContext> = RequestContext<Ctx
 }
 
 /**
- * Values yielded by streaming handlers to describe response metadata such as [`HttpStatus`]{@link HttpStatus}.
+ * Values yielded by generator-style handlers.
  *
  * @example
  * ```ts
  * async function* handler() {
- *   yield 201
- *   yield new Headers({'content-type': 'application/octet-stream'})
- *   yield {status: 202, headers: {'x-stream': 'true'}}
- *   yield 'chunk-1'
- *   yield new Uint8Array([1, 2, 3])
- *   return new Uint8Array([1, 2, 3])
+ *   yield head(HttpStatus.OK, {'cache-control': 'no-store'})
+ *   return {ok: true}
  * }
  * ```
  */
-export type HandlerYield =
-    | number
-    | HttpStatus
-    | Headers
-    | { status?: number | HttpStatus; headers?: RouterHeadersInit }
-    | Buffer
-    | Uint8Array
-    | string
-    | undefined
+export type HandlerYield = RoutekitYield
 
 /**
- * Response type that preserves the expected JSON payload type.
+ * Native body value that can be passed to the Fetch [`Response`]{@link Response} constructor.
  *
  * @example
  * ```ts
- * const response: ResponseWithData<{ok: true}> = new Response('{"ok":true}')
+ * const body: HandlerBody = 'ok'
  * ```
  */
-export type ResponseWithData<TJson> = Omit<Response, 'json'> & { json(): Promise<TJson> }
+export type HandlerBody = RouterBodyInit | null | undefined
 
 /**
- * Final body value returned from streaming handlers.
- *
- * @example
- * ```ts
- * const body: HandlerBody = new Uint8Array([1, 2, 3])
- * const textBody: HandlerBody = 'ok'
- * ```
+ * Final value a handler or generator may return.
  */
-export type HandlerBody = Buffer | Uint8Array | ReadableStream | string
+export type HandlerFinalResult<TOkRes = unknown> =
+    | Response
+    | RoutekitResponse<TOkRes>
+    | RoutekitBody<TOkRes>
+    | TOkRes
+    | HandlerBody
 
 /**
  * Allowed handler return values.
@@ -321,16 +329,9 @@ export type HandlerBody = Buffer | Uint8Array | ReadableStream | string
  * ```
  */
 export type HandlerResult<TOkRes = unknown> =
-    | ResponseWithData<TOkRes>
-    | TOkRes
-    | HandlerBody
-    | Promise<
-          | ResponseWithData<TOkRes>
-          | TOkRes
-          | HandlerBody
-          | AsyncGenerator<HandlerYield, HandlerBody>
-      >
-    | AsyncGenerator<HandlerYield, HandlerBody>
+    | HandlerFinalResult<TOkRes>
+    | Promise<HandlerFinalResult<TOkRes> | AsyncGenerator<HandlerYield, HandlerFinalResult<TOkRes>>>
+    | AsyncGenerator<HandlerYield, HandlerFinalResult<TOkRes>>
 
 /**
  * Route handler signature that preserves generic type parameters for API generation.

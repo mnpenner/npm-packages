@@ -1,6 +1,6 @@
 import type { HttpMethod } from '@mpen/http'
 import { HttpStatus } from '@mpen/http'
-import { simpleStatus } from '../response/simple'
+import { text, type RoutekitResponse } from '../response/simple'
 import type { AnyContext, Middleware, RequestContext } from '../types'
 
 export interface RateBucket {
@@ -623,8 +623,8 @@ function buildTooManyRequests(
     addRetryAfterHeader: boolean,
     resetAtMs: number,
     nowMs: number,
-): Response {
-    const response = simpleStatus(HttpStatus.TOO_MANY_REQUESTS)
+): RoutekitResponse<string> {
+    const response = text('Too Many Requests', { status: HttpStatus.TOO_MANY_REQUESTS })
     if (addRetryAfterHeader) {
         response.headers.set('Retry-After', formatRetryAfterSeconds(resetAtMs, nowMs))
     }

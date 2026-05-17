@@ -1,5 +1,5 @@
 import { HttpStatus } from '@mpen/http'
-import { simpleStatus } from '../response/simple'
+import { text } from '../response/simple'
 import { isLocalhost } from '../lib/host'
 import type {
     AnyContext,
@@ -135,7 +135,7 @@ function isSameSite(origin: URL, requestUrl: URL): boolean {
 export function csrf<Ctx extends object = AnyContext>(
     options: CsrfOptions<Ctx> = {},
 ): Middleware<Ctx> {
-    const reject = options.reject ?? (() => simpleStatus(HttpStatus.FORBIDDEN))
+    const reject = options.reject ?? (() => text('Forbidden', { status: HttpStatus.FORBIDDEN }))
     const allowLocalhost = options.allowLocalhost ?? options.dev ?? false
     const allowMissingOrigin = options.allowMissingOrigin ?? options.dev ?? false
     const allowMissingFetchMetadata = options.allowMissingFetchMetadata ?? options.dev ?? false

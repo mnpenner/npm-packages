@@ -1,7 +1,8 @@
-import { HttpMethod, HttpStatus, StatusText } from '@mpen/http'
+import { HttpMethod, StatusText } from '@mpen/http'
+import type { HttpStatus } from '@mpen/http'
 import type { Router } from '../../router'
 import type { Handler, JsonObjectSchema, JsonSchema, NormalizedRoute, RouteMeta } from '../../types'
-import { jsonResponse } from '../../response/simple'
+import { ok } from '../../response/simple'
 
 /**
  * OpenAPI document `info` section.
@@ -192,10 +193,7 @@ function buildOperationFromSchema(route: NormalizedRoute<any>): OpenApiOperation
                     description: defaultResponseDescription(status),
                 }
                 response.content = Object.fromEntries(
-                    contentTypes.map((contentType) => [
-                        contentType,
-                        { schema: responseSchema },
-                    ]),
+                    contentTypes.map((contentType) => [contentType, { schema: responseSchema }]),
                 )
                 return [[status, response]]
             }),
@@ -290,6 +288,6 @@ export function openapi(options: OpenApiOptions): Handler<OpenApiDocument> {
             ...(options.security ? { security: options.security } : {}),
         }
 
-        return jsonResponse(document, HttpStatus.OK)
+        return ok(document)
     }
 }

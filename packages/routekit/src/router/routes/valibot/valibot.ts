@@ -11,6 +11,7 @@ import type {
     RouteOptions,
     RouteSchema,
 } from '../../types'
+import { isRoutekitBody, isRoutekitResponse, response } from '../../response'
 import * as v from 'valibot'
 
 /**
@@ -291,11 +292,6 @@ type ResolvedValibotHandlerOptions<
     validationError: ValibotValidationErrorHandler
 }
 
-type ResponseEnvelope = {
-    status: number
-    body: unknown
-}
-
 type ResponseBodyForValidation = {
     value: unknown
     writableJson: boolean
@@ -330,16 +326,13 @@ class ValibotResponseValidationError extends Error {
 function createValidationResponse(
     component: ValibotValidationError,
     issues: [v.BaseIssue<unknown>, ...v.BaseIssue<unknown>[]],
-): Response {
+): HandlerResult {
     const payload: ValibotValidationErrorBody = {
         component: validationErrorComponentName.get(component) ?? 'request_body',
         issues,
         message: v.summarize(issues),
     }
-    return new Response(JSON.stringify(payload), {
-        status: HttpStatus.BAD_REQUEST,
-        headers: { 'content-type': 'application/json' },
-    })
+    return response(payload, { status: HttpStatus.BAD_REQUEST })
 }
 
 function normalizeResponseValidationMode(
@@ -522,16 +515,6 @@ function hasRoutePath(options: unknown): options is { path: unknown } {
     return (options as { path?: unknown }).path !== undefined
 }
 
-function isResponseEnvelope(value: unknown): value is ResponseEnvelope {
-    return (
-        !!value &&
-        typeof value === 'object' &&
-        'status' in value &&
-        typeof (value as { status: unknown }).status === 'number' &&
-        'body' in value
-    )
-}
-
 function isSkippableResponseValidationValue(value: unknown): boolean {
     return (
         value instanceof ReadableStream ||
@@ -637,9 +620,15 @@ async function validateHandlerResult(
         const parsed = parseResponseSchema(schema, result.status, body.value, mode)
         return mode === 'parse' && body.writableJson ? responseWithJsonBody(result, parsed) : result
     }
-    if (isResponseEnvelope(result)) {
+    if (isRoutekitResponse(result)) {
         const parsed = parseResponseSchema(schema, result.status, result.body, mode)
-        return mode === 'parse' ? { ...result, body: parsed } : result
+        return mode === 'parse'
+            ? response(parsed, { status: result.status, headers: result.headers })
+            : result
+    }
+    if (isRoutekitBody(result)) {
+        const parsed = parseResponseSchema(schema, HttpStatus.OK, result.value, mode)
+        return mode === 'parse' ? parsed : result
     }
     if (isSkippableResponseValidationValue(result)) {
         return result

@@ -1,5 +1,5 @@
 import { createValibotRoutes } from '@mpen/routekit/routes'
-import { jsonResponse } from '@mpen/routekit'
+import { response } from '@mpen/routekit'
 import * as v from 'valibot'
 import { HttpStatus } from '@mpen/http'
 import type { BaseIssue } from 'valibot'
@@ -48,7 +48,7 @@ export const valibotRoute = createValibotRoutes({
     validateResponse: 'parse',
     validationError(component, issues) {
         console.error('validationError', { component, issues })
-        return jsonResponse({ component, issues }, HttpStatus.BAD_REQUEST)
+        return response({ component, issues }, { status: HttpStatus.BAD_REQUEST })
     },
     schema: {
         response: {

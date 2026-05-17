@@ -1,4 +1,4 @@
-import { jsonResponse } from '@mpen/routekit'
+import { ok } from '@mpen/routekit'
 import { HttpMethod, HttpStatus } from '@mpen/http'
 import * as v from 'valibot'
 import { valibotRoute } from '../valibot.ts'
@@ -16,6 +16,6 @@ export default valibotRoute({
         },
     },
     handler() {
-        return jsonResponse({ ok: true })
+        return ok({ ok: true })
     },
 })

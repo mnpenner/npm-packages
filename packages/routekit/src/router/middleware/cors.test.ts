@@ -23,6 +23,25 @@ describe(cors.name, () => {
         expect(response.headers.get('access-control-allow-origin')).toBe('*')
     })
 
+    it('adds CORS headers to logical response bodies', async () => {
+        const router = new Router()
+        router.use(cors({ origin: '*' }))
+        router.add({
+            method: HttpMethod.GET,
+            path: '/data',
+            handler: () => ({ ok: true }),
+        })
+
+        const response = await router.fetch(
+            new Request('https://api.example.com/data', {
+                headers: { origin: 'https://app.example.com' },
+            }),
+        )
+
+        expect(response.headers.get('access-control-allow-origin')).toBe('*')
+        expect(await response.json()).toEqual({ ok: true })
+    })
+
     it('supports an origin resolver function', async () => {
         const router = new Router()
         router.use(

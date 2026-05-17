@@ -1,7 +1,7 @@
 import { CommonHeaders, HttpStatus, HttpMethod } from '@mpen/http'
 import type {
     AnyContext,
-    HandlerBody,
+    HandlerFinalResult,
     HandlerYield,
     MaybePromise,
     Middleware,
@@ -9,7 +9,17 @@ import type {
     RequestContext,
 } from '../types'
 import { isLocalhost } from '../lib/host'
-import type { RouterBodyInit, RouterHeadersInit } from '../fetch-types'
+import type { RouterBodyInit } from '../fetch-types'
+import {
+    headers as headersDirective,
+    isChunkDirective,
+    isHeadersDirective,
+    isHeadDirective,
+    isResponseBodyInit,
+    isRoutekitResponse,
+    isStreamDirective,
+    response,
+} from '../response'
 
 type CorsOriginResolver<Ctx extends object> = (
     origin: string | null,
@@ -231,30 +241,28 @@ function applyCorsHeaders(
     }
 }
 
-function isBodyChunk(value: unknown): value is Uint8Array | string {
-    return typeof value === 'string' || value instanceof Uint8Array
-}
-
-function isAsyncGenerator(value: unknown): value is AsyncGenerator<HandlerYield, HandlerBody> {
+function isAsyncGenerator(
+    value: unknown,
+): value is AsyncGenerator<HandlerYield, HandlerFinalResult> {
     return (
         !!value &&
-        typeof (value as AsyncGenerator<HandlerYield, HandlerBody>)[Symbol.asyncIterator] ===
+        typeof (value as AsyncGenerator<HandlerYield, HandlerFinalResult>)[Symbol.asyncIterator] ===
             'function'
     )
 }
 
 function wrapGeneratorWithCors(
-    generator: AsyncGenerator<HandlerYield, HandlerBody>,
+    generator: AsyncGenerator<HandlerYield, HandlerFinalResult>,
     allowOrigin: string,
     allowCredentials: boolean,
     exposeHeaders: OneOrMany<string> | undefined,
     varyOrigin: boolean,
-): AsyncGenerator<HandlerYield, HandlerBody> {
+): AsyncGenerator<HandlerYield, HandlerFinalResult> {
     const apply = (headers: Headers) => {
         applyCorsHeaders(headers, allowOrigin, allowCredentials, exposeHeaders, varyOrigin)
     }
 
-    async function* wrapped(): AsyncGenerator<HandlerYield, HandlerBody> {
+    async function* wrapped(): AsyncGenerator<HandlerYield, HandlerFinalResult> {
         let headersInjected = false
         while (true) {
             const next = await generator.next()
@@ -262,31 +270,37 @@ function wrapGeneratorWithCors(
                 if (!headersInjected) {
                     const headers = new Headers()
                     apply(headers)
-                    yield headers
+                    yield headersDirective(headers)
                 }
                 return next.value
             }
             const value = next.value
-            if (value instanceof Headers) {
-                const headers = new Headers(value)
+            if (isHeadersDirective(value)) {
+                const headers = new Headers(value.headers)
                 apply(headers)
                 headersInjected = true
-                yield headers
+                yield headersDirective(headers)
                 continue
             }
-            if (value && typeof value === 'object' && 'headers' in value) {
-                const entry = value as { status?: number; headers?: RouterHeadersInit }
-                const headers = new Headers(entry.headers)
+            if (isHeadDirective(value)) {
+                const headers = new Headers(value.headers)
                 apply(headers)
                 headersInjected = true
-                yield { ...entry, headers }
+                yield { ...value, headers }
                 continue
             }
-            if (!headersInjected && isBodyChunk(value)) {
+            if (isStreamDirective(value)) {
+                const headers = new Headers(value.headers)
+                apply(headers)
+                headersInjected = true
+                yield { ...value, headers }
+                continue
+            }
+            if (!headersInjected && isChunkDirective(value)) {
                 const headers = new Headers()
                 apply(headers)
                 headersInjected = true
-                yield headers
+                yield headersDirective(headers)
             }
             yield value
         }
@@ -408,6 +422,17 @@ export function cors<Ctx extends object = AnyContext>(options: CorsOptions<Ctx>)
             return result
         }
 
+        if (isRoutekitResponse(result)) {
+            applyCorsHeaders(
+                result.headers,
+                allowOrigin,
+                allowCredentials,
+                options.exposeHeaders,
+                varyOrigin,
+            )
+            return result
+        }
+
         if (isAsyncGenerator(result)) {
             return wrapGeneratorWithCors(
                 result,
@@ -418,7 +443,7 @@ export function cors<Ctx extends object = AnyContext>(options: CorsOptions<Ctx>)
             )
         }
 
-        if (isBodyChunk(result) || result instanceof ReadableStream) {
+        if (result != null && isResponseBodyInit(result)) {
             const headers = new Headers()
             applyCorsHeaders(
                 headers,
@@ -430,6 +455,8 @@ export function cors<Ctx extends object = AnyContext>(options: CorsOptions<Ctx>)
             return new Response(result as RouterBodyInit, { headers })
         }
 
-        return result
+        const headers = new Headers()
+        applyCorsHeaders(headers, allowOrigin, allowCredentials, options.exposeHeaders, varyOrigin)
+        return response(result, { headers })
     }
 }

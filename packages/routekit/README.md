@@ -24,15 +24,15 @@ bun add valibot @valibot/to-json-schema
 ## Quick Start
 
 ```ts
-import { Router, jsonResponse } from '@mpen/routekit'
+import { Router, ok } from '@mpen/routekit'
 
 const router = new Router()
 
-router.get('/', () => jsonResponse({ message: 'Hello World!' }))
+router.get('/', () => ok({ message: 'Hello World!' }))
 
 router.get('/users/:id', ({ pathParams }) => {
     const { id } = pathParams as { id: string }
-    return jsonResponse({ id })
+    return ok({ id })
 })
 
 export default router
@@ -61,12 +61,12 @@ expect(await response.json()).toEqual({ id: '123' })
 Routes can be registered with method helpers:
 
 ```ts
-router.get('/health', () => new Response('ok'))
-router.head('/health', () => new Response(null))
-router.post('/items', ({ req }) => req.json().then(jsonResponse))
-router.put('/items/:id', () => new Response('updated'))
-router.patch('/items/:id', () => new Response('patched'))
-router.delete('/items/:id', () => new Response('deleted'))
+router.get('/health', () => text('ok'))
+router.head('/health', () => noContent())
+router.post('/items', async ({ req }) => ok(await req.json()))
+router.put('/items/:id', () => text('updated'))
+router.patch('/items/:id', () => text('patched'))
+router.delete('/items/:id', () => text('deleted'))
 ```
 
 Or with a full route definition:
@@ -84,7 +84,7 @@ router.add({
             summary: 'Fetch an item',
         },
     },
-    handler: ({ pathParams }) => jsonResponse({ id: (pathParams as { id: string }).id }),
+    handler: ({ pathParams }) => ok({ id: (pathParams as { id: string }).id }),
 })
 ```
 
@@ -107,25 +107,31 @@ app.mount('/api', api)
 Handlers may return:
 
 - a `Response`
-- a `string`, `Uint8Array`, `Buffer`, or `ReadableStream`
-- an async generator that yields response metadata or body chunks
-- another value that middleware converts into a response
+- a `RoutekitResponse` from helpers such as `ok()`, `response()`, `text()`, or `html()`
+- a `string`, `Uint8Array`, `Buffer`, or `ReadableStream` for raw native bodies
+- a structured object wrapped with `ok()` for content negotiation
+- an async generator that yields typed response directives
 
-For JSON responses, use `jsonResponse` so the response has a typed `json()` result and
-the correct headers:
+For structured responses, return `ok(value)`. When no `Content-Type` is set, the router
+serializes the body using the request's `Accept` header:
 
 ```ts
-router.get('/profile', () => jsonResponse({ name: 'Ada' }))
+router.get('/profile', () => ok({ name: 'Ada' }))
 ```
 
-Streaming handlers can yield status, headers, and chunks:
+Use `text()` and `html()` for represented bodies that should skip negotiation:
+
+```ts
+router.get('/health', () => text('ok'))
+```
+
+Streaming handlers yield explicit directives:
 
 ```ts
 router.get('/events', async function* () {
-    yield 200
-    yield new Headers({ 'content-type': 'text/plain' })
-    yield 'hello '
-    return 'world'
+    yield head(HttpStatus.OK, { 'content-type': 'text/plain; charset=utf-8' })
+    yield chunk('hello ')
+    yield chunk('world')
 })
 ```
 
@@ -143,7 +149,7 @@ const auth: ContextMiddleware<{ userId: string }> = (ctx) => {
 
 const router = new Router().use(auth)
 
-router.get('/me', ({ userId }) => jsonResponse({ userId }))
+router.get('/me', ({ userId }) => ok({ userId }))
 ```
 
 Middleware can also wrap downstream results:
@@ -190,7 +196,7 @@ to routes for OpenAPI and client generation.
 
 ```ts
 import { HttpStatus } from '@mpen/http'
-import { Router, jsonResponse } from '@mpen/routekit'
+import { Router, ok } from '@mpen/routekit'
 import { withZod } from '@mpen/routekit/routes'
 import { z } from 'zod'
 
@@ -219,7 +225,7 @@ router.post(
             },
         },
         handler: ({ params }) =>
-            jsonResponse({
+            ok({
                 id: params.path.id,
                 title: params.body.title,
                 author: params.body.author,
@@ -246,7 +252,7 @@ Valibot helpers expose the same shape as the Zod helpers:
 
 ```ts
 import { HttpStatus } from '@mpen/http'
-import { jsonResponse } from '@mpen/routekit'
+import { ok } from '@mpen/routekit'
 import { withValibot } from '@mpen/routekit/routes'
 import * as v from 'valibot'
 
@@ -279,7 +285,7 @@ router.post(
             },
         },
         handler: ({ params }) =>
-            jsonResponse({
+            ok({
                 id: params.path.id,
                 title: params.body.title,
                 author: params.body.author,

@@ -1,73 +1,22 @@
 import { CommonContentTypes, HttpStatus } from '@mpen/http'
-import { Router, type ContextMiddleware } from '@mpen/routekit'
+import { jsonSerializer, response, Router, type BodySerializer } from '@mpen/routekit'
 import { createZodRoutes, ValidationError } from '@mpen/routekit/routes'
 import { z } from 'zod'
-
-type StructuredBody = Record<string, unknown> | unknown[]
-type StructuredResult = StructuredBody | { status: number; body: StructuredBody }
 
 const validationErrorSchema = z.object({
     component: z.enum(['request_body', 'url_path', 'query_parameters']),
     message: z.string(),
 })
 
-function isStructuredResult(value: unknown): value is StructuredBody {
-    return Array.isArray(value) || (!!value && typeof value === 'object')
+const yamlSerializer: BodySerializer<unknown> = {
+    mediaTypes: [CommonContentTypes.YAML, 'application/yaml', 'application/x-yaml', 'text/yaml'],
+    canSerialize: () => true,
+    serialize: (value) => Bun.YAML.stringify(value, null, 2),
 }
 
-function isResultEnvelope(value: unknown): value is { status: number; body: StructuredBody } {
-    return (
-        !!value &&
-        typeof value === 'object' &&
-        'status' in value &&
-        typeof (value as { status: unknown }).status === 'number' &&
-        'body' in value &&
-        isStructuredResult((value as { body: unknown }).body)
-    )
-}
-
-function isYamlPreferred(request: Request): boolean {
-    const accept = request.headers.get('accept') ?? '*/*'
-    return (
-        accept.includes(CommonContentTypes.YAML) ||
-        accept.includes('application/yaml') ||
-        accept.includes('application/x-yaml') ||
-        accept.includes('text/yaml')
-    )
-}
-
-function toYaml(value: unknown): string {
-    return Bun.YAML.stringify(value, null, 2)
-}
-
-const structuredResponse: ContextMiddleware = async (ctx, next) => {
-    const result = await next()
-    if (
-        result instanceof Response ||
-        result instanceof ReadableStream ||
-        typeof result === 'string' ||
-        result instanceof Uint8Array ||
-        (typeof Buffer !== 'undefined' && result instanceof Buffer) ||
-        (!!result && typeof result === 'object' && Symbol.asyncIterator in result)
-    ) {
-        return result
-    }
-    if (!isStructuredResult(result) && !isResultEnvelope(result)) {
-        return result
-    }
-
-    const status = isResultEnvelope(result) ? result.status : HttpStatus.OK
-    const body = isResultEnvelope(result) ? result.body : result
-    const asYaml = isYamlPreferred(ctx.req)
-    return new Response(asYaml ? toYaml(body) : JSON.stringify(body), {
-        status,
-        headers: {
-            'content-type': asYaml ? CommonContentTypes.YAML : CommonContentTypes.JSON,
-        },
-    })
-}
-
-export const router = new Router().use(structuredResponse)
+export const router = new Router({
+    serializers: [jsonSerializer(), yamlSerializer],
+})
 
 const zodRoutes = createZodRoutes({
     schema: {
@@ -84,13 +33,13 @@ const zodRoutes = createZodRoutes({
                 : component === ValidationError.URL_PATH
                   ? 'url_path'
                   : 'query_parameters'
-        return {
-            status: HttpStatus.BAD_REQUEST,
-            body: {
+        return response(
+            {
                 component: componentName,
                 message: z.prettifyError(error),
             },
-        }
+            { status: HttpStatus.BAD_REQUEST },
+        )
     },
 })
 

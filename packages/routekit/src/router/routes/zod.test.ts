@@ -4,7 +4,7 @@ import { HttpMethod, HttpStatus } from '@mpen/http'
 import { z } from 'zod'
 import { Router } from '../router'
 import { expectType } from '@mpen/ts-types'
-import { jsonResponse, plainTextResponse } from '../response'
+import { ok, response as routekitResponse } from '../response'
 import { createZodRoutes, ValidationError, withZod, zodHandler, zodPartial, zodRoute } from './zod'
 import type { AnyContext, Route, RouteOptions } from '../types'
 
@@ -36,7 +36,7 @@ describe('zodHandler', () => {
                 expectType<{ id: string }>(params.path)
                 expectType<{ verbose: 'yes' | 'no' }>(params.query)
                 expectType<{ name: string }>(params.body)
-                return jsonResponse({
+                return ok({
                     pathParams: params.path,
                     query: params.query,
                     body: params.body,
@@ -75,7 +75,7 @@ describe('zodHandler', () => {
                 },
             },
             validateResponse: false,
-            handler: () => plainTextResponse('ok'),
+            handler: () => new Response('ok'),
         })
         const router = new Router().add({
             path: '/users/:id',
@@ -104,7 +104,7 @@ describe('zodHandler', () => {
                 },
             },
             validateResponse: false,
-            handler: () => plainTextResponse('ok'),
+            handler: () => new Response('ok'),
             validationError: (component, error) => {
                 expect(component).toBe(ValidationError.URL_PATH)
                 expect(error).toBeInstanceOf(z.ZodError)
@@ -160,7 +160,7 @@ describe('zodHandler', () => {
                     },
                 },
                 validateResponse: true,
-                handler: () => jsonResponse({ ok: true }),
+                handler: () => ok({ ok: true }),
             }),
         })
 
@@ -187,11 +187,11 @@ describe('zodHandler', () => {
                     },
                 },
                 validationError: (component, error) =>
-                    jsonResponse(
+                    routekitResponse(
                         { component, errorTree: z.treeifyError(error) },
-                        HttpStatus.BAD_REQUEST,
+                        { status: HttpStatus.BAD_REQUEST },
                     ),
-                handler: () => jsonResponse({ ok: true }),
+                handler: () => ok({ ok: true }),
             }),
         })
 
@@ -216,7 +216,10 @@ describe('zodHandler', () => {
                     },
                 },
                 handler: () =>
-                    jsonResponse({ ok: 'accepted', extra: 'stripped' }, HttpStatus.ACCEPTED),
+                    routekitResponse(
+                        { ok: 'accepted', extra: 'stripped' },
+                        { status: HttpStatus.ACCEPTED },
+                    ),
             }),
         })
 
@@ -270,7 +273,7 @@ describe('zodPartial', () => {
                 },
             },
             validateResponse: false,
-            handler: () => plainTextResponse('ok'),
+            handler: () => new Response('ok'),
         })
 
         expect(typeof partial.handler).toBe('function')
@@ -341,7 +344,7 @@ describe('zodRoute', () => {
                 },
             },
             validateResponse: false,
-            handler: ({ params }) => jsonResponse({ id: params.path.id }),
+            handler: ({ params }) => ok({ id: params.path.id }),
         })
 
         expect(route.path).toBe('/users/:id')
@@ -375,8 +378,7 @@ describe('withZod', () => {
                     },
                 },
                 validateResponse: true,
-                handler: ({ params }) =>
-                    jsonResponse({ id: params.path.id, name: params.body.name }),
+                handler: ({ params }) => ok({ id: params.path.id, name: params.body.name }),
             }),
         )
 
@@ -423,7 +425,7 @@ describe('createZodRoutes', () => {
                         path: z.object({ id: z.string().uuid() }),
                     },
                 },
-                handler: () => plainTextResponse('ok'),
+                handler: () => new Response('ok'),
             }),
         )
 
@@ -519,7 +521,7 @@ describe('createZodRoutes', () => {
                     },
                 },
             },
-            handler: () => jsonResponse({ ok: true }),
+            handler: () => ok({ ok: true }),
         })
         expectType<Route<AnyContext>>(route)
 
@@ -554,7 +556,7 @@ describe('createZodRoutes', () => {
                     },
                 },
                 validateResponse: false,
-                handler: () => plainTextResponse('ok'),
+                handler: () => new Response('ok'),
             }),
         )
 
@@ -589,7 +591,7 @@ describe('createZodRoutes', () => {
                     },
                 },
                 validateResponse: false,
-                handler: ({ params }) => jsonResponse({ id: params.path.id }),
+                handler: ({ params }) => ok({ id: params.path.id }),
             })
             expectType<RouteOptions<AnyContext>>(options)
 
@@ -602,7 +604,7 @@ describe('createZodRoutes', () => {
                     },
                 },
                 validateResponse: false,
-                handler: ({ params }) => jsonResponse({ id: params.path.id }),
+                handler: ({ params }) => ok({ id: params.path.id }),
             })
             expectType<Route<AnyContext>>(route)
         })

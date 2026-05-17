@@ -113,6 +113,26 @@ describe(requestIdCtx.name, () => {
         expect(await response.text()).toBe('ok')
     })
 
+    it('writes the request id into logical response headers', async () => {
+        const router = new Router()
+        router.use(
+            requestIdCtx({
+                generate: () => 'req-logical',
+                writeHeaderName: 'x-request-id',
+            }),
+        )
+        router.add({
+            method: HttpMethod.GET,
+            path: '/',
+            handler: () => ({ ok: true }),
+        })
+
+        const response = await router.fetch(makeRequest())
+
+        expect(response.headers.get('x-request-id')).toBe('req-logical')
+        expect(await response.json()).toEqual({ ok: true })
+    })
+
     it('uses the default generator format when no header is provided', async () => {
         const router = new Router()
         router.use(requestIdCtx({ prefix: 'req' }))

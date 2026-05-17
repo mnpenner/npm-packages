@@ -6,6 +6,12 @@ import type { ContextMiddleware, Handler } from './types'
 import { expectType } from '@mpen/ts-types'
 import { requestIdCtx } from './middleware/request-id-ctx'
 import type { RouterHeadersInit } from './fetch-types'
+import {
+    chunk,
+    head as responseHead,
+    headers as responseHeaders,
+    status as responseStatus,
+} from './response'
 
 function makeRequest(
     path: string,
@@ -78,11 +84,14 @@ describe('Router', () => {
         const beforeHeader = mock()
         const afterHeader = mock()
         const handler: Handler = async function* () {
-            yield 201
+            yield responseStatus(HttpStatus.CREATED)
             beforeHeader()
-            yield new Headers({ 'x-stream': 'true' })
+            yield responseHeaders({
+                'content-type': 'text/plain; charset=utf-8',
+                'x-stream': 'true',
+            })
             afterHeader()
-            return new TextEncoder().encode('hello')
+            return 'hello'
         }
         const router = new Router()
         router.add({ method: HttpMethod.GET, path: '/', handler })
@@ -104,8 +113,8 @@ describe('Router', () => {
     it('defaults to 200 when headers are yielded before status', async () => {
         const { resolve: resume, promise: deferred } = Promise.withResolvers()
         const handler: Handler = async function* () {
-            yield new Headers({ 'x-stream': 'true' })
-            yield 499 // ignored
+            yield responseHeaders({ 'x-stream': 'true' })
+            yield responseStatus(499) // ignored
             await deferred
             return new TextEncoder().encode('hello')
         }
@@ -126,46 +135,46 @@ describe('Router', () => {
         resume()
     })
 
-    it('accepts metadata objects from streaming handlers', async () => {
+    it('accepts typed metadata directives from streaming handlers', async () => {
         const router = new Router()
         router.add({
             method: HttpMethod.GET,
             path: '/status',
             handler: async function* () {
-                yield { status: 202 }
-                return new TextEncoder().encode('ok')
+                yield responseStatus(HttpStatus.ACCEPTED)
+                return { ok: true }
             },
         })
         router.add({
             method: HttpMethod.GET,
             path: '/headers',
             handler: async function* () {
-                yield { headers: { 'x-meta': 'yes' } }
-                return new TextEncoder().encode('ok')
+                yield responseHeaders({ 'x-meta': 'yes' })
+                return { ok: true }
             },
         })
         router.add({
             method: HttpMethod.GET,
             path: '/both',
             handler: async function* () {
-                yield { status: 201, headers: { 'x-both': 'true' } }
-                return new TextEncoder().encode('ok')
+                yield responseHead(HttpStatus.CREATED, { 'x-both': 'true' })
+                return { ok: true }
             },
         })
 
         const statusResponse = await router.fetch(makeRequest('/status'))
         expect(statusResponse.status).toBe(HttpStatus.ACCEPTED)
-        expect(await statusResponse.text()).toBe('ok')
+        expect(await statusResponse.json()).toEqual({ ok: true })
 
         const headersResponse = await router.fetch(makeRequest('/headers'))
         expect(headersResponse.status).toBe(HttpStatus.OK)
         expect(headersResponse.headers.get('x-meta')).toBe('yes')
-        expect(await headersResponse.text()).toBe('ok')
+        expect(await headersResponse.json()).toEqual({ ok: true })
 
         const bothResponse = await router.fetch(makeRequest('/both'))
         expect(bothResponse.status).toBe(HttpStatus.CREATED)
         expect(bothResponse.headers.get('x-both')).toBe('true')
-        expect(await bothResponse.text()).toBe('ok')
+        expect(await bothResponse.json()).toEqual({ ok: true })
     })
 
     it('streams yielded body chunks and appends the returned body', async () => {
@@ -174,10 +183,10 @@ describe('Router', () => {
             method: HttpMethod.GET,
             path: '/stream',
             handler: async function* () {
-                yield 'hello '
-                yield new TextEncoder().encode('world')
-                yield Buffer.from('!')
-                return ' done'
+                yield chunk('hello ')
+                yield chunk(new TextEncoder().encode('world'))
+                yield chunk(Buffer.from('!'))
+                yield chunk(' done')
             },
         })
 

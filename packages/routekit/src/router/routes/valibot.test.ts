@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'bun:test'
 import { HttpMethod, HttpStatus } from '@mpen/http'
 import { Router } from '../router'
-import { jsonResponse } from '../response'
+import { ok, response as routekitResponse } from '../response'
 import { expectType } from '@mpen/ts-types'
 import * as v from 'valibot'
 import {
@@ -47,7 +47,7 @@ describe(valibotHandler.name, () => {
                 expectType<{ id: string }>(path)
                 expectType<{ verbose: 'yes' | 'no' }>(query)
                 expectType<{ name: string }>(body)
-                return jsonResponse({
+                return ok({
                     pathParams: path,
                     query,
                     body,
@@ -86,7 +86,7 @@ describe(valibotHandler.name, () => {
                 },
             },
             validateResponse: false,
-            handler: () => jsonResponse({ id: '1', name: 'Ada' }),
+            handler: () => ok({ id: '1', name: 'Ada' }),
         })
         const router = new Router().add({
             path: '/users/:id',
@@ -116,7 +116,7 @@ describe(valibotHandler.name, () => {
                 },
             },
             validateResponse: false,
-            handler: () => jsonResponse({ id: '1', name: 'Ada' }),
+            handler: () => ok({ id: '1', name: 'Ada' }),
             validationError: (component, issues) => {
                 expect(component).toBe(ValibotValidationError.URL_PATH)
                 expect(issues.length).toBeGreaterThan(0)
@@ -174,7 +174,7 @@ describe(valibotHandler.name, () => {
                     },
                 },
                 validateResponse: true,
-                handler: () => jsonResponse({ ok: true }),
+                handler: () => ok({ ok: true }),
             }),
         })
 
@@ -203,8 +203,8 @@ describe(valibotHandler.name, () => {
                     },
                 },
                 validationError: (component, issues) =>
-                    jsonResponse({ component, issues }, HttpStatus.BAD_REQUEST),
-                handler: () => jsonResponse({ ok: true }),
+                    routekitResponse({ component, issues }, { status: HttpStatus.BAD_REQUEST }),
+                handler: () => ok({ ok: true }),
             }),
         })
 
@@ -229,7 +229,10 @@ describe(valibotHandler.name, () => {
                     },
                 },
                 handler: () =>
-                    jsonResponse({ ok: 'accepted', extra: 'stripped' }, HttpStatus.ACCEPTED),
+                    routekitResponse(
+                        { ok: 'accepted', extra: 'stripped' },
+                        { status: HttpStatus.ACCEPTED },
+                    ),
             }),
         })
 
@@ -257,7 +260,7 @@ describe(valibotPartial.name, () => {
                 },
             },
             validateResponse: false,
-            handler: () => jsonResponse({ id: '1', name: 'Ada' }),
+            handler: () => ok({ id: '1', name: 'Ada' }),
         })
 
         expect(typeof partial.handler).toBe('function')
@@ -288,7 +291,7 @@ describe(valibotPartial.name, () => {
                 },
             },
             validateResponse: false,
-            handler: ({ path }) => jsonResponse({ id: path.id }),
+            handler: ({ path }) => ok({ id: path.id }),
         })
 
         expect(partial.schema?.request?.path).toEqual({
@@ -320,7 +323,7 @@ describe(valibotRoute.name, () => {
                 },
             },
             validateResponse: false,
-            handler: ({ path }) => jsonResponse({ id: path.id }),
+            handler: ({ path }) => ok({ id: path.id }),
         })
 
         expect(route.path).toBe('/users/:id')
@@ -345,7 +348,7 @@ describe(valibotRoute.name, () => {
                     },
                 },
                 validateResponse: false,
-                handler: () => jsonResponse({ id: '1' }),
+                handler: () => ok({ id: '1' }),
             })
 
             valibotRoute({
@@ -358,7 +361,7 @@ describe(valibotRoute.name, () => {
                     },
                 },
                 validateResponse: false,
-                handler: () => jsonResponse({ id: '1' }),
+                handler: () => ok({ id: '1' }),
             })
         })
     })
@@ -375,7 +378,7 @@ describe(valibotRoute.name, () => {
                 },
                 validateResponse: false,
                 // @ts-expect-error Valibot handlers expose validated path values on path.
-                handler: ({ pathParams }) => jsonResponse({ id: pathParams.id }),
+                handler: ({ pathParams }) => ok({ id: pathParams.id }),
             })
         })
     })
@@ -406,7 +409,7 @@ describe(withValibot.name, () => {
                     },
                 },
                 validateResponse: true,
-                handler: ({ path, body }) => jsonResponse({ id: path.id, name: body.name }),
+                handler: ({ path, body }) => ok({ id: path.id, name: body.name }),
             }),
         )
 
@@ -510,7 +513,7 @@ describe(createValibotRoutes.name, () => {
                     },
                 },
             },
-            handler: () => jsonResponse({ ok: true }),
+            handler: () => ok({ ok: true }),
         })
         expectType<Route<object>>(route)
 
@@ -535,7 +538,7 @@ describe(createValibotRoutes.name, () => {
                 validateResponse: false,
                 handler: ({ path }) => {
                     expectType<{ id: string }>(path)
-                    return jsonResponse({ id: path.id })
+                    return ok({ id: path.id })
                 },
             })
             expectType<RouteOptions<object>>(options)
@@ -549,7 +552,7 @@ describe(createValibotRoutes.name, () => {
                     },
                 },
                 validateResponse: false,
-                handler: ({ path }) => jsonResponse({ id: path.id }),
+                handler: ({ path }) => ok({ id: path.id }),
             })
             expectType<Route<object>>(route)
 
@@ -561,7 +564,7 @@ describe(createValibotRoutes.name, () => {
                     },
                 },
                 validateResponse: false,
-                handler: () => jsonResponse({ id: '1' }),
+                handler: () => ok({ id: '1' }),
             })
 
             valibotRouteBuilder({
@@ -572,7 +575,7 @@ describe(createValibotRoutes.name, () => {
                 },
                 validateResponse: false,
                 // @ts-expect-error Valibot route builders expose validated path values on path.
-                handler: ({ pathParams }) => jsonResponse({ id: pathParams.id }),
+                handler: ({ pathParams }) => ok({ id: pathParams.id }),
             })
         })
     })

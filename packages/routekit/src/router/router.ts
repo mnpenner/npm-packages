@@ -1,13 +1,14 @@
-import { HttpMethod, HttpStatus } from '@mpen/http'
+import { CommonHeaders, HttpMethod, HttpStatus, StatusText } from '@mpen/http'
 import type { SimpleServerInterface } from './UniversalServerInterface'
 import { joinPrefixPathname, stripPrefixPathname } from './pathname'
 import { normalizeRoute } from './route-normalize'
-import { mediaTypeMatches, parseMediaType } from './lib/media-type'
+import { mediaTypeMatches, parseAcceptHeader, parseMediaType } from './lib/media-type'
 import type {
     AnyContext,
     ContextMiddleware,
     Handler,
     HandlerBody,
+    HandlerFinalResult,
     HandlerResult,
     HandlerContext,
     HandlerYield,
@@ -16,9 +17,25 @@ import type {
     RequestContext,
     Route,
     RouteOptions,
+    RouterOptions,
 } from './types'
-import { simpleStatus } from './response/simple'
-import type { RouterBodyInit, RouterHeadersInit } from './fetch-types'
+import {
+    isChunkDirective,
+    isHeadersDirective,
+    isHeadDirective,
+    isResponseBodyInit,
+    isRoutekitBody,
+    isRoutekitResponse,
+    isStatusDirective,
+    isStreamDirective,
+    jsonSerializer,
+    response as routekitResponse,
+    text,
+    type BodySerializer,
+    type RoutekitResponse,
+    type StreamFramer,
+} from './response/simple'
+import type { RouterBodyInit } from './fetch-types'
 
 type RouteEntry =
     | { kind: 'route'; route: NormalizedRoute<any> }
@@ -77,6 +94,7 @@ function isHandler<Ctx extends object>(input: MethodRouteInput<Ctx>): input is H
 export class Router<Ctx extends object = AnyContext> implements SimpleServerInterface {
     private _entries: RouteEntry[] = []
     private _middleware: ContextMiddleware<any, any>[] = []
+    private _serializers: BodySerializer[]
     private _notFoundHandler?: Handler<any, Ctx>
     private _methodNotAllowedHandler?: Handler<any, Ctx>
     private _notAcceptableHandler?: Handler<any, Ctx>
@@ -84,8 +102,12 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
 
     /**
      * Create a new router instance.
+     *
+     * @param options - Router configuration.
      */
-    constructor() {}
+    constructor(options: RouterOptions = {}) {
+        this._serializers = options.serializers?.slice() ?? [jsonSerializer()]
+    }
 
     /**
      * Register a handler for requests that do not match any route.
@@ -220,7 +242,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
     ): Router<any> {
         const list = normalizeMiddlewareList(middleware)
         if (router) {
-            const group = new Router<Ctx>().use(list)
+            const group = new Router<Ctx>({ serializers: this._serializers }).use(list)
             group.mount(router)
             this._entries.push({ kind: 'router', router: group })
             return this
@@ -270,7 +292,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         configure: (router: Router<any>) => void,
     ): this {
         const list = normalizeMiddlewareList(middleware)
-        const group = new Router<Ctx>().use(list)
+        const group = new Router<Ctx>({ serializers: this._serializers }).use(list)
         configure(group)
         this._entries.push({ kind: 'router', router: group })
         return this
@@ -612,12 +634,126 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
             if (response) return response
             return new Response(null, { status: HttpStatus.CLIENT_CLOSED_REQUEST })
         }
-        if (this._isBodyChunk(result) || result instanceof ReadableStream) {
-            return new Response(this._toResponseBody(result))
-        }
-        throw new TypeError(
-            'Handler returned a non-Response value that was not converted by middleware',
+        return await this._finalizeResult(result, request)
+    }
+
+    private _statusResponse(status: HttpStatus, request?: Request): Response {
+        const result = text(StatusText[status] ?? `HTTP Status ${status}`, { status })
+        return new Response(
+            request?.method.toUpperCase() === HttpMethod.HEAD ? null : (result.body as string),
+            {
+                status,
+                headers: result.headers,
+            },
         )
+    }
+
+    private async _finalizeResult(result: HandlerFinalResult, request: Request): Promise<Response> {
+        if (result instanceof Response) {
+            return result
+        }
+        if (this._isAsyncGenerator(result)) {
+            const response = await this._responseFromGenerator(result, request)
+            if (response) return response
+            return new Response(null, { status: HttpStatus.CLIENT_CLOSED_REQUEST })
+        }
+        if (isRoutekitResponse(result)) {
+            return await this._responseFromRoutekitResponse(result, request)
+        }
+        if (isRoutekitBody(result)) {
+            return await this._responseFromRoutekitResponse(routekitResponse(result.value), request)
+        }
+        if (isResponseBodyInit(result)) {
+            return new Response(this._toResponseBody(result), {
+                status: HttpStatus.OK,
+            })
+        }
+        return await this._responseFromRoutekitResponse(routekitResponse(result), request)
+    }
+
+    private async _responseFromRoutekitResponse(
+        result: RoutekitResponse,
+        request: Request,
+    ): Promise<Response> {
+        const isHead = request.method.toUpperCase() === HttpMethod.HEAD
+        const headers = new Headers(result.headers)
+        const status = result.status
+
+        if (headers.has(CommonHeaders.CONTENT_TYPE)) {
+            if (!isResponseBodyInit(result.body)) {
+                throw new TypeError(
+                    'Routekit response has Content-Type set, so body must be a native Response body.',
+                )
+            }
+            return new Response(isHead ? null : this._toResponseBody(result.body), {
+                status,
+                headers,
+            })
+        }
+
+        if (result.body === undefined) {
+            return new Response(null, { status, headers })
+        }
+
+        const serializer = this._selectSerializer(result.body, request)
+        if (!serializer) {
+            return this._statusResponse(HttpStatus.NOT_ACCEPTABLE, request)
+        }
+        headers.set(CommonHeaders.CONTENT_TYPE, serializer.mediaType)
+        this._appendVary(headers, CommonHeaders.ACCEPT)
+
+        return new Response(isHead ? null : await serializer.serializer.serialize(result.body), {
+            status,
+            headers,
+        })
+    }
+
+    private _appendVary(headers: Headers, value: string): void {
+        const current = headers.get(CommonHeaders.VARY)
+        if (!current) {
+            headers.set(CommonHeaders.VARY, value)
+            return
+        }
+        const entries = current.split(',').map((entry) => entry.trim().toLowerCase())
+        if (entries.includes(value.toLowerCase())) return
+        headers.set(CommonHeaders.VARY, `${current}, ${value}`)
+    }
+
+    private _selectSerializer(
+        body: unknown,
+        request: Request,
+    ): { serializer: BodySerializer; mediaType: string } | null {
+        const accepted = parseAcceptHeader(request.headers.get(CommonHeaders.ACCEPT) ?? '*/*')
+        const ranges = accepted.length ? accepted : parseAcceptHeader('*/*')
+        for (const accept of ranges) {
+            if (accept.q === 0) continue
+            for (const serializer of this._serializers) {
+                if (!serializer.canSerialize(body)) continue
+                for (const mediaType of serializer.mediaTypes) {
+                    if (this._mediaRangeAccepts(accept.type, mediaType)) {
+                        return { serializer, mediaType }
+                    }
+                }
+            }
+        }
+        return null
+    }
+
+    private _mediaRangeAccepts(range: string, mediaType: string): boolean {
+        const normalizedRange = range.toLowerCase()
+        const produced = parseMediaType(mediaType)
+        if (!produced) return false
+        const normalizedProduced = produced.type.toLowerCase()
+        if (normalizedRange === '*/*') return true
+        if (normalizedRange === normalizedProduced) return true
+        const [rangeType, rangeSubtype] = normalizedRange.split('/', 2)
+        const [producedType, producedSubtype] = normalizedProduced.split('/', 2)
+        if (!rangeType || !rangeSubtype || !producedType || !producedSubtype) return false
+        if (rangeSubtype === '*' && rangeType === producedType) return true
+        if (rangeSubtype.startsWith('*+')) {
+            return rangeType === producedType && producedSubtype.endsWith(rangeSubtype.slice(1))
+        }
+        return false
     }
 
     private async _tryCustomHandler(
@@ -630,7 +766,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         try {
             return await this._executeHandler(handler, [], ctx, router, request)
         } catch {
-            return simpleStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+            return this._statusResponse(HttpStatus.INTERNAL_SERVER_ERROR, request)
         }
     }
 
@@ -638,7 +774,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         const ctx = this._buildHandlerContext(request, url, {})
         const custom = await this._tryCustomHandler(this._notFoundHandler, ctx, this, request)
         if (custom) return custom
-        return simpleStatus(HttpStatus.NOT_FOUND)
+        return this._statusResponse(HttpStatus.NOT_FOUND, request)
     }
 
     private async _handleMethodNotAllowed(request: Request, url: URL): Promise<Response> {
@@ -650,7 +786,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
             request,
         )
         if (custom) return custom
-        return simpleStatus(HttpStatus.METHOD_NOT_ALLOWED)
+        return this._statusResponse(HttpStatus.METHOD_NOT_ALLOWED, request)
     }
 
     private async _handleInternalError(
@@ -665,7 +801,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
             request,
         )
         if (custom) return custom
-        return simpleStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+        return this._statusResponse(HttpStatus.INTERNAL_SERVER_ERROR, request)
     }
 
     private async _handleNotAcceptable(
@@ -685,7 +821,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
             request,
         )
         if (custom) return custom
-        return simpleStatus(HttpStatus.NOT_ACCEPTABLE)
+        return this._statusResponse(HttpStatus.NOT_ACCEPTABLE, request)
     }
 
     private async _handleMatch(found: MatchResult, request: Request, url: URL): Promise<Response> {
@@ -843,15 +979,17 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         return dispatch(0)
     }
 
-    private _isAsyncGenerator(value: unknown): value is AsyncGenerator<HandlerYield, HandlerBody> {
+    private _isAsyncGenerator(
+        value: unknown,
+    ): value is AsyncGenerator<HandlerYield, HandlerFinalResult> {
         return !!value && typeof (value as AsyncGenerator)[Symbol.asyncIterator] === 'function'
     }
 
     private async _closeGenerator(
-        generator: AsyncGenerator<HandlerYield, HandlerBody>,
+        generator: AsyncGenerator<HandlerYield, HandlerFinalResult>,
     ): Promise<void> {
         try {
-            await generator.return?.(undefined as unknown as HandlerBody)
+            await generator.return?.(undefined as unknown as HandlerFinalResult)
         } catch {
             // Ignore generator errors during teardown.
         }
@@ -859,40 +997,59 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
 
     private _toResponseBody(body: HandlerBody | null): RouterBodyInit | null {
         if (body == null) return null
-        if (body instanceof ReadableStream) return body
-        if (typeof body === 'string') return body
-        if (body instanceof Uint8Array) {
-            const copy = new Uint8Array(body.byteLength)
-            copy.set(body)
-            return copy.buffer
-        }
-        return new Uint8Array(body).buffer
+        return body
     }
 
-    private _isBodyChunk(value: unknown): value is Uint8Array | string {
+    private _isBodyChunk(value: unknown): value is Uint8Array | Buffer | string {
         return typeof value === 'string' || value instanceof Uint8Array
     }
 
-    private _toBodyChunk(value: Uint8Array | string): Uint8Array {
+    private _toBodyChunk(value: Uint8Array | Buffer | string): Uint8Array {
         if (typeof value === 'string') {
             return new TextEncoder().encode(value)
         }
         return value
     }
 
+    private _mergeHeaders(target: Headers, source: Headers): void {
+        source.forEach((value, key) => target.set(key, value))
+    }
+
+    private async _frameChunk(
+        value: unknown,
+        framer: StreamFramer | undefined,
+    ): Promise<Uint8Array> {
+        if (!framer) {
+            if (!this._isBodyChunk(value)) {
+                throw new TypeError(
+                    'Generator yielded a structured chunk without stream(). Use stream(sseFramer()) or yield raw string/bytes chunks.',
+                )
+            }
+            return this._toBodyChunk(value)
+        }
+        if (framer.canFrame && !framer.canFrame(value)) {
+            throw new TypeError('Stream framer cannot encode the yielded chunk.')
+        }
+        return this._toBodyChunk(await framer.frame(value as never))
+    }
+
     private async _responseFromGenerator(
-        generator: AsyncGenerator<HandlerYield, HandlerBody>,
+        generator: AsyncGenerator<HandlerYield, HandlerFinalResult>,
         request: Request,
     ): Promise<Response | null> {
         const isHead = request.method.toUpperCase() === HttpMethod.HEAD
-        let status: number | undefined
-        let headers: Headers | undefined
+        let status: number | HttpStatus | undefined
+        let statusSet = false
+        const headers = new Headers()
+        let framer: StreamFramer | undefined
         let bodyStream: ReadableStream<Uint8Array> | undefined
         let bodyController: ReadableStreamDefaultController<Uint8Array> | undefined
         let responseResolved = false
         let resolveResponse: ((value: Response | null) => void) | undefined
-        const responsePromise = new Promise<Response | null>((resolve) => {
+        let rejectResponse: ((reason?: unknown) => void) | undefined
+        const responsePromise = new Promise<Response | null>((resolve, reject) => {
             resolveResponse = resolve
+            rejectResponse = reject
         })
         let abortListener: (() => void) | undefined
         const abortSignal = request.signal
@@ -918,9 +1075,18 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
             resolveResponse?.(response)
         }
 
+        const rejectResponseOnce = (error: unknown) => {
+            if (responseResolved) {
+                bodyController?.error?.(error)
+                return
+            }
+            responseResolved = true
+            rejectResponse?.(error)
+        }
+
         const buildResponseInit = (): ResponseInit => ({
-            ...(status !== undefined ? { status } : {}),
-            ...(headers ? { headers } : {}),
+            status: status ?? HttpStatus.OK,
+            headers,
         })
 
         const ensureStreamResponse = () => {
@@ -932,8 +1098,60 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
                     },
                 })
             }
-            if (status === undefined) status = HttpStatus.OK
             resolveResponseOnce(new Response(bodyStream, buildResponseInit()))
+        }
+
+        const setStatus = (value: number | HttpStatus) => {
+            if (bodyStream) {
+                throw new TypeError('Generator cannot set status after streaming has started.')
+            }
+            if (statusSet) {
+                throw new TypeError('Generator response status was already set.')
+            }
+            status = value
+            statusSet = true
+        }
+
+        const mergeHeaders = (value: Headers) => {
+            if (bodyStream) {
+                throw new TypeError('Generator cannot set headers after streaming has started.')
+            }
+            this._mergeHeaders(headers, value)
+        }
+
+        const finalizeReturnedValue = async (value: HandlerFinalResult) => {
+            if (isRoutekitResponse(value)) {
+                if (statusSet) {
+                    throw new TypeError(
+                        'Generator returned a Routekit response after status was already set.',
+                    )
+                }
+                const mergedHeaders = new Headers(headers)
+                this._mergeHeaders(mergedHeaders, value.headers)
+                return await this._responseFromRoutekitResponse(
+                    routekitResponse(value.body, {
+                        status: value.status,
+                        headers: mergedHeaders,
+                    }),
+                    request,
+                )
+            }
+            if (value instanceof Response) {
+                if (statusSet || [...headers.keys()].length > 0) {
+                    throw new TypeError(
+                        'Generator returned a native Response after response metadata was already set.',
+                    )
+                }
+                return value
+            }
+            const returnedBody = isRoutekitBody(value) ? value.value : value
+            return await this._responseFromRoutekitResponse(
+                routekitResponse(returnedBody, {
+                    status: status ?? HttpStatus.OK,
+                    headers,
+                }),
+                request,
+            )
         }
 
         try {
@@ -952,9 +1170,15 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
 
                         if (next.done) {
                             if (bodyStream) {
-                                if (!isHead && next.value != null) {
-                                    if (this._isBodyChunk(next.value)) {
-                                        bodyController?.enqueue(this._toBodyChunk(next.value))
+                                if (next.value !== undefined) {
+                                    throw new TypeError(
+                                        'Generator cannot return a final body after yielding chunks.',
+                                    )
+                                }
+                                if (framer?.close && !isHead) {
+                                    const finalChunk = await framer.close()
+                                    if (finalChunk !== undefined) {
+                                        bodyController?.enqueue(this._toBodyChunk(finalChunk))
                                     }
                                 }
                                 bodyController?.close()
@@ -966,76 +1190,75 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
                                 return
                             }
 
-                            const body = isHead ? null : (next.value ?? null)
-                            resolveResponseOnce(
-                                new Response(this._toResponseBody(body), buildResponseInit()),
-                            )
+                            resolveResponseOnce(await finalizeReturnedValue(next.value))
                             return
                         }
 
                         const yielded = next.value
-                        if (typeof yielded === 'number') {
-                            status = yielded
+                        if (yielded === undefined) {
                             continue
                         }
 
-                        if (yielded instanceof Headers) {
-                            headers = yielded
-                            if (status === undefined) {
-                                status = HttpStatus.OK
-                            }
-                            if (isHead && status !== undefined && headers) {
+                        if (isStatusDirective(yielded)) {
+                            setStatus(yielded.status)
+                            continue
+                        }
+
+                        if (isHeadersDirective(yielded)) {
+                            mergeHeaders(yielded.headers)
+                            if (isHead) {
                                 await this._closeGenerator(generator)
-                                resolveResponseOnce(new Response(null, { status, headers }))
+                                resolveResponseOnce(new Response(null, buildResponseInit()))
                                 return
                             }
-                            if (!isHead) {
-                                ensureStreamResponse()
+                            continue
+                        }
+
+                        if (isHeadDirective(yielded)) {
+                            setStatus(yielded.status)
+                            mergeHeaders(yielded.headers)
+                            if (isHead) {
+                                await this._closeGenerator(generator)
+                                resolveResponseOnce(new Response(null, buildResponseInit()))
+                                return
                             }
                             continue
                         }
 
-                        if (this._isBodyChunk(yielded)) {
+                        if (isStreamDirective(yielded)) {
+                            if (bodyStream) {
+                                throw new TypeError(
+                                    'Generator cannot select a stream framer after streaming has started.',
+                                )
+                            }
+                            framer = yielded.framer
+                            mergeHeaders(yielded.headers)
+                            headers.set(CommonHeaders.CONTENT_TYPE, framer.contentType)
                             if (isHead) {
-                                continue
+                                await this._closeGenerator(generator)
+                                resolveResponseOnce(new Response(null, buildResponseInit()))
+                                return
+                            }
+                            continue
+                        }
+
+                        if (isChunkDirective(yielded)) {
+                            if (isHead) {
+                                await this._closeGenerator(generator)
+                                resolveResponseOnce(new Response(null, buildResponseInit()))
+                                return
                             }
                             ensureStreamResponse()
-                            bodyController?.enqueue(this._toBodyChunk(yielded))
+                            bodyController?.enqueue(await this._frameChunk(yielded.value, framer))
                             continue
                         }
 
-                        if (yielded && typeof yielded === 'object') {
-                            const yieldedStatus =
-                                'status' in yielded
-                                    ? (yielded as { status?: number | undefined }).status
-                                    : undefined
-                            const yieldedHeaders =
-                                'headers' in yielded
-                                    ? (yielded as { headers?: RouterHeadersInit | undefined })
-                                          .headers
-                                    : undefined
-                            if (yieldedStatus !== undefined) {
-                                status = yieldedStatus
-                            }
-                            if (yieldedHeaders !== undefined) {
-                                headers = new Headers(yieldedHeaders)
-                                if (status === undefined) {
-                                    status = HttpStatus.OK
-                                }
-                                if (isHead && status !== undefined && headers) {
-                                    await this._closeGenerator(generator)
-                                    resolveResponseOnce(new Response(null, { status, headers }))
-                                    return
-                                }
-                                if (!isHead) {
-                                    ensureStreamResponse()
-                                }
-                            }
-                        }
+                        throw new TypeError(
+                            'Generator yielded an unsupported value. Use status(), headers(), head(), stream(), or chunk().',
+                        )
                     }
                 } catch (err) {
-                    bodyController?.error?.(err)
-                    resolveResponseOnce(null)
+                    rejectResponseOnce(err)
                 }
             }
 

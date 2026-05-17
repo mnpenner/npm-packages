@@ -1,4 +1,4 @@
-import { Router, jsonResponse } from '@mpen/routekit'
+import { empty, head as responseHead, ok, Router, text } from '@mpen/routekit'
 import { withZod } from '@mpen/routekit/routes'
 import { z } from 'zod'
 import { CommonHeaders, CommonContentTypes, HttpStatus } from '@mpen/http'
@@ -16,7 +16,7 @@ router.get(
                 },
             },
         },
-        handler: () => jsonResponse({ message: 'Hello World!' }),
+        handler: () => ok({ message: 'Hello World!' }),
     }),
 )
 
@@ -31,7 +31,7 @@ router.get(
                 },
             },
         },
-        handler: () => jsonResponse({ message: 'Hello World!' }),
+        handler: () => ok({ message: 'Hello World!' }),
     }),
 )
 
@@ -46,7 +46,7 @@ router.post(
                 },
             },
         },
-        handler: () => jsonResponse({ message: 'Hello World!' }),
+        handler: () => ok({ message: 'Hello World!' }),
     }),
 )
 
@@ -61,7 +61,7 @@ router.post(
                 },
             },
         },
-        handler: () => jsonResponse({ message: 'Hello World!' }),
+        handler: () => ok({ message: 'Hello World!' }),
     }),
 )
 
@@ -84,7 +84,7 @@ router.post(
             },
         },
         handler: ({ params }) =>
-            jsonResponse({
+            ok({
                 id: params.path.id,
                 title: params.body.title,
                 author: params.body.author,
@@ -103,7 +103,7 @@ router.get(
                 },
             },
         },
-        handler: () => jsonResponse({ message: 'Hello Json Helper!' }),
+        handler: () => ok({ message: 'Hello Json Helper!' }),
     }),
 )
 
@@ -121,21 +121,21 @@ router.post(
                 },
             },
         },
-        handler: ({ params }) => jsonResponse({ ok: true, tag: params.body.tag }),
+        handler: ({ params }) => ok({ ok: true, tag: params.body.tag }),
     }),
 )
 
-router.get('/health', () => new Response('ok'))
+router.get('/health', () => text('ok'))
 
-router.head('/health', () => new Response(null))
+router.head('/health', () => empty(HttpStatus.OK))
 
-router.post('/submit', () => new Response('submitted'))
+router.post('/submit', () => text('submitted'))
 
-router.put('/items/:id', () => new Response('updated'))
+router.put('/items/:id', () => text('updated'))
 
-router.delete('/items/:id', () => new Response('deleted'))
+router.delete('/items/:id', () => text('deleted'))
 
-router.patch('/items/:id', () => new Response('patched'))
+router.patch('/items/:id', () => text('patched'))
 
 function sleep(ms: number): Promise<void> {
     return new Promise<void>((resolve) => setTimeout(resolve, ms))
@@ -145,9 +145,7 @@ router.add({
     path: '/gen',
     handler: async function* () {
         // console.log('start')
-        yield HttpStatus.OK
-        // console.log('ok yielded')
-        yield new Headers({
+        yield responseHead(HttpStatus.OK, {
             'x-foo': 'bar',
             'x-bar': 'baz',
             [CommonHeaders.CONTENT_TYPE]: CommonContentTypes.PLAIN_TEXT,
@@ -156,7 +154,7 @@ router.add({
         await sleep(1000)
         yield
         // console.log('sleep done')
-        return new TextEncoder().encode('herro')
+        return 'herro'
     },
 })
 

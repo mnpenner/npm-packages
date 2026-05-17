@@ -18,6 +18,7 @@ export type {
     RouteOptions,
     RoutePath,
     RouteSchema,
+    RouterOptions,
 } from './router/types'
 export type {
     UniversalFetchResult,
