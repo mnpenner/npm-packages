@@ -1,7 +1,7 @@
 {
   "name": "merge-attrs",
   "description": "Merge HTML attributes",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "type": "module",
   "sideEffects": false,
   "files": [
@@ -47,7 +47,8 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "publishHash": {
-    "hgChangesetId": "d98e94266bbc+",
-    "sha256": "c3fee68884e2784d798f31488d3e403a01b4547ac326372e248bfd5c5e57ad0b"
+    "buildDate": "2026-05-16T17:49:09.470-07:00",
+    "hgChangesetId": "3f927ff60e36+",
+    "sha256": "3231101f304e59327b87609c2e368cb4bc98bef4bbaf15a5f9b110e05136e563"
   }
 }

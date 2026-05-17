@@ -1,7 +1,7 @@
 {
   "name": "js-serialize",
   "description": "Serialize JavaScript values beyond JSON.stringify.",
-  "version": "0.7.10",
+  "version": "0.7.11",
   "author": "Mark Penner <npm@mpen.ca>",
   "dependencies": {
     "@mpen/is-type": "workspace:*"
@@ -44,7 +44,8 @@
     "access": "public"
   },
   "publishHash": {
-    "hgChangesetId": "d98e94266bbc+",
-    "sha256": "2bd1a42d4b59d42a96f17500cdcee9d3fca113dfcb94ed9be5f5eb072f3612de"
+    "buildDate": "2026-05-16T17:48:42.984-07:00",
+    "hgChangesetId": "3f927ff60e36+",
+    "sha256": "b2a43a01d3785626cae5f32622d22162c696407cc361b146fb8f1355f38dd367"
   }
 }

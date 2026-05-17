@@ -48,11 +48,11 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "inlinedDependencies": {
-    "path-to-regexp": "8.4.2",
-    "process": "0.11.10"
+    "path-to-regexp": "8.4.2"
   },
   "publishHash": {
-    "hgChangesetId": "d98e94266bbc+",
-    "sha256": "4bb032e1067fa3e8c6332486e6f71ff1b0236d6395dad1e106fecaeb129ecf64"
+    "buildDate": "2026-05-16T17:49:55.958-07:00",
+    "hgChangesetId": "3f927ff60e36+",
+    "sha256": "4122e23d8a9d0b4e994db589e634cada3389a9b594277f01280a2a54120985fd"
   }
 }

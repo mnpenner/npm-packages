@@ -36,8 +36,7 @@
     "example:browser": "bun examples/browser/server.ts",
     "example:json": "bun examples/json-logger.ts",
     "example:terminal": "bun examples/terminal-logger.ts",
-    "test": "bun test",
-    "prepublishOnly": "bun run build && bun run test"
+    "test": "bun test"
   },
   "publishConfig": {
     "access": "public"
