@@ -102,7 +102,6 @@ interface TableLayout {
  * import { TableDensity, type TableOptions } from '@mpen/logger/terminal'
  *
  * const table: TableOptions = {
- *     density: TableDensity.BALANCED,
  *     showIndex: true,
  * }
  * ```
@@ -110,6 +109,8 @@ interface TableLayout {
 export interface TableOptions {
     /**
      * Table density to use.
+     * @defaultValue TableDensity.AUTO
+     * @experimental Better to leave the default. Options may change over time.
      */
     density?: TableDensity
     /**
@@ -117,11 +118,13 @@ export interface TableOptions {
      */
     inspect?: TableInspectOptions
     /**
+     * Show the array index as the first column.
      * @defaultValue false
      */
     showIndex?: boolean
     /**
      * @defaultValue false
+     * @experimental May allow choosing BG color or theming.
      */
     striped?: boolean
 }
