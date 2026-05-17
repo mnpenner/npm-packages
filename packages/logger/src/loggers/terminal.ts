@@ -227,7 +227,7 @@ export class TerminalLogger implements Logger {
                     return cell.lines
                 }
 
-                return this.joinRenderedLineGroups(result, cell.lines, '  ')
+                return this.appendRenderedLineGroup(result, cell.lines, '  ')
             }, null)
 
         return { lines: lines ?? [this.createRenderedLine('')] }
@@ -301,6 +301,32 @@ export class TerminalLogger implements Logger {
         return lines
     }
 
+    private appendRenderedLineGroup(
+        left: RenderedLine[],
+        right: RenderedLine[],
+        separator: string,
+    ): RenderedLine[] {
+        const lastLeft = left.at(-1)
+        const [firstRight, ...remainingRight] = right
+
+        if (lastLeft == null) {
+            return right
+        }
+
+        if (firstRight == null) {
+            return left
+        }
+
+        return [
+            ...left.slice(0, -1),
+            this.joinRenderedLines(
+                this.joinRenderedLines(lastLeft, this.createRenderedLine(separator)),
+                firstRight,
+            ),
+            ...remainingRight,
+        ]
+    }
+
     private renderTable(
         headers: string[],
         renderedRows: RenderedCell[][],
@@ -346,7 +372,7 @@ export class TerminalLogger implements Logger {
         const valueWidth = Math.max(1, maxWidth - labelWidth - 4)
         const lines = renderedRows.flatMap((row, rowIndex) => {
             return this.createVerticalRecordLines(labels, row, labelWidth, valueWidth).map((line) =>
-                this.stripeTableRow(line, rowIndex),
+                this.stripeVerticalTableRow(line, rowIndex),
             )
         })
 
@@ -1129,7 +1155,7 @@ export class TerminalLogger implements Logger {
         const entries = visibleKeys.map((key, index) => {
             const label = this.createRenderedLine(
                 `${this.formatPropertyKey(key)}: `,
-                this._pc.magentaBright(`${this.formatPropertyKey(key)}: `),
+                this._pc.white(`${this.formatPropertyKey(key)}: `),
             )
             const lines = this.inspectPrettyValue(
                 (value as Record<PropertyKey, unknown>)[key],
@@ -1203,7 +1229,10 @@ export class TerminalLogger implements Logger {
         const keys = Object.keys(value)
         const entries = keys.slice(0, this._tblInspect.maxObjectKeys).map((key) => {
             return this.joinRenderedLines(
-                this.createRenderedLine(`${this.formatObjectKey(key)}:`),
+                this.createRenderedLine(
+                    `${this.formatObjectKey(key)}:`,
+                    this._pc.white(`${this.formatObjectKey(key)}:`),
+                ),
                 this.inspectValue(value[key], depth + 1),
             )
         })
@@ -1579,6 +1608,20 @@ export class TerminalLogger implements Logger {
         }
 
         return this._pc.bgRgb(24, 24, 24)(line)
+    }
+
+    private stripeVerticalTableRow(line: string, index: number): string {
+        if (!this._tblStriped || index % 2 === 0) {
+            return line
+        }
+
+        const colonIndex = line.indexOf(':')
+
+        if (colonIndex === -1) {
+            return this.stripeTableRow(line, index)
+        }
+
+        return this._pc.bgRgb(24, 24, 24)(line.slice(0, colonIndex + 1)) + line.slice(colonIndex + 1)
     }
 
     private formatHeaderRow(line: string, density: TableDensity): string {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { TerminalLogger } from './terminal.ts'
+import { TableDensity, TerminalLogger } from './terminal.ts'
 
 describe(TerminalLogger.name, () => {
     it('renders plain log values with colorized pretty inspection', () => {
@@ -17,7 +17,7 @@ describe(TerminalLogger.name, () => {
             nested: { value: 2 },
             list: [1, 'two', circular],
             [Symbol.for('source')]: 'test',
-        })
+        }, [3.14, 159n, Symbol('sym')])
 
         const output = lines.join('')
 
@@ -29,6 +29,10 @@ describe(TerminalLogger.name, () => {
         expect(output).toContain('"two"')
         expect(output).toContain('[Circular]')
         expect(output).toContain('[Symbol(source)]: "test"')
+        expect(output).toContain('}  [')
+        expect(output).toContain('3.14')
+        expect(output).toContain('159n')
+        expect(output).toContain('Symbol(sym)')
     })
 
     it('renders Error values with stack, cause, and aggregate errors', () => {
@@ -81,5 +85,24 @@ describe(TerminalLogger.name, () => {
         expect(output).toContain('beta │ null')
         expect(output).toContain('gamma│   23')
         expect(output).toContain('delta│')
+    })
+
+    it('stripes only vertical table labels', () => {
+        const lines: string[] = []
+        const logger = new TerminalLogger({
+            color: true,
+            table: { density: TableDensity.VERTICAL, striped: true },
+            write: (line) => lines.push(line),
+        })
+
+        logger.table([
+            { name: 'alpha', count: 1 },
+            { name: 'beta', count: 2 },
+        ])
+
+        const output = lines.join('')
+
+        expect(output).toContain('\x1B[48;2;24;24;24m┌  name:\x1B[49m beta')
+        expect(output).toContain('\x1B[48;2;24;24;24m└ count:\x1B[49m \x1B[94m2\x1B[39m')
     })
 })
