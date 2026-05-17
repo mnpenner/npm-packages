@@ -14,7 +14,7 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@mpen/http-helpers": "workspace:*",
+    "@mpen/http": "workspace:*",
     "@mpen/routekit": "workspace:*",
     "neverject": "workspace:*",
     "zod": "^4.1.13"

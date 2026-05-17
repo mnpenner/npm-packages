@@ -1,4 +1,4 @@
-import { HttpStatus } from '@mpen/http-helpers'
+import { HttpStatus } from '@mpen/http'
 import { simpleStatus } from '../response/simple'
 import type { AnyContext, HandlerResult, MaybePromise, Middleware, RequestContext } from '../types'
 

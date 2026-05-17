@@ -1,4 +1,4 @@
-import { HttpMethod, HttpStatus } from '@mpen/http-helpers'
+import { HttpMethod, HttpStatus } from '@mpen/http'
 import type { SimpleServerInterface } from './UniversalServerInterface'
 import { joinPrefixPathname, stripPrefixPathname } from './pathname'
 import { normalizeRoute } from './route-normalize'

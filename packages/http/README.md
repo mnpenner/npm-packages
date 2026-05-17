@@ -1,18 +1,18 @@
-# @mpen/http-helpers
+# @mpen/http
 
 Small TypeScript constants for HTTP methods, status codes, status text, common headers, and common content types.
 
 ## Installation
 
 ```bash
-bun add @mpen/http-helpers
+bun add @mpen/http
 ```
 
 ## Quick Start
 
 ```ts
-import { HttpMethod, HttpStatus, StatusText } from '@mpen/http-helpers'
-import { ContentType, HeaderName } from '@mpen/http-helpers/common'
+import { HttpMethod, HttpStatus, StatusText } from '@mpen/http'
+import { ContentType, HeaderName } from '@mpen/http/common'
 
 const response = new Response(StatusText[HttpStatus.CREATED], {
     status: HttpStatus.CREATED,
@@ -27,10 +27,10 @@ console.log(HttpMethod.POST)
 
 ## Headers and Content Types
 
-Import common header names, content types, and media types directly from `@mpen/http-helpers/common`.
+Import common header names, content types, and media types directly from `@mpen/http/common`.
 
 ```ts
-import { ContentType, HeaderName, MediaType } from '@mpen/http-helpers/common'
+import { ContentType, HeaderName, MediaType } from '@mpen/http/common'
 
 const headers = new Headers({
     [HeaderName.ACCEPT]: MediaType.JSON,

@@ -72,7 +72,7 @@ router.delete('/items/:id', () => new Response('deleted'))
 Or with a full route definition:
 
 ```ts
-import { HttpMethod } from '@mpen/http-helpers'
+import { HttpMethod } from '@mpen/http'
 
 router.add({
     name: 'items.detail',
@@ -189,7 +189,7 @@ Zod helpers validate request input, infer typed `params`, and attach JSON Schema
 to routes for OpenAPI and client generation.
 
 ```ts
-import { HttpStatus } from '@mpen/http-helpers'
+import { HttpStatus } from '@mpen/http'
 import { Router, jsonResponse } from '@mpen/routekit'
 import { withZod } from '@mpen/routekit/routes'
 import { z } from 'zod'
@@ -245,7 +245,7 @@ Request validation failures return a `400` JSON response by default. Override
 Valibot helpers expose the same shape as the Zod helpers:
 
 ```ts
-import { HttpStatus } from '@mpen/http-helpers'
+import { HttpStatus } from '@mpen/http'
 import { jsonResponse } from '@mpen/routekit'
 import { withValibot } from '@mpen/routekit/routes'
 import * as v from 'valibot'

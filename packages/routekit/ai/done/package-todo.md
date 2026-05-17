@@ -1,4 +1,4 @@
-- Split packages/http-helpers/src/http-enums.ts into separate files. one enum per file.
+- Split packages/http/src/http-enums.ts into separate files. one enum per file.
 - Add "bin" (https://docs.npmjs.com/cli/v7/configuring-npm/package-json#bin) for routekit and rerouter (points to the generators)
 - packages/rerouter/src/draft is what I had in mind for a react/client-side router. Polish that up and move it out of the draft/ dir
 - I wanted to do something like experimental/url-pattern/path-to-regexp.ts (which outputs experimental/url-pattern/dist/path-to-regexp.gen.ts) which is similar to packages/routekit/gen-api-client.ts but for packages/rerouter. Get that working. Indent the output properly. Add a similar "Do not modify this file. ..." header

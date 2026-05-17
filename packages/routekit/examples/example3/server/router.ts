@@ -1,4 +1,4 @@
-import { CommonContentTypes, HttpStatus } from '@mpen/http-helpers'
+import { CommonContentTypes, HttpStatus } from '@mpen/http'
 import { Router, type ContextMiddleware } from '@mpen/routekit'
 import { createZodRoutes, ValidationError } from '@mpen/routekit/routes'
 import { z } from 'zod'

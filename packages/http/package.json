@@ -1,14 +1,14 @@
 {
-  "name": "@mpen/http-helpers",
-  "description": "HTTP status, header, and request helper utilities.",
+  "name": "@mpen/http",
+  "description": "Typed HTTP constants for methods, statuses, headers, and media types.",
   "version": "0.1.0",
   "private": false,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mnpenner/npm-packages.git",
-    "directory": "packages/http-helpers"
+    "directory": "packages/http"
   },
-  "homepage": "https://github.com/mnpenner/npm-packages/tree/main/packages/http-helpers",
+  "homepage": "https://github.com/mnpenner/npm-packages/tree/main/packages/http",
   "license": "MIT",
   "author": "Mark Penner <npm@mpen.ca>",
   "packageManager": "bun@1.3.13",

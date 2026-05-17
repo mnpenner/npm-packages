@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bun test
 import { describe, expect, it, mock } from 'bun:test'
-import { HttpMethod, HttpStatus } from '@mpen/http-helpers'
+import { HttpMethod, HttpStatus } from '@mpen/http'
 import { Router } from './router'
 import type { ContextMiddleware, Handler } from './types'
 import { expectType } from '@mpen/ts-types'

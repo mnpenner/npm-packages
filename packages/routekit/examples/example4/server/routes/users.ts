@@ -1,7 +1,7 @@
 import { jsonResponse } from '@mpen/routekit'
 import { valibotRoute } from '../valibot.ts'
 import * as v from 'valibot'
-import { HttpStatus } from '@mpen/http-helpers'
+import { HttpStatus } from '@mpen/http'
 import * as s from '../schemas.ts'
 import { StringInt } from '../schemas.ts'
 

@@ -15,7 +15,7 @@
 
         "paths": {
             "@mpen/base50": ["./packages/base50/src/bundle.ts"],
-            "@mpen/http-helpers": ["./packages/http-helpers/src/index.ts"],
+            "@mpen/http": ["./packages/http/src/index.ts"],
             "@mpen/imut-utils": ["./packages/imut-utils/src/imp/index.ts"],
             "@mpen/is-type": ["./packages/is-type/src/index.ts"],
             "@mpen/jsxhtml": ["./packages/jsxhtml/src/index.ts"],
@@ -48,12 +48,8 @@
             ],
             "@mpen/routekit": ["./packages/routekit/src/index.ts"],
             "@mpen/routekit/client": ["./packages/routekit/src/client/index.ts"],
-            "@mpen/routekit/handlers": [
-                "./packages/routekit/src/router/handlers/index.ts"
-            ],
-            "@mpen/routekit/middleware": [
-                "./packages/routekit/src/router/middleware/index.ts"
-            ],
+            "@mpen/routekit/handlers": ["./packages/routekit/src/router/handlers/index.ts"],
+            "@mpen/routekit/middleware": ["./packages/routekit/src/router/middleware/index.ts"],
             "@mpen/routekit/routes": ["./packages/routekit/src/router/routes/index.ts"],
             "@mpen/routekit-zod-neverject": [
                 "./packages/rerouter/experimental/routekit-zod-neverject/src/index.ts"
@@ -86,7 +82,7 @@
             "yamake": ["./packages/yamake/src/index.ts"],
             "jtilz/node": ["./packages/jtilz/src/index.node.ts"],
             "jtilz/web": ["./packages/jtilz/src/index.web.ts"],
-            "@mpen/http-helpers/common": ["./packages/http-helpers/src/common/index.ts"],
+            "@mpen/http/common": ["./packages/http/src/common/index.ts"],
             "@mpen/jsxhtml/jsx-runtime": ["./packages/jsxhtml/src/jsx-runtime.ts"],
             "@mpen/jsxhtml/jsx-dev-runtime": ["./packages/jsxhtml/src/jsx-dev-runtime.ts"],
             "@mpen/classcat": ["./packages/classcat/classcat.ts"],
@@ -96,14 +92,13 @@
             "@mpen/rerouter/hooks": ["./packages/rerouter/src/hooks/index.ts"],
             "@mpen/imut-utils/fp": ["./packages/imut-utils/src/fp/index.ts"],
             "@mpen/rerouter/bin": ["./packages/rerouter/cli/bin.ts"],
-            "@mpen/rerouter": [
-                "./packages/rerouter/src/index.ts"
-            ],
-            "@mpen/routekit/bin": [
-                "./packages/routekit/src/bin/gen-api-client.ts"
-            ],
+            "@mpen/rerouter": ["./packages/rerouter/src/index.ts"],
+            "@mpen/routekit/bin": ["./packages/routekit/src/bin/gen-api-client.ts"],
             "@mpen/picocolors": [
                 "./packages/picocolors/src/color.ts"
+            ],
+            "@mpen/logger": [
+                "./packages/logger/src/index.ts"
             ]
         }
     },

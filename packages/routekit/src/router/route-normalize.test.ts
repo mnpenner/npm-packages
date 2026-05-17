@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bun test
 import { describe, expect, it } from 'bun:test'
-import { HttpMethod } from '@mpen/http-helpers'
+import { HttpMethod } from '@mpen/http'
 import { normalizeRoute } from './route-normalize'
 
 describe('normalizeRoute', function () {

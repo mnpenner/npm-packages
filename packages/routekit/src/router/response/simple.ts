@@ -1,4 +1,4 @@
-import { CommonHeaders, HttpStatus, CommonContentTypes, StatusText } from '@mpen/http-helpers'
+import { CommonHeaders, HttpStatus, CommonContentTypes, StatusText } from '@mpen/http'
 import type { ResponseWithData } from '../types'
 import { fullWide } from '../lib/format'
 import type { RouterHeadersInit } from '../fetch-types'

@@ -1,4 +1,4 @@
-import { CommonHeaders, HttpStatus, HttpMethod } from '@mpen/http-helpers'
+import { CommonHeaders, HttpStatus, HttpMethod } from '@mpen/http'
 import type {
     AnyContext,
     HandlerBody,

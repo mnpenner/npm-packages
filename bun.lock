@@ -78,8 +78,8 @@
         "typescript-json-schema": "^0.42.0",
       },
     },
-    "packages/http-helpers": {
-      "name": "@mpen/http-helpers",
+    "packages/http": {
+      "name": "@mpen/http",
       "devDependencies": {
         "tsdown": "catalog:",
         "typescript": "catalog:",
@@ -417,7 +417,7 @@
         "routekit": "./dist/bin.mjs",
       },
       "dependencies": {
-        "@mpen/http-helpers": "workspace:*",
+        "@mpen/http": "workspace:*",
         "chalk": "^5.6.2",
         "json-schema-to-typescript": "^15.0.4",
       },
@@ -739,7 +739,7 @@
 
     "@mpen/classcat": ["@mpen/classcat@workspace:packages/classcat"],
 
-    "@mpen/http-helpers": ["@mpen/http-helpers@workspace:packages/http-helpers"],
+    "@mpen/http": ["@mpen/http@workspace:packages/http"],
 
     "@mpen/imut-utils": ["@mpen/imut-utils@workspace:packages/imut-utils"],
 

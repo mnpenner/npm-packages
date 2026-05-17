@@ -1,7 +1,7 @@
 import { Router, jsonResponse } from '@mpen/routekit'
 import { withZod } from '@mpen/routekit/routes'
 import { z } from 'zod'
-import { CommonHeaders, CommonContentTypes, HttpStatus } from '@mpen/http-helpers'
+import { CommonHeaders, CommonContentTypes, HttpStatus } from '@mpen/http'
 
 export const router = new Router()
 const helloResponseSchema = z.object({ message: z.string() })

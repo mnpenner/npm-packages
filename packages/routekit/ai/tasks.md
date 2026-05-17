@@ -1,4 +1,4 @@
-- [ ] Rename `http-helpers` package to `http-enums`
+- [x] Rename the HTTP helper package to `@mpen/http`
 - Clean up tsdown entrypoints. We should have
   - @mpen/routekit   # main router
   - @mpen/routekit/client  # client transports 

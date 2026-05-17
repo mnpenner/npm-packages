@@ -1,5 +1,5 @@
-import type { HttpMethod } from '@mpen/http-helpers'
-import { HttpStatus } from '@mpen/http-helpers'
+import type { HttpMethod } from '@mpen/http'
+import { HttpStatus } from '@mpen/http'
 import { simpleStatus } from '../response/simple'
 import type { AnyContext, Middleware, RequestContext } from '../types'
 

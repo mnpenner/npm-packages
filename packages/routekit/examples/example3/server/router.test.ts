@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bun test
 import { describe, expect, it } from 'bun:test'
-import { CommonContentTypes, HttpMethod, HttpStatus, CommonMediaTypes } from '@mpen/http-helpers'
+import { CommonContentTypes, HttpMethod, HttpStatus, CommonMediaTypes } from '@mpen/http'
 import router from './router'
 
 describe('example3 router', () => {

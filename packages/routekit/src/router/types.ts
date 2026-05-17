@@ -1,4 +1,4 @@
-import type { HttpMethod, HttpStatus } from '@mpen/http-helpers'
+import type { HttpMethod, HttpStatus } from '@mpen/http'
 import type { Router } from './router'
 import type { RouterHeadersInit } from './fetch-types'
 

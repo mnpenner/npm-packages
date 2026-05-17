@@ -1,4 +1,4 @@
-import { HttpMethod, HttpStatus, StatusText } from '@mpen/http-helpers'
+import { HttpMethod, HttpStatus, StatusText } from '@mpen/http'
 import type { Router } from '../../router'
 import type { Handler, JsonObjectSchema, JsonSchema, NormalizedRoute, RouteMeta } from '../../types'
 import { jsonResponse } from '../../response/simple'

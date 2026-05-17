@@ -1,7 +1,7 @@
 import { createValibotRoutes } from '@mpen/routekit/routes'
 import { jsonResponse } from '@mpen/routekit'
 import * as v from 'valibot'
-import { HttpStatus } from '@mpen/http-helpers'
+import { HttpStatus } from '@mpen/http'
 import type { BaseIssue } from 'valibot'
 
 interface SerializedBaseIssue extends Omit<BaseIssue<unknown>, 'issues' | 'path'> {

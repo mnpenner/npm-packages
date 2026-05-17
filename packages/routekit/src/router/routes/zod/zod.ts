@@ -1,4 +1,4 @@
-import { HttpStatus } from '@mpen/http-helpers'
+import { HttpStatus } from '@mpen/http'
 import type { Router } from '../../router'
 import type {
     AnyContext,

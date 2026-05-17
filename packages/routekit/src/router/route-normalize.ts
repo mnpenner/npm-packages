@@ -1,5 +1,5 @@
 import type { AnyContext, MediaType, NormalizedRoute, Route } from './types'
-import type { HttpMethod } from '@mpen/http-helpers'
+import type { HttpMethod } from '@mpen/http'
 import { normalizeMediaType, parseMediaType } from './lib/media-type'
 import { pattToName, sanitizeNameParts, splitNameString } from './route-names'
 

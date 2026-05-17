@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bun test
 import { describe, expect, it } from 'bun:test'
-import { HttpMethod, HttpStatus } from '@mpen/http-helpers'
+import { HttpMethod, HttpStatus } from '@mpen/http'
 import { Router } from '../router'
 import { csrf } from './csrf'
 

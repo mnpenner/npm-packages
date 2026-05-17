@@ -46,7 +46,7 @@ const serverPackageFiles = [
     'packages/cli-api/**/*.{js,jsx,ts,tsx}',
     'packages/crap-app/*.{js,jsx,ts,tsx}',
     'packages/create-tslib/**/*.{js,jsx,ts,tsx}',
-    'packages/http-helpers/**/*.{js,jsx,ts,tsx}',
+    'packages/http/**/*.{js,jsx,ts,tsx}',
     'packages/imut-utils/**/*.{js,jsx,ts,tsx}',
     'packages/is-type/**/*.{js,jsx,ts,tsx}',
     'packages/js-serialize/**/*.{js,jsx,ts,tsx}',

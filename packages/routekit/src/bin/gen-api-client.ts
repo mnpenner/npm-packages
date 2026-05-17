@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url'
 import { parseArgs } from 'util'
 import { $ } from 'bun'
 import { compile } from 'json-schema-to-typescript'
-import { HttpMethod } from '@mpen/http-helpers'
+import { HttpMethod } from '@mpen/http'
 import type { JsonSchema, NormalizedRoute, RouteSchema } from '../router/types'
 
 const DEFAULT_RESPONSE_TYPE = 'ApiResponsePromise'
