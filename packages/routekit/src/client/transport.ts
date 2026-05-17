@@ -1,3 +1,5 @@
+type ClientHeadersInit = NonNullable<ConstructorParameters<typeof Headers>[0]>
+
 /**
  * Optional per-call settings accepted by generated API client methods.
  *
@@ -13,7 +15,7 @@
  */
 export interface ClientCallOptions {
     /** Additional headers for this call. */
-    headers?: HeadersInit
+    headers?: ClientHeadersInit
     /** Abort signal for this call. */
     signal?: AbortSignal
     /** Additional request init fields for this call. */
@@ -56,7 +58,7 @@ export interface ApiTransportResponse {
     /** The response status code. */
     status: number
     /** The response headers, when available. */
-    headers?: HeadersInit
+    headers?: ClientHeadersInit
 
     /**
      * Parse the response body with the transport's active body codec.

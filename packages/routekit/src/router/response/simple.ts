@@ -338,7 +338,10 @@ function makeDirective<T extends BaseDirective>(directive: Omit<T, typeof routek
  * @param init - Response status and headers.
  * @returns Routekit logical response.
  */
-export function response<T>(responseBody: T, init: RoutekitResponseInit = {}): RoutekitResponse<T> {
+export function response<const T>(
+    responseBody: T,
+    init: RoutekitResponseInit = {},
+): RoutekitResponse<T> {
     const responseHeaders = new Headers(init.headers)
     if (hasContentType(responseHeaders) && !isResponseBodyInit(responseBody)) {
         throw new TypeError(
@@ -365,7 +368,7 @@ export function response<T>(responseBody: T, init: RoutekitResponseInit = {}): R
  * @param init - Response headers.
  * @returns Routekit logical response.
  */
-export function ok<T>(
+export function ok<const T>(
     responseBody: T,
     init: Omit<RoutekitResponseInit, 'status'> = {},
 ): RoutekitResponse<T> {
@@ -487,7 +490,7 @@ export function redirect(
  * @param value - Logical response body.
  * @returns Final body wrapper.
  */
-export function body<T>(value: T): RoutekitBody<T> {
+export function body<const T>(value: T): RoutekitBody<T> {
     return {
         [routekitBodyBrand]: true,
         value,
@@ -562,7 +565,7 @@ export function head(statusCode: number | HttpStatus, init: RouterHeadersInit = 
  * @param init - Additional stream headers.
  * @returns Stream directive.
  */
-export function stream<T>(
+export function stream<const T>(
     framer: StreamFramer<T>,
     init: RouterHeadersInit = {},
 ): StreamDirective<T> {
@@ -586,7 +589,7 @@ export function stream<T>(
  * @param value - Chunk value to stream.
  * @returns Chunk directive.
  */
-export function chunk<T>(value: T): ChunkDirective<T> {
+export function chunk<const T>(value: T): ChunkDirective<T> {
     return makeDirective<ChunkDirective<T>>({
         kind: 'chunk',
         value,

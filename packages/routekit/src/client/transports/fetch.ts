@@ -2,6 +2,9 @@ import type { ClientHeaders } from '../headers'
 import type { ApiTransportResponsePromise, ClientRequest, ClientTransport } from '../transport'
 import { jsonBodyCodec, type BodyCodec } from './body-codec'
 
+type ClientHeadersInit = NonNullable<ConstructorParameters<typeof Headers>[0]>
+type FetchFn = NonNullable<FetchTransportOptions['fetch']>
+
 /**
  * Options for [`FetchTransport`]{@link FetchTransport}.
  *
@@ -24,7 +27,7 @@ export interface FetchTransportOptions {
     bodyCodec?: BodyCodec
 }
 
-function mergeHeaders(...sources: Array<HeadersInit | undefined>): Headers {
+function mergeHeaders(...sources: Array<ClientHeadersInit | undefined>): Headers {
     const headers = new Headers()
     for (const source of sources) {
         if (!source) continue
@@ -55,7 +58,7 @@ function resolveUrl(url: string, baseUrl: string | URL | undefined): string {
 export class FetchTransport implements ClientTransport {
     readonly #baseUrl: string | URL | undefined
     readonly #bodyCodec: BodyCodec
-    readonly #fetch: typeof fetch
+    readonly #fetch: FetchFn
     readonly #headers: ClientHeaders | undefined
 
     /**

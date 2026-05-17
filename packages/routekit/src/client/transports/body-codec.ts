@@ -1,3 +1,5 @@
+type ClientBodyInit = NonNullable<RequestInit['body']>
+
 /**
  * The response body stream exposed to response body codecs.
  *
@@ -26,7 +28,7 @@ export interface BodyCodec {
      * @param value - The generated client body value.
      * @returns A Fetch-compatible body, or nullish to omit the request body.
      */
-    serialize(value: unknown): BodyInit | null | undefined
+    serialize(value: unknown): ClientBodyInit | null | undefined
 
     /**
      * Deserialize a response body for typed `response.parseBody()` calls.

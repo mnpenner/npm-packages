@@ -10,7 +10,7 @@ const validationErrorSchema = z.object({
 
 const yamlSerializer: BodySerializer<unknown> = {
     mediaTypes: [CommonContentTypes.YAML, 'application/yaml', 'application/x-yaml', 'text/yaml'],
-    canSerialize: () => true,
+    canSerialize: (_value): _value is unknown => true,
     serialize: (value) => Bun.YAML.stringify(value, null, 2),
 }
 

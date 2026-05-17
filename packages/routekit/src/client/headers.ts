@@ -1,5 +1,7 @@
 import type { MaybePromise } from './promise'
 
+type ClientHeadersInit = NonNullable<ConstructorParameters<typeof Headers>[0]>
+
 /**
  * Context passed to global header providers.
  *
@@ -25,5 +27,5 @@ export interface ClientHeaderContext {
  * ```
  */
 export type ClientHeaders =
-    | HeadersInit
-    | ((context: ClientHeaderContext) => MaybePromise<HeadersInit | undefined>)
+    | ClientHeadersInit
+    | ((context: ClientHeaderContext) => MaybePromise<ClientHeadersInit | undefined>)
