@@ -181,7 +181,7 @@ export function jsAsciiString(obj: string) {
     const quote = useSingle ? "'" : '"'
     const quoteCode = useSingle ? 0x27 : 0x22
 
-    const result =
+    return (
         quote +
         Array.from(obj)
             .map((ch) => {
@@ -217,6 +217,5 @@ export function jsAsciiString(obj: string) {
             })
             .join('') +
         quote
-
-    return result
+    )
 }

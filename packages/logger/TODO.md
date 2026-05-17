@@ -4,4 +4,6 @@
 - Filters
   - Log-level
   - Logger/sub-logger name
-- `write` option in `TerminalLogger` won't match prod logger -- prod/json logger always has to write 1 full line at a time
+- [x] `write` option in `TerminalLogger` won't match prod logger -- prod/json logger always has to write 1 full line at a time
+    - That's OK. Different c'tors
+- Drop dependency on Bun (`stringWidth`)

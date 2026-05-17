@@ -1,16 +1,76 @@
 import type { Logger } from '../logger.ts'
 import { LogLevel, LogLevelValues } from '../logger.ts'
 
-interface BrowserConsole {
+/**
+ * Console-like target used by [`BrowserLogger`]{@link BrowserLogger}.
+ *
+ * @example
+ * ```ts
+ * import { BrowserLogger, type BrowserConsole } from '@mpen/logger/browser'
+ *
+ * const target: BrowserConsole = window.console
+ * const logger = new BrowserLogger({ console: target })
+ * ```
+ */
+export interface BrowserConsole {
+    /**
+     * Writes a debug-level message.
+     *
+     * @param data - Values to write.
+     * @returns Nothing.
+     */
     log(...data: any[]): void
+    /**
+     * Writes an info-level message.
+     *
+     * @param data - Values to write.
+     * @returns Nothing.
+     */
     info(...data: any[]): void
+    /**
+     * Writes a warning-level message.
+     *
+     * @param data - Values to write.
+     * @returns Nothing.
+     */
     warn(...data: any[]): void
+    /**
+     * Writes an error-level message.
+     *
+     * @param data - Values to write.
+     * @returns Nothing.
+     */
     error(...data: any[]): void
+    /**
+     * Writes tabular data when supported by the target console.
+     *
+     * @param tabularData - Data to render as rows.
+     * @param properties - Optional property names to include and order.
+     * @returns Nothing.
+     */
     table?(tabularData?: any, properties?: string[]): void
 }
 
-interface BrowserLoggerOptions {
+/**
+ * Options for [`BrowserLogger`]{@link BrowserLogger}.
+ *
+ * @example
+ * ```ts
+ * import { LogLevel } from '@mpen/logger'
+ * import { BrowserLogger, type BrowserLoggerOptions } from '@mpen/logger/browser'
+ *
+ * const options: BrowserLoggerOptions = { minLogLevel: LogLevel.INFO }
+ * const logger = new BrowserLogger(options)
+ * ```
+ */
+export interface BrowserLoggerOptions {
+    /**
+     * Console target to write to.
+     */
     console?: BrowserConsole
+    /**
+     * Lowest severity to write.
+     */
     minLogLevel?: LogLevel
 }
 

@@ -23,7 +23,18 @@ interface RenderedCell {
     formatter?: CellFormatter
 }
 
-interface TableInspectOptions {
+/**
+ * Value inspection limits used when rendering terminal output.
+ *
+ * @example
+ * ```ts
+ * import { TerminalLogger, type TableInspectOptions } from '@mpen/logger/terminal'
+ *
+ * const inspect: TableInspectOptions = { depth: 2, maxStringLength: 120 }
+ * const logger = new TerminalLogger({ table: { inspect } })
+ * ```
+ */
+export interface TableInspectOptions {
     /**
      * @defaultValue 1
      */
@@ -42,11 +53,36 @@ interface TableInspectOptions {
     maxStringLength?: number
 }
 
+/**
+ * Table layout density options for [`TerminalLogger.table`]{@link TerminalLogger#table}.
+ *
+ * @example
+ * ```ts
+ * import { TableDensity, TerminalLogger } from '@mpen/logger/terminal'
+ *
+ * const logger = new TerminalLogger({ table: { density: TableDensity.BALANCED } })
+ * ```
+ */
 export enum TableDensity {
+    /**
+     * Selects a table layout based on the rendered data and terminal width.
+     */
     AUTO = 'auto',
+    /**
+     * Uses a compact layout for short machine-readable values.
+     */
     COMPACT = 'compact',
+    /**
+     * Uses a middle-density layout that wraps cramped cells.
+     */
     BALANCED = 'balanced',
+    /**
+     * Uses additional padding around cells.
+     */
     COMFORTABLE = 'comfortable',
+    /**
+     * Renders each record vertically.
+     */
     VERTICAL = 'vertical',
 }
 
@@ -58,8 +94,27 @@ interface TableLayout {
     padding: number
 }
 
-interface TableOptions {
+/**
+ * Terminal table rendering options.
+ *
+ * @example
+ * ```ts
+ * import { TableDensity, type TableOptions } from '@mpen/logger/terminal'
+ *
+ * const table: TableOptions = {
+ *     density: TableDensity.BALANCED,
+ *     showIndex: true,
+ * }
+ * ```
+ */
+export interface TableOptions {
+    /**
+     * Table density to use.
+     */
     density?: TableDensity
+    /**
+     * Value inspection limits for table cells.
+     */
     inspect?: TableInspectOptions
     /**
      * @defaultValue false
@@ -71,15 +126,58 @@ interface TableOptions {
     striped?: boolean
 }
 
-interface TerminalLogOptions {
+/**
+ * Plain log rendering options for [`TerminalLogger`]{@link TerminalLogger}.
+ *
+ * @example
+ * ```ts
+ * import { TerminalLogger, type TerminalLogOptions } from '@mpen/logger/terminal'
+ *
+ * const log: TerminalLogOptions = { inspect: { depth: 3 } }
+ * const logger = new TerminalLogger({ log })
+ * ```
+ */
+export interface TerminalLogOptions {
+    /**
+     * Value inspection limits for log messages.
+     */
     inspect?: TableInspectOptions
 }
 
-interface TerminalLoggerOptions {
+/**
+ * Options for [`TerminalLogger`]{@link TerminalLogger}.
+ *
+ * @example
+ * ```ts
+ * import { TerminalLogger, type TerminalLoggerOptions } from '@mpen/logger/terminal'
+ *
+ * const options: TerminalLoggerOptions = {
+ *     color: true,
+ *     write: (buffer) => process.stdout.write(buffer),
+ * }
+ * const logger = new TerminalLogger(options)
+ * ```
+ */
+export interface TerminalLoggerOptions {
+    /**
+     * Whether ANSI color output is enabled.
+     */
     color?: boolean
+    /**
+     * Plain log rendering options.
+     */
     log?: TerminalLogOptions
+    /**
+     * Maximum output width before wrapping.
+     */
     maxWidth?: number
+    /**
+     * Table rendering options.
+     */
     table?: TableOptions
+    /**
+     * Receives formatted terminal output.
+     */
     write?: WriteFn
 }
 
@@ -99,6 +197,18 @@ function getLogTime(): string {
     return `${hour}:${minutes}`
 }
 
+/**
+ * Writes formatted logs and tables for Bun terminal programs.
+ *
+ * @example
+ * ```ts
+ * import { TerminalLogger } from '@mpen/logger/terminal'
+ *
+ * const logger = new TerminalLogger()
+ * logger.info('build started')
+ * logger.table([{ name: 'api', status: 'ok' }])
+ * ```
+ */
 export class TerminalLogger implements Logger {
     private readonly _pc: Colors
     private readonly _write: WriteFn
@@ -109,6 +219,11 @@ export class TerminalLogger implements Logger {
     private readonly _logInspect: Required<TableInspectOptions>
     private readonly _maxWidth: number | null
 
+    /**
+     * Creates a terminal logger.
+     *
+     * @param options - Optional output, color, width, and formatting settings.
+     */
     constructor(options?: TerminalLoggerOptions) {
         this._write = options?.write ?? DEFAULT_WRITE_FN
         this._pc = createColors(options?.color)
@@ -130,6 +245,12 @@ export class TerminalLogger implements Logger {
         }
     }
 
+    /**
+     * Writes a debug-level terminal message without a timestamp prefix.
+     *
+     * @param data - Values to render.
+     * @returns Nothing.
+     */
     log(...data: any[]): void {
         const message = this.stringifyPlainLogData(data)
         const maxWidth = this.getTerminalWidth()
@@ -138,18 +259,43 @@ export class TerminalLogger implements Logger {
         this._write(lines.map((line) => line.text).join('\n') + '\n')
     }
 
+    /**
+     * Writes an info-level terminal message.
+     *
+     * @param data - Values to render.
+     * @returns Nothing.
+     */
     info(...data: any[]): void {
         this.writeLogLine(INFO_ICON, data)
     }
 
+    /**
+     * Writes a warning-level terminal message.
+     *
+     * @param data - Values to render.
+     * @returns Nothing.
+     */
     warn(...data: any[]): void {
         this.writeLogLine(WARN_ICON, data)
     }
 
+    /**
+     * Writes an error-level terminal message.
+     *
+     * @param data - Values to render.
+     * @returns Nothing.
+     */
     error(...data: any[]): void {
         this.writeLogLine(ERROR_ICON, data)
     }
 
+    /**
+     * Writes tabular terminal output.
+     *
+     * @param tabularData - Data to render as rows.
+     * @param properties - Optional property names to include and order.
+     * @returns Nothing.
+     */
     table(tabularData?: any, properties?: string[]): void {
         const rows = this.toRows(tabularData)
         const columns = this.getColumns(rows, properties)
