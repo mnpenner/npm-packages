@@ -10,7 +10,7 @@ describe(csrf.name, () => {
         router.use(csrf())
         router.add({
             method: HttpMethod.POST,
-            pattern: '/submit',
+            path: '/submit',
             handler: () => new Response('ok'),
         })
 
@@ -34,7 +34,7 @@ describe(csrf.name, () => {
         router.use(csrf())
         router.add({
             method: HttpMethod.POST,
-            pattern: '/submit',
+            path: '/submit',
             handler: () => new Response('ok'),
         })
 
@@ -58,7 +58,7 @@ describe(csrf.name, () => {
         router.use(csrf({ allowedOrigins: ['https://evil.example'] }))
         router.add({
             method: HttpMethod.POST,
-            pattern: '/submit',
+            path: '/submit',
             handler: () => new Response('ok'),
         })
 
@@ -82,7 +82,7 @@ describe(csrf.name, () => {
         router.use(csrf({ dev: true }))
         router.add({
             method: HttpMethod.POST,
-            pattern: '/submit',
+            path: '/submit',
             handler: () => new Response('ok'),
         })
 

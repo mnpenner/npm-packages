@@ -1,5 +1,5 @@
-- Convert all packages that are using a package manager other than bun to bun (e.g. pnpm, yarn or npm)
-- Convert packages that are compiled with something other than tsdown to use the latest version of tsdown. Make sure `exports: true` is set (this will fix the export paths in package.json)
+- [x] Convert all packages that are using a package manager other than bun to bun (e.g. pnpm, yarn or npm)
+- [x] Convert packages that are compiled with something other than tsdown to use the latest version of tsdown. Make sure `exports: true` is set (this will fix the export paths in package.json)
 - Upgrade all packages to typescript 6
 - [x] Add eslint to root; remove eslint from packages
 - [x] Add prettier
@@ -12,14 +12,14 @@
 - [x] Freshen `@mpen/is-type`
 - Start `ts-types` package; include `ts-expect` and my fav helpers like `Override`, `assumeType`
     - Have a `react/` subdir for `OverrideProps` et al
-- Create `logger` package (extract from routekit and bookmarks)
+- [x] Create `logger` package (extract from routekit and bookmarks)
 - Create `progressbar` package (extract from scrubber)
 - Create `process` package (extract from `podman`)
 - Uplevel all the `packages/rollup-plugins/packages` packages
-- Create script to bump versions and publish any packages if it passes all tests and has been modified since last release
+- [x] Create script to bump versions and publish any packages if it passes all tests and has been modified since last release
 - Add `resolveValue` to `jtilz` or `ts-types`...? Already exists as `value` in `packages/jtilz/src/Lang/value.ts`
 - In publish.ts, when bumping the version, show OLDVER -> NEWVER
-- For `imut-utils`, move fp functions into `@mpen/imut-utils/fp` and remove prefix
+- [x] For `imut-utils`, move fp functions into `@mpen/imut-utils/fp` and remove prefix
 - Add `--react` flag to `svg2fonts`; it should output a React component for each icon
 - [x] Drop `"ignoreDeprecations": "6.0"` from `tsconfig.json`
 - packages/rerouter

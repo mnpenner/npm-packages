@@ -111,11 +111,7 @@ export interface Route<Ctx extends object = AnyContext> {
     /**
      * Path pattern matched by the default route matcher.
      */
-    path?: RoutePath
-    /**
-     * Deprecated alias for [`Route.path`]{@link Route#path}.
-     */
-    pattern?: RoutePath
+    path: RoutePath
     handler: Handler<any, Ctx>
     method?: OneOrMany<HttpMethod>
     /**
@@ -176,10 +172,7 @@ export interface Route<Ctx extends object = AnyContext> {
  * router.get('/users/:id', options)
  * ```
  */
-export type RouteOptions<Ctx extends object = AnyContext> = Omit<
-    Route<Ctx>,
-    'method' | 'path' | 'pattern'
->
+export type RouteOptions<Ctx extends object = AnyContext> = Omit<Route<Ctx>, 'method' | 'path'>
 
 /**
  * Normalized route metadata used internally by the router.

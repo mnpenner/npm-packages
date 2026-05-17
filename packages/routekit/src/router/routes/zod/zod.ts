@@ -28,7 +28,6 @@ type AnyZodResponseBodySchemas = Partial<Record<number | 'default', z.ZodTypeAny
 type ZodResponseBodySchemas = AnyZodResponseBodySchemas | undefined
 type ResponseValidationMode = false | 'strict' | 'parse'
 type ResponseValidationOption = boolean | ResponseValidationMode
-
 /**
  * Default validation error payload returned by Zod-backed routes.
  */
@@ -65,7 +64,7 @@ type InferResponseBody<ResponseBodySchemas extends ZodResponseBodySchemas> =
             ? z.infer<NonNullable<ResponseBodySchemas[200]>>
             : 'default' extends keyof ResponseBodySchemas
               ? z.infer<NonNullable<ResponseBodySchemas['default']>>
-            : unknown
+              : unknown
         : unknown
 
 type NormalizeSchema<Schema> =
@@ -202,13 +201,53 @@ export type WithZodOptions<
 
 /**
  * Zod route builder created by `createZodRoutes`.
+ *
+ * @example
+ * ```ts
+ * const route = createZodRoutes()
+ *
+ * router.get('/users/:id', route({
+ *   schema: {
+ *     request: {
+ *       path: z.object({id: z.string()}),
+ *     },
+ *   },
+ *   handler: ({params}) => ({id: params.path.id}),
+ * }))
+ *
+ * router.add(route({
+ *   method: HttpMethod.GET,
+ *   path: '/health',
+ *   handler: () => ({ok: true}),
+ * }))
+ * ```
  */
-export type ZodRoutes = <
-    Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
-    Ctx extends object = AnyContext,
->(
-    options: WithZodOptions<Schema, Ctx>,
-) => RouteOptions<Ctx>
+export type ZodRoutes = {
+    /**
+     * Build a full route definition that includes its own path.
+     *
+     * @param options - Full route options including `path`.
+     * @returns A full route definition compatible with [`Router.add`]{@link Router#add}.
+     */
+    <
+        Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
+        Ctx extends object = AnyContext,
+    >(
+        options: ZodRouteOptions<Schema, Ctx>,
+    ): Route<Ctx>
+    /**
+     * Build method-specific route options that leave the path to the registering router.
+     *
+     * @param options - Method route options without a route path.
+     * @returns Route options compatible with helpers like [`Router.get`]{@link Router#get}.
+     */
+    <
+        Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
+        Ctx extends object = AnyContext,
+    >(
+        options: WithZodOptions<Schema, Ctx>,
+    ): RouteOptions<Ctx>
+}
 
 type ResolvedZodHandlerOptions<
     Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
@@ -419,19 +458,19 @@ function mergeRouteSchema(
     }
 }
 
-function mergeWithZodOptions<
-    Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
-    Ctx extends object,
->(
-    defaults: ZodRouteHelperDefaults,
-    options: WithZodOptions<Schema, Ctx>,
-): WithZodOptions<ZodRouteSchemaInput<any, any, any, any>, Ctx> {
+function mergeZodOptions<
+    Options extends { schema?: ZodRouteSchemaInput<any, any, any, any> | undefined },
+>(defaults: ZodRouteHelperDefaults, options: Options): Options {
     const schema = mergeRouteSchema(defaults, options.schema)
     return {
         ...defaults,
         ...options,
         ...(schema === undefined ? {} : { schema }),
-    }
+    } as Options
+}
+
+function hasRoutePath(options: unknown): options is { path: unknown } {
+    return (options as { path?: unknown }).path !== undefined
 }
 
 function isResponseEnvelope(value: unknown): value is ResponseEnvelope {
@@ -784,12 +823,18 @@ export function withZod<
  * @returns A route-options builder compatible with method-specific router helpers.
  */
 export function createZodRoutes(defaults: ZodRouteHelperDefaults = {}): ZodRoutes {
-    return <
+    return (<
         Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
         Ctx extends object = AnyContext,
     >(
-        options: WithZodOptions<Schema, Ctx>,
-    ): RouteOptions<Ctx> => withZod(mergeWithZodOptions(defaults, options))
+        options: ZodRouteOptions<Schema, Ctx> | WithZodOptions<Schema, Ctx>,
+    ): Route<Ctx> | RouteOptions<Ctx> => {
+        const merged = mergeZodOptions(defaults, options)
+        if (hasRoutePath(merged)) {
+            return zodRoute(merged as ZodRouteOptions<Schema, Ctx>)
+        }
+        return withZod(merged as WithZodOptions<Schema, Ctx>)
+    }) as ZodRoutes
 }
 
 /**

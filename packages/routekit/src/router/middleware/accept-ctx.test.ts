@@ -11,7 +11,7 @@ describe(acceptCtx.name, () => {
         router.use(acceptCtx())
         router.add({
             method: HttpMethod.GET,
-            pattern: '/',
+            path: '/',
             handler: ({ accept }) => new Response(JSON.stringify(accept)),
         })
 

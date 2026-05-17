@@ -6,6 +6,11 @@ import { Router } from '../router'
 import { expectType } from '@mpen/ts-types'
 import { jsonResponse, plainTextResponse } from '../response'
 import { createZodRoutes, ValidationError, withZod, zodHandler, zodPartial, zodRoute } from './zod'
+import type { AnyContext, Route, RouteOptions } from '../types'
+
+function typeTest(callback: () => void) {
+    void callback
+}
 
 describe('zodHandler', () => {
     it('parses and supplies validated inputs to the handler', async () => {
@@ -500,6 +505,32 @@ describe('createZodRoutes', () => {
         expect(strictResponse.status).toBe(HttpStatus.INTERNAL_SERVER_ERROR)
     })
 
+    it('builds full routes when path is provided to the shared builder', async () => {
+        const zodRoute = createZodRoutes({
+            validateResponse: false,
+        })
+        const route = zodRoute({
+            path: '/factory-health',
+            method: HttpMethod.GET,
+            schema: {
+                response: {
+                    body: {
+                        [HttpStatus.OK]: z.object({ ok: z.boolean() }),
+                    },
+                },
+            },
+            handler: () => jsonResponse({ ok: true }),
+        })
+        expectType<Route<AnyContext>>(route)
+
+        const router = new Router().add(route)
+        const response = await router.fetch(new Request('https://example.com/factory-health'))
+
+        expect(response.status).toBe(HttpStatus.OK)
+        expect(await response.json()).toEqual({ ok: true })
+        expect(router.getRoutes()[0]?.method).toBe(HttpMethod.GET)
+    })
+
     it('merges default schemas into generated route schemas', () => {
         const zodRoute = createZodRoutes({
             schema: {
@@ -544,6 +575,36 @@ describe('createZodRoutes', () => {
                 required: ['message'],
                 additionalProperties: false,
             },
+        })
+    })
+
+    it('preserves pathless and full-route return types on route builders', () => {
+        const zodRoute = createZodRoutes()
+
+        typeTest(() => {
+            const options = zodRoute({
+                schema: {
+                    request: {
+                        path: z.object({ id: z.string() }),
+                    },
+                },
+                validateResponse: false,
+                handler: ({ params }) => jsonResponse({ id: params.path.id }),
+            })
+            expectType<RouteOptions<AnyContext>>(options)
+
+            const route = zodRoute({
+                path: '/typed/:id',
+                method: HttpMethod.GET,
+                schema: {
+                    request: {
+                        path: z.object({ id: z.string() }),
+                    },
+                },
+                validateResponse: false,
+                handler: ({ params }) => jsonResponse({ id: params.path.id }),
+            })
+            expectType<Route<AnyContext>>(route)
         })
     })
 })

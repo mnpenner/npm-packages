@@ -23,7 +23,7 @@ describe(bodyLimit.name, () => {
         const handler = mock(() => new Response('ok'))
 
         router.use(bodyLimit({ maxSize: 9 }))
-        router.add({ method: HttpMethod.POST, pattern: '/upload', handler })
+        router.add({ method: HttpMethod.POST, path: '/upload', handler })
 
         const request = new Request('https://example.com/upload', {
             method: HttpMethod.POST,
@@ -43,7 +43,7 @@ describe(bodyLimit.name, () => {
         router.use(bodyLimit({ maxSize: 4 }))
         router.add({
             method: HttpMethod.POST,
-            pattern: '/upload',
+            path: '/upload',
             handler: async ({ req }) => new Response(await req.text()),
         })
 
@@ -63,7 +63,7 @@ describe(bodyLimit.name, () => {
         router.use(bodyLimit({ maxSize: 10 }))
         router.add({
             method: HttpMethod.POST,
-            pattern: '/upload',
+            path: '/upload',
             handler: async ({ req }) => new Response(await req.text()),
         })
 
@@ -84,7 +84,7 @@ describe(bodyLimit.name, () => {
         router.use(bodyLimit({ maxSize: 10 }))
         router.add({
             method: HttpMethod.POST,
-            pattern: '/upload',
+            path: '/upload',
             handler: async ({ req }) => new Response(await req.text()),
         })
 

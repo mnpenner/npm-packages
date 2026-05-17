@@ -10,7 +10,7 @@ describe(cors.name, () => {
         router.use(cors({ origin: '*' }))
         router.add({
             method: HttpMethod.GET,
-            pattern: '/data',
+            path: '/data',
             handler: () => new Response('ok'),
         })
 
@@ -32,7 +32,7 @@ describe(cors.name, () => {
         )
         router.add({
             method: HttpMethod.GET,
-            pattern: '/data',
+            path: '/data',
             handler: () => new Response('ok'),
         })
 
@@ -57,7 +57,7 @@ describe(cors.name, () => {
         router.use(cors({ origin: '*', credentials: true }))
         router.add({
             method: HttpMethod.GET,
-            pattern: '/data',
+            path: '/data',
             handler: () => new Response('ok'),
         })
 
@@ -77,7 +77,7 @@ describe(cors.name, () => {
         router.use(cors({ origin: '*', exposeHeaders: ['x-trace', 'x-request-id'] }))
         router.add({
             method: HttpMethod.GET,
-            pattern: '/data',
+            path: '/data',
             handler: () => new Response('ok'),
         })
 
@@ -95,7 +95,7 @@ describe(cors.name, () => {
         router.use(cors({ origin: '*', allowMethods: ['GET', 'POST'] }))
         router.add({
             method: HttpMethod.OPTIONS,
-            pattern: '/widgets',
+            path: '/widgets',
             handler: () => new Response('ok'),
         })
 
@@ -123,7 +123,7 @@ describe(cors.name, () => {
         )
         router.add({
             method: HttpMethod.OPTIONS,
-            pattern: '/widgets',
+            path: '/widgets',
             handler: () => new Response('ok'),
         })
 
@@ -145,7 +145,7 @@ describe(cors.name, () => {
         router.use(cors({ origin: 'https://app.example.com', dev: true }))
         router.add({
             method: HttpMethod.GET,
-            pattern: '/data',
+            path: '/data',
             handler: () => new Response('ok'),
         })
 
@@ -163,7 +163,7 @@ describe(cors.name, () => {
         router.use(cors({ origin: 'https://app.example.com', allowLocalhost: true }))
         router.add({
             method: HttpMethod.GET,
-            pattern: '/data',
+            path: '/data',
             handler: () => new Response('ok'),
         })
 
@@ -182,7 +182,7 @@ describe(cors.name, () => {
         router.use(cors({ origin: '*', maxAge: 600 }))
         router.add({
             method: HttpMethod.OPTIONS,
-            pattern: '/widgets',
+            path: '/widgets',
             handler,
         })
 
@@ -218,7 +218,7 @@ describe(cors.name, () => {
         )
         router.add({
             method: HttpMethod.OPTIONS,
-            pattern: '/widgets',
+            path: '/widgets',
             handler: () => new Response('ok'),
         })
 

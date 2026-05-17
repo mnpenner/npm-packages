@@ -17,7 +17,7 @@ describe(requestIdCtx.name, () => {
         router.use(requestIdCtx())
         router.add({
             method: HttpMethod.GET,
-            pattern: '/',
+            path: '/',
             handler: ({ requestId }) => {
                 expect(requestId).toBe('req-123')
                 return new Response(requestId)
@@ -45,7 +45,7 @@ describe(requestIdCtx.name, () => {
         router.use(requestIdCtx({ generate, prefix: 'custom' }))
         router.add({
             method: HttpMethod.GET,
-            pattern: '/',
+            path: '/',
             handler: ({ requestId }) => {
                 expect(requestId).toBe(generated[generated.length - 1])
                 return new Response(requestId)
@@ -70,7 +70,7 @@ describe(requestIdCtx.name, () => {
         router.use(requestIdCtx({ readHeaderName: ['x-request-id', 'x-trace-id'] }))
         router.add({
             method: HttpMethod.GET,
-            pattern: '/',
+            path: '/',
             handler: ({ requestId, req }) => {
                 const headerId = req.headers.get('x-request-id') ?? req.headers.get('x-trace-id')
                 expect(requestId).toBe(headerId)
@@ -100,7 +100,7 @@ describe(requestIdCtx.name, () => {
         )
         router.add({
             method: HttpMethod.GET,
-            pattern: '/',
+            path: '/',
             handler: ({ requestId }) => {
                 expect(requestId).toBe('req-42')
                 return 'ok'
@@ -118,7 +118,7 @@ describe(requestIdCtx.name, () => {
         router.use(requestIdCtx({ prefix: 'req' }))
         router.add({
             method: HttpMethod.GET,
-            pattern: '/',
+            path: '/',
             handler: ({ requestId }) => {
                 return new Response(requestId)
             },

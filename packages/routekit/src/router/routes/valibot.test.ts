@@ -13,9 +13,14 @@ import {
     ValibotValidationError,
     withValibot,
 } from './valibot'
+import type { Route, RouteOptions } from '../types'
 import type { ValibotValidationErrorBody } from './valibot'
 
-describe('valibotHandler', () => {
+function typeTest(callback: () => void) {
+    void callback
+}
+
+describe(valibotHandler.name, () => {
     it('parses and supplies validated inputs to the handler', async () => {
         const handler = valibotHandler({
             schema: {
@@ -235,7 +240,7 @@ describe('valibotHandler', () => {
     })
 })
 
-describe('valibotPartial', () => {
+describe(valibotPartial.name, () => {
     it('returns a handler and generated route schema', () => {
         const partial = valibotPartial({
             schema: {
@@ -299,7 +304,7 @@ describe('valibotPartial', () => {
     })
 })
 
-describe('valibotRoute', () => {
+describe(valibotRoute.name, () => {
     it('returns a full route with a validated handler and generated schema', () => {
         const route = valibotRoute({
             path: '/users/:id',
@@ -329,7 +334,7 @@ describe('valibotRoute', () => {
     })
 
     it('requires path schemas to be Valibot object schemas', () => {
-        if (false) {
+        typeTest(() => {
             valibotRoute({
                 path: '/users/:id',
                 method: HttpMethod.GET,
@@ -355,11 +360,11 @@ describe('valibotRoute', () => {
                 validateResponse: false,
                 handler: () => jsonResponse({ id: '1' }),
             })
-        }
+        })
     })
 
     it('hides raw pathParams from Valibot handlers', () => {
-        if (false) {
+        typeTest(() => {
             valibotRoute({
                 path: '/users/:id',
                 method: HttpMethod.GET,
@@ -372,11 +377,11 @@ describe('valibotRoute', () => {
                 // @ts-expect-error Valibot handlers expose validated path values on path.
                 handler: ({ pathParams }) => jsonResponse({ id: pathParams.id }),
             })
-        }
+        })
     })
 })
 
-describe('withValibot', () => {
+describe(withValibot.name, () => {
     it('returns route options for method-specific router helpers', async () => {
         const router = new Router()
         router.post(
@@ -420,7 +425,7 @@ describe('withValibot', () => {
     })
 })
 
-describe('createValibotRoutes', () => {
+describe(createValibotRoutes.name, () => {
     it('applies shared defaults and allows per-route overrides', async () => {
         const valibotRouteBuilder = createValibotRoutes({
             validateResponse: false,
@@ -491,11 +496,37 @@ describe('createValibotRoutes', () => {
         expect(strictResponse.status).toBe(HttpStatus.INTERNAL_SERVER_ERROR)
     })
 
+    it('builds full routes when path is provided to the shared builder', async () => {
+        const valibotRouteBuilder = createValibotRoutes({
+            validateResponse: false,
+        })
+        const route = valibotRouteBuilder({
+            path: '/builder-health',
+            method: HttpMethod.GET,
+            schema: {
+                response: {
+                    body: {
+                        [HttpStatus.OK]: v.object({ ok: v.boolean() }),
+                    },
+                },
+            },
+            handler: () => jsonResponse({ ok: true }),
+        })
+        expectType<Route<object>>(route)
+
+        const router = new Router().add(route)
+        const response = await router.fetch(new Request('https://example.com/builder-health'))
+
+        expect(response.status).toBe(HttpStatus.OK)
+        expect(await response.json()).toEqual({ ok: true })
+        expect(router.getRoutes()[0]?.method).toBe(HttpMethod.GET)
+    })
+
     it('preserves strict handler and path schema types on route builders', () => {
         const valibotRouteBuilder = createValibotRoutes()
 
-        if (false) {
-            valibotRouteBuilder({
+        typeTest(() => {
+            const options = valibotRouteBuilder({
                 schema: {
                     request: {
                         path: v.object({ id: v.string() }),
@@ -507,6 +538,20 @@ describe('createValibotRoutes', () => {
                     return jsonResponse({ id: path.id })
                 },
             })
+            expectType<RouteOptions<object>>(options)
+
+            const route = valibotRouteBuilder({
+                path: '/typed/:id',
+                method: HttpMethod.GET,
+                schema: {
+                    request: {
+                        path: v.object({ id: v.string() }),
+                    },
+                },
+                validateResponse: false,
+                handler: ({ path }) => jsonResponse({ id: path.id }),
+            })
+            expectType<Route<object>>(route)
 
             valibotRouteBuilder({
                 schema: {
@@ -529,6 +574,6 @@ describe('createValibotRoutes', () => {
                 // @ts-expect-error Valibot route builders expose validated path values on path.
                 handler: ({ pathParams }) => jsonResponse({ id: pathParams.id }),
             })
-        }
+        })
     })
 })

@@ -22,7 +22,7 @@ describe('Router', () => {
         // failing when ran by Codex for some reason
         const router = new Router().add({
             method: HttpMethod.GET,
-            pattern: '/hello',
+            path: '/hello',
             handler: () => new Response('world'),
         })
 
@@ -52,7 +52,7 @@ describe('Router', () => {
         const router = new Router()
         router.add({
             method: HttpMethod.GET,
-            pattern: '/search',
+            path: '/search',
             handler: ({ url }) => new Response(`${url.pathname}?q=${url.searchParams.get('q')}`),
         })
 
@@ -65,7 +65,7 @@ describe('Router', () => {
         const router = new Router()
         router.add({
             method: HttpMethod.GET,
-            pattern: '/users/:id',
+            path: '/users/:id',
             handler: ({ pathParams }) => new Response((pathParams as { id: string }).id),
         })
 
@@ -85,7 +85,7 @@ describe('Router', () => {
             return new TextEncoder().encode('hello')
         }
         const router = new Router()
-        router.add({ method: HttpMethod.GET, pattern: '/', handler })
+        router.add({ method: HttpMethod.GET, path: '/', handler })
 
         const getResponse = await router.fetch(makeRequest('/'))
         expect(getResponse.status).toBe(HttpStatus.CREATED)
@@ -110,7 +110,7 @@ describe('Router', () => {
             return new TextEncoder().encode('hello')
         }
         const router = new Router()
-        router.add({ method: HttpMethod.GET, pattern: '/', handler })
+        router.add({ method: HttpMethod.GET, path: '/', handler })
 
         const responsePromise = router.fetch(makeRequest('/', HttpMethod.HEAD))
         const response = await Promise.race([
@@ -130,7 +130,7 @@ describe('Router', () => {
         const router = new Router()
         router.add({
             method: HttpMethod.GET,
-            pattern: '/status',
+            path: '/status',
             handler: async function* () {
                 yield { status: 202 }
                 return new TextEncoder().encode('ok')
@@ -138,7 +138,7 @@ describe('Router', () => {
         })
         router.add({
             method: HttpMethod.GET,
-            pattern: '/headers',
+            path: '/headers',
             handler: async function* () {
                 yield { headers: { 'x-meta': 'yes' } }
                 return new TextEncoder().encode('ok')
@@ -146,7 +146,7 @@ describe('Router', () => {
         })
         router.add({
             method: HttpMethod.GET,
-            pattern: '/both',
+            path: '/both',
             handler: async function* () {
                 yield { status: 201, headers: { 'x-both': 'true' } }
                 return new TextEncoder().encode('ok')
@@ -172,7 +172,7 @@ describe('Router', () => {
         const router = new Router()
         router.add({
             method: HttpMethod.GET,
-            pattern: '/stream',
+            path: '/stream',
             handler: async function* () {
                 yield 'hello '
                 yield new TextEncoder().encode('world')
@@ -191,7 +191,7 @@ describe('Router', () => {
         const router = new Router()
         router.add({
             method: HttpMethod.GET,
-            pattern: '/late',
+            path: '/late',
             handler: () => {
                 const stream = new ReadableStream<Uint8Array>({
                     async start(controller) {
@@ -227,7 +227,7 @@ describe('Router', () => {
         const router = new Router()
         router.add({
             method: HttpMethod.GET,
-            pattern: '/slow',
+            path: '/slow',
             handler: async ({ req }) => {
                 handlerStarted()
                 await allowCheckPromise
@@ -257,12 +257,12 @@ describe('Router', () => {
         const router = new Router()
         router.add({
             method: HttpMethod.GET,
-            pattern: '/text',
+            path: '/text',
             handler: () => 'ok',
         })
         router.add({
             method: HttpMethod.GET,
-            pattern: '/bytes',
+            path: '/bytes',
             handler: () => new Uint8Array([111, 107]),
         })
 
@@ -281,7 +281,7 @@ describe('Router', () => {
         let headCalls = 0
         router.add({
             method: HttpMethod.GET,
-            pattern: '/resource',
+            path: '/resource',
             handler: () => {
                 getCalls += 1
                 return new Response('get')
@@ -289,7 +289,7 @@ describe('Router', () => {
         })
         router.add({
             method: HttpMethod.HEAD,
-            pattern: '/resource',
+            path: '/resource',
             handler: () => {
                 headCalls += 1
                 return new Response('head')
@@ -297,7 +297,7 @@ describe('Router', () => {
         })
         router.add({
             method: HttpMethod.GET,
-            pattern: '/fallback',
+            path: '/fallback',
             handler: () => {
                 getCalls += 1
                 return new Response('get')
@@ -319,7 +319,7 @@ describe('Router', () => {
         let postCalls = 0
         router.add({
             method: HttpMethod.POST,
-            pattern: '/mutate',
+            path: '/mutate',
             handler: () => {
                 postCalls += 1
                 return new Response('ok')
@@ -344,7 +344,7 @@ describe('Router', () => {
         let calls = 0
         router.add({
             method: [HttpMethod.POST, HttpMethod.HEAD],
-            pattern: '/combo',
+            path: '/combo',
             handler: () => {
                 calls += 1
                 return new Response('ok')
@@ -368,14 +368,14 @@ describe('Router', () => {
         const router = new Router()
         router.add({
             method: HttpMethod.GET,
-            pattern: '/cors',
+            path: '/cors',
             handler: function () {
                 return new Response('get')
             },
         })
         router.add({
             method: HttpMethod.POST,
-            pattern: '/cors',
+            path: '/cors',
             handler: function () {
                 return new Response('post')
             },
@@ -393,7 +393,7 @@ describe('Router', () => {
         const router = new Router()
         router.add({
             method: HttpMethod.POST,
-            pattern: '/json',
+            path: '/json',
             accept: ['application/json; charset=UTF-8', { type: 'text/plain' }],
             handler: () => new Response('ok'),
         })
@@ -432,7 +432,7 @@ describe('Router', () => {
         const router = new Router()
         router.add({
             method: HttpMethod.POST,
-            pattern: '/plain',
+            path: '/plain',
             handler: () => new Response('ok'),
         })
 
@@ -552,7 +552,7 @@ describe('Router.methodNotAllowed', () => {
             .methodNotAllowed(() => new Response('nope', { status: HttpStatus.METHOD_NOT_ALLOWED }))
             .add({
                 method: HttpMethod.POST,
-                pattern: '/mutate',
+                path: '/mutate',
                 handler: () => new Response('ok'),
             })
 
@@ -569,7 +569,7 @@ describe('Router.notAcceptable', () => {
             .notAcceptable(() => new Response('unsupported', { status: HttpStatus.NOT_ACCEPTABLE }))
             .add({
                 method: HttpMethod.POST,
-                pattern: '/json',
+                path: '/json',
                 accept: ['application/json'],
                 handler: () => new Response('ok'),
             })
@@ -587,7 +587,7 @@ describe('Router.internalError', () => {
             .internalError(() => new Response('broken', { status: HttpStatus.SERVICE_UNAVAILABLE }))
             .add({
                 method: HttpMethod.GET,
-                pattern: '/boom',
+                path: '/boom',
                 handler: () => {
                     throw new Error('boom')
                 },
@@ -606,7 +606,7 @@ describe('Router.internalError', () => {
             })
             .add({
                 method: HttpMethod.GET,
-                pattern: '/boom',
+                path: '/boom',
                 handler: () => {
                     throw new Error('boom')
                 },
@@ -625,7 +625,7 @@ describe('Router.fetch', () => {
         let boundRouter: Router | null = null
         router.add({
             method: HttpMethod.GET,
-            pattern: '/ping',
+            path: '/ping',
             handler: function () {
                 boundRouter = this
                 return new Response('ok')
@@ -642,7 +642,7 @@ describe('Router.fetch', () => {
         const router = new Router()
         router.add({
             method: HttpMethod.GET,
-            pattern: '/ping',
+            path: '/ping',
             handler: () => new Response('ok'),
         })
 
@@ -659,7 +659,7 @@ describe('Router.fetch', () => {
         let boundRouter: Router | null = null
         child.add({
             method: HttpMethod.GET,
-            pattern: '/nested',
+            path: '/nested',
             handler: function () {
                 boundRouter = this
                 return new Response('ok')
@@ -680,7 +680,7 @@ describe('Router.use', () => {
 
         router.add({
             method: HttpMethod.GET,
-            pattern: '/',
+            path: '/',
             handler: (ctx) => {
                 expectType<string>(ctx.requestId)
                 return new Response('ok')
@@ -700,7 +700,7 @@ describe('Router.use', () => {
 
         router.add({
             method: HttpMethod.GET,
-            pattern: '/',
+            path: '/',
             handler: (ctx) => {
                 expectType<string>(ctx.userId)
                 expectType<boolean>(ctx.isAdmin)
@@ -717,7 +717,7 @@ describe('Router.use', () => {
         const router = new Router().use(addRequestIdLocal)
         router.add({
             method: HttpMethod.GET,
-            pattern: '/',
+            path: '/',
             handler: (ctx) => new Response(String(ctx.requestId)),
         })
 
@@ -737,7 +737,7 @@ describe('Router.group', () => {
         router.group([addUser] as const, (group) => {
             group.add({
                 method: HttpMethod.GET,
-                pattern: '/',
+                path: '/',
                 handler: (ctx) => {
                     expectType<string>(ctx.requestId)
                     expectType<string>(ctx.userId)
@@ -762,7 +762,7 @@ describe('Router.group', () => {
         router.group([log('group')], (group) => {
             group.add({
                 method: HttpMethod.GET,
-                pattern: '/items',
+                path: '/items',
                 handler: () => {
                     events.push('handler')
                     return new Response('ok')

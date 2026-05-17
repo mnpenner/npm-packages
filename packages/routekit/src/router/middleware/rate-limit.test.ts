@@ -43,7 +43,7 @@ describe(rateLimit.name, () => {
         )
         router.add({
             method: HttpMethod.GET,
-            pattern: '/',
+            path: '/',
             handler: () => new Response('ok'),
         })
 
@@ -79,7 +79,7 @@ describe(rateLimit.name, () => {
         )
         router.add({
             method: HttpMethod.GET,
-            pattern: '/limited',
+            path: '/limited',
             handler: () => new Response('ok'),
         })
 
@@ -116,7 +116,7 @@ describe(rateLimit.name, () => {
         )
         router.add({
             method: HttpMethod.GET,
-            pattern: '/endpoint',
+            path: '/endpoint',
             handler: () => new Response('ok'),
         })
 
@@ -147,7 +147,7 @@ describe(rateLimit.name, () => {
         )
         router.add({
             method: HttpMethod.GET,
-            pattern: '/search',
+            path: '/search',
             handler: () => new Response('ok'),
         })
 
@@ -183,7 +183,7 @@ describe(rateLimit.name, () => {
         )
         router.add({
             method: HttpMethod.GET,
-            pattern: '/ipv4',
+            path: '/ipv4',
             handler: () => new Response('ok'),
         })
 
@@ -217,7 +217,7 @@ describe(rateLimit.name, () => {
         )
         router.add({
             method: HttpMethod.GET,
-            pattern: '/ipv6',
+            path: '/ipv6',
             handler: () => new Response('ok'),
         })
 
@@ -252,7 +252,7 @@ describe(rateLimit.name, () => {
         )
         router.add({
             method: HttpMethod.GET,
-            pattern: '/unknown-ip',
+            path: '/unknown-ip',
             handler: () => new Response('ok'),
         })
 
@@ -283,7 +283,7 @@ describe(rateLimit.name, () => {
         )
         router.add({
             method: HttpMethod.GET,
-            pattern: '/ipv4-mapped',
+            path: '/ipv4-mapped',
             handler: () => new Response('ok'),
         })
 
@@ -318,7 +318,7 @@ describe(rateLimit.name, () => {
         )
         router.add({
             method: HttpMethod.GET,
-            pattern: '/ipv4-prefix',
+            path: '/ipv4-prefix',
             handler: () => new Response('ok'),
         })
 
@@ -360,7 +360,7 @@ describe(rateLimit.name, () => {
         )
         router.add({
             method: HttpMethod.GET,
-            pattern: '/ipv4-prefix',
+            path: '/ipv4-prefix',
             handler: () => new Response('ok'),
         })
 
@@ -402,7 +402,7 @@ describe(rateLimit.name, () => {
         )
         router.add({
             method: HttpMethod.GET,
-            pattern: '/ipv6-prefix',
+            path: '/ipv6-prefix',
             handler: () => new Response('ok'),
         })
 
@@ -440,7 +440,7 @@ describe(rateLimit.name, () => {
         )
         router.add({
             method: HttpMethod.GET,
-            pattern: '/subnet-prefix',
+            path: '/subnet-prefix',
             handler: () => new Response('ok'),
         })
 
@@ -475,7 +475,7 @@ describe(rateLimit.name, () => {
         )
         router.add({
             method: HttpMethod.GET,
-            pattern: '/country',
+            path: '/country',
             handler: () => new Response('ok'),
         })
 
@@ -517,7 +517,7 @@ describe(rateLimit.name, () => {
         )
         router.add({
             method: HttpMethod.GET,
-            pattern: '/peak',
+            path: '/peak',
             handler: () => new Response('ok'),
         })
 
@@ -556,7 +556,7 @@ describe(rateLimit.name, () => {
         )
         router.add({
             method: HttpMethod.GET,
-            pattern: '/asn',
+            path: '/asn',
             handler: () => new Response('ok'),
         })
 
@@ -594,7 +594,7 @@ describe(rateLimit.name, () => {
         )
         router.add({
             method: HttpMethod.GET,
-            pattern: '/asn-maxmind',
+            path: '/asn-maxmind',
             handler: () => new Response('ok'),
         })
 
@@ -629,7 +629,7 @@ describe(rateLimit.name, () => {
         )
         router.add({
             method: HttpMethod.GET,
-            pattern: '/custom-ip',
+            path: '/custom-ip',
             handler: () => new Response('ok'),
         })
 
@@ -667,7 +667,7 @@ describe(rateLimit.name, () => {
         )
         router.add({
             method: HttpMethod.GET,
-            pattern: '/country-maxmind',
+            path: '/country-maxmind',
             handler: () => new Response('ok'),
         })
 
@@ -705,7 +705,7 @@ describe(rateLimit.name, () => {
         )
         router.add({
             method: HttpMethod.GET,
-            pattern: '/country-registered',
+            path: '/country-registered',
             handler: () => new Response('ok'),
         })
 
@@ -739,7 +739,7 @@ describe(rateLimit.name, () => {
         )
         router.add({
             method: HttpMethod.GET,
-            pattern: '/anon',
+            path: '/anon',
             handler: () => new Response('ok'),
         })
 
@@ -774,7 +774,7 @@ describe(rateLimit.name, () => {
         )
         router.add({
             method: HttpMethod.GET,
-            pattern: '/ttl',
+            path: '/ttl',
             handler: () => new Response('ok'),
         })
 
@@ -812,7 +812,7 @@ describe(rateLimit.name, () => {
         )
         router.add({
             method: HttpMethod.GET,
-            pattern: '/buckets',
+            path: '/buckets',
             handler: () => new Response('ok'),
         })
 
@@ -848,7 +848,7 @@ describe(rateLimit.name, () => {
         )
         router.add({
             method: HttpMethod.GET,
-            pattern: '/empty-query',
+            path: '/empty-query',
             handler: () => new Response('ok'),
         })
 

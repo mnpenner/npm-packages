@@ -21,11 +21,11 @@ function normalizeRouteName(
 export function normalizeRoute<Ctx extends object = AnyContext>(
     route: Route<Ctx>,
 ): NormalizedRoute<Ctx> {
-    const routePath = route.path ?? route.pattern
-    if (!routePath) {
+    if (!route.path) {
         throw new Error('Route is missing a path')
     }
-    const path = typeof routePath === 'string' ? new URLPattern({ pathname: routePath }) : routePath
+    const path =
+        typeof route.path === 'string' ? new URLPattern({ pathname: route.path }) : route.path
     const method = route.method
     const accept = route.accept
     let normalizedAccept: MediaType[] | undefined

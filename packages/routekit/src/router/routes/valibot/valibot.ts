@@ -33,7 +33,6 @@ type AnyValibotResponseBodySchemas = Partial<Record<number | 'default', AnyValib
 type ValibotResponseBodySchemas = AnyValibotResponseBodySchemas | undefined
 type ResponseValidationMode = false | 'strict' | 'parse'
 type ResponseValidationOption = boolean | ResponseValidationMode
-
 /**
  * Default validation error payload returned by Valibot-backed routes.
  */
@@ -234,13 +233,47 @@ export type WithValibotOptions<
 
 /**
  * Valibot route builder created by `createValibotRoutes`.
+ *
+ * @example
+ * ```ts
+ * const route = createValibotRoutes()
+ *
+ * router.get('/users/:id', route({
+ *   schema: {
+ *     request: {
+ *       path: v.object({id: v.string()}),
+ *     },
+ *   },
+ *   handler: ({path}) => ({id: path.id}),
+ * }))
+ *
+ * router.add(route({
+ *   method: HttpMethod.GET,
+ *   path: '/health',
+ *   handler: () => ({ok: true}),
+ * }))
+ * ```
  */
-export type ValibotRoutes = <
-    Schema extends AnyValibotRouteSchemaInput | undefined,
-    Ctx extends object = object,
->(
-    options: WithValibotOptions<Schema, Ctx>,
-) => RouteOptions<Ctx>
+export type ValibotRoutes = {
+    /**
+     * Build a full route definition that includes its own path.
+     *
+     * @param options - Full route options including `path`.
+     * @returns A full route definition compatible with [`Router.add`]{@link Router#add}.
+     */
+    <Schema extends AnyValibotRouteSchemaInput | undefined, Ctx extends object = object>(
+        options: ValibotRouteOptions<Schema, Ctx>,
+    ): Route<Ctx>
+    /**
+     * Build method-specific route options that leave the path to the registering router.
+     *
+     * @param options - Method route options without a route path.
+     * @returns Route options compatible with helpers like [`Router.get`]{@link Router#get}.
+     */
+    <Schema extends AnyValibotRouteSchemaInput | undefined, Ctx extends object = object>(
+        options: WithValibotOptions<Schema, Ctx>,
+    ): RouteOptions<Ctx>
+}
 
 type ResolvedValibotHandlerOptions<
     Schema extends AnyValibotRouteSchemaInput | undefined,
@@ -473,19 +506,20 @@ function mergeRouteSchema(
     }
 }
 
-function mergeWithValibotOptions<
-    Schema extends AnyValibotRouteSchemaInput | undefined,
-    Ctx extends object,
->(
+function mergeValibotOptions<Options extends { schema?: AnyValibotRouteSchemaInput | undefined }>(
     defaults: ValibotRouteHelperDefaults,
-    options: WithValibotOptions<Schema, Ctx>,
-): WithValibotOptions<Schema, Ctx> {
+    options: Options,
+): Options {
     const schema = mergeRouteSchema(defaults, options.schema)
     return {
         ...defaults,
         ...options,
         ...(schema === undefined ? {} : { schema }),
-    } as WithValibotOptions<Schema, Ctx>
+    } as Options
+}
+
+function hasRoutePath(options: unknown): options is { path: unknown } {
+    return (options as { path?: unknown }).path !== undefined
 }
 
 function isResponseEnvelope(value: unknown): value is ResponseEnvelope {
@@ -839,9 +873,15 @@ export function withValibot<
  * @returns A route-options builder compatible with method-specific router helpers.
  */
 export function createValibotRoutes(defaults: ValibotRouteHelperDefaults = {}): ValibotRoutes {
-    return <Schema extends AnyValibotRouteSchemaInput | undefined, Ctx extends object = object>(
-        options: WithValibotOptions<Schema, Ctx>,
-    ): RouteOptions<Ctx> => withValibot(mergeWithValibotOptions(defaults, options))
+    return (<Schema extends AnyValibotRouteSchemaInput | undefined, Ctx extends object = object>(
+        options: ValibotRouteOptions<Schema, Ctx> | WithValibotOptions<Schema, Ctx>,
+    ): Route<Ctx> | RouteOptions<Ctx> => {
+        const merged = mergeValibotOptions(defaults, options)
+        if (hasRoutePath(merged)) {
+            return valibotRoute(merged as ValibotRouteOptions<Schema, Ctx>)
+        }
+        return withValibot(merged as WithValibotOptions<Schema, Ctx>)
+    }) as ValibotRoutes
 }
 
 /**
