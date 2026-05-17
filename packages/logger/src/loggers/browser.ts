@@ -6,7 +6,7 @@ import { LogLevel, LogLevelValues } from '../logger.ts'
  *
  * @example
  * ```ts
- * import { BrowserLogger, type BrowserConsole } from '@mpen/logger/browser'
+ * import { BrowserLogger, type BrowserConsole } from '@mpen/logger'
  *
  * const target: BrowserConsole = window.console
  * const logger = new BrowserLogger({ console: target })
@@ -57,7 +57,7 @@ export interface BrowserConsole {
  * @example
  * ```ts
  * import { LogLevel } from '@mpen/logger'
- * import { BrowserLogger, type BrowserLoggerOptions } from '@mpen/logger/browser'
+ * import { BrowserLogger, type BrowserLoggerOptions } from '@mpen/logger'
  *
  * const options: BrowserLoggerOptions = { minLogLevel: LogLevel.INFO }
  * const logger = new BrowserLogger(options)

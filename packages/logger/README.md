@@ -1,24 +1,29 @@
 # @mpen/logger
 
-Lightweight logging utilities for structured JSON logs, styled browser console output, and Bun terminal output.
+Lightweight logging utilities for structured JSON logs, styled browser console output, and terminal output.
 
 ## Installation
 
 ```sh
-bun add @mpen/logger
+npm install @mpen/logger
 ```
 
-## Shared Types
+## Usage
 
 ```ts
-import { LogLevel, type Logger } from '@mpen/logger'
+import {
+    BrowserLogger,
+    JsonLogger,
+    LogLevel,
+    TerminalLogger,
+    type Logger,
+} from '@mpen/logger'
 ```
 
 ## JSON Logger
 
 ```ts
-import { JsonLogger } from '@mpen/logger/json'
-import { LogLevel } from '@mpen/logger'
+import { JsonLogger, LogLevel } from '@mpen/logger'
 
 const logger = new JsonLogger({ minLogLevel: LogLevel.INFO })
 
@@ -31,7 +36,7 @@ logger.warn('retrying request', { attempt: 2 })
 ## Browser Logger
 
 ```ts
-import { BrowserLogger } from '@mpen/logger/browser'
+import { BrowserLogger } from '@mpen/logger'
 
 const logger = new BrowserLogger()
 
@@ -44,7 +49,7 @@ logger.table([{ id: 1, status: 'active' }])
 ## Terminal Logger
 
 ```ts
-import { TerminalLogger } from '@mpen/logger/terminal'
+import { TerminalLogger } from '@mpen/logger'
 
 const logger = new TerminalLogger()
 
@@ -55,4 +60,4 @@ logger.table([
 ])
 ```
 
-`TerminalLogger` is intended for Bun runtimes. It uses Bun's string width support to render wrapped terminal logs and tables.
+`TerminalLogger` uses Unicode-aware string width measurement to render wrapped terminal logs and tables.

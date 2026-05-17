@@ -1,6 +1,6 @@
 import type { Logger, WriteFn } from '../logger'
 import { createColors, type Colors } from '@mpen/picocolors'
-import { stringWidth } from 'bun'
+import stringWidth from 'string-width'
 import { jsAsciiString } from '../json.ts'
 import {
     getTableColumns,
@@ -28,7 +28,7 @@ interface RenderedCell {
  *
  * @example
  * ```ts
- * import { TerminalLogger, type TableInspectOptions } from '@mpen/logger/terminal'
+ * import { TerminalLogger, type TableInspectOptions } from '@mpen/logger'
  *
  * const inspect: TableInspectOptions = { depth: 2, maxStringLength: 120 }
  * const logger = new TerminalLogger({ table: { inspect } })
@@ -58,7 +58,7 @@ export interface TableInspectOptions {
  *
  * @example
  * ```ts
- * import { TableDensity, TerminalLogger } from '@mpen/logger/terminal'
+ * import { TableDensity, TerminalLogger } from '@mpen/logger'
  *
  * const logger = new TerminalLogger({ table: { density: TableDensity.BALANCED } })
  * ```
@@ -99,7 +99,7 @@ interface TableLayout {
  *
  * @example
  * ```ts
- * import { TableDensity, type TableOptions } from '@mpen/logger/terminal'
+ * import { TableDensity, type TableOptions } from '@mpen/logger'
  *
  * const table: TableOptions = {
  *     showIndex: true,
@@ -134,7 +134,7 @@ export interface TableOptions {
  *
  * @example
  * ```ts
- * import { TerminalLogger, type TerminalLogOptions } from '@mpen/logger/terminal'
+ * import { TerminalLogger, type TerminalLogOptions } from '@mpen/logger'
  *
  * const log: TerminalLogOptions = { inspect: { depth: 3 } }
  * const logger = new TerminalLogger({ log })
@@ -152,7 +152,7 @@ export interface TerminalLogOptions {
  *
  * @example
  * ```ts
- * import { TerminalLogger, type TerminalLoggerOptions } from '@mpen/logger/terminal'
+ * import { TerminalLogger, type TerminalLoggerOptions } from '@mpen/logger'
  *
  * const options: TerminalLoggerOptions = {
  *     color: true,
@@ -201,11 +201,11 @@ function getLogTime(): string {
 }
 
 /**
- * Writes formatted logs and tables for Bun terminal programs.
+ * Writes formatted logs and tables for terminal programs.
  *
  * @example
  * ```ts
- * import { TerminalLogger } from '@mpen/logger/terminal'
+ * import { TerminalLogger } from '@mpen/logger'
  *
  * const logger = new TerminalLogger()
  * logger.info('build started')

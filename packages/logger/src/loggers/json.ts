@@ -9,7 +9,7 @@ import { getTableColumns, toTableRows } from '../table.ts'
  * @example
  * ```ts
  * import { LogLevel } from '@mpen/logger'
- * import { JsonLogger, type JsonLoggerOptions } from '@mpen/logger/json'
+ * import { JsonLogger, type JsonLoggerOptions } from '@mpen/logger'
  *
  * const options: JsonLoggerOptions = {
  *     minLogLevel: LogLevel.INFO,
@@ -34,7 +34,7 @@ export interface JsonLoggerOptions {
  *
  * @example
  * ```ts
- * import { JsonLogger } from '@mpen/logger/json'
+ * import { JsonLogger } from '@mpen/logger'
  *
  * const logger = new JsonLogger()
  * logger.info('server started')

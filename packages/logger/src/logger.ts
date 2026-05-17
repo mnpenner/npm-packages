@@ -4,7 +4,7 @@
  * @example
  * ```ts
  * import { LogLevel } from '@mpen/logger'
- * import { JsonLogger } from '@mpen/logger/json'
+ * import { JsonLogger } from '@mpen/logger'
  *
  * const logger = new JsonLogger({ minLogLevel: LogLevel.WARN })
  * logger.info('hidden')
