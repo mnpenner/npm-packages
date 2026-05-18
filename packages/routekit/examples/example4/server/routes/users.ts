@@ -1,10 +1,10 @@
 import { ok } from '@mpen/routekit'
-import { valibotRoute } from '../valibot.ts'
+import { route } from '../valibot.ts'
 import * as v from 'valibot'
 import { HttpStatus } from '@mpen/http'
 import { StringInt } from '../schemas.ts'
 
-export default valibotRoute({
+export default route({
     schema: {
         request: {
             path: v.object({

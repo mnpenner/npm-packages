@@ -44,7 +44,7 @@ export const BaseIssueSchema: v.GenericSchema<unknown, SerializedBaseIssue> = v.
     skipPipe: v.optional(v.boolean()),
 })
 
-export const valibotRoute = createValibotRoutes({
+export const route = createValibotRoutes({
     validateResponse: 'parse',
     validationError(component, issues) {
         console.error('validationError', { component, issues })

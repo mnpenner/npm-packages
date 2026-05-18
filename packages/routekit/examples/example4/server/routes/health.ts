@@ -1,9 +1,9 @@
 import { ok, response } from '@mpen/routekit'
 import { HttpMethod, HttpStatus } from '@mpen/http'
 import * as v from 'valibot'
-import { valibotRoute } from '../valibot.ts'
+import { route } from '../valibot.ts'
 
-export default valibotRoute({
+export default route({
     method: HttpMethod.GET,
     path: '/health',
     schema: {
