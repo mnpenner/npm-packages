@@ -112,7 +112,7 @@ describe('zodHandler', () => {
             },
             validateResponse: false,
             handler: () => new Response('ok'),
-            validationError: (component, error) => {
+            onRequestValidationError: (component, error) => {
                 expect(component).toBe(ValidationError.URL_PATH)
                 expect(error).toBeInstanceOf(z.ZodError)
                 return new Response('bad input', { status: HttpStatus.UNPROCESSABLE_ENTITY })
@@ -193,7 +193,7 @@ describe('zodHandler', () => {
                         },
                     },
                 },
-                validationError: (component, error) =>
+                onRequestValidationError: (component, error) =>
                     routekitResponse(
                         { component, errorTree: z.treeifyError(error) },
                         { status: HttpStatus.BAD_REQUEST },
@@ -442,7 +442,7 @@ describe('createZodRouteBuilder', () => {
     it('builds method-specific route options with shared defaults', async () => {
         const zod = createZodRouteBuilder({
             validateResponse: false,
-            validationError: () =>
+            onRequestValidationError: () =>
                 new Response('factory bad input', { status: HttpStatus.BAD_REQUEST }),
         })
         const router = new Router()
@@ -476,7 +476,7 @@ describe('createZodRouteBuilder', () => {
                     },
                 },
             },
-            validationError: () =>
+            onRequestValidationError: () =>
                 new Response('factory bad input', { status: HttpStatus.UNPROCESSABLE_ENTITY }),
         })
 

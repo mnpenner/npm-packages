@@ -117,7 +117,7 @@ describe(valibotHandler.name, () => {
             },
             validateResponse: false,
             handler: () => ok({ id: '1', name: 'Ada' }),
-            validationError: (component, issues) => {
+            onRequestValidationError: (component, issues) => {
                 expect(component).toBe(ValibotValidationError.URL_PATH)
                 expect(issues.length).toBeGreaterThan(0)
                 return new Response('bad input', { status: HttpStatus.UNPROCESSABLE_ENTITY })
@@ -202,7 +202,7 @@ describe(valibotHandler.name, () => {
                         },
                     },
                 },
-                validationError: (component, issues) =>
+                onRequestValidationError: (component, issues) =>
                     routekitResponse({ component, issues }, { status: HttpStatus.BAD_REQUEST }),
                 handler: () => ok({ ok: true }),
             }),
@@ -461,7 +461,7 @@ describe(createValibotRouteBuilder.name, () => {
                     },
                 },
             },
-            validationError: () =>
+            onRequestValidationError: () =>
                 new Response('builder bad input', { status: HttpStatus.UNPROCESSABLE_ENTITY }),
         })
 

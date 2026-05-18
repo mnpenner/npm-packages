@@ -194,7 +194,7 @@ export type ValibotRouteHelperDefaults = {
     /**
      * Override the default request validation error response.
      */
-    validationError?: ValibotValidationErrorHandler
+    onRequestValidationError?: ValibotValidationErrorHandler
 }
 
 /**
@@ -301,7 +301,7 @@ type ResolvedValibotHandlerOptions<
         Ctx
     >
     validateResponse: ResponseValidationMode
-    validationError: ValibotValidationErrorHandler
+    onRequestValidationError: ValibotValidationErrorHandler
 }
 
 type ResponseBodyForValidation = {
@@ -365,8 +365,10 @@ function resolveDefaults<Schema extends AnyValibotRouteSchemaInput | undefined, 
             normalizeResponseValidationMode(options.validateResponse) ??
             normalizeResponseValidationMode(defaults?.validateResponse) ??
             'parse',
-        validationError:
-            options.validationError ?? defaults?.validationError ?? createValidationResponse,
+        onRequestValidationError:
+            options.onRequestValidationError ??
+            defaults?.onRequestValidationError ??
+            createValidationResponse,
     }
 }
 
@@ -720,7 +722,7 @@ export function valibotHandler<
                 const queryResult = v.safeParse(querySchema, queryParams)
                 if (!queryResult.success) {
                     return await validateAndReturn(
-                        resolved.validationError(
+                        resolved.onRequestValidationError(
                             ValibotValidationError.QUERY_PARAMETERS,
                             queryResult.issues,
                         ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>,
@@ -738,7 +740,7 @@ export function valibotHandler<
                     rawBody = await readRequestBody(ctx.req)
                 } catch (err) {
                     return await validateAndReturn(
-                        resolved.validationError(
+                        resolved.onRequestValidationError(
                             ValibotValidationError.REQUEST_BODY,
                             valibotIssuesFromThrowable(err),
                         ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>,
@@ -747,7 +749,7 @@ export function valibotHandler<
                 const bodyResult = v.safeParse(bodySchema, rawBody)
                 if (!bodyResult.success) {
                     return await validateAndReturn(
-                        resolved.validationError(
+                        resolved.onRequestValidationError(
                             ValibotValidationError.REQUEST_BODY,
                             bodyResult.issues,
                         ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>,
@@ -763,7 +765,7 @@ export function valibotHandler<
                 const pathResult = v.safeParse(pathSchema, ctx.pathParams)
                 if (!pathResult.success) {
                     return await validateAndReturn(
-                        resolved.validationError(
+                        resolved.onRequestValidationError(
                             ValibotValidationError.URL_PATH,
                             pathResult.issues,
                         ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>,
@@ -829,11 +831,11 @@ export function withValibot<
     Schema extends AnyValibotRouteSchemaInput | undefined,
     Ctx extends object = object,
 >(options: WithValibotOptions<Schema, Ctx>): RouteOptions<Ctx> {
-    const { schema, handler, validationError, validateResponse, ...routeOptions } = options
+    const { schema, handler, onRequestValidationError, validateResponse, ...routeOptions } = options
     const partial = valibotPartial<Schema, Ctx>({
         ...(schema ? { schema } : {}),
         handler,
-        ...(validationError ? { validationError } : {}),
+        ...(onRequestValidationError ? { onRequestValidationError } : {}),
         ...(validateResponse === undefined ? {} : { validateResponse }),
     })
     return {
@@ -897,11 +899,11 @@ export function valibotRoute<
     Schema extends AnyValibotRouteSchemaInput | undefined,
     Ctx extends object = object,
 >(options: ValibotRouteOptions<Schema, Ctx>): Route<Ctx> {
-    const { schema, handler, validationError, validateResponse, ...route } = options
+    const { schema, handler, onRequestValidationError, validateResponse, ...route } = options
     const partial = valibotPartial<Schema, Ctx>({
         ...(schema ? { schema } : {}),
         handler,
-        ...(validationError ? { validationError } : {}),
+        ...(onRequestValidationError ? { onRequestValidationError } : {}),
         ...(validateResponse === undefined ? {} : { validateResponse }),
     })
     return {

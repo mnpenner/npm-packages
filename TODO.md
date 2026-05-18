@@ -28,9 +28,12 @@
     - Mouseover to start fetching page JS (but not data)
 - [x] Rename `react-external-state` to `react-external-store` ?
 - routekit
-  - Auto-parse body? (rather than `await res.parseBody()`)
-  - Simpler API client; none of this `ClientCallOptions` crap. Just do (path,query,body)
-  - Include path in packages/routekit/examples/example4/server/routes/users.ts ? Go back to route factory?
-  - `validateResponse` naming -- it's now an option of parse, validate or neither/off.
-  - Error sub-types; maybe `rk-error-code` header?
-    - e.g. unauthorized (403), unauthenticated (401), session_expired (401)
+  - Client
+    - Auto-parse body? (rather than `await res.parseBody()`)
+    - Simpler API client; none of this `ClientCallOptions` crap. Just do (path,query,body)
+  - Server
+    - [x] Include path in packages/routekit/examples/example4/server/routes/users.ts ? Go back to route factory?
+    - [x] `validateResponse` naming -- it's now an option of parse, validate or neither/off.
+    - Error sub-types; maybe `rk-error-code` header?
+      - e.g. unauthorized (403), unauthenticated (401), session_expired (401)
+    - Standard/default validation error. Validate all 3 in one response

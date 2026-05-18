@@ -26,7 +26,7 @@ const zodRoute = createZodRouteBuilder({
             },
         },
     },
-    validationError(component, error) {
+    onRequestValidationError(component, error) {
         const componentName =
             component === ValidationError.REQUEST_BODY
                 ? 'request_body'

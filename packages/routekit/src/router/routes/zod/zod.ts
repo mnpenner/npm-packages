@@ -162,7 +162,7 @@ export type ZodRouteHelperDefaults = {
     /**
      * Override the default request validation error response.
      */
-    validationError?: ValidationErrorHandler
+    onRequestValidationError?: ValidationErrorHandler
 }
 
 /**
@@ -275,7 +275,7 @@ type ResolvedZodHandlerOptions<
         Ctx
     >
     validateResponse: ResponseValidationMode
-    validationError: ValidationErrorHandler
+    onRequestValidationError: ValidationErrorHandler
 }
 
 type ResponseBodyForValidation = {
@@ -331,8 +331,10 @@ function resolveDefaults<
             normalizeResponseValidationMode(options.validateResponse) ??
             normalizeResponseValidationMode(defaults?.validateResponse) ??
             'parse',
-        validationError:
-            options.validationError ?? defaults?.validationError ?? createValidationResponse,
+        onRequestValidationError:
+            options.onRequestValidationError ??
+            defaults?.onRequestValidationError ??
+            createValidationResponse,
     }
 }
 
@@ -673,7 +675,7 @@ export function zodHandler<
                 const queryResult = querySchema.safeParse(queryParams)
                 if (!queryResult.success) {
                     return await validateAndReturn(
-                        resolved.validationError(
+                        resolved.onRequestValidationError(
                             ValidationError.QUERY_PARAMETERS,
                             queryResult.error,
                         ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>,
@@ -690,7 +692,7 @@ export function zodHandler<
                     rawBody = await readRequestBody(ctx.req)
                 } catch (err) {
                     return await validateAndReturn(
-                        resolved.validationError(
+                        resolved.onRequestValidationError(
                             ValidationError.REQUEST_BODY,
                             zodErrorFromThrowable(err),
                         ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>,
@@ -699,7 +701,7 @@ export function zodHandler<
                 const bodyResult = bodySchema.safeParse(rawBody)
                 if (!bodyResult.success) {
                     return await validateAndReturn(
-                        resolved.validationError(
+                        resolved.onRequestValidationError(
                             ValidationError.REQUEST_BODY,
                             bodyResult.error,
                         ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>,
@@ -714,7 +716,7 @@ export function zodHandler<
                 const pathResult = pathSchema.safeParse(ctx.pathParams)
                 if (!pathResult.success) {
                     return await validateAndReturn(
-                        resolved.validationError(
+                        resolved.onRequestValidationError(
                             ValidationError.URL_PATH,
                             pathResult.error,
                         ) as HandlerResult<InferResponseBody<ExtractResponseBodySchemas<Schema>>>,
@@ -779,11 +781,11 @@ export function withZod<
     Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
     Ctx extends object = AnyContext,
 >(options: WithZodOptions<Schema, Ctx>): RouteOptions<Ctx> {
-    const { schema, handler, validationError, validateResponse, ...routeOptions } = options
+    const { schema, handler, onRequestValidationError, validateResponse, ...routeOptions } = options
     const partial = zodPartial<Schema, Ctx>({
         ...(schema ? { schema } : {}),
         handler,
-        ...(validationError ? { validationError } : {}),
+        ...(onRequestValidationError ? { onRequestValidationError } : {}),
         ...(validateResponse === undefined ? {} : { validateResponse }),
     })
     return {
@@ -848,11 +850,11 @@ export function zodRoute<
     Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
     Ctx extends object = AnyContext,
 >(options: ZodRouteOptions<Schema, Ctx>): Route<Ctx> {
-    const { schema, handler, validationError, validateResponse, ...route } = options
+    const { schema, handler, onRequestValidationError, validateResponse, ...route } = options
     const partial = zodPartial<Schema, Ctx>({
         ...(schema ? { schema } : {}),
         handler,
-        ...(validationError ? { validationError } : {}),
+        ...(onRequestValidationError ? { onRequestValidationError } : {}),
         ...(validateResponse === undefined ? {} : { validateResponse }),
     })
     return {

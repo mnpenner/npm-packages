@@ -46,8 +46,8 @@ export const BaseIssueSchema: v.GenericSchema<unknown, SerializedBaseIssue> = v.
 
 export const route = createValibotRouteBuilder({
     validateResponse: 'parse',
-    validationError(component, issues) {
-        console.error('validationError', { component, issues })
+    onRequestValidationError(component, issues) {
+        console.error('onRequestValidationError', { component, issues })
         return response({ component, issues }, { status: HttpStatus.BAD_REQUEST })
     },
     schema: {

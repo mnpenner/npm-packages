@@ -243,7 +243,7 @@ Available Zod helpers:
 - `createZodRouteBuilder(defaults)` creates a route builder with shared schema, validation, and error handling defaults.
 
 Request validation failures return a `400` JSON response by default. Override
-`validationError` to customize that response. Response validation defaults to
+`onRequestValidationError` to customize that response. Response validation defaults to
 `process.env.NODE_ENV !== 'production'` and can be controlled with `validateResponse`.
 
 ## Valibot Routes
