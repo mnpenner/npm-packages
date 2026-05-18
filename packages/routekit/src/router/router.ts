@@ -1,4 +1,5 @@
 import { CommonHeaders, HttpMethod, HttpStatus, StatusText } from '@mpen/http'
+import { ConsoleLogger, type Logger } from '@mpen/logger'
 import type { SimpleServerInterface } from './UniversalServerInterface'
 import { joinPrefixPathname, stripPrefixPathname } from './pathname'
 import { normalizeRoute } from './route-normalize'
@@ -95,6 +96,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
     private _entries: RouteEntry[] = []
     private _middleware: ContextMiddleware<any, any>[] = []
     private _serializers: BodySerializer[]
+    private _logger: Logger
     private _notFoundHandler?: Handler<any, Ctx>
     private _methodNotAllowedHandler?: Handler<any, Ctx>
     private _notAcceptableHandler?: Handler<any, Ctx>
@@ -107,6 +109,7 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
      */
     constructor(options: RouterOptions = {}) {
         this._serializers = options.serializers?.slice() ?? [jsonSerializer()]
+        this._logger = options.logger ?? new ConsoleLogger()
     }
 
     /**
@@ -242,7 +245,10 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
     ): Router<any> {
         const list = normalizeMiddlewareList(middleware)
         if (router) {
-            const group = new Router<Ctx>({ serializers: this._serializers }).use(list)
+            const group = new Router<Ctx>({
+                serializers: this._serializers,
+                logger: this._logger,
+            }).use(list)
             group.mount(router)
             this._entries.push({ kind: 'router', router: group })
             return this
@@ -292,7 +298,10 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         configure: (router: Router<any>) => void,
     ): this {
         const list = normalizeMiddlewareList(middleware)
-        const group = new Router<Ctx>({ serializers: this._serializers }).use(list)
+        const group = new Router<Ctx>({
+            serializers: this._serializers,
+            logger: this._logger,
+        }).use(list)
         configure(group)
         this._entries.push({ kind: 'router', router: group })
         return this
@@ -648,6 +657,17 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         )
     }
 
+    private _logInternalServerError(error: unknown, request: Request): void {
+        try {
+            this._logger.error('Routekit internal server error', error, {
+                method: request.method,
+                url: request.url,
+            })
+        } catch {
+            // Logging must not change the response produced for an internal server error.
+        }
+    }
+
     private async _finalizeResult(result: HandlerFinalResult, request: Request): Promise<Response> {
         if (result instanceof Response) {
             return result
@@ -765,7 +785,8 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         if (!handler) return null
         try {
             return await this._executeHandler(handler, [], ctx, router, request)
-        } catch {
+        } catch (error) {
+            router._logInternalServerError(error, request)
             return this._statusResponse(HttpStatus.INTERNAL_SERVER_ERROR, request)
         }
     }
@@ -793,7 +814,9 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
         router: Router<any>,
         ctx: HandlerContext<any>,
         request: Request,
+        error: unknown,
     ): Promise<Response> {
+        router._logInternalServerError(error, request)
         const custom = await this._tryCustomHandler(
             router._internalErrorHandler,
             ctx,
@@ -839,8 +862,8 @@ export class Router<Ctx extends object = AnyContext> implements SimpleServerInte
                 found.router,
                 request,
             )
-        } catch {
-            return await this._handleInternalError(found.router, handlerCtx, request)
+        } catch (error) {
+            return await this._handleInternalError(found.router, handlerCtx, request, error)
         }
     }
 

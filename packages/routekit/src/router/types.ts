@@ -1,4 +1,5 @@
 import type { HttpMethod } from '@mpen/http'
+import type { Logger } from '@mpen/logger'
 import type { Router } from './router'
 import type { RouterBodyInit } from './fetch-types'
 import type {
@@ -88,6 +89,17 @@ export interface RouterOptions {
      * Body serializers used when a logical response does not set `Content-Type`.
      */
     serializers?: BodySerializer[]
+    /**
+     * Logger used for router-level internal server error reports.
+     *
+     * @example
+     * ```ts
+     * import { JsonLogger } from '@mpen/logger'
+     *
+     * const router = new Router({logger: new JsonLogger()})
+     * ```
+     */
+    logger?: Logger
 }
 
 /**

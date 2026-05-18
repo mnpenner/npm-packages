@@ -27,7 +27,7 @@
     - Create `<RouteContext routes={ROUTES}>`, then inside we can do `<RouteLink name="routeName" params={{id:123}} />`. It can "active" when there's an exact match (id is 123) _or_ when the route generally matches.
     - Mouseover to start fetching page JS (but not data)
 - [x] Rename `react-external-state` to `react-external-store` ?
-- routekit
+- @mpen/routekit
   - Client
     - Auto-parse body? (rather than `await res.parseBody()`)
     - Simpler API client; none of this `ClientCallOptions` crap. Just do (path,query,body)
@@ -36,9 +36,12 @@
     - [x] `validateResponse` naming -- it's now an option of parse, validate or neither/off.
     - Error sub-types; maybe `rk-error-code` header?
       - e.g. unauthorized (403), unauthenticated (401), session_expired (401)
-    - Standard/default validation error. Validate all 3 in one response
+    - Standard/default validation error. ~~Validate all 3 in one response~~
+      - Refine packages/routekit/src/router/rfc9457.ts
     - Logger integration
     - Integrate more error helpers?
       - See https://github.com/JohnAdib/rfc9457. They use validate -> 422
       - https://gist.github.com/devEstivenValencia/009f06ca1af29bb572625836f74e14a2
     - Handle weird `+json` content-types when parsing incoming requests
+- @mpen/logger
+  - Integrate stack trace parser from packages/routekit/src/router/middleware/logger-context.ts into TerminalLogger

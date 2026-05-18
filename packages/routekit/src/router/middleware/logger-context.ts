@@ -139,6 +139,9 @@ export interface LoggerCtxOptions<Ctx extends object = AnyContext> {
     rootPath?: string
 }
 
+/**
+ * @experimental
+ */
 class Logger {
     private readonly _path: string[] = []
     private readonly _context: Record<string, any> = {}
@@ -240,6 +243,9 @@ class Logger {
     }
 }
 
+/**
+ * @experimental
+ */
 export function loggerCtx<Ctx extends object = AnyContext>(
     options: LoggerCtxOptions<Ctx> = {},
 ): ContextMiddleware<{ logger: Logger }> {

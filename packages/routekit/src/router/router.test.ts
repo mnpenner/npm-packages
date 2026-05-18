@@ -1,6 +1,7 @@
 #!/usr/bin/env -S bun test
 import { describe, expect, it, mock } from 'bun:test'
 import { HttpMethod, HttpStatus } from '@mpen/http'
+import type { Logger } from '@mpen/logger'
 import { Router } from './router'
 import type { ContextMiddleware, Handler } from './types'
 import { expectType } from '@mpen/ts-types'
@@ -21,6 +22,33 @@ function makeRequest(
     const init: RequestInit = { method }
     if (headers) init.headers = headers
     return new Request(`https://example.com${path}`, init)
+}
+
+type LogCall = {
+    method: keyof Logger
+    data: any[]
+}
+
+type TestLogger = Logger & {
+    calls: LogCall[]
+}
+
+function createTestLogger(): TestLogger {
+    const calls: LogCall[] = []
+    const write =
+        (method: keyof Logger) =>
+        (...data: any[]) => {
+            calls.push({ method, data })
+        }
+
+    return {
+        calls,
+        log: write('log'),
+        info: write('info'),
+        warn: write('warn'),
+        error: write('error'),
+        table: write('table'),
+    }
 }
 
 describe('Router', () => {
@@ -544,7 +572,7 @@ describe('Router.notFound', () => {
     })
 
     it('falls back to 500 when the notFound handler throws', async () => {
-        const router = new Router().notFound(() => {
+        const router = new Router({ logger: createTestLogger() }).notFound(() => {
             throw new Error('boom')
         })
 
@@ -591,14 +619,48 @@ describe('Router.notAcceptable', () => {
 })
 
 describe('Router.internalError', () => {
+    it('logs matched route errors with the default ConsoleLogger', async () => {
+        const originalError = console.error
+        const calls: any[][] = []
+        const error = new Error('boom')
+        console.error = ((...data: any[]) => {
+            calls.push(data)
+        }) as typeof console.error
+        try {
+            const router = new Router().add({
+                method: HttpMethod.GET,
+                path: '/boom',
+                handler: () => {
+                    throw error
+                },
+            })
+
+            const response = await router.fetch(makeRequest('/boom'))
+
+            expect(response.status).toBe(HttpStatus.INTERNAL_SERVER_ERROR)
+            expect(await response.text()).toBe('Internal Server Error')
+            expect(calls).toHaveLength(1)
+            expect(calls[0]?.[0]).toBe('Routekit internal server error')
+            expect(calls[0]?.[1]).toBe(error)
+            expect(calls[0]?.[2]).toEqual({
+                method: HttpMethod.GET,
+                url: 'https://example.com/boom',
+            })
+        } finally {
+            console.error = originalError
+        }
+    })
+
     it('uses the configured internalError handler', async () => {
-        const router = new Router()
+        const logger = createTestLogger()
+        const error = new Error('boom')
+        const router = new Router({ logger })
             .internalError(() => new Response('broken', { status: HttpStatus.SERVICE_UNAVAILABLE }))
             .add({
                 method: HttpMethod.GET,
                 path: '/boom',
                 handler: () => {
-                    throw new Error('boom')
+                    throw error
                 },
             })
 
@@ -606,18 +668,29 @@ describe('Router.internalError', () => {
 
         expect(response.status).toBe(HttpStatus.SERVICE_UNAVAILABLE)
         expect(await response.text()).toBe('broken')
+        expect(logger.calls).toHaveLength(1)
+        expect(logger.calls[0]?.method).toBe('error')
+        expect(logger.calls[0]?.data[0]).toBe('Routekit internal server error')
+        expect(logger.calls[0]?.data[1]).toBe(error)
+        expect(logger.calls[0]?.data[2]).toEqual({
+            method: HttpMethod.GET,
+            url: 'https://example.com/boom',
+        })
     })
 
     it('falls back to 500 when the internalError handler throws', async () => {
-        const router = new Router()
+        const logger = createTestLogger()
+        const routeError = new Error('boom')
+        const handlerError = new Error('handler boom')
+        const router = new Router({ logger })
             .internalError(() => {
-                throw new Error('handler boom')
+                throw handlerError
             })
             .add({
                 method: HttpMethod.GET,
                 path: '/boom',
                 handler: () => {
-                    throw new Error('boom')
+                    throw routeError
                 },
             })
 
@@ -625,6 +698,9 @@ describe('Router.internalError', () => {
 
         expect(response.status).toBe(HttpStatus.INTERNAL_SERVER_ERROR)
         expect(await response.text()).toBe('Internal Server Error')
+        expect(logger.calls).toHaveLength(2)
+        expect(logger.calls[0]?.data[1]).toBe(routeError)
+        expect(logger.calls[1]?.data[1]).toBe(handlerError)
     })
 })
 
@@ -680,6 +756,33 @@ describe('Router.fetch', () => {
 
         expect(response.status).toBe(HttpStatus.OK)
         expect(boundRouter === child).toBe(true)
+    })
+
+    it('uses the matched mounted router logger for internal errors', async () => {
+        const parentLogger = createTestLogger()
+        const childLogger = createTestLogger()
+        const error = new Error('boom')
+        const parent = new Router({ logger: parentLogger })
+        const child = new Router({ logger: childLogger })
+        child.add({
+            method: HttpMethod.GET,
+            path: '/nested',
+            handler: () => {
+                throw error
+            },
+        })
+        parent.mount('/api', child)
+
+        const response = await parent.fetch(new Request('https://example.com/api/nested'))
+
+        expect(response.status).toBe(HttpStatus.INTERNAL_SERVER_ERROR)
+        expect(parentLogger.calls).toHaveLength(0)
+        expect(childLogger.calls).toHaveLength(1)
+        expect(childLogger.calls[0]?.data[1]).toBe(error)
+        expect(childLogger.calls[0]?.data[2]).toEqual({
+            method: HttpMethod.GET,
+            url: 'https://example.com/api/nested',
+        })
     })
 })
 
@@ -788,5 +891,27 @@ describe('Router.group', () => {
             'group:after',
             'root:after',
         ])
+    })
+
+    it('uses the parent logger for grouped route internal errors', async () => {
+        const logger = createTestLogger()
+        const error = new Error('boom')
+        const router = new Router({ logger })
+
+        router.group([], (group) => {
+            group.add({
+                method: HttpMethod.GET,
+                path: '/items',
+                handler: () => {
+                    throw error
+                },
+            })
+        })
+
+        const response = await router.fetch(makeRequest('/items'))
+
+        expect(response.status).toBe(HttpStatus.INTERNAL_SERVER_ERROR)
+        expect(logger.calls).toHaveLength(1)
+        expect(logger.calls[0]?.data[1]).toBe(error)
     })
 })
