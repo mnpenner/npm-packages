@@ -21,12 +21,45 @@ export const ProgressBarPartialBlocks = {
     /**
      * Bottom-to-top block segments.
      */
-    vertical: '▁▂▃▄▅▆▇█',
+    grow: '▁▂▃▄▅▆▇█',
 
     /**
      * Light-to-heavy shade segments.
      */
     shades: '░▒▓█',
+
+    /**
+     * Vertical center-out expansion.
+     *
+     * Sparse → centered → full.
+     */
+    // centerVertical: '─╌╍▀█',
+
+    // middleOut: '┄─━',
+
+    /**
+     * Heavy centered vertical expansion.
+     */
+    // centerVerticalBold: '─═▀█',
+
+    /**
+     * Braille density progression.
+     *
+     * Useful for very fine-grained fills.
+     */
+    braille: '⠁⠃⠇⡇⡏⡟⡿⣿', // https://unicode.org/charts/nameslist/c_2800.html
+    braille2: '⠂⠆⠇⡇⡗⡷⡿⣿',
+    braille3: '⠁⠑⠕⢕⢝⢟⢿⣿',
+
+    /**
+     * Box-drawing density progression.
+     */
+    thatched: '│║╫█', // ╬ https://w3c.github.io/xml-entities/025.html
+
+    amstrad: '▘▖▍▚▞▛▙▉',
+
+    // sevseg: '🯰🯱🯲🯳🯴🯵🯶🯷🯸🯹🯺',
+    // numeric: '0123456789',
 } as const
 
 /**

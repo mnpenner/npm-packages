@@ -13,7 +13,7 @@
 - Start `ts-types` package; include `ts-expect` and my fav helpers like `Override`, `assumeType`
     - Have a `react/` subdir for `OverrideProps` et al
 - [x] Create `logger` package (extract from routekit and bookmarks)
-- Create `progressbar` package (extract from scrubber)
+- [x] Create `progressbar` package (extract from scrubber)
 - Create `process` package (extract from `podman`)
 - Uplevel all the `packages/rollup-plugins/packages` packages
 - [x] Create script to bump versions and publish any packages if it passes all tests and has been modified since last release
@@ -47,3 +47,6 @@
   - [x] Integrate stack trace parser from packages/routekit/src/router/middleware/logger-context.ts into TerminalLogger; paths should be relative to cwd
   - [x] Extra properties on the Error object should be logged. See `ValibotResponseValidationError`, it ought to log `status` and `issues` 
   - JsonLogger should log the callsite; see how packages/routekit/src/router/middleware/logger-context.ts creates a new Error to do so
+  - Alignment w/ `TerminalLogger.error(new Error(...))` looks a little off. Needs improvement.
+  - Implement `logger.sub("name")`
+- Revive `child-spawn` because Bun's `$` breaks TTY

@@ -1171,7 +1171,7 @@ export class TerminalLogger implements Logger {
         if (depth >= this._tblInspect.depth) {
             const text = Array.isArray(value) ? '[Array]' : '[Object]'
 
-            return this.createRenderedLine(text, this._pc.yellowBright(text))
+            return this.createCollapsedValueLine(text)
         }
 
         if (Array.isArray(value)) {
@@ -1450,7 +1450,7 @@ export class TerminalLogger implements Logger {
         if (depth >= this._logInspect.depth) {
             const text = Array.isArray(value) ? '[Array]' : '[Object]'
 
-            return [this.createRenderedLine(text, this._pc.yellowBright(text))]
+            return [this.createCollapsedValueLine(text)]
         }
 
         seen.add(value)
@@ -1484,7 +1484,7 @@ export class TerminalLogger implements Logger {
 
             return index === visibleItems.length - 1 && !hasMore
                 ? lines
-                : this.appendToLastRenderedLine(lines, ',')
+                : this.appendToLastRenderedLine(lines, this.createSeparatorLine(','))
         })
         const suffix = hasMore
             ? [
@@ -1525,9 +1525,10 @@ export class TerminalLogger implements Logger {
         const visibleKeys = keys.slice(0, this._logInspect.maxObjectKeys)
         const hasMore = keys.length > visibleKeys.length
         const entries = visibleKeys.map((key, index) => {
-            const label = this.createRenderedLine(
-                `${this.formatPropertyKey(key)}: `,
-                this._pc.white(`${this.formatPropertyKey(key)}: `),
+            const keyText = this.formatPropertyKey(key)
+            const label = this.joinRenderedLines(
+                this.createRenderedLine(keyText, this._pc.white(keyText)),
+                this.createSeparatorLine(': '),
             )
             const lines = this.inspectPrettyValue(
                 (value as Record<PropertyKey, unknown>)[key],
@@ -1537,7 +1538,7 @@ export class TerminalLogger implements Logger {
             const [firstLine = this.createRenderedLine(''), ...remainingLines] =
                 index === visibleKeys.length - 1 && !hasMore
                     ? lines
-                    : this.appendToLastRenderedLine(lines, ',')
+                    : this.appendToLastRenderedLine(lines, this.createSeparatorLine(','))
 
             return [
                 this.joinRenderedLines(label, firstLine),
@@ -1568,15 +1569,13 @@ export class TerminalLogger implements Logger {
         return typeof key === 'symbol' ? `[${key.toString()}]` : this.formatObjectKey(key)
     }
 
-    private appendToLastRenderedLine(lines: RenderedLine[], suffix: string): RenderedLine[] {
+    private appendToLastRenderedLine(lines: RenderedLine[], suffix: RenderedLine): RenderedLine[] {
         if (lines.length === 0) {
-            return [this.createRenderedLine(suffix)]
+            return [suffix]
         }
 
         return lines.map((line, index) =>
-            index === lines.length - 1
-                ? this.joinRenderedLines(line, this.createRenderedLine(suffix))
-                : line,
+            index === lines.length - 1 ? this.joinRenderedLines(line, suffix) : line,
         )
     }
 
@@ -1600,10 +1599,12 @@ export class TerminalLogger implements Logger {
     private inspectObject(value: Record<string, unknown>, depth: number): RenderedLine {
         const keys = Object.keys(value)
         const entries = keys.slice(0, this._tblInspect.maxObjectKeys).map((key) => {
+            const keyText = this.formatObjectKey(key)
+
             return this.joinRenderedLines(
-                this.createRenderedLine(
-                    `${this.formatObjectKey(key)}:`,
-                    this._pc.white(`${this.formatObjectKey(key)}:`),
+                this.joinRenderedLines(
+                    this.createRenderedLine(keyText, this._pc.white(keyText)),
+                    this.createSeparatorLine(':'),
                 ),
                 this.inspectValue(value[key], depth + 1),
             )
@@ -1633,7 +1634,7 @@ export class TerminalLogger implements Logger {
             }
 
             return this.joinRenderedLines(
-                this.joinRenderedLines(result, this.createRenderedLine(separator)),
+                this.joinRenderedLines(result, this.createSeparatorLine(separator)),
                 part,
             )
         }, null)
@@ -1649,6 +1650,14 @@ export class TerminalLogger implements Logger {
 
     private formatObjectKey(key: string): string {
         return /^[a-z_$][\w$]*$/i.test(key) ? key : JSON.stringify(key)
+    }
+
+    private createSeparatorLine(text: string): RenderedLine {
+        return this.createRenderedLine(text, this._pc.blackBright(text))
+    }
+
+    private createCollapsedValueLine(text: string): RenderedLine {
+        return this.createRenderedLine(text, this._pc.magentaBright(text))
     }
 
     private truncateString(value: string): string {

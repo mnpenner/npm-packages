@@ -53,6 +53,30 @@ describe(TerminalLogger.name, () => {
         expect(output).toContain('Symbol(sym)')
     })
 
+    it('colors inspection separators and collapsed values', () => {
+        const lines: string[] = []
+        const logger = new TerminalLogger({
+            color: true,
+            log: { inspect: { depth: 1 } },
+            maxWidth: 200,
+            table: { inspect: { depth: 1 } },
+            write: (line) => lines.push(line),
+        })
+
+        logger.log({
+            list: [1, 2],
+            nested: { value: 1 },
+        })
+        logger.table([{ meta: { one: 1, two: 2 }, nested: { child: { value: 1 } } }])
+
+        const output = lines.join('')
+
+        expect(output).toContain('\x1B[90m:\x1B[0m')
+        expect(output).toContain('\x1B[90m,\x1B[0m')
+        expect(output).toContain('\x1B[95m[\x1B[0m')
+        expect(output).not.toContain('\x1B[93m[\x1B[0m')
+    })
+
     it('renders Error values with stack, cause, and aggregate errors', () => {
         const lines: string[] = []
         const logger = new TerminalLogger({
