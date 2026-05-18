@@ -1198,8 +1198,15 @@ export class TerminalLogger implements Logger {
         }
 
         const lines = error.stack.split('\n').map((line) => line.trimEnd())
-        const [firstLine, ...remainingLines] = lines
+        const summaryLines = this.getErrorSummary(error)
+            .split('\n')
+            .map((line) => line.trimEnd())
 
+        if (summaryLines.every((line, index) => lines[index] === line)) {
+            return lines.slice(summaryLines.length)
+        }
+
+        const [firstLine, ...remainingLines] = lines
         if (firstLine != null && !this.isErrorStackFrameLine(firstLine)) {
             return remainingLines
         }

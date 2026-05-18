@@ -31,3 +31,5 @@
 - Keep the code tidy. Organize functions and classes into separate files. Rename things when they no longer make sense.
 - All tests should be in a `describe(func.name, () => ...` block. Class methods should be in a `describe(Class.name,`
   block with the methods nested underneath.
+- Add a test to prevent regressions whenever the user reports a bug or error
+- Use `expectType<TypeEqual<typeof VALUE, EXPECTED_TYPE>>(true)` (from `@mpen/ts-types`) to assert exact types in tests.

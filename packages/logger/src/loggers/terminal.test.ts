@@ -142,6 +142,43 @@ describe(TerminalLogger.name, () => {
         expect(lines.join('')).toContain(`at validateHandlerResult (${relativePath}:638:24)`)
     })
 
+    it('does not duplicate multiline Error message lines from the stack header', () => {
+        const lines: string[] = []
+        const logger = new TerminalLogger({
+            color: false,
+            maxWidth: 200,
+            write: (line) => lines.push(line),
+        })
+        const filepath = path.join(
+            process.cwd(),
+            'packages',
+            'routekit',
+            'src',
+            'router',
+            'routes',
+            'valibot',
+            'valibot.ts',
+        )
+        const error = new Error(
+            [
+                'Response validation failed for status 400: × Invalid type: Expected number but received "url_path"',
+                '  → at component',
+            ].join('\n'),
+        )
+        error.name = 'ValibotResponseValidationError'
+        error.stack = [
+            `ValibotResponseValidationError: ${error.message}`,
+            `    at parseResponseSchema (${filepath}:613:19)`,
+        ].join('\n')
+
+        logger.error(error)
+
+        const output = lines.join('')
+
+        expect(output.match(/→ at component/gu)).toHaveLength(1)
+        expect(output).toContain('at parseResponseSchema')
+    })
+
     it('colors Error names separately from colons and messages', () => {
         const lines: string[] = []
         const logger = new TerminalLogger({
