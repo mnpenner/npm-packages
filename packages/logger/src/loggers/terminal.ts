@@ -2,6 +2,8 @@ import type { Logger, WriteFn } from '../logger'
 import { createColors, type Colors } from '@mpen/picocolors'
 import stringWidth from 'string-width'
 import { jsAsciiString } from '../json.ts'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import {
     getTableColumns,
     TABLE_INDEX_COLUMN,
@@ -21,6 +23,13 @@ interface RenderedLine {
 interface RenderedCell {
     lines: RenderedLine[]
     formatter?: CellFormatter
+}
+
+interface ErrorStackFrame {
+    callee?: string
+    indent: string
+    location: string
+    wrappedLocation: boolean
 }
 
 /**
@@ -167,6 +176,11 @@ export interface TerminalLoggerOptions {
      */
     color?: boolean
     /**
+     * Root directory used to shorten absolute file paths in rendered error stack traces.
+     * @defaultValue process.cwd()
+     */
+    errorRootPath?: string
+    /**
      * Plain log rendering options.
      */
     log?: TerminalLogOptions
@@ -189,6 +203,13 @@ const WARN_ICON = '\u26a0\ufe0f' //'\u{1F6A7}'
 const ERROR_ICON = '\u274C'
 const ANSI_PATTERN = /\x1B\[[0-?]*[ -/]*[@-~]/gu
 const ANSI_RESET = '\x1B[0m'
+const ERROR_STANDARD_PROPERTIES = new Set<PropertyKey>([
+    'cause',
+    'errors',
+    'message',
+    'name',
+    'stack',
+])
 
 const DEFAULT_WRITE_FN: WriteFn = (str) => process.stdout.write(str)
 
@@ -221,6 +242,7 @@ export class TerminalLogger implements Logger {
     private readonly _tblInspect: Required<TableInspectOptions>
     private readonly _logInspect: Required<TableInspectOptions>
     private readonly _maxWidth: number | null
+    private readonly _errorRootPath: string
 
     /**
      * Creates a terminal logger.
@@ -233,6 +255,7 @@ export class TerminalLogger implements Logger {
         this._tblDensity = options?.table?.density ?? TableDensity.AUTO
         this._tblStriped = options?.table?.striped ?? false
         this._maxWidth = options?.maxWidth ?? null
+        this._errorRootPath = options?.errorRootPath ?? process.cwd()
         this._tblIndex = options?.table?.showIndex ?? false
         this._tblInspect = {
             depth: options?.table?.inspect?.depth ?? 1,
@@ -1142,9 +1165,7 @@ export class TerminalLogger implements Logger {
         }
 
         if (value instanceof Error) {
-            const text = this.getErrorSummary(value)
-
-            return this.createRenderedLine(text, this._pc.redBright(text))
+            return this.formatErrorSummary(value)
         }
 
         if (depth >= this._tblInspect.depth) {
@@ -1161,25 +1182,33 @@ export class TerminalLogger implements Logger {
     }
 
     private stringifyError(error: Error): RenderedCell {
-        const [firstLine = this.getErrorSummary(error), ...stackLines] = this.getErrorLines(error)
-
         return {
             lines: [
-                this.createRenderedLine(firstLine, this._pc.redBright(firstLine)),
-                ...stackLines.map((line) =>
-                    this.createRenderedLine(line, this._pc.blackBright(line)),
-                ),
+                this.formatErrorSummary(error),
+                ...this.getErrorStackLines(error).map((line) => this.formatErrorStackLine(line)),
+                ...this.getErrorExtraPropertyLines(error),
                 ...this.getErrorDetailLines(error),
             ],
         }
     }
 
-    private getErrorLines(error: Error): string[] {
-        return (
-            error.stack == null || error.stack === '' ? this.getErrorSummary(error) : error.stack
-        )
-            .split('\n')
-            .map((line) => line.trimEnd())
+    private getErrorStackLines(error: Error): string[] {
+        if (error.stack == null || error.stack === '') {
+            return []
+        }
+
+        const lines = error.stack.split('\n').map((line) => line.trimEnd())
+        const [firstLine, ...remainingLines] = lines
+
+        if (firstLine != null && !this.isErrorStackFrameLine(firstLine)) {
+            return remainingLines
+        }
+
+        return lines
+    }
+
+    private isErrorStackFrameLine(line: string): boolean {
+        return /^\s*at\b/u.test(line)
     }
 
     private getErrorSummary(error: Error): string {
@@ -1188,6 +1217,186 @@ export class TerminalLogger implements Logger {
         }
 
         return error.message === '' ? error.name : `${error.name}: ${error.message}`
+    }
+
+    private formatErrorSummary(error: Error): RenderedLine {
+        if (error.name === '') {
+            return this.createRenderedLine(error.message, this._pc.white(error.message))
+        }
+
+        if (error.message === '') {
+            return this.createRenderedLine(error.name, this._pc.redBright(error.name))
+        }
+
+        return this.joinRenderedLines(
+            this.joinRenderedLines(
+                this.createRenderedLine(error.name, this._pc.redBright(error.name)),
+                this.createRenderedLine(': ', this._pc.blackBright(': ')),
+            ),
+            this.createRenderedLine(error.message, this._pc.white(error.message)),
+        )
+    }
+
+    private formatErrorStackLine(line: string): RenderedLine {
+        const frame = this.parseErrorStackFrame(line)
+
+        if (frame == null) {
+            return this.createRenderedLine(line, this._pc.blackBright(line))
+        }
+
+        const prefix = this.createRenderedLine(
+            `${frame.indent}at `,
+            this._pc.blackBright(`${frame.indent}at `),
+        )
+        const location = this.formatErrorStackLocation(frame.location)
+
+        if (frame.callee == null || frame.callee === '') {
+            return this.joinRenderedLines(prefix, location)
+        }
+
+        const callee = this.formatErrorStackCallee(frame.callee)
+
+        if (!frame.wrappedLocation) {
+            return this.joinRenderedLines(
+                this.joinRenderedLines(prefix, callee),
+                this.joinRenderedLines(this.createRenderedLine(' '), location),
+            )
+        }
+
+        return this.joinRenderedLines(
+            this.joinRenderedLines(
+                this.joinRenderedLines(prefix, callee),
+                this.createRenderedLine(' (', this._pc.blackBright(' (')),
+            ),
+            this.joinRenderedLines(
+                location,
+                this.createRenderedLine(')', this._pc.blackBright(')')),
+            ),
+        )
+    }
+
+    private parseErrorStackFrame(line: string): ErrorStackFrame | null {
+        const wrappedLocation = /^(?<indent>\s*)at\s+(?<callee>.*?)\s+\((?<location>.*)\)$/u.exec(
+            line,
+        )
+
+        if (wrappedLocation?.groups != null) {
+            return {
+                callee: wrappedLocation.groups.callee,
+                indent: wrappedLocation.groups.indent,
+                location: wrappedLocation.groups.location,
+                wrappedLocation: true,
+            }
+        }
+
+        const locationOnly = /^(?<indent>\s*)at\s+(?<location>.+)$/u.exec(line)
+
+        if (locationOnly?.groups == null) {
+            return null
+        }
+
+        return {
+            indent: locationOnly.groups.indent,
+            location: locationOnly.groups.location,
+            wrappedLocation: false,
+        }
+    }
+
+    private formatErrorStackCallee(callee: string): RenderedLine {
+        if (callee.startsWith('<') && callee.endsWith('>')) {
+            return this.createRenderedLine(callee, this._pc.blackBright(callee))
+        }
+
+        return this.createRenderedLine(callee, this._pc.italic(this._pc.white(callee)))
+    }
+
+    private formatErrorStackLocation(location: string): RenderedLine {
+        const parsedLocation = /^(?<filepath>.*):(?<line>\d+)(?::(?<column>\d+))?$/u.exec(location)
+
+        if (parsedLocation?.groups == null) {
+            return this.createRenderedLine(location, this._pc.blackBright(location))
+        }
+
+        const filepath = this.getRelativeErrorFilePath(parsedLocation.groups.filepath)
+        const line = parsedLocation.groups.line
+        const column = parsedLocation.groups.column
+
+        let renderedLocation = this.joinRenderedLines(
+            this.createRenderedLine(filepath, this._pc.cyanBright(filepath)),
+            this.joinRenderedLines(
+                this.createRenderedLine(':', this._pc.blackBright(':')),
+                this.createRenderedLine(line, this._pc.yellowBright(line)),
+            ),
+        )
+
+        if (column != null) {
+            renderedLocation = this.joinRenderedLines(
+                renderedLocation,
+                this.joinRenderedLines(
+                    this.createRenderedLine(':', this._pc.blackBright(':')),
+                    this.createRenderedLine(column, this._pc.yellowBright(column)),
+                ),
+            )
+        }
+
+        return renderedLocation
+    }
+
+    private getRelativeErrorFilePath(filepath: string): string {
+        const normalizedFilePath = this.normalizeErrorFilePath(filepath)
+
+        if (this.isWin32AbsoluteErrorFilePath(normalizedFilePath)) {
+            return path.win32.relative(this._errorRootPath, normalizedFilePath) || '.'
+        }
+
+        if (path.posix.isAbsolute(normalizedFilePath)) {
+            return path.posix.relative(this._errorRootPath, normalizedFilePath) || '.'
+        }
+
+        return normalizedFilePath
+    }
+
+    private isWin32AbsoluteErrorFilePath(filepath: string): boolean {
+        return /^[a-z]:[\\/]/iu.test(filepath) || /^[\\/]{2}/u.test(filepath)
+    }
+
+    private normalizeErrorFilePath(filepath: string): string {
+        if (!filepath.startsWith('file://')) {
+            return filepath
+        }
+
+        try {
+            return fileURLToPath(filepath)
+        } catch {
+            return filepath
+        }
+    }
+
+    private getErrorExtraPropertyLines(error: Error): RenderedLine[] {
+        const keys = this.getErrorExtraPropertyKeys(error)
+
+        return keys.flatMap((key) => {
+            const labelText = `${this.formatPropertyKey(key)}: `
+            const label = this.createRenderedLine(labelText, this._pc.white(labelText))
+            const seen = new WeakSet<object>()
+            seen.add(error)
+            const [firstLine = this.createRenderedLine(''), ...remainingLines] =
+                this.inspectPrettyValue(Reflect.get(error, key), 0, seen)
+
+            return [
+                this.joinRenderedLines(label, firstLine),
+                ...remainingLines.map((line) => this.indentRenderedLine(line, '  ')),
+            ]
+        })
+    }
+
+    private getErrorExtraPropertyKeys(error: Error): (string | symbol)[] {
+        return [
+            ...Object.keys(error),
+            ...Object.getOwnPropertySymbols(error).filter((symbol) =>
+                Object.prototype.propertyIsEnumerable.call(error, symbol),
+            ),
+        ].filter((key) => !ERROR_STANDARD_PROPERTIES.has(key))
     }
 
     private getErrorDetailLines(error: Error): RenderedLine[] {

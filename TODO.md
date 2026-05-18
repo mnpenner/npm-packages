@@ -44,4 +44,6 @@
       - https://gist.github.com/devEstivenValencia/009f06ca1af29bb572625836f74e14a2
     - Handle weird `+json` content-types when parsing incoming requests
 - @mpen/logger
-  - Integrate stack trace parser from packages/routekit/src/router/middleware/logger-context.ts into TerminalLogger
+  - [x] Integrate stack trace parser from packages/routekit/src/router/middleware/logger-context.ts into TerminalLogger; paths should be relative to cwd
+  - [x] Extra properties on the Error object should be logged. See `ValibotResponseValidationError`, it ought to log `status` and `issues` 
+  - JsonLogger should log the callsite; see how packages/routekit/src/router/middleware/logger-context.ts creates a new Error to do so

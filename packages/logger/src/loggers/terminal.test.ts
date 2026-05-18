@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { TableDensity, TerminalLogger } from './terminal.ts'
+import path from 'node:path'
 
 function restoreProperty(
     target: object,
@@ -77,6 +78,120 @@ describe(TerminalLogger.name, () => {
         expect(output).toContain('errors:')
         expect(output).toContain('TypeError: bad id')
         expect(output).toContain('"fallback failed"')
+    })
+
+    it('renders Error stack paths relative to cwd by default', () => {
+        const lines: string[] = []
+        const logger = new TerminalLogger({
+            color: false,
+            maxWidth: 200,
+            write: (line) => lines.push(line),
+        })
+        const filepath = path.join(
+            process.cwd(),
+            'packages',
+            'logger',
+            'src',
+            'loggers',
+            'terminal.ts',
+        )
+        const relativePath = path.relative(process.cwd(), filepath)
+        const error = new Error('response validation failed')
+        error.name = 'ValibotResponseValidationError'
+        error.stack = [
+            'ValibotResponseValidationError: response validation failed',
+            `    at parseResponseSchema (${filepath}:613:15)`,
+            `    at ${filepath}:638:24`,
+        ].join('\n')
+
+        logger.error(error)
+
+        const output = lines.join('')
+
+        expect(output).toContain(`at parseResponseSchema (${relativePath}:613:15)`)
+        expect(output).toContain(`at ${relativePath}:638:24`)
+        expect(output).not.toContain(`${filepath}:613:15`)
+    })
+
+    it('uses errorRootPath when rendering Error stack paths', () => {
+        const lines: string[] = []
+        const errorRootPath = path.join(process.cwd(), 'packages')
+        const logger = new TerminalLogger({
+            color: false,
+            errorRootPath,
+            maxWidth: 200,
+            write: (line) => lines.push(line),
+        })
+        const filepath = path.join(
+            process.cwd(),
+            'packages',
+            'logger',
+            'src',
+            'loggers',
+            'terminal.ts',
+        )
+        const relativePath = path.relative(errorRootPath, filepath)
+        const error = new Error('response validation failed')
+        error.stack = [
+            'Error: response validation failed',
+            `    at validateHandlerResult (${filepath}:638:24)`,
+        ].join('\n')
+
+        logger.error(error)
+
+        expect(lines.join('')).toContain(`at validateHandlerResult (${relativePath}:638:24)`)
+    })
+
+    it('colors Error names separately from colons and messages', () => {
+        const lines: string[] = []
+        const logger = new TerminalLogger({
+            color: true,
+            maxWidth: 200,
+            write: (line) => lines.push(line),
+        })
+        const error = new TypeError('bad input')
+        error.stack = 'TypeError: bad input'
+
+        logger.error(error)
+
+        const output = lines.join('')
+
+        expect(output).toContain('\x1B[91mT\x1B[0m')
+        expect(output).toContain('\x1B[90m:\x1B[0m\x1B[90m \x1B[0m')
+        expect(output).toContain('\x1B[37mb\x1B[0m')
+        expect(output).not.toContain('\x1B[91m:\x1B[0m')
+    })
+
+    it('renders extra enumerable Error properties', () => {
+        const lines: string[] = []
+        const logger = new TerminalLogger({
+            color: false,
+            maxWidth: 200,
+            write: (line) => lines.push(line),
+        })
+        const error = new Error('Response validation failed for status 400') as Error & {
+            issues: unknown[]
+            status: number
+        }
+        error.name = 'ValibotResponseValidationError'
+        error.status = 400
+        error.issues = [
+            {
+                expected: 'number',
+                message: 'Invalid type',
+                received: '"url_path"',
+            },
+        ]
+        error.stack = 'ValibotResponseValidationError: Response validation failed for status 400'
+
+        logger.error(error)
+
+        const output = lines.join('')
+
+        expect(output).toContain('status: 400')
+        expect(output).toContain('issues: [')
+        expect(output).toContain('expected: "number"')
+        expect(output).toContain('received: \'"url_path"\'')
     })
 
     it('keeps later log arguments after multiline error details', () => {
