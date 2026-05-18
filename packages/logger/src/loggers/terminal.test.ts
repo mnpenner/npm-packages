@@ -1,6 +1,19 @@
 import { describe, expect, it } from 'bun:test'
 import { TableDensity, TerminalLogger } from './terminal.ts'
 
+function restoreProperty(
+    target: object,
+    property: string,
+    descriptor: PropertyDescriptor | undefined,
+): void {
+    if (descriptor == null) {
+        Reflect.deleteProperty(target, property)
+        return
+    }
+
+    Object.defineProperty(target, property, descriptor)
+}
+
 describe(TerminalLogger.name, () => {
     it('renders plain log values with colorized pretty inspection', () => {
         const lines: string[] = []
@@ -64,6 +77,72 @@ describe(TerminalLogger.name, () => {
         expect(output).toContain('errors:')
         expect(output).toContain('TypeError: bad id')
         expect(output).toContain('"fallback failed"')
+    })
+
+    it('keeps later log arguments after multiline error details', () => {
+        const lines: string[] = []
+        const logger = new TerminalLogger({
+            color: false,
+            maxWidth: 200,
+            write: (line) => lines.push(line),
+        })
+        const error = new Error('request failed')
+        error.stack = 'Error: request failed\n    at handleRequest\n    at dispatch'
+
+        logger.error('Routekit internal server error', error, {
+            method: 'GET',
+            url: 'http://localhost:3000/users/123x',
+        })
+
+        const output = lines.join('')
+        const stackIndex = output.indexOf('    at handleRequest')
+        const metadataIndex = output.indexOf(
+            '{method:"GET",url:"http://localhost:3000/users/123x"}',
+        )
+
+        expect(stackIndex).not.toBe(-1)
+        expect(metadataIndex).not.toBe(-1)
+        expect(stackIndex < metadataIndex).toBe(true)
+    })
+
+    it('uses COLUMNS when stdio column counts are unavailable', () => {
+        const stdoutColumns = Object.getOwnPropertyDescriptor(process.stdout, 'columns')
+        const stderrColumns = Object.getOwnPropertyDescriptor(process.stderr, 'columns')
+        const previousColumns = process.env.COLUMNS
+        const lines: string[] = []
+
+        try {
+            Object.defineProperty(process.stdout, 'columns', {
+                configurable: true,
+                value: undefined,
+            })
+            Object.defineProperty(process.stderr, 'columns', {
+                configurable: true,
+                value: undefined,
+            })
+            process.env.COLUMNS = '120'
+
+            const logger = new TerminalLogger({
+                color: false,
+                write: (line) => lines.push(line),
+            })
+
+            logger.error('x'.repeat(90))
+        } finally {
+            restoreProperty(process.stdout, 'columns', stdoutColumns)
+            restoreProperty(process.stderr, 'columns', stderrColumns)
+
+            if (previousColumns == null) {
+                delete process.env.COLUMNS
+            } else {
+                process.env.COLUMNS = previousColumns
+            }
+        }
+
+        const outputLines = lines.join('').trimEnd().split('\n')
+
+        expect(outputLines).toHaveLength(1)
+        expect(outputLines[0]).toContain('x'.repeat(90))
     })
 
     it('right-aligns numeric table columns that only contain numbers, null, or undefined', () => {

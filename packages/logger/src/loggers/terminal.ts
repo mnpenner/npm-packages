@@ -339,17 +339,19 @@ export class TerminalLogger implements Logger {
         const firstLineWidth = Math.max(1, maxWidth - this.getCellWidth(prefix.plain))
         const continuationIndent = '   '
         const continuationWidth = Math.max(1, maxWidth - this.getCellWidth(continuationIndent))
-        const wrappedLines = message.lines.flatMap((line) => this.wrapLine(line, firstLineWidth))
-        const [firstLine = this.createRenderedLine(''), ...remainingLines] = wrappedLines
+        const [firstMessageLine = this.createRenderedLine(''), ...remainingMessageLines] =
+            message.lines
+        const [firstLine = this.createRenderedLine(''), ...firstMessageContinuationLines] =
+            this.wrapLine(firstMessageLine, firstLineWidth)
+        const remainingLines = [
+            ...firstMessageContinuationLines,
+            ...remainingMessageLines.flatMap((line) => this.wrapLine(line, continuationWidth)),
+        ]
 
         this._write(
             [
                 formattedPrefix.text + firstLine.text,
-                ...remainingLines.flatMap((line) =>
-                    this.wrapLine(line, continuationWidth).map(
-                        (wrappedLine) => continuationIndent + wrappedLine.text,
-                    ),
-                ),
+                ...remainingLines.map((line) => continuationIndent + line.text),
             ].join('\n') + '\n',
         )
     }
@@ -362,10 +364,22 @@ export class TerminalLogger implements Logger {
                     return cell.lines
                 }
 
-                return this.joinRenderedLineGroups(result, cell.lines, '  ')
+                return this.appendLogLineGroup(result, cell.lines, '  ')
             }, null)
 
         return { lines: lines ?? [this.createRenderedLine('')] }
+    }
+
+    private appendLogLineGroup(
+        left: RenderedLine[],
+        right: RenderedLine[],
+        separator: string,
+    ): RenderedLine[] {
+        if (left.length > 1) {
+            return [...left, ...right]
+        }
+
+        return this.appendRenderedLineGroup(left, right, separator)
     }
 
     private stringifyPlainLogData(data: unknown[]): RenderedCell {
@@ -420,34 +434,6 @@ export class TerminalLogger implements Logger {
                 this.createRenderedLine(line.plain, cell.formatter?.(line.plain) ?? line.text),
             ),
         }
-    }
-
-    private joinRenderedLineGroups(
-        left: RenderedLine[],
-        right: RenderedLine[],
-        separator: string,
-    ): RenderedLine[] {
-        const maxLength = Math.max(left.length, right.length)
-        const lines: RenderedLine[] = []
-
-        for (let index = 0; index < maxLength; index++) {
-            const leftLine = left[index]
-            const rightLine = right[index]
-
-            if (leftLine != null && rightLine != null) {
-                lines.push(
-                    this.joinRenderedLines(
-                        this.joinRenderedLines(leftLine, this.createRenderedLine(separator)),
-                        rightLine,
-                    ),
-                )
-                continue
-            }
-
-            lines.push(leftLine ?? rightLine ?? this.createRenderedLine(''))
-        }
-
-        return lines
     }
 
     private appendRenderedLineGroup(
@@ -998,15 +984,36 @@ export class TerminalLogger implements Logger {
             return this._maxWidth
         }
 
-        if (process.stdout.columns != null && process.stdout.columns > 0) {
-            return process.stdout.columns
+        const stdoutColumns = this.toPositiveInteger(process.stdout.columns)
+        if (stdoutColumns != null) {
+            return stdoutColumns
         }
 
-        if (process.stderr.columns != null && process.stderr.columns > 0) {
-            return process.stderr.columns
+        const stderrColumns = this.toPositiveInteger(process.stderr.columns)
+        if (stderrColumns != null) {
+            return stderrColumns
+        }
+
+        const envColumns = this.toPositiveInteger(process.env.COLUMNS)
+        if (envColumns != null) {
+            return envColumns
         }
 
         return 80
+    }
+
+    private toPositiveInteger(value: number | string | undefined): number | null {
+        if (typeof value === 'number') {
+            return Number.isSafeInteger(value) && value > 0 ? value : null
+        }
+
+        if (value == null || !/^\d+$/u.test(value.trim())) {
+            return null
+        }
+
+        const parsedValue = Number(value)
+
+        return Number.isSafeInteger(parsedValue) && parsedValue > 0 ? parsedValue : null
     }
 
     private wrapCell(
