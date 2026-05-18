@@ -34,7 +34,7 @@ import {
     type BodySerializer,
     type RoutekitResponse,
     type StreamFramer,
-} from './response/simple'
+} from './response'
 import type { RouterBodyInit } from './fetch-types'
 
 type RouteEntry =

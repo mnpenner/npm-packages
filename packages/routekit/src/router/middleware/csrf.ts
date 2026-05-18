@@ -1,5 +1,5 @@
 import { HttpStatus } from '@mpen/http'
-import { text } from '../response/simple'
+import { text } from '../response'
 import { isLocalhost } from '../lib/host'
 import type {
     AnyContext,

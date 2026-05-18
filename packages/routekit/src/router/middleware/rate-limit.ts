@@ -1,6 +1,6 @@
 import type { HttpMethod } from '@mpen/http'
 import { HttpStatus } from '@mpen/http'
-import { text, type RoutekitResponse } from '../response/simple'
+import { text, type RoutekitResponse } from '../response'
 import type { AnyContext, Middleware, RequestContext } from '../types'
 
 export interface RateBucket {

@@ -1,5 +1,5 @@
 import { HttpStatus } from '@mpen/http'
-import { text } from '../response/simple'
+import { text } from '../response'
 import type { AnyContext, HandlerResult, MaybePromise, Middleware, RequestContext } from '../types'
 
 type BodyLimitHandler<Ctx extends object = AnyContext> = (

@@ -1,4 +1,4 @@
-GET http://localhost:3000/users/123
+GET http://localhost:3000/users/123x
 
 ###
 
@@ -12,3 +12,7 @@ Content-Type: application/json
         "Male"
     ]
 }
+
+###
+
+GET http://localhost:3000/health

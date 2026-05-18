@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bun test
 import { describe, expect, it } from 'bun:test'
 import { HttpStatus } from '@mpen/http'
-import { badRequest, unprocessableContent } from './simple'
+import { badRequest, unprocessableContent } from './status-responses'
 
-describe('simple response helpers', () => {
+describe('status response helpers', () => {
     it('creates bad request responses', () => {
         const result = badRequest({ message: 'Invalid request' }, { headers: { 'x-error': '1' } })
 

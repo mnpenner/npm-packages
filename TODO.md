@@ -37,3 +37,4 @@
     - Error sub-types; maybe `rk-error-code` header?
       - e.g. unauthorized (403), unauthenticated (401), session_expired (401)
     - Standard/default validation error. Validate all 3 in one response
+    - Logger integration

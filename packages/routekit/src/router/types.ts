@@ -6,7 +6,7 @@ import type {
     RoutekitBody,
     RoutekitResponse,
     RoutekitYield,
-} from './response/simple'
+} from './response'
 
 export type OneOrMany<T> = T | T[]
 export type MaybePromise<T> = T | Promise<T>
