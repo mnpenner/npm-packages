@@ -25,3 +25,6 @@
     - Mark items that are `export`ed but not public as `@internal`
 - Use `templates/script-template.ts` for new scripts
 - If you need to write a temporary file, put it in `scratch/`
+- When causing an API break (e.g. renaming an existing function or property), ask the user if they want to deprecate and
+  create an alias or just delete the old version. Most of these packages have little to no usage, so
+  backwards-compatibility breaks are preferred for cleaner code.

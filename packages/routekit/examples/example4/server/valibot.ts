@@ -1,4 +1,4 @@
-import { createValibotRoutes } from '@mpen/routekit/routes'
+import { createValibotRouteBuilder } from '@mpen/routekit/routes'
 import { response } from '@mpen/routekit'
 import * as v from 'valibot'
 import { HttpStatus } from '@mpen/http'
@@ -44,7 +44,7 @@ export const BaseIssueSchema: v.GenericSchema<unknown, SerializedBaseIssue> = v.
     skipPipe: v.optional(v.boolean()),
 })
 
-export const route = createValibotRoutes({
+export const route = createValibotRouteBuilder({
     validateResponse: 'parse',
     validationError(component, issues) {
         console.error('validationError', { component, issues })

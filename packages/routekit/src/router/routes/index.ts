@@ -1,6 +1,6 @@
 export type { Route, RouteMatch, RouteMeta, RouteOptions, RouteSchema } from '../types'
 export {
-    createValibotRoutes,
+    createValibotRouteBuilder,
     valibotHandler,
     valibotPartial,
     valibotRoute,
@@ -11,19 +11,27 @@ export type {
     ValibotHandlerContext,
     ValibotHandlerOptions,
     ValibotHandlerParams,
+    ValibotRouteBuilder,
     ValibotRouteHandler,
     ValibotRouteHelperDefaults,
     ValibotRouteOptions,
-    ValibotRoutes,
     ValibotRouteSchemaInput,
     ValibotValidationErrorBody,
     ValibotValidationErrorHandler,
     WithValibotOptions,
 } from './valibot'
-export { createZodRoutes, withZod, zodHandler, zodPartial, zodRoute, ValidationError } from './zod'
+export {
+    createZodRouteBuilder,
+    withZod,
+    zodHandler,
+    zodPartial,
+    zodRoute,
+    ValidationError,
+} from './zod'
 export type {
     ValidationErrorHandler,
     WithZodOptions,
+    ZodRouteBuilder,
     ZodHandlerContext,
     ZodHandlerOptions,
     ZodHandlerParams,
@@ -31,6 +39,5 @@ export type {
     ZodRouteHandler,
     ZodRouteOptions,
     ZodRouteSchemaInput,
-    ZodRoutes,
     ZodValidationErrorBody,
 } from './zod'

@@ -1,6 +1,6 @@
 import { CommonContentTypes, HttpStatus } from '@mpen/http'
 import { jsonSerializer, response, Router, type BodySerializer } from '@mpen/routekit'
-import { createZodRoutes, ValidationError } from '@mpen/routekit/routes'
+import { createZodRouteBuilder, ValidationError } from '@mpen/routekit/routes'
 import { z } from 'zod'
 
 const validationErrorSchema = z.object({
@@ -18,7 +18,7 @@ export const router = new Router({
     serializers: [jsonSerializer(), yamlSerializer],
 })
 
-const zodRoutes = createZodRoutes({
+const zodRoute = createZodRouteBuilder({
     schema: {
         response: {
             body: {
@@ -45,7 +45,7 @@ const zodRoutes = createZodRoutes({
 
 router.post(
     '/widgets/:id',
-    zodRoutes({
+    zodRoute({
         name: 'widgets.byId',
         schema: {
             request: {

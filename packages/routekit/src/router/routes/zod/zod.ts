@@ -213,11 +213,11 @@ export type WithZodOptions<
 > = Omit<RouteOptions<Ctx>, 'handler' | 'schema'> & ZodHandlerOptions<Schema, Ctx>
 
 /**
- * Zod route builder created by `createZodRoutes`.
+ * Zod route builder created by [`createZodRouteBuilder`]{@link createZodRouteBuilder}.
  *
  * @example
  * ```ts
- * const route = createZodRoutes()
+ * const route = createZodRouteBuilder()
  *
  * router.get('/users/:id', route({
  *   schema: {
@@ -235,7 +235,7 @@ export type WithZodOptions<
  * }))
  * ```
  */
-export type ZodRoutes = {
+export type ZodRouteBuilder = {
     /**
      * Build a full route definition that includes its own path.
      *
@@ -798,7 +798,7 @@ export function withZod<
  *
  * @example
  * ```ts
- * const zod = createZodRoutes({
+ * const zodRoute = createZodRouteBuilder({
  *   validateResponse: false,
  *   schema: {
  *     response: {
@@ -809,7 +809,7 @@ export function withZod<
  *   },
  * })
  *
- * router.post('/users/:id', zod({
+ * router.post('/users/:id', zodRoute({
  *   name: 'user.update',
  *   schema: {
  *     request: {
@@ -821,9 +821,9 @@ export function withZod<
  * ```
  *
  * @param defaults - Default schema fragments, response validation, and request validation error handling.
- * @returns A route-options builder compatible with method-specific router helpers.
+ * @returns A route builder compatible with method-specific router helpers and full route definitions.
  */
-export function createZodRoutes(defaults: ZodRouteHelperDefaults = {}): ZodRoutes {
+export function createZodRouteBuilder(defaults: ZodRouteHelperDefaults = {}): ZodRouteBuilder {
     return (<
         Schema extends ZodRouteSchemaInput<any, any, any, any> | undefined,
         Ctx extends object = AnyContext,
@@ -835,7 +835,7 @@ export function createZodRoutes(defaults: ZodRouteHelperDefaults = {}): ZodRoute
             return zodRoute(merged as ZodRouteOptions<Schema, Ctx>)
         }
         return withZod(merged as WithZodOptions<Schema, Ctx>)
-    }) as ZodRoutes
+    }) as ZodRouteBuilder
 }
 
 /**

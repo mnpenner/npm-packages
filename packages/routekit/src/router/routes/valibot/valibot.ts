@@ -245,11 +245,11 @@ export type WithValibotOptions<
 > = Omit<RouteOptions<Ctx>, 'handler' | 'schema'> & ValibotHandlerOptions<Schema, Ctx>
 
 /**
- * Valibot route builder created by `createValibotRoutes`.
+ * Valibot route builder created by [`createValibotRouteBuilder`]{@link createValibotRouteBuilder}.
  *
  * @example
  * ```ts
- * const route = createValibotRoutes()
+ * const route = createValibotRouteBuilder()
  *
  * router.get('/users/:id', route({
  *   schema: {
@@ -267,7 +267,7 @@ export type WithValibotOptions<
  * }))
  * ```
  */
-export type ValibotRoutes = {
+export type ValibotRouteBuilder = {
     /**
      * Build a full route definition that includes its own path.
      *
@@ -848,7 +848,7 @@ export function withValibot<
  *
  * @example
  * ```ts
- * const valibot = createValibotRoutes({
+ * const valibotRoute = createValibotRouteBuilder({
  *   validateResponse: false,
  *   schema: {
  *     response: {
@@ -859,7 +859,7 @@ export function withValibot<
  *   },
  * })
  *
- * router.post('/users/:id', valibot({
+ * router.post('/users/:id', valibotRoute({
  *   name: 'user.update',
  *   schema: {
  *     request: {
@@ -871,9 +871,11 @@ export function withValibot<
  * ```
  *
  * @param defaults - Default schema fragments, response validation, and request validation error handling.
- * @returns A route-options builder compatible with method-specific router helpers.
+ * @returns A route builder compatible with method-specific router helpers and full route definitions.
  */
-export function createValibotRoutes(defaults: ValibotRouteHelperDefaults = {}): ValibotRoutes {
+export function createValibotRouteBuilder(
+    defaults: ValibotRouteHelperDefaults = {},
+): ValibotRouteBuilder {
     return (<Schema extends AnyValibotRouteSchemaInput | undefined, Ctx extends object = object>(
         options: ValibotRouteOptions<Schema, Ctx> | WithValibotOptions<Schema, Ctx>,
     ): Route<Ctx> | RouteOptions<Ctx> => {
@@ -882,7 +884,7 @@ export function createValibotRoutes(defaults: ValibotRouteHelperDefaults = {}): 
             return valibotRoute(merged as ValibotRouteOptions<Schema, Ctx>)
         }
         return withValibot(merged as WithValibotOptions<Schema, Ctx>)
-    }) as ValibotRoutes
+    }) as ValibotRouteBuilder
 }
 
 /**

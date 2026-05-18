@@ -1,5 +1,5 @@
 export {
-    createValibotRoutes,
+    createValibotRouteBuilder,
     valibotHandler,
     valibotPartial,
     valibotRoute,
@@ -10,10 +10,10 @@ export type {
     ValibotHandlerContext,
     ValibotHandlerOptions,
     ValibotHandlerParams,
+    ValibotRouteBuilder,
     ValibotRouteHandler,
     ValibotRouteHelperDefaults,
     ValibotRouteOptions,
-    ValibotRoutes,
     ValibotRouteSchemaInput,
     ValibotValidationErrorBody,
     ValibotValidationErrorHandler,

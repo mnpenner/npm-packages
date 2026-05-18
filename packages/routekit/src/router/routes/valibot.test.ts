@@ -6,7 +6,7 @@ import { ok, response as routekitResponse } from '../response'
 import { expectType } from '@mpen/ts-types'
 import * as v from 'valibot'
 import {
-    createValibotRoutes,
+    createValibotRouteBuilder,
     valibotHandler,
     valibotPartial,
     valibotRoute,
@@ -450,9 +450,9 @@ describe(withValibot.name, () => {
     })
 })
 
-describe(createValibotRoutes.name, () => {
+describe(createValibotRouteBuilder.name, () => {
     it('applies shared defaults and allows per-route overrides', async () => {
-        const valibotRouteBuilder = createValibotRoutes({
+        const valibotRouteBuilder = createValibotRouteBuilder({
             validateResponse: false,
             schema: {
                 response: {
@@ -522,7 +522,7 @@ describe(createValibotRoutes.name, () => {
     })
 
     it('builds full routes when path is provided to the shared builder', async () => {
-        const valibotRouteBuilder = createValibotRoutes({
+        const valibotRouteBuilder = createValibotRouteBuilder({
             validateResponse: false,
         })
         const route = valibotRouteBuilder({
@@ -548,7 +548,7 @@ describe(createValibotRoutes.name, () => {
     })
 
     it('preserves strict handler and path schema types on route builders', () => {
-        const valibotRouteBuilder = createValibotRoutes()
+        const valibotRouteBuilder = createValibotRouteBuilder()
 
         typeTest(() => {
             const options = valibotRouteBuilder({

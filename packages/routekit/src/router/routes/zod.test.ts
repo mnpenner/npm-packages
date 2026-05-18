@@ -5,7 +5,14 @@ import { z } from 'zod'
 import { Router } from '../router'
 import { expectType } from '@mpen/ts-types'
 import { ok, response as routekitResponse } from '../response'
-import { createZodRoutes, ValidationError, withZod, zodHandler, zodPartial, zodRoute } from './zod'
+import {
+    createZodRouteBuilder,
+    ValidationError,
+    withZod,
+    zodHandler,
+    zodPartial,
+    zodRoute,
+} from './zod'
 import type { AnyContext, Route, RouteOptions } from '../types'
 
 function typeTest(callback: () => void) {
@@ -431,9 +438,9 @@ describe('withZod', () => {
     })
 })
 
-describe('createZodRoutes', () => {
+describe('createZodRouteBuilder', () => {
     it('builds method-specific route options with shared defaults', async () => {
-        const zod = createZodRoutes({
+        const zod = createZodRouteBuilder({
             validateResponse: false,
             validationError: () =>
                 new Response('factory bad input', { status: HttpStatus.BAD_REQUEST }),
@@ -460,7 +467,7 @@ describe('createZodRoutes', () => {
     })
 
     it('applies shared defaults and allows per-route overrides', async () => {
-        const zodRoute = createZodRoutes({
+        const zodRoute = createZodRouteBuilder({
             validateResponse: false,
             schema: {
                 response: {
@@ -530,7 +537,7 @@ describe('createZodRoutes', () => {
     })
 
     it('builds full routes when path is provided to the shared builder', async () => {
-        const zodRoute = createZodRoutes({
+        const zodRoute = createZodRouteBuilder({
             validateResponse: false,
         })
         const route = zodRoute({
@@ -556,7 +563,7 @@ describe('createZodRoutes', () => {
     })
 
     it('merges default schemas into generated route schemas', () => {
-        const zodRoute = createZodRoutes({
+        const zodRoute = createZodRouteBuilder({
             schema: {
                 response: {
                     body: {
@@ -603,7 +610,7 @@ describe('createZodRoutes', () => {
     })
 
     it('preserves pathless and full-route return types on route builders', () => {
-        const zodRoute = createZodRoutes()
+        const zodRoute = createZodRouteBuilder()
 
         typeTest(() => {
             const options = zodRoute({

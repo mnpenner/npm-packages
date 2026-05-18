@@ -240,7 +240,7 @@ Available Zod helpers:
 - `zodPartial(options)` returns `{ handler, schema }`.
 - `withZod(options)` returns method-helper route options.
 - `zodRoute(options)` returns a full route definition.
-- `createZodRoutes(defaults)` creates a route helper with shared schema, validation, and error handling defaults.
+- `createZodRouteBuilder(defaults)` creates a route builder with shared schema, validation, and error handling defaults.
 
 Request validation failures return a `400` JSON response by default. Override
 `validationError` to customize that response. Response validation defaults to
@@ -300,7 +300,7 @@ Available Valibot helpers:
 - `valibotPartial(options)`
 - `withValibot(options)`
 - `valibotRoute(options)`
-- `createValibotRoutes(defaults)`
+- `createValibotRouteBuilder(defaults)`
 
 ## OpenAPI
 
