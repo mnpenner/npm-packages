@@ -28,3 +28,6 @@
 - When causing an API break (e.g. renaming an existing function or property), ask the user if they want to deprecate and
   create an alias or just delete the old version. Most of these packages have little to no usage, so
   backwards-compatibility breaks are preferred for cleaner code.
+- Keep the code tidy. Organize functions and classes into separate files. Rename things when they no longer make sense.
+- All tests should be in a `describe(func.name, () => ...` block. Class methods should be in a `describe(Class.name,`
+  block with the methods nested underneath.

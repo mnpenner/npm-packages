@@ -38,3 +38,7 @@
       - e.g. unauthorized (403), unauthenticated (401), session_expired (401)
     - Standard/default validation error. Validate all 3 in one response
     - Logger integration
+    - Integrate more error helpers?
+      - See https://github.com/JohnAdib/rfc9457. They use validate -> 422
+      - https://gist.github.com/devEstivenValencia/009f06ca1af29bb572625836f74e14a2
+    - Handle weird `+json` content-types when parsing incoming requests
